@@ -16,3 +16,11 @@ export function intakePlaceSearchTargetKindError(extractedFields = {}) {
 export function namedPlaceLookupFromTargetKind(targetKind = '') {
   return normalizePlaceSearchTargetKind(targetKind) === 'named_place';
 }
+
+/** Live queue / in-turn search: turnKind required on ok classifications. */
+export function placeSearchTurnKindError(classification = {}) {
+  if (classification?.ok !== true) return '';
+  const turnKind = String(classification.turnKind || '').trim();
+  if (!turnKind) return 'trip intake classification turnKind missing';
+  return '';
+}

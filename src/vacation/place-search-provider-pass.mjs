@@ -8,6 +8,11 @@ import {
   radiusMetersForAnchorScope,
 } from './place-search-radius-filter.mjs';
 import { namedPlaceLookupFromQueries } from './place-search-named-target.mjs';
+import {
+  finalizeNamedPlaceSearchResults,
+  resolveNamedPlaceTieBreakLabel,
+} from './place-search-named-select.mjs';
+import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 
 function providerRowIsError(row = {}) {
   return String(row?.status || '').trim().toLowerCase() === 'error';
@@ -352,8 +357,43 @@ export async function runPlaceProviderPass({
     }
     throw error;
   }
-  const places = relevance.places;
+  let places = relevance.places;
   const relevanceRejections = relevance.rejections;
+  const singleNamedPlaceQuery = placeQueries.length === 1
+    && normalizePlaceSearchTargetKind(placeQueries[0]?.targetKind) === 'named_place';
+  let namedPlaceAnchorCenter = null;
+  if (singleNamedPlaceQuery) {
+    const tieBreakLabel = resolveNamedPlaceTieBreakLabel({
+      namedArea,
+      searchAnchor,
+      destination: dest,
+    });
+    if (tieBreakLabel) {
+      const tieBreakGeocode = await tryGeocodeLabel(fetchImpl, tieBreakLabel, providerLog, readJson);
+      namedPlaceAnchorCenter = anchorRadiusCenter(tieBreakGeocode, destinationRadiusCenter);
+    } else {
+      namedPlaceAnchorCenter = destinationRadiusCenter;
+    }
+  }
+  const namedFinalize = finalizeNamedPlaceSearchResults(
+    places,
+    singleNamedPlaceQuery ? 'named_place' : '',
+    { anchorCenter: namedPlaceAnchorCenter },
+  );
+  if (namedFinalize.ambiguous) {
+    const titles = (namedFinalize.namedPlaceCandidates || []).map((row) => row.title).filter(Boolean).join(', ');
+    fail(
+      `Place search named_place tie among top relevance scores: ${titles || 'unknown candidates'}`,
+      'named_place_ambiguous',
+      providerLog,
+      relevanceRejections,
+      {
+        ...diagnosticsBase(relevanceRejections),
+        namedPlaceCandidates: namedFinalize.namedPlaceCandidates,
+      },
+    );
+  }
+  places = namedFinalize.places;
   const liveMerged = merged.filter((place) => place.source !== 'prior_db');
   const liveCount = places.filter((place) => place.source !== 'prior_db').length;
   if (!liveCount) {

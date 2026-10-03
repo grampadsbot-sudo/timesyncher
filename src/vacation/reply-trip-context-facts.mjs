@@ -2,7 +2,7 @@ import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { applyPlaceSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
 import { chatPlaceSearchSavedReplyFacts } from './chat-place-search-when.mjs';
-import { applyInTurnCitablePlaces } from './provider-result-context.mjs';
+import { applyInTurnCitablePlaces, tripOwnedPlaceAllowRows } from './provider-result-context.mjs';
 import { tripIsoDay } from './intake-weekday-dates.mjs';
 import {
   applyPendingInviteReplyFacts,
@@ -22,6 +22,18 @@ function itineraryHasStatus(line) {
   const text = String(line || '');
   const colon = text.indexOf(':');
   return colon >= 0 && text.slice(colon + 1).trim().length > 0;
+}
+
+function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
+  if (!ctx || typeof ctx !== 'object' || !Array.isArray(inTurnPlaceResults) || !inTurnPlaceResults.length) return ctx;
+  return {
+    ...ctx,
+    tripReplyGate: tripOwnedPlaceAllowRows({
+      destination: String(ctx.destination || '').trim(),
+      lodging: String(ctx.lodging || '').trim(),
+      things,
+    }),
+  };
 }
 
 function applyUnscheduledDayStatus(ctx) {
@@ -119,7 +131,7 @@ export async function enrichDraftingTripContext(tripContext, {
     const label = statedLodgingLabelFromThings(things);
     if (label) ctx.lodging = label;
   }
-  if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(ctx);
+  if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   try {
     const { sql } = await import('./db.mjs');
     const db = sql(env);
@@ -135,8 +147,8 @@ export async function enrichDraftingTripContext(tripContext, {
       tripId,
       onboardingSessionId: session?.id || '',
     });
-    return applyUnscheduledDayStatus(applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows)));
+    return applyUnscheduledDayStatus(applyTripReplyGate(applyPendingInviteReplyFacts(ctx, pendingInviteReplyFacts(pendingRows)), things, inTurnPlaceResults));
   } catch {
-    return applyUnscheduledDayStatus(ctx);
+    return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   }
 }

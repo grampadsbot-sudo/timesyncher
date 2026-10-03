@@ -31,11 +31,76 @@ function rejectedOrPriorRow(row) {
   return source === 'prior_db';
 }
 
+function foldPlaceLetters(value) {
+  return String(value || '').toLowerCase().replace(/[''`]/g, '');
+}
+
+function areaOrLocalityPlaceRow(row) {
+  if (!row || typeof row !== 'object') return false;
+  const cat = String(row.category || row.metadata?.categoryName || row.subtype || '').trim().toLowerCase();
+  if (/^(locality|administrative|neighbourhood|neighborhood|suburb|county|state|region|district|island|town|village|hamlet|city)$/.test(cat)) {
+    return true;
+  }
+  const tags = row.metadata?.sourceRecord?.tags || row.tags;
+  if (tags && typeof tags === 'object') {
+    const place = String(tags.place || '').trim().toLowerCase();
+    if (place && /^(city|town|village|hamlet|suburb|neighbourhood|neighborhood|locality|county|state|island)$/.test(place)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function citableInTurnVenueRow(row) {
+  return !rejectedOrPriorRow(row) && !areaOrLocalityPlaceRow(row);
+}
+
+function rememberAllowName(rows, seen, raw) {
+  const name = normalizePlaceTitle(raw);
+  const key = foldPlaceLetters(name);
+  if (!name || key.length < 3 || seen.has(key)) return;
+  seen.add(key);
+  rows.push({ name });
+  for (const part of name.split(/[,/]/)) {
+    const piece = normalizePlaceTitle(part);
+    const pieceKey = foldPlaceLetters(piece);
+    if (piece.length >= 3 && !seen.has(pieceKey)) {
+      seen.add(pieceKey);
+      rows.push({ name: piece });
+    }
+  }
+}
+
+export function tripOwnedPlaceAllowRows({
+  destination = '',
+  lodging = '',
+  tripResolvedArea = '',
+  tripStatedLodgingArea = '',
+  things = [],
+} = {}) {
+  const rows = [];
+  const seen = new Set();
+  for (const value of [destination, lodging, tripResolvedArea, tripStatedLodgingArea]) {
+    rememberAllowName(rows, seen, value);
+  }
+  for (const thing of Array.isArray(things) ? things : []) {
+    const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
+    if (!['hotel', 'lodging', 'accommodation'].includes(kind)) continue;
+    rememberAllowName(rows, seen, thing?.title || thing?.name);
+    const location = thing?.location && typeof thing.location === 'object' ? thing.location : {};
+    rememberAllowName(rows, seen, location.address);
+    rememberAllowName(rows, seen, location.locality);
+    rememberAllowName(rows, seen, location.city);
+    rememberAllowName(rows, seen, thing?.description);
+  }
+  return rows;
+}
+
 export function citablePlaceTitles(inTurnResults = []) {
   const titles = [];
   const seen = new Set();
   for (const row of Array.isArray(inTurnResults) ? inTurnResults : []) {
-    if (rejectedOrPriorRow(row)) continue;
+    if (!citableInTurnVenueRow(row)) continue;
     const title = placeTitle(row);
     const key = title.toLowerCase();
     if (!title || seen.has(key)) continue;
@@ -81,6 +146,7 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
 function inTurnPlaceRows(sources) {
   return (Array.isArray(sources) ? sources : []).flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
+    if (!citableInTurnVenueRow(item)) return [];
     const name = String(item.name ?? item.title ?? '').trim();
     if (!name) return [];
     return [{ name }];
@@ -89,10 +155,15 @@ function inTurnPlaceRows(sources) {
 
 function venuePhraseSourced(phrase, rows) {
   const lower = String(phrase || '').trim().toLowerCase();
+  const folded = foldPlaceLetters(lower);
   if (!lower) return false;
   for (const row of rows) {
     for (const alias of webResultAliases(row.name)) {
-      if (lower === alias || lower.includes(alias) || alias.includes(lower)) return true;
+      const normalized = alias.toLowerCase();
+      if (lower === normalized || lower.includes(normalized) || normalized.includes(lower)) return true;
+      const aliasFolded = foldPlaceLetters(normalized);
+      if (folded === aliasFolded) return true;
+      if (aliasFolded.length >= 4 && (folded.includes(aliasFolded) || aliasFolded.includes(folded))) return true;
     }
   }
   return false;
@@ -118,14 +189,15 @@ function phraseParsesAsDate(text, matchIndex, phrase) {
   return parsedDayMatches(`${phrase}, ${monthLead[1]} ${monthLead[2]}`, Number(monthLead[2]));
 }
 
-function inventedVenueMentions(text, rows) {
-  if (!rows.length) return [];
+function inventedVenueMentions(text, rows, allowRows = []) {
+  const sourcedRows = [...rows, ...(Array.isArray(allowRows) ? allowRows : [])];
+  if (!sourcedRows.length) return [];
   const flagged = [];
   const body = String(text || '');
   for (const match of body.matchAll(/\b(?:at|near|including|from|visit)\s+([\p{Lu}][\p{L}'’&-]+(?:\s+[\p{Lu}][\p{L}'’&-]+)*)/gu)) {
     const phrase = match[1].replace(/\s+/g, ' ').trim();
     const phraseStart = match.index + match[0].lastIndexOf(phrase);
-    if (!phrase || venuePhraseSourced(phrase, rows) || phraseParsesAsDate(body, phraseStart, phrase)) continue;
+    if (!phrase || venuePhraseSourced(phrase, sourcedRows) || phraseParsesAsDate(body, phraseStart, phrase)) continue;
     flagged.push(phrase);
   }
   return flagged;
@@ -140,7 +212,7 @@ export function placeResultExtra(sources) {
   const items = Array.isArray(sources) ? sources : [];
   const parts = items.flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
-    if (rejectedOrPriorRow(item)) return [];
+    if (!citableInTurnVenueRow(item)) return [];
     const name = normalizePlaceTitle(item.name ?? item.title ?? '');
     return name ? [name] : [];
   });
@@ -148,14 +220,16 @@ export function placeResultExtra(sources) {
   return `Results: ${parts.join('; ')}.`;
 }
 
-export function unsourcedAgainstInTurnResults(reply, sources) {
+export function unsourcedAgainstInTurnResults(reply, sources, options = {}) {
   const text = String(reply || '');
   const rows = inTurnPlaceRows(sources);
-  if (!rows.length) return [];
-  const flagged = new Set(inventedVenueMentions(text, rows));
+  const allowRows = Array.isArray(options.tripPlaceAllowRows) ? options.tripPlaceAllowRows : [];
+  if (!rows.length && !allowRows.length) return [];
+  const sourcedRows = [...rows, ...allowRows];
+  const flagged = new Set(inventedVenueMentions(text, rows, allowRows));
   for (const match of text.matchAll(/\(id:([^)\s]+)\)/g)) {
     const spoken = spokenPlaceName(text, match.index);
-    if (spoken && !venuePhraseSourced(spoken, rows)) flagged.add(spoken);
+    if (spoken && !venuePhraseSourced(spoken, sourcedRows)) flagged.add(spoken);
   }
   return [...flagged];
 }
