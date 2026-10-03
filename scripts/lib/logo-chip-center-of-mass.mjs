@@ -26,15 +26,7 @@ export async function collectBrandLogoChips(page) {
   });
 }
 
-/** @param {import('puppeteer-core').Page} page */
-export async function collectLogoChipElements(page) {
-  return collectBrandLogoChips(page);
-}
-
-/**
- * @param {import('puppeteer-core').Page} page
- * @param {string} selector
- */
+/** @param {import('puppeteer-core').Page} page @param {string} selector */
 export async function measureCenterOfMassOffset(page, selector) {
   return page.evaluate(async (sel) => {
     const chip = document.querySelector(sel);

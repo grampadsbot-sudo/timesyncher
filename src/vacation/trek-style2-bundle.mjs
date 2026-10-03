@@ -46,7 +46,6 @@ const LIST_PAGE_PATCH = '.keepsake-list-page{break-before:page;page-break-before
 const WD_MEDIA_NEEDLE = 'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""';
 const WD_MEDIA_PATCH = 'zr=fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media">${fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""';
 
-
 const W_LIST_NEEDLE = 'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}';
 const W_LIST_PATCH_PRIOR = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="align-items:flex-start">${Re?`<img class="tiny-logo" src="${an(Re)}" alt="" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
@@ -318,11 +317,8 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(WD_MEDIA_NEEDLE)) {
     patched = patched.replace(WD_MEDIA_NEEDLE, WD_MEDIA_PATCH);
   }
-  if (patched.includes(W_LIST_PATCH_PRIOR)) {
-    patched = patched.replace(W_LIST_PATCH_PRIOR, W_LIST_PATCH);
-  } else if (patched.includes(W_LIST_NEEDLE)) {
-    patched = patched.replace(W_LIST_NEEDLE, W_LIST_PATCH);
-  }
+  if (patched.includes(W_LIST_PATCH_PRIOR)) patched = patched.replace(W_LIST_PATCH_PRIOR, W_LIST_PATCH);
+  else if (patched.includes(W_LIST_NEEDLE)) patched = patched.replace(W_LIST_NEEDLE, W_LIST_PATCH);
   if (patched.includes(OP_TITLE_NEEDLE)) {
     patched = patched.replace(OP_TITLE_NEEDLE, OP_TITLE_PATCH);
   }
