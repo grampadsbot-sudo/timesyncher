@@ -23,6 +23,9 @@ function createPassthroughStore() {
     async getCachedGeocode() { return null; },
     async putCachedGeocode() {},
     async reserveNominatimSlot() {},
+    async runNominatimThrottled(work) {
+      return work(Date.now());
+    },
   };
 }
 
