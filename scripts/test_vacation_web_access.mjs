@@ -22,7 +22,7 @@ const env = {
 
 assert.equal(
   webAccessAcceptUrl('abc 123', env),
-  'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=abc%20123',
+  'https://vacation-staging.timesyncher.com/api/vacation-itinerary?webAccess=1&action=accept&token=abc%20123',
 );
 assert.equal(webAccessTokenHash('token', env), webAccessTokenHash('token', env));
 assert.notEqual(webAccessTokenHash('token', env), webAccessTokenHash('other', env));
@@ -71,7 +71,7 @@ const email = webEditorInviteEmail({
 });
 assert.match(email.subject, /Craig approved you to edit Las Vegas Strip Vacation/);
 assert.match(email.textBody, /owner-approved email verification/i);
-assert.match(email.textBody, /vacation-web-access\?action=accept/);
+assert.match(email.textBody, /vacation-itinerary\?webAccess=1&action=accept/);
 
 const migration = await readFile(new URL('../db/migrations/001_vacation_mvp.sql', import.meta.url), 'utf8');
 assert.match(migration, /create table if not exists vacation_web_access_grants/);

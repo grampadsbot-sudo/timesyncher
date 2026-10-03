@@ -77,7 +77,8 @@ export function webAccessCookieName() {
 }
 
 export function webAccessAcceptUrl(token, env = process.env) {
-  return `${siteBase(env)}/api/vacation-web-access?action=accept&token=${encodeURIComponent(token)}`;
+  const base = websiteTripBase(env);
+  return `${base}/api/vacation-itinerary?webAccess=1&action=accept&token=${encodeURIComponent(token)}`;
 }
 
 export function publicTripUrl(trip, env = process.env) {
