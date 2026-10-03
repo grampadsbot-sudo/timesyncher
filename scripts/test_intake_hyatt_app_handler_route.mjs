@@ -21,6 +21,7 @@ import {
   OPENROUTER_DUMMY,
   TAVILY_DUMMY,
 } from './fixtures/intake-hyatt-app-handler-fixtures.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 
 const HANDLER_CATCH_LINE = 'routes/vacation-itinerary.mjs:1256';
 
@@ -151,6 +152,7 @@ async function runHyattHandlerRouteTest() {
       payload: { welcomeAudience: 'owner_no_site', welcomeFor: 'owner', selectedTripId: null },
       speaker: 'app',
     });
+    const intakeSlug = intakeShareSlug(state.tripId);
     state.trip = {
       id: state.tripId,
       customer_id: state.customerId,
@@ -160,9 +162,9 @@ async function runHyattHandlerRouteTest() {
       end_date: '2027-03-17',
       status: 'planning',
       metadata: {
-        publicSlug: 'intake-aaaabbbbcccc',
-        shareToken: 'intake-aaaabbbbcccc',
-        publicUrl: 'https://vacation-staging.timesyncher.com/shared/intake-aaaabbbbcccc/',
+        publicSlug: intakeSlug,
+        shareToken: intakeSlug,
+        publicUrl: `https://vacation-staging.timesyncher.com/shared/${intakeSlug}/`,
         intakeShare: true,
       },
     };

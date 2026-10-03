@@ -99,8 +99,14 @@ function vacationAppTripSummary(row) {
 
 const db = async (strings, ...values) => {
   const text = sqlText(strings);
+  if (/select metadata/i.test(text) && /from trips/i.test(text) && !/customer_id/i.test(text)) {
+    const trip = state.trips.find((row) => row.id === tripId) || state.trips[0];
+    return [{ metadata: trip?.metadata || {} }];
+  }
   if (/update trips/i.test(text) && /metadata = coalesce/i.test(text)) {
     const trip = state.trips[0];
+    const patchJson = values.find((v) => typeof v === 'string' && v.includes('publicSlug'));
+    if (trip && patchJson) trip.metadata = { ...trip.metadata, ...JSON.parse(patchJson) };
     const patch = values.find((v) => v && typeof v === 'object' && (v.publicUrl || v.publicSlug));
     if (trip && patch) trip.metadata = { ...trip.metadata, ...patch };
     return [{ public_slug: trip?.metadata?.publicSlug || publicSlug }];

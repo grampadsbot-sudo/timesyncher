@@ -12,6 +12,15 @@ function tripSlugFromMetadata(meta = {}) {
   ).trim();
 }
 
+function tripMetadataHasIntakeSlug(meta = {}, publicSlug) {
+  const slug = String(publicSlug || '').trim();
+  if (!slug) return false;
+  for (const key of ['publicSlug', 'shareToken', 'sharedToken', 'source_token']) {
+    if (String(meta[key] || '').trim() === slug) return true;
+  }
+  return false;
+}
+
 export async function assignTripSiteUrl(db, tripId, env = process.env) {
   const publicSlug = intakeShareSlug(tripId);
   if (!publicSlug) throw tripSiteUrlFailure('onboarding trip site url missing slug', tripId);
@@ -23,13 +32,13 @@ export async function assignTripSiteUrl(db, tripId, env = process.env) {
     limit 1
   `;
   const priorMeta = existing[0]?.metadata && typeof existing[0].metadata === 'object' ? existing[0].metadata : {};
-  const priorSlug = tripSlugFromMetadata(priorMeta);
-  if (priorSlug === publicSlug) {
+  if (tripMetadataHasIntakeSlug(priorMeta, publicSlug)) {
     return {
       publicSlug,
       publicUrl: String(priorMeta.publicUrl || priorMeta.public_url || publicUrl).trim() || publicUrl,
     };
   }
+  const priorSlug = tripSlugFromMetadata(priorMeta);
   if (priorSlug && priorSlug !== publicSlug) {
     throw tripSiteUrlFailure('onboarding trip site url not stored', tripId);
   }

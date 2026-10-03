@@ -13,7 +13,11 @@ const db = async (strings, ...values) => {
   if (/count\(\*\)/i.test(text) && /trip_things/i.test(text)) return [{ n: 1 }];
   if (/update trips/i.test(text)) {
     assignCalls += 1;
-    const patch = values.find((v) => v?.publicSlug);
+    const patch = values.find((v) => v?.publicSlug)
+      || values.map((v) => {
+        if (typeof v !== 'string' || !v.startsWith('{')) return null;
+        try { return JSON.parse(v); } catch { return null; }
+      }).find((v) => v?.publicSlug);
     assert.ok(patch?.publicUrl, 'assignTripSiteUrl stores publicUrl');
     return [{ public_slug: patch.publicSlug }];
   }

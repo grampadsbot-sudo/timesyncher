@@ -85,6 +85,12 @@ export function createHyattHandlerDb(state) {
       return [{ id: state.trip.id }];
     }
     if (/update trips/i.test(text)) {
+      const jsonMetaPatch = values.find((v) => typeof v === 'string' && v.startsWith('{') && v.includes('publicSlug'));
+      if (jsonMetaPatch) {
+        try {
+          state.trip.metadata = { ...state.trip.metadata, ...JSON.parse(jsonMetaPatch) };
+        } catch { /* ignore */ }
+      }
       const metaPatch = values.find((v) => v && typeof v === 'object' && !Array.isArray(v) && ('dialogParty' in v || 'titleSource' in v || 'titleError' in v || 'publicSlug' in v || 'publicUrl' in v));
       if (metaPatch) state.trip.metadata = { ...state.trip.metadata, ...metaPatch };
       const titleVal = values.find((v) => typeof v === 'string' && v.length > 0 && v !== state.trip.id && !/^\d{4}-\d{2}-\d{2}$/.test(v) && v !== 'yes' && v !== 'planning' && v !== 'onboarding');
@@ -106,6 +112,9 @@ export function createHyattHandlerDb(state) {
         };
       }
       return text.includes('returning') ? [{ public_slug: state.trip.metadata.publicSlug || 'intake-test' }] : [];
+    }
+    if (/select metadata\b/i.test(text) && /from trips/i.test(text) && !/->>/i.test(text)) {
+      return state.trip ? [{ metadata: state.trip.metadata }] : [];
     }
     if (/select metadata->>'publicSlug'/i.test(text)) {
       return [{ public_slug: state.trip?.metadata?.publicSlug || '' }];
