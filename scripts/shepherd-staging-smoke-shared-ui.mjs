@@ -32,7 +32,11 @@ export function intakeShareUrlFromPrep(prep = {}) {
 }
 
 function logoPassFromTabs(logoHotels, logoCars) {
-  return logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked;
+  const carsPlaces = Number(logoCars.logoUrlEvidence?.placeCount) || 0;
+  const carsHay = JSON.stringify(logoCars.logoUrlEvidence?.records || []);
+  const hertzRow = /hertz/i.test(carsHay);
+  return logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked
+    && carsPlaces >= 1 && hertzRow;
 }
 
 function budFailReason({ publicUrlAfterH, sharedJson, budgetCheck }) {
