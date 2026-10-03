@@ -52,9 +52,9 @@ import {
   vacationAppTurnPayloadForClient,
 } from '../src/vacation/reply-ship.mjs';
 import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { intakeItineraryExistingThings } from '../src/vacation/intake-itinerary-existing-things.mjs';
 import {
   intakeActivityThings,
-  intakeLodgingThings,
   intakeLodgingWanted,
   mergeWantedThings,
   resolveIntakePlace,
@@ -477,6 +477,7 @@ async function welcomeInputs(db, session, trip) {
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
   const tripId = trip?.id || seat?.ownerTripId || null;
+  const welcomeScopeTripId = trip?.id || session?.trip_id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) {
     if (seat) {
@@ -488,10 +489,10 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
-  if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) {
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) {
     await bindPreTripOnboardingWelcome(db, {
       customerId,
-      tripId,
+      tripId: welcomeScopeTripId,
       welcomeAudience,
       welcomeFor,
       onboardingSessionId,
@@ -526,7 +527,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     returning id
   `;
   if (!claimed.length) {
-    if (await onboardingWelcomeTurnExists(db, { customerId, tripId, welcomeAudience })) return;
+    if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) return;
     if (!priorClaims.length) return;
     console.error(JSON.stringify({
       event: 'onboarding_welcome_claim_without_turn',
@@ -661,32 +662,15 @@ async function loadTripThings(db, tripId) {
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
   const planned = intakeActivityThings(extracted);
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+  const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
-    if (lodgingWanted.length) {
-      const current = await loadTripThings(db, tripId);
-      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
-        destinationHint: extractedDestination,
-        areaHint: extractedDestination,
-        env,
-        fetchImpl,
-        searchImpl: searchPlacesImpl,
-        existingThings: current,
-      });
-      if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
-        await persistIntakeLodgingLookupOnCustomerTurn(
-          db,
-          customerTurnId,
-          lodgingOutcome.lookups || [],
-          lodgingOutcome.lodgingOutcome || null,
-        );
-      }
-    }
-    await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
-    return loadTripThings(db, tripId);
+    return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
+      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId,
+      savedTripTitle: priorRows[0]?.title,
+    }, loadTripThings);
   }
   const span = intakeSpan(text);
-  const priorRows = await db`select destination, metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
   const priorDestination = String(priorRows[0]?.destination || '').trim();
   const resolvedDestination = priorDestination

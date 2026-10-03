@@ -240,7 +240,7 @@ export function thingsFromIntake(extracted) {
   }));
 }
 
-export function intakeLodgingThings(extracted) {
+function intakeLodgingThings(extracted) {
   return thingsFromIntake(extracted).filter((thing) => thing.category === 'hotel');
 }
 

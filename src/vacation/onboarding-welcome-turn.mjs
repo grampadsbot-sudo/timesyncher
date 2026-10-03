@@ -168,6 +168,12 @@ export async function bindPreTripOnboardingWelcome(db, {
       and channel in ('vacation-app', 'vacation_app')
       and speaker = 'app'
       and direction = 'outbound'
-      and payload->>'welcomeAudience' = ${welcomeAudience}
+      and (
+        payload->>'welcomeAudience' = ${welcomeAudience}
+        or (
+          ${welcomeAudience} = 'owner'
+          and payload->>'welcomeAudience' = 'owner_no_site'
+        )
+      )
   `;
 }

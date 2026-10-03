@@ -143,6 +143,9 @@ scripts/test_intake_stated_lodging_customer.mjs
 scripts/test_intake_brave_lodging_query.mjs
 scripts/test_brave_address_shapes.mjs
 scripts/test_intake_lodging_live_path_e2e.mjs
+scripts/test_intake_lodging_followup_saved_trip_title.mjs
+scripts/test_intake_hyatt_app_handler_route.mjs
+scripts/test_welcome_scope_trip_id_lodging_turn.mjs
 scripts/test_intake_lodging_resolve_providers.mjs
 scripts/test_intake_lodging_pick_rank.mjs
 scripts/test_first_intake_no_consent_policy.mjs
