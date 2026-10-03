@@ -281,7 +281,7 @@ export async function runShepherdSmokeTail(ctx) {
   out.session = session;
   out.tripId = tripId;
   out.smokeEmail = smokeEmail;
-  out.deployId = 'dpl_7BSwCuKQTvQM7ikkVWPCRiHaeooB';
+  out.deployId = process.env.SHEPHERD_DEPLOY_ID || null;
   out.runTs = RUN_TS;
   out.couponA1 = couponA1;
   out.couponA2 = couponA2;

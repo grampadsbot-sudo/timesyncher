@@ -356,7 +356,7 @@ export function gradeLeafletProductMap(mapState, consoleErrors = []) {
 }
 
 /** Evidence that a place-search row is a real coffee shop. */
-export function coffeePlaceEvidence(place = {}) {
+function coffeePlaceEvidence(place = {}) {
   const name = String(place.name || place.title || '').toLowerCase();
   const cat = String(
     place.category

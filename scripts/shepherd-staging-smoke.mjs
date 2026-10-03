@@ -8,7 +8,7 @@ import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candi
 import { classifyTripIntake } from '/workspace/src/vacation/trip-intake-classify.mjs';
 import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
-import { gradeLeafletProductMap, gradeMapBar, gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
+import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import {
   configureShepherdSmokeHelpers,
   postItinerary,
@@ -23,9 +23,7 @@ import {
   hyattThingPass,
   anchorMatchesRealHyatt,
   lookupBundle,
-  mapSharedTripState,
-  sharedBudgetTabCheck,
-  sharedLogoChipMetrics,
+  runSharedSiteMapBudLogoChecks,
   inviteUiHits,
   fullDiag,
   classifierSnapshot,
@@ -258,52 +256,24 @@ if (shareSlug) {
 const chromeMap = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome', headless: true, args: ['--no-sandbox'] });
 const mapPage = await chromeMap.newPage();
 const mapUrl = publicUrlAfterH || (shareSlug ? `${BASE}/shared/${shareSlug}/` : '');
-let mapCapture = { mapUrl, mapState: null, mapConsoleErrors: [] };
-if (mapUrl) mapCapture = { mapUrl, ...(await mapSharedTripState(mapPage, mapUrl)) };
-const mapShot = artifactPath('trip-map.png');
-await mapPage.screenshot({ path: mapShot, fullPage: true });
-const budgetShot = artifactPath('shared-budget.png');
-const budgetCheck = mapUrl
-  ? await sharedBudgetTabCheck(mapPage, sharedApi?.json?.budget || [])
-  : { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {} };
-if (budgetCheck.clicked) await mapPage.screenshot({ path: budgetShot, fullPage: true });
-const logoShot = artifactPath('shared-logo-chips.png');
-const logoHotels = mapUrl ? await sharedLogoChipMetrics(mapPage, 'Hotels') : { pass: false, rows: [] };
-const logoCars = mapUrl ? await sharedLogoChipMetrics(mapPage, 'Cars') : { pass: false, rows: [] };
-if (logoHotels.clicked || logoCars.clicked) await mapPage.screenshot({ path: logoShot, fullPage: true });
-const sharedHtml = await mapPage.content();
-await chromeMap.close();
-const productMapGrade = gradeLeafletProductMap(mapCapture.productMapState, mapCapture.mapConsoleErrors);
-const mapGrade = gradeMapBar(mapCapture.mapState, mapCapture.mapConsoleErrors);
-out.checkMAP = {
-  publicUrl: publicUrlAfterH,
+const sharedSite = await runSharedSiteMapBudLogoChecks({
+  page: mapPage,
+  mapUrl,
+  publicUrlAfterH,
   shareSlug,
-  sharedApiPlaces: (sharedApi?.json?.places || []).length,
-  mapCapture,
-  productMapGrade,
-  mapGrade,
-  mapShot,
-  sharedUiHits: inviteUiHits(sharedHtml),
-};
-out.checkBUD = {
-  budgetCheck,
-  budgetShot: budgetCheck.clicked ? budgetShot : null,
-  apiBudgetLines: (sharedApi?.json?.budget || []).length,
-};
-out.checkLOGO = { hotels: logoHotels, cars: logoCars, logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null };
+  sharedApi,
+  artifactPath,
+});
+await chromeMap.close();
+out.checkMAP = { ...sharedSite.checkMAP, sharedUiHits: inviteUiHits(sharedSite.sharedHtml) };
+out.checkBUD = sharedSite.checkBUD;
+out.checkLOGO = sharedSite.checkLOGO;
 out.http.MAP = 200;
 out.http.BUD = 200;
 out.http.LOGO = 200;
-const budPass = Boolean(publicUrlAfterH)
-  && (sharedApi?.json?.places?.length || 0) >= 1
-  && budgetCheck.tabPresent
-  && budgetCheck.clicked
-  && budgetCheck.hardcoded.length === 0
-  && !budgetCheck.pageErrors?.mapError;
-out.checks.BUD = budPass ? 'PASS' : 'FAIL';
-const logoPass = logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked;
-out.checks.LOGO = logoPass ? 'PASS' : 'FAIL';
-out.checks.MAP = Boolean(publicUrlAfterH) && (sharedApi?.json?.places?.length || 0) >= 1 && productMapGrade.pass ? 'PASS' : 'FAIL';
+out.checks.MAP = sharedSite.checks.MAP;
+out.checks.BUD = sharedSite.checks.BUD;
+out.checks.LOGO = sharedSite.checks.LOGO;
 out.checks['INV-UI'] = (out.checkINVUI?.chatHits || []).length === 0 && (out.checkMAP?.sharedUiHits || []).length === 0 ? 'PASS' : 'FAIL';
 
 const t6b = await postItinerary(session, { tripId, text: 'best tacos near our hotel' });

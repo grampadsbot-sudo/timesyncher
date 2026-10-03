@@ -6,6 +6,8 @@ import {
   evaluateLeafletProductMapInPage,
   evaluateTripMapInPage,
   budgetHardcodedHits,
+  gradeLeafletProductMap,
+  gradeMapBar,
 } from './shepherd-staging-smoke-lib.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
@@ -105,7 +107,7 @@ export function persistedTurnClassifier(payload) {
   return { targetKind: tc.targetKind || p.targetKind || null, category: tc.category || p.category || null, reason: tc.reason || p.placeSearch?.error || null };
 }
 
-export async function mapSharedTripState(page, url) {
+async function mapSharedTripState(page, url) {
   const mapConsoleErrors = [];
   page.on('console', (m) => {
     const t = m.text();
@@ -134,7 +136,7 @@ async function clickTabByLabel(page, label) {
   }, label);
 }
 
-export async function sharedBudgetTabCheck(page, budgetLines = []) {
+async function sharedBudgetTabCheck(page, budgetLines = []) {
   const clicked = await clickTabByLabel(page, 'Budget');
   await new Promise((r) => setTimeout(r, 1500));
   const bodyText = await page.evaluate(() => document.body?.innerText || '');
@@ -156,7 +158,7 @@ export async function sharedBudgetTabCheck(page, budgetLines = []) {
   };
 }
 
-export async function sharedLogoChipMetrics(page, tabLabel) {
+async function sharedLogoChipMetrics(page, tabLabel) {
   const clicked = await clickTabByLabel(page, tabLabel);
   await new Promise((r) => setTimeout(r, 1200));
   const chips = await page.evaluate(() => {
@@ -188,6 +190,59 @@ export async function sharedLogoChipMetrics(page, tabLabel) {
     centered: c.dx <= tolerance && c.dy <= tolerance,
   }));
   return { tab: tabLabel, clicked, rows, pass: clicked && rows.every((r) => r.centered) };
+}
+
+export async function runSharedSiteMapBudLogoChecks({
+  page,
+  mapUrl,
+  publicUrlAfterH,
+  shareSlug,
+  sharedApi,
+  artifactPath,
+}) {
+  let mapCapture = { mapUrl, mapState: null, productMapState: null, mapConsoleErrors: [] };
+  if (mapUrl) mapCapture = { mapUrl, ...(await mapSharedTripState(page, mapUrl)) };
+  const mapShot = artifactPath('trip-map.png');
+  await page.screenshot({ path: mapShot, fullPage: true });
+  const budgetShot = artifactPath('shared-budget.png');
+  const budgetCheck = mapUrl
+    ? await sharedBudgetTabCheck(page, sharedApi?.json?.budget || [])
+    : { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {} };
+  if (budgetCheck.clicked) await page.screenshot({ path: budgetShot, fullPage: true });
+  const logoShot = artifactPath('shared-logo-chips.png');
+  const logoHotels = mapUrl ? await sharedLogoChipMetrics(page, 'Hotels') : { pass: false, rows: [], clicked: false };
+  const logoCars = mapUrl ? await sharedLogoChipMetrics(page, 'Cars') : { pass: false, rows: [], clicked: false };
+  if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
+  const sharedHtml = await page.content();
+  const productMapGrade = gradeLeafletProductMap(mapCapture.productMapState, mapCapture.mapConsoleErrors);
+  const mapGrade = gradeMapBar(mapCapture.mapState, mapCapture.mapConsoleErrors);
+  const placesOk = (sharedApi?.json?.places || []).length >= 1;
+  const budPass = Boolean(publicUrlAfterH) && placesOk && budgetCheck.tabPresent && budgetCheck.clicked
+    && budgetCheck.hardcoded.length === 0 && !budgetCheck.pageErrors?.mapError;
+  const logoPass = logoHotels.pass && logoCars.pass && logoHotels.clicked && logoCars.clicked;
+  const mapPass = Boolean(publicUrlAfterH) && placesOk && productMapGrade.pass;
+  return {
+    mapShot,
+    budgetShot: budgetCheck.clicked ? budgetShot : null,
+    logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null,
+    sharedHtml,
+    checkMAP: {
+      publicUrl: publicUrlAfterH,
+      shareSlug,
+      sharedApiPlaces: (sharedApi?.json?.places || []).length,
+      mapCapture,
+      productMapGrade,
+      mapGrade,
+      mapShot,
+    },
+    checkBUD: {
+      budgetCheck,
+      budgetShot: budgetCheck.clicked ? budgetShot : null,
+      apiBudgetLines: (sharedApi?.json?.budget || []).length,
+    },
+    checkLOGO: { hotels: logoHotels, cars: logoCars, logoShot: (logoHotels.rows.length || logoCars.rows.length) ? logoShot : null },
+    checks: { MAP: mapPass ? 'PASS' : 'FAIL', BUD: budPass ? 'PASS' : 'FAIL', LOGO: logoPass ? 'PASS' : 'FAIL' },
+  };
 }
 
 export function inviteUiHits(html) {
