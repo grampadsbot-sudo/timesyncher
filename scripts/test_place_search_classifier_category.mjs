@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { classifyTripIntake, TRIP_INTAKE_EXTRACTION_SYSTEM_PROMPT } from '../src/vacation/trip-intake-classify.mjs';
 import { queriesFromPlaceClassification } from '../src/vacation/place-search-query-plan.mjs';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const OVERPASS_HOST = ['overpass-api', 'de'].join('.');

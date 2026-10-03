@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { JEV_RELEVANCE_MINIMUM } from '../src/vacation/keepsake-list-minimums.mjs';
 import { PlaceSearchError, fillTripIntake } from '../src/vacation/place-search.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 function jsonResponse(body, status = 200) {
   return {

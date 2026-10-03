@@ -2,6 +2,9 @@
 import assert from 'node:assert/strict';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { KAANAPALI_GEOCODE, KAANAPALI_ON_TARGET_BRAVE } from './fixtures/place-relevance-kaanapali-brave.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');

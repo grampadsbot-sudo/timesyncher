@@ -12,6 +12,9 @@ import {
   LODGING_LOCALITY,
   STAGING_HOTEL_BRAVE_REJECTIONS,
 } from './fixtures/place-relevance-kaanapali-brave.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');

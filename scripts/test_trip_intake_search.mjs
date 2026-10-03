@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import { classifyTripIntake, tripIntakeJobFields } from '../src/vacation/trip-intake-classify.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const workerSource = fs.readFileSync(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');

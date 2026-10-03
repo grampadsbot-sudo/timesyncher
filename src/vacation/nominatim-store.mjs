@@ -40,60 +40,27 @@ function defaultSleep(ms) {
   });
 }
 
-function createMemoryNominatimStore() {
-  const cache = new Map();
-  let nextSlotMs = 0;
-  let slotChain = Promise.resolve();
-
-  return {
-    async getCachedGeocode(cacheKey) {
-      const key = String(cacheKey || '').trim();
-      if (!key) return null;
-      const hit = cache.get(key);
-      if (!hit || hit.expiresAt <= Date.now()) {
-        if (hit) cache.delete(key);
-        return null;
-      }
-      return hit.payload;
-    },
-    async putCachedGeocode(cacheKey, payload, ttlMs = NOMINATIM_GEOCODE_CACHE_TTL_MS) {
-      const key = String(cacheKey || '').trim();
-      if (!key || payload === undefined) return;
-      cache.set(key, { payload, expiresAt: Date.now() + Math.max(Number(ttlMs) || 0, 1) });
-    },
-    async reserveNominatimSlot(options = {}) {
-      await this.runNominatimThrottled(async () => {}, options);
-    },
-    async runNominatimThrottled(work, {
-      nowMs = Date.now(),
-      maxWaitMs = NOMINATIM_THROTTLE_MAX_WAIT_MS,
-      sleep = defaultSleep,
-    } = {}) {
-      let release;
-      const prior = slotChain;
-      slotChain = new Promise((resolve) => {
-        release = resolve;
-      });
-      await prior;
-      try {
-        const now = Number(typeof nowMs === 'function' ? nowMs() : nowMs);
-        const executeAt = Math.max(nextSlotMs, now);
-        nextSlotMs = executeAt + NOMINATIM_THROTTLE_INTERVAL_MS;
-        const waitMs = Math.max(0, executeAt - now);
-        if (waitMs > maxWaitMs) {
-          throw new PlaceSearchError(
-            `Nominatim throttle wait ${waitMs}ms exceeds budget ${maxWaitMs}ms`,
-            'nominatim_throttle_timeout',
-          );
-        }
-        if (waitMs > 0) await sleep(waitMs);
-        const callAtMs = typeof nowMs === 'function' ? nowMs() : Date.now();
-        return await work(Number.isFinite(Number(callAtMs)) ? Number(callAtMs) : Date.now());
-      } finally {
-        release();
-      }
-    },
-  };
+export function parseNominatimGeocodeCachePayload(raw) {
+  if (raw === undefined || raw === null) return null;
+  let payload = raw;
+  if (typeof payload === 'string') {
+    try {
+      payload = JSON.parse(payload);
+    } catch (error) {
+      throw new PlaceSearchError(
+        `Nominatim geocode cache payload is not valid JSON: ${error.message}`,
+        'nominatim_geocode_cache_corrupt',
+      );
+    }
+  }
+  const kind = typeof payload;
+  if (kind !== 'object' || payload === null) {
+    throw new PlaceSearchError(
+      'Nominatim geocode cache payload must be a JSON object or array',
+      'nominatim_geocode_cache_corrupt',
+    );
+  }
+  return payload;
 }
 
 function createPostgresNominatimStore(env) {
@@ -109,8 +76,9 @@ function createPostgresNominatimStore(env) {
           and expires_at > now()
         limit 1
       `;
-      const payload = rows?.[0]?.payload;
-      return payload === undefined || payload === null ? null : payload;
+      const raw = rows?.[0]?.payload;
+      if (raw === undefined || raw === null) return null;
+      return parseNominatimGeocodeCachePayload(raw);
     },
     async putCachedGeocode(cacheKey, payload, ttlMs = NOMINATIM_GEOCODE_CACHE_TTL_MS) {
       const key = String(cacheKey || '').trim();
@@ -119,7 +87,7 @@ function createPostgresNominatimStore(env) {
       const expiresAt = new Date(Date.now() + ttl).toISOString();
       await db`
         insert into nominatim_geocode_cache (cache_key, payload, expires_at)
-        values (${key}, ${payload}, ${expiresAt}::timestamptz)
+        values (${key}, ${JSON.stringify(payload)}::jsonb, ${expiresAt}::timestamptz)
         on conflict (cache_key) do update
         set payload = excluded.payload,
             expires_at = excluded.expires_at
@@ -160,8 +128,13 @@ function createPostgresNominatimStore(env) {
 
 export function getNominatimStore(env = process.env) {
   if (storeOverride) return storeOverride;
-  if (hasDatabase(env)) return createPostgresNominatimStore(env);
-  return createMemoryNominatimStore();
+  if (!hasDatabase(env)) {
+    throw new PlaceSearchError(
+      'Nominatim geocode cache requires DATABASE_URL or NEON_DATABASE_URL',
+      'nominatim_store_unavailable',
+    );
+  }
+  return createPostgresNominatimStore(env);
 }
 
 export function nominatimForwardCacheKey(query, limit = 5) {
