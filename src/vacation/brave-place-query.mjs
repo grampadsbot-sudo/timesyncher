@@ -110,7 +110,7 @@ export function trimBraveResultEvidence(result = {}) {
     ? result.categories.map((item) => (typeof item === 'string' ? item : String(item?.name || item || '').trim())).filter(Boolean)
     : [];
   return {
-    title: braveTitle(result?.title || result?.name),
+    title: bravePlaceDisplayTitle(result),
     id: String(result?.id || '').slice(0, 200),
     categories,
     icon_category: String(result?.icon_category || '').trim() || null,
@@ -149,4 +149,11 @@ export function braveTitle(value) {
   const raw = String(value || '').trim();
   const cut = raw.split(/\s+[|]\s+/)[0].trim();
   return cut || raw;
+}
+
+/** Prefer Brave structured `name` over marketing `title` when both are present. */
+export function bravePlaceDisplayTitle(result) {
+  const name = String(result?.name || '').trim();
+  if (name) return braveTitle(name);
+  return braveTitle(result?.title);
 }

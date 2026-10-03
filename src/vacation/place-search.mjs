@@ -7,8 +7,9 @@ import {
   braveQueryString,
   braveLocalPlaceResult,
   bravePlaceSearchRows,
-  braveTitle,
+  bravePlaceDisplayTitle,
 } from './brave-place-query.mjs';
+import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
@@ -23,11 +24,7 @@ import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
 import { mergePlaces as mergePlaceRows } from './place-search-merge.mjs';
 import { distanceMeters, samePlace } from './place-search-same-place.mjs';
-import {
-  ANCHOR_RADIUS_SCOPE_DESTINATION,
-  ANCHOR_RADIUS_SCOPE_LODGING,
-  radiusMetersForAnchorScope,
-} from './place-search-radius-filter.mjs';
+import { ANCHOR_RADIUS_SCOPE_DESTINATION, ANCHOR_RADIUS_SCOPE_LODGING, radiusMetersForAnchorScope } from './place-search-radius-filter.mjs';
 
 export { PlaceSearchError };
 const SOURCE_IDS = new Set(['prior_db', 'osm', 'brave']);
@@ -354,7 +351,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
         const result = braveRows[providerRank];
         if (!braveLocalPlaceResult(result)) continue;
         const point = bravePoint(result);
-        const title = braveTitle(result?.title || result?.name);
+        const title = bravePlaceDisplayTitle(result);
         const address = braveAddress(result);
         const description = String(result?.description || '').replace(/\s+/g, ' ').trim();
         if (!title) continue;
@@ -378,7 +375,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
         places.push({
           source: 'brave',
           title,
-          category: item.category,
+          category: placePersistCategory({ source: 'brave', category: item.category, sourceRecord: result, providerCategories }),
           lat: point.lat,
           lng: point.lng,
           address,
@@ -669,7 +666,7 @@ export function placeToTripThing(place) {
       : {}),
   };
   return {
-    category: place.category,
+    category: placePersistCategory(place),
     subtype: place.source,
     title: place.title,
     description: place.address || '',
