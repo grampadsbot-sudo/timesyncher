@@ -517,6 +517,7 @@ export async function searchPlaces({
   searchAnchor = null,
   keepAreaText = false,
   tripDestinationCenter = null,
+  tripDestinationLabel = '',
   tripId = '',
   db = null,
   env = process.env,
@@ -578,6 +579,7 @@ export async function searchPlaces({
       lodgingPoint,
       keepAreaText,
       tripDestinationCenter,
+      tripDestinationLabel: String(tripDestinationLabel || dest).trim(),
       placeQueries,
       osmCategoryFilter,
       searchAnchor,
@@ -613,18 +615,20 @@ export async function searchPlaces({
       ...(Array.isArray(pass.anchorRadiusRejections) && pass.anchorRadiusRejections.length
         ? { anchorRadiusRejections: pass.anchorRadiusRejections }
         : {}),
+      ...(pass.providerTimings ? { providerTimings: pass.providerTimings } : {}),
     };
     if (pass.status === 'no_results') {
       return {
         destination: dest || center?.label || locationText || '',
-        center,
+        center: pass.queryCenter || center,
         places: [],
         notes: [],
         queries: searchQueries,
         queried: [...SOURCE_IDS],
         providers: providerLog,
-        relevanceRejections: [],
+        relevanceRejections: pass.relevanceRejections || [],
         outcomeStatus: 'no_results',
+        outcomeReason: pass.reason || null,
         ...placeSearchDiagnostics,
         elapsedMs: Date.now() - started,
         sourceCounts: countSources([]),

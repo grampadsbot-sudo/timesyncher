@@ -26,6 +26,7 @@ export function buildPlaceSearchFailureDiagnostics({
   braveLookups = [],
   anchorRadiusPolicy = null,
   anchorRadiusRejections = [],
+  providerTimings = null,
 } = {}) {
   const lat = finite(center?.lat);
   const lng = finite(center?.lng);
@@ -94,6 +95,14 @@ export function buildPlaceSearchFailureDiagnostics({
     }))
     .filter((row) => row.title || row.reason);
   if (radiusRejections.length) diagnostics.anchorRadiusRejections = radiusRejections;
+  if (providerTimings && typeof providerTimings === 'object') {
+    const timings = {};
+    for (const [key, value] of Object.entries(providerTimings)) {
+      const ms = Number(value);
+      if (Number.isFinite(ms) && ms >= 0) timings[key] = Math.round(ms);
+    }
+    if (Object.keys(timings).length) diagnostics.providerTimings = timings;
+  }
   return diagnostics;
 }
 
@@ -114,6 +123,7 @@ export function placeSearchDiagnosticsFromError(error) {
     'braveLookups',
     'anchorRadiusPolicy',
     'anchorRadiusRejections',
+    'providerTimings',
   ]) {
     if (error[key] !== undefined) picked[key] = error[key];
   }

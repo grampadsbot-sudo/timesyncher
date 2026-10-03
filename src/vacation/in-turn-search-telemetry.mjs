@@ -169,6 +169,7 @@ export function placeSearchTelemetry({
   braveLookups = null,
   anchorRadiusPolicy = null,
   anchorRadiusRejections = null,
+  providerTimings = null,
 } = {}) {
   const rows = resultRowsFromThings(things);
   const providers = normalizeProviderAttempts(providerAttempts);
@@ -244,6 +245,14 @@ export function placeSearchTelemetry({
   }
   if (Array.isArray(anchorRadiusRejections) && anchorRadiusRejections.length) {
     telemetry.anchorRadiusRejections = anchorRadiusRejections.slice(0, 20);
+  }
+  if (providerTimings && typeof providerTimings === 'object') {
+    const timings = {};
+    for (const [key, value] of Object.entries(providerTimings)) {
+      const ms = Number(value);
+      if (Number.isFinite(ms) && ms >= 0) timings[key] = Math.round(ms);
+    }
+    if (Object.keys(timings).length) telemetry.providerTimings = timings;
   }
   return telemetry;
 }

@@ -1,5 +1,6 @@
 import { PlaceSearchError } from './place-search-error.mjs';
 import { persistTripDestinationCenter } from './trip-destination-center.mjs';
+import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
 import {
   getNominatimStore,
   NOMINATIM_GEOCODE_CACHE_TTL_MS,
@@ -420,8 +421,9 @@ export async function resolveSearchContext(
   const destinationLabel = String(destination || '').trim();
   if (given) {
     providerLog.push({ provider: 'nominatim', status: 'skipped', reason: 'lodging_coordinates', resultCount: 0 });
+    const lodgingIdentity = lodgingLabel || String(given.label || '').trim();
     return {
-      center: { ...given, geocoded: 'lodging' },
+      center: { ...given, geocoded: 'lodging', geocodeIdentity: lodgingIdentity },
       locationText: lodgingLabel || destinationLabel || given.label || '',
       compactLocality: compactLocalityText(null, lodgingLabel || destinationLabel || given.label || ''),
     };
@@ -430,7 +432,7 @@ export async function resolveSearchContext(
     const found = await tryGeocodeLabel(fetchImpl, lodgingLabel, providerLog, readJson, options);
     if (found) {
       return {
-        center: { ...found, geocoded: 'lodging' },
+        center: { ...found, geocoded: 'lodging', geocodeIdentity: lodgingLabel },
         locationText: lodgingLabel,
         compactLocality: found.compactLocality || compactLocalityText(null, lodgingLabel),
       };
@@ -440,7 +442,17 @@ export async function resolveSearchContext(
   if (!destinationLabel && !lodgingLabel) {
     fail('Place search needs a destination.', 'missing_destination');
   }
-  if (destinationLabel && storedCenter && !lodgingLabel) {
+  const tripDestinationLabel = String(options.tripDestinationLabel || destinationLabel).trim();
+  const turnNamedAnchor = String(options.turnNamedAnchor || '').trim();
+  const namedAnchorOverridesStoredCenter = turnNamedAnchor
+    && !nominatimLabelsEquivalent(turnNamedAnchor, tripDestinationLabel);
+  if (
+    destinationLabel
+    && storedCenter
+    && !lodgingLabel
+    && !namedAnchorOverridesStoredCenter
+    && nominatimLabelsEquivalent(destinationLabel, tripDestinationLabel)
+  ) {
     providerLog.push({
       provider: 'nominatim',
       status: 'skipped',
@@ -449,7 +461,11 @@ export async function resolveSearchContext(
     });
     const locationText = keepAreaText ? destinationLabel : (storedCenter.label || destinationLabel);
     return {
-      center: { ...storedCenter, geocoded: 'stored' },
+      center: {
+        ...storedCenter,
+        geocoded: 'stored',
+        geocodeIdentity: tripDestinationLabel,
+      },
       locationText,
       compactLocality: compactLocalityText(null, destinationLabel),
     };
@@ -459,12 +475,12 @@ export async function resolveSearchContext(
     if (found) {
       const tripId = String(options.tripId || '').trim();
       const db = options.db;
-      if (db && tripId) {
+      if (db && tripId && nominatimLabelsEquivalent(destinationLabel, tripDestinationLabel)) {
         await persistTripDestinationCenter(db, tripId, found);
       }
       const locationText = keepAreaText ? destinationLabel : (found.label || destinationLabel);
       return {
-        center: { ...found, geocoded: 'destination' },
+        center: { ...found, geocoded: 'destination', geocodeIdentity: destinationLabel },
         locationText,
         compactLocality: found.compactLocality || compactLocalityText(null, destinationLabel),
       };

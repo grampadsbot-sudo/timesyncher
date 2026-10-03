@@ -72,12 +72,16 @@ export function placeSearchReplyFacts({
   code = 'all_providers_failed',
 } = {}) {
   const query = clean(target || area || destination || 'that search');
+  const normalizedCode = String(code || 'all_providers_failed').trim();
+  const detail = normalizedCode === 'relevance_rejected_all'
+    ? (query ? `providers returned candidates but none passed relevance for ${query}` : 'providers returned candidates but none passed relevance')
+    : (query ? `nothing found nearby for ${query}` : 'nothing found nearby for that search');
   return {
     placeSearch: {
       outcome: 'no_results',
-      code: String(code || 'all_providers_failed').trim(),
+      code: normalizedCode,
       query,
-      detail: query ? `nothing found nearby for ${query}` : 'nothing found nearby for that search',
+      detail,
     },
   };
 }
