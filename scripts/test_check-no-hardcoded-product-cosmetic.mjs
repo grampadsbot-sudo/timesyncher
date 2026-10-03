@@ -23,20 +23,20 @@ const unlabeled = sharedTripFromIntake({
   things: [{ id: 'blank', title: 'Open block' }],
 });
 assert.equal(unlabeled.places[0].category_name, '');
-assert.equal('budget' in unlabeled, false);
-assert.equal('share_budget' in unlabeled.permissions, false);
+assert.deepEqual(unlabeled.budget, []);
+assert.equal(unlabeled.permissions.share_budget, true);
 const nullPrice = sharedTripFromIntake({
   trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
   things: [{ id: 'blank', title: 'Open block', total_price: null, price: null }],
 });
-assert.equal('budget' in nullPrice, false);
-assert.equal('share_budget' in nullPrice.permissions, false);
+assert.deepEqual(nullPrice.budget, []);
+assert.equal(nullPrice.permissions.share_budget, true);
 const sourced = sharedTripFromIntake({
   trip: { id: tripId, title: 'Trip', start_date: '2026-04-03', end_date: '2026-04-03' },
   things: [{ id: 'cafe', category: 'activity', title: 'Cafe', source: { category: 'restaurant' }, total_price: 18 }],
 });
 assert.equal(sourced.places[0].category_name, 'Restaurant');
-assert.equal('budget' in sourced, false);
+assert.equal(sourced.budget[0].total_price, 18);
 
 const index = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const order = fs.readFileSync(new URL('../order-test.html', import.meta.url), 'utf8');
