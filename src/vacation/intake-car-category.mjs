@@ -3,12 +3,7 @@ function tagEquals(value, expected) {
 }
 
 export function braveResultHasCarRentalTag(record = {}) {
-  if (tagEquals(record?.icon_category, 'car_rental')) return true;
-  const categories = Array.isArray(record?.categories) ? record.categories : [];
-  return categories.some((item) => {
-    const text = typeof item === 'string' ? item : String(item?.name || '');
-    return tagEquals(text, 'car_rental');
-  });
+  return tagEquals(record?.icon_category, 'car_rental');
 }
 
 export function osmTagsIndicateCarRental(tags = {}) {
@@ -19,12 +14,8 @@ export function osmTagsIndicateCarRental(tags = {}) {
 export function isCarRentalProviderPlace(place = {}) {
   if (osmTagsIndicateCarRental(place.osmTags || {})) return true;
   const record = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
-  if (record && (record.id || record.icon_category !== undefined || record.categories)) {
+  if (record && (record.id || record.icon_category !== undefined)) {
     return braveResultHasCarRentalTag(record);
-  }
-  if (String(place.source || '').trim().toLowerCase() === 'brave') {
-    const tags = Array.isArray(place.providerCategories) ? place.providerCategories : [];
-    return tags.some((item) => tagEquals(item, 'car_rental'));
   }
   return false;
 }

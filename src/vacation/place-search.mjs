@@ -8,6 +8,7 @@ import {
   braveLocalPlaceResult,
   bravePlaceSearchRows,
   bravePlaceDisplayTitle,
+  preferBraveUrlDuplicates,
 } from './brave-place-query.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
@@ -402,8 +403,9 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
     query: String(row.query || '').trim(),
     endpoint: String(row.endpoint || '').trim(),
   })).filter((row) => row.query && row.endpoint);
+  const dedupedPlaces = preferBraveUrlDuplicates(places);
   return {
-    places,
+    places: dedupedPlaces,
     rawResults,
     ...(braveLookups.length ? { braveLookups } : {}),
     ...(anchorRadiusRejected > 0 ? { anchorRadiusRejected } : {}),

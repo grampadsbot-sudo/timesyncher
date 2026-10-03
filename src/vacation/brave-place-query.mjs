@@ -151,9 +151,45 @@ export function braveTitle(value) {
   return cut || raw;
 }
 
-/** Prefer Brave structured `name` over marketing `title` when both are present. */
+/** Brave local rows expose the venue label on `title` (no separate `name` in live payloads). */
 export function bravePlaceDisplayTitle(result) {
-  const name = String(result?.name || '').trim();
-  if (name) return braveTitle(name);
   return braveTitle(result?.title);
+}
+
+function bravePlaceUrl(place = {}) {
+  const record = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
+  return String(place.url || record.url || '').trim();
+}
+
+function braveProviderRank(place = {}) {
+  const rank = Number(place.providerRank);
+  return Number.isFinite(rank) ? rank : Number.POSITIVE_INFINITY;
+}
+
+/** Same Brave listing URL can appear as multiple rows; keep the earliest provider rank. */
+export function preferBraveUrlDuplicates(places = []) {
+  const kept = [];
+  const urlIndex = new Map();
+  for (const place of places) {
+    if (String(place?.source || '').trim().toLowerCase() !== 'brave') {
+      kept.push(place);
+      continue;
+    }
+    const url = bravePlaceUrl(place);
+    if (!url) {
+      kept.push(place);
+      continue;
+    }
+    const index = urlIndex.get(url);
+    if (index === undefined) {
+      urlIndex.set(url, kept.length);
+      kept.push(place);
+      continue;
+    }
+    const existing = kept[index];
+    if (braveProviderRank(place) < braveProviderRank(existing)) {
+      kept[index] = place;
+    }
+  }
+  return kept;
 }
