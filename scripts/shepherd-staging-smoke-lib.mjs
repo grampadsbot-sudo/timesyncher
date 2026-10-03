@@ -7,6 +7,21 @@ const MAUI_MAP_BOUNDS = {
   lngMax: -155.95,
 };
 
+/** Strip emoji / pictographs for shared-site tab matching (labels often prefix emoji). */
+export function normalizeSharedTabLabel(text) {
+  return String(text || '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+export function sharedTabLabelIncludes(text, keyword) {
+  const norm = normalizeSharedTabLabel(text);
+  const want = String(keyword || '').trim().toLowerCase();
+  return want.length > 0 && norm.includes(want);
+}
+
 /** ISO calendar date from starts_at (never String(Date)). */
 export function isoDateFromStartsAt(value) {
   if (value == null || value === '') return '';

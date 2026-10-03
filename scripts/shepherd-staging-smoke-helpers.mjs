@@ -8,6 +8,7 @@ import {
   budgetHardcodedHits,
   gradeLeafletProductMap,
   gradeMapBar,
+  sharedTabLabelIncludes,
 } from './shepherd-staging-smoke-lib.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
@@ -115,8 +116,7 @@ async function mapSharedTripState(page, url) {
   });
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 120000 });
   await new Promise((r) => setTimeout(r, 4000));
-  const planBtn = await page.$('button[title="Plan"],button[title*="Plan"]');
-  if (planBtn) await planBtn.click();
+  await clickSharedTabByKeyword(page, 'plan');
   await page.waitForSelector('.leaflet-container', { timeout: 90000 }).catch((err) => {
     mapConsoleErrors.push(`leaflet_wait:${String(err?.message || err)}`);
   });
@@ -126,25 +126,60 @@ async function mapSharedTripState(page, url) {
   return { mapState, productMapState, mapConsoleErrors };
 }
 
-async function clickTabByLabel(page, label) {
-  return page.evaluate((text) => {
-    const nodes = Array.from(document.querySelectorAll('button, [role="tab"], a'));
-    const hit = nodes.find((n) => String(n.textContent || '').trim() === text);
-    if (!hit) return false;
-    hit.click();
-    return true;
-  }, label);
+async function clickSharedTabByKeyword(page, keyword) {
+  return page.evaluate((kw) => {
+    function normalize(text) {
+      return String(text || '')
+        .replace(/\p{Extended_Pictographic}/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+    const want = normalize(kw);
+    const nodes = Array.from(document.querySelectorAll(
+      'button, [role="tab"], a, [data-tab], [data-ts-tab]',
+    ));
+    for (const node of nodes) {
+      const title = node.getAttribute('title') || '';
+      const dataTab = node.getAttribute('data-tab') || node.getAttribute('data-ts-tab') || '';
+      const combined = [node.textContent, title, dataTab].join(' ');
+      if (normalize(combined).includes(want)) {
+        node.click();
+        return true;
+      }
+    }
+    return false;
+  }, keyword);
+}
+
+async function sharedTabPresent(page, keyword) {
+  return page.evaluate((kw) => {
+    function normalize(text) {
+      return String(text || '')
+        .replace(/\p{Extended_Pictographic}/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+    const want = normalize(kw);
+    const nodes = Array.from(document.querySelectorAll(
+      'button, [role="tab"], a, [data-tab], [data-ts-tab]',
+    ));
+    return nodes.some((node) => {
+      const title = node.getAttribute('title') || '';
+      const dataTab = node.getAttribute('data-tab') || node.getAttribute('data-ts-tab') || '';
+      const combined = [node.textContent, title, dataTab].join(' ');
+      return normalize(combined).includes(want);
+    });
+  }, keyword);
 }
 
 async function sharedBudgetTabCheck(page, budgetLines = []) {
-  const clicked = await clickTabByLabel(page, 'Budget');
+  const clicked = await clickSharedTabByKeyword(page, 'budget');
   await new Promise((r) => setTimeout(r, 1500));
   const bodyText = await page.evaluate(() => document.body?.innerText || '');
   const hardcoded = budgetHardcodedHits(bodyText, budgetLines);
-  const tabPresent = await page.evaluate(() => {
-    const nodes = Array.from(document.querySelectorAll('button, [role="tab"], a'));
-    return nodes.some((n) => String(n.textContent || '').trim() === 'Budget');
-  });
+  const tabPresent = await sharedTabPresent(page, 'budget');
   const pageErrors = await page.evaluate(() => ({
     mapError: !!document.querySelector('[data-ts-trip-map-error]'),
     unresolved: !!document.querySelector('[data-map-center-unresolved]'),
@@ -158,8 +193,8 @@ async function sharedBudgetTabCheck(page, budgetLines = []) {
   };
 }
 
-async function sharedLogoChipMetrics(page, tabLabel) {
-  const clicked = await clickTabByLabel(page, tabLabel);
+async function sharedLogoChipMetrics(page, tabKeyword) {
+  const clicked = await clickSharedTabByKeyword(page, tabKeyword);
   await new Promise((r) => setTimeout(r, 1200));
   const chips = await page.evaluate(() => {
     const imgs = Array.from(document.querySelectorAll('li img, img.tiny-logo, [data-has-logo="1"] img'));
@@ -189,7 +224,7 @@ async function sharedLogoChipMetrics(page, tabLabel) {
     ...c,
     centered: c.dx <= tolerance && c.dy <= tolerance,
   }));
-  return { tab: tabLabel, clicked, rows, pass: clicked && rows.every((r) => r.centered) };
+  return { tab: tabKeyword, clicked, rows, pass: clicked && rows.every((r) => r.centered) };
 }
 
 export async function runSharedSiteMapBudLogoChecks({
@@ -210,8 +245,8 @@ export async function runSharedSiteMapBudLogoChecks({
     : { tabPresent: false, clicked: false, hardcoded: [], pageErrors: {} };
   if (budgetCheck.clicked) await page.screenshot({ path: budgetShot, fullPage: true });
   const logoShot = artifactPath('shared-logo-chips.png');
-  const logoHotels = mapUrl ? await sharedLogoChipMetrics(page, 'Hotels') : { pass: false, rows: [], clicked: false };
-  const logoCars = mapUrl ? await sharedLogoChipMetrics(page, 'Cars') : { pass: false, rows: [], clicked: false };
+  const logoHotels = mapUrl ? await sharedLogoChipMetrics(page, 'hotels') : { pass: false, rows: [], clicked: false };
+  const logoCars = mapUrl ? await sharedLogoChipMetrics(page, 'cars') : { pass: false, rows: [], clicked: false };
   if (logoHotels.clicked || logoCars.clicked) await page.screenshot({ path: logoShot, fullPage: true });
   const sharedHtml = await page.content();
   const productMapGrade = gradeLeafletProductMap(mapCapture.productMapState, mapCapture.mapConsoleErrors);
