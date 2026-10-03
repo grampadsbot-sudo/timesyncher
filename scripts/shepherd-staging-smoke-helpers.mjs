@@ -6,7 +6,6 @@ import { normalizePlaceName } from '../src/vacation/intake-lodging-candidate.mjs
 import { loadCollaboratorAppSeatEulaText } from '../src/onboarding/eula-persistent-core.mjs';
 import {
   configureSharedUiHelpers,
-  runSharedSiteLogoBarChecks,
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
@@ -142,8 +141,6 @@ export function persistedTurnClassifier(payload) {
   const tc = p.turnClassifier || p.liveTranscript?.turnClassifier || {};
   return { targetKind: tc.targetKind || p.targetKind || null, category: tc.category || p.category || null, reason: tc.reason || p.placeSearch?.error || null };
 }
-
-export { runSharedSiteLogoBarChecks };
 
 export function inviteUiHits(html) {
   const hits = [];
