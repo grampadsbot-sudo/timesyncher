@@ -10,6 +10,7 @@ import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs'
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import { createSmokeRunner } from './shepherd-staging-smoke-run-check.mjs';
+import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import {
   configureShepherdSmokeHelpers,
   postItinerary,
@@ -87,6 +88,8 @@ const { runCheck } = runner;
 
 const [couponMain, couponH2, couponA1, couponA2, couponDTrip, couponInvClaim] = process.argv.slice(3);
 if (!couponMain || !couponH2 || !couponA1 || !couponA2 || !couponDTrip || !couponInvClaim) process.exit(1);
+
+await ensureShepherdStagingSmokeEnv();
 
 const db = sql(process.env);
 out.decoy = await seedDecoy(db);
