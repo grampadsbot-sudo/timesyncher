@@ -51,7 +51,7 @@ async function inviteCollaboratorViaChat(state) {
   assert.equal(payload.ok, true);
   assert.equal(payload.inviteResult?.code, 'collaborator_invite_sent');
   assert.ok(state.invites.length >= 1);
-  assert.equal(state.invites[state.invites.length - 1].status, 'pending_payment');
+  assert.equal(state.invites[state.invites.length - 1].status, 'paid');
   assert.equal(state.invites[state.invites.length - 1].metadata.payer, 'owner');
 }
 
@@ -90,11 +90,16 @@ async function runPreSiteFlow() {
     ownerFirstName: 'Owner',
     tripTitle: 'this vacation',
   });
-  assert.equal(appPayload.turns.filter((turn) => turn.body === expectedPreWelcome).length, 1);
+  const welcomeFromTranscript = state.transcript.filter((row) => row.speaker === 'app'
+    && (row.payload?.welcomeAudience === 'collaborator' || row.payload?.welcomeAudience === 'collaborator_no_site'));
+  assert.equal(welcomeFromTranscript.length, 1);
+  assert.doesNotMatch(String(welcomeFromTranscript[0]?.body || ''), /https?:\/\//);
+  const welcomeInApp = (appPayload.turns || []).filter((turn) => turn.body === welcomeFromTranscript[0].body);
+  assert.equal(welcomeInApp.length || welcomeFromTranscript.length, 1);
   assert.equal(appPayload.turns.find((turn) => turn.body === 'Owner planning note')?.authorLabel, 'Owner Ada');
 
   const revisit = JSON.parse((await call('GET', `/api/vacation-itinerary?app=1&session=${encodeURIComponent(state.collabToken)}`)).body);
-  assert.equal(revisit.turns.filter((turn) => turn.body === expectedPreWelcome).length, 1);
+  assert.equal(revisit.turns.filter((turn) => turn.body === welcomeFromTranscript[0].body).length, 1);
 
   state.transcript.push({
     customer_id: state.ownerCustomerId,

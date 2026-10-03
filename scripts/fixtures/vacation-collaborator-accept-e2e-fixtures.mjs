@@ -116,24 +116,64 @@ export function buildState({ withTrip = false, withInvite = true } = {}) {
 export function dbFor(state) {
   const db = async (strings, ...values) => {
     const text = sqlText(strings);
+    if (/from transcript_turns/i.test(text) && /speaker = 'app'/i.test(text) && /limit 1/i.test(text) && !/order by/i.test(text)) {
+      const welcomed = state.transcript.filter((row) => row.speaker === 'app'
+        && (row.payload?.welcomeAudience === 'collaborator'
+          || row.payload?.welcomeAudience === 'collaborator_no_site'
+          || row.payload?.welcomeAudience === 'owner'
+          || row.payload?.welcomeAudience === 'owner_no_site'));
+      if (welcomed.length) return [{ id: welcomed[0].id || 'welcome-turn' }];
+    }
+    if (/insert into trips/i.test(text)) {
+      const tripId = crypto.randomUUID();
+      state.tripId = tripId;
+      state.ownerSession.trip_id = tripId;
+      state.trips.push({
+        id: tripId,
+        customer_id: state.ownerCustomerId,
+        title: values.find((v) => typeof v === 'string' && v.startsWith('shell-')),
+        destination: null,
+        metadata: { placeholderTrip: true, source: 'owner_workspace' },
+        status: 'onboarding',
+      });
+      return [{ id: tripId }];
+    }
     if (/insert into vacation_collaborator_invites/i.test(text)) {
       const id = crypto.randomUUID();
       state.inviteId = id;
       const metadata = values.find((v) => v && typeof v === 'object' && v.email) || {};
+      const tripId = values[1] || state.tripId;
+      const status = values.find((v) => v === 'paid' || v === 'pending_payment') || 'paid';
       state.invites.push({
         id,
         owner_customer_id: state.ownerCustomerId,
-        trip_id: values.find((v) => v === state.tripId) || state.tripId,
+        trip_id: tripId,
         plan_code: 'telegram_collaborators_single_trip',
         scope: 'single_trip',
         requested_for: values.find((v) => typeof v === 'string' && v.includes('@')) ? 'Bryn' : 'Alex',
-        status: 'pending_payment',
+        status,
         metadata,
         owner_display_name: 'Owner Ada',
         owner_email: 'owner@example.com',
         trip_title: state.trips[0]?.title || null,
       });
       return [{ id, token: 'invite-token' }];
+    }
+    if (/from onboarding_sessions/i.test(text) && /where id =/i.test(text)) {
+      const sessionId = values.find((v) => v === state.ownerSessionId);
+      return sessionId ? [state.ownerSession] : [];
+    }
+    if (/update onboarding_sessions/i.test(text) && /set trip_id =/i.test(text) && !/jsonb_set/i.test(text)) {
+      const tripId = values.find((v) => typeof v === 'string' && state.trips.some((trip) => trip.id === v));
+      if (tripId) state.ownerSession.trip_id = tripId;
+      return [{ id: state.ownerSessionId }];
+    }
+    if (/update entitlements/i.test(text) && /set trip_id =/i.test(text)) return [{ id: crypto.randomUUID() }];
+    if (/from entitlements e/i.test(text) && /trip_id is null/i.test(text)) {
+      return [{ id: crypto.randomUUID(), customer_id: state.ownerCustomerId, trip_id: null, plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }];
+    }
+    if (/from entitlements e/i.test(text) && /inner join paid_orders/i.test(text)) {
+      return [{ id: crypto.randomUUID(), customer_id: state.ownerCustomerId, trip_id: null, plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }];
     }
     if (/from vacation_collaborator_invites/i.test(text) && /where i\.id =/i.test(text)) {
       const id = values.find((v) => typeof v === 'string' && state.invites.some((row) => row.id === v));
@@ -263,16 +303,29 @@ export function dbFor(state) {
     }
     if (/update outbound_emails/i.test(text)) return [{ id: crypto.randomUUID() }];
     if (/from transcript_turns/i.test(text) && /welcomeAudience/i.test(text)) {
-      const welcomed = state.transcript.filter((row) => row.speaker === 'app'
-        && row.direction === 'outbound'
-        && row.payload?.welcomeAudience === 'collaborator');
+      const welcomed = state.transcript.filter((row) => {
+        if (row.speaker !== 'app') return false;
+        return row.payload?.welcomeAudience === 'collaborator'
+          || row.payload?.welcomeAudience === 'collaborator_no_site';
+      });
       return welcomed.length ? [{ id: welcomed[0].id || 'welcome-turn' }] : [];
     }
     if (/from transcript_turns/i.test(text)) {
-      const customerId = values.find((v) => v === state.ownerCustomerId) || state.ownerCustomerId;
+      const customerId = values.find((v) => v === state.ownerCustomerId || v === state.collabCustomerId)
+        || state.ownerCustomerId;
+      const tripId = values.find((v) => typeof v === 'string' && state.trips.some((trip) => trip.id === v));
       const tripScoped = /trip_id =/i.test(text) && !/trip_id is null/i.test(text);
+      const welcomeOnly = /payload->>'welcomeAudience' = 'collaborator'/i.test(text);
       const rows = state.transcript.filter((row) => {
         if (row.customer_id !== customerId) return false;
+        if (welcomeOnly) {
+          return row.payload?.welcomeAudience === 'collaborator'
+            || row.payload?.welcomeAudience === 'collaborator_no_site';
+        }
+        if (tripScoped && tripId) {
+          if (/or trip_id is null/i.test(text)) return row.trip_id === tripId || row.trip_id == null;
+          return row.trip_id === tripId;
+        }
         if (tripScoped) return row.trip_id === state.tripId;
         return row.trip_id == null;
       });

@@ -105,9 +105,14 @@ try {
   console.error = priorLog;
 }
 
-const db = async () => [{ plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }];
+const db = async () => [{ plan: 'single', status: 'active', trip_id: 'trip-db', metadata: { product: 'timesyncher_vacation_single' } }];
 const loaded = await loadTripOwnerReplyPlan({ tripId: 'trip-db', env, db });
 assert.equal(loaded.plan_id, 'timesyncher_vacation_single');
+
+assert.throws(
+  () => replyPlanFactsFromEntitlementRow({ plan: 'single', status: 'active', metadata: { product: 'timesyncher_vacation_single' } }, env, 'trip-null'),
+  (error) => error instanceof ReplyPlanEntitlementMissingError && error.reason === 'entitlement_trip_id_null',
+);
 
 const emptyDb = async () => [];
 await assert.rejects(

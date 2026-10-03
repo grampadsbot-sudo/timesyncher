@@ -35,7 +35,13 @@ import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedInta
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
-import { bindPreTripOnboardingWelcome, onboardingWelcomeTurnExists } from '../src/vacation/onboarding-welcome-turn.mjs';
+import {
+  bindPreTripOnboardingWelcome,
+  loadCollaboratorWelcomeTranscriptRows,
+  onboardingWelcomeTranscriptCustomerId,
+  onboardingWelcomeTurnExists,
+  releaseOnboardingWelcomeClaim,
+} from '../src/vacation/onboarding-welcome-turn.mjs';
 import { authorPeopleFromTrip, transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
@@ -344,10 +350,9 @@ async function loadVacationAppTurns(db, session, tripId) {
   if (!customerId) return [];
   const tripKey = tripId || null;
   const people = await loadTranscriptAuthorPeople(db, customerId, tripKey);
-  const labelSession = {
-    ...session,
-    viewerId: session.viewerId || session.customer_id || null,
-  };
+  const labelSession = { ...session, viewerId: session.viewerId || session.customer_id || null };
+  const seat = seatFromSession(session);
+  const welcomeCustomerId = onboardingWelcomeTranscriptCustomerId(session, seat);
   const rows = tripKey
     ? await db`
       select speaker, body, channel, payload, direction, received_at, sent_at, created_at
@@ -367,7 +372,19 @@ async function loadVacationAppTurns(db, session, tripId) {
       order by coalesce(received_at, sent_at, created_at) desc nulls last
       limit 120
     `;
-  return rows.reverse().map((row) => {
+  let merged = rows;
+  if (seat && welcomeCustomerId && welcomeCustomerId !== customerId) {
+    const welcomeRows = await loadCollaboratorWelcomeTranscriptRows(db, welcomeCustomerId, tripKey);
+    const seen = new Set(rows.map((row) => `${row.body}|${row.received_at}|${row.sent_at}`));
+    const extra = welcomeRows.filter((row) => !seen.has(`${row.body}|${row.received_at}|${row.sent_at}`));
+    merged = [...rows, ...extra];
+    merged.sort((a, b) => {
+      const atA = a.received_at || a.sent_at || a.created_at;
+      const atB = b.received_at || b.sent_at || b.created_at;
+      return new Date(atA).getTime() - new Date(atB).getTime();
+    });
+  }
+  return merged.reverse().map((row) => {
     const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
     const clientPayload = vacationAppTurnPayloadForClient(payload);
     const live = clientPayload.liveTranscript && typeof clientPayload.liveTranscript === 'object' ? clientPayload.liveTranscript : {};
@@ -461,7 +478,7 @@ async function welcomeInputs(db, session, trip) {
 
 export async function ensureOnboardingOpener(db, session, trip, deps) {
   const seat = seatFromSession(session);
-  const tripId = trip?.id || seat?.ownerTripId || null;
+  const tripId = trip?.id || session?.trip_id || seat?.ownerTripId || null;
   const onboardingSessionId = session?.id;
   if (!onboardingSessionId) {
     if (seat) {
@@ -469,7 +486,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     }
     return;
   }
-  const customerId = seat ? transcriptCustomerId(session) : session.customer_id;
+  const customerId = onboardingWelcomeTranscriptCustomerId(session, seat);
   const welcomeFor = seat ? String(session.customer_id) : 'owner';
   const welcomeAudience = seat ? 'collaborator' : 'owner';
   const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
@@ -482,6 +499,20 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
       onboardingSessionId,
     });
     return;
+  }
+  const inputs = await welcomeInputs(db, session, welcomeTrip);
+  const missing = missingWelcomeFields(inputs);
+  const started = Date.now();
+  let text;
+  try {
+    if (missing.length) throw onboardingWelcomeFailure(`onboarding welcome missing ${missing[0]}`, tripId);
+    text = renderOnboardingWelcome(inputs, deps);
+  } catch (error) {
+    const failed = error?.code === 'onboarding_welcome_failed' ? error : onboardingWelcomeFailure(error?.message, tripId);
+    const welcomeError = { reason: String(failed.reason || failed.message || ''), tripId: String(tripId || ''), missing };
+    console.error(JSON.stringify({ event: 'onboarding_welcome_failed', ...welcomeError }));
+    failed.welcomeError = welcomeError;
+    throw failed;
   }
   const priorClaims = await db`
     select id
@@ -507,20 +538,7 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
       welcomeAudience,
     }));
   }
-  const inputs = await welcomeInputs(db, session, welcomeTrip);
-  const missing = missingWelcomeFields(inputs);
-  const started = Date.now();
-  let text;
-  try {
-    if (missing.length) throw onboardingWelcomeFailure(`onboarding welcome missing ${missing[0]}`, tripId);
-    text = renderOnboardingWelcome(inputs, deps);
-  } catch (error) {
-    const failed = error?.code === 'onboarding_welcome_failed' ? error : onboardingWelcomeFailure(error?.message, tripId);
-    const welcomeError = { reason: String(failed.reason || failed.message || ''), tripId: String(tripId || ''), missing };
-    console.error(JSON.stringify({ event: 'onboarding_welcome_failed', ...welcomeError }));
-    failed.welcomeError = welcomeError;
-    throw failed;
-  }
+  const payloadWelcomeAudience = String(inputs?.audience || welcomeAudience);
   const elapsed = Math.max(1, Date.now() - started);
   const live = cannedWelcomeLiveTurn({
     text,
@@ -533,22 +551,29 @@ export async function ensureOnboardingOpener(db, session, trip, deps) {
     source: 'vacation_app',
     surface: 'vacation-app',
     selectedTripId: tripId,
-    welcomeAudience,
+    welcomeAudience: payloadWelcomeAudience,
     welcomeFor,
     liveTranscript: live,
   };
-  const inserted = await db`
-    insert into transcript_turns (
-      customer_id, trip_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${customerId}, ${tripId}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
-      now(), 0
-    )
-    returning id
-  `;
+  let inserted;
+  try {
+    inserted = await db`
+      insert into transcript_turns (
+        customer_id, trip_id, speaker, channel, body, payload, direction,
+        sent_at, response_latency_ms
+      )
+      values (
+        ${customerId}, ${tripId}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+        now(), 0
+      )
+      returning id
+    `;
+  } catch (error) {
+    await releaseOnboardingWelcomeClaim(db, { onboardingSessionId, welcomeFor });
+    throw error;
+  }
   if (!inserted.length) {
+    await releaseOnboardingWelcomeClaim(db, { onboardingSessionId, welcomeFor });
     throw onboardingWelcomeFailure('onboarding welcome transcript insert failed', tripId);
   }
   console.log(JSON.stringify({
