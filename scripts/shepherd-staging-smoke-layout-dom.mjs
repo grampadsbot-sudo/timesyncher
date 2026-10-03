@@ -1,8 +1,8 @@
-import { evaluateLayoutRules } from './shepherd-staging-smoke-layout-eval.mjs';
+import { evaluateComposerControlsOnly, evaluateLayoutRules } from './shepherd-staging-smoke-layout-eval.mjs';
 
 export async function runLayoutDomEval(page, pageKind) {
-  const evalSrc = evaluateLayoutRules.toString();
-  return page.evaluate(new Function('pageKind', `return (${evalSrc})(pageKind)`), pageKind);
+  const body = `${evaluateComposerControlsOnly.toString()};\nreturn (${evaluateLayoutRules.toString()})(pageKind);`;
+  return page.evaluate(new Function('pageKind', body), pageKind);
 }
 
 export async function probeSiteFullscreenControl(page) {

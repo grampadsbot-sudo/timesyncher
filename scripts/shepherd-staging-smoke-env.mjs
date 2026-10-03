@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 
 const PROJECT = 'timesyncher-vacation-staging';
 const V1_ENV_IDS = {
-  DATABASE_URL: 'A9IvKmyFpAfVBLQx',
+  DATABASE_URL: '1aaOv6d2efkLmXJA',
   OPENROUTER_API_KEY: '84Sr0i1odTrW9wLN',
   TIMESYNCHER_COUPON_HASH_SALT: 'v5J7KMS41ksY339X',
   TIMESYNCHER_COLLABORATOR_NAME: 'i6c6ba5Gh1Xx1ysV',
