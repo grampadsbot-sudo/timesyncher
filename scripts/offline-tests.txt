@@ -213,6 +213,7 @@ scripts/test_shepherd_staging_smoke_harness.mjs
 scripts/test_shepherd_staging_smoke_visual_judge.mjs
 scripts/test_shepherd_staging_smoke_jev_preflight.mjs
 scripts/test_shepherd_staging_smoke_lib.mjs
+scripts/test_logo_pixel_ink_grade.mjs
 scripts/test_shepherd_staging_smoke_provider_log.mjs
 scripts/test_trip_intake_classify.mjs
 scripts/test_trip_intake_concrete_things.mjs

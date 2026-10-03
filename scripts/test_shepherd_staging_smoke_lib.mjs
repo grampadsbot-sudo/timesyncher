@@ -219,7 +219,7 @@ const geoPass = gradeLogoChipRow({
   contentCenterDxPx: 1,
   contentCenterDyPx: 0.5,
   paddingAsymmetryPx: { left: 3, right: 3, top: 2, bottom: 2 },
-  com: { dxPx: 1, dyPx: 1 },
+  com: { dxPx: 1, dyPx: 1, mass: 12 },
 });
 assert.equal(geoPass.pass, true);
 
@@ -243,7 +243,7 @@ assert.equal(tabFail.failReason, 'zero_brand_imgs_with_real_src');
 const logoUrlFail = gradeLogoTabResult({
   tab: 'hotels',
   clicked: true,
-  rows: [{ isBrandImg: true, com: { dxPx: 0.5, dyPx: 0.5 } }],
+  rows: [{ isBrandImg: true, com: { dxPx: 0.5, dyPx: 0.5, mass: 10 } }],
   logoUrlEvidence: gradeSharedTabLogoUrlRecords({
     places: [{ id: 1, name: 'Westin', category_name: 'hotel' }],
     thingOverrides: { 'place:1': {} },

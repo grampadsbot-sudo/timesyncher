@@ -5,6 +5,11 @@ import {
   gradeCoffeePlaceRowByJev,
   jevBlockFromResult,
 } from './shepherd-staging-smoke-jev-reply-judge.mjs';
+import {
+  gradeCarsHeadingLogoInk,
+  gradeLogoChipInkPresence,
+  logoChipInkPresent,
+} from './lib/logo-pixel-ink-grade.mjs';
 
 function coffeeRowLabel(row = {}) {
   return String(row.name || row.title || row.placeName || row.displayName || row.label || '').trim();
@@ -196,13 +201,34 @@ function gradeLogoChipCom(row = {}) {
 export function gradeLogoChipRow(row = {}) {
   const geometry = gradeLogoChipGeometry(row);
   const comGrade = gradeLogoChipCom(row);
-  const pass = comGrade.comCentered === true;
+  const inkGrade = gradeLogoChipInkPresence(row.com || {});
+  const pass = comGrade.comCentered === true && inkGrade.inkPresent === true;
   return {
     ...row,
     ...geometry,
     ...comGrade,
+    ...inkGrade,
     pass,
   };
+}
+
+export function countBrandLogoRowsWithInk(rows = []) {
+  return (rows || []).filter((r) => r.isBrandImg === true && isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
+}
+
+export function gradeCarsHeadingInkForViewports(viewports = {}) {
+  const byWidth = {};
+  let pass = true;
+  let failReason = null;
+  for (const [width, viewport] of Object.entries(viewports || {})) {
+    const grade = viewport?.carsHeadingInk || { pass: false, reason: 'missing_cars_heading_ink' };
+    byWidth[width] = grade;
+    if (!grade.pass) {
+      pass = false;
+      failReason = failReason || grade.reason || 'cars_heading_logo_off_center';
+    }
+  }
+  return { pass, failReason: pass ? null : failReason, byWidth };
 }
 
 export function gradeLogoTabResult({
@@ -213,14 +239,23 @@ export function gradeLogoTabResult({
   logoUrlEvidence = null,
   viewports = null,
   carIconGrade = null,
+  carsHeadingInk = null,
 }) {
   const brandRows = (rows || []).filter((r) => r.isBrandImg === true);
   const graded = brandRows.map((r) => gradeLogoChipRow(r));
+  const brandInkCount = countBrandLogoRowsWithInk(graded);
+  const isCars = String(tab || '').toLowerCase() === 'cars';
+  const carsHeadingGrade = isCars
+    ? (carsHeadingInk || gradeCarsHeadingInkForViewports(viewports))
+    : null;
   let failReason = null;
   if (!clicked) failReason = 'tab_not_clicked';
-  else if (brandRows.length === 0) failReason = 'zero_brand_imgs_with_real_src';
+  else if (brandInkCount === 0) failReason = 'zero_brand_imgs_with_real_src';
   else if (logoUrlEvidence && logoUrlEvidence.ok === false) failReason = logoUrlEvidence.failReason || 'records_missing_logoUrl';
   else if (viewports && Object.values(viewports).some((v) => v && v.pass === false)) failReason = 'viewport_logo_fail';
+  else if (carsHeadingGrade && carsHeadingGrade.pass === false) {
+    failReason = carsHeadingGrade.failReason || 'cars_heading_logo_off_center';
+  }
   else if (carIconGrade && carIconGrade.pass === false) failReason = 'car_tab_icon_fail';
   else if (!graded.every((r) => r.pass)) failReason = 'logo_com_off_center';
 
@@ -229,15 +264,18 @@ export function gradeLogoTabResult({
     tab,
     clicked,
     rows: graded,
-    brandImgCount: brandRows.length,
+    brandImgCount: brandInkCount,
     logoUrlEvidence,
     viewports,
     carIconGrade,
+    carsHeadingInk: carsHeadingGrade,
     failReason,
     pass,
     cssSuspects,
   };
 }
+
+export { gradeCarsHeadingLogoInk };
 
 /** Map computed layout hints to likely source files (harness attribution, not runtime). */
 export function attributeLogoMisalignmentCss(computed = {}) {

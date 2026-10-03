@@ -9,6 +9,14 @@ import {
   isRealBrandLogoSrc,
 } from './shepherd-staging-smoke-lib.mjs';
 import { clickSharedTabByKeyword } from './shepherd-staging-smoke-shared-ui-map.mjs';
+import {
+  collectCategoryTabInkMetrics,
+} from './lib/shared-trip-category-tab-icon-metrics.mjs';
+import {
+  findCarsTabInkMetric,
+  gradeCarsHeadingLogoInk,
+  logoChipInkPresent,
+} from './lib/logo-pixel-ink-grade.mjs';
 
 export const LOGO_VIEWPORT_WIDTHS = [1280, 390];
 export const LOGO_TAB_SETTLE_MS = 400;
@@ -198,7 +206,7 @@ async function waitLogoImagesBounded(page, capMs) {
     }
     const imgs = Array.from(document.querySelectorAll('[data-ts-logo-chip] img.tiny-logo')).filter((img) => realSrc(img.getAttribute('src')));
     await Promise.all(imgs.map((img) => new Promise((resolve) => {
-      if (img.complete && img.naturalWidth > 0) {
+      if (img.complete) {
         resolve();
         return;
       }
@@ -218,17 +226,21 @@ async function collectLogoDescriptors(page) {
       if (/timesyncher-icon/i.test(value)) return false;
       return true;
     }
-    const imgs = Array.from(document.querySelectorAll('[data-ts-logo-chip] img.tiny-logo, img.tiny-logo')).filter((img) => {
+    const listImgs = Array.from(
+      document.querySelectorAll('li[data-list-row="1"] img.tiny-logo, li[data-has-logo="1"] img.tiny-logo, [data-shared-live-tab] img.tiny-logo'),
+    );
+    const imgs = listImgs.filter((img) => {
       if (!realSrc(img.getAttribute('src'))) return false;
-      const r = img.getBoundingClientRect();
-      return r.width >= 4 && r.height >= 4 && img.offsetParent !== null;
+      const chipEl = img.closest('[data-ts-logo-chip]') || img.parentElement;
+      if (!chipEl) return false;
+      const chipR = chipEl.getBoundingClientRect();
+      return chipR.width >= 12 && chipR.height >= 12 && img.offsetParent !== null;
     });
     return imgs.slice(0, 12).map((logoEl, index) => {
       const chipEl = logoEl.closest('[data-ts-logo-chip]') || logoEl.parentElement;
       const chipR = chipEl.getBoundingClientRect();
       const li = logoEl.closest('li[data-list-row], li[data-has-logo], li');
       chipEl.setAttribute('data-ts-logo-chip-idx', String(index));
-      logoEl.setAttribute('data-ts-logo-img-idx', String(index));
       return {
         index,
         isBrandImg: true,
@@ -251,7 +263,8 @@ async function collectLogoDescriptors(page) {
   });
 }
 
-async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measureKey, tabClicked) {
+async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measureKey, tabClicked, opts = {}) {
+  const { carsHeadingCheck = false } = opts;
   const startKey = `${measureKey}StartMs`;
   const endKey = `${measureKey}EndMs`;
   stamp(stageTimestamps, startKey);
@@ -264,14 +277,14 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
   const screenshotLimit = Math.min(descriptors.length, LOGO_ROW_SCREENSHOT_CAP);
   for (let i = 0; i < screenshotLimit; i += 1) {
     const desc = descriptors[i];
-    const imgHandle = await page.$(`img.tiny-logo[data-ts-logo-img-idx="${desc.index}"]`);
-    let com = { error: 'img_handle_missing' };
+    const chipHandle = await page.$(`[data-ts-logo-chip-idx="${desc.index}"]`);
+    let com = { error: 'chip_handle_missing' };
     let cropBuf = null;
-    if (imgHandle) {
-      cropBuf = await imgHandle.screenshot({ type: 'png' });
+    if (chipHandle) {
+      cropBuf = await chipHandle.screenshot({ type: 'png' });
       com = await measureLogoComFromPngBuffer(cropBuf);
       if (cropBuf) cropBuffers.push(cropBuf);
-      await imgHandle.dispose();
+      await chipHandle.dispose();
     }
     const cssSuspects = attributeLogoMisalignmentCss(desc.computed || {});
     gradedRows.push({
@@ -295,12 +308,20 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
       cssSuspects: attributeLogoMisalignmentCss(desc.computed || {}),
     });
   }
-  const brandCount = gradedRows.filter((r) => isRealBrandLogoSrc(r.src)).length;
+  const brandCount = gradedRows.filter((r) => isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
   const viewportPass = brandCount > 0 && gradedRows.every((r) => {
     const com = r.com || {};
-    return com.error === 'screenshot_cap_skipped'
-      || (!com.error && Number(com.dxPx) <= 1.5 && Number(com.dyPx) <= 1.5);
+    if (com.error === 'screenshot_cap_skipped') return true;
+    if (!isRealBrandLogoSrc(r.src)) return true;
+    if (!logoChipInkPresent(com)) return false;
+    return Number(com.dxPx) <= 1.5 && Number(com.dyPx) <= 1.5;
   });
+  let carsHeadingInk = null;
+  if (carsHeadingCheck) {
+    const tabMetrics = await collectCategoryTabInkMetrics(page);
+    carsHeadingInk = gradeCarsHeadingLogoInk(findCarsTabInkMetric(tabMetrics));
+  }
+  const headingPass = !carsHeadingCheck || carsHeadingInk?.pass === true;
   stamp(stageTimestamps, endKey);
   return {
     viewportWidth,
@@ -308,8 +329,9 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
     rows: gradedRows,
     brandImgCount: brandCount,
     cropBuffers,
-    pass: Boolean(tabClicked) && viewportPass,
-    failReason: !tabClicked ? 'tab_not_clicked' : (brandCount === 0 ? 'zero_brand_imgs_with_real_src' : null),
+    carsHeadingInk,
+    pass: Boolean(tabClicked) && viewportPass && headingPass,
+    failReason: !tabClicked ? 'tab_not_clicked' : (brandCount === 0 ? 'zero_brand_imgs_with_real_src' : (!headingPass ? (carsHeadingInk?.reason || 'cars_heading_logo_off_center') : null)),
   };
 }
 
@@ -332,6 +354,7 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
     stageTimestamps,
     isHotels ? 'hotelsMeasure1280' : 'carsMeasure1280',
     clicked,
+    { carsHeadingCheck: !isHotels },
   );
   onPersist?.({ stageTimestamps, hotels: isHotels ? { viewports: { ...viewports } } : undefined, cars: !isHotels ? { viewports: { ...viewports } } : undefined });
   viewports[390] = await measureRowsAtViewport(
@@ -340,6 +363,7 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
     stageTimestamps,
     isHotels ? 'hotelsMeasure390' : 'carsMeasure390',
     clicked,
+    { carsHeadingCheck: !isHotels },
   );
   onPersist?.({ stageTimestamps, hotels: isHotels ? { viewports: { ...viewports } } : undefined, cars: !isHotels ? { viewports: { ...viewports } } : undefined });
 
