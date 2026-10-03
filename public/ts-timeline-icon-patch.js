@@ -29,7 +29,12 @@
 
   function resolve(place, override) {
     const name = text(place?.category_name || override?.category || place?.category?.name).toLowerCase();
-    const logoUrl = text(override?.logoUrl || place?.captured_logo_url || place?.logoUrl || '');
+    const logoUrl = text(
+      override?.logoUrl || override?.iconUrl
+      || place?.logoUrl || place?.iconUrl
+      || place?.captured_logo_url || place?.image_url || place?.imageUrl
+      || '',
+    );
     let type = '';
     if (name.includes('flight')) type = 'flight';
     else if (name.includes('restaurant')) type = 'restaurant';
@@ -116,6 +121,14 @@
 
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
+    const keptLogo = el.querySelector?.('img.tiny-logo');
+    if (keptLogo) {
+      const keptSrc = text(keptLogo.getAttribute('src') || '');
+      if (keptSrc && !/timesyncher-icon/i.test(keptSrc) && !/^data:image\/svg\+xml/i.test(keptSrc)) {
+        el.dataset.tsIconFixed = '1';
+        return;
+      }
+    }
     if (/^H[1-6]$/.test(el.tagName)) return;
     if (el.closest('.print-media-card, .story-card, .logo-list, [data-trip-directory], [data-post-itinerary], [data-stories-up-front]')) return;
     if (el.closest('[data-print-menu-root], [data-trip-view-root], button[aria-label], [role="button"][aria-label]')) return;
