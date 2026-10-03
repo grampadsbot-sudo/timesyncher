@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { normalizePngBufferInput, measureLogoComFromPngBuffer } from './shepherd-staging-smoke-logo-metrics.mjs';
 
 const require = createRequire(import.meta.url);
-const { PNG } = require('/workspace/node_modules/pngjs');
+const { PNG } = require('pngjs');
 
 const png = new PNG({ width: 4, height: 4 });
 for (let y = 0; y < 4; y += 1) {
