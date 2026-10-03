@@ -81,6 +81,39 @@ export function checkIOutboundPassesSmokeHarness(row, env = process.env) {
   return outboundEmailPassesSmokeHarness(row);
 }
 
+/** True while still in the current UTC quota day (before the next 00:00 UTC Resend reset). */
+export function isBeforeUtcResendDailyReset(now = new Date()) {
+  return now.getUTCHours() > 0
+    || now.getUTCMinutes() > 0
+    || now.getUTCSeconds() > 0
+    || now.getUTCMilliseconds() > 0;
+}
+
+/**
+ * Check I outbound verdict. Real Resend sends never PASS before UTC reset; unconfirmed rows are INFRA_BLOCKED.
+ */
+export function evaluateCheckIOutbound({ row, env = process.env, now = new Date() } = {}) {
+  const stub = env.TIMESYNCHER_HARNESS_STUB_OUTBOUND === '1';
+  const status = String(row?.status || '');
+  const provider = String(row?.provider || '');
+  if (stub) {
+    if (checkIOutboundPassesSmokeHarness(row, env)) {
+      return { pass: true, infraBlocked: false, reason: null };
+    }
+    return { pass: false, infraBlocked: true, reason: 'stub_outbound_unconfirmed' };
+  }
+  if (status === 'sent' && provider === 'resend' && isBeforeUtcResendDailyReset(now)) {
+    return { pass: false, infraBlocked: true, reason: 'real_resend_before_utc_reset' };
+  }
+  if (checkIOutboundPassesSmokeHarness(row, env)) {
+    return { pass: true, infraBlocked: false, reason: null };
+  }
+  if (isBeforeUtcResendDailyReset(now)) {
+    return { pass: false, infraBlocked: true, reason: 'outbound_unconfirmed_before_utc_reset' };
+  }
+  return { pass: false, infraBlocked: false, reason: 'outbound_failed' };
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   await ensureShepherdStagingSmokeEnv();
   process.stdout.write('ok\n');

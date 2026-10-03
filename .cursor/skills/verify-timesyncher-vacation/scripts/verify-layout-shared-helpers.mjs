@@ -9,19 +9,49 @@ export async function detectApp(page) {
       const rect = el.getBoundingClientRect();
       return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0 && rect.width >= 0.5 && rect.height >= 0.5;
     };
+    const tripOptions = document.querySelectorAll('#vacationDropdown .trip-option, .trip-list .trip-option');
+    const header = document.getElementById('appHeader');
     return {
       eula: paints(document.querySelector('#eulaScreen')),
       gate: paints(document.querySelector('#sessionForm')),
       composer: Boolean(document.querySelector('#messageText')) && paints(document.querySelector('#messageText')),
-      options: document.querySelectorAll('#tripMenu [role="option"], .trip-option').length,
+      options: tripOptions.length,
+      headerVisible: paints(header),
       hasSite: paints(document.querySelector('.site-pane iframe')),
     };
   });
 }
 
+export async function fetchVacationAppSnapshot(session, baseUrl, fetchImpl = fetch) {
+  const token = String(session || '').trim();
+  if (!token) return { ok: false, vacationCount: 0, hasSite: false };
+  const base = String(baseUrl || '').replace(/\/?$/, '');
+  const res = await fetchImpl(`${base}/api/vacation-itinerary?app=1&session=${encodeURIComponent(token)}`);
+  const data = await res.json().catch(() => ({}));
+  const vacations = Array.isArray(data.vacations) ? data.vacations : [];
+  const currentId = data.session?.currentTripId || vacations[0]?.id || '';
+  const current = vacations.find((row) => row.id === currentId) || vacations[0] || null;
+  const hasSite = Boolean(String(current?.publicUrl || '').trim());
+  return {
+    ok: res.ok && data.ok !== false,
+    vacationCount: vacations.length,
+    hasSite,
+  };
+}
+
+export function stateIdFromSnapshot(snapshot, detected) {
+  if (!detected?.composer) return '';
+  const n = Number(snapshot?.vacationCount) || 0;
+  if (n >= 2) return 'app-2-plus';
+  if (n === 1 && (snapshot?.hasSite || detected.hasSite)) return 'app-1-with-site';
+  if (n === 1) return 'app-1-no-site';
+  return 'app-0-vacations';
+}
+
+/** @deprecated Use stateIdFromSnapshot; trip dropdown options exist only when 2+ vacations. */
 export function stateId(detected) {
   if (!detected.composer) return '';
-  if (detected.options >= 2) return 'app-2-plus';
+  if (detected.options >= 2 || detected.headerVisible) return 'app-2-plus';
   if (detected.options === 1 && detected.hasSite) return 'app-1-with-site';
   if (detected.options === 1) return 'app-1-no-site';
   return 'app-0-vacations';

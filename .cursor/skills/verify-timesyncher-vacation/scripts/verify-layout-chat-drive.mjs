@@ -4,9 +4,10 @@ import { VIEWPORTS, applyViewport } from './layout-measure.mjs';
 import {
   clickControl,
   detectApp,
+  fetchVacationAppSnapshot,
   showMessages,
   splitRestored,
-  stateId,
+  stateIdFromSnapshot,
 } from './verify-layout-shared-helpers.mjs';
 
 export async function driveChatProvisioned({
@@ -53,7 +54,13 @@ export async function driveChatProvisioned({
         if (status >= 400) throw new Error(`chat HTTP ${status} for ${sub}`);
         await page.waitForSelector('#messageText, #eulaScreen, #sessionForm', { timeout: 20000 });
         const detected = await detectApp(page);
-        const current = stateId(detected);
+        const baseUrl = new URL(fixture.chatUrl).origin;
+        const snapshot = await fetchVacationAppSnapshot(fixture.session, baseUrl);
+        const current = stateIdFromSnapshot(snapshot, detected);
+        if (!snapshot.ok) {
+          rows.push(unreachableRow('chat', sub, viewport.id, `vacation-itinerary snapshot failed for ${sub}`));
+          continue;
+        }
         if (current !== sub) {
           rows.push(unreachableRow('chat', sub, viewport.id, `expected ${sub} got ${current || 'unknown'}`));
           continue;

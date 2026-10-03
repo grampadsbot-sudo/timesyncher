@@ -4,7 +4,8 @@ const puppeteer = require('/workspace/node_modules/puppeteer-core');
 import { normalizePlaceName } from '/workspace/src/vacation/intake-lodging-candidate.mjs';
 import { inTurnPlaceReplyViolation } from '/workspace/src/vacation/chat-place-search.mjs';
 import { outboundEmailPassesSmokeHarness } from '/workspace/src/vacation/email.mjs';
-import { checkIOutboundPassesSmokeHarness } from './shepherd-staging-smoke-env.mjs';
+import { registerShepherdEulaReadbackCheck } from './shepherd-staging-smoke-eula-readback.mjs';
+import { runShepherdCheckI } from './shepherd-staging-smoke-check-i.mjs';
 import { gradeCoffeeReplyRows } from './shepherd-staging-smoke-lib.mjs';
 import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 import { prepareMapLogoIntakeShare } from './shepherd-staging-smoke-map-prep.mjs';
@@ -102,6 +103,8 @@ export async function runShepherdSmokeBootstrap(ctx) {
     });
     return { pass: couponRes.status === 200 && tripsAfter === 0, http: couponRes.status };
   }, { timeoutMs: 60000 });
+
+  await registerShepherdEulaReadbackCheck(runCheck, { db, out, sessionToken: state.session });
 
   await runCheck('4', async ({ setStage }) => {
     setStage('onboarding hi');
@@ -219,49 +222,7 @@ export async function runShepherdSmokeSpine(ctx) {
     SHA7,
   });
 
-  await runCheck('I', async ({ setStage }) => {
-    setStage('collaborator invite Alex');
-    const inviteRes = await postItinerary(state.session, { tripId: state.tripId, action: 'collaborator-invite', seats: [{ name: 'Invite Alex', email: INVITE_EMAIL }] });
-    const iInviteRow = (await db`
-      select id, trip_id, status, metadata from vacation_collaborator_invites
-      where owner_customer_id=${state.customerId} and metadata->>'email'=${INVITE_EMAIL} order by created_at desc limit 1`)[0];
-    const iOutboundAll = await db`
-      select id, status, subject, to_email, html_body, text_body, metadata, error_summary, provider_message_id from outbound_emails
-      where customer_id=${state.customerId} and to_email=${INVITE_EMAIL} order by created_at asc`;
-    const ownerDisplay = (await db`select display_name, first_name from customers where id=${state.customerId} limit 1`)[0];
-    const iAcceptPath = iInviteRow?.id ? `/accept/vacation-collaborator-${iInviteRow.id}` : '';
-    const iHtml = String(iOutboundAll[0]?.html_body || iOutboundAll[0]?.text_body || '');
-    const iLinkOk = iHtml.includes(iAcceptPath);
-    const outboundRow = iOutboundAll[0] || null;
-    const errorSummary = String(outboundRow?.error_summary || outboundRow?.metadata?.error || '');
-    const resendQuotaBlocked = /daily email sending quota/i.test(errorSummary);
-    out.checkI = {
-      http: inviteRes.status,
-      inviteId: iInviteRow?.id,
-      outboundCount: iOutboundAll.length,
-      outboundEmail: outboundRow,
-      ownerDisplay,
-      tripTitle: state.tripTitle,
-      acceptLinkOk: iLinkOk,
-      expectedAcceptPath: iAcceptPath,
-      resendQuotaBlocked,
-    };
-    if (resendQuotaBlocked) {
-      out.checkI.infraReason = errorSummary;
-      console.error(`Check I: INFRA_BLOCKED — Resend daily quota (not an app PASS/FAIL): ${errorSummary}`);
-      return {
-        pass: false,
-        checkStatus: 'INFRA_BLOCKED',
-        infraDetail: { reason: 'resend_daily_quota', errorSummary },
-        http: inviteRes.status,
-      };
-    }
-    const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
-    const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
-    const pass = inviteRes.status === 200 && iOutboundAll.length === 1
-      && checkIOutboundPassesSmokeHarness(outboundRow) && iLinkOk && iOwnerOk && iTitleOk;
-    return { pass, http: inviteRes.status };
-  }, { timeoutMs: 60000 });
+  await runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL });
 
   await runCheck('6', async ({ setStage }) => {
     setStage('taco search Kaanapali');

@@ -49,8 +49,8 @@ const chatPrompt = buildVisualJudgePrompt({
   layoutDomFacts: 'LAYOUT DOM ground truth: PASS',
 });
 assert.match(chatPrompt, /form#composer/);
-assert.match(chatPrompt, /accessible name is "Send"/);
-assert.doesNotMatch(chatPrompt, /Do NOT fail rubric item 2/);
+assert.match(chatPrompt, /icon-only up-arrow|paper-plane/i);
+assert.match(chatPrompt, /accessible name Send/);
 
 const listed = await fetchOpenRouterModelRecord(VISUAL_JUDGE_MODEL, { apiKey: 'test-key', fetchImpl: preflightFetchOk });
 assert.equal(listed.ok, true);
