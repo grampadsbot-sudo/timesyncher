@@ -607,16 +607,10 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     }
   }
   const hasCustomerInput = Object.keys(customerInput).length > 0;
-  const needsCustomerInput = Array.isArray(tripRaw?.needsCustomerInput)
-    ? tripRaw.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean)
-    : [];
+  const needsCustomerInput = Array.isArray(tripRaw?.needsCustomerInput) ? tripRaw.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean) : [];
   const flightAsk = String(tripRaw?.flightAsk || '').trim();
-  const lodgingGapAskRule = needsCustomerInput.length
-    ? 'The saved trip record flags needsCustomerInput for lodging. Ask the customer where they are staying, in your own words.'
-    : '';
-  const flightAskRule = flightAsk
-    ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.'
-    : '';
+  const lodgingGapAskRule = needsCustomerInput.length ? 'The saved trip record flags needsCustomerInput for lodging. Ask the customer where they are staying, in your own words.' : '';
+  const flightAskRule = flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '';
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
