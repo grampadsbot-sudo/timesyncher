@@ -8,12 +8,7 @@ import { intakeShareSlug } from '/workspace/src/vacation/intake-shared-trip.mjs'
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';
 import { runShepherdJevPreflight } from './shepherd-staging-smoke-jev-preflight.mjs';
-import { mintCheckoutCoupons } from './mint-checkout-coupons.mjs';
-import {
-  configureShepherdSmokeHelpers,
-  postItinerary,
-  getApp,
-} from './shepherd-staging-smoke-helpers.mjs';
+import { configureShepherdSmokeHelpers } from './shepherd-staging-smoke-helpers.mjs';
 import {
   ensureLayoutArtifactDir,
   runLayoutHarnessCheck,
@@ -25,6 +20,7 @@ import {
 } from './shepherd-staging-smoke-visual.mjs';
 import { VISUAL_JUDGE_MODEL } from './shepherd-staging-smoke-visual-judge.mjs';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
+import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 
 const EXPECT_SHA = process.argv[2];
 if (!EXPECT_SHA || !/^[0-9a-f]{7,40}$/i.test(EXPECT_SHA)) {
@@ -70,33 +66,17 @@ const page = await browser.newPage();
 let layout;
 let visual;
 try {
-  const [couponMain] = await mintCheckoutCoupons(db, { count: 1, max: 1, label: `layout-${SHA7}` });
-  const email = `layout-${SHA7}-${Date.now()}@resend.dev`;
-  const couponRes = await fetch(`${BASE}/api/checkout-coupon`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      firstName: 'Layout', lastName: SHA7, email, couponCode: couponMain, orderBump: false, photoMemories: false,
-    }),
-  });
-  const couponJson = await couponRes.json();
-  const session = couponJson.session?.token;
-  await fetch(`${BASE}/api/eula?action=accept&sessionId=${encodeURIComponent(`vacation-${session}`)}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ acceptedByName: 'Layout', checkboxConfirmed: true }),
-  });
-  await getApp(session);
-  await postItinerary(session, { text: 'hi' });
-  const tripMsg = await postItinerary(session, { text: 'Maui March 10-17 2027 with my wife' });
-  const tripId = tripMsg.json.trip?.id;
-  const chatUrl = `${BASE}/vacation-app.html?session=${encodeURIComponent(session)}`;
-  const sharedUrl = tripId ? `${BASE}/shared/${intakeShareSlug(tripId)}/` : '';
-
+  const setStage = (label) => { process.stderr.write(`[mint] ${label}\n`); };
+  const states = await mintVisualStateCustomers({ db, BASE, SHA7, setStage });
+  const v1site = states.v1site;
+  if (!v1site?.sharedUrl) {
+    console.error(JSON.stringify({ error: 'v1site_missing_shared_url', states: Object.keys(states) }));
+    process.exit(2);
+  }
   layout = await runLayoutHarnessCheck({
     page,
-    chatUrl,
-    sharedUrl,
+    chatUrl: v1site.chatUrl,
+    sharedUrl: v1site.sharedUrl,
     artifactPath: (name) => `${ARTIFACT_DIR}/${name}`,
     setStage: (label) => { process.stderr.write(`[LAYOUT] ${label}\n`); },
   });

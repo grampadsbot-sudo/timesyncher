@@ -224,39 +224,25 @@ export async function runShepherdSmokeSpine(ctx) {
       select id, trip_id, status, metadata from vacation_collaborator_invites
       where owner_customer_id=${state.customerId} and metadata->>'email'=${INVITE_EMAIL} order by created_at desc limit 1`)[0];
     const iOutboundAll = await db`
-      select id, status, subject, to_email, html_body, text_body, metadata, error_summary from outbound_emails
+      select id, status, subject, to_email, html_body, text_body, metadata from outbound_emails
       where customer_id=${state.customerId} and to_email=${INVITE_EMAIL} order by created_at asc`;
     const ownerDisplay = (await db`select display_name, first_name from customers where id=${state.customerId} limit 1`)[0];
     const iAcceptPath = iInviteRow?.id ? `/accept/vacation-collaborator-${iInviteRow.id}` : '';
     const iHtml = String(iOutboundAll[0]?.html_body || iOutboundAll[0]?.text_body || '');
     const iLinkOk = iHtml.includes(iAcceptPath);
-    const outboundRow = iOutboundAll[0] || null;
-    const errorSummary = String(outboundRow?.error_summary || outboundRow?.metadata?.error || '');
-    const resendQuotaBlocked = /daily email sending quota/i.test(errorSummary);
     out.checkI = {
       http: inviteRes.status,
       inviteId: iInviteRow?.id,
       outboundCount: iOutboundAll.length,
-      outboundEmail: outboundRow,
+      outboundEmail: iOutboundAll[0],
       ownerDisplay,
       tripTitle: state.tripTitle,
       acceptLinkOk: iLinkOk,
       expectedAcceptPath: iAcceptPath,
-      resendQuotaBlocked,
     };
-    if (resendQuotaBlocked) {
-      out.checkI.infraReason = errorSummary;
-      console.error(`Check I: INFRA_BLOCKED — Resend daily quota (not an app PASS/FAIL): ${errorSummary}`);
-      return {
-        pass: false,
-        checkStatus: 'INFRA_BLOCKED',
-        infraDetail: { reason: 'resend_daily_quota', errorSummary },
-        http: inviteRes.status,
-      };
-    }
-    const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
-    const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
-    const pass = inviteRes.status === 200 && iOutboundAll.length === 1 && outboundRow?.status === 'sent' && iLinkOk && iOwnerOk && iTitleOk;
+    const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(iOutboundAll[0]?.subject || '');
+    const iTitleOk = state.tripTitle && (iOutboundAll[0]?.subject || '').includes(state.tripTitle);
+    const pass = inviteRes.status === 200 && iOutboundAll.length === 1 && iOutboundAll[0]?.status === 'sent' && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
   }, { timeoutMs: 60000 });
 
