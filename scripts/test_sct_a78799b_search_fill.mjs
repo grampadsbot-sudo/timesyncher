@@ -22,6 +22,9 @@ import { placeToTripThing, searchPlaces } from '../src/vacation/place-search.mjs
 import { runCustomerChatPlaceSearch } from '../src/vacation/chat-place-search.mjs';
 import { intakeLodgingLookupQuery } from '../src/vacation/intake-lodging-lookup.mjs';
 import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 const KIHEI_CENTER = { lat: 20.763395, lng: -156.4463997 };

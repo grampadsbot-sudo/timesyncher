@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { braveAddress, bravePlaceSearchRows, bravePoint, braveTitle, trimBraveResultEvidence } from '../src/vacation/brave-place-query.mjs';
 import { persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
 import { urlIsNominatim } from './intake-lodging-test-hosts.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const FIXTURE_DIR = fileURLToPath(new URL('./fixtures/intake-lodging-brave/', import.meta.url));
 const HYATT_LAT = 20.9124823;
