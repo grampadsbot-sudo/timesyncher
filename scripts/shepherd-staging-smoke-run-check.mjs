@@ -7,7 +7,7 @@ export const SMOKE_CHECK_ORDER = [
   'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'INV-CLAIM',
 ];
 
-export const WHOLE_RUN_CAP_MS = 25 * 60 * 1000;
+const WHOLE_RUN_CAP_MS = 25 * 60 * 1000;
 
 /**
  * @param {{ out: Record<string, unknown>, sha7: string, artifactDir?: string, runStartedAt?: number, wholeRunCapMs?: number }} ctx
@@ -41,12 +41,12 @@ export function createSmokeRunner(ctx) {
           try {
             await page.close();
           } catch {
-            /* ignore */
+            void 0;
           }
         }
         await browser.close();
       } catch {
-        /* ignore */
+        void 0;
       }
     }
     browsers.clear();
