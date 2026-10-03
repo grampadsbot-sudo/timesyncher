@@ -1,5 +1,5 @@
 import { sql } from './db.mjs';
-import { cleanText, headerValue, sendJson } from './http.mjs';
+import { cleanText, headerValue, sendJson, vacationAppErrorBody } from './http.mjs';
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
@@ -62,18 +62,50 @@ function slugMissError(shareToken) {
   return error;
 }
 
-export async function intakeSharedResponse(shareToken, db = null) {
-  if (!shareToken || !shareToken.startsWith('intake-')) return null;
-  if (!db) db = openSharedDb();
-  const rows = await db`
-    select id, title, destination, start_date, end_date, metadata
+function intakeSlugHex(shareToken) {
+  const hex = String(shareToken || '').slice('intake-'.length);
+  return /^[0-9a-f]{12}$/i.test(hex) ? hex.toLowerCase() : '';
+}
+
+function intakeTripMetadata(meta = {}) {
+  return meta && typeof meta === 'object' && !Array.isArray(meta) ? meta : {};
+}
+
+function intakeTripIsShareable(trip) {
+  const meta = intakeTripMetadata(trip?.metadata);
+  if (meta.intakeShare === true || meta.intakeShare === 'true') return true;
+  return String(trip?.status || '').trim() === 'onboarding';
+}
+
+async function loadIntakeTripRow(shareToken, db) {
+  const published = await db`
+    select id, title, destination, start_date, end_date, metadata, status
     from trips
     where metadata->>'publicSlug' = ${shareToken}
       and metadata->>'intakeShare' = 'true'
     limit 1
   `;
-  const trip = rows[0];
-  if (!trip || intakeShareSlug(trip.id) !== shareToken) return null;
+  const publishedTrip = published[0];
+  if (publishedTrip && intakeShareSlug(publishedTrip.id) === shareToken) return publishedTrip;
+
+  const hex = intakeSlugHex(shareToken);
+  if (!hex) return null;
+  const candidates = await db`
+    select id, title, destination, start_date, end_date, metadata, status
+    from trips
+    where replace(id::text, '-', '') ilike ${`${hex}%`}
+    limit 6
+  `;
+  const trip = candidates.find((row) => intakeShareSlug(row.id) === shareToken);
+  if (!trip || !intakeTripIsShareable(trip)) return null;
+  return trip;
+}
+
+export async function intakeSharedResponse(shareToken, db = null) {
+  if (!shareToken || !shareToken.startsWith('intake-')) return null;
+  if (!db) db = openSharedDb();
+  const trip = await loadIntakeTripRow(shareToken, db);
+  if (!trip) return null;
   const things = await db`
     select id, category, title, description, metadata, ratings, location, source, starts_at
     from trip_things
@@ -101,9 +133,11 @@ function sendSlugMiss(res, shareToken) {
   const miss = slugMissError(shareToken);
   logSharedTripFailure(miss.code, shareToken, miss);
   return sendJson(res, 404, {
-    ok: false,
-    code: miss.code,
-    error: miss.message,
+    ...vacationAppErrorBody({
+      code: miss.code,
+      error: miss.message,
+      customerMessage: 'This itinerary link is not available yet. Please open the vacation app and try again.',
+    }),
     slug: String(shareToken || ''),
   });
 }
