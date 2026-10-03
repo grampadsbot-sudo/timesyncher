@@ -7,7 +7,6 @@ import { loadCollaboratorAppSeatEulaText } from '../src/onboarding/eula-persiste
 import {
   configureSharedUiHelpers,
   runSharedSiteLogoBarChecks,
-  runSharedSiteMapBudLogoChecks,
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
@@ -144,7 +143,7 @@ export function persistedTurnClassifier(payload) {
   return { targetKind: tc.targetKind || p.targetKind || null, category: tc.category || p.category || null, reason: tc.reason || p.placeSearch?.error || null };
 }
 
-export { runSharedSiteLogoBarChecks, runSharedSiteMapBudLogoChecks };
+export { runSharedSiteLogoBarChecks };
 
 export function inviteUiHits(html) {
   const hits = [];
@@ -165,6 +164,21 @@ export function classifierSnapshot(payload) {
     intakeError: p.intakeError || null,
     reason: p.placeSearch?.reason || tc.reason || null,
   };
+}
+
+/** Provider stage timings from itinerary JSON / persisted placeSearch (or literal absent). */
+export function smokeProviderTimingsReport({ payload, placeSearch, itineraryJson } = {}) {
+  const ps = placeSearch || payload?.placeSearch || itineraryJson?.placeSearch || itineraryJson?.search;
+  const candidates = [
+    ps?.providerTimings,
+    itineraryJson?.placeSearch?.providerTimings,
+    payload?.placeSearchDiagnostics?.providerTimings,
+    payload?.placeSearch?.providerTimings,
+  ];
+  for (const value of candidates) {
+    if (value && typeof value === 'object' && Object.keys(value).length) return value;
+  }
+  return 'absent';
 }
 
 export function fullDiag(payload, ps) {

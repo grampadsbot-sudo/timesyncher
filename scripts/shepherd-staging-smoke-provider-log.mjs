@@ -45,6 +45,7 @@ export function isProviderHttp429(row = {}) {
 }
 
 function normalizeProviderCallRecord(checkName, row = {}) {
+  const throttle = Number(row.nominatimThrottleWaitMs);
   return {
     check: checkName,
     provider: String(row.provider || '').trim() || null,
@@ -53,12 +54,22 @@ function normalizeProviderCallRecord(checkName, row = {}) {
     calledAtMs: providerCallTimestampMs(row),
     reason: row.reason ? String(row.reason).slice(0, 800) : null,
     logSource: row._logSource || null,
+    nominatimThrottleWaitMs: Number.isFinite(throttle) && throttle >= 0 ? throttle : null,
   };
 }
 
 export function recordProviderCallsForCheck(out, checkName, sources = {}) {
   out.providerCallTimestamps = out.providerCallTimestamps || [];
   const rows = extractProviderLogRows(sources);
+  let throttleSum = 0;
+  for (const row of rows) {
+    if (!nominatimRow(row)) continue;
+    const wait = Number(row.nominatimThrottleWaitMs);
+    if (Number.isFinite(wait) && wait >= 0) throttleSum += wait;
+  }
+  if (throttleSum > 0) {
+    out.nominatimThrottleWaitMs = Number(out.nominatimThrottleWaitMs || 0) + throttleSum;
+  }
   const records = rows.map((row) => normalizeProviderCallRecord(checkName, row));
   out.providerCallTimestamps.push(...records);
   return records;
@@ -138,4 +149,5 @@ export function finalizeSmokeProviderLogSummary(out) {
   out.nominatimCacheHits = nominatimCacheHitCount(calls);
   out.nominatimOutboundHttpCalls = nominatimOutboundHttpRows(calls).length;
   out.nominatimCallsPerSecondMax = nominatimCallsPerSecondMax(calls);
+  if (out.nominatimThrottleWaitMs == null) out.nominatimThrottleWaitMs = 0;
 }

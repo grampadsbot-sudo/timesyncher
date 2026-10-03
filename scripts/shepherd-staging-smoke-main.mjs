@@ -18,8 +18,8 @@ import {
   hyattThingPass,
   anchorMatchesRealHyatt,
   lookupBundle,
-  runSharedSiteMapBudLogoChecks,
   inviteUiHits,
+  smokeProviderTimingsReport,
   fullDiag,
   classifierSnapshot,
   persistedTurnClassifier,
@@ -32,7 +32,6 @@ import {
 } from './shepherd-staging-smoke-helpers.mjs';
 import {
   withBrowserPageSlot,
-  withConnectionClosedRetry,
   waitForSelector,
 } from './shepherd-staging-smoke-browser-pool.mjs';
 
@@ -241,8 +240,19 @@ export async function runShepherdSmokeSpine(ctx) {
     const st6Keys = ['classifierMs', 'searchMs', 'judgeMs', 'replyMs', 'gateMs'];
     const st6Ok = st6 && st6Keys.every((k) => Number.isFinite(Number(st6[k])));
     out.check6 = {
-      http: t6.status, elapsedMs: t6.elapsedMs, stageTimings: st6, brave: brave6, anchor: state.ps6?.anchor,
-      searchCenter: state.ps6?.searchCenter, braveTacoRows: taco6, diag: fullDiag(t6db?.payload, state.ps6),
+      http: t6.status,
+      elapsedMs: t6.elapsedMs,
+      stageTimings: st6,
+      providerTimings: smokeProviderTimingsReport({
+        payload: t6db?.payload,
+        placeSearch: state.ps6,
+        itineraryJson: t6.json,
+      }),
+      brave: brave6,
+      anchor: state.ps6?.anchor,
+      searchCenter: state.ps6?.searchCenter,
+      braveTacoRows: taco6,
+      diag: fullDiag(t6db?.payload, state.ps6),
     };
     const fail429 = attachProviderLogAndMaybeFail(out, '6', { payload: t6db?.payload, placeSearch: state.ps6, itineraryJson: t6.json }, { http: t6.status });
     if (fail429) return fail429;
@@ -445,54 +455,4 @@ export async function runShepherdSmokeSpine(ctx) {
   }, { timeoutMs: 60000 });
 }
 
-/** MAP/BUD/LOGO in a dedicated browser after the parallel pool (one retry on connection closed). */
-export async function runShepherdSmokeMapBudLogoChecks(ctx) {
-  const { runCheck, out, state, BASE, CHROME, artifactPath, registerBrowser } = ctx;
-
-  await runCheck('MAP', async ({ setStage }) => {
-    setStage('map/logo dedicated browser');
-    const prep = state.mapLogoPrep || {};
-    const chromeMap = await puppeteer.launch(CHROME);
-    registerBrowser(chromeMap);
-    try {
-      const sharedSite = await withConnectionClosedRetry(async () => {
-        const mapPage = await chromeMap.newPage();
-        try {
-          return await runSharedSiteMapBudLogoChecks({
-            page: mapPage,
-            mapUrl: prep.intakeShareUrl || '',
-            publicUrlAfterH: prep.publicUrlAfterH || '',
-            shareSlug: prep.shareSlug || '',
-            sharedApi: prep.sharedApi,
-            artifactPath,
-          });
-        } finally {
-          await mapPage.close().catch((err) => {
-            out.browserCloseErrors = out.browserCloseErrors || [];
-            out.browserCloseErrors.push(String(err?.message || err));
-          });
-        }
-      }, { retries: 1 });
-      state.sharedSite = sharedSite;
-      out.checkMAP = { ...sharedSite.checkMAP, sharedUiHits: inviteUiHits(sharedSite.sharedHtml), intakeShareUrl: prep.intakeShareUrl };
-      out.checkBUD = sharedSite.checkBUD;
-      out.checkLOGO = sharedSite.checkLOGO;
-      return { pass: sharedSite.checks.MAP === 'PASS', http: 200 };
-    } finally {
-      await chromeMap.close().catch((err) => {
-        out.browserCloseErrors = out.browserCloseErrors || [];
-        out.browserCloseErrors.push(String(err?.message || err));
-      });
-    }
-  }, { timeoutMs: 120000 });
-
-  await runCheck('BUD', async () => ({
-    pass: state.sharedSite?.checks.BUD === 'PASS',
-    http: 200,
-  }), { timeoutMs: 60000 });
-
-  await runCheck('LOGO', async () => ({
-    pass: state.sharedSite?.checks.LOGO === 'PASS',
-    http: 200,
-  }), { timeoutMs: 60000 });
-}
+export { runShepherdSmokeMapBudLogoChecks } from './shepherd-staging-smoke-map-logo-run.mjs';

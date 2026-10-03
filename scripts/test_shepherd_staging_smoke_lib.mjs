@@ -32,7 +32,17 @@ import {
 import {
   classifySmokeServerTiming,
   serverTimingFromItineraryJson,
+  smokeProviderTimingsReport,
 } from './shepherd-staging-smoke-helpers.mjs';
+import {
+  APP_MAP_READY_FAIL_MS,
+  SHARED_GOTO_TIMEOUT_MS,
+  SHARED_MAP_READY_WAIT_MS,
+} from './shepherd-staging-smoke-shared-ui-map.mjs';
+
+assert.equal(APP_MAP_READY_FAIL_MS, 10000);
+assert.equal(SHARED_GOTO_TIMEOUT_MS, 60000);
+assert.equal(SHARED_MAP_READY_WAIT_MS, 45000);
 
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
@@ -47,6 +57,8 @@ const st5 = serverTimingFromItineraryJson({
 assert.equal(st5.latencyMs, 2913);
 assert.equal(st5.sessionE2eMs, 8165);
 assert.deepEqual(st5.stages, { postMs: 4000, queueTurnMs: 3000, classifierMs: 1200 });
+assert.equal(smokeProviderTimingsReport({ placeSearch: { providerTimings: { braveMs: 1 } } }).braveMs, 1);
+assert.equal(smokeProviderTimingsReport({}), 'absent');
 assert.equal(isoDateFromStartsAt('2027-03-13T12:00:00.000Z'), '2027-03-13');
 assert.equal(isoDateFromStartsAt('Sat Mar 13 2027 12:00:00 GMT+0000'), '2027-03-13');
 assert.equal(d1StartsOnDate(new Date('2027-03-13T12:00:00.000Z')), true);
