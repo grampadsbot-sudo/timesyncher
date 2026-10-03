@@ -9,6 +9,9 @@ import {
   selectPriorPlaces,
 } from '../src/vacation/place-search.mjs';
 import { braveLocalPlaceResult, bravePlaceSearchRows } from '../src/vacation/brave-place-query.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const CENTER = { lat: 20.737, lng: -156.446 };
 const TRIP_A = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';

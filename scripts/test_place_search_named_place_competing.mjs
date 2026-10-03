@@ -8,6 +8,9 @@ import {
   MAUI_D2_GEOCODE,
   PAIA_AREA_GEOCODE,
 } from './fixtures/place-search-maui-d2-geocode.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const NOMINATIM_HOST = ['nominatim', 'openstreetmap', 'org'].join('.');
 const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');

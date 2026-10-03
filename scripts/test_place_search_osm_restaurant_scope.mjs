@@ -4,6 +4,9 @@
  */
 import assert from 'node:assert/strict';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
+import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
+
+installNoopNominatimStore();
 
 const STAGING_6B_REJECT_TITLES = [
   'Baldwin Home Museum',
