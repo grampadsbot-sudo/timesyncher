@@ -85,7 +85,7 @@ const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","a
 
 const BOOKINGS_TAB_ICON_V1_NEEDLE = BOOKINGS_TAB_ICON_PATCH;
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box"},children:G.icon})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box"},children:G.icon})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
