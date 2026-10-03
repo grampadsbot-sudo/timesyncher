@@ -17,8 +17,8 @@ Drive the real app at the staging shared trip for `testTripSlug` (`verify-config
 - Staging alias `https://vacation-staging.timesyncher.com`.
 - Doctor first: `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --doctor`.
 - Screenshot `verify-screenshot-gate.png`.
-- Pass when the live page shows the control named above.
-- If the app no longer shows it, the result is a product gap. Do not delete or soften this file.
+- Pass when the same drive shows the Day-by-Day tab row, Vacation Day View timeline bars, and a Thing Detail page, and the document has no Vacation path nav and no shell itinerary cards.
+- If any of those surfaces is missing, the result is a product gap. Do not delete or soften this file.
 
 ## Gotchas
 

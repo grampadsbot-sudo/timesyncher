@@ -17,7 +17,7 @@ function argValue(flag) {
   return index === -1 ? '' : (process.argv[index + 1] || '');
 }
 
-export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, sharedApp = '' }) {
+export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, sharedApp = '', welcome = '' }) {
   const errors = [];
   if (!/data\.reply/.test(vacationApp) || /Got it\. I saved that/.test(vacationApp)) {
     errors.push('composer does not render the live reply, or it still has the canned bubble');
@@ -25,8 +25,17 @@ export function assertComposerSource({ vacationApp, api, liveTurn, replyRules, s
   if (!/produceLiveAppReply/.test(api) || !/jevStamp/.test(api)) {
     errors.push('vacation-app API does not store the shared-producer reply and Jev stamp');
   }
-  if (!/ensureOnboardingOpener/.test(api) || !/produceOnboardingOpener/.test(api)) {
-    errors.push('vacation-app API does not ask the model for the onboarding opener');
+  if (!/ensureOnboardingOpener/.test(api) || !/cannedWelcomeLiveTurn/.test(api)) {
+    errors.push('vacation-app API does not store the canned onboarding welcome');
+  }
+  if (/produceOnboardingOpener/.test(api)) {
+    errors.push('vacation-app API still asks a model for the onboarding opener');
+  }
+  if (!/jevRan:\s*false/.test(welcome) || !/fixed_onboarding_opener/.test(welcome)) {
+    errors.push('canned onboarding welcome does not record jevRan false with reason fixed_onboarding_opener');
+  }
+  if (!/if \(!choice\.rewritten\)/.test(liveTurn) || !/text: String\(pending\.draft/.test(liveTurn)) {
+    errors.push('a failed rewrite does not ship the tier draft');
   }
   if (/onboardingOpenerText/.test(`${api}\n${liveTurn}`) || /ONBOARDING_OPENER_WITH_SITE|ONBOARDING_OPENER_CHAT_ONLY|const CANNED_APP_REPLY/.test(liveTurn)) {
     errors.push('vacation-app still ships a fixed onboarding opener or a canned reply');
@@ -278,14 +287,15 @@ function liveDoc(turns) {
 }
 
 async function readSources() {
-  const [vacationApp, api, liveTurn, replyRules, sharedApp] = await Promise.all([
+  const [vacationApp, api, liveTurn, replyRules, sharedApp, welcome] = await Promise.all([
     readFile(path.join(root, 'vacation-app.html'), 'utf8'),
     readFile(path.join(root, 'routes/vacation-itinerary.mjs'), 'utf8'),
     readFile(path.join(root, 'src/vacation/live-app-turn.mjs'), 'utf8'),
     readFile(path.join(root, 'scripts/vacation-app-reply-rules.mjs'), 'utf8'),
     readFile(path.join(root, 'shared-app.html'), 'utf8'),
+    readFile(path.join(root, 'src/vacation/onboarding-welcome.mjs'), 'utf8'),
   ]);
-  return { vacationApp, api, liveTurn, replyRules, sharedApp };
+  return { vacationApp, api, liveTurn, replyRules, sharedApp, welcome };
 }
 
 function fail(errors) {
