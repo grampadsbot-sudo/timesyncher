@@ -53,15 +53,16 @@ import {
   vacationAppTurnPayloadForClient,
 } from '../src/vacation/reply-ship.mjs';
 import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { intakeItineraryExistingThings } from '../src/vacation/intake-itinerary-existing-things.mjs';
 import {
   classifyTripIntake,
   intakeActivityThings,
-  intakeLodgingThings,
   intakeLodgingWanted,
   mergeWantedThings,
   resolveIntakePlace,
   tripIntakeJobFields,
 } from '../src/vacation/trip-intake-classify.mjs';
+import { resolveIntakeTitleFields } from '../src/vacation/intake-title-persist.mjs';
 import {
   classifyVacationAppCustomerTurn,
   intakeExtractedThings,
@@ -668,34 +669,22 @@ async function loadTripThings(db, tripId) {
 async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
   const planned = intakeActivityThings(extracted);
   const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+  const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (Number(existing[0]?.n) > 0) {
-    if (lodgingWanted.length) {
-      const current = await loadTripThings(db, tripId);
-      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
-        destinationHint: extractedDestination,
-        areaHint: extractedDestination,
-        env,
-        fetchImpl,
-        searchImpl: searchPlacesImpl,
-        existingThings: current,
-      });
-      if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
-        await persistIntakeLodgingLookupOnCustomerTurn(
-          db,
-          customerTurnId,
-          lodgingOutcome.lookups || [],
-          lodgingOutcome.lodgingOutcome || null,
-        );
-      }
-    }
-    await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
-    return loadTripThings(db, tripId);
+    return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
+      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId,
+      savedTripTitle: priorRows[0]?.title,
+    }, loadTripThings);
   }
   const span = intakeSpan(text);
-  const priorRows = await db`select destination, metadata from trips where id = ${tripId} limit 1`;
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
   const priorDestination = String(priorRows[0]?.destination || '').trim();
+  const titleFields = resolveIntakeTitleFields({
+    extractedTitle,
+    titleError,
+    savedTripTitle: priorRows[0]?.title,
+  });
   const resolvedDestination = priorDestination
     ? { destination: priorDestination, ask: false, source: 'saved-trip' }
     : await resolveTripDestination({
@@ -717,9 +706,9 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
   const resolved = await resolveIntakePlace({
     destination: extractedDestination || resolvedDestination.destination,
-    title: extractedTitle,
+    title: titleFields.title,
     destinationError,
-    titleError,
+    titleError: titleFields.titleError,
     searchImpl,
   });
   const tripTitle = resolved.title;
