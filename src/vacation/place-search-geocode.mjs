@@ -26,6 +26,19 @@ function httpStatusFromReason(reason) {
   return match ? Number(match[1]) : null;
 }
 
+let lastNominatimNetworkCallAtMs = null;
+
+/** Timestamp (ms) of the most recent live Nominatim HTTP call, for provider telemetry. */
+export function consumeNominatimNetworkCallAtMs() {
+  const ms = lastNominatimNetworkCallAtMs;
+  lastNominatimNetworkCallAtMs = null;
+  return ms;
+}
+
+function nominatimProviderTimingFields(calledAtMs) {
+  return Number.isFinite(Number(calledAtMs)) ? { calledAtMs: Number(calledAtMs) } : {};
+}
+
 export function providerFailureMessage(providerLog = []) {
   return providerLog
     .map((row) => `${row.provider}: ${row.reason || row.status}`)
@@ -88,6 +101,8 @@ async function nominatimReadJson(fetchImpl, url, readJson, {
     sleep,
     maxWaitMs: readOptions.maxWaitMs,
   });
+  const callAtMs = typeof now === 'function' ? now() : Number(now);
+  lastNominatimNetworkCallAtMs = Number.isFinite(callAtMs) ? callAtMs : Date.now();
   const payload = await readJson(fetchImpl, url, readOptions);
   if (key) {
     let cacheable = false;
@@ -169,18 +184,26 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
   }
   try {
     const found = await geocodeLabel(fetchImpl, trimmed, readJson, options);
+    const calledAtMs = consumeNominatimNetworkCallAtMs();
     if (!found) {
       providerLog.push({
         provider: 'nominatim',
         status: 'empty',
         reason: `no coordinates for ${trimmed}`,
         resultCount: 0,
+        ...nominatimProviderTimingFields(calledAtMs),
       });
       return null;
     }
-    providerLog.push({ provider: 'nominatim', status: 'ok', resultCount: 1 });
+    providerLog.push({
+      provider: 'nominatim',
+      status: 'ok',
+      resultCount: 1,
+      ...nominatimProviderTimingFields(calledAtMs),
+    });
     return found;
   } catch (error) {
+    const calledAtMs = consumeNominatimNetworkCallAtMs();
     const reason = String(error?.message || error || 'geocode failed').trim();
     const httpStatus = Number.isFinite(Number(error?.httpStatus))
       ? Number(error.httpStatus)
@@ -191,6 +214,7 @@ export async function tryGeocodeLabel(fetchImpl, label, providerLog, readJson, o
       reason,
       ...(Number.isFinite(httpStatus) ? { httpStatus } : {}),
       resultCount: 0,
+      ...nominatimProviderTimingFields(calledAtMs),
     });
     return null;
   }

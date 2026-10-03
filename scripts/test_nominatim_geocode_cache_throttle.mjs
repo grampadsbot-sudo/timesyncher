@@ -7,6 +7,7 @@ import {
 } from '../src/vacation/nominatim-store.mjs';
 import { tryGeocodeLabel } from '../src/vacation/place-search-geocode.mjs';
 import { PlaceSearchError } from '../src/vacation/place-search-error.mjs';
+import { nominatimCallsPerSecondMax } from './shepherd-staging-smoke-provider-log.mjs';
 
 function createTestStore() {
   const cache = new Map();
@@ -79,12 +80,13 @@ async function concurrentGeocodesSpaced() {
     nowMs += ms;
   };
   const readJson = async () => [{ lat: '1', lon: '2', display_name: 'x' }];
+  const providerLog = [];
   const run = (label) => tryGeocodeLabel(
     async () => {
       await readJson();
     },
     label,
-    [],
+    providerLog,
     readJson,
     { sleep, now: () => nowMs },
   );
@@ -95,6 +97,8 @@ async function concurrentGeocodesSpaced() {
   ]);
   assert.ok(sleeps.length >= 2, `expected waits, got ${sleeps.join(',')}`);
   assert.ok(sleeps.every((ms) => ms >= 1000), `waits must be >= 1000ms: ${sleeps.join(',')}`);
+  assert.ok(providerLog.length >= 3);
+  assert.equal(nominatimCallsPerSecondMax(providerLog), 1);
   useNominatimStore(null);
 }
 
