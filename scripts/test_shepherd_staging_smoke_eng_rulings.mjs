@@ -54,8 +54,8 @@ holder.kill('SIGTERM');
 
 const envText = readFileSync(new URL('./shepherd-staging-smoke-env.mjs', import.meta.url), 'utf8');
 assert.match(envText, /TIMESYNCHER_HARNESS_STUB_OUTBOUND = '1'/);
-const mainText = readFileSync(new URL('./shepherd-staging-smoke-main.mjs', import.meta.url), 'utf8');
-assert.match(mainText, /checkIOutboundPassesSmokeHarness/);
+const checkIText = readFileSync(new URL('./shepherd-staging-smoke-check-i.mjs', import.meta.url), 'utf8');
+assert.match(checkIText, /evaluateCheckIOutbound/);
 const stubEnv = { TIMESYNCHER_HARNESS_STUB_OUTBOUND: '1', RESEND_API_KEY: 're_test' };
 const sent = await sendWithResend({
   to: 'collab-invite-deadbeef-1@resend.dev',
