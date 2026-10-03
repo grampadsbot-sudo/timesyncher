@@ -60,6 +60,7 @@ try {
   });
   assert.equal(miss.status, 404);
   assert.equal(miss.json.code, 'shared_trip_slug_not_found');
+  assert.match(miss.json.customerMessage, /vacation app/i);
   assert.match(miss.json.error, new RegExp(slug));
   assert.equal(miss.body.includes('travel.timesyncher.com'), false);
   assert.equal(miss.body.includes('Invalid or expired link'), false);

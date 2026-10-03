@@ -32,7 +32,7 @@
     button { cursor: pointer; }
     .app {
       height: 100vh;
-      padding-bottom: 24px;
+      height: 100dvh;
       box-sizing: border-box;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
@@ -62,7 +62,6 @@
     }
     .app.site-fullscreen .splitter,
     .app.site-fullscreen .chat-pane { display: none; }
-    html:has(.app.site-fullscreen) body { padding-bottom: 0 !important; }
     .brand {
       min-width: 0;
       display: flex;
@@ -244,6 +243,7 @@
     .composer {
       border-top: 1px solid var(--line);
       padding: 10px clamp(10px, 2.5vw, 18px);
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
       background: rgba(255, 255, 255, .96);
     }
     .attachment-row {
@@ -410,9 +410,8 @@
     @media (max-width: 700px) {
       .topbar { grid-template-columns: minmax(0, 1fr); align-items: start; } .trip-button { max-width: 100%; } .trip-list { left: 0; right: auto; width: 100%; } .workspace:not(.chat-only) { grid-template-rows: minmax(160px, var(--site-height, 48fr)) 10px minmax(260px, 52fr); } .bubble { max-width: 94%; }
     }
-    html:has(.app.site-fullscreen) footer[data-build-stamp="1"] {
-      visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0);
-    }
+    html:has(main.app) body { padding-bottom: 0 !important; }
+    html:has(main.app) footer[data-build-stamp="1"] { visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); }
   </style>
 </head>
 <body>
