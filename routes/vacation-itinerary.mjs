@@ -32,6 +32,7 @@ import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mj
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
 import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
+import { vacationAppItineraryPostStatus } from '../src/vacation/vacation-app-turn-http.mjs';
 // Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
 import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
@@ -1012,7 +1013,7 @@ async function handleVacationApp(req, res, db, url) {
     const queueStarted = Date.now();
     const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill);
     const queueTurnMs = Date.now() - queueStarted;
-    const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
+    const postStatus = vacationAppItineraryPostStatus(queued, Boolean(selected));
     const serverTiming = mergeTripCreateServerTiming({
       postMs: Date.now() - postStarted,
       createVacationMs,

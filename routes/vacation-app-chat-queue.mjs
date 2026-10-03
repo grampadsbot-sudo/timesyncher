@@ -18,6 +18,10 @@ import { loadOwnerReplyPlanForTurn } from '../src/vacation/reply-plan-entitlemen
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 import { failedInTurnSearchTurn, replyStageMillis, turnStageTimings, withGateMs } from '../src/vacation/turn-stage-timings.mjs';
 import { persistVacationAppCustomerTurn } from '../src/vacation/vacation-app-queue-persist.mjs';
+import {
+  vacationAppBlockedReplyTurnReturn,
+  vacationAppReplyFailureTurnReturn,
+} from '../src/vacation/vacation-app-turn-http.mjs';
 export async function queueVacationAppTurn(db, session, trip, body, hooks, intake = {}) {
   const env = process.env;
   const tripId = trip?.id ?? null;
@@ -414,11 +418,11 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     if (String(interimDraft || '').trim() && !interimText) {
       const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
       await storeReplyFailure(db, turnRows[0].id, payload);
-      return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
+      return vacationAppReplyFailureTurnReturn(base, failure);
     }
     if (produced.interimReply) produced.interimReply.text = interimText;
     const interimBlocked = await blockReplyShipGate(interimText);
-    if (interimBlocked) return interimBlocked;
+    if (interimBlocked) return vacationAppBlockedReplyTurnReturn(base, interimBlocked);
     const pending = {
       ...produced.pending,
       customerTurnIndex,
@@ -458,11 +462,11 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
   if (!produced.reply) {
     const failure = applyLiveAppReplyFailureToPayload(payload, customerLive, produced);
     await storeReplyFailure(db, turnRows[0].id, payload);
-    return { ...base, ok: false, status: failure.failureStatus, error: failure.replyFailure, invented: failure.invented };
+    return vacationAppReplyFailureTurnReturn(base, failure);
   }
 
   const citationBlocked = await blockReplyShipGate(produced.reply);
-  if (citationBlocked) return citationBlocked;
+  if (citationBlocked) return vacationAppBlockedReplyTurnReturn(base, citationBlocked);
 
   return persistVacationAppOutboundReply({
     db,

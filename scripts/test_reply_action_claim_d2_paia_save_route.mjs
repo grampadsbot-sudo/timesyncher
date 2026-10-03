@@ -175,7 +175,7 @@ try {
 const route = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const appHtml = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
 const requestJs = await readFile(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
-assert.match(route, /const postStatus = queued\.ok \? \(selected \? 201 : 200\) : 502/);
+assert.match(route, /vacationAppItineraryPostStatus\(queued/);
 assert.match(appHtml, /if \(!res\.ok \|\| data\.ok === false\) failAppRequest/);
 assert.match(appHtml, /showComposerStatus\(customerSafeErrorMessage/);
 assert.match(requestJs, /return 'Something went wrong\. Please try again\.'/);
