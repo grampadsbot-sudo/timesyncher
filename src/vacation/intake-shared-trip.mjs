@@ -3,6 +3,8 @@ import { assignDatesScheduling as scheduleThingDates, tripIsoDay } from './intak
 export { tripIsoDay };
 import { placeSourceFieldsFromThing, logoFieldsForSharedPlace } from './intake-shared-place-source.mjs';
 import { transportKind } from './intake-transport-kind.mjs';
+import { isLodgingStay } from './intake-lodging-stay.mjs';
+import { normalizeThingType } from './timeline-icons.mjs';
 import { destinationCenterFromTripMetadata } from './trip-destination-center.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
@@ -135,8 +137,9 @@ function sourceCategoryName(thing = {}) {
 }
 
 function categoryFor(thing) {
+  const lodging = isLodgingStay(thing);
   const kind = transportKind(thing);
-  if (kind === 'flight' || kind === 'car') {
+  if (kind === 'flight' || (kind === 'car' && !lodging)) {
     const category_name = kind === 'flight' ? 'Flight' : 'Car';
     const category_icon = kind === 'flight' ? '✈️' : '🚗';
     return { category_name, category_icon, category: kind };
@@ -148,11 +151,11 @@ function categoryFor(thing) {
     || model.category || model.category_name || thing?.modelCategory || ''
     || sourceCategoryName(thing)
   ).trim();
-  if (!raw) return { category_name: '', category_icon: '', category: '' };
+  if (!raw && !lodging) return { category_name: '', category_icon: '', category: '' };
   const key = raw.toLowerCase();
-  if (key === 'hotel' || key === 'lodging' || key === 'accommodation') {
+  if (lodging || normalizeThingType(raw) === 'hotel') {
     const named = sourceCategoryName(thing);
-    const category_name = named && !/^(hotel|lodging|accommodation)$/i.test(named) ? named : 'Hotel';
+    const category_name = named && !/^(hotel|lodging|accommodation|resort|motel|hostel|inn)$/i.test(named) ? named : 'Hotel';
     return { category_name, category_icon: '🏨', category: 'hotel' };
   }
   const known = {
