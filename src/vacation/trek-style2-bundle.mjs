@@ -401,7 +401,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MN_CATEGORY_NEEDLE)) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
-  patched = applySharedLiveTabBundlePatches(patched);
+  patched = applySharedLiveTabBundlePatches(patched, { served });
   patched = applyLiveProductPatches(patched);
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
@@ -673,11 +673,16 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
   }
-  if (!js.includes('tsSharedLiveTabListMount=G=>')) {
-    throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
-  }
-  if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
-    throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
+  const servedSharedHotelsCars = js.includes('tsSharedLiveTabListMount=G=>');
+  if (servedSharedHotelsCars) {
+    if (!js.includes('tsSharedLiveTabListMount=G=>')) {
+      throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
+    }
+    if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
+      throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
+    }
+  } else if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
+    throw new Error('Live Hotels/Cars tabs must filter trip catalog rows in the vacation bundle.');
   }
   if (js.includes('__tsLiveFill:1') || js.includes('lat:36.1147') || js.includes('address:"Nevada"') || js.includes('logoUrl:tsLogo(name)')) {
     throw new Error('Live tabs must not pad Las Vegas names or coordinates.');
