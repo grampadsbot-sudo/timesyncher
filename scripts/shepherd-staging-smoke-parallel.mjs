@@ -15,6 +15,7 @@ import {
   measureCheckoutIndexFetchMs,
   classifySmokeServerTiming,
 } from './shepherd-staging-smoke-helpers.mjs';
+import { attachProviderLogAndMaybeFail } from './shepherd-staging-smoke-provider-log.mjs';
 import {
   withBrowserPageSlot,
   waitForSelector,
@@ -64,8 +65,30 @@ export function buildMainIndependentParallelChecks(ctx) {
         setStage('checkout zero UI');
         const browser = sharedBrowser || await puppeteer.launch(CHROME);
         return withBrowserPageSlot(browser, async (cPage) => {
-          await cPage.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-          await waitForSelector(cPage, '#singlePrice', 120000);
+          const checkoutUrl = `${BASE}/index.html`;
+          await cPage.goto(checkoutUrl, { waitUntil: 'domcontentloaded', timeout: 120000 });
+          try {
+            await waitForSelector(cPage, '#singlePrice', 120000);
+          } catch (err) {
+            const timeoutSelector = err?.selector || '#singlePrice';
+            const pageUrl = cPage.url();
+            const cShot = artifactPath('checkout-zero-timeout.png');
+            await cPage.screenshot({ path: cShot, fullPage: true }).catch(() => null);
+            out.checkC = {
+              timeoutSelector,
+              pageUrl,
+              screenshot: cShot,
+              indexFetch,
+              serverTiming: checkoutPageTiming,
+              appFailElementMissing: true,
+            };
+            return {
+              pass: false,
+              http: 200,
+              harnessError: true,
+              harnessMessage: `APP FAIL: checkout element never rendered (${timeoutSelector}) at ${pageUrl}`,
+            };
+          }
           await cPage.type('input[name="firstName"]', 'C');
           await cPage.type('input[name="lastName"]', 'Check');
           await cPage.type('input[name="email"]', `c-check-${Date.now()}@resend.dev`);
@@ -149,6 +172,8 @@ export function buildMainIndependentParallelChecks(ctx) {
           h2OneHotelAtShip,
         };
         ctx.state.creationReply = creationReply;
+        const fail429 = attachProviderLogAndMaybeFail(out, 'H2', { payload: h2Db?.payload, placeSearch: h2Db?.payload?.placeSearch, itineraryJson: h2Trip.json }, { http: h2Trip.status });
+        if (fail429) return fail429;
         const pass = h2Trip.status >= 200 && h2Trip.status < 300 && h2Trip.status !== 502 && creationMentionsKihei && h2AddrOk && h2HotelsTabOk && h2OneHotelAtShip;
         return { pass, http: h2Trip.status };
       },
@@ -178,6 +203,8 @@ export function buildMainIndependentParallelChecks(ctx) {
           customerTurnId: kDb?.id || null,
           postsOk: itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn),
         };
+        const fail429 = attachProviderLogAndMaybeFail(out, 'K', { payload: kDb?.payload, placeSearch: kDb?.payload?.placeSearch, itineraryJson: kTurn.json }, { http: kTurn.status });
+        if (fail429) return fail429;
         const category = String(kPersist.category || kFromResponse?.category || '').toLowerCase();
         const postsOk = itineraryPostOk(kHi) && itineraryPostOk(kTrip) && itineraryPostOk(kTurn);
         return {

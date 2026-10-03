@@ -55,5 +55,12 @@ export async function withConnectionClosedRetry(fn, { retries = 1 } = {}) {
 }
 
 export async function waitForSelector(page, selector, timeoutMs = 120000) {
-  await page.waitForSelector(selector, { timeout: timeoutMs, visible: true });
+  try {
+    await page.waitForSelector(selector, { timeout: timeoutMs, visible: true });
+  } catch (err) {
+    const wrapped = new Error(`waitForSelector ${selector}: ${err?.message || err}`);
+    wrapped.selector = selector;
+    wrapped.cause = err;
+    throw wrapped;
+  }
 }

@@ -2,61 +2,29 @@
 
 import {
   gradeAskLodgingReplyQuestion,
+  gradeCoffeePlaceRowByJev,
   jevBlockFromResult,
 } from './shepherd-staging-smoke-jev-reply-judge.mjs';
 
-function coffeePlaceEvidenceFromPersistedRow(row = {}) {
-  const name = String(
-    row.name || row.title || row.placeName || row.displayName || row.label || '',
-  ).trim();
-  const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const category = String(
-    row.category
-    || row.categoryName
-    || row.category_name
-    || meta.categoryName
-    || meta.category
-    || row.sourceRecord?.categoryName
-    || (Array.isArray(row.providerCategories) ? row.providerCategories.join(' ') : '')
-    || (Array.isArray(row.categories) ? row.categories.join(' ') : '')
-    || '',
-  ).toLowerCase();
-  const desc = String(row.description || row.address || meta.address || '').trim();
-  const tags = row.tags || row.osmTags || meta.tags || meta.osmTags || row.source?.tags || row.raw?.tags || {};
-  const amenity = String(tags.amenity || meta.amenity || '').toLowerCase();
-  const cuisine = String(tags.cuisine || meta.cuisine || '').toLowerCase();
-  const braveCategory = String(row.sourceRecord?.categoryName || meta.sourceRecord?.categoryName || '').toLowerCase();
-  const evidence = [];
-  if (name && /\bcafe\b|coffee|espresso|roaster|latte/i.test(name)) evidence.push('name');
-  if (category && /\bcafe\b|coffee|coffeeshop|coffee_shop/.test(category)) evidence.push('category');
-  if (amenity === 'cafe') evidence.push('osm:amenity=cafe');
-  if (cuisine.includes('coffee') || cuisine === 'coffee_shop') evidence.push('osm:cuisine=coffee');
-  if (braveCategory && /\bcafe\b|coffee/.test(braveCategory)) evidence.push('brave:category');
-  if (desc && /\bcafe\b|coffee|espresso|roaster|latte/i.test(desc)) evidence.push('description');
-  const hasPersistedFields = Boolean(name || desc || category || amenity || cuisine || braveCategory
-    || (tags && typeof tags === 'object' && Object.keys(tags).length > 0));
-  return {
-    ok: evidence.length > 0,
-    evidence,
-    harnessMissing: !hasPersistedFields,
-    fields: { name, category, amenity, cuisine, braveCategory },
-  };
+function coffeeRowLabel(row = {}) {
+  return String(row.name || row.title || row.placeName || row.displayName || row.label || '').trim();
 }
 
-export function gradeCoffeeReplyRows(rows = []) {
+export async function gradeCoffeeReplyRows(rows = [], opts = {}) {
   let harnessError = false;
-  const graded = (rows || []).map((row) => {
-    const { ok, evidence, harnessMissing, fields } = coffeePlaceEvidenceFromPersistedRow(row);
-    if (harnessMissing) harnessError = true;
-    return {
-      name: row.name || row.title || null,
-      ok: harnessMissing ? null : ok,
-      evidence,
-      harnessMissing,
-      fields,
+  const graded = [];
+  for (const row of rows || []) {
+    const name = coffeeRowLabel(row) || null;
+    const rowGrade = await gradeCoffeePlaceRowByJev(row, opts);
+    if (rowGrade.harnessMissing) harnessError = true;
+    graded.push({
+      name,
+      ok: rowGrade.harnessMissing ? null : rowGrade.pass,
+      jev: rowGrade.jev,
+      harnessMissing: rowGrade.harnessMissing,
       source: row.provider || row.source || null,
-    };
-  });
+    });
+  }
   const failures = graded.filter((r) => r.harnessMissing !== true && r.ok === false);
   return {
     rows: graded,
@@ -377,7 +345,11 @@ export async function gradeAskLodging({
     fetchImpl,
   });
   const hotelN = Number(hotelCount);
-  const jev = jevBlockFromResult(replyGrade.jev);
+  const jev = jevBlockFromResult(replyGrade.jev, {
+    questionKey: 'asks_where_staying',
+    customerTurn,
+    replyExcerpt: replyEvidence,
+  });
   const pass = hotelN === 0 && signals.persistedLodgingAsk && replyGrade.pass;
   return {
     pass,

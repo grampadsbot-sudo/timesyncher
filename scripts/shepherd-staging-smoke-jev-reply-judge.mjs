@@ -198,11 +198,51 @@ const JEV_ASK_LODGING_REPLY = {
   passWhenYes: true,
 };
 
-export function jevBlockFromResult(jev = {}) {
+const JEV_COFFEE_PLACE_ROW = {
+  questionKey: 'real_coffee_place',
+  instructions: 'Is this a real coffee shop or cafe where customers can buy coffee?',
+  criteria: {
+    true: 'The place is a cafe, coffee shop, espresso bar, roaster, or similar venue associated with serving coffee.',
+    false: 'The place is not a coffee venue (for example a generic restaurant, grocery, hotel, or unrelated business).',
+  },
+  passWhenYes: true,
+};
+
+export async function gradeCoffeePlaceRowByJev(row = {}, opts = {}) {
+  const name = String(row.name || row.title || row.placeName || row.displayName || '').trim();
+  const hint = [name, row.description, row.address].filter(Boolean).join(' — ').slice(0, 800);
+  const graded = await gradeSmokeReplyJev({
+    ...JEV_COFFEE_PLACE_ROW,
+    replyText: hint || name,
+    customerTurn: opts.customerTurn || 'coffee shops near Kihei',
+    judgeFn: opts.judgeFn,
+    env: opts.env,
+    fetchImpl: opts.fetchImpl,
+  });
+  if (!name) {
+    return { pass: false, jev: jevBlockFromResult(graded.jev, { questionKey: JEV_COFFEE_PLACE_ROW.questionKey }), harnessMissing: true };
+  }
+  if (!graded.jev?.ok || graded.jev?.yes == null) {
+    return { pass: false, jev: jevBlockFromResult(graded.jev, { questionKey: JEV_COFFEE_PLACE_ROW.questionKey, customerTurn: opts.customerTurn, replyExcerpt: name }), harnessMissing: false };
+  }
+  return {
+    pass: graded.pass,
+    jev: jevBlockFromResult(graded.jev, { questionKey: JEV_COFFEE_PLACE_ROW.questionKey, customerTurn: opts.customerTurn, replyExcerpt: name }),
+    harnessMissing: false,
+  };
+}
+
+export function jevBlockFromResult(jev = {}, meta = {}) {
+  const customerTurn = meta.customerTurn != null ? String(meta.customerTurn) : '';
+  const replyExcerpt = meta.replyExcerpt != null ? String(meta.replyExcerpt) : '';
   return {
     verdict: jev.verdict ?? null,
     rationale: String(jev.rationale || '').slice(0, 2000),
     model: jev.model || JEV_QUALITY_MODEL,
+    ...(meta.questionKey ? { questionKey: String(meta.questionKey) } : {}),
+    ...(customerTurn ? { customerTurn: customerTurn.slice(0, 500) } : {}),
+    ...(replyExcerpt ? { replyExcerpt: replyExcerpt.slice(0, 800) } : {}),
+    ...(jev.score != null ? { noul: jev.score } : {}),
     ...(jev.error ? { error: String(jev.error).slice(0, 300) } : {}),
   };
 }
@@ -222,7 +262,14 @@ export async function gradeD2UnschedReply(replyText, opts = {}) {
     env,
     fetchImpl,
   });
-  return { pass: graded.pass, jev: jevBlockFromResult(graded.jev) };
+  return {
+    pass: graded.pass,
+    jev: jevBlockFromResult(graded.jev, {
+      questionKey: JEV_D2_UNSCHED.questionKey,
+      customerTurn,
+      replyExcerpt: replyText,
+    }),
+  };
 }
 
 export async function gradeAskD2Reply(replyText, opts = {}) {
@@ -240,7 +287,14 @@ export async function gradeAskD2Reply(replyText, opts = {}) {
     env,
     fetchImpl,
   });
-  return { pass: graded.pass, jev: jevBlockFromResult(graded.jev) };
+  return {
+    pass: graded.pass,
+    jev: jevBlockFromResult(graded.jev, {
+      questionKey: JEV_ASK_D2.questionKey,
+      customerTurn,
+      replyExcerpt: replyText,
+    }),
+  };
 }
 
 export async function gradeAskLodgingReplyQuestion(replyText, opts = {}) {
