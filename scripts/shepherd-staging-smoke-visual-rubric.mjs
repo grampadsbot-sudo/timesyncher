@@ -2,8 +2,8 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 
-export const VISUAL_JUDGE_MODEL = 'qwen/qwen3-235b-a22b-2507';
-export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v5-composer-send-a3896550';
+export const VISUAL_JUDGE_MODEL = 'qwen/qwen2.5-vl-72b-instruct';
+export const VISUAL_RUBRIC_VERSION = 'shepherd-visual-rubric-v6-qwen25-vl-composer-send-8204';
 
 const LOGO_DISTINCTION = `Logo policy (VISUAL only; separate LOGO smoke gate is unchanged):
 - Craig's spec applies to the APP SHELL: header, composer row, and site/chat slider divider area.
