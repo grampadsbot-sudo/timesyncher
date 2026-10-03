@@ -3,7 +3,6 @@ import { cleanText, headerValue, sendJson, vacationAppErrorBody } from './http.m
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
-import { collectUnpaintableLogoEmbeds } from './shared-logo-paint.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 
 let sharedTripDatabase = null;
@@ -102,7 +101,7 @@ async function loadIntakeTripRow(shareToken, db) {
   return trip;
 }
 
-export async function intakeSharedResponse(shareToken, db = null, options = {}) {
+export async function intakeSharedResponse(shareToken, db = null) {
   if (!shareToken || !shareToken.startsWith('intake-')) return null;
   if (!db) db = openSharedDb();
   const trip = await loadIntakeTripRow(shareToken, db);
@@ -127,8 +126,7 @@ export async function intakeSharedResponse(shareToken, db = null, options = {}) 
   }
   const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
   const captured = applyCapturedLogos(presented);
-  const logoBodies = options.fetchLogos ? await collectUnpaintableLogoEmbeds(captured) : undefined;
-  return finalizeServedSharedTripPayload(captured, { logoBodies });
+  return finalizeServedSharedTripPayload(captured);
 }
 
 function sendSlugMiss(res, shareToken) {
@@ -146,7 +144,7 @@ function sendSlugMiss(res, shareToken) {
 
 async function respondSharedTripGet(req, res, shareToken) {
   try {
-    const local = await intakeSharedResponse(shareToken, null, { fetchLogos: true });
+    const local = await intakeSharedResponse(shareToken);
     if (local) return sendJson(res, 200, local);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
     return await proxyConfiguredUpstream(req, res, shareToken);

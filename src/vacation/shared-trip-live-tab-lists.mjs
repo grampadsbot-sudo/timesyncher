@@ -1,5 +1,4 @@
 import { applyProductKeepsakeOverrides, productThingCategory } from './keepsake-product-overrides.mjs';
-import { logoEmbedAttrs } from './shared-logo-paint.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -54,7 +53,7 @@ function sharedLiveTabRows(shared = {}, tabKeyword = '') {
   return rows;
 }
 
-function listRowHtml({ place, override, tab, onLogoMissing, logoBodies }) {
+function listRowHtml({ place, override, tab, onLogoMissing }) {
   const logoUrl = resolveThingLogoUrl(place, override);
   const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
@@ -63,17 +62,15 @@ function listRowHtml({ place, override, tab, onLogoMissing, logoBodies }) {
     return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="display:flex;align-items:center;gap:8px"><span><strong>${name}</strong></span></li>`;
   }
   const src = escapeHtml(logoUrl);
-  const embed = logoEmbedAttrs(logoUrl, logoBodies);
-  const chip = `<span data-ts-logo-chip="1" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${src}"${embed} alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center center;display:block" /></span>`;
+  const chip = `<span data-ts-logo-chip="1" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${src}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center center;display:block" /></span>`;
   return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {
   const tab = text(tabKeyword).toLowerCase();
   const onLogoMissing = options.onLogoMissing || logSharedLiveTabLogoMissing;
-  const logoBodies = options.logoBodies;
   const rows = sharedLiveTabRows(shared, tab);
-  return rows.map((row) => listRowHtml({ ...row, tab, onLogoMissing, logoBodies }));
+  return rows.map((row) => listRowHtml({ ...row, tab, onLogoMissing }));
 }
 
 export function renderSharedLiveTabListHtml(shared = {}, tabKeyword = '', options = {}) {
@@ -85,9 +82,8 @@ export function renderSharedLiveTabListHtml(shared = {}, tabKeyword = '', option
 export function buildSharedLiveTabLists(shared = {}, options = {}) {
   const prepared = prepareSharedTripForLiveApp(shared);
   const onLogoMissing = options.onLogoMissing || logSharedLiveTabLogoMissing;
-  const logoBodies = options.logoBodies;
   return {
-    hotels: sharedLiveTabRowHtmlFragments(prepared, 'hotels', { onLogoMissing, logoBodies }),
-    cars: sharedLiveTabRowHtmlFragments(prepared, 'cars', { onLogoMissing, logoBodies }),
+    hotels: sharedLiveTabRowHtmlFragments(prepared, 'hotels', { onLogoMissing }),
+    cars: sharedLiveTabRowHtmlFragments(prepared, 'cars', { onLogoMissing }),
   };
 }

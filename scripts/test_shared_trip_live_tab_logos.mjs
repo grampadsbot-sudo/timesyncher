@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 
 import { sharedLiveTabListMountOutcome } from '../src/vacation/shared-live-tab-list-mount.mjs';
-import { logoBodyKind, unpaintableLogoEmbed } from '../src/vacation/shared-logo-paint.mjs';
 import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { finalizeServedSharedTripPayload, renderServedSharedPageLiveTabMarkup } from '../src/vacation/shared-trip-served-page.mjs';
@@ -165,20 +164,5 @@ assert.equal(
   resolveThingLogoUrl({ image_url: '/ts-thing-logos/car.svg', category_name: 'Car' }, { category: 'car' }),
   '/ts-thing-logos/car.svg',
 );
-
-const svgLogo = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"></svg>');
-const pngLogo = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
-assert.equal(logoBodyKind(svgLogo, 'image/svg+xml'), 'svg');
-assert.equal(logoBodyKind(pngLogo, 'image/png'), 'png');
-const svgEmbed = unpaintableLogoEmbed(svgLogo, 'image/svg+xml');
-assert.equal(unpaintableLogoEmbed(pngLogo, 'image/png'), null);
-assert.equal(svgEmbed.typeAttr, 'image/svg+xml');
-const embedded = finalizeServedSharedTripPayload(shared, {
-  logoBodies: new Map([['https://hertz.com/favicon.ico', svgEmbed]]),
-});
-const embeddedCars = embedded.liveTabLists.cars.join('');
-assert.match(embeddedCars, /src="https:\/\/hertz\.com\/favicon\.ico"/);
-assert.match(embeddedCars, /data-logo-bytes="/);
-assert.match(embeddedCars, /data-logo-type="image\/svg\+xml"/);
 
 console.log('shared trip served page live tab logo tests passed');
