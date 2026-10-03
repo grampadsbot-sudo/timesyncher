@@ -191,6 +191,7 @@ scripts/test_trip_site_url_purchase.mjs
 scripts/test_g3c_model_intent.mjs
 scripts/test_jev_relevance_gate.mjs
 scripts/test_no_seeded_transport.mjs
+scripts/test_no_telegram_media_proxy.mjs
 scripts/test_place_search.mjs
 scripts/test_trip_things_insert.mjs
 scripts/test_trip_things_site_url_hook.mjs

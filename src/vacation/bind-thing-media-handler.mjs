@@ -13,7 +13,7 @@ import {
   resolveThingFromShared,
   sniffMediaType,
 } from './thing-media-bind.mjs';
-import { getBindingMedia, listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
+import { listBindings, putMediaBlob, saveBinding } from './thing-media-store.mjs';
 
 const MAX_BYTES = Number.parseInt(process.env.TIMESYNCHER_MEDIA_BIND_MAX_BYTES || '20971520', 10);
 function trekPublic() {
@@ -278,16 +278,11 @@ export default async function handler(req, res) {
       const id = cleanText(url.searchParams.get('id'), 80);
       const raw = url.searchParams.get('raw') === '1' || url.searchParams.get('raw') === 'true';
       if (raw && shareToken && id) {
-        const media = await getBindingMedia(shareToken, id, process.env);
-        if (!media) {
-          return sendJson(res, 404, { ok: false, error: 'Bound media bytes were not found.' });
-        }
-        res.statusCode = 200;
-        res.setHeader('content-type', media.mimeType);
-        res.setHeader('cache-control', 'public, max-age=3600');
-        res.setHeader('content-disposition', `inline; filename="${media.originalName.replace(/"/g, '')}"`);
-        res.end(media.bytes);
-        return;
+        console.error(`rejected bind-thing-media raw stream shareToken=${shareToken} id=${id}`);
+        return sendJson(res, 410, {
+          ok: false,
+          error: 'Bound media is no longer streamed through this API. Use the public blob URL on the binding row.',
+        });
       }
       if (!shareToken) {
         return sendJson(res, 200, { ok: true, ...opsHelp(originFromReq(req)) });
