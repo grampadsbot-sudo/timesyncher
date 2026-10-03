@@ -39,7 +39,7 @@ function inkCenterYFromPngBuffer(buf) {
 }
 
 /** @param {import('puppeteer-core').Page} page @param {string} selector */
-export async function measureElementInkCenterY(page, selector) {
+async function measureElementInkCenterY(page, selector) {
   const handle = await page.$(selector);
   if (!handle) return null;
   const box = await handle.boundingBox();
