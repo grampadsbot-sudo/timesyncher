@@ -593,16 +593,19 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
-  const unscheduledDayRule = String(tripRaw?.unscheduledDayRule || tripRaw?.chatPlaceSearch?.unscheduledDayRule || '').trim();
+  const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
+    && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
   const customerInput = {};
   const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
-    if (statedTripFields.has(key)) continue;
+    if (statedTripFields.has(key) || key === 'unscheduledDayRule') continue;
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
     } else if (value && typeof value === 'object') {
-      customerInput[key] = value;
+      customerInput[key] = key === 'chatPlaceSearch'
+        ? Object.fromEntries(Object.entries(value).filter(([field]) => field !== 'unscheduledDayRule'))
+        : value;
     } else if (value === true) {
       customerInput[key] = true;
     } else if (typeof value === 'string' && value.trim()) {
@@ -632,7 +635,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
-    ...(unscheduledDayRule ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
+    ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     'Do not say seat to the customer; say collaborator or person joining instead.',
     'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
@@ -659,7 +662,6 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     ...perFactGapAskRuleLines(tripRaw),
-    unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',

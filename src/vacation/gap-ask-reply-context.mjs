@@ -1,5 +1,5 @@
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
-import { customerInputState, statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
+import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
 import { FIRST_INTAKE_GAP_ORDER, persistTripGapAskState } from './first-intake-customer-input.mjs';
 
 function lodgingSatisfied(things = [], trip = {}) {
@@ -18,7 +18,6 @@ function gapSatisfied(gap, things = [], trip = {}) {
     const party = trip?.party && typeof trip.party === 'object' ? trip.party : {};
     return Boolean(String(party?.primary?.name || '').trim());
   }
-  if (key === 'plans') return (Array.isArray(things) ? things : []).length > 0;
   return true;
 }
 
@@ -29,6 +28,7 @@ function nextOpenGapAfter(filledGap, things, trip) {
   const inviteNeeded = trip?.invite_contact_needed === true;
   for (let i = Math.max(0, start); i < order.length; i += 1) {
     const gap = order[i];
+    if (gap === 'plans') continue;
     if (gap === 'invite_contact' && !inviteNeeded) continue;
     if (!gapSatisfied(gap, things, trip)) return gap;
   }
@@ -88,19 +88,9 @@ export function annotateLiveTurnGapAnswer(merged = {}, saved = null, { wantedThi
   return { ...withMeta, gapAnswerTurn: true, gapFilledThisTurn: detected.gapFilledThisTurn };
 }
 
-/** Missing structured data only (no lodgingAsk / inviteContactAsk / flightAsk ask signals). */
-function missingCustomerInputFacts(things = [], trip = {}) {
-  const state = customerInputState(things, trip);
-  const needs = Array.isArray(state.needsCustomerInput)
-    ? state.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean)
-    : [];
-  if (!needs.length) return {};
-  return { needsCustomerInput: needs };
-}
-
 function askSignalsForGap(gap, things, trip) {
   const key = String(gap || '').trim();
-  if (!key) return { fields: {}, persistGapAsk: null };
+  if (!key || key === 'plans') return { fields: {}, persistGapAsk: null };
   if (key === 'lodging') {
     return {
       fields: { lodgingAsk: true, needsCustomerInput: ['lodging'] },
@@ -150,9 +140,8 @@ function replyGapAskSignals(record = {}, things = []) {
 }
 
 export function draftingGapFields(record = {}, things = []) {
-  const missing = missingCustomerInputFacts(things, record);
   const { fields, persistGapAsk } = replyGapAskSignals(record, things);
-  return { facts: { ...missing, ...fields }, persistGapAsk };
+  return { facts: { ...fields }, persistGapAsk };
 }
 
 export function perFactGapAskRuleLines(tripRaw = {}) {

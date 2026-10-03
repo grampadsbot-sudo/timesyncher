@@ -52,12 +52,13 @@ const tripContext = await enrichDraftingTripContext(draftingFacts(
   savedStart,
   savedEnd,
 });
-assert.match(String(tripContext.unscheduledDayRule || ''), /not on a day/);
+assert.equal(tripContext.chatPlaceSearch.unscheduled[0].notOnADay, true);
+assert.equal(tripContext.unscheduledDayRule, undefined);
 
 const system = replyRulesSystem({}, 'Maui', false, false, customerTurn, { tripContext });
 assert.doesNotMatch(system, DAY_REQUIRED_NOTES);
 assert.doesNotMatch(system, /includes lodgingAsk\./);
-assert.match(system, /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /Tell the customer that for each of those places/);
 
 const lodgedFacts = draftingFacts([], customerTurn, {
   things,

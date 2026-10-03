@@ -75,7 +75,8 @@ const saved = system.slice(system.indexOf('Saved trip record:'));
 const record = JSON.parse(saved.slice('Saved trip record: '.length).split('\n')[0]);
 assert.equal(record.chatPlaceSearch.unscheduled[0].title, 'Paia Fish Market South Side');
 assert.equal(record.chatPlaceSearch.unscheduled[0].notOnADay, true);
-assert.match(system.slice(0, system.indexOf('Saved trip record:')), /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /Tell the customer that for each of those places/);
+assert.doesNotMatch(system, /name the day \(required\)/i);
 
 const generated = chatPlaceSearchSavedReplyFacts([
   { title: 'Paia Fish Market Restaurant' },
@@ -100,7 +101,8 @@ const stagedRecord = JSON.parse(stagedSaved.slice('Saved trip record: '.length).
 assert.equal(stagedRecord.itinerary[1], 'Paia Fish Market South Side: not on a day');
 assert.equal(stagedRecord.chatPlaceSearch.unscheduled[1].notOnADay, true);
 assert.equal(stagedRecord.chatPlaceSearch.unscheduled.some((row) => row.title === "Mama's Fish House"), false);
-assert.match(stagedSystem.slice(0, stagedSystem.indexOf('Saved trip record:')), /Tell the customer that for each of those places/);
+assert.doesNotMatch(stagedSystem, /Tell the customer that for each of those places/);
+assert.doesNotMatch(stagedSystem, /name the day \(required\)/i);
 
 const tripId = '285c0510-1403-4609-bee7-66ae1636134b';
 const slug = intakeShareSlug(tripId);
