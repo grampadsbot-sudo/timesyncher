@@ -6,6 +6,7 @@ const PROJECT = 'timesyncher-vacation-staging';
 const V1_ENV_IDS = {
   DATABASE_URL: 'A9IvKmyFpAfVBLQx',
   TIMESYNCHER_COUPON_HASH_SALT: 'v5J7KMS41ksY339X',
+  TIMESYNCHER_COLLABORATOR_NAME: 'i6c6ba5Gh1Xx1ysV',
 };
 
 function teamId() {
