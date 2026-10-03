@@ -9,6 +9,7 @@ import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
+import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 
 export async function outboundAppReplyForRequest(db, requestId) {
@@ -190,7 +191,26 @@ export async function commitShippedRewrite(db, session, pending, finished, { rec
   const claimContext = pending.intent && typeof pending.intent === 'object'
     ? { activeCollaborators: Array.isArray(pending.intent.activeCollaborators) ? pending.intent.activeCollaborators : [] }
     : null;
-  assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext);
+  try {
+    assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext);
+  } catch (error) {
+    if (error?.name !== 'reply_action_claim_blocked') throw error;
+    const recovered = await rewriteBlockedActionClaim({
+      draft: finished.reply,
+      reason: error.reason,
+      customerTurn: pending.customerTurn || '',
+      customerTurnId: pending.customerTurnId || '',
+      tripId: pending.tripId || '',
+      turnActionResults: pending.turnActionResults || null,
+      replyClaimContext: claimContext,
+      jev: finished.jev || pending.jev || null,
+      rules: finished.rules || null,
+    });
+    if (!recovered.reply || recovered.reason) {
+      return { ok: false, status: 'reply_unavailable', reply: null, error: 'reply_unavailable' };
+    }
+    finished = { ...finished, reply: recovered.reply, model: recovered.model || finished.model };
+  }
   const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
   const appLive = liveTurnRecord({
     turnIndex: Number(pending.customerTurnIndex) + 1,
