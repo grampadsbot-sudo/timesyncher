@@ -31,11 +31,22 @@ import {
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   classifySmokeServerTiming,
+  serverTimingFromItineraryJson,
 } from './shepherd-staging-smoke-helpers.mjs';
 
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
 assert.equal(classifySmokeServerTiming({ latencyMs: 11000, sessionE2eMs: 4000 }).appFail, true);
+const st5 = serverTimingFromItineraryJson({
+  serverTiming: {
+    latencyMs: 2913,
+    sessionE2eMs: 8165,
+    stages: { postMs: 4000, queueTurnMs: 3000, classifierMs: 1200 },
+  },
+});
+assert.equal(st5.latencyMs, 2913);
+assert.equal(st5.sessionE2eMs, 8165);
+assert.deepEqual(st5.stages, { postMs: 4000, queueTurnMs: 3000, classifierMs: 1200 });
 assert.equal(isoDateFromStartsAt('2027-03-13T12:00:00.000Z'), '2027-03-13');
 assert.equal(isoDateFromStartsAt('Sat Mar 13 2027 12:00:00 GMT+0000'), '2027-03-13');
 assert.equal(d1StartsOnDate(new Date('2027-03-13T12:00:00.000Z')), true);
