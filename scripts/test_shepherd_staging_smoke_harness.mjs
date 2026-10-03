@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   SMOKE_CHECK_ORDER,
+  SMOKE_PARALLEL_INDEPENDENT_NAMES,
 } from './shepherd-staging-smoke-run-check.mjs';
 import {
   normalizeSharedTabLabel,
@@ -21,8 +22,10 @@ for (const file of harnessFiles) {
 
 const mainText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke.mjs'), 'utf8');
 const spineText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-main.mjs'), 'utf8');
+const parallelText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-parallel.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
-const combined = `${mainText}\n${spineText}\n${tailText}`;
+const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-check.mjs'), 'utf8');
+const combined = `${mainText}\n${spineText}\n${parallelText}\n${tailText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
 const registered = new Set();
@@ -32,8 +35,16 @@ while ((m = runCheckRe.exec(combined)) !== null) {
 }
 
 for (const name of SMOKE_CHECK_ORDER) {
-  assert.ok(registered.has(name), `missing runCheck('${name}', ..., { timeoutMs })`);
+  const hasRunCheck = registered.has(name);
+  const parallelEntry = SMOKE_PARALLEL_INDEPENDENT_NAMES.includes(name)
+    && /name:\s*['"]/.test(combined)
+    && new RegExp(`name:\\s*['"]${name}['"]`).test(combined);
+  assert.ok(hasRunCheck || parallelEntry, `missing runCheck('${name}', ..., { timeoutMs }) or parallel entry name: '${name}'`);
 }
+
+assert.equal(/\bconst WHOLE_RUN_CAP_MS = 12 \* 60 \* 1000/.test(runCheckText), true, 'whole-run cap must be 12 minutes');
+assert.match(runCheckText, /runChecksParallel/, 'run-check must export parallel runner');
+assert.doesNotMatch(runCheckText, /\bexport const WHOLE_RUN_CAP_MS\b/, 'WHOLE_RUN_CAP_MS must not be a dead export');
 
 assert.equal(sharedTabLabelIncludes('🗺️ Plan', 'plan'), true);
 assert.equal(sharedTabLabelIncludes('💰 Budget', 'budget'), true);

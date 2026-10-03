@@ -15,6 +15,11 @@ import {
   replayA2FromSaved,
   collaboratorWelcomeTemplatePrefix,
   welcomeTranscriptTurnsForClaims,
+  gradeLogoChipRow,
+  gradeLogoTabResult,
+  attributeLogoMisalignmentCss,
+  objectFitContentBox,
+  LOGO_CENTER_TOLERANCE_PX,
 } from './shepherd-staging-smoke-lib.mjs';
 
 assert.equal(isoDateFromStartsAt(new Date('2027-03-13T12:00:00.000Z')), '2027-03-13');
@@ -138,5 +143,44 @@ const mapSignals = gradeMapBar({
 }, ['map_center_unresolved: trip-1']);
 assert.equal(mapSignals.pass, false);
 assert.ok(mapSignals.signals.length >= 1);
+
+const fitBox = objectFitContentBox({
+  boxLeft: 10,
+  boxTop: 20,
+  boxWidth: 22,
+  boxHeight: 22,
+  naturalWidth: 44,
+  naturalHeight: 22,
+  objectFit: 'contain',
+});
+assert.ok(fitBox);
+assert.equal(fitBox.width, 22);
+assert.equal(fitBox.height, 11);
+assert.equal(Math.abs(fitBox.centerX - (10 + 11)), 0);
+assert.equal(Math.abs(fitBox.centerY - (20 + 11)), 0);
+
+const geoPass = gradeLogoChipRow({
+  contentCenterDxPx: 1,
+  contentCenterDyPx: 0.5,
+  paddingAsymmetryPx: { left: 3, right: 3, top: 2, bottom: 2 },
+  com: { dxPx: 1, dyPx: 1 },
+});
+assert.equal(geoPass.pass, true);
+
+const geoFail = gradeLogoChipRow({
+  contentCenterDxPx: 4,
+  contentCenterDyPx: 0,
+  paddingAsymmetryPx: { left: 1, right: 5, top: 2, bottom: 2 },
+  com: { dxPx: 0.5, dyPx: 0.5 },
+});
+assert.equal(geoFail.pass, false);
+assert.equal(geoFail.geometryCentered, false);
+
+const tabFail = gradeLogoTabResult({ tab: 'hotels', clicked: true, rows: [geoFail] });
+assert.equal(tabFail.pass, false);
+
+const suspects = attributeLogoMisalignmentCss({ liAlignItems: 'flex-start', imgMargin: '0px auto' });
+assert.ok(suspects.some((s) => s.file.includes('trek-style2-bundle.mjs')));
+assert.ok(suspects.some((s) => s.file === 'shared-app.html'));
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));
