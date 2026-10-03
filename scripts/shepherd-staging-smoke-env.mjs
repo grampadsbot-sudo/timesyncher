@@ -144,7 +144,7 @@ export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchIm
   }
   const eulaPrefixKey = 'TIMESYNCHER_EULA_BLOB_PREFIX';
   hydrateEnvKeyFromPulledFiles(eulaPrefixKey, env);
-  if (!String(env[eulaPrefixKey] || '').trim()) {
+  if (!String(env[eulaPrefixKey] || '').trim() && String(env.VERCEL_TOKEN || '').trim()) {
     const row = await fetchProjectEnvValueByKey(eulaPrefixKey, { env, fetchImpl });
     env[row.key] = row.value;
   }
