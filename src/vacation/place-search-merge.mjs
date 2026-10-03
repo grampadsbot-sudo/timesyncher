@@ -19,6 +19,7 @@ const PRIOR_CATEGORIES = new Map([
   ['tourism', 'activity'],
   ['event', 'activity'],
   ['hotel', 'hotel'],
+  ['car', 'car'],
 ]);
 
 function finite(value) {
@@ -38,6 +39,13 @@ function primarySourceForMerged(sources) {
     if (sources.includes(source)) return source;
   }
   return 'prior_db';
+}
+
+function mergePlaceCategory(existing, incoming) {
+  const live = String(incoming?.category || '').trim().toLowerCase();
+  const saved = String(existing?.category || '').trim().toLowerCase();
+  if (live === 'car' || saved === 'car') return 'car';
+  return live || saved;
 }
 
 function mergePlaceFields(existing, incoming) {
@@ -129,6 +137,7 @@ export function mergePlaces(groups = [], options = {}, samePlaceImpl) {
         kept[matchIndex] = {
           ...existing,
           ...mergePlaceFields(existing, next),
+          category: mergePlaceCategory(existing, next),
           source: primarySourceForMerged(mergedSources),
           sources: mergedSources,
         };

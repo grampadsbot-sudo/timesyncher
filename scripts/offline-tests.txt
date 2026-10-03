@@ -10,6 +10,7 @@ scripts/test_place_search_reply_no_internal_ids.mjs
 scripts/test_in_turn_citable_places.mjs
 scripts/test_lodging_anchored_reply_area_gate.mjs
 scripts/test_staging_smoke_r21_inputs.mjs
+scripts/test_staging_smoke_m_place_search_prompt_premise.mjs
 scripts/test_unscheduled_saved_place_reply_prompt_d2.mjs
 scripts/test_ask_d2_saved_place_no_ask_reply_plan.mjs
 scripts/test_ask_d2_stored_prompt_premise.mjs
@@ -25,6 +26,8 @@ scripts/test_place_search_lodging_anchor.mjs
 scripts/test_place_search_kihei_taco_osm_relevance.mjs
 scripts/test_place_search_kihei_caffe_title.mjs
 scripts/test_place_search_hertz_car_category.mjs
+scripts/test_hertz_brave_car_persist_shared_e2e.mjs
+scripts/test_market_save_reply_cites_place.mjs
 scripts/test_trip_intake_extraction_category_schema.mjs
 scripts/test_first_intake_lodging_before_reply.mjs
 scripts/test_first_intake_lodging_ask.mjs

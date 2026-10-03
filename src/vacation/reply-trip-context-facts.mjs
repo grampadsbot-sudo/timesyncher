@@ -26,11 +26,16 @@ function itineraryHasStatus(line) {
 
 function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
   if (!ctx || typeof ctx !== 'object' || !Array.isArray(inTurnPlaceResults) || !inTurnPlaceResults.length) return ctx;
+  const lodgingCtx = ctx.customerOwnLodgingContext && typeof ctx.customerOwnLodgingContext === 'object'
+    ? ctx.customerOwnLodgingContext
+    : null;
   return {
     ...ctx,
     tripReplyGate: tripOwnedPlaceAllowRows({
       destination: String(ctx.destination || '').trim(),
-      lodging: String(ctx.lodging || '').trim(),
+      lodging: String(ctx.lodging || lodgingCtx?.lodging || '').trim(),
+      tripStatedLodgingArea: String(ctx.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim(),
+      tripResolvedArea: String(ctx.searchArea || '').trim(),
       things,
     }),
   };
@@ -104,6 +109,32 @@ function chatExtractionReplyFacts(wantedThings, tripStart, tripEnd) {
   return chatPlaceSearchSavedReplyFacts(rows, tripStart, tripEnd);
 }
 
+function statedLodgingAreaFromTripMetadata(meta = {}) {
+  const row = meta && typeof meta === 'object' ? meta : {};
+  return String(row.statedLodgingArea || row.statedLodgingAreaHint || '').trim().slice(0, 240);
+}
+
+export async function loadTripMetadataStatedLodgingArea(db, tripId) {
+  const id = String(tripId || '').trim();
+  if (!db || !id) return '';
+  const trips = await db`select metadata from trips where id = ${id} limit 1`;
+  const meta = trips[0]?.metadata && typeof trips[0].metadata === 'object' ? trips[0].metadata : {};
+  return statedLodgingAreaFromTripMetadata(meta);
+}
+
+export async function draftingLodgingFields(ctx, { things = [], db = null, tripId = '' } = {}) {
+  let next = ctx && typeof ctx === 'object' ? { ...ctx } : {};
+  if (!String(next.lodging || '').trim()) {
+    const label = statedLodgingLabelFromThings(things);
+    if (label) next.lodging = label;
+  }
+  if (!String(next.statedLodgingArea || '').trim()) {
+    const area = await loadTripMetadataStatedLodgingArea(db, tripId);
+    if (area) next.statedLodgingArea = area;
+  }
+  return next;
+}
+
 export async function enrichDraftingTripContext(tripContext, {
   things = [],
   session = null,
@@ -121,22 +152,22 @@ export async function enrichDraftingTripContext(tripContext, {
   if (!ctx.chatPlaceSearch) {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
   }
-  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
-  if (!ctx.lodging) {
-    const label = statedLodgingLabelFromThings(things);
-    if (label) ctx.lodging = label;
-  }
-  if (!env?.DATABASE_URL || !session?.customer_id) return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
-  try {
-    const { sql } = await import('./db.mjs');
-    const db = sql(env);
-    const tripId = session?.trip_id || session?.tripId || '';
-    if (tripId && !ctx.lodging) {
-      const trips = await db`select metadata from trips where id = ${tripId} limit 1`;
-      const meta = trips[0]?.metadata && typeof trips[0].metadata === 'object' ? trips[0].metadata : {};
-      const area = String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim();
-      if (area) ctx.lodging = area.slice(0, 240);
+  const tripId = String(session?.trip_id || session?.tripId || '').trim();
+  let db = null;
+  if (env?.DATABASE_URL && session?.customer_id) {
+    try {
+      const { sql } = await import('./db.mjs');
+      db = sql(env);
+    } catch {
+      db = null;
     }
+  }
+  ctx = await draftingLodgingFields(ctx, { things, db, tripId });
+  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
+  if (!db || !session?.customer_id) {
+    return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
+  }
+  try {
     const pendingRows = await loadPendingCollaboratorInvites(db, {
       ownerCustomerId: session.customer_id,
       tripId,

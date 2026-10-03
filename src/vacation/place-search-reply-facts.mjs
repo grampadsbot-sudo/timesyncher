@@ -121,6 +121,13 @@ export function inTurnPlaceSearchSoftNoResults({
   };
 }
 
+export function attachSearchArea(facts, classification) {
+  const searchArea = String(classification?.anchor || '').trim();
+  if (!searchArea) return facts || null;
+  if (!facts) return { searchArea };
+  return { ...facts, searchArea };
+}
+
 export function applyPlaceSearchReplyFacts(tripContext, facts) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
   if (!facts || typeof facts !== 'object') return tripContext;
