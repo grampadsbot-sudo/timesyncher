@@ -106,11 +106,11 @@ export class DatabaseJsonStore {
   }
 }
 
-export function isDeployedEulaRuntime(env = process.env) {
+function isDeployedEulaRuntime(env) {
   return Boolean(env.VERCEL || env.VERCEL_ENV || env.NODE_ENV === 'production');
 }
 
-export function isEulaStoreTestRuntime(env = process.env) {
+function isEulaStoreTestRuntime(env) {
   return env.NODE_ENV === 'test';
 }
 
