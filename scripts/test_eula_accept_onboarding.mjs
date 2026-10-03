@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import handler from '../api/[...route].mjs';
 import { useOnboardingLookup } from '../routes/eula.mjs';
-import { LocalJsonStore, VercelBlobStore } from '../src/onboarding/eula-persistent-store.mjs';
+import { DatabaseJsonStore, LocalJsonStore } from '../src/onboarding/eula-persistent-store.mjs';
+import { useVacationDatabase } from '../src/vacation/db.mjs';
+import { handleEulaStoreDbSql } from './fixtures/eula-store-db-sql.mjs';
 
 function sessionKey(sessionId) {
   return `sessions/${sessionId}.json`;
@@ -166,40 +168,26 @@ try {
   assert.match(collaborator.body, /Review & continue/);
   assert.doesNotMatch(collaborator.body, /Acceptance session not found/);
 
-  const docs = new Map();
-  class FallbackStore extends VercelBlobStore {
-    async blob() {
-      return {
-        get: async () => ({ statusCode: 404 }),
-        put: async () => { throw new Error('403 access denied'); },
-        list: async () => ({ blobs: [] }),
-      };
-    }
-
-    async writeDatabaseJson(pathname, value) {
-      docs.set(pathname, value);
-      return { key: pathname, fallback: 'database' };
-    }
-
-    async readDatabaseJson(pathname) {
-      return docs.get(pathname) ?? null;
-    }
-
-    async listDatabaseJson(prefix) {
-      const needle = this.key(prefix);
-      return [...docs.entries()].filter(([key]) => key.startsWith(needle) && key.endsWith('.json')).map(([, value]) => value);
-    }
-  }
-  const blobStore = new FallbackStore({ prefix: 'timesyncher-eula' });
-  const written = await blobStore.putJson(sessionKey('vacation-blob-token'), {
-    sessionId: 'vacation-blob-token',
+  const eulaStore = {};
+  useVacationDatabase((strings, ...values) => {
+    const text = strings.join(' ').replace(/\s+/g, ' ').trim();
+    const handled = handleEulaStoreDbSql(text, values, eulaStore);
+    if (handled !== undefined) return handled;
+    throw new Error(`unexpected sql in eula accept onboarding db test: ${text}`);
+  });
+  process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgres://eula-accept-onboarding/local';
+  const dbStore = new DatabaseJsonStore({ prefix: 'timesyncher-eula' });
+  const written = await dbStore.putJson(sessionKey('vacation-db-token'), {
+    sessionId: 'vacation-db-token',
     status: 'pending',
   });
-  assert.equal(written.fallback, 'database');
-  const readBack = await blobStore.getJson(sessionKey('vacation-blob-token'));
-  assert.equal(readBack.sessionId, 'vacation-blob-token');
-  const listed = await blobStore.listJson('sessions');
-  assert.equal(listed.some((item) => item.sessionId === 'vacation-blob-token'), true);
+  assert.equal(written.key.includes('timesyncher-eula/sessions/vacation-db-token.json'), true);
+  const readBack = await dbStore.getJson(sessionKey('vacation-db-token'));
+  assert.equal(readBack.sessionId, 'vacation-db-token');
+  const listed = await dbStore.listJson('sessions');
+  assert.equal(listed.some((item) => item.sessionId === 'vacation-db-token'), true);
+  useVacationDatabase(null);
+  delete process.env.DATABASE_URL;
 } finally {
   useOnboardingLookup(null);
   await rm(storeDir, { recursive: true, force: true });

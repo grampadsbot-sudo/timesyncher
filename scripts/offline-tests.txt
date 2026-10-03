@@ -118,6 +118,8 @@ scripts/test_place_search_prior_trip_scope.mjs
 scripts/test_place_search_classifier_category.mjs
 scripts/test_intake_hyatt_staging_classifier_e2e.mjs
 scripts/test_eula_render_markdown.mjs
+scripts/test_eula_no_vercel_blob.mjs
+scripts/test_eula_receipt_database_store.mjs
 scripts/test_eula_accept_onboarding.mjs
 scripts/test_collaborator_welcome_a1_a2.mjs
 scripts/test_collaborator_getapp_trip_site_url.mjs
