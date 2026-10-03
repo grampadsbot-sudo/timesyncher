@@ -28,6 +28,14 @@ export function createSmokeRunner(ctx) {
 
   out.stageTimings = out.stageTimings || {};
   out.checkFailures = out.checkFailures || {};
+  out.browserCleanupErrors = out.browserCleanupErrors || [];
+
+  function recordBrowserCleanupError(err, context) {
+    out.browserCleanupErrors.push({
+      context,
+      message: String(err?.message || err),
+    });
+  }
 
   function registerBrowser(browser) {
     if (browser) browsers.add(browser);
@@ -40,13 +48,13 @@ export function createSmokeRunner(ctx) {
         for (const page of pages) {
           try {
             await page.close();
-          } catch {
-            void 0;
+          } catch (err) {
+            recordBrowserCleanupError(err, 'page.close');
           }
         }
         await browser.close();
-      } catch {
-        void 0;
+      } catch (err) {
+        recordBrowserCleanupError(err, 'browser.close');
       }
     }
     browsers.clear();

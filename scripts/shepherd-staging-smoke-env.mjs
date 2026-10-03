@@ -9,14 +9,6 @@ const V1_ENV_IDS = {
   TIMESYNCHER_COLLABORATOR_NAME: 'i6c6ba5Gh1Xx1ysV',
 };
 
-const OPENROUTER_ENV_KEYS = [
-  'OPENROUTER_API_KEY',
-  'TIMESYNCHER_OPENROUTER_API_KEY',
-  'TIMESYNCHER_JEV_CLASSIFY_TOKEN',
-  'JEV_OPENROUTER_API_KEY',
-  'TIMESYNCHER_JEV_OPENROUTER_API_KEY',
-];
-
 function teamId() {
   const fromEnv = process.env.VERCEL_ORG_ID || process.env.VERCEL_TEAM_ID;
   if (fromEnv) return fromEnv;
@@ -55,10 +47,6 @@ async function fetchV1EnvValue(envId, { env = process.env, fetchImpl = fetch } =
   return { key: payload.key, value };
 }
 
-function openRouterKeyPresent(env = process.env) {
-  return OPENROUTER_ENV_KEYS.some((key) => String(env[key] || '').trim().length > 0);
-}
-
 export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchImpl = fetch } = {}) {
   for (const [key, envId] of Object.entries(V1_ENV_IDS)) {
     const existing = String(env[key] || '').trim();
@@ -69,30 +57,6 @@ export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchIm
     const row = await fetchV1EnvValue(envId, { env, fetchImpl });
     env[row.key] = row.value;
     if (row.key === 'DATABASE_URL') env.NEON_DATABASE_URL = row.value;
-  }
-  if (!openRouterKeyPresent(env)) {
-    const token = String(env.VERCEL_TOKEN || '').trim();
-    if (token) {
-      const team = await resolveTeamId(fetchImpl);
-      const params = new URLSearchParams();
-      if (team) params.set('teamId', team);
-      const res = await fetchImpl(
-        `https://api.vercel.com/v9/projects/${encodeURIComponent(PROJECT)}/env?${params}`,
-        { headers: { Authorization: `Bearer ${token}` }, redirect: 'error' },
-      );
-      if (res.ok) {
-        const payload = await res.json();
-        const rows = Array.isArray(payload?.envs) ? payload.envs : [];
-        for (const want of OPENROUTER_ENV_KEYS) {
-          const hit = rows.find((row) => String(row?.key || '').trim() === want);
-          const value = typeof hit?.value === 'string' ? hit.value.trim() : '';
-          if (value) {
-            env[want] = value;
-            break;
-          }
-        }
-      }
-    }
   }
 }
 
