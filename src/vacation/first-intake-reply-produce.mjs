@@ -11,6 +11,7 @@ import {
   persistTripInviteContactNeeded,
 } from './first-intake-customer-input.mjs';
 import {
+  firstIntakeModelFacts,
   firstIntakeReplyFacts,
   firstIntakeReplyInstruction,
   hiddenIds,
@@ -81,7 +82,8 @@ export async function produceFirstIntakeReply({
     customerInput,
   );
   await persistTripInviteContactNeeded(env, tripId, facts.invite_contact_needed === true);
-  const prompt = `${firstIntakeReplyInstruction(facts)}\n\nIntake facts: ${JSON.stringify(facts)}`;
+  const modelFacts = firstIntakeModelFacts(facts);
+  const prompt = `${firstIntakeReplyInstruction(modelFacts)}\n\nIntake facts: ${JSON.stringify(modelFacts)}`;
   let model = null;
   let reply = '';
   let block = '';
@@ -98,7 +100,7 @@ export async function produceFirstIntakeReply({
       upsell: facts.shape === 'voice-note' ? 'allow-once' : 'forbidden',
       postIntake: true,
       intakeReplyTurn: true,
-      replyFacts: facts,
+      replyFacts: modelFacts,
       env,
       systemExtra: prompt,
     });

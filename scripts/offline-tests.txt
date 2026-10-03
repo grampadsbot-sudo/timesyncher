@@ -15,6 +15,7 @@ scripts/test_ask_d2_saved_place_no_ask_reply_plan.mjs
 scripts/test_ask_d2_stored_prompt_premise.mjs
 scripts/test_ask_d2_live_0fed637_premise.mjs
 scripts/test_inv_claim_stored_prompt_premise.mjs
+scripts/test_inv_claim_first_intake_prompt_premise.mjs
 scripts/test_gap_answer_invite_contact_reply_plan.mjs
 scripts/test_vacation_per_fact_ask_reply_rules.mjs
 scripts/test_intake_lodging_thing_hotel.mjs
