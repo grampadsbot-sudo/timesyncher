@@ -66,6 +66,7 @@ function sharedFromFixture(fixture) {
       place_time: '10:00',
       website: candidate.website || '',
       notes: '',
+      source: 'fixture-research',
     };
     places.push(place);
     assignments[String(day.id)].push({
