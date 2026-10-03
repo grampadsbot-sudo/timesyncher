@@ -56,6 +56,7 @@ assert.match(String(tripContext.unscheduledDayRule || ''), /not on a day/);
 
 const system = replyRulesSystem({}, 'Maui', false, false, customerTurn, { tripContext });
 assert.doesNotMatch(system, DAY_REQUIRED_NOTES);
+assert.doesNotMatch(system, /includes lodgingAsk\./);
 assert.match(system, /Tell the customer that for each of those places/);
 
 const lodgedFacts = draftingFacts([], customerTurn, {

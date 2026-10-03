@@ -10,7 +10,9 @@ import {
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
-import { customerInputState, statedLodgingLabelFromThings, tripIsoDay } from './intake-shared-trip.mjs';
+import { tripIsoDay } from './intake-shared-trip.mjs';
+import { annotateLiveTurnGapAnswer, replyGapAskFields, stripGapAskPersistHints } from './gap-ask-reply-context.mjs';
+import { persistTripGapAskState } from './first-intake-customer-input.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs'; import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
@@ -374,6 +376,12 @@ function projectCustomerRecord(priorTurns, customerTurn = '') {
   };
 }
 
+async function liveDraftingFactsForReply(history, customerTurn, mergedTrip, env, tripId) {
+  const raw = draftingFacts(history, customerTurn, mergedTrip);
+  if (raw._persistGapAsk && tripId) await persistTripGapAskState(env, tripId, raw._persistGapAsk);
+  return stripGapAskPersistHints(raw);
+}
+
 export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
   const record = saved && typeof saved === 'object' ? saved : projectCustomerRecord(priorTurns, customerTurn);
   const things = Array.isArray(record?.things) ? record.things : [];
@@ -404,23 +412,10 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     itinerary,
     roster,
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
-    ...customerInputState(things, record),
-    ...customerInputFields(record, things),
+    ...replyGapAskFields(record, things),
   };
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
-}
-
-function customerInputFields(record, things = []) {
-  if (!record || typeof record !== 'object') return {};
-  const fields = {};
-  if (Array.isArray(record.needsCustomerInput)) {
-    const needsCustomerInput = record.needsCustomerInput.map((item) => String(item || '').trim()).filter(Boolean).filter((item) => item !== 'lodging' || !(statedLodgingLabelFromThings(things) || String(record.lodging || record.statedLodgingArea || record.statedLodgingAreaHint || '').trim()));
-    if (needsCustomerInput.length) { fields.needsCustomerInput = needsCustomerInput; if (needsCustomerInput.some((item) => item === 'lodging')) fields.lodgingAsk = true; }
-  }
-  const flightAsk = String(record.flightAsk || '').trim();
-  if (flightAsk) fields.flightAsk = flightAsk;
-  return fields;
 }
 
 export function qualityFailureReason(quality, flags) {
@@ -1429,7 +1424,13 @@ export async function loadSavedTripRecord(session, env = process.env) {
       }),
       party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
       rule: meta.intakeRule || '',
-      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true, statedLodgingArea: String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim(),
+      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
+      statedLodgingArea: String(meta.statedLodgingArea || meta.statedLodgingAreaHint || '').trim(),
+      lastAskedGap: String(meta.lastAskedGap || '').trim(),
+      invite_contact_needed: meta.invite_contact_needed === true,
+      lodgingAsk: meta.lodgingAsk === true,
+      needsCustomerInput: Array.isArray(meta.needsCustomerInput) ? meta.needsCustomerInput : undefined,
+      flightAsk: String(meta.flightAsk || '').trim(),
     };
   } catch {
     return null;
@@ -1476,7 +1477,9 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     planOwned: saved?.planOwned === true,
     purchased_plan: String(saved?.purchased_plan || saved?.ownerPlan?.checkout_plan || '').trim(), rule: saved?.rule || projected.rule,
     addressedTo: projected.addressedTo || (collaborator ? String(seat?.displayName || '').trim().split(/\s+/)[0] : ''),
-    ...customerInputFields(saved, things),
+    lastAskedGap: String(saved?.lastAskedGap || '').trim(),
+    invite_contact_needed: saved?.invite_contact_needed === true,
+    statedLodgingArea: String(saved?.statedLodgingArea || '').trim(),
   };
 }
 export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
@@ -1500,12 +1503,16 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
   const modelPlaceSources = enforceInTurnPlaces ? inTurnProviderResults : citedPlaces;
   const rosterList = Array.isArray(roster) ? roster : [];
-  const mergedTrip = mergeSavedTurn(savedTrip, history, customerTurn, session, {
+  const mergedBase = mergeSavedTurn(savedTrip, history, customerTurn, session, {
     roster: Array.isArray(roster) ? roster : null,
     rosterError: rosterError || null,
     askRoster: Boolean(rosterError) || (intake === true && Array.isArray(roster) && rosterList.length === 0),
   });
-  let tripContext = await enrichDraftingTripContext(draftingFacts(history, customerTurn, mergedTrip), { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end, wantedThings, inTurnPlaceResults: inTurnProviderResults }); intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
+  const mergedTrip = annotateLiveTurnGapAnswer(mergedBase, savedTrip, { wantedThings });
+  const tripId = String(session?.trip_id || session?.tripId || '').trim();
+  const drafting = await liveDraftingFactsForReply(history, customerTurn, mergedTrip, env, tripId);
+  let tripContext = await enrichDraftingTripContext(drafting, { things: mergedTrip.things, session, env, turnActionResults, placeSearchReplyFacts, savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end, wantedThings, inTurnPlaceResults: inTurnProviderResults });
+  intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
   const commerce = liveReplyCommerceGate({
     session,

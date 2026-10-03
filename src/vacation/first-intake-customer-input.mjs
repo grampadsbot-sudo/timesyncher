@@ -10,7 +10,7 @@ export function firstIntakeLodgingCustomerInput(savedThings = [], wantedThings =
   return customerInputState(records);
 }
 
-const FIRST_INTAKE_GAP_ORDER = ['where', 'when', 'who', 'lodging', 'plans', 'invite_contact'];
+export const FIRST_INTAKE_GAP_ORDER = ['where', 'when', 'who', 'lodging', 'plans', 'invite_contact'];
 
 function finalizeFirstIntakeGaps(facts = {}) {
   if (!facts || typeof facts !== 'object') return facts;
@@ -57,6 +57,7 @@ export async function persistTripLodgingCustomerInputGap(env, tripId, inputState
       set metadata = coalesce(metadata, '{}'::jsonb) || ${{
         needsCustomerInput: Array.isArray(gap.needsCustomerInput) ? gap.needsCustomerInput : ['lodging'],
         lodgingAsk: true,
+        lastAskedGap: 'lodging',
       }},
         updated_at = now()
       where id = ${id}
@@ -65,7 +66,58 @@ export async function persistTripLodgingCustomerInputGap(env, tripId, inputState
   }
   await db`
     update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) - 'needsCustomerInput' - 'lodgingAsk',
+    set metadata = coalesce(metadata, '{}'::jsonb) - 'needsCustomerInput' - 'lodgingAsk' - 'lastAskedGap',
+        updated_at = now()
+    where id = ${id}
+  `;
+}
+
+export async function persistTripInviteContactNeeded(env, tripId, needed = false) {
+  const id = String(tripId || '').trim();
+  if (!id || !env?.DATABASE_URL) return;
+  const { sql } = await import('./db.mjs');
+  const db = sql(env);
+  if (needed === true) {
+    await db`
+      update trips
+      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ invite_contact_needed: true }},
+          updated_at = now()
+      where id = ${id}
+    `;
+    return;
+  }
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) - 'invite_contact_needed',
+        updated_at = now()
+    where id = ${id}
+  `;
+}
+
+export async function persistTripGapAskState(env, tripId, state = {}) {
+  const id = String(tripId || '').trim();
+  if (!id || !env?.DATABASE_URL || !state || typeof state !== 'object') return;
+  const patch = {};
+  const lastAskedGap = String(state.lastAskedGap || '').trim();
+  if (lastAskedGap) patch.lastAskedGap = lastAskedGap;
+  if (state.lodgingAsk === true) {
+    patch.lodgingAsk = true;
+    patch.needsCustomerInput = Array.isArray(state.needsCustomerInput) ? state.needsCustomerInput : ['lodging'];
+  } else if (state.lodgingAsk === false) {
+    patch.lodgingAsk = false;
+  }
+  if (state.invite_contact_needed === true) patch.invite_contact_needed = true;
+  if (Array.isArray(state.needsCustomerInput) && state.needsCustomerInput.length) {
+    patch.needsCustomerInput = state.needsCustomerInput;
+  }
+  const flightAsk = String(state.flightAsk || '').trim();
+  if (flightAsk) patch.flightAsk = flightAsk;
+  if (!Object.keys(patch).length) return;
+  const { sql } = await import('./db.mjs');
+  const db = sql(env);
+  await db`
+    update trips
+    set metadata = coalesce(metadata, '{}'::jsonb) || ${patch},
         updated_at = now()
     where id = ${id}
   `;

@@ -602,6 +602,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       if (items.length) customerInput[key] = items;
     } else if (value && typeof value === 'object') {
       customerInput[key] = value;
+    } else if (typeof value === 'boolean') {
+      if (value === true) customerInput[key] = true;
     } else if (typeof value === 'string' && value.trim()) {
       customerInput[key] = value.trim();
     }
@@ -609,8 +611,10 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const hasCustomerInput = Object.keys(customerInput).length > 0;
   const lodgingAsk = tripRaw?.lodgingAsk === true;
   const flightAsk = String(tripRaw?.flightAsk || '').trim();
+  const inviteContactAsk = tripRaw?.inviteContactAsk === true;
   const lodgingGapAskRule = lodgingAsk ? 'The saved trip record includes lodgingAsk. Ask the customer where they are staying, in your own words.' : '';
   const flightAskRule = flightAsk ? 'The saved trip record includes flightAsk. Ask the customer about their flights, in your own words.' : '';
+  const inviteContactAskRule = inviteContactAsk ? 'The saved trip record includes inviteContactAsk. Ask for the collaborator name and email so you can invite them, in your own words.' : '';
   const trip = itinerary.length || dates || roster || rule || hasCustomerInput
     ? { itinerary, dates, roster, rule, ...customerInput }
     : null;
@@ -661,6 +665,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
     lodgingGapAskRule,
     flightAskRule,
+    inviteContactAskRule,
     unscheduledDayRule,
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
