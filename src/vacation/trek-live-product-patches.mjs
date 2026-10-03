@@ -1,4 +1,5 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
+import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -31,7 +32,17 @@ const TRIP_MAP_VIEW_PATCH = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.c
 
 const TRIP_MAP_LOG_NEEDLE = 'return I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
 
-const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error(JSON.stringify({event:"map_center_unresolved",code:tsMapIv.code||"map_center_unresolved",tripId:e}))},[tsMapIv.ok,tsMapIv.code,e]),I.useEffect(()=>{if(tsMapIv.ok&&jn){const lt=setTimeout(()=>{if(!document.querySelector(".leaflet-container,.mapboxgl-map"))console.error(JSON.stringify({event:"map_mount_failed",code:"map_mount_failed",tripId:e}))},3000);return()=>clearTimeout(lt)}},[tsMapIv.ok,jn,e]),I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
+const TRIP_MAP_LOG_PATCH = 'return I.useEffect(()=>{if(!tsMapIv.ok)console.error(JSON.stringify({event:"map_center_unresolved",code:tsMapIv.code||"map_center_unresolved",tripId:e}))},[tsMapIv.ok,tsMapIv.code,e]),I.useEffect(()=>{if(tsMapIv.ok&&jn){const lt=setTimeout(()=>{const tsMapRoot=document.querySelector(".leaflet-container,.mapboxgl-map");if(!tsMapRoot||(tsMapRoot.classList.contains("leaflet-container")&&!tsMapRoot.getAttribute("data-ts-map-center")))console.error(JSON.stringify({event:"map_mount_failed",code:"map_mount_failed",tripId:e}))},3000);return()=>clearTimeout(lt)}},[tsMapIv.ok,jn,e]),I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
+
+const TRIP_MAP_HOOK_LOG_NEEDLE = 'if(!document.querySelector(".leaflet-container,.mapboxgl-map"))console.error(JSON.stringify({event:"map_mount_failed",code:"map_mount_failed",tripId:e}))';
+
+const TRIP_MAP_HOOK_RSE_NEEDLE = 'x!=null&&K.whenReady(x),U(tpe(K))';
+
+const TRIP_MAP_HOOK_RSE_PATCH = 'x!=null&&K.whenReady(x),tsBindTripMapHookLeaflet(K),U(tpe(K))';
+
+const TRIP_MAP_HOOK_RSE_ANCHOR = 'function rSe({bounds:e,boundsOptions:t,center:i,children:c,className:h,id:p,placeholder:g,style:r,whenReady:x,zoom:z,...P},A){';
+
+const TRIP_MAP_HOOK_SNIPPET = tripMapHookBundleSnippet();
 
 const TRIP_MAP_PLAN_NEEDLE = 'Se==="plan"&&n.jsxs("div",{style:{position:"absolute",inset:0},children:[n.jsx(hze,{';
 
@@ -92,6 +103,40 @@ export function patchTripMapInitialView(source = '') {
   }
   if (!js.includes('map_mount_failed')) {
     throw new Error('trip map mount guard patch did not apply');
+  }
+  return patchTripMapHarnessHook(js);
+}
+
+export function patchTripMapHarnessHook(source = '') {
+  let js = String(source || '');
+  const mapIvPatched = js.includes('tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r})');
+  if (!mapIvPatched) {
+    return js;
+  }
+  if (!js.includes('tsBindTripMapHookLeaflet')) {
+    if (!js.includes(TRIP_MAP_HOOK_RSE_ANCHOR)) {
+      throw new Error('trek bundle missing MapContainer anchor for trip map harness hook patch');
+    }
+    js = js.replace(TRIP_MAP_HOOK_RSE_ANCHOR, `${TRIP_MAP_HOOK_SNIPPET}${TRIP_MAP_HOOK_RSE_ANCHOR}`);
+    if (!js.includes(TRIP_MAP_HOOK_RSE_NEEDLE)) {
+      throw new Error('trek bundle missing MapContainer whenReady anchor for trip map harness hook patch');
+    }
+    js = js.replace(TRIP_MAP_HOOK_RSE_NEEDLE, TRIP_MAP_HOOK_RSE_PATCH);
+  }
+  if (js.includes(TRIP_MAP_HOOK_LOG_NEEDLE)) {
+    js = js.replace(TRIP_MAP_HOOK_LOG_NEEDLE, 'const tsMapRoot=document.querySelector(".leaflet-container,.mapboxgl-map");if(!tsMapRoot||(tsMapRoot.classList.contains("leaflet-container")&&!tsMapRoot.getAttribute("data-ts-map-center")))console.error(JSON.stringify({event:"map_mount_failed",code:"map_mount_failed",tripId:e}))');
+  }
+  if (!js.includes('tsBindTripMapHookLeaflet')) {
+    throw new Error('trip map harness hook patch did not apply');
+  }
+  if (!js.includes('data-ts-map-center')) {
+    throw new Error('trip map harness hook patch did not apply (data-ts-map-center missing)');
+  }
+  if (!js.includes('window.__tsTripMap')) {
+    throw new Error('trip map harness hook patch did not apply (__tsTripMap missing)');
+  }
+  if (js.includes(TRIP_MAP_HOOK_RSE_NEEDLE)) {
+    throw new Error('trip map harness hook MapContainer patch did not apply');
   }
   return js;
 }
