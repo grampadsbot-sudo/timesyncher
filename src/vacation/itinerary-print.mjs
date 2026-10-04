@@ -74,7 +74,9 @@ function thingCardSummaryText(place = {}, override = {}) {
   ].map(text).find(Boolean);
   if (!paragraph) {
     const name = text(place.name || place.title || place.id) || 'thing';
-    throw new Error(`thing_card_summary_missing:${name}`);
+    const message = `thing_card_summary_missing:${name}`;
+    console.error(JSON.stringify({ event: 'thing_card_summary_missing', placeName: name }));
+    return message;
   }
   return paragraph;
 }
