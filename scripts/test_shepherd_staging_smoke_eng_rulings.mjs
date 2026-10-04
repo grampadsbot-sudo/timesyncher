@@ -12,7 +12,12 @@ import { buildSmokeBindThingMediaSeed } from './shepherd-staging-smoke-bind-thin
 import { buildVisualJudgePrompt } from './shepherd-staging-smoke-visual-rubric.mjs';
 import { evaluateCheckIOutbound, checkIResendSentRowPasses } from './shepherd-staging-smoke-env.mjs';
 import { reconcileVisualJudgeComposerSend } from './shepherd-staging-smoke-composer-send-dom.mjs';
-import { waitForSharedSlugApiReady } from './shepherd-staging-smoke-shared-ui-map.mjs';
+import {
+  SHARED_API_RETRY_INTERVAL_MS,
+  SHARED_API_RETRY_TIMEOUT_MS,
+  sharedSlugApiPathFromPageUrl,
+  waitForSharedSlugApiReady,
+} from './shepherd-staging-smoke-shared-ui-map.mjs';
 import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from './shepherd-staging-smoke-single-instance.mjs';
 import { sendWithResend } from '../src/vacation/email-harness-outbound.mjs';
 
@@ -90,6 +95,9 @@ const reconciled = reconcileVisualJudgeComposerSend(
   { id: 'sendButton', ariaLabel: 'Send', role: 'button' },
 );
 assert.equal(reconciled.pass, true);
+
+assert.ok(SHARED_API_RETRY_TIMEOUT_MS > SHARED_API_RETRY_INTERVAL_MS);
+assert.equal(sharedSlugApiPathFromPageUrl('https://vacation-staging.timesyncher.com/shared/intake-abc/'), '/api/shared/intake-abc/');
 
 let apiStatuses = [404, 404, 200];
 const apiReady = await waitForSharedSlugApiReady(

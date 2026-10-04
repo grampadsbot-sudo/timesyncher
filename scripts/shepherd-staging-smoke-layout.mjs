@@ -4,6 +4,11 @@ import {
   gotoAndHydrateSharedIntakePage,
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import {
+  SHARED_API_RETRY_INTERVAL_MS,
+  SHARED_API_RETRY_TIMEOUT_MS,
+  sharedSlugApiPathFromPageUrl,
+} from './shepherd-staging-smoke-shared-ui-map.mjs';
+import {
   evaluateLayoutRules,
   LAYOUT_RULE_APPLICABILITY,
   LAYOUT_VIEWPORTS,
@@ -33,13 +38,18 @@ async function runLayoutProbeOnPage(page, {
   } else {
     setStage?.(`layout shared ${viewport.label} hydrate`);
     const diagPath = artifactPath(`layout-shared-hydration-diag-${viewport.label}.json`);
-    const hydrated = await gotoAndHydrateSharedIntakePage(page, url, { debugArtifactPath: diagPath });
+    const hydrated = await gotoAndHydrateSharedIntakePage(page, url, {
+      debugArtifactPath: diagPath,
+      sharedApiRetryTimeoutMs: SHARED_API_RETRY_TIMEOUT_MS,
+      sharedApiRetryIntervalMs: SHARED_API_RETRY_INTERVAL_MS,
+    });
     if (hydrated.hydrationError) {
       const shot = artifactPath(`layout-shared-${viewport.label}.png`);
       await page.screenshot({ path: shot, fullPage: true });
       const notFound404Urls = hydrated.notFound404Urls || [];
+      const sharedApiPath = sharedSlugApiPathFromPageUrl(url) || '';
       const detail404 = notFound404Urls.length
-        ? `${hydrated.hydrationError}; http404=${notFound404Urls.join(' | ')}`
+        ? `${hydrated.hydrationError}; http404=${notFound404Urls.join(' | ')}${sharedApiPath ? `; expectedApi=${sharedApiPath}` : ''}`
         : hydrated.hydrationError;
       return {
         pageKind,
