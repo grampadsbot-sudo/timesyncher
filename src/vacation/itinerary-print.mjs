@@ -97,3 +97,15 @@ export function thingCardParagraphs(place = {}, override = {}) {
 export function thingCardBodyHtml(paragraphs = []) {
   return paragraphs.map((part) => `<p>${printEscape(part)}</p>`).join('');
 }
+
+export function renderDayItineraryHtml(fields = {}) {
+  const titleHtml = fields.titleHtml || '';
+  const openingHtml = fields.openingHtml || '';
+  const cardsHtml = fields.cardsHtml || '';
+  const styleHtml = fields.styleHtml || '';
+  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1" data-day-itinerary="1">${styleHtml}<h1>${titleHtml}</h1>${openingHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
+}
+
+export function dayItineraryBundleExpr() {
+  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},tsDayWebStyle=${JSON.stringify(thingCardWebStyleTag())}`;
+}

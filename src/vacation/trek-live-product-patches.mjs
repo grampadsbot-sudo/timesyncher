@@ -1,7 +1,7 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
-import { thingCardBundleExpr } from './itinerary-print.mjs';
+import { dayItineraryBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -345,8 +345,23 @@ function applySharedThingCardPatches(source = '') {
     js = js.replace('wd=(G,Re)=>', `${thingCardBundleExpr()},wd=(G,Re)=>`);
   }
   if (js.includes(WD_RETURN_NEEDLE)) js = js.replace(WD_RETURN_NEEDLE, WD_RETURN_PATCH);
+  if (js.includes('wd=(G,Re)=>') && !js.includes('tsRenderDayItinerary=')) {
+    js = js.replace('wd=(G,Re)=>', `${dayItineraryBundleExpr()},wd=(G,Re)=>`);
+  }
+  if (js.includes(MC_CALL_NEEDLE)) js = js.replace(MC_CALL_NEEDLE, MC_CALL_PATCH);
+  const dayStart = js.indexOf(DAY_ROW_START);
+  const dayEnd = dayStart >= 0 ? js.indexOf(DAY_ROW_END, dayStart) : -1;
+  if (dayStart >= 0 && dayEnd > dayStart) {
+    js = js.slice(0, dayStart) + DAY_ROW_PATCH + js.slice(dayEnd + DAY_ROW_END.length);
+  }
   return js;
 }
+
+const MC_CALL_NEEDLE = 'sr=`<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details" data-day-things-flow="1">${Rn.map(zr=>wd(zr,G)).join("")}</main></section>`;return sr';
+const MC_CALL_PATCH = 'sr=tsRenderDayItinerary({titleHtml:an(la.title||"Trip"),openingHtml:Su(G,Re,Rn.map(zr=>zr.item)),cardsHtml:Rn.map(zr=>wd(zr,G)).join(""),styleHtml:""});return sr';
+const DAY_ROW_START = 'Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."}),Re.map((ua,Rn)=>';
+const DAY_ROW_END = '})]},`${ua.type}-${Rn}-${ua.title}`)})';
+const DAY_ROW_PATCH = 'n.jsx("div",{"data-day-itinerary-mount":"1",dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({titleHtml:an(G.title||("Day "+G.day_number)),openingHtml:"",cardsHtml:Re.map(ua=>wd({item:ua.item,row:ua},G)).join(""),styleHtml:tsDayWebStyle})}})';
 
 export function patchThingDetailRatings(source = '') {
   let js = String(source || '');
