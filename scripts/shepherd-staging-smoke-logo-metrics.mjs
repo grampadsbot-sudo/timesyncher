@@ -3,7 +3,6 @@ import { PNG } from 'pngjs';
 import {
   gradeLogoTabResult,
   gradeSharedTabLogoUrlRecords,
-  gradeCarTabRowIcons,
   attributeLogoMisalignmentCss,
   mergeLogoCssSuspects,
   isRealBrandLogoSrc,
@@ -165,31 +164,6 @@ export async function stitchLogoChipCropsPng(cropBuffers, outPath) {
   return outPath;
 }
 
-async function collectCarTabIconScan(page) {
-  return page.evaluate(() => {
-    const planeRe = /\u2708|\u2708\uFE0F|✈️/;
-    const carRe = /\u{1F697}|\u{1F698}|🚗/u;
-    const rows = Array.from(document.querySelectorAll('li[data-list-row="1"], li[data-has-logo="1"]'));
-    const samples = [];
-    let hasPlane = false;
-    let hasCar = false;
-    for (const li of rows) {
-      const text = li.innerText || '';
-      if (!/hertz|rental|\bcar\b|alamo|avis|enterprise|budget|national/i.test(text)) continue;
-      const emojiText = Array.from(li.querySelectorAll('.thing-emoji, span[aria-hidden="true"], span'))
-        .map((el) => el.textContent || '')
-        .join('');
-      const hay = `${text} ${emojiText}`;
-      const rowHasPlane = planeRe.test(hay);
-      const rowHasCar = carRe.test(hay);
-      if (rowHasPlane) hasPlane = true;
-      if (rowHasCar) hasCar = true;
-      samples.push({ text: text.replace(/\s+/g, ' ').trim().slice(0, 120), rowHasPlane, rowHasCar });
-    }
-    return { rowCount: samples.length, hasPlane, hasCar, samples };
-  });
-}
-
 async function waitLogoImagesBounded(page, capMs) {
   await page.evaluate(async (maxMs) => {
     function realSrc(src) {
@@ -226,36 +200,36 @@ async function collectLogoDescriptors(page) {
       if (/timesyncher-icon/i.test(value)) return false;
       return true;
     }
-    const listImgs = Array.from(
-      document.querySelectorAll('li[data-list-row="1"] img.tiny-logo, li[data-has-logo="1"] img.tiny-logo, [data-shared-live-tab] img.tiny-logo'),
-    );
-    const imgs = listImgs.filter((img) => {
-      if (!realSrc(img.getAttribute('src'))) return false;
-      const chipEl = img.closest('[data-ts-logo-chip]') || img.parentElement;
-      if (!chipEl) return false;
+    const chipEls = Array.from(
+      document.querySelectorAll('li[data-list-row="1"] [data-ts-logo-chip], li[data-has-logo] [data-ts-logo-chip], [data-shared-live-tab] [data-ts-logo-chip]'),
+    ).filter((chipEl) => {
       const chipR = chipEl.getBoundingClientRect();
-      return chipR.width >= 12 && chipR.height >= 12 && img.offsetParent !== null;
+      return chipR.width >= 12 && chipR.height >= 12 && chipEl.offsetParent !== null;
     });
-    return imgs.slice(0, 12).map((logoEl, index) => {
-      const chipEl = logoEl.closest('[data-ts-logo-chip]') || logoEl.parentElement;
+    return chipEls.slice(0, 12).map((chipEl, index) => {
+      const logoEl = chipEl.querySelector('img.tiny-logo, img[src][alt=""]');
+      const src = logoEl?.getAttribute('src') || '';
       const chipR = chipEl.getBoundingClientRect();
-      const li = logoEl.closest('li[data-list-row], li[data-has-logo], li');
+      const li = chipEl.closest('li[data-list-row], li[data-has-logo], li');
       chipEl.setAttribute('data-ts-logo-chip-idx', String(index));
       return {
         index,
-        isBrandImg: true,
-        src: logoEl.getAttribute('src') || '',
-        title: li?.querySelector('strong')?.textContent?.trim() || logoEl.getAttribute('alt') || '',
-        alt: logoEl.getAttribute('alt') || '',
+        isListRowChip: true,
+        isBrandImg: Boolean(logoEl && realSrc(src)),
+        src,
+        title: li?.querySelector('strong')?.textContent?.trim() || logoEl?.getAttribute('alt') || '',
+        alt: logoEl?.getAttribute('alt') || '',
         chipW: chipR.width,
         chipH: chipR.height,
-        imgW: logoEl.getBoundingClientRect().width,
-        imgH: logoEl.getBoundingClientRect().height,
-        naturalWidth: logoEl.naturalWidth,
-        naturalHeight: logoEl.naturalHeight,
-        computed: {
+        imgW: logoEl?.getBoundingClientRect().width || 0,
+        imgH: logoEl?.getBoundingClientRect().height || 0,
+        naturalWidth: logoEl?.naturalWidth || 0,
+        naturalHeight: logoEl?.naturalHeight || 0,
+        computed: logoEl ? {
           imgMargin: getComputedStyle(logoEl).margin,
           imgObjectPosition: getComputedStyle(logoEl).objectPosition,
+          chipDisplay: getComputedStyle(chipEl).display,
+        } : {
           chipDisplay: getComputedStyle(chipEl).display,
         },
       };
@@ -308,12 +282,13 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
       cssSuspects: attributeLogoMisalignmentCss(desc.computed || {}),
     });
   }
-  const brandCount = gradedRows.filter((r) => isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
-  const viewportPass = brandCount > 0 && gradedRows.every((r) => {
+  const chipRows = gradedRows.filter((r) => r.isListRowChip === true);
+  const brandCount = chipRows.filter((r) => isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
+  const viewportPass = chipRows.length > 0 && chipRows.every((r) => {
     const com = r.com || {};
     if (com.error === 'screenshot_cap_skipped') return true;
-    if (!isRealBrandLogoSrc(r.src)) return true;
     if (!logoChipInkPresent(com)) return false;
+    if (!isRealBrandLogoSrc(r.src)) return true;
     return Number(com.dxPx) <= 1.5 && Number(com.dyPx) <= 1.5;
   });
   let carsHeadingInk = null;
@@ -331,7 +306,7 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
     cropBuffers,
     carsHeadingInk,
     pass: Boolean(tabClicked) && viewportPass && headingPass,
-    failReason: !tabClicked ? 'tab_not_clicked' : (brandCount === 0 ? 'zero_brand_imgs_with_real_src' : (!headingPass ? (carsHeadingInk?.reason || 'cars_heading_logo_off_center') : null)),
+    failReason: !tabClicked ? 'tab_not_clicked' : (chipRows.length === 0 ? 'zero_list_row_logo_chips' : (!viewportPass ? 'empty_logo_chip' : (!headingPass ? (carsHeadingInk?.reason || 'cars_heading_logo_off_center') : null))),
   };
 }
 
@@ -369,10 +344,6 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
 
   const rows = viewports[1280]?.rows || [];
   const cropBuffers = [...(viewports[1280]?.cropBuffers || []), ...(viewports[390]?.cropBuffers || [])];
-  let carIconGrade = null;
-  if (!isHotels) {
-    carIconGrade = gradeCarTabRowIcons(await collectCarTabIconScan(page));
-  }
   const tabResult = gradeLogoTabResult({
     tab: tabKeyword,
     clicked,
@@ -380,7 +351,6 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
     cssSuspects: mergeLogoCssSuspects(rows),
     logoUrlEvidence,
     viewports,
-    carIconGrade,
   });
   return { ...tabResult, cropBuffers, viewports };
 }

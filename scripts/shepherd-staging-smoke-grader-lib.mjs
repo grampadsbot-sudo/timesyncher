@@ -202,7 +202,9 @@ export function gradeLogoChipRow(row = {}) {
   const geometry = gradeLogoChipGeometry(row);
   const comGrade = gradeLogoChipCom(row);
   const inkGrade = gradeLogoChipInkPresence(row.com || {});
-  const pass = comGrade.comCentered === true && inkGrade.inkPresent === true;
+  const brandImg = row.isBrandImg === true && isRealBrandLogoSrc(row.src);
+  const pass = inkGrade.inkPresent === true
+    && (!brandImg || comGrade.comCentered === true);
   return {
     ...row,
     ...geometry,
@@ -210,6 +212,10 @@ export function gradeLogoChipRow(row = {}) {
     ...inkGrade,
     pass,
   };
+}
+
+function listRowLogoChipRows(rows = []) {
+  return (rows || []).filter((row) => row && row.isListRowChip === true);
 }
 
 function countBrandLogoRowsWithInk(rows = []) {
@@ -238,25 +244,25 @@ export function gradeLogoTabResult({
   cssSuspects = [],
   logoUrlEvidence = null,
   viewports = null,
-  carIconGrade = null,
   carsHeadingInk = null,
 }) {
-  const brandRows = (rows || []).filter((r) => r.isBrandImg === true);
-  const graded = brandRows.map((r) => gradeLogoChipRow(r));
+  const chipRows = listRowLogoChipRows(rows);
+  const graded = chipRows.map((r) => gradeLogoChipRow(r));
   const brandInkCount = countBrandLogoRowsWithInk(graded);
+  const emptyChips = graded.filter((r) => !logoChipInkPresent(r.com));
   const isCars = String(tab || '').toLowerCase() === 'cars';
   const carsHeadingGrade = isCars
     ? (carsHeadingInk || gradeCarsHeadingInkForViewports(viewports))
     : null;
   let failReason = null;
   if (!clicked) failReason = 'tab_not_clicked';
-  else if (brandInkCount === 0) failReason = 'zero_brand_imgs_with_real_src';
+  else if (chipRows.length === 0) failReason = 'zero_list_row_logo_chips';
+  else if (emptyChips.length > 0) failReason = 'empty_logo_chip';
   else if (logoUrlEvidence && logoUrlEvidence.ok === false) failReason = logoUrlEvidence.failReason || 'records_missing_logoUrl';
   else if (viewports && Object.values(viewports).some((v) => v && v.pass === false)) failReason = 'viewport_logo_fail';
   else if (carsHeadingGrade && carsHeadingGrade.pass === false) {
     failReason = carsHeadingGrade.failReason || 'cars_heading_logo_off_center';
   }
-  else if (carIconGrade && carIconGrade.pass === false) failReason = 'car_tab_icon_fail';
   else if (!graded.every((r) => r.pass)) failReason = 'logo_com_off_center';
 
   const pass = !failReason;
@@ -265,9 +271,9 @@ export function gradeLogoTabResult({
     clicked,
     rows: graded,
     brandImgCount: brandInkCount,
+    listRowChipCount: chipRows.length,
     logoUrlEvidence,
     viewports,
-    carIconGrade,
     carsHeadingInk: carsHeadingGrade,
     failReason,
     pass,

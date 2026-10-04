@@ -160,6 +160,7 @@ export async function captureVisualStateScreenshots({
         layoutDom,
         layoutDomFacts: layoutDom.layoutDomFacts,
         sendButtonDomContext,
+        sendDom,
       });
       if (state.id === 'v1site' && state.sharedUrl) {
         setStage?.(`visual ${state.id} shared hydrate ${viewport.label}`);

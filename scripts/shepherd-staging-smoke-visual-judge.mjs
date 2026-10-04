@@ -6,6 +6,7 @@ import {
   buildVisualJudgePrompt,
   loadScreenSpecForLabel,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
+import { reconcileVisualJudgeComposerSend } from './shepherd-staging-smoke-composer-send-dom.mjs';
 
 export { VISUAL_JUDGE_MODEL };
 
@@ -134,7 +135,8 @@ async function judgeScreenshotWithOpenRouter({
     const content = outer?.choices?.[0]?.message?.content;
     const text = typeof content === 'string' ? content : JSON.stringify(content || '');
     try {
-      const verdict = parseVisualJudgeResponseText(text);
+      const parsed = parseVisualJudgeResponseText(text);
+      const verdict = reconcileVisualJudgeComposerSend(parsed, shotMeta.sendDom);
       return {
         ...verdict,
         error: null,

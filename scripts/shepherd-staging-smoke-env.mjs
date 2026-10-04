@@ -158,35 +158,35 @@ export function checkIOutboundPassesSmokeHarness(row, env = process.env) {
   return outboundEmailPassesSmokeHarness(row);
 }
 
-/** True while still in the current UTC quota day (before the next 00:00 UTC Resend reset). */
-export function isBeforeUtcResendDailyReset(now = new Date()) {
-  return now.getUTCHours() > 0
-    || now.getUTCMinutes() > 0
-    || now.getUTCSeconds() > 0
-    || now.getUTCMilliseconds() > 0;
+function outboundRowErrorSummaryEmpty(row) {
+  const summary = row?.error_summary ?? row?.errorSummary;
+  return summary == null || String(summary).trim() === '';
+}
+
+/** Live Resend row: status=sent, provider=resend, no error_summary. */
+export function checkIResendSentRowPasses(row) {
+  if (!row || typeof row !== 'object') return false;
+  if (String(row.status || '') !== 'sent') return false;
+  if (String(row.provider || '') !== 'resend') return false;
+  return outboundRowErrorSummaryEmpty(row);
 }
 
 /**
- * Check I outbound verdict. Real Resend sends never PASS before UTC reset; unconfirmed rows are INFRA_BLOCKED.
+ * Check I outbound verdict (stub harness vs confirmed live Resend send).
  */
-export function evaluateCheckIOutbound({ row, env = process.env, now = new Date() } = {}) {
+export function evaluateCheckIOutbound({ row, env = process.env } = {}) {
   const stub = env.TIMESYNCHER_HARNESS_STUB_OUTBOUND === '1';
-  const status = String(row?.status || '');
-  const provider = String(row?.provider || '');
   if (stub) {
     if (checkIOutboundPassesSmokeHarness(row, env)) {
       return { pass: true, infraBlocked: false, reason: null };
     }
     return { pass: false, infraBlocked: true, reason: 'stub_outbound_unconfirmed' };
   }
-  if (status === 'sent' && provider === 'resend' && isBeforeUtcResendDailyReset(now)) {
-    return { pass: false, infraBlocked: true, reason: 'real_resend_before_utc_reset' };
+  if (checkIResendSentRowPasses(row)) {
+    return { pass: true, infraBlocked: false, reason: null };
   }
   if (checkIOutboundPassesSmokeHarness(row, env)) {
     return { pass: true, infraBlocked: false, reason: null };
-  }
-  if (isBeforeUtcResendDailyReset(now)) {
-    return { pass: false, infraBlocked: true, reason: 'outbound_unconfirmed_before_utc_reset' };
   }
   return { pass: false, infraBlocked: false, reason: 'outbound_failed' };
 }

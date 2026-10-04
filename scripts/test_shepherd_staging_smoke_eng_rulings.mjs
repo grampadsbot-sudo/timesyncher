@@ -10,7 +10,9 @@ import { checkIOutboundPassesSmokeHarness } from './shepherd-staging-smoke-env.m
 import { normalizePngBufferInput, measureLogoComFromPngBuffer } from './shepherd-staging-smoke-logo-metrics.mjs';
 import { buildSmokeBindThingMediaSeed } from './shepherd-staging-smoke-bind-thing-media-seed.mjs';
 import { buildVisualJudgePrompt } from './shepherd-staging-smoke-visual-rubric.mjs';
-import { evaluateCheckIOutbound, isBeforeUtcResendDailyReset } from './shepherd-staging-smoke-env.mjs';
+import { evaluateCheckIOutbound, checkIResendSentRowPasses } from './shepherd-staging-smoke-env.mjs';
+import { reconcileVisualJudgeComposerSend } from './shepherd-staging-smoke-composer-send-dom.mjs';
+import { waitForSharedSlugApiReady } from './shepherd-staging-smoke-shared-ui-map.mjs';
 import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from './shepherd-staging-smoke-single-instance.mjs';
 import { sendWithResend } from '../src/vacation/email-harness-outbound.mjs';
 
@@ -77,8 +79,42 @@ assert.match(seededUrl, /bind-thing-media/);
 const rubricSource = readFileSync(new URL('./shepherd-staging-smoke-visual-rubric.mjs', import.meta.url), 'utf8');
 assert.match(rubricSource, /icon-only up-arrow|paper-plane/i);
 assert.match(buildVisualJudgePrompt({ screenLabel: 'v1', pageKind: 'chat', stateId: 'v1', tabLabel: '', viewport: { width: 390, height: 844 }, screenSpecText: 'spec', specSource: 'test', layoutDomFacts: '' }), /paper-plane/i);
-const live = evaluateCheckIOutbound({ row: { status: 'sent', provider: 'resend', provider_message_id: 'abc' }, env: { TIMESYNCHER_HARNESS_STUB_OUTBOUND: '0' }, now: new Date('2026-10-03T15:00:00.000Z') });
-assert.equal(live.infraBlocked, true);
-assert.equal(isBeforeUtcResendDailyReset(new Date('2026-10-03T00:00:01.000Z')), true);
+const liveRow = { status: 'sent', provider: 'resend', error_summary: null, provider_message_id: 'abc' };
+assert.equal(checkIResendSentRowPasses(liveRow), true);
+const live = evaluateCheckIOutbound({ row: liveRow, env: { TIMESYNCHER_HARNESS_STUB_OUTBOUND: '0' } });
+assert.equal(live.pass, true);
+assert.equal(live.infraBlocked, false);
+
+const reconciled = reconcileVisualJudgeComposerSend(
+  { pass: false, failures: [{ rubricItem: '2', reason: 'send control not visible' }] },
+  { id: 'sendButton', ariaLabel: 'Send', role: 'button' },
+);
+assert.equal(reconciled.pass, true);
+
+let apiStatuses = [404, 404, 200];
+const apiReady = await waitForSharedSlugApiReady(
+  { evaluate: async () => false },
+  'https://vacation-staging.timesyncher.com/shared/intake-abc/',
+  {
+    timeoutMs: 5000,
+    intervalMs: 10,
+    fetchStatus: async () => apiStatuses.shift() ?? 200,
+  },
+);
+assert.equal(apiReady.ok, true);
+assert.equal(apiReady.status, 200);
+
+apiStatuses = [404, 404];
+const apiTimeout = await waitForSharedSlugApiReady(
+  { evaluate: async () => false },
+  'https://vacation-staging.timesyncher.com/shared/intake-abc/',
+  {
+    timeoutMs: 40,
+    intervalMs: 15,
+    fetchStatus: async () => 404,
+  },
+);
+assert.equal(apiTimeout.ok, false);
+assert.equal(apiTimeout.timedOut, true);
 
 console.log('shepherd staging smoke eng rulings tests passed');
