@@ -14,7 +14,7 @@ import {
   rowInkGradeFromCom,
 } from './shepherd-staging-smoke-thing-card-eval.mjs';
 
-export const THING_CARD_VIEWPORTS = [
+const THING_CARD_VIEWPORTS = [
   { width: 390, height: 844, label: '390' },
   { width: 1280, height: 800, label: '1280' },
 ];
@@ -31,7 +31,7 @@ async function measureRowInk(page, rowIndex) {
     const com = await measureLogoComFromPngBuffer(cropBuf);
     return rowInkGradeFromCom(com);
   } finally {
-    await handle.dispose().catch(() => {});
+    await handle.dispose().catch(() => 0);
   }
 }
 
@@ -98,7 +98,7 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
       const panel = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
       if (panel) {
         await panel.screenshot({ path: cropPath, type: 'png' });
-        await panel.dispose().catch(() => {});
+        await panel.dispose().catch(() => 0);
       } else {
         await page.screenshot({ path: cropPath, fullPage: false });
       }
