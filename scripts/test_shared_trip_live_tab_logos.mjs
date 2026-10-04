@@ -79,6 +79,8 @@ assert.match(hotelsHtml, /data-ts-logo-chip="1"/);
 
 assert.match(carsHtml, /data-shared-live-tab="cars"/);
 assert.match(carsHtml, /img class="tiny-logo" src="https:\/\/hertz\.com\/favicon\.ico"/);
+assert.match(carsHtml, /width:18px;height:18px/);
+assert.match(carsHtml, /data-ts-fallback-emoji="🚗"/);
 assert.match(carsHtml, /data-ts-logo-chip="1"/);
 
 const mountHotels = sharedLiveTabListMountOutcome('hotels', servedPayload.liveTabLists);
