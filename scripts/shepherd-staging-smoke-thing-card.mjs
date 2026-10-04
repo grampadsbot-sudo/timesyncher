@@ -26,6 +26,10 @@ const THING_CARD_VIEWPORTS = [
   { width: 1280, height: 800, label: '1280' },
 ];
 
+async function disposeHandle(handle) {
+  if (handle) await handle.dispose();
+}
+
 async function evaluateTabDom(page) {
   return page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.evaluateThingCardTabDom();`);
 }
@@ -38,7 +42,7 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
   const panelBefore = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
   if (panelBefore) {
     await panelBefore.screenshot({ path: beforeCrop, type: 'png' });
-    await panelBefore.dispose().catch(() => 0);
+    await disposeHandle(panelBefore);
   }
 
   const orders = {
@@ -58,6 +62,7 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
 
   if ((dom.rows || []).length >= 2 && dom.columnSortLabels?.price) {
     await clickLabel('price');
+    orders.priceClicked = true;
     await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
     const afterPrice = await readOrder();
     orders.priceAfter = afterPrice.rowTexts;
@@ -68,7 +73,7 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
   const panelAfter = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
   if (panelAfter) {
     await panelAfter.screenshot({ path: afterCrop, type: 'png' });
-    await panelAfter.dispose().catch(() => 0);
+    await disposeHandle(panelAfter);
   }
 
   const sortByLabel = gradeThingCardSortByLabel({
@@ -83,6 +88,10 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
     sortByLabel,
     sortByLabelGate: {
       ...sortByLabel.gate,
+      status: sortByLabel.status,
+      rowSortExercised: sortByLabel.rowSortExercised,
+      priceSortExercised: sortByLabel.priceSortExercised,
+      priceStatus: sortByLabel.priceStatus,
       beforeCrop,
       afterCrop,
       orders,
@@ -150,7 +159,7 @@ async function collectThingTagsFromDetailPages(page, tab, { maxOpens = 20 } = {}
     } finally {
       await closeThingDetailIfOpen(page);
       await new Promise((r) => setTimeout(r, 80));
-      await handle.dispose().catch(() => 0);
+      await handle.dispose();
     }
   }
   return [...tags].sort((a, b) => a.localeCompare(b));
@@ -173,8 +182,8 @@ async function screenshotTagFilterRow(page, cropPath) {
     await el.screenshot({ path: cropPath, type: 'png' });
     return true;
   } finally {
-    await el.dispose().catch(() => 0);
-    await handle.dispose().catch(() => 0);
+    await disposeHandle(el);
+    await disposeHandle(handle);
   }
 }
 
@@ -186,7 +195,7 @@ async function measureRowInk(page, rowIndex) {
     const com = await measureLogoComFromPngBuffer(cropBuf);
     return rowInkGradeFromCom(com);
   } finally {
-    await handle.dispose().catch(() => 0);
+    await disposeHandle(handle);
   }
 }
 
@@ -269,7 +278,7 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
       const panel = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
       if (panel) {
         await panel.screenshot({ path: cropPath, type: 'png' });
-        await panel.dispose().catch(() => 0);
+        await disposeHandle(panel);
       } else {
         await page.screenshot({ path: cropPath, fullPage: false });
       }

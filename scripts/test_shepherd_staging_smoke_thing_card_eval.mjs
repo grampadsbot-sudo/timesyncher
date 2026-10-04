@@ -4,6 +4,7 @@ import {
   apiThingTagsForTab,
   forbiddenSortControlsFromMatches,
   gradeThingCardSortByLabel,
+  gradeThingCardSortByLabelHarness,
   gradeThingCardTabScan,
   gradeThingCardHarnessResult,
   gradeThingCardTagFilterParity,
@@ -120,7 +121,8 @@ const sortLabelNotEnough = gradeThingCardSortByLabel({
   orders: {},
 });
 assert.equal(sortLabelNotEnough.status, 'not_enough_rows');
-assert.equal(sortLabelNotEnough.pass, false);
+assert.equal(sortLabelNotEnough.pass, true);
+assert.equal(sortLabelNotEnough.failures.length, 0);
 
 const sortLabelPass = gradeThingCardSortByLabel({
   tab: 'cars',
@@ -135,6 +137,24 @@ const sortLabelPass = gradeThingCardSortByLabel({
   },
 });
 assert.equal(sortLabelPass.pass, true);
+assert.equal(sortLabelPass.priceSortExercised, true);
+
+const sortLabelPriceNotExercised = gradeThingCardSortByLabel({
+  tab: 'hotels',
+  viewport: '390',
+  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  rows: [{ title: 'Westin' }, { title: 'Hyatt' }],
+  orders: {
+    nameAfterFirst: ['Hyatt', 'Westin'],
+    nameAfterSecond: ['Westin', 'Hyatt'],
+    priceAfter: ['Westin stay', 'Hyatt stay'],
+    priceClicked: true,
+    priceDirection: 'asc',
+  },
+});
+assert.equal(sortLabelPriceNotExercised.priceStatus, 'price_not_exercised');
+assert.equal(sortLabelPriceNotExercised.priceSortExercised, false);
+assert.equal(sortLabelPriceNotExercised.pass, true);
 
 const sortLabelFailName = gradeThingCardSortByLabel({
   tab: 'cars',
@@ -159,6 +179,93 @@ const sortLabelMissing = gradeThingCardSortByLabel({
 });
 assert.equal(sortLabelMissing.pass, false);
 assert.ok(sortLabelMissing.failures.some((f) => f.detail.includes('missing Name')));
+
+const carsSortGate = {
+  status: 'ok',
+  rowCount: 2,
+  rowSortExercised: true,
+  priceSortExercised: true,
+  priceStatus: 'ok',
+};
+
+const hotelOneRowNoSortFail = gradeThingCardTabScan({
+  tab: 'hotels',
+  viewport: '390',
+  sortControls: [],
+  sortControlMatches: [],
+  rows: [{ index: 0, title: 'Westin', summaryText: 'stay', requiresLogo: true }],
+  expectedRows: 1,
+  sortByLabel: { pass: true, status: 'not_enough_rows', failures: [] },
+}, { 0: { inkPresent: true } }, { failOnSortControls: false });
+assert.equal(hotelOneRowNoSortFail.failures.some((f) => f.rule === 'SORT-BY-LABEL'), false);
+
+const harnessCarsExercised = gradeThingCardHarnessResult({
+  tabs: ['cars', 'hotels'],
+  probes: [
+    {
+      tab: 'hotels',
+      viewport: '390',
+      rowCount: 1,
+      pass: true,
+      failures: [],
+      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+    },
+    {
+      tab: 'cars',
+      viewport: '390',
+      rowCount: 2,
+      pass: true,
+      failures: [],
+      sortByLabelGate: carsSortGate,
+    },
+    {
+      tab: 'hotels',
+      viewport: '1280',
+      rowCount: 1,
+      pass: true,
+      failures: [],
+      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+    },
+    {
+      tab: 'cars',
+      viewport: '1280',
+      rowCount: 2,
+      pass: true,
+      failures: [],
+      sortByLabelGate: carsSortGate,
+    },
+  ],
+});
+assert.equal(
+  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('>=2 rows')),
+  false,
+);
+assert.equal(
+  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('priced rows')),
+  false,
+);
+
+const harnessAllUnderTwoRows = gradeThingCardHarnessResult({
+  tabs: ['hotels'],
+  probes: [
+    {
+      tab: 'hotels',
+      viewport: '390',
+      rowCount: 1,
+      pass: true,
+      failures: [],
+      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+    },
+  ],
+});
+assert.ok(harnessAllUnderTwoRows.failures.some((f) => f.detail.includes('>=2 rows')));
+
+assert.deepEqual(
+  gradeThingCardSortByLabelHarness([
+    { viewport: '390', rowCount: 2, sortByLabelGate: carsSortGate, pass: true, failures: [] },
+  ]),
+  [],
+);
 
 const tagMatch = gradeThingCardTagFilterParity({
   tab: 'restaurants',
