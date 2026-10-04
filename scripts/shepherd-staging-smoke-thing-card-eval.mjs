@@ -14,7 +14,7 @@ export function normalizeThingCardTagLabel(raw) {
   return String(raw || '').replace(/\s+/g, ' ').trim();
 }
 
-export function sortedUniqueThingCardTags(list = []) {
+function sortedUniqueThingCardTags(list = []) {
   const out = new Set();
   for (const item of list || []) {
     const label = normalizeThingCardTagLabel(item);
