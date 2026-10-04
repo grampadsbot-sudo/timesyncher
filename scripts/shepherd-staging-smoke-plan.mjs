@@ -6,12 +6,12 @@ export const SMOKE_PARALLEL_CONCURRENCY = 3;
 export const SMOKE_CHECK_ORDER = [
   '1', '2', '3', 'EULA', '4', 'C', 'W', '5', 'LAYOUT', 'VISUAL', 'I', '6', 'H', 'MAP', 'BUD', 'LOGO', 'INV-UI',
   '6b', 'T', 'CL', '7', '8', 'H2', 'M', 'R', 'K', 'ASK-lodging', 'O',
-  'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'ASK-d2', 'INV-CLAIM',
+  'A1', 'A2', 'P', 'E', 'prior_db', 'D', 'ASK-d2', 'INV-CLAIM', 'THING-CARD',
 ];
 
 /** Fail-closed GO gate (harness contract). */
 export const SMOKE_FAIL_CLOSED_GO = [
-  '5', 'D', 'R', 'INV-CLAIM', 'MAP', 'BUD', 'LOGO', 'LAYOUT', 'VISUAL', 'EULA',
+  '5', 'D', 'R', 'INV-CLAIM', 'MAP', 'BUD', 'LOGO', 'THING-CARD', 'LAYOUT', 'VISUAL', 'EULA',
 ];
 
 /** Main customer spine — one session/trip/couponMain; must stay sequential. */
