@@ -85,11 +85,19 @@ const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","a
 
 const BOOKINGS_TAB_ICON_V1_NEEDLE = BOOKINGS_TAB_ICON_PATCH;
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box"},children:G.icon})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16,verticalAlign:"middle"},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
-const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center"},children:G.label})';
+const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
+
+const TAB_BUTTON_LINE_HEIGHT_NEEDLE = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,background:q===G.id?';
+
+const TAB_BUTTON_LINE_HEIGHT_PATCH = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",lineHeight:1,gap:4,background:q===G.id?';
+
+const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
+
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
@@ -123,8 +131,19 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
-  } else if (!js.includes('display:"inline-flex",alignItems:"center"},children:G.label})')) {
+  } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})')) {
     throw new Error('trek bundle missing category tab label anchor for centering patch');
+  }
+  if (js.includes(TAB_BUTTON_LINE_HEIGHT_NEEDLE)) {
+    js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
+  } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
+    throw new Error('trek bundle missing category tab button anchor for line-height patch');
+  }
+  if (!js.includes('function tsPaintTabEmoji(')) {
+    if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
+      throw new Error('trek bundle missing anchor for category tab emoji ink centering');
+    }
+    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);

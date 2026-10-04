@@ -8,7 +8,9 @@ import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 const sharedApp = readFileSync(new URL('../shared-app.html', import.meta.url), 'utf8');
 const vacationApp = readFileSync(new URL('../vacation-app.html', import.meta.url), 'utf8');
 
-assert.match(sharedApp, /\[data-ts-logo-chip\]\[data-tab-category="hotels"\]/);
+assert.match(sharedApp, /\[data-ts-logo-chip\]\[data-tab-category\] \{/);
+assert.match(sharedApp, /top:\s*0\s*!important/);
+assert.doesNotMatch(sharedApp, /\[data-ts-logo-chip\]\[data-tab-category="(?:hotels|cars|flights|stores)"\]/);
 assert.doesNotMatch(vacationApp, /data-tab-category/);
 
 const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';

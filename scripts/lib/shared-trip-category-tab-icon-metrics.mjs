@@ -68,8 +68,9 @@ async function measureElementInkCenterY(page, selector) {
   await handle.dispose();
   const ink = inkCenterYFromPngBuffer(Buffer.from(buf), bgRgb);
   if (!ink) return null;
+  const dpr = await page.evaluate(() => window.devicePixelRatio || 1);
   return {
-    pageInkCenterY: box.y + ink.inkCenterY,
+    pageInkCenterY: box.y + ink.inkCenterY / dpr,
     boxTop: box.y,
     boxHeight: box.height,
     boxCenterY: box.y + box.height / 2,
@@ -97,9 +98,7 @@ export async function collectCategoryTabInkMetrics(page) {
       const chip = btn.querySelector('[data-ts-logo-chip][data-tab-category]')
         || (categoryLabels.has(aria) ? btn.querySelector('[data-ts-logo-chip]') : null);
       if (!chip) continue;
-      const label = [...btn.querySelectorAll('span')].find(
-        (node) => !node.hasAttribute('data-ts-logo-chip') && !node.hasAttribute('aria-hidden'),
-      );
+      const label = [...btn.children].find((node) => node !== chip && !node.hasAttribute('data-ts-logo-chip'));
       const labelVisible = Boolean(
         label
         && getComputedStyle(label).display !== 'none'
