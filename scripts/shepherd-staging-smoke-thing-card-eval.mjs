@@ -5,7 +5,146 @@ import { gradeSharedTabLogoUrlRecords } from './shepherd-staging-smoke-grader-li
 
 const THING_CARD_TAB_KEYWORDS = ['cars', 'hotels', 'restaurants', 'stores', 'flights', 'events'];
 
+/** Tabs that render list-level tag filter chips (All tags + ci / $n). */
+export const THING_CARD_TAG_FILTER_TABS = new Set(['restaurants', 'stores']);
+
 const SORT_CONTROL_RE = /^(name|price)(\s*[↑↓])?$/i;
+
+export function normalizeThingCardTagLabel(raw) {
+  return String(raw || '').replace(/\s+/g, ' ').trim();
+}
+
+export function sortedUniqueThingCardTags(list = []) {
+  const out = new Set();
+  for (const item of list || []) {
+    const label = normalizeThingCardTagLabel(item);
+    if (label) out.add(label);
+  }
+  return [...out].sort((a, b) => a.localeCompare(b));
+}
+
+function placeMatchesThingCardTab(place = {}, tabKeyword = '') {
+  const tab = String(tabKeyword || '').toLowerCase();
+  const name = String(place.name || place.title || '').trim();
+  const category = String(place.category_name || place.category || '').toLowerCase();
+  const hay = `${name} ${category}`;
+  if (tab === 'hotels' || tab === 'hotel') {
+    return /hotel|lodging|resort|stay/i.test(hay);
+  }
+  if (tab === 'cars' || tab === 'car') {
+    return /\bcar\b|rental|hertz|alamo|avis|enterprise|budget/i.test(hay);
+  }
+  if (tab === 'restaurants' || tab === 'restaurant') {
+    return /restaurant|dining|food|cafe|bar|grill|bistro|eatery/i.test(hay);
+  }
+  if (tab === 'stores' || tab === 'store') {
+    return /store|shop|retail|market|boutique|mall/i.test(hay);
+  }
+  return false;
+}
+
+function thingCardTagFieldForTab(tab = '') {
+  const t = String(tab || '').toLowerCase();
+  if (t === 'restaurants' || t === 'restaurant') return 'restaurantTags';
+  if (t === 'stores' || t === 'store') return 'storeTags';
+  return null;
+}
+
+/** Tags on Things in this tab from shared API payload (thingOverrides + place). */
+export function apiThingTagsForTab(sharedJson = {}, tab = '') {
+  const field = thingCardTagFieldForTab(tab);
+  if (!field) return [];
+  const places = Array.isArray(sharedJson?.places) ? sharedJson.places : [];
+  const overrides = sharedJson?.thingOverrides && typeof sharedJson.thingOverrides === 'object'
+    ? sharedJson.thingOverrides
+    : {};
+  const tags = new Set();
+  for (const place of places) {
+    if (!placeMatchesThingCardTab(place, tab)) continue;
+    const key = `place:${place.id}`;
+    const override = overrides[key] && typeof overrides[key] === 'object' ? overrides[key] : {};
+    const raw = override[field] ?? place[field];
+    const list = Array.isArray(raw)
+      ? raw
+      : String(raw || '').split(',').map((s) => s.trim()).filter(Boolean);
+    for (const tag of list) {
+      const label = normalizeThingCardTagLabel(tag);
+      if (label) tags.add(label);
+    }
+  }
+  return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Fail-closed tag-filter parity: filter chip set must equal union of thing tags.
+ * @returns {{ pass: boolean, failures: object[], filterTags: string[], thingTags: string[], apiThingTags: string[] }}
+ */
+export function gradeThingCardTagFilterParity({
+  tab = 'unknown',
+  viewport = null,
+  filterTags = [],
+  thingTags = [],
+  apiThingTags = [],
+} = {}) {
+  const failures = [];
+  const filters = sortedUniqueThingCardTags(filterTags);
+  const things = sortedUniqueThingCardTags(thingTags);
+  const apiTags = sortedUniqueThingCardTags(apiThingTags);
+  const tabKey = String(tab || '').toLowerCase();
+  const tagTab = THING_CARD_TAG_FILTER_TABS.has(tabKey);
+
+  if (tagTab && apiTags.length) {
+    const apiStr = apiTags.join('\0');
+    const thingStr = things.join('\0');
+    if (apiStr !== thingStr) {
+      failures.push({
+        rule: 'tag_filter_api_dom',
+        tab,
+        viewport,
+        detail: `thing tags from detail DOM [${things.join(', ')}] != shared API [${apiTags.join(', ')}]`,
+        thingTags: things,
+        apiThingTags: apiTags,
+      });
+    }
+  }
+
+  const filterSet = new Set(filters);
+  const thingSet = new Set(things);
+  for (const tag of things) {
+    if (!filterSet.has(tag)) {
+      failures.push({
+        rule: 'tag_filter_missing',
+        tab,
+        viewport,
+        detail: `thing tag missing from tab filters: ${tag}`,
+        tag,
+        filterTags: filters,
+        thingTags: things,
+      });
+    }
+  }
+  for (const tag of filters) {
+    if (!thingSet.has(tag)) {
+      failures.push({
+        rule: 'tag_filter_orphan',
+        tab,
+        viewport,
+        detail: `filter chip has no thing carrying tag: ${tag}`,
+        tag,
+        filterTags: filters,
+        thingTags: things,
+      });
+    }
+  }
+
+  return {
+    pass: failures.length === 0,
+    failures,
+    filterTags: filters,
+    thingTags: things,
+    apiThingTags: apiTags,
+  };
+}
 
 export function thingCardFailOnSortControlsFromEnv(env = process.env) {
   const raw = env?.THING_CARD_FAIL_ON_SORT_CONTROLS;
@@ -61,6 +200,15 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
       detail: 'populated tab has zero list rows in DOM',
     });
   }
+  const tagParity = gradeThingCardTagFilterParity({
+    tab,
+    viewport,
+    filterTags: scan.filterTags,
+    thingTags: scan.thingTags,
+    apiThingTags: scan.apiThingTags,
+  });
+  for (const f of tagParity.failures) failures.push(f);
+
   for (const row of rows) {
     const summary = String(row.summaryText || '').trim();
     if (!summary) {
@@ -91,7 +239,16 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
       });
     }
   }
-  return { pass: failures.length === 0, failures, rowCount: rows.length };
+  return {
+    pass: failures.length === 0,
+    failures,
+    rowCount: rows.length,
+    tagFilterParity: {
+      filterTags: tagParity.filterTags,
+      thingTags: tagParity.thingTags,
+      apiThingTags: tagParity.apiThingTags,
+    },
+  };
 }
 
 export function gradeThingCardHarnessResult({ tabs = [], probes = [] } = {}) {
@@ -123,6 +280,25 @@ export function rowInkGradeFromCom(com = {}) {
 
 /** Serialized for page.evaluate — keep self-contained. */
 export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
+  function tagFilterChips() {
+    for (const btn of document.querySelectorAll('button')) {
+      const st = getComputedStyle(btn);
+      if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
+      const label = String(btn.textContent || '').replace(/\\s+/g, ' ').trim();
+      if (label !== 'All tags') continue;
+      const row = btn.parentElement;
+      if (!row) continue;
+      const chips = [];
+      for (const chip of row.querySelectorAll('button')) {
+        const cst = getComputedStyle(chip);
+        if (cst.display === 'none' || cst.visibility === 'hidden') continue;
+        const text = String(chip.textContent || '').replace(/\\s+/g, ' ').trim();
+        if (text && text !== 'All tags') chips.push(text);
+      }
+      return chips;
+    }
+    return [];
+  }
   function sortControls() {
     const hits = [];
     for (const el of document.querySelectorAll('button, [role="button"]')) {
@@ -162,6 +338,6 @@ export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
         logoSrc: String(src || '').trim(),
       };
     });
-    return { sortControls: sortControls(), rows };
+    return { sortControls: sortControls(), filterTags: tagFilterChips(), rows };
   };
 })()`;
