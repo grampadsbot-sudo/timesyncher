@@ -717,7 +717,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(IT_CATEGORY_PATCH) || js.includes(IT_CATEGORY_NEEDLE)) {
     throw new Error('Style two live It() category-object patch did not apply.');
   }
-  if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
+  const tabCardMount = js.includes('tsSharedLiveTabListMount("restaurants")') && js.includes('tsSharedLiveTabListMount("stores")') && js.includes('tsSharedLiveTabListMount("events")');
+  if (!(js.includes(QN_RENDER_PATCH) && js.includes(GN_RENDER_PATCH) && js.includes(KI_RENDER_PATCH)) && !tabCardMount) {
     throw new Error('Style two live tab render pad did not apply.');
   }
   if (!js.includes(MO_BUDGET_PATCH) || !js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
@@ -726,7 +727,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
   }
-  if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
+  const tabEmptyMount = js.includes('tsSharedLiveTabListMount("restaurants"),tsPad(Qn).length===0') && js.includes('tsSharedLiveTabListMount("stores"),tsPad(Gn).length===0');
+  if (!(js.includes(QN_EMPTY_PATCH) && js.includes(GN_EMPTY_PATCH)) && !tabEmptyMount) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
   }
   if (js.includes('tsPf=') && !js.includes('tsPf=[]')) {
@@ -876,7 +878,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(THING_META_CSS_PATCH) || js.includes('padding:12px 124px 12px 12px') || js.includes('.style2-thing-meta{position:absolute')) {
     throw new Error('style2-thing-meta must be static so titles do not overlap day/time.');
   }
-  if (!js.includes(WD_META_PATCH) || !js.includes(DOC_TITLE_PATCH) || !js.includes(SE_TITLE_PATCH)) {
+  if (!(js.includes(WD_META_PATCH) || (js.includes('return tsRenderThingCard(') && js.includes('<div class="style2-thing-meta">${metaHtml}</div><div class="thing-head">'))) || !js.includes(DOC_TITLE_PATCH) || !js.includes(SE_TITLE_PATCH)) {
     throw new Error('wd() meta, document.title, and _se title must drop brand prefix and absolute day/time.');
   }
   if (!js.includes('[data-endlist-maps="0"] .map-box') || !js.includes('[data-post-itinerary="1"]{break-before:page')) {
@@ -936,7 +938,9 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(THING_BREAK_PATCH) || js.includes('.style2-details{display:grid;grid-template-columns:1fr;gap:10px}') || js.includes('column-count:2') || js.includes('overflow-wrap:anywhere')) {
     throw new Error('Style two Mc() must 2-col grid (not CSS columns / overflow-wrap:anywhere letter-stack).');
   }
-  if (!js.includes('<div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">') || js.includes('<div class="thing-head"><div class="style2-thing-meta">')) {
+  const thingCardMeta = js.includes('<div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">')
+    || (js.includes('<div class="style2-thing-meta">${metaHtml}</div><div class="thing-head">') && js.includes('return tsRenderThingCard('));
+  if (!thingCardMeta || js.includes('<div class="thing-head"><div class="style2-thing-meta">')) {
     throw new Error('wd() meta must sit above thing-head, not in the 34px logo grid track (letter-stacked titles).');
   }
   if (js.includes('[data-style2-centered-day]{display:block!important;break-after:page') || js.includes('style="break-inside:avoid;page-break-inside:avoid;width:auto;max-width:100%"')) {
