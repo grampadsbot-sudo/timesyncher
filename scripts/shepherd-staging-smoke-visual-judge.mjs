@@ -6,7 +6,11 @@ import {
   buildVisualJudgePrompt,
   loadScreenSpecForLabel,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
-import { reconcileVisualJudgeComposerSend } from './shepherd-staging-smoke-composer-send-dom.mjs';
+import {
+  reconcileVisualJudgeComposerSend,
+  sendBboxHasInkInComposerPng,
+  sendDomStructurallyConfirmsVisibleSend,
+} from './shepherd-staging-smoke-composer-send-dom.mjs';
 
 export { VISUAL_JUDGE_MODEL };
 
@@ -145,9 +149,14 @@ async function judgeScreenshotWithOpenRouter({
         }
       }
       const verdict = reconcileVisualJudgeComposerSend(parsed, shotMeta.sendDom, { composerPngBuffer });
+      const sendCropInk = composerPngBuffer && shotMeta.sendDom
+        ? sendBboxHasInkInComposerPng(composerPngBuffer, shotMeta.sendDom)
+        : null;
       return {
         ...verdict,
         sendDom: shotMeta.sendDom || null,
+        sendDomStructural: sendDomStructurallyConfirmsVisibleSend(shotMeta.sendDom),
+        sendCropInk,
         error: null,
         model: outer?.model || VISUAL_JUDGE_MODEL,
         rubricVersion: VISUAL_RUBRIC_VERSION,

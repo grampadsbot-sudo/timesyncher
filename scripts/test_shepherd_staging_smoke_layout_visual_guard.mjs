@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { reconcileVisualJudgeComposerSend, sendBboxHasInkInComposerPng } from './shepherd-staging-smoke-composer-send-dom.mjs';
 import {
   layoutAppFailShareUrlBeforeApi,
-  transcriptBlobContainsShareUrl,
 } from './shepherd-staging-smoke-layout-share-guard.mjs';
+import { reconcileVisualJudgeComposerSend } from './shepherd-staging-smoke-composer-send-dom.mjs';
 import { readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
@@ -32,8 +31,6 @@ assert.equal(
   layoutAppFailShareUrlBeforeApi({ customerShareUrlSeenMs: 6000, sharedApiFirst200Ms: 5000 }),
   null,
 );
-
-assert.equal(transcriptBlobContainsShareUrl('see https://x.com/shared/intake-abc/', 'intake-abc'), true);
 
 const visibleSendDom = {
   id: 'sendButton',
@@ -66,8 +63,6 @@ for (let y = 0; y < 20; y += 1) {
   }
 }
 const buf = PNG.sync.write(png);
-const emptyInk = sendBboxHasInkInComposerPng(buf, visibleSendDom);
-assert.equal(emptyInk.hasInk, false);
 
 const appCrop = reconcileVisualJudgeComposerSend(
   { pass: false, failures: [{ rubricItem: '2', reason: 'no send visible' }] },

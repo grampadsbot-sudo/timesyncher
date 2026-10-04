@@ -1,14 +1,12 @@
 /** LAYOUT APP guard: share URL shown to customer before /api/shared/ returns 200. */
 
-import { sharedSlugApiPathFromPageUrl } from './shepherd-staging-smoke-shared-ui-map.mjs';
-
-export function shareSlugPathNeedle(shareSlug = '') {
+function shareSlugPathNeedle(shareSlug = '') {
   const slug = String(shareSlug || '').replace(/\/+$/, '');
   if (!slug) return '';
   return `/shared/${slug}`;
 }
 
-export function transcriptBlobContainsShareUrl(blob, shareSlug) {
+function transcriptBlobContainsShareUrl(blob, shareSlug) {
   const needle = shareSlugPathNeedle(shareSlug);
   if (!needle || !blob) return false;
   return String(blob).includes(needle);
@@ -59,8 +57,4 @@ export function layoutAppFailShareUrlBeforeApi({
     viewport: {},
     rects: {},
   };
-}
-
-export function sharedApiPathForLayoutUrl(sharedUrl) {
-  return sharedSlugApiPathFromPageUrl(sharedUrl) || '';
 }
