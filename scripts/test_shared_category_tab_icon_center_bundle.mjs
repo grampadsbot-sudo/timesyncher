@@ -13,7 +13,8 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /data-tab-category":G\.id/);
-assert.match(rendered, /display:"inline-flex",alignItems:"center"\},children:G\.label\}/);
+assert.match(rendered, /display:"inline-flex",alignItems:"center",verticalAlign:"middle"\},children:G\.label\}/);
+assert.match(rendered, /function tsPaintTabEmoji\(/);
 assert.doesNotMatch(rendered, /AI-assisted vacation itinerary planning/);
 
 const atR20Tip = execFileSync('git', ['show', '9986132:public/assets/index-BKun7ofk.js'], {
