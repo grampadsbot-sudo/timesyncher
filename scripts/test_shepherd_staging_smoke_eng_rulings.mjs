@@ -92,7 +92,13 @@ assert.equal(live.infraBlocked, false);
 
 const reconciled = reconcileVisualJudgeComposerSend(
   { pass: false, failures: [{ rubricItem: '2', reason: 'send control not visible' }] },
-  { id: 'sendButton', ariaLabel: 'Send', role: 'button' },
+  {
+    id: 'sendButton',
+    ariaLabel: 'Send',
+    role: 'button',
+    visible: true,
+    bboxInComposer: { x: 1, y: 1, width: 20, height: 20 },
+  },
 );
 assert.equal(reconciled.pass, true);
 

@@ -1,5 +1,4 @@
-/** Register LAYOUT + VISUAL spine checks (keeps main.mjs under line cap). */
-import { registerLayoutSpineChecks } from './shepherd-staging-smoke-layout-spine.mjs';
+/** Register VISUAL spine check (LAYOUT shared probes register after share publish in main.mjs). */
 import { runVisualHarnessCheck } from './shepherd-staging-smoke-visual.mjs';
 import { visualInfraBlockedFromPreflight, visualPreflightReady } from './shepherd-staging-smoke-visual-preflight.mjs';
 import { withBrowserPageSlot } from './shepherd-staging-smoke-browser-pool.mjs';
@@ -59,6 +58,5 @@ async function registerVisualSpineChecks(spineCtx) {
 }
 
 export async function registerLayoutVisualSpineChecks(spineCtx) {
-  await registerLayoutSpineChecks(spineCtx);
   await registerVisualSpineChecks(spineCtx);
 }
