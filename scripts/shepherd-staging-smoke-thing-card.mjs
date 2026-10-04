@@ -12,6 +12,7 @@ import {
   gradeThingCardTabScan,
   populatedThingCardTabs,
   rowInkGradeFromCom,
+  THING_CARD_FAIL_ON_SORT_CONTROLS,
 } from './shepherd-staging-smoke-thing-card-eval.mjs';
 
 const THING_CARD_VIEWPORTS = [
@@ -115,11 +116,14 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
     }
   }
   const summary = gradeThingCardHarnessResult({ tabs, probes });
+  const sortControlsPresent = probes.some((p) => (p.sortControls || []).length > 0);
   return {
     pass: summary.pass,
     checkTHINGCARD: {
       tabs,
       probes,
+      failOnSortControls: THING_CARD_FAIL_ON_SORT_CONTROLS,
+      sortControlsPresent,
       failures: summary.failures,
       failReason: summary.pass ? null : (summary.failures[0]?.detail || 'thing_card_fail'),
     },

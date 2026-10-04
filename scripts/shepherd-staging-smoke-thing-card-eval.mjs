@@ -7,6 +7,16 @@ const THING_CARD_TAB_KEYWORDS = ['cars', 'hotels', 'restaurants', 'stores', 'fli
 
 const SORT_CONTROL_RE = /^(name|price)(\s*[↑↓])?$/i;
 
+export function thingCardFailOnSortControlsFromEnv(env = process.env) {
+  const raw = env?.THING_CARD_FAIL_ON_SORT_CONTROLS;
+  if (raw == null || String(raw).trim() === '') return false;
+  const v = String(raw).trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
+/** Default false; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to fail closed on Name/Price sort UI. */
+export const THING_CARD_FAIL_ON_SORT_CONTROLS = thingCardFailOnSortControlsFromEnv();
+
 export function thingCardSortControlLabel(text) {
   const label = String(text || '').replace(/\s+/g, ' ').trim();
   if (!label) return null;
@@ -27,17 +37,20 @@ export function populatedThingCardTabs(sharedJson = {}) {
 /**
  * Pure grade from in-page scan rows (see evaluateThingCardTabDom source in thing-card harness).
  */
-export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}) {
+export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {}) {
   const failures = [];
   const tab = scan.tab || 'unknown';
   const viewport = scan.viewport || null;
-  for (const sortLabel of scan.sortControls || []) {
-    failures.push({
-      rule: 'sort_control',
-      tab,
-      viewport,
-      detail: `forbidden sort control: ${sortLabel}`,
-    });
+  const failOnSortControls = options.failOnSortControls ?? THING_CARD_FAIL_ON_SORT_CONTROLS;
+  if (failOnSortControls) {
+    for (const sortLabel of scan.sortControls || []) {
+      failures.push({
+        rule: 'sort_control',
+        tab,
+        viewport,
+        detail: `forbidden sort control: ${sortLabel}`,
+      });
+    }
   }
   const rows = scan.rows || [];
   if (!rows.length && scan.expectedRows > 0) {
