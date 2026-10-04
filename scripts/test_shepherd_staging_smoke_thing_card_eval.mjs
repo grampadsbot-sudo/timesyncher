@@ -5,6 +5,7 @@ import {
   gradeThingCardHarnessResult,
   populatedThingCardTabs,
   thingCardSortControlLabel,
+  thingCardFailOnSortControlsFromEnv,
   rowInkGradeFromCom,
 } from './shepherd-staging-smoke-thing-card-eval.mjs';
 
@@ -23,32 +24,42 @@ const tabs = populatedThingCardTabs(sharedJson);
 assert.ok(tabs.includes('cars'));
 assert.ok(tabs.includes('hotels'));
 
-const failSort = gradeThingCardTabScan({
+assert.equal(thingCardFailOnSortControlsFromEnv({}), false);
+assert.equal(thingCardFailOnSortControlsFromEnv({ THING_CARD_FAIL_ON_SORT_CONTROLS: 'true' }), true);
+
+const sortScan = {
   tab: 'cars',
   viewport: '390',
   sortControls: ['Name', 'Price ↑'],
   rows: [{ index: 0, title: 'Hertz', summaryText: 'OGG pickup', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: true } });
+};
+const inkOk = { 0: { inkPresent: true } };
+
+const sortPresentFlagOff = gradeThingCardTabScan(sortScan, inkOk, { failOnSortControls: false });
+assert.equal(sortPresentFlagOff.pass, true);
+assert.equal(sortPresentFlagOff.failures.some((f) => f.rule === 'sort_control'), false);
+
+const failSort = gradeThingCardTabScan(sortScan, inkOk, { failOnSortControls: true });
 assert.equal(failSort.pass, false);
 assert.ok(failSort.failures.some((f) => f.rule === 'sort_control'));
 
 const failSummary = gradeThingCardTabScan({
   tab: 'cars',
   viewport: '390',
-  sortControls: [],
+  sortControls: ['Name'],
   rows: [{ index: 0, title: 'Hertz', summaryText: '', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: true } });
+}, { 0: { inkPresent: true } }, { failOnSortControls: false });
 assert.equal(failSummary.pass, false);
 
 const failInk = gradeThingCardTabScan({
   tab: 'cars',
   viewport: '390',
-  sortControls: [],
+  sortControls: ['Price ↑'],
   rows: [{ index: 0, title: 'Hertz', summaryText: 'OGG pickup', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: false, inkError: 'ink_below_min_mass' } });
+}, { 0: { inkPresent: false, inkError: 'ink_below_min_mass' } }, { failOnSortControls: false });
 assert.equal(failInk.pass, false);
 
 const pass = gradeThingCardTabScan({
