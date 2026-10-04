@@ -153,6 +153,8 @@ export async function runVisualHarnessCheck({
       tabLabel: shot.tabLabel || null,
       viewport: shot.viewport?.label || shot.viewport?.width,
       path: shot.path,
+      composerPath: shot.composerPath || null,
+      sendDom: shot.sendDom || verdict.sendDom || null,
       pass: verdict.pass,
       layoutDomPass: shot.layoutDom?.pass !== false,
       failures: verdict.failures,

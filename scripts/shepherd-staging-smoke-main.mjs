@@ -38,6 +38,7 @@ import {
   waitForSelector,
 } from './shepherd-staging-smoke-browser-pool.mjs';
 import { registerLayoutVisualSpineChecks } from './shepherd-staging-smoke-layout-visual-spine.mjs';
+import { registerLayoutSpineChecks } from './shepherd-staging-smoke-layout-spine.mjs';
 
 /**
  * @param {object} ctx
@@ -283,6 +284,19 @@ export async function runShepherdSmokeSpine(ctx) {
   }, { timeoutMs: 60000 });
 
   state.mapLogoPrep = await prepareMapLogoIntakeShare(ctx);
+
+  await registerLayoutSpineChecks({
+    runCheck,
+    out,
+    state,
+    BASE,
+    CHROME,
+    sharedBrowser,
+    registerBrowser,
+    artifactPath,
+    puppeteer,
+    db,
+  });
 
   await runCheck('INV-UI', async () => {
     const pass = (out.checkINVUI?.chatHits || []).length === 0 && (out.checkMAP?.sharedUiHits || []).length === 0;

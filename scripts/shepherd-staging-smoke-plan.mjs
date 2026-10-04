@@ -16,8 +16,8 @@ export const SMOKE_FAIL_CLOSED_GO = [
 
 /** Main customer spine — one session/trip/couponMain; must stay sequential. */
 export const SMOKE_MAIN_SPINE_ORDER = [
-  '1', '2', '3', 'EULA', '4', 'W', '5', 'LAYOUT', 'VISUAL', 'I', '6', 'H',
-  'INV-UI', '6b', 'T', 'CL', '7', '8', 'M', 'R', 'O',
+  '1', '2', '3', 'EULA', '4', 'W', '5', 'VISUAL', 'I', '6', 'H',
+  'LAYOUT', 'INV-UI', '6b', 'T', 'CL', '7', '8', 'M', 'R', 'O',
 ];
 
 /**

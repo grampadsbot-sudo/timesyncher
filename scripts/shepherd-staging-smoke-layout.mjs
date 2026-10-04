@@ -14,6 +14,10 @@ import {
   LAYOUT_VIEWPORTS,
 } from './shepherd-staging-smoke-layout-eval.mjs';
 import { probeSiteFullscreenControl, runLayoutDomEval } from './shepherd-staging-smoke-layout-dom.mjs';
+import {
+  layoutAppFailShareUrlBeforeApi,
+  scanChatDomShareUrlVisible,
+} from './shepherd-staging-smoke-layout-share-guard.mjs';
 
 async function waitForChatAppReady(page) {
   await page.waitForFunction(() => {
@@ -29,12 +33,17 @@ async function runLayoutProbeOnPage(page, {
   viewport,
   artifactPath,
   setStage,
+  shareAppGuard,
 }) {
   setStage?.(`layout ${pageKind} ${viewport.label} viewport`);
   await page.setViewport({ width: viewport.width, height: viewport.height });
   if (pageKind === 'chat') {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 });
     await waitForChatAppReady(page);
+    if (shareAppGuard?.shareSlug && shareAppGuard.customerShareUrlSeenMs == null) {
+      const domVisible = await scanChatDomShareUrlVisible(page, shareAppGuard.shareSlug);
+      if (domVisible) shareAppGuard.customerShareUrlSeenMs = Date.now();
+    }
   } else {
     setStage?.(`layout shared ${viewport.label} hydrate`);
     const diagPath = artifactPath(`layout-shared-hydration-diag-${viewport.label}.json`);
@@ -71,6 +80,29 @@ async function runLayoutProbeOnPage(page, {
     }
     await clickSharedTabByKeyword(page, 'day-by-day');
     await new Promise((r) => setTimeout(r, 400));
+    if (shareAppGuard?.sharedApiFirst200Ms != null) {
+      const appRow = layoutAppFailShareUrlBeforeApi({
+        customerShareUrlSeenMs: shareAppGuard.customerShareUrlSeenMs,
+        sharedApiFirst200Ms: shareAppGuard.sharedApiFirst200Ms,
+        shareSlug: shareAppGuard.shareSlug,
+      });
+      if (appRow) {
+        const shot = artifactPath(`layout-shared-${viewport.label}.png`);
+        await page.screenshot({ path: shot, fullPage: true });
+        return {
+          pageKind,
+          viewport: viewport.label,
+          pass: false,
+          failures: [{
+            ...appRow,
+            viewport: { width: viewport.width, height: viewport.height },
+          }],
+          screenshot: shot,
+          shareUrlAppGuard: shareAppGuard,
+          applicability: LAYOUT_RULE_APPLICABILITY,
+        };
+      }
+    }
   }
   setStage?.(`layout ${pageKind} ${viewport.label} evaluate`);
   const result = await runLayoutDomEval(page, pageKind);
@@ -104,6 +136,7 @@ export async function runLayoutHarnessCheck({
   sharedUrl,
   artifactPath,
   setStage,
+  shareAppGuard = null,
 }) {
   const probes = [];
   let pass = true;
@@ -121,12 +154,18 @@ export async function runLayoutHarnessCheck({
         viewport,
         artifactPath,
         setStage,
+        shareAppGuard: shareAppGuard || null,
       });
       probes.push(row);
       if (!row.pass) pass = false;
     }
   }
-  return { pass, probes, applicability: LAYOUT_RULE_APPLICABILITY };
+  const shareUrlTiming = shareAppGuard ? {
+    customerShareUrlSeenMs: shareAppGuard.customerShareUrlSeenMs ?? null,
+    sharedApiFirst200Ms: shareAppGuard.sharedApiFirst200Ms ?? null,
+    shareSlug: shareAppGuard.shareSlug,
+  } : null;
+  return { pass, probes, applicability: LAYOUT_RULE_APPLICABILITY, shareUrlTiming };
 }
 
 export function summarizeLayoutFailures(probes) {

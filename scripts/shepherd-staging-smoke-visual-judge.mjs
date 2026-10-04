@@ -136,9 +136,18 @@ async function judgeScreenshotWithOpenRouter({
     const text = typeof content === 'string' ? content : JSON.stringify(content || '');
     try {
       const parsed = parseVisualJudgeResponseText(text);
-      const verdict = reconcileVisualJudgeComposerSend(parsed, shotMeta.sendDom);
+      let composerPngBuffer = null;
+      if (shotMeta.composerPath) {
+        try {
+          composerPngBuffer = readFileSync(shotMeta.composerPath);
+        } catch {
+          composerPngBuffer = null;
+        }
+      }
+      const verdict = reconcileVisualJudgeComposerSend(parsed, shotMeta.sendDom, { composerPngBuffer });
       return {
         ...verdict,
+        sendDom: shotMeta.sendDom || null,
         error: null,
         model: outer?.model || VISUAL_JUDGE_MODEL,
         rubricVersion: VISUAL_RUBRIC_VERSION,
