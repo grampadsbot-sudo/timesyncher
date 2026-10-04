@@ -31,15 +31,25 @@ const centeredChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 11, do
 assert.equal(centeredChip.error, undefined);
 assert.equal(logoChipInkPresent(centeredChip), true);
 assert.equal(gradeLogoChipRow({
+  isListRowChip: true,
   isBrandImg: true,
   src: 'https://cdn.example/sizeless.svg',
   com: centeredChip,
+}).pass, true);
+
+const emojiChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
+assert.equal(gradeLogoChipRow({
+  isListRowChip: true,
+  isBrandImg: false,
+  src: '',
+  com: emojiChip,
 }).pass, true);
 
 const emptyChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
 assert.equal(emptyChip.error, 'empty_mass');
 assert.equal(gradeLogoChipInkPresence(emptyChip).inkPresent, false);
 assert.equal(gradeLogoChipRow({
+  isListRowChip: true,
   isBrandImg: true,
   src: 'https://cdn.example/logo.png',
   com: emptyChip,
@@ -49,6 +59,7 @@ const tabNoInk = gradeLogoTabResult({
   tab: 'hotels',
   clicked: true,
   rows: [{
+    isListRowChip: true,
     isBrandImg: true,
     src: 'https://cdn.example/logo.png',
     com: emptyChip,
@@ -57,7 +68,7 @@ const tabNoInk = gradeLogoTabResult({
   viewports: { 1280: { pass: true }, 390: { pass: true } },
 });
 assert.equal(tabNoInk.pass, false);
-assert.equal(tabNoInk.failReason, 'zero_brand_imgs_with_real_src');
+assert.equal(tabNoInk.failReason, 'empty_logo_chip');
 
 assert.equal(
   gradeCarsHeadingLogoInk({ tab: 'Cars', labelVisible: true, iconVsLabelPx: 2, chipMass: 40 }).pass,

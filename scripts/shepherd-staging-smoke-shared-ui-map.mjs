@@ -8,6 +8,39 @@ import { writeFileSync } from 'node:fs';
 export const SHARED_GOTO_TIMEOUT_MS = 60000;
 export const SHARED_MAP_READY_WAIT_MS = 45000;
 export const APP_MAP_READY_FAIL_MS = 10000;
+export const SHARED_API_RETRY_TIMEOUT_MS = 45000;
+export const SHARED_API_RETRY_INTERVAL_MS = 750;
+
+export function sharedSlugApiPathFromPageUrl(url = '') {
+  const match = String(url).match(/\/shared\/([^/?#]+)/i);
+  if (!match) return null;
+  const slug = decodeURIComponent(match[1]).replace(/\/+$/, '');
+  return `/api/shared/${encodeURIComponent(slug)}/`;
+}
+
+export async function waitForSharedSlugApiReady(page, pageUrl, opts = {}) {
+  const apiPath = sharedSlugApiPathFromPageUrl(pageUrl);
+  if (!apiPath) return { ok: true, status: 200, skipped: true };
+  const timeoutMs = Number(opts.timeoutMs) || SHARED_API_RETRY_TIMEOUT_MS;
+  const intervalMs = Number(opts.intervalMs) || SHARED_API_RETRY_INTERVAL_MS;
+  const fetchStatus = opts.fetchStatus;
+  const deadline = Date.now() + timeoutMs;
+  let lastStatus = 0;
+  while (Date.now() < deadline) {
+    const status = fetchStatus
+      ? await fetchStatus(apiPath)
+      : await page.evaluate(async (path) => {
+        const res = await fetch(path, { credentials: 'same-origin' });
+        return res.status;
+      }, apiPath);
+    lastStatus = status;
+    if (status === 200) return { ok: true, status };
+    const hydrated = await page.evaluate(sharedIntakeTabShellReadyInBrowser).catch(() => false);
+    if (hydrated) return { ok: true, status, hydratedDespiteApi: true };
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return { ok: false, status: lastStatus, timedOut: true };
+}
 
 function attachSharedHydrationDiagnostics(page) {
   const diag = { consoleErrors: [], failedRequests: [], notFound404Urls: [], timingTrace: [] };
@@ -182,7 +215,7 @@ async function waitForSharedTabShellHydration(page, stageTimestamps) {
   await waitForSharedIntakeTabShellReady(page, stageTimestamps);
 }
 
-export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
+async function gotoAndHydrateSharedIntakePageOnce(page, url, opts = {}) {
   const { debugArtifactPath = null } = opts;
   const stageTimestamps = {
     networkidle2Skipped: true,
@@ -201,6 +234,34 @@ export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
   await gotoSharedIntakePage(page, url);
   stageTimestamps.gotoEndMs = Date.now();
   diagSession.mark('goto_end');
+  const apiWait = await waitForSharedSlugApiReady(page, url, opts);
+  stageTimestamps.sharedApiStatus = apiWait.status;
+  stageTimestamps.sharedApiHydratedDespite404 = apiWait.hydratedDespiteApi === true;
+  if (!apiWait.ok && !apiWait.hydratedDespiteApi) {
+    diagSession.mark('shared_api_wait_timeout', String(apiWait.status || 'unknown'));
+    const domTabList = await listSharedDomTabs(page);
+    const notFound404Urls = [...(diagSession.diag.notFound404Urls || [])];
+    const hydrationError = `shared_api_404_retry_timeout (lastStatus=${apiWait.status || 0})`;
+    const payload = {
+      url,
+      hydrationError,
+      stageTimestamps,
+      domTabList,
+      notFound404Urls,
+      diagnostics: diagSession.diag,
+      sharedApiWait: apiWait,
+    };
+    if (debugArtifactPath) writeFileSync(debugArtifactPath, `${JSON.stringify(payload, null, 2)}\n`);
+    diagSession.detach();
+    return {
+      stageTimestamps,
+      domTabList,
+      notFound404Urls,
+      hydrationError,
+      hydrationDiagPath: debugArtifactPath,
+      sharedApiWait: apiWait,
+    };
+  }
   try {
     diagSession.mark('hydration_wait_start');
     await waitForSharedTabShellHydration(page, stageTimestamps);
@@ -216,6 +277,7 @@ export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
       domTabList,
       notFound404Urls,
       diagnostics: diagSession.diag,
+      sharedApiWait: apiWait,
     };
     if (debugArtifactPath) writeFileSync(debugArtifactPath, `${JSON.stringify(payload, null, 2)}\n`);
     diagSession.detach();
@@ -225,12 +287,41 @@ export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
       notFound404Urls,
       hydrationError: String(err?.message || err),
       hydrationDiagPath: debugArtifactPath,
+      sharedApiWait: apiWait,
     };
   }
   diagSession.detach();
   await new Promise((r) => setTimeout(r, 800));
   const domTabList = await listSharedDomTabs(page);
-  return { stageTimestamps, domTabList, hydrationError: null, notFound404Urls: [] };
+  return {
+    stageTimestamps,
+    domTabList,
+    hydrationError: null,
+    notFound404Urls: [],
+    sharedApiWait: apiWait,
+  };
+}
+
+export async function gotoAndHydrateSharedIntakePage(page, url, opts = {}) {
+  const retryTimeoutMs = Number(opts.sharedApiRetryTimeoutMs) || SHARED_API_RETRY_TIMEOUT_MS;
+  const intervalMs = Number(opts.sharedApiRetryIntervalMs) || SHARED_API_RETRY_INTERVAL_MS;
+  const deadline = Date.now() + retryTimeoutMs;
+  let last = null;
+  while (Date.now() < deadline) {
+    const remaining = Math.max(1000, deadline - Date.now());
+    last = await gotoAndHydrateSharedIntakePageOnce(page, url, {
+      ...opts,
+      timeoutMs: remaining,
+      intervalMs,
+    });
+    if (!last.hydrationError) return last;
+    const apiPath = sharedSlugApiPathFromPageUrl(url);
+    const api404 = apiPath && (last.notFound404Urls || []).some((u) => u.includes(apiPath));
+    const apiTimedOut = last.hydrationError?.includes('shared_api_404_retry_timeout');
+    if (!api404 && !apiTimedOut) return last;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return last || { hydrationError: 'shared_api_404_retry_timeout', domTabList: [], notFound404Urls: [] };
 }
 
 export async function mapSharedTripState(page, url) {
