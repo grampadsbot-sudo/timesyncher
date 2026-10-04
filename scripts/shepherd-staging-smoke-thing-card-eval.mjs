@@ -148,12 +148,13 @@ export function gradeThingCardTagFilterParity({
 
 export function thingCardFailOnSortControlsFromEnv(env = process.env) {
   const raw = env?.THING_CARD_FAIL_ON_SORT_CONTROLS;
-  if (raw == null || String(raw).trim() === '') return false;
+  if (raw == null || String(raw).trim() === '') return true;
   const v = String(raw).trim().toLowerCase();
+  if (v === '0' || v === 'false' || v === 'no') return false;
   return v === '1' || v === 'true' || v === 'yes';
 }
 
-/** Default false; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to fail closed on Name/Price sort UI. */
+/** Default on; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `0`/`false`/`no` to allow standalone Name/Price sort pills. */
 export const THING_CARD_FAIL_ON_SORT_CONTROLS = thingCardFailOnSortControlsFromEnv();
 
 export function thingCardSortControlLabel(text) {
@@ -162,6 +163,192 @@ export function thingCardSortControlLabel(text) {
   if (SORT_CONTROL_RE.test(label)) return label;
   if (/^price\b/i.test(label) && /[↑↓]/.test(label)) return label;
   return null;
+}
+
+export function thingCardSortColumnBaseLabel(text) {
+  const label = String(text || '').replace(/\s+/g, ' ').trim().replace(/\s*[↑↓]\s*$/, '').trim();
+  if (!label) return null;
+  const lower = label.toLowerCase();
+  if (lower === 'name' || lower === 'price') return lower;
+  return null;
+}
+
+/** Standalone pill sort controls (not list column header labels). */
+export function forbiddenSortControlsFromMatches(sortControlMatches = []) {
+  return (sortControlMatches || []).map((m) => m?.label).filter(Boolean);
+}
+
+export function rowTitlesFromScanRows(rows = []) {
+  return (rows || []).map((r) => String(r?.title || '').trim()).filter(Boolean);
+}
+
+export function parseThingCardRowPrice(rowText = '') {
+  const m = String(rowText || '').match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return m ? Number(m[1].replace(/,/g, '')) : null;
+}
+
+function rowPriceTextsFromScanRows(rows = []) {
+  return (rows || []).map((r) => `${r?.title || ''} ${r?.summaryText || ''}`);
+}
+
+export function isAscendingNameOrder(titles = []) {
+  const list = titles.map((t) => String(t || '').trim()).filter(Boolean);
+  if (list.length < 2) return false;
+  for (let i = 1; i < list.length; i += 1) {
+    if (list[i - 1].localeCompare(list[i], undefined, { sensitivity: 'base' }) > 0) return false;
+  }
+  return true;
+}
+
+export function isDescendingNameOrder(titles = []) {
+  const list = titles.map((t) => String(t || '').trim()).filter(Boolean);
+  if (list.length < 2) return false;
+  for (let i = 1; i < list.length; i += 1) {
+    if (list[i - 1].localeCompare(list[i], undefined, { sensitivity: 'base' }) < 0) return false;
+  }
+  return true;
+}
+
+export function isAscendingPriceOrder(rowTexts = []) {
+  const prices = (rowTexts || []).map((t) => parseThingCardRowPrice(t));
+  return priceOrderOk(prices, 'asc');
+}
+
+export function priceOrderOk(prices = [], direction = 'asc') {
+  const vals = prices.map((p) => (p == null ? null : Number(p)));
+  const pricedIdx = vals.map((p, i) => (p != null && !Number.isNaN(p) ? i : -1)).filter((i) => i >= 0);
+  const unpricedIdx = vals.map((p, i) => (p == null || Number.isNaN(p) ? i : -1)).filter((i) => i >= 0);
+  if (pricedIdx.length >= 2) {
+    for (let k = 1; k < pricedIdx.length; k += 1) {
+      const a = vals[pricedIdx[k - 1]];
+      const b = vals[pricedIdx[k]];
+      if (direction === 'asc' && a > b) return false;
+      if (direction === 'desc' && a < b) return false;
+    }
+  }
+  if (unpricedIdx.length && pricedIdx.length) {
+    const atStart = unpricedIdx.every((i) => i < pricedIdx[0]);
+    const atEnd = unpricedIdx.every((i) => i > pricedIdx[pricedIdx.length - 1]);
+    if (!atStart && !atEnd) return false;
+  }
+  return pricedIdx.length >= 1 || unpricedIdx.length >= 2;
+}
+
+/**
+ * Fail-closed SORT-BY-LABEL grading from harness interaction snapshots.
+ */
+export function gradeThingCardSortByLabel({
+  tab = 'unknown',
+  viewport = null,
+  columnSortLabels = {},
+  rows = [],
+  orders = {},
+} = {}) {
+  const failures = [];
+  const rowCount = (rows || []).length;
+  const titles = rowTitlesFromScanRows(rows);
+  const rowTexts = rowPriceTextsFromScanRows(rows);
+  const gate = {
+    rule: 'SORT-BY-LABEL',
+    tab,
+    viewport,
+    rowCount,
+    columnSortLabels,
+    orders,
+    sortControlMatches: orders.sortControlMatches,
+  };
+
+  if (rowCount < 2) {
+    return {
+      pass: false,
+      status: 'not_enough_rows',
+      failures: [{
+        rule: 'SORT-BY-LABEL',
+        tab,
+        viewport,
+        detail: 'not_enough_rows',
+        rowCount,
+      }],
+      gate,
+    };
+  }
+
+  if (!columnSortLabels?.name) {
+    failures.push({
+      rule: 'SORT-BY-LABEL',
+      tab,
+      viewport,
+      detail: 'missing Name column label',
+    });
+  }
+  if (!columnSortLabels?.price) {
+    failures.push({
+      rule: 'SORT-BY-LABEL',
+      tab,
+      viewport,
+      detail: 'missing Price column label',
+    });
+  }
+
+  const nameAfterFirst = orders.nameAfterFirst || [];
+  const nameAfterSecond = orders.nameAfterSecond || [];
+  const priceAfter = orders.priceAfter || [];
+
+  if (columnSortLabels?.name) {
+    if (!isAscendingNameOrder(nameAfterFirst)) {
+      failures.push({
+        rule: 'SORT-BY-LABEL',
+        tab,
+        viewport,
+        detail: `Name click did not sort ascending: [${nameAfterFirst.join(', ')}]`,
+        observed: nameAfterFirst,
+      });
+    }
+    if (nameAfterSecond.length >= 2
+      && nameAfterFirst.join('\0') === nameAfterSecond.join('\0')) {
+      failures.push({
+        rule: 'SORT-BY-LABEL',
+        tab,
+        viewport,
+        detail: 'second Name click did not reverse or change order',
+        observed: nameAfterSecond,
+      });
+    }
+    if (nameAfterSecond.length >= 2 && isAscendingNameOrder(nameAfterSecond)) {
+      failures.push({
+        rule: 'SORT-BY-LABEL',
+        tab,
+        viewport,
+        detail: `second Name click still ascending: [${nameAfterSecond.join(', ')}]`,
+        observed: nameAfterSecond,
+      });
+    }
+  }
+
+  if (columnSortLabels?.price && priceAfter.length >= 2) {
+    const prices = priceAfter.map((text) => parseThingCardRowPrice(text));
+    const dir = orders.priceDirection || 'asc';
+    if (!priceOrderOk(prices, dir)) {
+      failures.push({
+        rule: 'SORT-BY-LABEL',
+        tab,
+        viewport,
+        detail: `Price click order invalid (${dir}): prices=${JSON.stringify(prices)}`,
+        observed: priceAfter,
+      });
+    }
+  }
+
+  return {
+    pass: failures.length === 0,
+    status: failures.length ? 'failed' : 'ok',
+    failures,
+    gate: {
+      ...gate,
+      titlesBefore: titles,
+      rowTextsBefore: rowTexts,
+    },
+  };
 }
 
 export function populatedThingCardTabs(sharedJson = {}) {
@@ -182,12 +369,16 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
   const viewport = scan.viewport || null;
   const failOnSortControls = options.failOnSortControls ?? THING_CARD_FAIL_ON_SORT_CONTROLS;
   if (failOnSortControls) {
-    for (const sortLabel of scan.sortControls || []) {
+    const forbidden = scan.sortControls?.length
+      ? scan.sortControls
+      : forbiddenSortControlsFromMatches(scan.sortControlMatches);
+    for (const sortLabel of forbidden) {
       failures.push({
         rule: 'sort_control',
         tab,
         viewport,
         detail: `forbidden sort control: ${sortLabel}`,
+        sortControlMatches: scan.sortControlMatches,
       });
     }
   }
@@ -208,6 +399,10 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
     apiThingTags: scan.apiThingTags,
   });
   for (const f of tagParity.failures) failures.push(f);
+
+  if (scan.sortByLabel?.failures?.length) {
+    for (const f of scan.sortByLabel.failures) failures.push(f);
+  }
 
   for (const row of rows) {
     const summary = String(row.summaryText || '').trim();
@@ -299,19 +494,79 @@ export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
     }
     return [];
   }
-  function sortControls() {
-    const hits = [];
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      const st = getComputedStyle(el);
-      if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
-      const r = el.getBoundingClientRect();
-      if (r.width < 1 || r.height < 1) continue;
-      const label = String(el.textContent || '').replace(/\\s+/g, ' ').trim();
-      if (/^(name|price)(\\s*[↑↓])?$/i.test(label) || (/^price\\b/i.test(label) && /[↑↓]/.test(label))) {
-        hits.push(label);
+  function sortControlLabel(text) {
+    const label = String(text || '').replace(/\\s+/g, ' ').trim();
+    if (/^(name|price)(\\s*[↑↓])?$/i.test(label)) return label;
+    if (/^price\\b/i.test(label) && /[↑↓]/.test(label)) return label;
+    return null;
+  }
+  function sortColumnBase(text) {
+    const label = String(text || '').replace(/\\s+/g, ' ').trim().replace(/\\s*[↑↓]\\s*$/, '').trim().toLowerCase();
+    return label === 'name' || label === 'price' ? label : null;
+  }
+  function isVisible(el) {
+    const st = getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) return false;
+    const r = el.getBoundingClientRect();
+    return r.width >= 1 && r.height >= 1;
+  }
+  function isPillSortButton(el) {
+    const st = getComputedStyle(el);
+    const br = parseFloat(st.borderRadius) || 0;
+    const h = el.getBoundingClientRect().height || parseFloat(st.height) || 0;
+    if (br >= 18 && h > 0 && br >= h * 0.35) return true;
+    const row = el.parentElement;
+    if (row && getComputedStyle(row).flexWrap === 'wrap' && sortControlLabel(el.textContent)) return true;
+    return false;
+  }
+  function listTabColumnRoot() {
+    const mount = document.querySelector('[data-shared-live-tab-mount]');
+    if (mount && mount.parentElement) return mount.parentElement;
+    const ul = document.querySelector('[data-shared-live-tab]');
+    return ul && ul.parentElement ? ul.parentElement : null;
+  }
+  function isListColumnHeaderRow(rowEl) {
+    if (!rowEl) return false;
+    if (rowEl.matches('[data-ts-list-sort-header],[data-list-sort-header]')) return true;
+    const root = listTabColumnRoot();
+    if (!root || !root.contains(rowEl)) return false;
+    const children = Array.from(root.children);
+    const listIdx = children.findIndex((c) => c.matches('[data-shared-live-tab-mount],[data-shared-live-tab]') || c.querySelector('[data-shared-live-tab],[data-shared-live-tab-mount]'));
+    const rowIdx = children.indexOf(rowEl);
+    if (listIdx < 0 || rowIdx < 0 || rowIdx >= listIdx) return false;
+    const buttons = [...rowEl.querySelectorAll('button,[role="button"]')].filter((b) => sortControlLabel(b.textContent));
+    if (!buttons.length) return false;
+    if (buttons.every(isPillSortButton)) return false;
+    const rowSt = getComputedStyle(rowEl);
+    if (rowSt.display === 'grid') return true;
+    return buttons.some((b) => !isPillSortButton(b));
+  }
+  function sortControlMatches() {
+    const matches = [];
+    for (const el of document.querySelectorAll('button,[role="button"]')) {
+      if (!isVisible(el)) continue;
+      const label = sortControlLabel(el.textContent);
+      if (!label) continue;
+      const row = el.closest('[data-ts-list-sort-header],[data-list-sort-header]') || el.parentElement;
+      if (isListColumnHeaderRow(row)) continue;
+      if (isPillSortButton(el) || (row && getComputedStyle(row).flexWrap === 'wrap')) {
+        matches.push({ label, kind: 'pill', flexWrap: row ? getComputedStyle(row).flexWrap : null });
       }
     }
-    return hits;
+    return matches;
+  }
+  function columnSortLabels() {
+    const out = { name: null, price: null };
+    for (const el of document.querySelectorAll('button,[role="button"]')) {
+      if (!isVisible(el)) continue;
+      const base = sortColumnBase(el.textContent);
+      if (!base) continue;
+      const row = el.closest('[data-ts-list-sort-header],[data-list-sort-header]') || el.parentElement;
+      if (!isListColumnHeaderRow(row)) continue;
+      const hit = { label: String(el.textContent || '').replace(/\\s+/g, ' ').trim() };
+      out[base] = hit;
+    }
+    return out;
   }
   function rowNodes() {
     const live = document.querySelector('[data-shared-live-tab]');
@@ -322,22 +577,55 @@ export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
       return st.display !== 'none' && st.visibility !== 'hidden' && r.height > 4 && r.width > 20;
     });
   }
-  return function evaluateThingCardTabDom() {
-    const rows = rowNodes().map((li, index) => {
-      const summaryEl = li.querySelector('[data-list-summary], [data-row-summary]');
-      const title = li.querySelector('strong')?.textContent?.trim() || '';
-      const chip = li.querySelector('[data-ts-logo-chip], img.tiny-logo, .thing-emoji');
-      const img = li.querySelector('img.tiny-logo, [data-ts-logo-chip] img');
-      const src = img?.getAttribute('src') || li.getAttribute('data-logo-src') || '';
-      li.setAttribute('data-ts-thing-card-row-idx', String(index));
+  function findColumnLabel(which) {
+    for (const el of document.querySelectorAll('button,[role="button"]')) {
+      if (!isVisible(el)) continue;
+      if (sortColumnBase(el.textContent) !== which) continue;
+      const row = el.closest('[data-ts-list-sort-header],[data-list-sort-header]') || el.parentElement;
+      if (!isListColumnHeaderRow(row)) continue;
+      return el;
+    }
+    return null;
+  }
+  return {
+    evaluateThingCardTabDom() {
+      const matches = sortControlMatches();
+      const rows = rowNodes().map((li, index) => {
+        const summaryEl = li.querySelector('[data-list-summary], [data-row-summary]');
+        const title = li.querySelector('strong')?.textContent?.trim() || '';
+        const chip = li.querySelector('[data-ts-logo-chip], img.tiny-logo, .thing-emoji');
+        const img = li.querySelector('img.tiny-logo, [data-ts-logo-chip] img');
+        const src = img?.getAttribute('src') || li.getAttribute('data-logo-src') || '';
+        li.setAttribute('data-ts-thing-card-row-idx', String(index));
+        return {
+          index,
+          title,
+          summaryText: summaryEl ? String(summaryEl.textContent || '').trim() : '',
+          rowText: String(li.textContent || '').replace(/\\s+/g, ' ').trim(),
+          requiresLogo: Boolean(chip),
+          logoSrc: String(src || '').trim(),
+        };
+      });
       return {
-        index,
-        title,
-        summaryText: summaryEl ? String(summaryEl.textContent || '').trim() : '',
-        requiresLogo: Boolean(chip),
-        logoSrc: String(src || '').trim(),
+        sortControls: matches.map((m) => m.label),
+        sortControlMatches: matches,
+        columnSortLabels: columnSortLabels(),
+        filterTags: tagFilterChips(),
+        rows,
       };
-    });
-    return { sortControls: sortControls(), filterTags: tagFilterChips(), rows };
+    },
+    clickThingCardColumnSortLabel(which) {
+      const btn = findColumnLabel(which);
+      if (!btn) return { clicked: false, which };
+      btn.click();
+      return { clicked: true, which, label: String(btn.textContent || '').replace(/\\s+/g, ' ').trim() };
+    },
+    readThingCardRowOrder() {
+      const rows = rowNodes();
+      return {
+        titles: rows.map((li) => li.querySelector('strong')?.textContent?.trim() || '').filter(Boolean),
+        rowTexts: rows.map((li) => String(li.textContent || '').replace(/\\s+/g, ' ').trim()),
+      };
+    },
   };
 })()`;

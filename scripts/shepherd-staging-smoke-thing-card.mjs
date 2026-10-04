@@ -10,6 +10,7 @@ import {
   apiThingTagsForTab,
   EVALUATE_THING_CARD_TAB_DOM_SOURCE,
   gradeThingCardHarnessResult,
+  gradeThingCardSortByLabel,
   gradeThingCardTabScan,
   normalizeThingCardTagLabel,
   populatedThingCardTabs,
@@ -18,13 +19,75 @@ import {
   THING_CARD_TAG_FILTER_TABS,
 } from './shepherd-staging-smoke-thing-card-eval.mjs';
 
+const THING_CARD_DOM_EVAL_PREFIX = `const __thingCardDomApi = ${EVALUATE_THING_CARD_TAB_DOM_SOURCE};`;
+
 const THING_CARD_VIEWPORTS = [
   { width: 390, height: 844, label: '390' },
   { width: 1280, height: 800, label: '1280' },
 ];
 
 async function evaluateTabDom(page) {
-  return page.evaluate(`${EVALUATE_THING_CARD_TAB_DOM_SOURCE}; return evaluateThingCardTabDom();`);
+  return page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.evaluateThingCardTabDom();`);
+}
+
+async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
+  const readOrder = () => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.readThingCardRowOrder();`);
+  const clickLabel = (which) => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.clickThingCardColumnSortLabel(${JSON.stringify(which)});`);
+
+  const beforeCrop = artifactPath(`thing-card-${tab}-${viewport}-sort-before.png`);
+  const panelBefore = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
+  if (panelBefore) {
+    await panelBefore.screenshot({ path: beforeCrop, type: 'png' });
+    await panelBefore.dispose().catch(() => 0);
+  }
+
+  const orders = {
+    titlesBefore: dom.rows?.map((r) => r.title).filter(Boolean) || [],
+    rowTextsBefore: dom.rows?.map((r) => r.rowText || `${r.title} ${r.summaryText}`) || [],
+    sortControlMatches: dom.sortControlMatches,
+  };
+
+  if ((dom.rows || []).length >= 2 && dom.columnSortLabels?.name) {
+    await clickLabel('name');
+    await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
+    orders.nameAfterFirst = (await readOrder()).titles;
+    await clickLabel('name');
+    await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
+    orders.nameAfterSecond = (await readOrder()).titles;
+  }
+
+  if ((dom.rows || []).length >= 2 && dom.columnSortLabels?.price) {
+    await clickLabel('price');
+    await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
+    const afterPrice = await readOrder();
+    orders.priceAfter = afterPrice.rowTexts;
+    orders.priceDirection = 'asc';
+  }
+
+  const afterCrop = artifactPath(`thing-card-${tab}-${viewport}-sort-after.png`);
+  const panelAfter = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
+  if (panelAfter) {
+    await panelAfter.screenshot({ path: afterCrop, type: 'png' });
+    await panelAfter.dispose().catch(() => 0);
+  }
+
+  const sortByLabel = gradeThingCardSortByLabel({
+    tab,
+    viewport,
+    columnSortLabels: dom.columnSortLabels,
+    rows: dom.rows,
+    orders,
+  });
+
+  return {
+    sortByLabel,
+    sortByLabelGate: {
+      ...sortByLabel.gate,
+      beforeCrop,
+      afterCrop,
+      orders,
+    },
+  };
 }
 
 const THING_DETAIL_TAG_FIELD = {
@@ -181,10 +244,19 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
         }
       }
       const expectedRows = (gradeSharedTabLogoUrlRecords(sharedJson, tab).placeCount) || 0;
+      const sortProbe = await runSortByLabelProbe(page, {
+        tab,
+        viewport: viewport.label,
+        dom,
+        artifactPath,
+      });
       const graded = gradeThingCardTabScan({
         tab,
         viewport: viewport.label,
         sortControls: dom.sortControls,
+        sortControlMatches: dom.sortControlMatches,
+        columnSortLabels: dom.columnSortLabels,
+        sortByLabel: sortProbe.sortByLabel,
         filterTags: dom.filterTags,
         thingTags,
         apiThingTags,
@@ -209,6 +281,9 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
         tagCropPath,
         rowCount: graded.rowCount,
         sortControls: dom.sortControls,
+        sortControlMatches: dom.sortControlMatches,
+        columnSortLabels: dom.columnSortLabels,
+        sortByLabelGate: sortProbe.sortByLabelGate,
         tagFilterParity: graded.tagFilterParity,
         failures: graded.failures,
         pass: graded.pass,
