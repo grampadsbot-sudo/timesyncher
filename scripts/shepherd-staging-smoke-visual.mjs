@@ -155,6 +155,8 @@ export async function runVisualHarnessCheck({
       path: shot.path,
       composerPath: shot.composerPath || null,
       sendDom: shot.sendDom || verdict.sendDom || null,
+      sendDomStructural: verdict.sendDomStructural ?? null,
+      sendCropInk: verdict.sendCropInk ?? null,
       pass: verdict.pass,
       layoutDomPass: shot.layoutDom?.pass !== false,
       failures: verdict.failures,
