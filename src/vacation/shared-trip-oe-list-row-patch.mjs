@@ -10,6 +10,7 @@ const CARS_TAB_PANEL_PATCH = 'q==="cars"&&n.jsxs("div",{"data-shared-live-tab":"
 /** Gate B markers on served shared-trip Oe() catalog rows (li + data-shared-live-tab panels). */
 export function patchSharedTripOeListRows(source = '') {
   let js = String(source || '');
+  if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;
   if (js.includes(OE_LIST_ROW_PREP_NEEDLE)) {
     js = js.replace(OE_LIST_ROW_PREP_NEEDLE, OE_LIST_ROW_PREP_PATCH);
   } else if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
