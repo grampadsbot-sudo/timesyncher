@@ -409,6 +409,7 @@ export function draftingFacts(priorTurns, customerTurn = '', saved = null) {
     dates: span?.spanLabel ? `Saved trip dates: ${span.spanLabel}.` : '',
     ...gap.facts,
   };
+  if (record.gapAnswerTurn === true) facts.gapAnswerTurn = true;
   if (party.askRoster === true) facts.askRoster = true;
   return facts;
 }

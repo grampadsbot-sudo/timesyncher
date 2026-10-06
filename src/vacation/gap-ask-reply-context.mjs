@@ -144,6 +144,18 @@ export function draftingGapFields(record = {}, things = []) {
   return { facts: { ...fields }, persistGapAsk };
 }
 
+export function gapAskReplyPromptTripRaw(tripSource, postIntake, visibleTripContext) {
+  const gapAskPromptTurn = postIntake === true || tripSource?.gapAnswerTurn === true;
+  let tripRaw = visibleTripContext(tripSource);
+  if (!gapAskPromptTurn && tripRaw && typeof tripRaw === 'object') {
+    tripRaw = { ...tripRaw };
+    delete tripRaw.lodgingAsk;
+    delete tripRaw.flightAsk;
+    delete tripRaw.inviteContactAsk;
+  }
+  return { tripRaw, gapAskPromptTurn };
+}
+
 export function perFactGapAskRuleLines(tripRaw = {}) {
   const lodgingAsk = tripRaw?.lodgingAsk === true;
   const flightAsk = String(tripRaw?.flightAsk || '').trim();

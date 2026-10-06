@@ -1,6 +1,6 @@
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
 import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
-import { perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
+import { gapAskReplyPromptTripRaw, perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -585,7 +585,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const configuredSeat = Number(context.seatDollars);
   const seatDollars = Number.isFinite(configuredSeat) && configuredSeat > 0 ? configuredSeat : null;
   const tripSource = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
-  const tripRaw = modelVisibleTripContext(tripSource);
+  const { tripRaw, gapAskPromptTurn } = gapAskReplyPromptTripRaw(tripSource, postIntake, modelVisibleTripContext);
   const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
@@ -666,7 +666,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     'Write plain sentences. Do not use markdown asterisks.',
     'Do not say you are setting that plan up. Do not say a plan covers people the customer did not name as covered.',
     'The customer URL owns vacations. Do not push vacation URLs onto collaborator seats.',
-    ...perFactGapAskRuleLines(tripRaw),
+    ...(gapAskPromptTurn ? perFactGapAskRuleLines(tripRaw) : []),
     trip ? `Saved trip record: ${JSON.stringify(trip)}` : '',
     'Write at least four sentences of real banter, about sixty words. Notice who is coming, the days, and what they care about, then do the useful thing. Do not answer in one clipped sentence.',
     'End with one final line that starts with BEAT: and a three-to-six word label of only what this reply actually did. Do not say the reply set, saved, added, or offered something it did not do. Do not put BEAT anywhere else.',
