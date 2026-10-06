@@ -11,7 +11,15 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { tripIsoDay } from './intake-shared-trip.mjs';
-import { annotateLiveTurnGapAnswer, draftingFactsForLiveReply, draftingGapFields, mergeSavedTripGapFields, savedTripGapFields } from './gap-ask-reply-context.mjs';
+import {
+  annotateLiveTurnGapAnswer,
+  draftingFactsForLiveReply,
+  draftingGapFields,
+  inviteContactAskReplySatisfied,
+  inviteContactAskRequired,
+  mergeSavedTripGapFields,
+  savedTripGapFields,
+} from './gap-ask-reply-context.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
@@ -1470,7 +1478,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     ...mergeSavedTripGapFields(saved),
   };
 }
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1485,7 +1493,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (turnActionResults && typeof turnActionResults === 'object') intent.turnActionResults = turnActionResults;
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env, session);
+  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecordFn(session, env), session?.trip_id || session?.tripId, env, session);
   const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
   const enforceInTurnPlaces = (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
@@ -1505,6 +1513,15 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end,
     wantedThings, inTurnPlaceResults: inTurnProviderResults,
   });
+  if (inviteContactAskRequired(drafting) && !inviteContactAskRequired(tripContext)) {
+    return {
+      reply: null,
+      rules,
+      jev: null,
+      model: null,
+      reason: 'invite_contact_ask_facts_missing',
+    };
+  }
   intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
   const commerce = liveReplyCommerceGate({
@@ -1579,6 +1596,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
+    inviteContactAskRequired(tripContext)
+      ? 'After acknowledging their lodging answer, ask for their travel companion name and email so you can send the trip invite. Do not skip that question.'
+      : '',
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1615,6 +1635,15 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       jev,
       model,
       reason: banned || model?.reason || 'live dispatcher returned no reply',
+    };
+  }
+  if (inviteContactAskRequired(tripContext) && !inviteContactAskReplySatisfied(reply)) {
+    return {
+      reply: null,
+      rules,
+      jev,
+      model,
+      reason: 'invite_contact_ask_reply_required',
     };
   }
   const originalDraft = reply;
@@ -1740,6 +1769,17 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const interimReply = finished.log?.interimReply || { text: null, model: null, ms: null };
   if (finished.log) finished.log.interimReply = interimReply;
   if (finished.reply) {
+    if (inviteContactAskRequired(tripContext) && !inviteContactAskReplySatisfied(finished.reply)) {
+      return {
+        reply: null,
+        rules,
+        jev,
+        model: finished.model,
+        quality: finished.quality,
+        log: finished.log,
+        reason: 'invite_contact_ask_reply_required',
+      };
+    }
     return {
       reply: finished.reply,
       rules,
