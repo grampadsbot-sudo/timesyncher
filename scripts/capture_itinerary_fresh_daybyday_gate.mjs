@@ -19,12 +19,12 @@ import {
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r1';
-const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r1.zip';
+const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r2';
+const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r2.zip';
 const ref390 = process.env.DAYBYDAY_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-390_48df.png';
 const ref1280 = process.env.DAYBYDAY_REF_1280 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-1280_c76e.png';
 const MAX_RATIO = 0.035;
-const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 1);
+const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 2);
 const UPSTREAM = '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
 const prodBundleName = 'index-BMaU4y5m.js';
