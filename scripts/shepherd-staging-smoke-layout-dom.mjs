@@ -1,8 +1,9 @@
 import { evaluateLayoutRules } from './shepherd-staging-smoke-layout-eval.mjs';
 import { composerSendHelperSource, evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
+import { horizontalOverflowHelperSource } from './shepherd-staging-smoke-layout-overflow.mjs';
 
 export async function runLayoutDomEval(page, pageKind) {
-  const body = `${composerSendHelperSource()};\n${evaluateComposerControlsOnly.toString()};\nreturn (${evaluateLayoutRules.toString()})(pageKind);`;
+  const body = `${composerSendHelperSource()};\n${horizontalOverflowHelperSource()};\n${evaluateComposerControlsOnly.toString()};\nreturn (${evaluateLayoutRules.toString()})(pageKind);`;
   return page.evaluate(new Function('pageKind', body), pageKind);
 }
 
