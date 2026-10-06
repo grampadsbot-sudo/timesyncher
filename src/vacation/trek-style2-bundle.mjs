@@ -74,7 +74,7 @@ const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
 const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
 
 const DAY_CARD_OVERFLOW_NEEDLE = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
-const DAY_CARD_OVERFLOW_PATCH = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{"data-ts-day-timeline":"1",style:{display:"flex",flexDirection:"column",gap:8,margin:"4px 0 12px",overflow:"visible"},children:[';
+const DAY_CARD_OVERFLOW_PATCH = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{"data-ts-day-timeline":"1",style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"visible",border:"1px solid var(--border-faint, #e5e7eb)",display:"flex",flexDirection:"column",gap:8,margin:"4px 0 12px"},children:[';
 
 const NR_POPUP_WRAP_NEEDLE = 'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58}';
 const NR_POPUP_WRAP_PATCH = 'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58,overflow:"visible"}';
