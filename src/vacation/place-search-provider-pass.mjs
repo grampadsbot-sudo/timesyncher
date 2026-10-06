@@ -328,6 +328,8 @@ export async function runPlaceProviderPass({
           ...diagnosticsBase(),
           judgeHttpStatus: Number.isFinite(Number(error?.judgeHttpStatus)) ? Number(error.judgeHttpStatus) : null,
           judgeBodySnippet: String(error?.judgeBodySnippet || '').trim() || null,
+          ...(error?.judgeTimedOut === true ? { judgeTimedOut: true } : {}),
+          ...(Number.isFinite(Number(error?.judgeTimeoutMs)) ? { judgeTimeoutMs: Number(error.judgeTimeoutMs) } : {}),
         },
       );
     }

@@ -63,6 +63,20 @@ export function jevRelevanceMinimum(env = process.env) {
   return Number.isFinite(parsed) ? parsed : JEV_RELEVANCE_MINIMUM;
 }
 
+export function jevRelevanceJudgeTimeoutMs(env = process.env) {
+  const raw = env?.JEV_RELEVANCE_JUDGE_TIMEOUT_MS;
+  if (raw === undefined || raw === null || String(raw).trim() === '') return 45_000;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 45_000;
+}
+
+export function jevRelevanceJudgeConcurrency(env = process.env) {
+  const raw = env?.JEV_RELEVANCE_JUDGE_CONCURRENCY;
+  if (raw === undefined || raw === null || String(raw).trim() === '') return 6;
+  const parsed = Number.parseInt(String(raw), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 6;
+}
+
 export function firstPassSearchLimit(category) {
   if (category === 'restaurant') return DEFAULT_FIRST_PASS_MINIMUMS.restaurant;
   if (category === 'store') return DEFAULT_FIRST_PASS_MINIMUMS.store;

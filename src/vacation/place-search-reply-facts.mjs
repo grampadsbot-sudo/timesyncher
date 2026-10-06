@@ -87,8 +87,11 @@ export function placeSearchReplyFacts({
 }
 
 export function placeSearchClientError(messageSource = {}, fallback = 'place_search_failed') {
-  const msg = String(messageSource?.error || fallback || '').trim();
+  const reason = String(messageSource?.reason || messageSource?.code || '').trim();
+  if (reason === 'relevance_judge_failed') return 'relevance_judge_failed';
+  const msg = String(messageSource?.error || messageSource?.internalError || fallback || '').trim();
   if (/missing_key|refused to run|Missing [A-Z0-9_]+/i.test(msg)) return msg;
+  if (/relevance_judge_failed|jev relevance judge/i.test(msg)) return 'relevance_judge_failed';
   return 'place_search_failed';
 }
 

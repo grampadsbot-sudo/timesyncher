@@ -15,6 +15,8 @@ export function buildProviderEnv(processEnv = process.env) {
     tavilyName: TAVILY_ENV_NAME,
     OPENROUTER_API_KEY: String(processEnv.OPENROUTER_API_KEY || processEnv.JEV_API_KEY || '').trim(),
     JEV_RELEVANCE_MINIMUM: processEnv.JEV_RELEVANCE_MINIMUM,
+    JEV_RELEVANCE_JUDGE_TIMEOUT_MS: processEnv.JEV_RELEVANCE_JUDGE_TIMEOUT_MS,
+    JEV_RELEVANCE_JUDGE_CONCURRENCY: processEnv.JEV_RELEVANCE_JUDGE_CONCURRENCY,
     DATABASE_URL: String(processEnv.DATABASE_URL || '').trim(),
     NEON_DATABASE_URL: String(processEnv.NEON_DATABASE_URL || '').trim(),
   };
