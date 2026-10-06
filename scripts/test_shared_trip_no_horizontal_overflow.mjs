@@ -190,7 +190,8 @@ try {
           return {
             labels,
             pills: pills.length,
-            hotels: document.querySelectorAll('[data-shared-live-tab="hotels"] [data-thing-card="1"]').length,
+            hotels: document.querySelectorAll('[data-trek-list="1"] button[aria-label="Open thing details"]').length,
+            nycCard: document.querySelectorAll('.ts-nyc-card').length,
             dayMount: !!document.querySelector('[data-day-itinerary-mount]'),
           };
         });
@@ -198,7 +199,10 @@ try {
         if (label === 'Hotels') assert.deepEqual(sort.labels, ['Name', 'Price ↑']);
         assert.equal(sort.pills, 0, `${label} still shows Name/Price pills`);
         assert.equal(sort.dayMount, false, 'day view was replaced');
-        if (label === 'Hotels') assert.ok(sort.hotels >= 1, 'Hotels tab is missing thing cards');
+        if (label === 'Hotels') {
+          assert.ok(sort.hotels >= 1, 'Hotels tab is missing TREK rows');
+          assert.equal(sort.nycCard, 0, 'web rows must not use the keepsake card');
+        }
       }
     }
   }

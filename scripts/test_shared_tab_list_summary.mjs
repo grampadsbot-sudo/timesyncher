@@ -18,17 +18,13 @@ for (const tab of ['hotels', 'cars']) {
   const rows = payload.liveTabLists[tab];
   assert.ok(rows.length > 0, `${tab} has rows`);
   for (const row of rows) {
-    assert.match(row, /display:flex;align-items:center;gap:8px/);
-    assert.match(row, /data-ts-logo-chip="1"/);
-    assert.match(row, /data-thing-card="1"/);
-    assert.match(row, /border-radius:10px/);
-    const summary = row.match(/data-list-summary="1"[^>]*>([^<]+)</);
-    assert.ok(summary && summary[1].trim(), `${tab} summary`);
+    assert.match(row, /data-place-id="/);
+    assert.doesNotMatch(row, /ts-nyc-card|data-thing-card="1"/);
   }
 }
 
-assert.match(payload.liveTabLists.cars.join(''), /101 Airport Rd/);
-assert.match(payload.liveTabLists.hotels.join(''), /Resort Hotel/);
+assert.match(payload.liveTabLists.cars.join(''), /Hertz/);
+assert.match(payload.liveTabLists.hotels.join(''), /Hyatt/);
 
 assert.equal(LIST_SORT_PRESENTATION, 'columns');
 assert.deepEqual(nextColumnSort({ key: 'name', dir: 'asc' }, 'name'), { key: 'name', dir: 'desc' });
