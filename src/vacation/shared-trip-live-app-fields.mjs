@@ -35,11 +35,48 @@ function parsePrice(value) {
   return match ? Number(match[1].replace(/,/g, '')) : null;
 }
 
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
+}
+
+function rentalCompanyFromTitle(name = '') {
+  const title = text(name);
+  if (!title) return '';
+  const head = title.split(/\s+\bat\b\s+/i)[0]?.trim();
+  return head || title;
+}
+
+function priceFromTextFields(place = {}, override = {}, source = null) {
+  const meta = placeMetadata(place);
+  const blobs = [
+    place.notes,
+    place.description,
+    override.notes,
+    source?.summary,
+    source?.description,
+    source?.details,
+    meta.reservationSummary,
+    meta.reservation_summary,
+    meta.pickSummary,
+  ];
+  for (const blob of blobs) {
+    const parsed = parsePrice(blob);
+    if (parsed != null) return parsed;
+  }
+  return null;
+}
+
 function priceFromRecords(place = {}, override = {}, source = null) {
+  const meta = placeMetadata(place);
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
   const candidates = [
     override.price,
     place.price,
     place.total_price,
+    meta.price,
+    metaRecord?.price,
     source?.price,
     source?.totalPrice,
     source?.total_price,
@@ -50,19 +87,26 @@ function priceFromRecords(place = {}, override = {}, source = null) {
     const parsed = parsePrice(candidate);
     if (parsed != null) return parsed;
   }
-  return null;
+  return priceFromTextFields(place, override, source);
 }
 
 function pickSummary(place = {}, override = {}, source = null) {
   const address = text(place.address || source?.address);
   const description = text(place.description);
   const notes = text(place.notes);
+  const meta = placeMetadata(place);
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
   return firstPresent(
     override.summary,
     place.summary,
     source?.summary,
     source?.pickSummary,
     source?.whyPick,
+    metaRecord?.summary,
+    metaRecord?.pickSummary,
+    metaRecord?.whyPick,
+    source?.description,
+    metaRecord?.description,
     description && description !== address ? description : '',
     notes && notes !== address ? notes : '',
   );
@@ -132,6 +176,7 @@ export function applyLiveAppListRowFields(shared = {}) {
         source?.vendor,
         source?.company,
         source?.provider,
+        rentalCompanyFromTitle(place.name || place.title),
       );
       copyIfBlank(
         override,
@@ -145,7 +190,18 @@ export function applyLiveAppListRowFields(shared = {}) {
     }
 
     const summary = pickSummary(place, override, source);
-    if (summary) override.summary = summary;
+    if (summary) {
+      override.summary = summary;
+    } else if (category === 'hotel' || category === 'car') {
+      const priceLabel = price != null ? `$${Math.round(price).toLocaleString('en-US')}` : '';
+      const location = text(place.address || source?.address || source?.postal_address?.displayAddress);
+      const bits = [
+        category === 'car' ? text(override.rentalCompany || rentalCompanyFromTitle(place.name)) : text(place.name),
+        location,
+        priceLabel && category === 'car' ? `${priceLabel} per day` : priceLabel,
+      ].filter(Boolean);
+      if (bits.length) override.summary = bits.join(' · ');
+    }
 
     const longDetails = pickLongDetails(place, override, source);
     if (longDetails) {
