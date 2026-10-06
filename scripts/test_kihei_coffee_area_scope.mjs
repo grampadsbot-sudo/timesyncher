@@ -49,16 +49,13 @@ const scopedFacts = applyInTurnCitablePlaces(
 );
 assert.deepEqual(scopedFacts.citablePlaces, ['Kihei Caffe']);
 
+const WESTIN = "The Westin Maui Resort & Spa, Ka'anapali";
 const things = [
   {
     category: 'hotel',
-    title: "The Westin Maui Resort & Spa, Ka'anapali",
+    title: WESTIN,
+    metadata: { customerStatedLodging: true, source: 'chat_extraction' },
     location: { locality: "Ka'anapali", address: '2365 Kaanapali Pkwy, Lahaina, HI 96761' },
-  },
-  {
-    category: 'hotel',
-    title: 'Hyatt Regency Maui',
-    location: { locality: 'Kaanapali' },
   },
 ];
 
@@ -72,10 +69,11 @@ const tripContext = await enrichDraftingTripContext(
   {
     destination: 'Maui',
     statedLodgingArea: 'Kaanapali',
+    lodging: WESTIN,
     customerOwnLodgingContext: {
       label: "Customer's own lodging (context only; not a search result; never recommend or describe it as a find)",
       statedLodgingArea: 'Kaanapali',
-      lodging: 'Hyatt Regency Maui',
+      lodging: WESTIN,
     },
   },
   { things, session: null, env: {}, placeSearchReplyFacts, inTurnPlaceResults: inTurnRows },
