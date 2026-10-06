@@ -326,6 +326,13 @@ const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onCli
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
 const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:0}';
 
+const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i';
+const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
+const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing",style:{fontSize:12,fontWeight:400,marginTop:3,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
+
+const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
+const NR_VIDEO_THUMB_PATCH = 'gr.kind==="video"?n.jsx("img",{src:Hc(gr.url),alt:"",loading:"lazy",className:"print-media-qr","data-row-video-qr":"1",style:{width:"100%",height:"100%",objectFit:"contain",background:"#fff"}})';
+
 const CAR_TIMELINE_CHECKBOX_NEEDLE = '!Mi(G)&&n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",justifyContent:"flex-end",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap"},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"';
 const CAR_TIMELINE_CHECKBOX_PATCH = 'n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",justifyContent:"flex-end",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap",flexShrink:0},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"';
 const CAR_LIST_ROW_GRID_NEEDLE = 'gridTemplateColumns:Mi(G)?"minmax(0, 1fr) 86px":"minmax(0, 1fr) 86px 86px",gap:12,alignItems:"center"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),kl(G),n.jsxs("label",{style:{display:"inline-flex"';
@@ -391,6 +398,14 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
+  if (js.includes(DAY_TITLE_NR_NEEDLE)) js = js.replace(DAY_TITLE_NR_NEEDLE, DAY_TITLE_NR_PATCH);
+  else if (served && !js.includes('data-summary-thing-only":"1","data-summary-src":"thing"')) {
+    throw new Error('day-by-day timeline row summary patch did not apply');
+  }
+  if (js.includes(NR_VIDEO_THUMB_NEEDLE)) js = js.replace(NR_VIDEO_THUMB_NEEDLE, NR_VIDEO_THUMB_PATCH);
+  else if (served && !js.includes('data-row-video-qr":"1"')) {
+    throw new Error('live media video QR thumb patch did not apply');
+  }
   if (js.includes(CAR_TIMELINE_CHECKBOX_NEEDLE)) {
     js = js.replace(CAR_TIMELINE_CHECKBOX_NEEDLE, CAR_TIMELINE_CHECKBOX_PATCH);
   } else if (served && !js.includes('checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"')) {
