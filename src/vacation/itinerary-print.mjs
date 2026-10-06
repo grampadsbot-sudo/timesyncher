@@ -101,16 +101,6 @@ export function thingCardBodyHtml(paragraphs = []) {
   return paragraphs.map((part) => `<p>${printEscape(part)}</p>`).join('');
 }
 
-/** Style-two PDF day page shell (keepsake markup); not used for web Day-by-Day. */
-export function renderDayItineraryHtml(fields = {}) {
-  const titleHtml = fields.titleHtml || '';
-  const openingHtml = fields.openingHtml || '';
-  const cardsHtml = fields.cardsHtml || '';
-  const dayMedia = text(fields.dayMediaHtml);
-  const dayMediaHtml = dayMedia ? `<div class="itinerary-media" data-itinerary-day-media="1">${dayMedia}</div>` : '';
-  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${titleHtml}</h1>${openingHtml}${dayMediaHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
-}
-
 function itineraryDayMedia(G) {
   const rows = (typeof li == 'function' ? li(G) : []).filter((Oo) => {
     if (!Oo) return false;
@@ -144,8 +134,4 @@ function itineraryRowMediaInline(item, type) {
 
 export function dayTimelineMediaBundleExpr() {
   return `tsItineraryDayMedia=${itineraryDayMedia.toString()},tsItineraryRowMedia=${itineraryRowMediaInline.toString()}`;
-}
-
-export function dayItineraryBundleExpr() {
-  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},${dayTimelineMediaBundleExpr()}`;
 }

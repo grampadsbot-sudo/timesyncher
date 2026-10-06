@@ -1,7 +1,7 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
-import { dayItineraryBundleExpr, dayTimelineMediaBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
+import { dayTimelineMediaBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -385,7 +385,7 @@ export function applyItineraryKeepsakePass(source = '') {
   if (js.includes(VIDEO_QR_HIDE) && !js.includes(VIDEO_QR_UNHIDE)) js = js.replace(VIDEO_QR_HIDE, `${VIDEO_QR_HIDE}${VIDEO_QR_UNHIDE}`);
   if (js.includes(DAY_GALLERY_NEEDLE)) js = js.replace(DAY_GALLERY_NEEDLE, '');
   if (!js.includes('tsItineraryDayMedia=') && js.includes('wd=(G,Re)=>')) {
-    js = js.replace('wd=(G,Re)=>', `${dayItineraryBundleExpr()},wd=(G,Re)=>`);
+    js = js.replace('wd=(G,Re)=>', `${dayTimelineMediaBundleExpr()},wd=(G,Re)=>`);
   }
   return js;
 }
