@@ -119,8 +119,8 @@
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }
-        const liveTabs = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
-        if (liveTabs.some((key) => !Object.prototype.hasOwnProperty.call(data.liveTabLists, key))) {
+        if (!Object.prototype.hasOwnProperty.call(data.liveTabLists, 'hotels')
+          || !Object.prototype.hasOwnProperty.call(data.liveTabLists, 'cars')) {
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }

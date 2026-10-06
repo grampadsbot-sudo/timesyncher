@@ -1,11 +1,4 @@
 import { applyProductKeepsakeOverrides, productThingCategory } from './keepsake-product-overrides.mjs';
-import {
-  renderThingCardHtml,
-  thingCardBodyHtml,
-  thingCardParagraphs,
-  thingCardPriceText,
-  thingCardWebStyleTag,
-} from './itinerary-print.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
@@ -20,19 +13,8 @@ function escapeHtml(value) {
   return text(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
-export const SHARED_LIVE_TAB_KEYS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
-
-const TAB_FOR_CATEGORY = {
-  flight: 'flights',
-  hotel: 'hotels',
-  car: 'cars',
-  restaurant: 'restaurants',
-  store: 'stores',
-};
 
 export function prepareSharedTripForLiveApp(shared = {}) {
   return applyProductKeepsakeOverrides(shared);
@@ -62,20 +44,15 @@ function logSharedLiveTabLogoMissing(place = {}, log = console.error) {
   log(JSON.stringify(row));
 }
 
-function tabForPlace(place = {}, override = {}) {
-  const category = productThingCategory(place, override);
-  return TAB_FOR_CATEGORY[category] || 'events';
-}
-
 function sharedLiveTabRows(shared = {}, tabKeyword = '') {
   const prepared = prepareSharedTripForLiveApp(shared);
   const tab = text(tabKeyword).toLowerCase();
-  if (!SHARED_LIVE_TAB_KEYS.includes(tab)) throw new Error(`shared_live_tab_unknown:${tab || 'blank'}`);
   const rows = [];
   for (const place of prepared.places || []) {
     const override = prepared.thingOverrides?.[`place:${place.id}`] || {};
     const category = productThingCategory(place, override);
-    if (tabForPlace(place, override) === tab) rows.push({ place, override, category });
+    if (tab === 'hotels' && category === 'hotel') rows.push({ place, override, category });
+    if (tab === 'cars' && category === 'car') rows.push({ place, override, category });
   }
   return rows;
 }
@@ -120,42 +97,17 @@ function logoChipHtml({ src, category }) {
   return `<span data-ts-logo-chip="1" data-ts-fallback-emoji="${emojiAttr}" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${src}" alt="" style="${LOGO_IMG_STYLE}" onerror="${onerror}" onload="${onload}" /></span>`;
 }
 
-function emojiChipHtml(category) {
-  const emoji = timelineCategoryIcon(category);
-  const emojiAttr = escapeHtml(emoji);
-  return `<span data-ts-logo-chip="1" data-ts-fallback-emoji="${emojiAttr}" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><span class="thing-emoji" style="${LOGO_FALLBACK_SPAN_STYLE}">${emojiAttr}</span></span>`;
-}
-
 function listRowHtml({ place, override, tab, category, onLogoMissing }) {
-  const nameText = text(place.name || place.title);
-  if (!nameText) throw new Error(`thing_card_name_missing:${text(place.id) || 'thing'}`);
   const logoUrl = resolveThingLogoUrl(place, override);
+  const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
-  const categoryAttr = escapeHtml(category);
-  let logoHtml = '';
-  let hasLogo = '1';
-  let srcAttr = '';
   if (!logoUrl) {
     onLogoMissing?.(place);
-    hasLogo = '0';
-    logoHtml = emojiChipHtml(category);
-  } else {
-    const src = escapeHtml(logoUrl);
-    srcAttr = ` data-logo-src="${src}"`;
-    logoHtml = logoChipHtml({ src, category });
+    return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="display:flex;align-items:center;gap:8px"><span><strong>${name}</strong></span></li>`;
   }
-  const price = thingCardPriceText(place, override);
-  const priceHtml = price ? `<div class="thing-meta">${escapeHtml(price)}</div>` : '';
-  const card = renderThingCardHtml({
-    metaHtml: '',
-    logoHtml,
-    nameHtml: escapeHtml(nameText),
-    priceHtml,
-    bodyHtml: thingCardBodyHtml(thingCardParagraphs(place, override)),
-    reviewsHtml: '',
-    mediaHtml: '',
-  });
-  return `<li data-list-row="1" data-has-logo="${hasLogo}"${srcAttr} data-shared-tab="${tabAttr}" data-thing-category="${categoryAttr}">${thingCardWebStyleTag()}${card}</li>`;
+  const src = escapeHtml(logoUrl);
+  const chip = logoChipHtml({ src, category });
+  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {
@@ -174,9 +126,8 @@ export function renderSharedLiveTabListHtml(shared = {}, tabKeyword = '', option
 export function buildSharedLiveTabLists(shared = {}, options = {}) {
   const prepared = prepareSharedTripForLiveApp(shared);
   const onLogoMissing = options.onLogoMissing || logSharedLiveTabLogoMissing;
-  const lists = {};
-  for (const tab of SHARED_LIVE_TAB_KEYS) {
-    lists[tab] = sharedLiveTabRowHtmlFragments(prepared, tab, { onLogoMissing });
-  }
-  return lists;
+  return {
+    hotels: sharedLiveTabRowHtmlFragments(prepared, 'hotels', { onLogoMissing }),
+    cars: sharedLiveTabRowHtmlFragments(prepared, 'cars', { onLogoMissing }),
+  };
 }

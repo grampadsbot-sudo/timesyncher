@@ -1,7 +1,6 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
-import { thingCardBundleExpr } from './itinerary-print.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -321,30 +320,6 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(QN_EMPTY_NEEDLE)) js = js.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
   if (js.includes(GN_EMPTY_NEEDLE)) js = js.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
   if (js.includes(KI_EMPTY_NEEDLE)) js = js.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
-  return applySharedThingCardPatches(js);
-}
-
-const FLIGHTS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"flights"}),vi(rs,"flights").map((G,Re)=>Oe(G,"flight",Re===0))';
-const HOTELS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"hotels"}),';
-const CARS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"cars"}),';
-const RESTAURANTS_LIST_NEEDLE = 'tsPad(Qn).map(G=>Oe(G))';
-const STORES_LIST_NEEDLE = 'tsPad(Gn).map(G=>Oe(G))';
-const REST_LIST_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
-const WD_RETURN_NEEDLE = 'return`<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">${Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`}<div><h3>${an(Bs(mr(zt)))}</h3>${bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:""}</div></div>${sr}${Xr?`<div class="reviews">${Xr}</div>`:""}${zr}</article>`';
-const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),priceHtml:bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:"",bodyHtml:sr,reviewsHtml:Xr?`<div class="reviews">${Xr}</div>`:"",mediaHtml:zr})';
-
-function applySharedThingCardPatches(source = '') {
-  let js = String(source || '');
-  if (js.includes(FLIGHTS_SORT_NEEDLE)) js = js.replace(FLIGHTS_SORT_NEEDLE, 'tsSharedLiveTabListMount("flights")');
-  if (js.includes(HOTELS_SORT_NEEDLE)) js = js.replace(HOTELS_SORT_NEEDLE, '');
-  if (js.includes(CARS_SORT_NEEDLE)) js = js.replace(CARS_SORT_NEEDLE, '');
-  if (js.includes(RESTAURANTS_LIST_NEEDLE)) js = js.replace(RESTAURANTS_LIST_NEEDLE, 'tsSharedLiveTabListMount("restaurants")');
-  if (js.includes(STORES_LIST_NEEDLE)) js = js.replace(STORES_LIST_NEEDLE, 'tsSharedLiveTabListMount("stores")');
-  if (js.includes(REST_LIST_NEEDLE)) js = js.replace(REST_LIST_NEEDLE, 'tsSharedLiveTabListMount("events")');
-  if (js.includes('wd=(G,Re)=>') && !js.includes('tsRenderThingCard=')) {
-    js = js.replace('wd=(G,Re)=>', `${thingCardBundleExpr()},wd=(G,Re)=>`);
-  }
-  if (js.includes(WD_RETURN_NEEDLE)) js = js.replace(WD_RETURN_NEEDLE, WD_RETURN_PATCH);
   return js;
 }
 
