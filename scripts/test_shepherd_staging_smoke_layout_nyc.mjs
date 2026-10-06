@@ -2,9 +2,11 @@
 import assert from 'node:assert/strict';
 import { thingCardFailOnSortControlsFromEnv, gradeThingCardTabScan } from './shepherd-staging-smoke-thing-card-eval.mjs';
 import {
+  defaultLayoutNycReferenceDir,
   gradeLayoutNycReferenceMissing,
   gradeLayoutNycStagingDom,
   layoutNycReferenceDefects,
+  layoutNycReferenceDir,
   reconcileLayoutNycJudgeVerdict,
   LAYOUT_NYC_TAB_ORDER,
 } from './shepherd-staging-smoke-layout-nyc.mjs';
@@ -44,5 +46,6 @@ assert.equal(gradeLayoutNycStagingDom({ ...stagingColumns, columnSortLabels: {} 
 assert.equal(gradeLayoutNycReferenceMissing(null).failures[0].code, 'reference_missing');
 assert.equal(gradeLayoutNycStagingDom(stagingOk, { tab: 'hotels', viewport: '390' }).pass, true);
 assert.equal(gradeLayoutNycStagingDom(stagingColumns, { tab: 'hotels', viewport: '390' }).pass, false);
+assert.equal(layoutNycReferenceDir({ NYC_REFERENCE_DIR: '', TSV_NYC_REFERENCE_DIR: '' }), defaultLayoutNycReferenceDir());
 
 console.log('shepherd layout-nyc tests passed');
