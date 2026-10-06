@@ -402,7 +402,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
-  patched = applyLiveProductPatches(patched);
+  patched = applyLiveProductPatches(patched, { served });
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }

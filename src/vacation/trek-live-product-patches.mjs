@@ -233,14 +233,15 @@ export function patchSharedTripHostnameForLocalHarness(js = '') {
   return source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
 }
 
-export function applyLiveProductPatches(patched = '') {
+export function applyLiveProductPatches(patched = '', options = {}) {
+  const served = options.served === true;
   let js = stripHotelBrandNameGuessing(String(patched || ''));
   if (js.includes(LIST_LOGO_PATCH) && js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
   }
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
-  if (!js.includes('AI-assisted vacation itinerary planning')) {
+  if (served && !js.includes('AI-assisted vacation itinerary planning')) {
     throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
   }
   if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
@@ -345,16 +346,16 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
   if (js.includes(CAR_TIMELINE_CHECKBOX_NEEDLE)) {
     js = js.replace(CAR_TIMELINE_CHECKBOX_NEEDLE, CAR_TIMELINE_CHECKBOX_PATCH);
-  } else if (!js.includes('checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"')) {
+  } else if (served && !js.includes('checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"')) {
     throw new Error('car timeline checkbox patch did not apply');
   }
   if (js.includes(CAR_DAY_LOOP_NEEDLE)) js = js.replace(CAR_DAY_LOOP_NEEDLE, CAR_DAY_LOOP_PATCH);
-  else if (!js.includes('title:`Pickup: ${mr(wn)}`')) {
+  else if (served && !js.includes('title:`Pickup: ${mr(wn)}`')) {
     throw new Error('car pickup/drop-off day timeline patch did not apply');
   }
   if (js.includes(FLIGHT_EU_NEEDLE)) js = js.replace(FLIGHT_EU_NEEDLE, FLIGHT_EU_PATCH);
   else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
-  else if (!js.includes('ha(G).fareDirection||ha(G).tripType||ha(G).pricingType')) {
+  else if (served && !js.includes('ha(G).fareDirection||ha(G).tripType||ha(G).pricingType')) {
     throw new Error('flight fare direction row patch did not apply');
   }
   if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {
