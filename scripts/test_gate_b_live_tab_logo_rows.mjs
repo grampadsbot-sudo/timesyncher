@@ -6,10 +6,12 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { buildSharedLiveTabLists } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { applyProductKeepsakeOverrides } from '../src/vacation/keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { patchSharedTripOeListRows } from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
 import { LIST_LOGO_PATCH } from '../src/vacation/trek-live-product-patches.mjs';
 
 assert.match(LIST_LOGO_PATCH, /new URL\(pg\)/);
 assert.match(LIST_LOGO_PATCH, /favicon\.ico/);
+assert.equal(typeof patchSharedTripOeListRows, 'function');
 
 const storeCarPlace = {
   id: 1,
