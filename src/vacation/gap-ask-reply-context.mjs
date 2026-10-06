@@ -71,7 +71,6 @@ export function mergeSavedTripGapFields(saved = {}) {
     lastAskedGap: String(row.lastAskedGap || '').trim(),
     invite_contact_needed: row.invite_contact_needed === true,
     statedLodgingArea: String(row.statedLodgingArea || '').trim(),
-    lodgingAsk: row.lodgingAsk === true,
   };
 }
 
