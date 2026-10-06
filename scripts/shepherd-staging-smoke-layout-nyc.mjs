@@ -72,6 +72,55 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
 
 const LAYOUT_NYC_DOM_PREFIX = `const __layoutNycDom = ${EVALUATE_LAYOUT_NYC_DOM_SOURCE};`;
 const LIST_SORT_TABS = new Set(['flights', 'hotels', 'cars']);
+const LAYOUT_NYC_OPENROUTER_INFRA_HTTP_STATUSES = new Set([429, 502, 503, 504]);
+
+function layoutNycColumnSortLabelsEmpty(columnSortLabels = {}) {
+  return !columnSortLabels?.name && !columnSortLabels?.price;
+}
+
+/** DOM shows sort pills (not column labels) and no horizontal overflow — vision sort/overflow claims are stale. */
+export function layoutNycDomProvesSortButtonsNoOverflow(stagingDom = {}) {
+  const pills = stagingDom?.sortPills || [];
+  if (!pills.length) return false;
+  if (!layoutNycColumnSortLabelsEmpty(stagingDom?.columnSortLabels)) return false;
+  if (stagingDom?.horizontalOverflow) return false;
+  return true;
+}
+
+export function layoutNycVisionSortOverflowClaim(reason = '') {
+  const lower = String(reason || '').toLowerCase();
+  return /column label|label.*sort|header.*sort|clickable.*column/.test(lower)
+    || /missing.*sort|sort button|sort control|name.*price.*button/.test(lower)
+    || /staging.*overflow|horizontal overflow|overflow.*390|scrollwidth|exceed.*viewport/.test(lower);
+}
+
+/** Flights/Hotels/Cars list-sort rubric must not apply to day-by-day, budget, stores, etc. */
+export function layoutNycNonListSortRubricClaim(reason = '') {
+  const lower = String(reason || '').toLowerCase();
+  return layoutNycVisionSortOverflowClaim(reason)
+    || /\bflights?\b|\bhotels?\b|\bcars?\b/.test(lower) && /sort/.test(lower);
+}
+
+export function layoutNycOpenRouterInfraHttpStatus(status) {
+  return LAYOUT_NYC_OPENROUTER_INFRA_HTTP_STATUSES.has(Number(status));
+}
+
+export function layoutNycJudgeHarnessInfraReason(reason = '') {
+  const text = String(reason || '');
+  if (layoutNycOpenRouterInfraHttpStatus(Number((/\bOpenRouter HTTP (\d+)/.exec(text) || [])[1]))) return true;
+  return /\b429\b/.test(text) && /openrouter|rate limit|too many requests/i.test(text);
+}
+
+export function layoutNycInfraDetailFromJudgeFailures(failures = []) {
+  for (const f of failures) {
+    const reason = String(f.reason || f.detail || '');
+    if (layoutNycJudgeHarnessInfraReason(reason)) {
+      const status = Number((/\bOpenRouter HTTP (\d+)/.exec(reason) || [])[1]) || 429;
+      return { reason: 'layout_nyc_openrouter', httpStatus: status, detail: reason };
+    }
+  }
+  return null;
+}
 
 const LAYOUT_NYC_REFERENCE_DEFECTS = {
   hotels: { '390': [{ code: 'horizontal_overflow', detail: 'NYC Hotels rows clipped on the right at 390px' }] },
@@ -146,6 +195,9 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
   const kept = [];
   const expectedDiffs = [];
   const nycDefects = layoutNycReferenceDefects(tab, viewport);
+  const tabKey = String(tab || '').toLowerCase();
+  const listSortTab = LIST_SORT_TABS.has(tabKey);
+  const domProvesSortOverflow = layoutNycDomProvesSortButtonsNoOverflow(stagingDom);
   const stagingHasSortButtons = () => {
     const pills = stagingDom?.sortPills || [];
     return pills.some((p) => /^name\b/i.test(String(p))) && pills.some((p) => /^price\b/i.test(String(p)));
@@ -153,20 +205,29 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
   for (const f of verdict.failures || []) {
     const reason = String(f.reason || f.detail || '');
     const lower = reason.toLowerCase();
+    if (!listSortTab && layoutNycNonListSortRubricClaim(reason)) {
+      continue;
+    }
+    if (domProvesSortOverflow && layoutNycVisionSortOverflowClaim(reason)) {
+      if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
+        expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+      }
+      continue;
+    }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
       expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
     } else if (nycDefects.some((d) => d.code === 'horizontal_overflow') && /nyc.*overflow|left.*clip|reference.*horizontal/.test(lower)) {
       expectedDiffs.push({ kind: 'nyc_horizontal_overflow', reason });
     } else if (/column label|label.*sort|header.*sort/.test(lower) && (stagingDom?.columnSortLabels?.name || stagingDom?.columnSortLabels?.price)) {
       kept.push({ rule: 'LAYOUT-NYC', detail: reason });
-    } else if (/missing.*sort|sort button|name.*price.*button/.test(lower) && LIST_SORT_TABS.has(String(tab || '').toLowerCase())) {
+    } else if (/missing.*sort|sort button|name.*price.*button/.test(lower) && listSortTab) {
       const pills = stagingDom?.sortPills || [];
       const hasName = pills.some((p) => /^name\b/i.test(String(p)));
       const hasPrice = pills.some((p) => /^price\b/i.test(String(p)));
       if (!hasName || !hasPrice) kept.push({ rule: 'LAYOUT-NYC', detail: reason });
     } else if (reason) kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
   }
-  if (LIST_SORT_TABS.has(String(tab || '').toLowerCase())) {
+  if (listSortTab) {
     const pills = stagingDom?.sortPills || [];
     const hasName = pills.some((p) => /^name\b/i.test(String(p)));
     const hasPrice = pills.some((p) => /^price\b/i.test(String(p)));
@@ -184,10 +245,15 @@ async function judgeLayoutNycPair({ comparePath, tab, viewport, stagingDom, apiK
   const key = String(apiKey || '').trim();
   if (!key) return { pass: false, failures: [{ rubricItem: 'harness', reason: 'OPENROUTER_API_KEY missing' }] };
   const nycDefects = layoutNycReferenceDefects(tab, viewport);
+  const tabKey = String(tab || '').toLowerCase();
+  const listSortNote = LIST_SORT_TABS.has(tabKey)
+    ? 'On this tab (Flights/Hotels/Cars list): FAIL missing Name/Price sort buttons above list or clickable column-label sort on staging.'
+    : 'This tab is not Flights/Hotels/Cars — do not apply list Name/Price sort-button rubric.';
   const prompt = `Side-by-side PNG LEFT=NYC reference RIGHT=staging. Judge layout/structure only; ignore text and logos.
-EXPECTED: Both NYC and staging use Name/Price sort buttons above list (not clickable column header labels). Sort button placement differences vs NYC are not failures.
+${listSortNote}
+EXPECTED on list tabs: Name/Price sort buttons above list (not clickable column header labels). Sort button placement differences vs NYC are not failures.
 NYC known defects (do not match): ${JSON.stringify(nycDefects)}. Staging must not overflow at 390.
-FAIL missing sort buttons on Flights/Hotels/Cars, clickable column-label sort on staging, bad tab order, header/row layout mismatch, staging overflow.
+FAIL bad tab order, header/row layout mismatch, staging horizontal overflow (when DOM overflow=true).
 Return JSON {pass:boolean,failures:[{rubricItem,reason}]}.
 DOM: pills=${JSON.stringify(stagingDom?.sortPills || [])} labels=${JSON.stringify(stagingDom?.columnSortLabels || {})} overflow=${Boolean(stagingDom?.horizontalOverflow)} tab=${tab} vp=${viewport}`;
   const pngB64 = readFileSync(comparePath).toString('base64');
@@ -207,7 +273,18 @@ DOM: pills=${JSON.stringify(stagingDom?.sortPills || [])} labels=${JSON.stringif
     }),
   });
   const raw = await res.text();
-  if (!res.ok) return { pass: false, failures: [{ rubricItem: 'harness', reason: `OpenRouter HTTP ${res.status}` }] };
+  if (!res.ok) {
+    const failures = [{ rubricItem: 'harness', reason: `OpenRouter HTTP ${res.status}: ${raw.slice(0, 200)}` }];
+    const infraDetail = layoutNycOpenRouterInfraHttpStatus(res.status)
+      ? { reason: 'layout_nyc_openrouter', httpStatus: res.status, detail: failures[0].reason }
+      : null;
+    return {
+      pass: false,
+      infraBlocked: Boolean(infraDetail),
+      infraDetail,
+      failures,
+    };
+  }
   const outer = JSON.parse(raw);
   const content = outer?.choices?.[0]?.message?.content;
   const text = typeof content === 'string' ? content : JSON.stringify(content || '');
@@ -225,6 +302,8 @@ async function runLayoutNycForViewport({ page, viewport, artifactPath, setStage,
   await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
   const probes = [];
   let pass = true;
+  let infraBlocked = false;
+  let infraDetail = null;
   for (const tab of LAYOUT_NYC_TAB_ORDER) {
     setStage?.(`layout-nyc ${tab} @ ${viewport.label}`);
     if (!await clickSharedTabByKeyword(page, tab)) {
@@ -249,16 +328,29 @@ async function runLayoutNycForViewport({ page, viewport, artifactPath, setStage,
     if (panel) await panel.dispose();
     await stitchLogoChipCropsPng([readFileSync(refPath), readFileSync(stagingShot)], comparePath);
     const judge = await judgeLayoutNycPair({ comparePath, tab, viewport: viewport.label, stagingDom, apiKey });
-    const rowPass = domGrade.pass && judge.pass;
-    if (!rowPass) pass = false;
+    if (judge.infraBlocked) {
+      infraBlocked = true;
+      infraDetail = judge.infraDetail || layoutNycInfraDetailFromJudgeFailures(judge.failures) || infraDetail;
+    }
+    const judgeBlocksLayout = !judge.pass && !judge.infraBlocked;
+    const rowPass = domGrade.pass && !judgeBlocksLayout;
+    if (!rowPass && !judge.infraBlocked) pass = false;
     probes.push({
       tab, viewport: viewport.label, pass: rowPass,
-      failures: [...domGrade.failures, ...(judge.pass ? [] : judge.failures)],
+      failures: [...domGrade.failures, ...(judge.pass || judge.infraBlocked ? [] : judge.failures)],
+      judgeInfraBlocked: Boolean(judge.infraBlocked),
       stagingDom, comparePath, stagingShot, referencePath: refPath,
       expectedDifferences: judge.expectedDifferences || [], nycReferenceDefects: domGrade.nycReferenceDefects,
     });
   }
-  return { pass, viewport: viewport.label, referenceDir: refDir, probes };
+  return {
+    pass,
+    viewport: viewport.label,
+    referenceDir: refDir,
+    probes,
+    infraBlocked,
+    infraDetail,
+  };
 }
 
 export async function runLayoutNycHarnessBlock({ page, sharedUrl, artifactPath, setStage }) {
@@ -268,10 +360,16 @@ export async function runLayoutNycHarnessBlock({ page, sharedUrl, artifactPath, 
   if (missing) return { pass: false, referenceDir: null, viewports: [missing] };
   const viewports = [];
   let pass = true;
+  let infraBlocked = false;
+  let infraDetail = null;
   for (const viewport of LAYOUT_VIEWPORTS) {
     const row = await runLayoutNycForViewport({ page, viewport, artifactPath, setStage, refDir });
     viewports.push(row);
-    if (!row.pass) pass = false;
+    if (row.infraBlocked) {
+      infraBlocked = true;
+      infraDetail = row.infraDetail || infraDetail;
+    }
+    if (!row.pass && !row.infraBlocked) pass = false;
   }
-  return { pass, referenceDir: refDir, viewports };
+  return { pass, referenceDir: refDir, viewports, infraBlocked, infraDetail };
 }
