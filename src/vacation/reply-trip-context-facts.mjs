@@ -1,6 +1,7 @@
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { applyPlaceSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
+import { tripLodgingFieldsFromThings } from './lodging-anchor.mjs';
 import { chatPlaceSearchSavedReplyFacts } from './chat-place-search-when.mjs';
 import { applyInTurnCitablePlaces, tripOwnedPlaceAllowRows, turnNamedSearchAwayFromStatedLodging } from './provider-result-context.mjs';
 import { tripIsoDay } from './intake-weekday-dates.mjs';
@@ -134,12 +135,13 @@ export async function loadTripMetadataStatedLodgingArea(db, tripId) {
 
 export async function draftingLodgingFields(ctx, { things = [], db = null, tripId = '' } = {}) {
   let next = ctx && typeof ctx === 'object' ? { ...ctx } : {};
+  const fromThings = tripLodgingFieldsFromThings(things);
   if (!String(next.lodging || '').trim()) {
-    const label = statedLodgingLabelFromThings(things);
+    const label = statedLodgingLabelFromThings(things) || fromThings.lodging;
     if (label) next.lodging = label;
   }
   if (!String(next.statedLodgingArea || '').trim()) {
-    const area = await loadTripMetadataStatedLodgingArea(db, tripId);
+    const area = fromThings.statedLodgingArea || await loadTripMetadataStatedLodgingArea(db, tripId);
     if (area) next.statedLodgingArea = area;
   }
   return next;
