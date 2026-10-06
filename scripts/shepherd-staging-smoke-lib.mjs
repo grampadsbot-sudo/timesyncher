@@ -193,6 +193,22 @@ export function a2WelcomePass(match, { redirectOk, publicUrlOk }) {
 }
 
 /** Offline replay: re-grade D bar from saved smoke out.json checkD + raw thing dates. */
+/** Resolve Paia D2 customer turn id when DB ilike miss still left reply evidence (ASK-d2 wiring). */
+export function resolvePaiaD2CustomerTurnId(checkD = {}, customerTurns = []) {
+  const d2 = checkD?.d2 || {};
+  if (d2.customerTurnId) return d2.customerTurnId;
+  const fromTurns = (customerTurns || []).find((t) => /paia\s+fish\s+market/i.test(String(t.body || '')));
+  if (fromTurns?.id) return fromTurns.id;
+  const ids = checkD?.dCustomerTurnIds || [];
+  if (ids.length >= 3) return ids[2];
+  const reqId = d2.requestId || d2.turnResponse?.requestId || null;
+  if (reqId) {
+    const byReq = (customerTurns || []).find((t) => t.request_id === reqId);
+    if (byReq?.id) return byReq.id;
+  }
+  return null;
+}
+
 export function replayDGradesFromSaved(checkD) {
   const d1Thing = checkD?.d1?.thing;
   const startsAt = d1Thing?.starts_at ?? checkD?.d1?.startsAt;

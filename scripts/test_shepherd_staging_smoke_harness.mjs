@@ -32,10 +32,11 @@ const parallelText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-paral
 const askText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-ask.mjs'), 'utf8');
 const tailText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-tail.mjs'), 'utf8');
 const mapLogoRunText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-map-logo-run.mjs'), 'utf8');
+const thingCardRunText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-thing-card.mjs'), 'utf8');
 const eulaReadbackText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-eula-readback.mjs'), 'utf8');
 const checkIText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-check-i.mjs'), 'utf8');
 const runCheckText = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-run-check.mjs'), 'utf8');
-const combined = `${mainText}\n${spineText}\n${layoutVisualSpineText}\n${layoutSpineText}\n${visualSpineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}\n${eulaReadbackText}\n${checkIText}`;
+const combined = `${mainText}\n${spineText}\n${layoutVisualSpineText}\n${layoutSpineText}\n${visualSpineText}\n${parallelText}\n${askText}\n${tailText}\n${mapLogoRunText}\n${thingCardRunText}\n${eulaReadbackText}\n${checkIText}`;
 
 const runCheckRe = /runCheck\s*\(\s*['"]([^'"]+)['"]\s*,[\s\S]*?\{\s*timeoutMs\s*:\s*(\d+)/g;
 const dedicatedCheckRe = /runDedicatedSharedCheck\s*\(\s*ctx\s*,\s*['"]([^'"]+)['"]\s*,\s*(?:\d+|MAP_CHECK_TIMEOUT_MS|LOGO_CHECK_TIMEOUT_MS)/g;
@@ -65,6 +66,8 @@ assert.equal(sharedTabLabelIncludes('💰 Budget', 'budget'), true);
 assert.equal(normalizeSharedTabLabel('  🏨  Hotels '), 'hotels');
 
 assert.ok(SMOKE_FAIL_CLOSED_GO.includes('LAYOUT'), 'GO gate must include LAYOUT');
+assert.ok(SMOKE_FAIL_CLOSED_GO.includes('THING-CARD'), 'GO gate must include THING-CARD');
+assert.ok(registered.has('THING-CARD'), 'map-logo run must register THING-CARD');
 if (SMOKE_CHECK_ORDER.includes('VISUAL')) {
   assert.ok(SMOKE_FAIL_CLOSED_GO.includes('VISUAL'), 'GO gate must include VISUAL when VISUAL is in check order');
 }
