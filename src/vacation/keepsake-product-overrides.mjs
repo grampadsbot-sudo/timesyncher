@@ -1,4 +1,7 @@
+import { isLodgingStay } from './intake-lodging-stay.mjs';
+import { transportKind } from './intake-transport-kind.mjs';
 import { normalizeThingType, resolveThingType } from './timeline-icons.mjs';
+import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -31,7 +34,25 @@ export function resolveThingCoords(place = {}, override = {}) {
   return null;
 }
 
+function transportKindRecord(place = {}, override = {}) {
+  const meta = place.metadata && typeof place.metadata === 'object' ? place.metadata : {};
+  return {
+    category: override.category || place.category?.name || place.category_name || place.category,
+    category_name: place.category_name || place.category?.name,
+    title: place.name || place.title,
+    name: place.name || place.title,
+    metadata: meta,
+    providerCategories: place.providerCategories
+      || meta.providerCategories
+      || override.providerCategories,
+  };
+}
+
 export function productThingCategory(place = {}, override = {}) {
+  const transportRecord = transportKindRecord(place, override);
+  const kind = transportKind(transportRecord);
+  if (kind === 'flight') return 'flight';
+  if (kind === 'car' && !isLodgingStay(transportRecord)) return 'car';
   const resolved = resolveThingType(place, override);
   if (resolved && resolved !== 'other') return resolved;
   return normalizeThingType(place.category_name || place.category?.name) || resolved || 'other';
@@ -95,6 +116,10 @@ export function applyProductKeepsakeOverrides(shared = {}) {
       if (finiteCoord(place.lng) == null) place.lng = coords[1];
     }
     Object.assign(override, applySourcedFields(place, override));
+    if (!text(override.logoUrl)) {
+      const logoUrl = resolveThingLogoUrl(place, override);
+      if (logoUrl) override.logoUrl = logoUrl;
+    }
     next.thingOverrides[key] = override;
     if (category === 'restaurant') {
       place.category_id = place.category_id || 2;
