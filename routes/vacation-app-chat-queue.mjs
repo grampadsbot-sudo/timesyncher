@@ -403,6 +403,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
       customerLive,
       base,
       storeReplyFailure,
+      turnActionResults,
+      replyClaimContext,
     });
     withGateMs(payload, customerLive, base, gateStarted);
     await db`update transcript_turns set payload = ${payload} where id = ${turnRows[0].id}`;

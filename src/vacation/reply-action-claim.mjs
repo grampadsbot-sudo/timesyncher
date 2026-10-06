@@ -169,6 +169,18 @@ function collaboratorOnTripClaimReason(reply, claimContext = null) {
   return '';
 }
 
+function pendingInviteeJoiningTripCooccurrenceReason(reply, turnActionResults = null) {
+  if (!collaboratorInviteSucceeded(turnActionResults)) return '';
+  const inviteeName = String(turnActionResults?.invite?.inviteeName || '').trim();
+  const first = nameTokens(inviteeName)[0];
+  if (!first) return '';
+  const body = String(reply || '');
+  if (!/\bjoining(?:\s+the)?\s+trip\b/i.test(body)) return '';
+  const nameRe = new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+  if (!nameRe.test(body)) return '';
+  return REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP;
+}
+
 function replyMentionsPlaceTitle(reply, title) {
   const body = String(reply || '').toLowerCase();
   const tokens = String(title || '').trim().toLowerCase().split(/\s+/).filter((token) => token.length > 2);
@@ -195,6 +207,8 @@ export function replyActionClaimReason(reply, turnActionResults = null, claimCon
     if (!collaboratorInviteSucceeded(turnActionResults)) return 'reply_action_claim_unbacked';
     return '';
   }
+  const pendingJoin = pendingInviteeJoiningTripCooccurrenceReason(reply, turnActionResults);
+  if (pendingJoin) return pendingJoin;
   const unscheduledDay = unscheduledPlaceDayClaimReason(reply, claimContext);
   if (unscheduledDay) return unscheduledDay;
   return collaboratorOnTripClaimReason(reply, claimContext);

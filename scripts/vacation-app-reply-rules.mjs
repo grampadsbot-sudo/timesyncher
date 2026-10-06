@@ -590,6 +590,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
   const rule = String(tripRaw?.rule || '').trim();
+  const turnInvitePending = tripRaw?.turnInvite?.ok === true;
+  const turnInviteRule = String(tripRaw?.turnInviteRule || '').trim();
   const unscheduledOpen = Array.isArray(tripRaw?.chatPlaceSearch?.unscheduled)
     && tripRaw.chatPlaceSearch.unscheduled.some((row) => row?.notOnADay === true);
   const customerInput = {};
@@ -635,7 +637,10 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
     namedSearchAreaAwayFromLodgingReplyLine(tripSource),
     ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
-    'Do not say seat to the customer; say collaborator or person joining instead.',
+    turnInvitePending
+      ? 'Do not say seat to the customer; say collaborator. The emailed invitee is not on the trip yet — describe the pending invite only.'
+      : 'Do not say seat to the customer; say collaborator instead.',
+    turnInviteRule,
     'Do not open with a comma-separated roster roll call like Name, you, Name are set or locked in.',
     (/\?/.test(String(customerTurn || '')) && /\bview access\b/i.test(String(customerTurn || '')) && /\bedit access\b/i.test(String(customerTurn || ''))
       ? 'This turn asks a real question about collaborator access. Offer the choice between view access and edit access. Use both phrases. Do not choose for them.'
