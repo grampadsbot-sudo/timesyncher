@@ -118,7 +118,7 @@ function sharedFromFixture(fixture) {
     budget: [],
     collab: [],
     thingOverrides,
-    liveTabLists: { flights: [], hotels: [], cars: [], restaurants: [], stores: [], events: [] },
+    liveTabLists: { hotels: [], cars: [] },
   };
 }
 

@@ -48,7 +48,6 @@ scripts/test_trip_map_harness_hook_bundle.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
 scripts/test_shared_category_tab_icon_center_bundle.mjs
 scripts/test_served_customer_copy_no_internal_terms.mjs
-scripts/test_shared_tab_thing_cards.mjs
 scripts/test_shared_tab_category_css_blast_radius.mjs
 scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
@@ -133,6 +132,8 @@ scripts/test_collaborator_trip_chat_visibility.mjs
 scripts/test_collaborator_web_access_redirect.mjs
 scripts/test_shared_place_logo_and_category.mjs
 scripts/test_shared_trip_live_tab_logos.mjs
+scripts/test_shared_tab_list_summary.mjs
+scripts/test_shared_tab_filter_chips.mjs
 scripts/test_shared_trip_served_live_tab_mount.mjs
 scripts/test_trip_thing_logo_metadata.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs

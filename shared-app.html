@@ -119,8 +119,8 @@
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }
-        const liveTabs = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
-        if (liveTabs.some((key) => !Object.prototype.hasOwnProperty.call(data.liveTabLists, key))) {
+        if (!Object.prototype.hasOwnProperty.call(data.liveTabLists, 'hotels')
+          || !Object.prototype.hasOwnProperty.call(data.liveTabLists, 'cars')) {
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }
@@ -177,8 +177,9 @@
         overflow: visible !important;
       }
       [data-ts-logo-chip][data-tab-category] {
-        display: inline-grid !important;
-        place-items: center !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         line-height: 1 !important;
         box-sizing: border-box !important;
         position: relative !important;

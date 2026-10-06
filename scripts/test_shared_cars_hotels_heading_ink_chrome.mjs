@@ -54,7 +54,7 @@ function sharedFromFixture(fixture) {
     days, assignments, dayNotes: {}, places, categories: Object.values(categories),
     permissions: { share_map: true, share_bookings: true, share_packing: false, share_budget: false, share_collab: false },
     media: [], reservations: [], accommodations: [], packing: [], budget: [], collab: [], thingOverrides,
-    liveTabLists: { flights: [], hotels: [], cars: [], restaurants: [], stores: [], events: [] },
+    liveTabLists: { hotels: [], cars: [] },
   };
 }
 

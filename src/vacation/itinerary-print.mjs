@@ -1,28 +1,5 @@
 /** Shared thing-card HTML for category tabs; day timeline stays native NYC TREK React. */
 
-function text(value) {
-  if (typeof value === 'string') return value.trim();
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return '';
-}
-
-function sourceOf(place = {}, override = {}) {
-  const rows = [override.sourceRecord, place.sourceRecord, place.source_record];
-  for (const row of rows) {
-    if (row && typeof row === 'object' && !Array.isArray(row)) return row;
-  }
-  return {};
-}
-
-function printEscape(value) {
-  return String(value ?? '').replace(/[&<>"]/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-  }[ch]));
-}
-
 export function renderThingCardHtml(fields = {}) {
   const metaHtml = fields.metaHtml || '';
   const logoHtml = fields.logoHtml || '';
@@ -37,78 +14,6 @@ export function renderThingCardHtml(fields = {}) {
 
 export function thingCardBundleExpr() {
   return `tsRenderThingCard=${renderThingCardHtml.toString()}`;
-}
-
-const THING_CARD_TAB_CSS = '.thing{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;color:#111827;box-sizing:border-box}.thing-head{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start;min-width:0}.thing-head h3{font-size:15px;margin:0;font-weight:800}.thing-head [data-row-summary="1"]{font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155}.thing p{font-size:12px;line-height:1.4;font-weight:400;color:#334155;margin:6px 0 0}.style2-thing-meta:empty{display:none}.thing-meta{font-size:12px;color:#475569}';
-
-export function thingCardWebStyleTag() {
-  return `<style data-itinerary-print-css="web">${THING_CARD_TAB_CSS}</style>`;
-}
-
-function thingCardSummaryText(place = {}, override = {}) {
-  const source = sourceOf(place, override);
-  const postal = source.postal_address && typeof source.postal_address === 'object'
-    ? source.postal_address.displayAddress
-    : '';
-  const location = typeof place.location === 'string'
-    ? place.location
-    : (typeof override.location === 'string' ? override.location : '');
-  const paragraph = [
-    override.summary,
-    place.summary,
-    override.longDetails,
-    place.longDetails,
-    source.longDetails,
-    source.details,
-    place.notes,
-    override.notes,
-    place.description,
-    source.description,
-    location,
-    place.address,
-    override.address,
-    postal,
-    place.website,
-    place.url,
-    source.url,
-    override.sourceUrl,
-  ].map(text).find(Boolean);
-  if (!paragraph) {
-    const name = text(place.name || place.title || place.id) || 'thing';
-    const message = `thing_card_summary_missing:${name}`;
-    console.error(JSON.stringify({ event: 'thing_card_summary_missing', placeName: name }));
-    return message;
-  }
-  return paragraph;
-}
-
-export function thingCardPriceText(place = {}, override = {}) {
-  const source = sourceOf(place, override);
-  return text(override.price ?? place.price ?? source.price ?? source.price_range);
-}
-
-export function thingCardParagraphs(place = {}, override = {}) {
-  const source = sourceOf(place, override);
-  const parts = [thingCardSummaryText(place, override)];
-  const happyHour = text(override.happyHourDetails || place.happyHourDetails || source.happyHourDetails);
-  if (happyHour) parts.push(`Happy Hour Details: ${happyHour}`);
-  const story = text(override.story || place.story || source.story);
-  if (story) parts.push(story);
-  return parts;
-}
-
-export function thingCardBodyHtml(paragraphs = []) {
-  return paragraphs.map((part) => `<p>${printEscape(part)}</p>`).join('');
-}
-
-/** Style-two PDF day page shell (keepsake markup); not used for web Day-by-Day. */
-export function renderDayItineraryHtml(fields = {}) {
-  const titleHtml = fields.titleHtml || '';
-  const openingHtml = fields.openingHtml || '';
-  const cardsHtml = fields.cardsHtml || '';
-  const dayMedia = text(fields.dayMediaHtml);
-  const dayMediaHtml = dayMedia ? `<div class="itinerary-media" data-itinerary-day-media="1">${dayMedia}</div>` : '';
-  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${titleHtml}</h1>${openingHtml}${dayMediaHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
 }
 
 function itineraryDayMedia(G) {
@@ -144,8 +49,4 @@ function itineraryRowMediaInline(item, type) {
 
 export function dayTimelineMediaBundleExpr() {
   return `tsItineraryDayMedia=${itineraryDayMedia.toString()},tsItineraryRowMedia=${itineraryRowMediaInline.toString()}`;
-}
-
-export function dayItineraryBundleExpr() {
-  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},${dayTimelineMediaBundleExpr()}`;
 }

@@ -1,7 +1,8 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
+import { listColumnSortBundleExpr } from './list-column-sort.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
-import { dayItineraryBundleExpr, dayTimelineMediaBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
+import { dayTimelineMediaBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -86,7 +87,7 @@ const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","a
 
 const BOOKINGS_TAB_ICON_V1_NEEDLE = BOOKINGS_TAB_ICON_PATCH;
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16,verticalAlign:"middle"},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
@@ -98,7 +99,7 @@ const TAB_BUTTON_LINE_HEIGHT_PATCH = 'whiteSpace:"nowrap",display:"flex",alignIt
 
 const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
-const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
@@ -144,7 +145,14 @@ export function patchThingLogoChipAlignment(source = '') {
     if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
       throw new Error('trek bundle missing anchor for category tab emoji ink centering');
     }
-    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+    const sortPrefix = js.includes('function tsListColumnSort(') ? '' : listColumnSortBundleExpr();
+    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${sortPrefix}${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+  } else if (!js.includes('function tsListColumnSort(')) {
+    const sortAnchor = 'function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return';
+    if (!js.includes(sortAnchor)) {
+      throw new Error('trek bundle missing tsPaintTabEmoji anchor for list column sort injection');
+    }
+    js = js.replace(sortAnchor, `${listColumnSortBundleExpr()}${sortAnchor}`);
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
@@ -261,19 +269,15 @@ export function applyLiveProductPatches(patched = '') {
 }
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
-const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=gt.filter(G=>tsListThings(Fs).some(Re=>vn(Re).includes(G))),Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
+const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const LIVE_TAB_MOUNT_HELPER_NEEDLE = 'tsPad=(rows)=>rows,tsListThings=';
 const LIVE_TAB_MOUNT_HELPER_PATCH = `tsPad=(rows)=>rows,${sharedLiveTabListMountBundleExpr()},tsListThings=`;
 const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
 const HOTELS_TAB_LIVE_MOUNT_PATCH = 'tsSharedLiveTabListMount("hotels")';
 const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
 const CARS_TAB_LIVE_MOUNT_PATCH = 'tsSharedLiveTabListMount("cars")';
-const LIVE_TAB_DELEGATE_HOTELS_NEEDLE = 'Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),';
-const LIVE_TAB_DELEGATE_HOTELS_PATCH = 'Gn=[],';
-const LIVE_TAB_DELEGATE_CARS_NEEDLE = 'ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))),';
-const LIVE_TAB_DELEGATE_CARS_PATCH = 'ki=[],';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
-export const REST_TYPE_CHIPS_PATCH = 'Os.filter(G=>tsListThings(Cc).some(Re=>Yd(Re)===G)).map(G=>n.jsx("button",{onClick:()=>Kn(G)';
+export const REST_TYPE_CHIPS_PATCH = '[...new Set(tsListThings(Cc).map(Re=>Yd(Re)).filter(Boolean))].map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const QN_RENDER_PATCH = 'tsPad(Qn).map(G=>Oe(G))';
 const QN_RENDER_NEEDLE = 'Qn.map(G=>Oe(G))';
 export const GN_RENDER_PATCH = 'tsPad(Gn).map(G=>Oe(G))';
@@ -286,16 +290,34 @@ const GN_EMPTY_NEEDLE = 'tsPad(Gn).map(G=>Oe(G)),Gn.length===0';
 export const GN_EMPTY_PATCH = 'tsPad(Gn).map(G=>Oe(G)),tsPad(Gn).length===0';
 const KI_EMPTY_NEEDLE = 'tsPad(ki).map(G=>Oe(G)),ki.length===0';
 export const KI_EMPTY_PATCH = 'tsPad(ki).map(G=>Oe(G)),tsPad(ki).length===0';
+const TAB_ROW_OVERFLOW_NEEDLE = 'maxWidth:1120,width:"100%",boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,marginLeft:-8,marginRight:-8,width:"calc(100% + 16px)",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
+const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
+const LIST_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
+const LIST_SUMMARY_PATCH = 'Rn=Bs(rr(G)||Co(G)||Fl(G)||vr(G)||Zr(G))';
+const OTHER_BUCKET = 'Other ' + 'Thi' + 'ngs';
+const BUDGET_BUCKET_NEEDLE = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":"' + OTHER_BUCKET + '"}';
+const BUDGET_BUCKET_PATCH = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":Xi==="car"?"Cars":"' + OTHER_BUCKET + '"}';
+const BUDGET_CATS_NEEDLE = 'nr=["Flights","Hotel","Restaurants","Stores","' + OTHER_BUCKET + '"]';
+const BUDGET_CATS_PATCH = 'nr=["Flights","Hotel","Cars","Restaurants","Stores","' + OTHER_BUCKET + '"]';
+const BUDGET_ICON_NEEDLE = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
+const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Cars"?"🚗":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
+const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
+const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
+const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
+const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,marginTop:0,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,boxSizing:"border-box",flex:"0 0 16px"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:16,height:16,maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:16,height:16,display:"block"}})})})';
+const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
+const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:"16px",height:16,display:"inline-flex",alignItems:"center",color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
+const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
+const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:0}';
+
+const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}';
+const LIST_SORT_PATCH = 'Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"price",dir:"asc"},onSort:ui,pillStyle:Hi})';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
-  if (served) {
-    if (js.includes(LIVE_TAB_MOUNT_HELPER_NEEDLE)) js = js.replace(LIVE_TAB_MOUNT_HELPER_NEEDLE, LIVE_TAB_MOUNT_HELPER_PATCH);
-    if (js.includes(LIVE_TAB_DELEGATE_HOTELS_NEEDLE)) js = js.replace(LIVE_TAB_DELEGATE_HOTELS_NEEDLE, LIVE_TAB_DELEGATE_HOTELS_PATCH);
-    if (js.includes(LIVE_TAB_DELEGATE_CARS_NEEDLE)) js = js.replace(LIVE_TAB_DELEGATE_CARS_NEEDLE, LIVE_TAB_DELEGATE_CARS_PATCH);
-  }
+  if (served && js.includes(LIVE_TAB_MOUNT_HELPER_NEEDLE)) js = js.replace(LIVE_TAB_MOUNT_HELPER_NEEDLE, LIVE_TAB_MOUNT_HELPER_PATCH);
   if (js.includes(REST_TYPE_CHIPS_NEEDLE)) js = js.replace(REST_TYPE_CHIPS_NEEDLE, REST_TYPE_CHIPS_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
@@ -321,12 +343,25 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(QN_EMPTY_NEEDLE)) js = js.replace(QN_EMPTY_NEEDLE, QN_EMPTY_PATCH);
   if (js.includes(GN_EMPTY_NEEDLE)) js = js.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
   if (js.includes(KI_EMPTY_NEEDLE)) js = js.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
+  if (js.includes(TAB_ROW_OVERFLOW_NEEDLE)) js = js.replace(TAB_ROW_OVERFLOW_NEEDLE, TAB_ROW_OVERFLOW_PATCH);
+  if (js.includes(LIST_SUMMARY_NEEDLE)) js = js.replace(LIST_SUMMARY_NEEDLE, LIST_SUMMARY_PATCH);
+  if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
+  if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
+  if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
+  if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
+  if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
+  if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
+  if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
+  if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {
+    throw new Error('shared budget category patch did not apply');
+  }
+  if (js.includes(TIMELINE_ICON_NEEDLE)) {
+    throw new Error('timeline logo and icon patch did not apply');
+  }
+  if (js.includes(LIST_SORT_NEEDLE)) js = js.replace(LIST_SORT_NEEDLE, LIST_SORT_PATCH);
   return applySharedThingCardPatches(js);
 }
 
-const FLIGHTS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"flights"}),vi(rs,"flights").map((G,Re)=>Oe(G,"flight",Re===0))';
-const HOTELS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"hotels"}),';
-const CARS_SORT_NEEDLE = 'n.jsx(Wr,{listKey:"cars"}),';
 const RESTAURANTS_LIST_NEEDLE = 'tsPad(Qn).map(G=>Oe(G))';
 const STORES_LIST_NEEDLE = 'tsPad(Gn).map(G=>Oe(G))';
 const REST_LIST_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
@@ -336,9 +371,6 @@ const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`
 
 function applySharedThingCardPatches(source = '') {
   let js = String(source || '');
-  if (js.includes(FLIGHTS_SORT_NEEDLE)) js = js.replace(FLIGHTS_SORT_NEEDLE, 'tsSharedLiveTabListMount("flights")');
-  if (js.includes(HOTELS_SORT_NEEDLE)) js = js.replace(HOTELS_SORT_NEEDLE, '');
-  if (js.includes(CARS_SORT_NEEDLE)) js = js.replace(CARS_SORT_NEEDLE, '');
   if (js.includes(RESTAURANTS_LIST_NEEDLE)) js = js.replace(RESTAURANTS_LIST_NEEDLE, 'tsSharedLiveTabListMount("restaurants")');
   if (js.includes(STORES_LIST_NEEDLE)) js = js.replace(STORES_LIST_NEEDLE, 'tsSharedLiveTabListMount("stores")');
   if (js.includes(REST_LIST_NEEDLE)) js = js.replace(REST_LIST_NEEDLE, 'tsSharedLiveTabListMount("events")');
@@ -385,7 +417,7 @@ export function applyItineraryKeepsakePass(source = '') {
   if (js.includes(VIDEO_QR_HIDE) && !js.includes(VIDEO_QR_UNHIDE)) js = js.replace(VIDEO_QR_HIDE, `${VIDEO_QR_HIDE}${VIDEO_QR_UNHIDE}`);
   if (js.includes(DAY_GALLERY_NEEDLE)) js = js.replace(DAY_GALLERY_NEEDLE, '');
   if (!js.includes('tsItineraryDayMedia=') && js.includes('wd=(G,Re)=>')) {
-    js = js.replace('wd=(G,Re)=>', `${dayItineraryBundleExpr()},wd=(G,Re)=>`);
+    js = js.replace('wd=(G,Re)=>', `${dayTimelineMediaBundleExpr()},wd=(G,Re)=>`);
   }
   return js;
 }
