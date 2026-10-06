@@ -89,5 +89,14 @@ assert(resolveThingType({ name: 'Sample Hotel', category_name: 'Hotel' }) === 'h
 assert(resolveThingType({ name: 'City A to City B', category_name: 'Flight' }) === 'flight', 'flight category selects the icon');
 assert(resolveThingType({ name: 'Sample Rental', category_name: 'Car' }) === 'car', 'car category selects the icon');
 assert(resolveThingType({ name: 'Hertz counter', category: 'car' }) === 'car', 'string trip_things category selects car');
+assert(
+  resolveThingType({
+    name: 'Hertz Car Rental',
+    category: 'store',
+    category_name: 'Store',
+    metadata: { providerCategories: ['Store', 'Car rental'] },
+  }) === 'car',
+  'car rental provider category overrides store category',
+);
 
 console.log('timeline icon tests passed');

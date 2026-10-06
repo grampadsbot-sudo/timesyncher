@@ -94,6 +94,10 @@ const TAB_BUTTON_LINE_HEIGHT_NEEDLE = 'whiteSpace:"nowrap",display:"flex",alignI
 
 const TAB_BUTTON_LINE_HEIGHT_PATCH = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",lineHeight:1,gap:4,background:q===G.id?';
 
+const TAB_BUTTON_DATA_TAB_NEEDLE = 'n.jsxs("button",{title:Re?G.label:void 0,"aria-label":G.label,onClick:()=>{W(G.id)},style:{';
+
+const TAB_BUTTON_DATA_TAB_PATCH = 'n.jsxs("button",{"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0,"aria-label":G.label,onClick:()=>{W(G.id)},style:{';
+
 const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
@@ -133,6 +137,11 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
   } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
     throw new Error('trek bundle missing category tab button anchor for line-height patch');
+  }
+  if (js.includes(TAB_BUTTON_DATA_TAB_NEEDLE)) {
+    js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
+  } else if (!js.includes('"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0')) {
+    throw new Error('trek bundle missing category tab button anchor for data-tab patch');
   }
   if (!js.includes('function tsPaintTabEmoji(')) {
     if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
