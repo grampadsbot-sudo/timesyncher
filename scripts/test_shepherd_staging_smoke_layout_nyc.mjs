@@ -5,6 +5,7 @@ import {
   gradeLayoutNycReferenceMissing,
   gradeLayoutNycStagingDom,
   layoutNycReferenceDefects,
+  layoutNycReferenceDir,
   reconcileLayoutNycJudgeVerdict,
   LAYOUT_NYC_TAB_ORDER,
 } from './shepherd-staging-smoke-layout-nyc.mjs';
@@ -41,6 +42,7 @@ assert.equal(reconcileLayoutNycJudgeVerdict(
   { tab: 'hotels', viewport: '390', stagingDom: stagingOk },
 ).pass, true);
 assert.equal(gradeLayoutNycStagingDom({ ...stagingColumns, columnSortLabels: {} }, { tab: 'hotels', viewport: '390' }).pass, false);
+assert.ok(layoutNycReferenceDir({ NYC_REFERENCE_DIR: '', TSV_NYC_REFERENCE_DIR: '' }));
 assert.equal(gradeLayoutNycReferenceMissing(null).failures[0].code, 'reference_missing');
 assert.equal(gradeLayoutNycStagingDom(stagingOk, { tab: 'hotels', viewport: '390' }).pass, true);
 assert.equal(gradeLayoutNycStagingDom(stagingColumns, { tab: 'hotels', viewport: '390' }).pass, false);
