@@ -18,7 +18,8 @@ assert.equal(bundle, committed, 'committed served bundle must match renderServed
 
 assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
-assert.match(bundle, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/);
+assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
+assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
 assert.doesNotMatch(bundle, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
 assert.match(bundle, /AI-assisted vacation itinerary planning/);
@@ -28,7 +29,8 @@ const car = payload.places.find((place) => String(place.name || '').includes('Pr
 assert.equal(payload.thingOverrides[`place:${car.id}`]?.rentalCompany, 'Priceline opaque');
 
 const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
-assert.match(dcSnippet, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/, 'logo chip keeps emoji under img');
+assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
+assert.match(dcSnippet, /children:zt\?\[n\.jsx\("img"/, 'logo chip uses img or emoji fallback');
 assert.match(dcSnippet, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/, 'broken logo URL hides img so emoji shows');
 
 console.log('shared trip live tab logo tests passed');

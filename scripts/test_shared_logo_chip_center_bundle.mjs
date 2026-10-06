@@ -14,9 +14,9 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
-assert.match(rendered, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/);
+assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
+assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
-assert.doesNotMatch(rendered, /className:"tiny-logo",src:zt/);
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);
 assert.match(rendered, /data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center/);
 assert.doesNotMatch(rendered, /translateY\(-0\.5px\)/);
