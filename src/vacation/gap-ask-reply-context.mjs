@@ -141,7 +141,21 @@ function replyGapAskSignals(record = {}, things = []) {
 
 export function draftingGapFields(record = {}, things = []) {
   const { fields, persistGapAsk } = replyGapAskSignals(record, things);
-  return { facts: { ...fields }, persistGapAsk };
+  const facts = { ...fields };
+  if (record.gapAnswerTurn === true) facts.gapAnswerTurn = true;
+  return { facts, persistGapAsk };
+}
+
+export function gapAskReplyPromptTripRaw(tripSource, postIntake, visibleTripContext) {
+  const gapAskPromptTurn = postIntake === true || tripSource?.gapAnswerTurn === true;
+  let tripRaw = visibleTripContext(tripSource);
+  if (!gapAskPromptTurn && tripRaw && typeof tripRaw === 'object') {
+    tripRaw = { ...tripRaw };
+    delete tripRaw.lodgingAsk;
+    delete tripRaw.flightAsk;
+    delete tripRaw.inviteContactAsk;
+  }
+  return { tripRaw, gapAskPromptTurn };
 }
 
 export function perFactGapAskRuleLines(tripRaw = {}) {

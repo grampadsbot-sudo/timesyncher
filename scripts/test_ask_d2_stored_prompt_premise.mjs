@@ -105,6 +105,7 @@ const facts = draftingFacts(
   customerTurn,
   merged,
 );
+assert.equal(facts.gapAnswerTurn, undefined);
 const tripContext = await enrichDraftingTripContext(facts, {
   things: merged.things,
   env: {},

@@ -38,6 +38,7 @@ const flightAsk = replyRulesSystem({}, 'Maui', 'forbidden', false, 'We land Tues
     itinerary: ['Swim: Monday'],
     dates: '',
     roster: '',
+    gapAnswerTurn: true,
     flightAsk: 'missing',
   },
 });

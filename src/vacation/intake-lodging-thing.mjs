@@ -403,6 +403,7 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
       }
       have.add(titleKey);
       saved.push(inserted);
+      if (resolvedArea) await persistTripStatedLodgingArea(db, tripId, resolvedArea);
     }
   }
   if (saved.length) await assignTripSiteUrlWhenThingsPresent(db, tripId, env);

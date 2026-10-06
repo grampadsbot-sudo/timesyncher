@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 
 import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
-import { trekBudgetAmount } from '../src/vacation/shared-trip-api-budget.mjs';
+import {
+  applyTripMetadataBudgetTargets,
+  trekBudgetAmount,
+  tripBudgetTargetTotal,
+} from '../src/vacation/shared-trip-api-budget.mjs';
 
 const tripId = 63357430;
 const base = {
@@ -104,6 +108,37 @@ const gateBodySnippet = [
 ].join('\n');
 const gateHits = budgetHardcodedHits(gateBodySnippet, gateShared.budget);
 assert.deepEqual(gateHits, [], `Gate B budget tab scrape must match API lines: ${JSON.stringify(gateHits)}`);
+
+const metadataTrip = {
+  id: tripId,
+  title: 'Maui',
+  start_date: '2027-03-10',
+  end_date: '2027-03-17',
+  metadata: {
+    __budgetTargets: { 'overall:Cars': '200' },
+  },
+};
+const metadataShared = prepareSharedTripForLiveApp(
+  applyTripMetadataBudgetTargets(
+    {
+      ...base,
+      trip: { id: tripId, title: 'Maui', start_date: '2027-03-10', end_date: '2027-03-17', currency: 'usd' },
+      places: [
+        { id: gateCarHertz, name: 'Hertz', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+        { id: gateCarAlamo, name: 'Alamo rental', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+      ],
+      thingOverrides: {
+        [`place:${gateCarHertz}`]: { price: 45, category: 'car' },
+        [`place:${gateCarAlamo}`]: { price: 55, category: 'car' },
+      },
+    },
+    metadataTrip,
+  ),
+);
+assert.equal(tripBudgetTargetTotal(metadataShared), 200);
+assert.equal(metadataShared.budget.some((line) => Number(line.total_price) === 200), true);
+const metadataGateHits = budgetHardcodedHits(gateBodySnippet, metadataShared.budget);
+assert.deepEqual(metadataGateHits, [], `metadata budget targets must sync to API: ${JSON.stringify(metadataGateHits)}`);
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
