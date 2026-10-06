@@ -141,7 +141,9 @@ function replyGapAskSignals(record = {}, things = []) {
 
 export function draftingGapFields(record = {}, things = []) {
   const { fields, persistGapAsk } = replyGapAskSignals(record, things);
-  return { facts: { ...fields }, persistGapAsk };
+  const facts = { ...fields };
+  if (record.gapAnswerTurn === true) facts.gapAnswerTurn = true;
+  return { facts, persistGapAsk };
 }
 
 export function gapAskReplyPromptTripRaw(tripSource, postIntake, visibleTripContext) {
