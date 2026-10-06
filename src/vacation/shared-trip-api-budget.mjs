@@ -106,21 +106,93 @@ function budgetRowsFromShared(shared = {}) {
   return rows;
 }
 
-function visibleAmountSet(rows = []) {
+function budgetTargetKey(bucket) {
+  return `overall:${bucket}`;
+}
+
+function otherThingsExpenseCategory(categoryLower = '') {
+  const fr = String(categoryLower || '').toLowerCase();
+  return [
+    'entertainment',
+    'event',
+    'tour',
+    'sightseeing',
+    'music',
+    'workout',
+    'fitness',
+    'gym',
+    'artist',
+    'theatre',
+    'theater',
+    'broadway',
+    'transport',
+    'other',
+  ].some((token) => fr.includes(token));
+}
+
+function expenseDerivedBucketTarget(shared = {}, bucket = '') {
+  const expenses = Array.isArray(shared.expenses) ? shared.expenses : [];
+  return expenses
+    .filter((expense) => {
+      const category = String(expense.category || '').toLowerCase();
+      if (bucket === 'Restaurants' && !category.includes('restaurant')) return false;
+      if (bucket === 'Other Things' && !otherThingsExpenseCategory(category)) return false;
+      if (bucket === 'Stores') return false;
+      if (bucket === 'Flights' && !category.includes('flight')) return false;
+      if (bucket === 'Hotel' && !category.includes('hotel')) return false;
+      return true;
+    })
+    .reduce((sum, expense) => sum + (Number(expense.total_price) || 0), 0);
+}
+
+function bucketTargetAmount(shared = {}, bucket = '') {
+  const targets = shared?.thingOverrides?.__budgetTargets;
+  const key = budgetTargetKey(bucket);
+  if (targets && typeof targets === 'object' && Object.prototype.hasOwnProperty.call(targets, key)) {
+    const raw = targets[key];
+    if (raw === '' || raw === null || raw === undefined) return 0;
+    const cleaned = String(raw).replace(/[^0-9.]/g, '');
+    if (!cleaned) return 0;
+    return Math.round(Number(cleaned) || 0);
+  }
+  return Math.round(expenseDerivedBucketTarget(shared, bucket) || 0);
+}
+
+function rowsInBucket(rows = [], bucket = '') {
+  return rows.filter((row) => row.bucket === bucket);
+}
+
+function bucketPlannedTotal(rows = [], bucket = '') {
+  return rowsInBucket(rows, bucket).reduce((acc, row) => acc + row.amount, 0);
+}
+
+/** Dollar amounts rendered on the live Budget tab (planned, targets, under/over chips). */
+function visibleAmountSet(rows = [], shared = {}) {
   const amounts = new Set();
   for (const row of rows) {
-    if (!row.hasPrice || row.amount <= 0) continue;
     amounts.add(row.amount);
-    if (row.nightly != null && row.nightly > 0 && row.nightly !== row.amount) {
+    if (row.nightly != null && row.nightly !== row.amount) {
       amounts.add(row.nightly);
     }
   }
   for (const bucket of BUDGET_BUCKETS) {
-    const sum = rows.filter((row) => row.bucket === bucket).reduce((acc, row) => acc + row.amount, 0);
-    if (sum > 0) amounts.add(sum);
+    const bucketRows = rowsInBucket(rows, bucket);
+    if (!bucketRows.length) continue;
+    const planned = bucketPlannedTotal(rows, bucket);
+    const target = bucketTargetAmount(shared, bucket);
+    amounts.add(planned);
+    amounts.add(target);
+    if (target > 0) {
+      amounts.add(Math.abs(planned - target));
+    }
   }
-  const tripTotal = rows.reduce((acc, row) => acc + row.amount, 0);
-  if (tripTotal > 0) amounts.add(tripTotal);
+  const tripPlanned = rows.reduce((acc, row) => acc + row.amount, 0);
+  const tripTarget = BUDGET_BUCKETS.reduce((acc, bucket) => acc + bucketTargetAmount(shared, bucket), 0);
+  amounts.add(tripPlanned);
+  amounts.add(tripTarget);
+  if (tripTarget > 0) {
+    amounts.add(Math.abs(tripPlanned - tripTarget));
+  }
   return amounts;
 }
 
@@ -129,7 +201,7 @@ export function syncSharedTripApiBudget(shared = {}) {
   if (!shared?.permissions?.share_budget) return shared;
   const tripId = shared.trip?.id;
   const rows = budgetRowsFromShared(shared);
-  const visible = visibleAmountSet(rows);
+  const visible = visibleAmountSet(rows, shared);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
   const covered = new Set(
@@ -140,7 +212,6 @@ export function syncSharedTripApiBudget(shared = {}) {
 
   let sortOrder = lines.length;
   for (const row of rows) {
-    if (!row.hasPrice || row.amount <= 0) continue;
     if (covered.has(row.amount)) continue;
     lines.push({
       id: intId(`${tripId}:budget:place:${row.place.id}`),
