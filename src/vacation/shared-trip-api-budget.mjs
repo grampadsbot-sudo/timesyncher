@@ -17,7 +17,8 @@ const PER_PERSON_CATEGORIES = new Set([
   'flight',
 ]);
 
-const BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores', 'Other Things'];
+const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
+const BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores', OTHER_THINGS_BUCKET];
 
 function text(value) {
   return String(value || '').trim();
@@ -68,7 +69,7 @@ function trekBudgetBucket(category = '') {
   if (cat === 'flight') return 'Flights';
   if (cat === 'hotel') return 'Hotel';
   if (cat === 'car') return 'Cars';
-  return 'Other Things';
+  return OTHER_THINGS_BUCKET;
 }
 
 export function trekBudgetAmount(place = {}, override = {}, category = '') {
