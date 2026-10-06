@@ -199,7 +199,16 @@ try {
       }
       if (width === 390 && label === 'Hotels') {
         const sort = await page.evaluate(() => {
-          const names = () => [...document.querySelectorAll('[data-shared-live-tab="hotels"] strong')].map((el) => el.textContent.trim());
+          const names = () => {
+            const header = document.querySelector('[data-ts-list-sort-header]');
+            const root = header?.parentElement;
+            if (!root) return [];
+            const rows = [...root.children].filter((el) => el !== header && el.querySelector('button[aria-label="Open thing details"]'));
+            return rows.map((row) => {
+              const btn = row.querySelector('button[aria-label="Open thing details"]');
+              return btn ? String(btn.textContent || '').trim() : '';
+            }).filter(Boolean);
+          };
           const click = (which) => {
             const header = document.querySelector('[data-ts-list-sort-header]');
             const btn = [...(header ? header.querySelectorAll('button') : [])].find((el) => String(el.textContent || '').trim().toLowerCase().startsWith(which));

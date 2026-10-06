@@ -115,16 +115,10 @@
           return;
         }
         const data = await response.json();
-        if (!data.liveTabLists || typeof data.liveTabLists !== 'object') {
+        if (!data || !Array.isArray(data.places)) {
           showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
           return;
         }
-        if (!Object.prototype.hasOwnProperty.call(data.liveTabLists, 'hotels')
-          || !Object.prototype.hasOwnProperty.call(data.liveTabLists, 'cars')) {
-          showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
-          return;
-        }
-        window.__TS_SHARED_LIVE_TAB_LISTS__ = data.liveTabLists;
         appendSharedTrekBundle();
       }()).catch(() => {
         showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');

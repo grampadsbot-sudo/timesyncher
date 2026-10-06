@@ -673,19 +673,18 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
   }
-  const servedSharedHotelsCars = js.includes('tsSharedLiveTabListMount=G=>');
-  if (servedSharedHotelsCars) {
-    if (!js.includes('tsSharedLiveTabListMount=G=>')) {
-      throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
+  if (served) {
+    if (!js.includes('vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))')) {
+      throw new Error('Served shared Hotels tab must render Oe rows from vi(kn,"hotels").');
+    }
+    if (!js.includes('vi(bc,"cars").map(G=>Oe(G))')) {
+      throw new Error('Served shared Cars tab must render Oe rows from vi(bc,"cars").');
+    }
+    if (js.includes('tsSharedLiveTabListMount') || js.includes('data-shared-live-tab-mount')) {
+      throw new Error('Served shared Hotels/Cars tabs must not mount liveTabLists HTML.');
     }
     if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
-    }
-    if (js.includes('vi(kn,"hotels")')) {
-      throw new Error('Served shared Hotels tab must mount liveTabLists.hotels, not catalog kn rows.');
-    }
-    if (!js.includes('tsSharedLiveTabListMount("hotels")') || !js.includes('tsSharedLiveTabListMount("cars")')) {
-      throw new Error('Served shared Hotels and Cars tabs must call tsSharedLiveTabListMount for each tab.');
     }
     if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
