@@ -331,7 +331,8 @@ const RESTAURANTS_LIST_NEEDLE = 'tsPad(Qn).map(G=>Oe(G))';
 const STORES_LIST_NEEDLE = 'tsPad(Gn).map(G=>Oe(G))';
 const REST_LIST_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
 const WD_RETURN_NEEDLE = 'return`<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">${Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`}<div><h3>${an(Bs(mr(zt)))}</h3>${bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:""}</div></div>${sr}${Xr?`<div class="reviews">${Xr}</div>`:""}${zr}</article>`';
-const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),priceHtml:bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:"",summaryHtml:!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String((ua&&ua.type)||""))&&!/^Travel (to|from)\\b/i.test(String((ua&&ua.title)||""))&&rr(zt)?`<div data-row-summary="1" data-summary-thing-only="1">${an(Bs(rr(zt)))}</div>`:"",bodyHtml:sr,reviewsHtml:Xr?`<div class="reviews">${Xr}</div>`:"",mediaHtml:zr})';
+const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-' + 'checkout)$/i';
+const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),priceHtml:bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:"",summaryHtml:!' + ROW_TYPE_SKIP + '.test(String((ua&&ua.type)||""))&&!/^Travel (to|from)\\b/i.test(String((ua&&ua.title)||""))&&rr(zt)?`<div data-row-summary="1" data-summary-thing-only="1">${an(Bs(rr(zt)))}</div>`:"",bodyHtml:sr,reviewsHtml:Xr?`<div class="reviews">${Xr}</div>`:"",mediaHtml:zr})';
 
 function applySharedThingCardPatches(source = '') {
   let js = String(source || '');
@@ -362,6 +363,27 @@ const MC_CALL_PATCH = 'sr=tsRenderDayItinerary({titleHtml:an(la.title||"Trip"),o
 const DAY_ROW_START = 'Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."}),Re.map((ua,Rn)=>';
 const DAY_ROW_END = '})]},`${ua.type}-${Rn}-${ua.title}`)})';
 const DAY_ROW_PATCH = 'n.jsx("div",{"data-day-itinerary-mount":"1",dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({titleHtml:an(G.title||("Day "+G.day_number)),openingHtml:"",dayMediaHtml:tsItineraryDayMedia(G),cardsHtml:Re.map(ua=>wd({item:ua.item,row:ua},G)).join(""),styleHtml:tsDayWebStyle})}})';
+const SU_TIMELINE_PN = '<div class="style2-timeline">${Rn}</div>${Pn}</section>';
+const SU_TIMELINE = '<div class="style2-timeline">${Rn}</div></section>';
+const BODY_SUMMARY_NEEDLE = 'Pn=rr(zt)||Co(zt)||Fl(zt)';
+const BODY_SUMMARY_PATCH = 'Pn=rr(zt)?(Co(zt)!==rr(zt)?Co(zt):""):(Co(zt)||Fl(zt))';
+const ROW_MEDIA_NEEDLE = 'zr=fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).length?`<div class="style2-thing-media">${fo(zt).filter(Oo=>Oo&&Oo.kind!=="video"&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" "))).map(Ba).join("")}</div>`:""';
+const ROW_MEDIA_PATCH = 'zr=(()=>{const rows=fo(zt).filter(Oo=>Oo&&!/bind[- ]?proof|neon file bind proof/i.test([Oo.filename,Oo.original_name,Oo.originalName,Oo.caption,Oo.url,Oo.public_url,Oo.id].join(" ")));const photos=rows.filter(Oo=>Oo.kind!=="video").map(Ba).join("");const videos=rows.filter(Oo=>Oo.kind==="video").map(Ba).join("");return photos||videos?`<div class="style2-thing-media" data-itinerary-row-media="1">${photos}${videos}</div>`:""})()';
+const VIDEO_QR_HIDE = '[data-daily-thing-media] .print-media-card.video{display:none!important}';
+const VIDEO_QR_UNHIDE = '[data-itinerary-day-media="1"] .print-media-card.video,[data-itinerary-row-media="1"] .print-media-card.video{display:inline-block!important}';
+const DAY_GALLERY_NEEDLE = 'zt.length>0&&n.jsx("div",{style:{padding:"10px 16px 2px"},children:n.jsx(Nr,{items:zt,scopeKey:`day:${G.id}`})}),';
+
+export function applyItineraryKeepsakePass(source = '') {
+  let js = String(source || '');
+  if (js.includes(SU_TIMELINE_PN)) js = js.replace(SU_TIMELINE_PN, SU_TIMELINE);
+  if (js.includes(BODY_SUMMARY_NEEDLE)) js = js.replace(BODY_SUMMARY_NEEDLE, BODY_SUMMARY_PATCH);
+  if (js.includes(ROW_MEDIA_NEEDLE)) js = js.replace(ROW_MEDIA_NEEDLE, ROW_MEDIA_PATCH);
+  if (js.includes(WD_RETURN_NEEDLE)) js = js.replace(WD_RETURN_NEEDLE, WD_RETURN_PATCH);
+  if (js.includes(MC_CALL_NEEDLE)) js = js.replace(MC_CALL_NEEDLE, MC_CALL_PATCH);
+  if (js.includes(VIDEO_QR_HIDE) && !js.includes(VIDEO_QR_UNHIDE)) js = js.replace(VIDEO_QR_HIDE, `${VIDEO_QR_HIDE}${VIDEO_QR_UNHIDE}`);
+  if (js.includes(DAY_GALLERY_NEEDLE)) js = js.replace(DAY_GALLERY_NEEDLE, '');
+  return js;
+}
 
 export function patchThingDetailRatings(source = '') {
   let js = String(source || '');

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 import {
+  applyItineraryKeepsakePass,
   applyLiveProductPatches,
   applySharedLiveTabBundlePatches,
   GN_EMPTY_PATCH,
@@ -487,6 +488,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
+  patched = applyItineraryKeepsakePass(patched);
   const finished = stripTripView(patchThingDetailRatings(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);
 }
