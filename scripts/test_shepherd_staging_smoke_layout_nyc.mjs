@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { thingCardFailOnSortControlsFromEnv, gradeThingCardTabScan } from './shepherd-staging-smoke-thing-card-eval.mjs';
 import {
   gradeLayoutNycReferenceMissing,
+  gradeLayoutNycStagingDom,
   layoutNycReferenceDefects,
   reconcileLayoutNycJudgeVerdict,
   LAYOUT_NYC_TAB_ORDER,
@@ -30,14 +31,17 @@ assert.equal(Object.keys(stagingOk.columnSortLabels).length, 0);
 assert.equal(stagingOk.horizontalOverflow, false);
 
 assert.deepEqual(layoutNycReferenceDefects('hotels', '390')[0].code, 'horizontal_overflow');
+const stagingColumns = {
+  ...stagingOk,
+  sortPills: [],
+  columnSortLabels: { name: true, price: true },
+};
 assert.equal(reconcileLayoutNycJudgeVerdict(
   { pass: false, failures: [{ reason: 'NYC left shows sort pills' }] },
-  { tab: 'hotels', viewport: '390', stagingDom: stagingOk },
+  { tab: 'hotels', viewport: '390', stagingDom: stagingColumns },
 ).pass, true);
-assert.equal(reconcileLayoutNycJudgeVerdict(
-  { pass: true, failures: [] },
-  { tab: 'hotels', viewport: '390', stagingDom: { ...stagingOk, sortPills: [] } },
-).pass, false);
+assert.equal(gradeLayoutNycStagingDom({ ...stagingColumns, columnSortLabels: {} }, { tab: 'hotels', viewport: '390' }).pass, false);
 assert.equal(gradeLayoutNycReferenceMissing(null).failures[0].code, 'reference_missing');
+assert.equal(gradeLayoutNycStagingDom(stagingColumns, { tab: 'hotels', viewport: '390' }).pass, true);
 
 console.log('shepherd layout-nyc tests passed');
