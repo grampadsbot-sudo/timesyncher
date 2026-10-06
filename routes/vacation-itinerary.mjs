@@ -639,8 +639,14 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
     titleError,
     searchImpl,
   });
-  const tripTitle = resolved.title;
+  let tripTitle = resolved.title;
   const tripDestination = resolved.destination || resolvedDestination.destination || '';
+  if (!tripTitle && span?.badge) {
+    const titleDestination = tripDestination || extractedDestination || priorDestination;
+    if (titleDestination) {
+      tripTitle = cleanText(`${titleDestination} ${span.badge}`, 180);
+    }
+  }
   const missingTitle = tripTitle ? null : resolved.titleError;
   const dated = span?.start ? 'yes' : '';
   await db`

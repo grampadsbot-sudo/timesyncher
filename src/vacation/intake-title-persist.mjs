@@ -1,6 +1,6 @@
 import { cleanText } from './http.mjs';
 import { isPlaceholderTripRecord } from './owner-shell-trip.mjs';
-import { resolveIntakePlace } from './trip-intake-classify.mjs';
+import { resolveIntakePlace } from './trip-intake-resolve-place.mjs';
 
 export async function applyIntakeExtractedTripTitle(db, tripId, {
   extractedDestination = '',

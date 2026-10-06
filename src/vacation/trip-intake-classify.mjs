@@ -13,6 +13,7 @@ import {
 } from './place-search-category-keys.mjs';
 import { intakePlaceSearchTargetKindError, normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { tripIntakeExtractionJsonSchema } from './trip-intake-extraction-schema.mjs';
+import { intakeJobFieldsFromSavedTrip } from './trip-intake-job-saved-trip.mjs';
 
 export { intakeThingHasProperName } from './intake-thing-name.mjs';
 
@@ -267,13 +268,28 @@ export function mergeWantedThings(things, extracted) {
   return next;
 }
 
-export function tripIntakeJobFields({ requestText, receivedAt, classification, firstIntake, jobKind }) {
+export function tripIntakeJobFields({
+  requestText,
+  receivedAt,
+  classification,
+  firstIntake,
+  jobKind,
+  savedTripTitle = '',
+  savedTripDestination = '',
+} = {}) {
   const ok = classification?.ok === true;
   const intake = ok && classification.intake === true;
   const wantedThings = ok ? cleanThings(classification.things) : [];
   const roster = ok ? cleanRoster(classification.roster) : [];
-  const destination = ok ? clean(classification.destination, 180) : '';
-  const title = ok ? clean(classification.title, 180) : '';
+  let destination = ok ? clean(classification.destination, 180) : '';
+  let title = ok ? clean(classification.title, 180) : '';
+  ({ title, destination } = intakeJobFieldsFromSavedTrip({
+    ok,
+    title,
+    destination,
+    savedTripTitle,
+    savedTripDestination,
+  }));
   const hasDates = ok && classification.hasDates === true;
   const startDate = ok ? isoDay(classification.startDate) : '';
   const endDate = ok ? isoDay(classification.endDate) : '';
@@ -428,63 +444,4 @@ export async function classifyTripIntake({
   }
 }
 
-export async function searchIntakePlace({ destination = '', title = '', query = '' } = {}) {
-  const placeQuery = clean(query || destination || title, 180);
-  if (!placeQuery) return { ok: false, error: 'trip place was not in the extraction' };
-  try {
-    const { runPublicResearch } = await import('../../scripts/vacation-public-research-worker.mjs');
-    const result = await runPublicResearch({
-      artifacts: { destination: placeQuery, requestText: placeQuery },
-    });
-    if (!Number(result?.sourceBackedCandidateCount)) {
-      return { ok: false, error: clean(result?.note || result?.status || 'live search returned no place', 300) };
-    }
-    return { ok: true, error: null };
-  } catch (error) {
-    return { ok: false, error: clean(error?.message || error, 300) || 'live search failed' };
-  }
-}
-
-export async function resolveIntakePlace({
-  destination = '',
-  title = '',
-  destinationError = null,
-  titleError = null,
-  searchImpl = searchIntakePlace,
-} = {}) {
-  const namedDestination = clean(destination, 180);
-  const namedTitle = clean(title, 180);
-  const query = namedDestination || namedTitle;
-  if (!query) {
-    return {
-      destination: '',
-      title: '',
-      destinationError: destinationError || 'trip place was not in the extraction',
-      titleError: titleError || 'trip title was not in the extraction',
-    };
-  }
-  if (namedDestination && namedTitle && !destinationError && !titleError) {
-    return {
-      destination: namedDestination,
-      title: namedTitle,
-      destinationError: null,
-      titleError: null,
-    };
-  }
-  let found;
-  try {
-    found = await searchImpl({ destination: namedDestination, title: namedTitle, query });
-  } catch (error) {
-    found = { ok: false, error: error?.message || error };
-  }
-  if (!found || found.ok !== true) {
-    const error = clean(found?.error || 'live search returned no place', 300);
-    return { destination: '', title: '', destinationError: error, titleError: error };
-  }
-  return {
-    destination: namedDestination,
-    title: namedTitle,
-    destinationError: namedDestination ? null : (destinationError || 'trip place was not in the extraction'),
-    titleError: namedTitle ? null : (titleError || 'trip title was not in the extraction'),
-  };
-}
+export { resolveIntakePlace, searchIntakePlace } from './trip-intake-resolve-place.mjs';

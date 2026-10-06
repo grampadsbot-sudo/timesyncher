@@ -162,6 +162,19 @@ assert.equal(notFirst.destinationError, 'trip place was not in the extraction');
 assert.equal(notFirst.titleError, 'trip title was not in the extraction');
 assert.equal(notFirst.intakeError, null);
 
+const savedTitleFields = tripIntakeJobFields({
+  requestText: 'What hotel are we at?',
+  receivedAt: '2026-09-27T12:05:00.000Z',
+  classification: followUp,
+  firstIntake: false,
+  jobKind: 'trip_intake',
+  savedTripTitle: 'Maui Mar 10–17 2027',
+  savedTripDestination: 'Maui',
+});
+assert.equal(savedTitleFields.title, 'Maui Mar 10–17 2027');
+assert.equal(savedTitleFields.titleError, null);
+assert.equal(savedTitleFields.destination, 'Maui');
+
 const failed = await classifyTripIntake({
   text: lisbon,
   env,
