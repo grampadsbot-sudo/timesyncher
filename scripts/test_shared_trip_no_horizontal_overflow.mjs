@@ -166,6 +166,10 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 250));
       const measure = await page.evaluate(overflowProbe);
       if (measure.scrollWidth > measure.innerWidth) failures.push({ width, label, ...measure });
+      if (label === 'Hotels') {
+        await page.evaluate(() => document.querySelector('[data-ts-list-sort-header] button:last-child')?.click());
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
       if (tabShotRoot) {
         await page.screenshot({ path: path.join(tabShotRoot, `${fileStem}-${width}.png`) });
       }

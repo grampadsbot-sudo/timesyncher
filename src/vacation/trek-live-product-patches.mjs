@@ -291,7 +291,7 @@ const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:
 const LIST_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const LIST_SUMMARY_PATCH = 'Rn=Bs(rr(G)||Co(G)||Fl(G)||vr(G)||Zr(G))';
 const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}' ;
-const LIST_SORT_PATCH = `${listColumnSortBundleExpr()},Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"price",dir:"asc"},onSort:ui,pillStyle:Hi})`;
+const LIST_SORT_PATCH = `${listColumnSortBundleExpr()},Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"name",dir:"asc"},onSort:ui})`;
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
