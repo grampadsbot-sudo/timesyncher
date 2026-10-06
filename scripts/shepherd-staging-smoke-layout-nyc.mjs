@@ -9,12 +9,14 @@ import { LOGO_TAB_SETTLE_MS, stitchLogoChipCropsPng } from './shepherd-staging-s
 import { LAYOUT_VIEWPORTS } from './shepherd-staging-smoke-layout-eval.mjs';
 import { EVALUATE_THING_CARD_TAB_DOM_SOURCE } from './shepherd-staging-smoke-thing-card-dom.mjs';
 import { playwrightEvaluateReturnScript } from './shepherd-staging-smoke-page-eval.mjs';
+import { LAYOUT_NYC_SHARED_HEADER_PROBE_SOURCE } from './shepherd-staging-smoke-layout-nyc-header.mjs';
 
 export const LAYOUT_NYC_TAB_ORDER = [
   'day-by-day', 'flights', 'hotels', 'cars', 'restaurants', 'stores', 'events', 'budget',
 ];
 
 const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
+  ${LAYOUT_NYC_SHARED_HEADER_PROBE_SOURCE}
   const __card = ${EVALUATE_THING_CARD_TAB_DOM_SOURCE};
   const slug = (raw) => {
     const n = String(raw || '').replace(/\\p{Extended_Pictographic}/gu, '').replace(/\\s+/g, ' ').trim().toLowerCase().replace(/day by day/, 'day-by-day');
@@ -42,8 +44,7 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
         const s = slug([node.textContent, node.getAttribute('title'), node.getAttribute('data-tab')].join(' '));
         if (s && !tabOrder.includes(s)) tabOrder.push(s);
       }
-      const headerEl = document.querySelector('[data-ts-shared-header],[data-shared-trip-header],header h1,.shared-trip h1');
-      const hr = headerEl?.getBoundingClientRect();
+      const headerProbe = __layoutNycProbeSharedHeader();
       let rowsNameLeft = true;
       for (const li of rowEls) {
         const strong = li.querySelector('strong');
@@ -60,7 +61,7 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
         filterTags: card.filterTags || [],
         rowCount: card.rows?.length || 0,
         rowsNameLeft,
-        header: { present: Boolean(hr && hr.height > 4 && hr.width > 20) },
+        header: headerProbe,
         horizontalOverflow: document.documentElement.scrollWidth > vw + 1,
         scrollWidth: document.documentElement.scrollWidth,
         innerWidth: vw,
