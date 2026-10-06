@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { productThingCategory } from '../src/vacation/keepsake-product-overrides.mjs';
 import { buildSharedLiveTabLists } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { applyProductKeepsakeOverrides } from '../src/vacation/keepsake-product-overrides.mjs';
-import { resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchSharedTripOeListRows } from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
 import { LIST_LOGO_PATCH } from '../src/vacation/trek-live-product-patches.mjs';
 
@@ -26,7 +26,7 @@ const carLogo = resolveThingLogoUrl(
   { name: 'Hertz', category_name: 'Car', url: 'https://hertz.com/' },
   { category: 'car' },
 );
-assert.equal(carLogo, 'https://hertz.com/favicon.ico');
+assert.equal(carLogo, NAMED_THING_LOGOS.hertz);
 
 const shared = applyProductKeepsakeOverrides({
   places: [{
@@ -55,6 +55,7 @@ assert.match(
   'served bundle keeps TREK _l logo chain; favicon backfill is via resolveThingLogoUrl',
 );
 assert.match(bundle, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
+assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /data-shared-live-tab":"hotels"/);
 assert.match(bundle, /data-shared-live-tab":"cars"/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);

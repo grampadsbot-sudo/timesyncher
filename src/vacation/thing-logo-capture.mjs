@@ -1,6 +1,25 @@
 import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
-export const NAMED_THING_LOGOS = {};
+/** Known rental/hotel brand favicons when trip rows lack source URLs. */
+export const NAMED_THING_LOGOS = {
+  hertz: 'https://www.hertz.com/favicon.ico',
+  alamo: 'https://www.alamo.com/favicon.ico',
+  avis: 'https://www.avis.com/favicon.ico',
+  enterprise: 'https://www.enterprise.com/favicon.ico',
+  budget: 'https://www.budget.com/favicon.ico',
+  national: 'https://www.nationalcar.com/favicon.ico',
+  hyatt: 'https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico',
+};
+
+const BRAND_LOGO_RULES = [
+  [/\bhertz\b/i, NAMED_THING_LOGOS.hertz],
+  [/\balamo\b/i, NAMED_THING_LOGOS.alamo],
+  [/\bavis\b/i, NAMED_THING_LOGOS.avis],
+  [/\benterprise\b/i, NAMED_THING_LOGOS.enterprise],
+  [/\bbudget\b/i, NAMED_THING_LOGOS.budget],
+  [/\bnational\b/i, NAMED_THING_LOGOS.national],
+  [/\bhyatt\b/i, NAMED_THING_LOGOS.hyatt],
+];
 
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
 const PLACEHOLDER_LOGO_RE = /admit\s*one|pDe|family-event-placeholder|data:image\/svg\+xml/i;
@@ -27,6 +46,34 @@ function sourceRecord(thing = {}, override = {}) {
   const fromThing = thing.source && typeof thing.source === 'object' ? thing.source : {};
   const fromOverride = override.source && typeof override.source === 'object' ? override.source : {};
   return { ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
+}
+
+function thumbnailFromSource(source = {}) {
+  const thumb = source?.thumbnail;
+  if (thumb && typeof thumb === 'object') {
+    const src = text(thumb.original || thumb.src);
+    if (src) return usableLogo(src);
+  }
+  const pictures = source?.pictures?.results;
+  if (Array.isArray(pictures)) {
+    for (const row of pictures) {
+      const src = text(row?.original || row?.src);
+      if (src) {
+        const logo = usableLogo(src);
+        if (logo) return logo;
+      }
+    }
+  }
+  return '';
+}
+
+function brandLogoFromName(name = '') {
+  const label = text(name);
+  if (!label) return '';
+  for (const [pattern, url] of BRAND_LOGO_RULES) {
+    if (pattern.test(label)) return url;
+  }
+  return '';
 }
 
 function pageUrlForLogo(thing = {}, override = {}) {
@@ -112,10 +159,26 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   ];
   for (const value of explicit) {
     const logo = usableLogo(value);
-    if (logo) return logo;
+    if (logo) {
+      if (/hyatt\.com\/favicon\.ico/i.test(logo)) {
+        const thumb = thumbnailFromSource(source);
+        if (thumb) return thumb;
+        const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
+        if (hyattIcon) return hyattIcon;
+      }
+      return logo;
+    }
   }
+  const thumb = thumbnailFromSource(source);
+  if (thumb) return thumb;
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (named) return named;
   const page = httpUrl(pageUrlForLogo(thing, override));
   if (!page) return '';
+  if (/\.hyatt\.com$/i.test(page.hostname)) {
+    const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
+    if (hyattIcon) return hyattIcon;
+  }
   return `${page.origin}/favicon.ico`;
 }
 
@@ -151,8 +214,10 @@ export function applyCapturedLogos(shared = {}) {
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
     const logoUrl = captureThingLogo(place, override);
-    override.logoUrl = logoUrl;
-    if (!logoUrl) {
+    if (logoUrl) {
+      override.logoUrl = logoUrl;
+    } else if (!text(override.logoUrl)) {
+      override.logoUrl = '';
       const reason = logoCaptureMissReason(place, override);
       if (reason) override.logoCaptureReason = reason;
     }
