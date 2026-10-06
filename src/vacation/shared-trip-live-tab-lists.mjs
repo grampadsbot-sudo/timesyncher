@@ -97,17 +97,56 @@ function logoChipHtml({ src, category }) {
   return `<span data-ts-logo-chip="1" data-ts-fallback-emoji="${emojiAttr}" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${src}" alt="" style="${LOGO_IMG_STYLE}" onerror="${onerror}" onload="${onload}" /></span>`;
 }
 
+function oneLine(value) {
+  return text(value).replace(/\s+/g, ' ');
+}
+
+function reservationSummaryLine(place = {}, override = {}) {
+  const source = place.sourceRecord || place.metadata?.sourceRecord || place.source_record || {};
+  const postal = source.postal_address || source.postalAddress || {};
+  const location = place.location;
+  const candidates = [
+    override.summary,
+    place.summary,
+    source.description,
+    place.description,
+    place.notes,
+    place.address,
+    override.address,
+    postal.displayAddress,
+    typeof location === 'string' ? location : location?.address,
+    place.website,
+    place.url,
+    source.url,
+    override.sourceUrl,
+  ];
+  const name = oneLine(place.name || place.title);
+  for (const value of candidates) {
+    const line = oneLine(value);
+    if (!line || /^considering$/i.test(line)) continue;
+    if (name && line.toLowerCase() === name.toLowerCase()) continue;
+    return line;
+  }
+  const label = name || text(place.id) || 'thing';
+  console.error(JSON.stringify({ event: 'thing_card_summary_missing', placeName: label }));
+  return `thing_card_summary_missing:${label}`;
+}
+
 function listRowHtml({ place, override, tab, category, onLogoMissing }) {
   const logoUrl = resolveThingLogoUrl(place, override);
   const name = escapeHtml(place.name || place.title || 'Place');
+  const summary = escapeHtml(reservationSummaryLine(place, override));
   const tabAttr = escapeHtml(tab);
+  const summaryHtml = `<span data-list-summary="1" style="display:block;font-size:12px;font-weight:400;line-height:1.35;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${summary}</span>`;
+  const textHtml = `<span style="min-width:0;overflow:hidden"><strong>${name}</strong>${summaryHtml}</span>`;
+  const rowStyle = 'display:flex;align-items:center;gap:8px;min-width:0;max-width:100%';
   if (!logoUrl) {
     onLogoMissing?.(place);
-    return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="display:flex;align-items:center;gap:8px"><span><strong>${name}</strong></span></li>`;
+    return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="${rowStyle}">${textHtml}</li>`;
   }
   const src = escapeHtml(logoUrl);
   const chip = logoChipHtml({ src, category });
-  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="display:flex;align-items:center;gap:8px">${chip}<span><strong>${name}</strong></span></li>`;
+  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="${rowStyle}">${chip}${textHtml}</li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {
