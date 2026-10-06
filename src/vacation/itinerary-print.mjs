@@ -54,12 +54,7 @@ function itineraryRowMediaInline(item, type) {
     return !/bind[- ]?proof|neon file bind proof/i.test([Oo.filename, Oo.original_name, Oo.originalName, Oo.caption, Oo.url, Oo.public_url, Oo.id].join(' '));
   });
   const photos = rows.filter((Oo) => Oo.kind !== 'video').map(Ba).join('');
-  const videos = rows.filter((Oo) => Oo.kind === 'video').map((Oo) => {
-    const fig = Ba(Oo);
-    return fig.includes('</figure>')
-      ? fig.replace('</figure>', '<figcaption style="font-size:10px;color:#64748b;margin-top:4px;text-align:center">Scan to play video</figcaption></figure>')
-      : fig;
-  }).join('');
+  const videos = rows.filter((Oo) => Oo.kind === 'video').map(Ba).join('');
   if (!photos && !videos) return '';
   return `<div data-itinerary-row-media="1">${photos}${videos}</div>`;
 }
