@@ -59,15 +59,7 @@ export function evaluateLayoutRules(pageKind) {
         documentElement: { scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth },
       });
     }
-    const overflowEls = [];
-    for (const el of document.querySelectorAll('body *')) {
-      const st = getComputedStyle(el);
-      if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
-      const r = el.getBoundingClientRect();
-      if (r.width < 1 || r.height < 1) continue;
-      if (r.right > vw + 1) overflowEls.push({ tag: el.tagName, id: el.id || '', cls: String(el.className || '').slice(0, 40), rect: rectObj(el) });
-      if (overflowEls.length >= 8) break;
-    }
+    const overflowEls = tsSampleUnclippedHorizontalOverflow(vw, getComputedStyle, rectObj);
     if (overflowEls.length) {
       push('body *', 'horizontal_overflow', `visible elements exceed viewport width (${overflowEls.length} sampled)`, { samples: overflowEls });
     }
