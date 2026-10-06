@@ -6,10 +6,12 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { buildSharedLiveTabLists } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { applyProductKeepsakeOverrides } from '../src/vacation/keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
+import { patchSharedTripOeListRows } from '../src/vacation/shared-trip-oe-list-row-patch.mjs';
 import { LIST_LOGO_PATCH } from '../src/vacation/trek-live-product-patches.mjs';
 
 assert.match(LIST_LOGO_PATCH, /new URL\(pg\)/);
 assert.match(LIST_LOGO_PATCH, /favicon\.ico/);
+assert.equal(typeof patchSharedTripOeListRows, 'function');
 
 const storeCarPlace = {
   id: 1,
@@ -52,5 +54,27 @@ assert.match(
   /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/,
   'served bundle keeps TREK _l logo chain; favicon backfill is via resolveThingLogoUrl',
 );
+assert.match(bundle, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
+assert.match(bundle, /data-shared-live-tab":"hotels"/);
+assert.match(bundle, /data-shared-live-tab":"cars"/);
+assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
+
+const fixture = JSON.parse(
+  readFileSync(new URL('./fixtures/intake-435a4d049b1d.json', import.meta.url), 'utf8'),
+);
+const gateBPlaces = (fixture.places || []).length;
+assert.ok(gateBPlaces > 0, 'Gate B fixture must include places');
+const gateBHotels = buildSharedLiveTabLists(
+  applyProductKeepsakeOverrides({ places: fixture.places, thingOverrides: fixture.thingOverrides || {} }),
+).hotels;
+const gateBCars = buildSharedLiveTabLists(
+  applyProductKeepsakeOverrides({ places: fixture.places, thingOverrides: fixture.thingOverrides || {} }),
+).cars;
+assert.ok(gateBHotels.length > 0, 'Gate B fixture must produce hotel list rows offline');
+assert.ok(gateBCars.length > 0, 'Gate B fixture must produce car list rows offline');
+for (const row of [...gateBHotels, ...gateBCars]) {
+  assert.match(row, /data-list-row="1"/);
+  assert.match(row, /data-ts-logo-chip="1"/);
+}
 
 console.log('gate b live tab logo row tests passed');

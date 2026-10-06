@@ -1,3 +1,4 @@
+import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 
@@ -158,6 +159,15 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
+  if (js.includes(THING_LOGO_CHIP_DC_PADDING_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_PADDING_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_V1_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
+    throw new Error('trek bundle dc() logo chip patch did not apply');
+  }
   if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
@@ -450,6 +460,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
+  }
+  js = patchSharedTripOeListRows(js);
+  if (served) {
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
+      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    }
+    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
+      throw new Error('served shared Oe() rows missing Gate B list row markers');
+    }
   }
   return js;
 }

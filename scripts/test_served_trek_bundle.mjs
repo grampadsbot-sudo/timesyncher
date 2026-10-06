@@ -46,10 +46,12 @@ const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', i
 assert.equal(rendered, committed);
 
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
-assert.match(rendered, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/);
+assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
+assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
 assert.match(rendered, /i==="car"\?"🚗"/);
-assert.match(rendered, /position:"absolute",inset:3,width:Re-6,height:Re-6,objectFit:"contain",borderRadius:6,background:"white"/);
+assert.match(rendered, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
+assert.doesNotMatch(rendered, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/);
 assert.doesNotMatch(rendered, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
 
 console.log('served trek bundle matches the patcher');
