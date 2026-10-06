@@ -46,6 +46,21 @@ function repoRootDir() {
   return fileURLToPath(new URL('..', import.meta.url));
 }
 
+/** Vercel decrypt occasionally returns a JSON-encoded string (extra quotes). */
+export function unwrapVercelEnvString(value) {
+  let trimmed = String(value ?? '').trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === 'string') trimmed = parsed.trim();
+    } catch (parseError) {
+      if (parseError instanceof Error) trimmed = trimmed.slice(1, -1).trim();
+    }
+  }
+  return trimmed;
+}
+
 function parseEnvFileValue(key, filePath) {
   if (!existsSync(filePath)) return '';
   const text = readFileSync(filePath, 'utf8');
@@ -60,7 +75,7 @@ function parseEnvFileValue(key, filePath) {
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
-    return value.trim();
+    return unwrapVercelEnvString(value.trim());
   }
   return '';
 }
@@ -118,7 +133,7 @@ async function fetchV1EnvValue(envId, { env = process.env, fetchImpl = fetch } =
   );
   if (!res.ok) throw new Error(`Failed to load Vercel env ${envId}: HTTP ${res.status}`);
   const payload = await res.json();
-  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
+  const value = unwrapVercelEnvString(typeof payload?.value === 'string' ? payload.value : '');
   if (!value) throw new Error(`Empty Vercel env ${payload?.key || envId}.`);
   return { key: payload.key, value };
 }
