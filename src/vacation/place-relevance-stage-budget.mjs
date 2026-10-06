@@ -56,15 +56,32 @@ export function jevRelevanceJudgeConcurrency(env = process.env) {
   });
 }
 
+function rowCategoryKey(row) {
+  return String(row?.category || '').trim().toLowerCase();
+}
+
 export function capRowsForRelevanceJudge(rows = [], category = '') {
   const list = Array.isArray(rows) ? rows : [];
-  const cap = firstPassSearchLimit(category);
-  const toJudge = list.slice(0, cap);
+  const judgedPerCategory = new Map();
+  const toJudge = [];
+  let skipped = 0;
+  for (const row of list) {
+    const key = rowCategoryKey(row);
+    const cap = firstPassSearchLimit(key || category);
+    const judged = judgedPerCategory.get(key) ?? 0;
+    if (judged < cap) {
+      toJudge.push(row);
+      judgedPerCategory.set(key, judged + 1);
+      continue;
+    }
+    skipped += 1;
+  }
+  const judgedCap = firstPassSearchLimit(String(category || '').trim().toLowerCase());
   return {
     toJudge,
-    judgedCap: cap,
+    judgedCap,
     totalRows: list.length,
-    skipped: Math.max(0, list.length - toJudge.length),
+    skipped,
   };
 }
 
