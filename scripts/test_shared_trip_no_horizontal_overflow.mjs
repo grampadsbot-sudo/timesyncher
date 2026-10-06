@@ -166,10 +166,6 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 250));
       const measure = await page.evaluate(overflowProbe);
       if (measure.scrollWidth > measure.innerWidth) failures.push({ width, label, ...measure });
-      if (label === 'Hotels') {
-        await page.evaluate(() => document.querySelector('[data-ts-list-sort-header] button:last-child')?.click());
-        await new Promise((resolve) => setTimeout(resolve, 80));
-      }
       if (tabShotRoot) {
         await page.screenshot({ path: path.join(tabShotRoot, `${fileStem}-${width}.png`) });
       }
@@ -199,6 +195,7 @@ try {
           };
         });
         assert.deepEqual(sort.labels.map((text) => text.replace(/[↑↓]/g, '').trim()), ['Name', 'Price']);
+        if (label === 'Hotels') assert.deepEqual(sort.labels, ['Name', 'Price ↑']);
         assert.equal(sort.pills, 0, `${label} still shows Name/Price pills`);
         assert.equal(sort.dayMount, false, 'day view was replaced');
         if (label === 'Hotels') assert.ok(sort.hotels >= 1, 'Hotels tab is missing thing cards');

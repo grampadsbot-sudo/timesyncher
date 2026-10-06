@@ -49,7 +49,7 @@ const sortExpr = listColumnSortBundleExpr();
 assert.equal(bundle.includes(sortExpr), true);
 assert.doesNotMatch(sortExpr, /pills|pillStyle|borderRadius:999/);
 const ul = { children: [], appendChild(node) { const i = this.children.indexOf(node); if (i >= 0) this.children.splice(i, 1); this.children.push(node); } };
-const row = (name, price) => ({ textContent: `${name} ${price}`, querySelector: (sel) => (sel === 'strong' ? { textContent: name } : null) });
+const row = (name, price) => ({ textContent: `${name} ${price}`, querySelector: (sel) => (String(sel).includes('strong') ? { textContent: name } : null) });
 const fill = () => { ul.children = [row('Zeta', '$20'), row('Alpha', '$5'), row('Mid', '$100')]; };
 globalThis.document = { querySelector: () => ul };
 globalThis.requestAnimationFrame = (fn) => { fn(); return 0; };
