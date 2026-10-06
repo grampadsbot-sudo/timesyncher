@@ -70,16 +70,16 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
 const LAYOUT_NYC_DOM_PREFIX = `const __layoutNycDom = ${EVALUATE_LAYOUT_NYC_DOM_SOURCE};`;
 const LIST_SORT_TABS = new Set(['flights', 'hotels', 'cars']);
 
-export const LAYOUT_NYC_REFERENCE_DEFECTS = {
+const LAYOUT_NYC_REFERENCE_DEFECTS = {
   hotels: { '390': [{ code: 'horizontal_overflow', detail: 'NYC Hotels rows clipped on the right at 390px' }] },
 };
 
-export function layoutNycReferenceDir(env = process.env) {
+function layoutNycReferenceDir(env = process.env) {
   const raw = String(env.NYC_REFERENCE_DIR || env.TSV_NYC_REFERENCE_DIR || '').trim();
   return raw && existsSync(raw) ? raw : null;
 }
 
-export function layoutNycReferenceImagePath(dir, tab, viewportLabel) {
+function layoutNycReferenceImagePath(dir, tab, viewportLabel) {
   const base = String(tab || '').toLowerCase();
   const vp = String(viewportLabel || '');
   for (const p of [join(dir, `${base}-${vp}.png`), join(dir, 'nyc-all', `${base}-${vp}.png`)]) {
@@ -189,7 +189,7 @@ DOM: pills=${JSON.stringify(stagingDom?.sortPills || [])} labels=${JSON.stringif
   }
 }
 
-export async function runLayoutNycForViewport({ page, viewport, artifactPath, setStage, refDir, apiKey = process.env.OPENROUTER_API_KEY }) {
+async function runLayoutNycForViewport({ page, viewport, artifactPath, setStage, refDir, apiKey = process.env.OPENROUTER_API_KEY }) {
   const missing = gradeLayoutNycReferenceMissing(refDir);
   if (missing) return { pass: false, viewport: viewport.label, probes: [], ...missing };
   await page.setViewport({ width: viewport.width, height: viewport.height });
