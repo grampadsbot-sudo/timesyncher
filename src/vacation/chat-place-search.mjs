@@ -161,6 +161,7 @@ export async function runCustomerChatPlaceSearch({
         reason: 'relevance_judge_failed',
         ...(error?.judgeTimedOut === true ? { judgeTimedOut: true } : {}),
         ...(Number.isFinite(Number(error?.judgeTimeoutMs)) ? { judgeTimeoutMs: Number(error.judgeTimeoutMs) } : {}),
+        ...(Number.isFinite(Number(error?.judgeStageBudgetMs)) ? { judgeStageBudgetMs: Number(error.judgeStageBudgetMs) } : {}),
       } : {}),
       ...(code === 'all_providers_failed' ? { reason: 'all_providers_failed' } : {}),
       ...(code === 'geocode_failed' ? { reason: 'geocode_failed' } : {}),

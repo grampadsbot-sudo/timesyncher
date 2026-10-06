@@ -1,12 +1,19 @@
-import { jevRelevanceJudgeConcurrency, jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
+import { jevRelevanceMinimum } from './keepsake-list-minimums.mjs';
 import { jevRelevanceScore } from './place-relevance-judge.mjs';
+import {
+  capRowsForRelevanceJudge,
+  jevRelevanceJudgeConcurrency,
+  jevRelevanceJudgeTimeoutMs,
+  jevRelevanceStageBudgetMs,
+  throwRelevanceStageBudgetExceeded,
+} from './place-relevance-stage-budget.mjs';
 
 function relevanceRejectionReason(jevScore, minimum) {
   const score = Number(jevScore);
   return `relevance_below_minimum_${score.toFixed(2)}`;
 }
 
-async function scoreRowsWithConcurrency(rows, scoreRow, concurrency) {
+async function scoreRowsWithConcurrency(rows, scoreRow, concurrency, stageGuard) {
   const list = Array.isArray(rows) ? rows : [];
   if (!list.length) return [];
   let cursor = 0;
@@ -16,6 +23,7 @@ async function scoreRowsWithConcurrency(rows, scoreRow, concurrency) {
   async function worker() {
     while (cursor < list.length) {
       if (failure) return;
+      stageGuard?.();
       const index = cursor;
       cursor += 1;
       try {
@@ -35,9 +43,29 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
   const apiKey = requireOpenRouterKey(env);
   const minimum = jevRelevanceMinimum(env);
   const concurrency = jevRelevanceJudgeConcurrency(env);
+  const stageBudgetMs = jevRelevanceStageBudgetMs(env);
+  const perCallTimeoutMs = jevRelevanceJudgeTimeoutMs(env);
+  const stageStarted = Date.now();
   const target = String(relevanceContext.target || '').trim();
   const area = String(relevanceContext.area || relevanceContext.locationText || '').trim();
-  const judged = await scoreRowsWithConcurrency(rows, async (row) => {
+  const category = String(relevanceContext.category || '').trim();
+  const { prior, live, judgedCap, liveTotal } = capRowsForRelevanceJudge(rows, category);
+  let judgedCount = 0;
+  const stageGuard = () => {
+    const elapsedMs = Date.now() - stageStarted;
+    if (elapsedMs > stageBudgetMs) {
+      throwRelevanceStageBudgetExceeded({
+        elapsedMs,
+        budgetMs: stageBudgetMs,
+        judged: judgedCount,
+        remaining: live.length - judgedCount,
+      });
+    }
+  };
+  const judged = await scoreRowsWithConcurrency(live, async (row) => {
+    stageGuard();
+    const remainingMs = stageBudgetMs - (Date.now() - stageStarted);
+    const callTimeoutMs = Math.min(perCallTimeoutMs, Math.max(1, remainingMs));
     const jevScore = await jevRelevanceScore({
       id: row.externalId || row.url || row.title,
       name: row.title,
@@ -47,10 +75,11 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
       description: row.description || '',
       target,
       area,
-    }, { fetchImpl, apiKey, target, area, env });
+    }, { fetchImpl, apiKey, target, area, env, timeoutMs: callTimeoutMs });
+    judgedCount += 1;
     return { row, jevScore: Number(jevScore) };
-  }, concurrency);
-  const scored = [];
+  }, concurrency, stageGuard);
+  const scored = prior.map((row) => ({ ...row, jevScore: 5 }));
   const rejections = [];
   for (const { row, jevScore } of judged) {
     if (jevScore >= minimum) {
@@ -67,5 +96,13 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
       });
     }
   }
-  return { places: scored, rejections };
+  return {
+    places: scored,
+    rejections,
+    relevanceStageMs: Date.now() - stageStarted,
+    relevanceJudgeCalls: judged.length,
+    relevanceJudgeCap: judgedCap,
+    relevanceJudgeSkipped: Math.max(0, liveTotal - live.length),
+    relevanceStageBudgetMs: stageBudgetMs,
+  };
 }

@@ -167,6 +167,8 @@ export function placeSearchTelemetry({
   judgeBodySnippet = null,
   judgeTimedOut = null,
   judgeTimeoutMs = null,
+  judgeStageBudgetMs = null,
+  relevanceStageMs = null,
   providerErrors = null,
   braveLookups = null,
   anchorRadiusPolicy = null,
@@ -215,6 +217,8 @@ export function placeSearchTelemetry({
   if (judgeBodySnippet) telemetry.judgeBodySnippet = String(judgeBodySnippet).trim().slice(0, 240);
   if (judgeTimedOut === true) telemetry.judgeTimedOut = true;
   if (Number.isFinite(Number(judgeTimeoutMs))) telemetry.judgeTimeoutMs = Number(judgeTimeoutMs);
+  if (Number.isFinite(Number(judgeStageBudgetMs))) telemetry.judgeStageBudgetMs = Number(judgeStageBudgetMs);
+  if (Number.isFinite(Number(relevanceStageMs))) telemetry.relevanceStageMs = Number(relevanceStageMs);
   if (Array.isArray(providerErrors) && providerErrors.length) {
     telemetry.providerErrors = providerErrors.slice(0, 10).map((row) => ({
       provider: String(row?.provider || '').trim(),

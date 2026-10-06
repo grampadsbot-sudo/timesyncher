@@ -1,5 +1,5 @@
 import { postJevDecisions } from '../../scripts/vacation-app-reply-rules.mjs';
-import { jevRelevanceJudgeTimeoutMs } from './keepsake-list-minimums.mjs';
+import { jevRelevanceJudgeTimeoutMs } from './place-relevance-stage-budget.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { parseJevRelevanceScoreAnswer } from './place-relevance-score-parse.mjs';
 
@@ -15,14 +15,11 @@ function throwRelevanceJudgeFailed(message, extra = {}) {
 
 function judgeFailureExtra(error, extra = {}) {
   const name = String(error?.name || '').trim();
-  const message = String(error?.message || error || '').trim();
-  const timedOut = name === 'TimeoutError'
-    || name === 'AbortError'
-    || /timed?\s*out|aborted/i.test(message);
+  const timedOut = name === 'TimeoutError' || name === 'AbortError';
   return timedOut ? { judgeTimedOut: true, ...extra } : extra;
 }
 
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '', env = process.env } = {}) {
+export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '', env = process.env, timeoutMs = null } = {}) {
   if (!apiKey || !fetchImpl) {
     throwRelevanceJudgeFailed('Jev relevance judge refused to run. Missing OPENROUTER_API_KEY.');
   }
@@ -58,7 +55,9 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
   };
   let response;
   let responseText = '';
-  const judgeTimeoutMs = jevRelevanceJudgeTimeoutMs(env);
+  const judgeTimeoutMs = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? Number(timeoutMs)
+    : jevRelevanceJudgeTimeoutMs(env);
   try {
     response = await postJevDecisions({
       payload,
