@@ -260,6 +260,57 @@ const harnessAllUnderTwoRows = gradeThingCardHarnessResult({
 });
 assert.ok(harnessAllUnderTwoRows.failures.some((f) => f.detail.includes('>=2 rows')));
 
+const priceNotExercisedGate = {
+  status: 'ok',
+  rowCount: 2,
+  rowSortExercised: true,
+  priceSortExercised: false,
+  priceStatus: 'price_not_exercised',
+};
+const harnessPriceNotExercised = gradeThingCardHarnessResult({
+  tabs: ['cars', 'hotels'],
+  probes: [
+    {
+      tab: 'hotels',
+      viewport: '390',
+      rowCount: 1,
+      pass: true,
+      failures: [],
+      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+    },
+    {
+      tab: 'cars',
+      viewport: '390',
+      rowCount: 2,
+      pass: true,
+      failures: [],
+      sortByLabelGate: priceNotExercisedGate,
+    },
+    {
+      tab: 'hotels',
+      viewport: '1280',
+      rowCount: 1,
+      pass: true,
+      failures: [],
+      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+    },
+    {
+      tab: 'cars',
+      viewport: '1280',
+      rowCount: 2,
+      pass: true,
+      failures: [],
+      sortByLabelGate: priceNotExercisedGate,
+    },
+  ],
+});
+assert.equal(harnessPriceNotExercised.pass, false);
+assert.ok(
+  harnessPriceNotExercised.failures.some(
+    (f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('priced rows'),
+  ),
+);
+
 assert.deepEqual(
   gradeThingCardSortByLabelHarness([
     { viewport: '390', rowCount: 2, sortByLabelGate: carsSortGate, pass: true, failures: [] },
