@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: NYC fixture Cars tab — no horizontal overflow; Timeline checkbox visible at 390/1280. */
+/** PR #225: NYC served page — no horizontal overflow on every tab @ 390; mobile icon-only inactive tabs. */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -13,7 +13,16 @@ import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-sh
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const widths = [390, 1280];
+const tabs = [
+  'Day-by-Day',
+  'Flights',
+  'Hotels',
+  'Cars',
+  'Restaurants',
+  'Stores',
+  'The Rest',
+  'Budget',
+];
 
 function loadPuppeteer() {
   try {
@@ -29,7 +38,7 @@ function send(res, status, body, type) {
   res.end(buf);
 }
 
-async function startServer({ html, js, css, tripPayload, logo }) {
+async function startServer({ html, js, css, tripPayload }) {
   const server = createServer(async (req, res) => {
     const pathname = decodeURIComponent(new URL(req.url || '/', 'http://127.0.0.1').pathname);
     if (pathname === '/assets/index-BKun7ofk.js') return send(res, 200, js, 'text/javascript; charset=utf-8');
@@ -73,8 +82,7 @@ const [html, css, js] = await Promise.all([
   readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 'utf8'),
   readFile(path.join(root, 'public/assets/index-BKun7ofk.js'), 'utf8'),
 ]);
-const logo = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-const app = await startServer({ html, js, css, tripPayload, logo });
+const app = await startServer({ html, js, css, tripPayload });
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
@@ -84,23 +92,27 @@ const browser = await puppeteer.launch({
 const failures = [];
 try {
   const page = await browser.newPage();
-  for (const width of widths) {
-    await page.setViewport({ width, height: width === 390 ? 844 : 800, deviceScaleFactor: 1 });
-    await page.goto(`${app.origin}/shared/${NYC_PR225_SLUG}/`, { waitUntil: 'domcontentloaded', timeout: 90000 });
-    await page.waitForFunction(() => /Day-by-Day/i.test(document.body?.innerText || ''), { timeout: 90000 });
-    await page.evaluate(() => {
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+  await page.goto(`${app.origin}/shared/${NYC_PR225_SLUG}/`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+  await page.waitForFunction(() => /Day-by-Day/i.test(document.body?.innerText || ''), { timeout: 90000 });
+  for (const label of tabs) {
+    const clicked = await page.evaluate((want) => {
       for (const btn of document.querySelectorAll('button,[role="tab"]')) {
-        if (btn.getAttribute('aria-label') === 'Cars') btn.click();
+        if (btn.getAttribute('aria-label') === want) {
+          btn.click();
+          return true;
+        }
       }
-    });
-    await page.waitForFunction(() => /Priceline opaque/i.test(document.body?.innerText || ''), { timeout: 30000 });
-    await page.waitForFunction(() => document.querySelector('input[type="checkbox"]'), { timeout: 30000 });
+      return false;
+    }, label);
+    assert.equal(clicked, true, `missing tab ${label}`);
     await page.evaluate(() => {
       window.scrollTo(0, 0);
+      document.scrollingElement.scrollLeft = 0;
       document.documentElement.scrollLeft = 0;
       document.body.scrollLeft = 0;
     });
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 400));
     const measure = await page.evaluate(() => {
       const scrollEl = document.scrollingElement;
       return {
@@ -108,20 +120,23 @@ try {
         innerWidth: window.innerWidth,
       };
     });
-    if (measure.scrollWidth > measure.innerWidth) failures.push({ width, ...measure });
-    const box = await page.evaluate(() => {
-      const input = [...document.querySelectorAll('input[type="checkbox"]')].find((el) => /timeline/i.test(el.parentElement?.textContent || ''));
-      if (!input) return null;
-      const r = input.getBoundingClientRect();
-      return { left: r.left, right: r.right, innerWidth: window.innerWidth };
-    });
-    assert.ok(box, `PR225 Cars timeline checkbox missing at ${width}px`);
-    assert.ok(box.left >= -1 && box.right <= box.innerWidth + 1, `PR225 Cars timeline checkbox clipped at ${width}px`);
+    if (measure.scrollWidth > measure.innerWidth) failures.push({ label, ...measure });
   }
+  const mobileTabs = await page.evaluate(() => {
+    const flights = [...document.querySelectorAll('button[aria-label="Flights"]')][0];
+    const hotels = [...document.querySelectorAll('button[aria-label="Hotels"]')][0];
+    const label = (btn) => btn && [...btn.children].find((el) => el.tagName === 'SPAN' && el.textContent?.trim() === btn.getAttribute('aria-label'));
+    return {
+      flightsLabelDisplay: label(flights) ? getComputedStyle(label(flights)).display : null,
+      hotelsLabelDisplay: label(hotels) ? getComputedStyle(label(hotels)).display : null,
+    };
+  });
+  assert.equal(mobileTabs.flightsLabelDisplay, 'none', 'inactive Flights tab must hide label at 390');
+  assert.equal(mobileTabs.hotelsLabelDisplay, 'none', 'inactive Hotels tab must hide label at 390');
   await page.close();
 } finally {
   await app.close();
   await browser.close();
 }
 assert.deepEqual(failures, []);
-console.log('PR225 NYC Cars tab has no horizontal overflow at 390 and 1280');
+console.log('PR225 NYC served tabs: scrollWidth <= 390 on every tab; mobile icon-only inactive labels');

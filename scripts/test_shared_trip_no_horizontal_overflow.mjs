@@ -109,12 +109,17 @@ async function startServer({ html, js, css, tripPayload, logo }) {
 }
 
 function overflowProbe() {
+  const scrollEl = document.scrollingElement;
   const root = document.documentElement;
   const buttons = [...document.querySelectorAll('button')].map((btn) => {
     const box = btn.getBoundingClientRect();
     return { label: btn.getAttribute('aria-label') || '', right: Math.round(box.right) };
   }).filter((btn) => btn.right > window.innerWidth + 1);
-  return { scrollWidth: root.scrollWidth, innerWidth: window.innerWidth, buttons };
+  return {
+    scrollWidth: scrollEl?.scrollWidth ?? root.scrollWidth,
+    innerWidth: window.innerWidth,
+    buttons,
+  };
 }
 
 const fixture = JSON.parse(await readFile(path.join(root, 'scripts/fixtures/intake-435a4d049b1d.json'), 'utf8'));
@@ -210,5 +215,6 @@ if (failures.length) console.error(JSON.stringify(failures, null, 2));
 assert.deepEqual(failures, []);
 
 execFileSync('node', [path.join(root, 'scripts/test_pr225_cars_tab_overflow.mjs')], { stdio: 'inherit' });
+execFileSync('node', [path.join(root, 'scripts/test_pr225_served_tabs_overflow.mjs')], { stdio: 'inherit' });
 
 console.log('shared trip has no horizontal overflow at 390 and 1280');

@@ -16,8 +16,8 @@ import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs-r3';
-const zipPath = '/opt/cursor/artifacts/pr225-nyc-sbs-r3.zip';
+const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs-r4';
+const zipPath = '/opt/cursor/artifacts/pr225-nyc-sbs-r4.zip';
 const slug = NYC_PR225_SLUG;
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
@@ -203,6 +203,7 @@ async function captureDayFiveSlice(page, bundleLabel, viewportTag, clipY, rootDi
   if (!clicked) throw new Error('Day 5 chip not found for day-by-day capture');
   await page.evaluate(() => {
     window.scrollTo(0, 0);
+    if (document.scrollingElement) document.scrollingElement.scrollLeft = 0;
     document.documentElement.scrollLeft = 0;
     document.body.scrollLeft = 0;
   });
@@ -220,7 +221,6 @@ async function captureTab(page, label, viewportTag, pinnedY) {
   let clicked = await page.evaluate((want) => {
     for (const btn of document.querySelectorAll('button,[role="tab"]')) {
       if (btn.getAttribute('aria-label') === want) {
-        btn.scrollIntoView({ block: 'nearest', inline: 'center' });
         btn.click();
         return true;
       }
@@ -249,6 +249,7 @@ async function captureTab(page, label, viewportTag, pinnedY) {
   if (!clicked) throw new Error(`tab not found: ${label}`);
   await page.evaluate(() => {
     window.scrollTo(0, 0);
+    if (document.scrollingElement) document.scrollingElement.scrollLeft = 0;
     document.documentElement.scrollLeft = 0;
     document.body.scrollLeft = 0;
   });
