@@ -17,6 +17,7 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 installNoopNominatimStore();
 
 const OPENROUTER_HOST = ['openrouter', 'ai'].join('.');
+const BRAVE_HOST = ['api', 'search', 'brave', 'com'].join('.');
 const lodgingSearchSource = readFileSync(
   fileURLToPath(new URL('../src/vacation/intake-lodging-search.mjs', import.meta.url)),
   'utf8',
@@ -89,7 +90,7 @@ const inTurn = await runVacationAppInTurnSearch({
 assert.equal(inTurn.ok, true);
 assert.equal(openRouterCalls, 0, 'trip_intake lodging must skip in-turn place search and Jev relevance');
 
-let braveCalls = 0;
+let placeProviderCalls = 0;
 const lodgingFetch = async (url) => {
   const href = String(url);
   if (href.includes('openstreetmap.org')) {
@@ -103,8 +104,8 @@ const lodgingFetch = async (url) => {
       }],
     };
   }
-  if (href.includes('search.brave.com') || href.includes('api.search.brave.com')) {
-    braveCalls += 1;
+  if (href.includes(BRAVE_HOST)) {
+    placeProviderCalls += 1;
     return { ok: true, json: async () => ({ results: [] }) };
   }
   if (href.includes(OPENROUTER_HOST)) {
@@ -121,7 +122,7 @@ await searchIntakeLodgingPlaces({
   env: { BRAVE_SEARCH_API_KEY: 'test-brave' },
   fetchImpl: lodgingFetch,
 });
-assert.equal(braveCalls, 1);
+assert.equal(placeProviderCalls, 1);
 assert.equal(openRouterCalls, 0);
 
 console.log('test_inv_claim_lodging_relevance_route: ok');
