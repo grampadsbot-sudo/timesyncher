@@ -42,6 +42,7 @@ function buildPayload() {
     activity: { id: 3, name: 'Attraction', icon: '🏛️' },
     store: { id: 4, name: 'Store', icon: '🛍️' },
     flight: { id: 5, name: 'Flight', icon: '✈️' },
+    car: { id: 6, name: 'Car', icon: '🚗' },
   };
   const days = [1, 2, 3, 4, 5, 6, 7, 8].map((day) => ({
     id: 500 + day,
@@ -61,6 +62,8 @@ function buildPayload() {
     { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
     { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
     { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
+    { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
+    { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
   ];
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
@@ -84,18 +87,29 @@ function buildPayload() {
       source: 'fixture-nyc',
     };
     places.push(place);
-    assignments[String(day.id)].push({
-      id: 700 + row.id,
-      day_id: day.id,
-      order_index: assignments[String(day.id)].length,
-      notes: '',
-      place,
-    });
+    if (!row.listOnly) {
+      assignments[String(day.id)].push({
+        id: 700 + row.id,
+        day_id: day.id,
+        order_index: assignments[String(day.id)].length,
+        notes: '',
+        place,
+      });
+    }
     const override = {
-      timeline: true,
+      timeline: !row.listOnly,
       category: row.cat,
-      summary: SUMMARIES[row.id],
+      summary: SUMMARIES[row.id] || '',
     };
+    if (row.id === 608) {
+      override.price = 389;
+      override.logoUrl = 'https://example-hotel.test/favicon.ico';
+    }
+    if (row.id === 609) {
+      override.price = 172;
+      override.rentalCompany = 'Priceline opaque';
+      override.vehicleClass = 'Toyota Corolla or similar';
+    }
     if (row.id === 601) {
       override.logoUrl = 'https://www.jetblue.com/favicon.ico';
     }
@@ -180,7 +194,7 @@ function buildPayload() {
       publicUrl: VIDEO_URL,
     });
   }
-  const timelineIds = rows.map((row) => row.id);
+  const timelineIds = rows.filter((row) => !row.listOnly).map((row) => row.id);
   let withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
   const conflictDay = days.find((d) => d.day_number === NYC_CONFLICT_DAY);
   if (conflictDay) {

@@ -51,6 +51,25 @@ export function diffInsideMasks(a, b, masks, factor = 4) {
   return diffMasked(a, b, masks, factor, true);
 }
 
+export function cropPng(png, clip) {
+  const x = Math.max(0, Math.floor(clip.x));
+  const y = Math.max(0, Math.floor(clip.y));
+  const w = Math.max(1, Math.min(png.width - x, Math.floor(clip.width)));
+  const h = Math.max(1, Math.min(png.height - y, Math.floor(clip.height)));
+  const out = new PNG({ width: w, height: h });
+  for (let row = 0; row < h; row += 1) {
+    for (let col = 0; col < w; col += 1) {
+      const si = ((y + row) * png.width + (x + col)) << 2;
+      const di = (row * w + col) << 2;
+      out.data[di] = png.data[si];
+      out.data[di + 1] = png.data[si + 1];
+      out.data[di + 2] = png.data[si + 2];
+      out.data[di + 3] = 255;
+    }
+  }
+  return out;
+}
+
 export function stitch(left, right) {
   const h = Math.max(left.height, right.height);
   const out = new PNG({ width: left.width + right.width, height: h });
