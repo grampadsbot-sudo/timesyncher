@@ -16,7 +16,8 @@ import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs-r2';
+const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs-r3';
+const zipPath = '/opt/cursor/artifacts/pr225-nyc-sbs-r3.zip';
 const slug = NYC_PR225_SLUG;
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
@@ -188,6 +189,33 @@ async function startServer({ html, js, css, tripPayload, logo, bundlePath }) {
 
 const FIXED_CLIP = { '390': 542, '1280': 537 };
 
+async function captureDayFiveSlice(page, bundleLabel, viewportTag, clipY, rootDir) {
+  const clicked = await page.evaluate(() => {
+    for (const btn of document.querySelectorAll('button,[role="tab"]')) {
+      const text = (btn.textContent || '').replace(/\s+/g, ' ').trim();
+      if (/^Day\s*5\b/i.test(text) || btn.getAttribute('aria-label') === 'Day 5' || /Jun 14/i.test(text)) {
+        btn.click();
+        return true;
+      }
+    }
+    return false;
+  });
+  if (!clicked) throw new Error('Day 5 chip not found for day-by-day capture');
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+  });
+  await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
+  await page.waitForFunction(
+    () => /Drop-off:\s*Priceline opaque/i.test(document.body?.innerText || ''),
+    { timeout: 60000 },
+  );
+  const clip = { x: 0, y: clipY, width: viewportTag === '1280' ? 1280 : 390, height: FIXED_CLIP[viewportTag] || 560 };
+  const shot = await page.screenshot({ type: 'png', encoding: 'binary', clip });
+  await writeFile(path.join(rootDir, `${bundleLabel}-day-by-day-day5-${viewportTag}.png`), shot);
+}
+
 async function captureTab(page, label, viewportTag, pinnedY) {
   let clicked = await page.evaluate((want) => {
     for (const btn of document.querySelectorAll('button,[role="tab"]')) {
@@ -219,7 +247,11 @@ async function captureTab(page, label, viewportTag, pinnedY) {
     }
   }
   if (!clicked) throw new Error(`tab not found: ${label}`);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+  });
   await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
   const clip = await page.evaluate((want, yPin) => {
     const tab = [...document.querySelectorAll('button,[role="tab"]')].find((btn) => btn.getAttribute('aria-label') === want)
@@ -308,6 +340,9 @@ async function main() {
         for (const [label, stem] of TABS) {
           const shot = await captureTab(page, label, viewport.tag, clipY);
           await writeFile(path.join(outRoot, `${bundleLabel}-${stem}-${viewport.tag}.png`), shot);
+          if (stem === 'day-by-day' && bundleLabel === 'live-patched') {
+            await captureDayFiveSlice(page, bundleLabel, viewport.tag, clipY, outRoot);
+          }
         }
         await page.close();
         await app.close();
@@ -322,10 +357,10 @@ async function main() {
     await browser.close();
   }
 
-  console.log(JSON.stringify({ outRoot, zip: '/opt/cursor/artifacts/pr225-nyc-sbs-r2.zip', bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
+  console.log(JSON.stringify({ outRoot, zip: zipPath, bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
 
   const { execFileSync } = await import('node:child_process');
-  execFileSync('zip', ['-qr', '/opt/cursor/artifacts/pr225-nyc-sbs-r2.zip', '.'], { cwd: outRoot });
+  execFileSync('zip', ['-qr', zipPath, '.'], { cwd: outRoot });
 }
 
 void main().catch((err) => {

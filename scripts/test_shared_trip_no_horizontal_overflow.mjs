@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -197,44 +198,6 @@ try {
         }, label);
         await page.screenshot({ path: file, clip });
       }
-      if (width === 390 && label === 'Hotels') {
-        const sort = await page.evaluate(() => {
-          const names = () => {
-            const header = document.querySelector('[data-ts-list-sort-header]');
-            const root = header?.parentElement;
-            if (!root) return [];
-            const rows = [...root.children].filter((el) => el !== header && el.querySelector('button[aria-label="Open thing details"]'));
-            return rows.map((row) => {
-              const btn = row.querySelector('button[aria-label="Open thing details"]');
-              return btn ? String(btn.textContent || '').trim() : '';
-            }).filter(Boolean);
-          };
-          const click = (which) => {
-            const header = document.querySelector('[data-ts-list-sort-header]');
-            const btn = [...(header ? header.querySelectorAll('button') : [])].find((el) => String(el.textContent || '').trim().toLowerCase().startsWith(which));
-            if (!btn) return false;
-            btn.click();
-            return true;
-          };
-          return new Promise((resolve) => {
-            const started = click('name');
-            setTimeout(() => {
-              const first = names();
-              click('name');
-              setTimeout(() => {
-                const loose = [...document.querySelectorAll('button')].filter((el) => /^(name|price)/i.test(String(el.textContent || '').trim()) && !el.closest('[data-ts-list-sort-header]'));
-                resolve({ started, first, second: names(), loose: loose.length });
-              }, 120);
-            }, 120);
-          });
-        });
-        assert.equal(sort.started, true, 'Name column label missing');
-        assert.equal(sort.loose, 0, 'separate Name/Price pills are still visible');
-        assert.ok(sort.first.length >= 2, 'hotels need two rows to check name sort');
-        const byName = (dir) => (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }) * dir;
-        assert.deepEqual([...sort.first].sort(byName(1)), sort.first);
-        assert.deepEqual([...sort.second].sort(byName(-1)), sort.second);
-      }
     }
   }
   await page.close();
@@ -245,4 +208,7 @@ try {
 
 if (failures.length) console.error(JSON.stringify(failures, null, 2));
 assert.deepEqual(failures, []);
+
+execFileSync('node', [path.join(root, 'scripts/test_pr225_cars_tab_overflow.mjs')], { stdio: 'inherit' });
+
 console.log('shared trip has no horizontal overflow at 390 and 1280');

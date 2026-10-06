@@ -57,7 +57,7 @@ function nycThings() {
     {
       id: 'car-priceline-opaque',
       category: 'car',
-      title: 'P Priceline opaque',
+      title: 'Priceline opaque Toyota Corolla',
       description: 'Compact automatic; pick up near JFK AirTrain.',
       source: 'brave',
       location: { lat: 40.6413, lng: -73.7781, address: 'JFK Airport, Queens, NY' },
@@ -73,7 +73,7 @@ function nycThings() {
           summary: 'Compact automatic; pick up near JFK AirTrain.',
           price: 172,
           timeline: true,
-          startTime: '09:00',
+          startTime: '11:00',
           duration: '45',
           logoUrl: 'https://www.priceline.com/favicon.ico',
         },
@@ -147,13 +147,13 @@ function wirePr225Timeline(shared) {
   const day5 = (next.days || []).find((day) => Number(day.day_number) === 5);
   const perDaySchedule = {};
   if (day1) {
-    perDaySchedule[String(day1.id)] = { startTime: '09:00', duration: '45' };
+    perDaySchedule[String(day1.id)] = { startTime: '11:00', duration: '45' };
   }
   if (day5) {
     perDaySchedule[String(day5.id)] = { startTime: '16:00', duration: '45' };
   }
   next = assignPlaceToTripDays(next, car.id, [1, 5], {
-    startTime: '09:00',
+    startTime: '11:00',
     duration: '45',
     endTime: '16:45',
     perDaySchedule,
