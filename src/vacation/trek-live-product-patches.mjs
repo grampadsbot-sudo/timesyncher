@@ -306,7 +306,7 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
-const FLIGHT_EU_PATCH = 'tsFareLbl=G=>{const v=String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase();return v.includes("round")?"round trip":v.includes("one")?"one-way":""},fareLbl=tsFareLbl(G),fareLine=fareLbl?`${Rn||String(bi(G)||"").trim()} ${fareLbl}`.trim():Rn||"";return[fareLine,ua,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_PATCH = 'return[(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());return fareLbl?`${Rn||String(bi(G)||"").trim()} ${fareLbl}`.trim():Rn||""})(),ua,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
@@ -354,7 +354,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   if (js.includes(FLIGHT_EU_NEEDLE)) js = js.replace(FLIGHT_EU_NEEDLE, FLIGHT_EU_PATCH);
   else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
-  else if (!js.includes('tsFareLbl=G=>')) {
+  else if (!js.includes('ha(G).fareDirection||ha(G).tripType||ha(G).pricingType')) {
     throw new Error('flight fare direction row patch did not apply');
   }
   if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {

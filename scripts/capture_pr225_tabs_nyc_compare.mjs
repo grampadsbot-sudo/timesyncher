@@ -186,10 +186,13 @@ async function startServer({ html, js, css, tripPayload, logo, bundlePath }) {
   };
 }
 
-async function captureTab(page, label) {
+const FIXED_CLIP = { '390': 542, '1280': 537 };
+
+async function captureTab(page, label, viewportTag, pinnedY) {
   let clicked = await page.evaluate((want) => {
     for (const btn of document.querySelectorAll('button,[role="tab"]')) {
       if (btn.getAttribute('aria-label') === want) {
+        btn.scrollIntoView({ block: 'nearest', inline: 'center' });
         btn.click();
         return true;
       }
@@ -216,8 +219,9 @@ async function captureTab(page, label) {
     }
   }
   if (!clicked) throw new Error(`tab not found: ${label}`);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
-  const clip = await page.evaluate((want) => {
+  const clip = await page.evaluate((want, yPin) => {
     const tab = [...document.querySelectorAll('button,[role="tab"]')].find((btn) => btn.getAttribute('aria-label') === want)
       || [...document.querySelectorAll('button,[role="tab"]')].find((btn) => {
         const normalize = (text) => String(text || '')
@@ -230,8 +234,12 @@ async function captureTab(page, label) {
         return combined.includes(target) || (target.includes('day') && combined.includes('day-by-day'));
       });
     const top = tab ? tab.getBoundingClientRect().top : 0;
-    return { x: 0, y: Math.max(0, top - 8), width: window.innerWidth, height: Math.min(560, window.innerHeight - Math.max(0, top - 8)) };
-  }, label);
+    const y = typeof yPin === 'number' ? yPin : Math.max(0, top - 8);
+    return { x: 0, y, width: window.innerWidth, height: 560 };
+  }, label, pinnedY);
+  const fixedH = FIXED_CLIP[viewportTag] || 560;
+  clip.height = fixedH;
+  clip.width = clip.width || (viewportTag === '1280' ? 1280 : 390);
   return page.screenshot({ type: 'png', encoding: 'binary', clip });
 }
 
@@ -292,8 +300,13 @@ async function main() {
           () => /Day-by-Day/i.test(document.body?.innerText || ''),
           { timeout: 90000 },
         );
+        const clipY = await page.evaluate(() => {
+          const tab = [...document.querySelectorAll('button,[role="tab"]')].find((btn) => btn.getAttribute('aria-label') === 'Day-by-Day');
+          const top = tab ? tab.getBoundingClientRect().top : 0;
+          return Math.max(0, top - 8);
+        });
         for (const [label, stem] of TABS) {
-          const shot = await captureTab(page, label);
+          const shot = await captureTab(page, label, viewport.tag, clipY);
           await writeFile(path.join(outRoot, `${bundleLabel}-${stem}-${viewport.tag}.png`), shot);
         }
         await page.close();
