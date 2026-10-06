@@ -1,4 +1,5 @@
 import { filterPlacesWithinRadius } from './place-search-radius-filter.mjs';
+import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
 
 function webResultAliases(name) {
   const aliases = new Set();
@@ -148,10 +149,45 @@ export function citablePlaceTitles(inTurnResults = []) {
 
 export const CUSTOMER_OWN_LODGING_CONTEXT_LABEL = "Customer's own lodging (context only; not a search result; never recommend or describe it as a find)";
 
+export function namedSearchAreaAwayFromLodgingReplyLine(facts) {
+  if (!turnNamedSearchAwayFromStatedLodging(facts)) return '';
+  const searchArea = String(facts?.searchArea || '').trim();
+  return searchArea
+    ? `This turn is only about places near ${searchArea}. Do not mention where the customer is staying, their hotel or resort, or geographic areas outside ${searchArea}.`
+    : '';
+}
+
+export function turnNamedSearchAwayFromStatedLodging(facts) {
+  if (!facts || typeof facts !== 'object') return false;
+  if (facts.namedSearchAwayFromStatedLodging === true) return true;
+  const lodgingCtx = facts.customerOwnLodgingContext && typeof facts.customerOwnLodgingContext === 'object'
+    ? facts.customerOwnLodgingContext
+    : null;
+  const searchArea = String(facts.searchArea || '').trim();
+  const statedLodgingArea = String(facts.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim();
+  return Boolean(
+    searchArea
+    && statedLodgingArea
+    && !nominatimLabelsEquivalent(searchArea, statedLodgingArea),
+  );
+}
+
+function omitOutOfTurnSearchAreaLodging(facts) {
+  if (!facts || typeof facts !== 'object' || !turnNamedSearchAwayFromStatedLodging(facts)) return facts;
+  const next = { ...facts, namedSearchAwayFromStatedLodging: true };
+  delete next.lodging;
+  delete next.statedLodgingArea;
+  delete next.customerOwnLodgingContext;
+  return next;
+}
+
 export function modelVisibleTripContext(tripContext) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
-  if (!('tripReplyGate' in tripContext) && !('placeSearchAreaScope' in tripContext)) return tripContext;
-  const { tripReplyGate, placeSearchAreaScope, ...rest } = tripContext;
+  const scoped = omitOutOfTurnSearchAreaLodging(tripContext);
+  if (!('tripReplyGate' in scoped) && !('placeSearchAreaScope' in scoped) && !('namedSearchAwayFromStatedLodging' in scoped)) {
+    return scoped;
+  }
+  const { tripReplyGate, placeSearchAreaScope, namedSearchAwayFromStatedLodging, ...rest } = scoped;
   return rest;
 }
 
@@ -175,8 +211,10 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
   for (const item of facts.survivingPriorDbTitles || []) remember(item);
   for (const item of facts.relevanceRejections || []) remember(item);
   for (const item of facts.priorPlaces || []) remember(item);
-  remember(facts.lodging);
-  remember(facts.statedLodgingArea);
+  if (!turnNamedSearchAwayFromStatedLodging(facts)) {
+    remember(facts.lodging);
+    remember(facts.statedLodgingArea);
+  }
   const itinerary = (Array.isArray(facts.itinerary) ? facts.itinerary : []).flatMap((item) => {
     const title = placeTitle(item);
     if (!title || !citableKeys.has(title.toLowerCase())) return [];
@@ -201,7 +239,7 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
     replyFacts.notCitableAsResult = notCitableAsResult;
     replyFacts.notCitableAsResultRule = 'notCitableAsResult places are not results from this turn. Cite only citablePlaces.';
   }
-  return replyFacts;
+  return omitOutOfTurnSearchAreaLodging(replyFacts);
 }
 
 function inTurnPlaceRows(sources) {

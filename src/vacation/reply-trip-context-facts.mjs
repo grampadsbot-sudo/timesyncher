@@ -2,8 +2,7 @@ import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { applyPlaceSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
 import { chatPlaceSearchSavedReplyFacts } from './chat-place-search-when.mjs';
-import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
-import { applyInTurnCitablePlaces, tripOwnedPlaceAllowRows } from './provider-result-context.mjs';
+import { applyInTurnCitablePlaces, tripOwnedPlaceAllowRows, turnNamedSearchAwayFromStatedLodging } from './provider-result-context.mjs';
 import { tripIsoDay } from './intake-weekday-dates.mjs';
 import {
   applyPendingInviteReplyFacts,
@@ -32,9 +31,7 @@ function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
     : null;
   const searchArea = String(ctx.searchArea || '').trim();
   const statedLodgingArea = String(ctx.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim();
-  const scopedToNamedSearchArea = searchArea
-    && (!statedLodgingArea || !nominatimLabelsEquivalent(searchArea, statedLodgingArea));
-  if (scopedToNamedSearchArea) {
+  if (turnNamedSearchAwayFromStatedLodging(ctx)) {
     return {
       ...ctx,
       tripReplyGate: tripOwnedPlaceAllowRows({
