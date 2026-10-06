@@ -115,7 +115,7 @@ function budgetTargetsRecord(value) {
 }
 
 /** Same map the live Budget tab reads via `thingOverrides.__budgetTargets` (plus saved trip metadata). */
-export function readBudgetTargetsMap(shared = {}) {
+function readBudgetTargetsMap(shared = {}) {
   const merged = {};
   const tripMeta = shared?.trip?.metadata;
   const meta = budgetTargetsRecord(tripMeta) || {};
