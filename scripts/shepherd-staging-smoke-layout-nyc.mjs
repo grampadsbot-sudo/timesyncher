@@ -8,6 +8,7 @@ import { clickSharedTabByKeyword } from './shepherd-staging-smoke-shared-ui.mjs'
 import { LOGO_TAB_SETTLE_MS, stitchLogoChipCropsPng } from './shepherd-staging-smoke-logo-metrics.mjs';
 import { LAYOUT_VIEWPORTS } from './shepherd-staging-smoke-layout-eval.mjs';
 import { EVALUATE_THING_CARD_TAB_DOM_SOURCE } from './shepherd-staging-smoke-thing-card-dom.mjs';
+import { playwrightEvaluateReturnScript } from './shepherd-staging-smoke-page-eval.mjs';
 
 export const LAYOUT_NYC_TAB_ORDER = [
   'day-by-day', 'flights', 'hotels', 'cars', 'restaurants', 'stores', 'events', 'budget',
@@ -231,7 +232,7 @@ async function runLayoutNycForViewport({ page, viewport, artifactPath, setStage,
       continue;
     }
     await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
-    const stagingDom = await page.evaluate(`${LAYOUT_NYC_DOM_PREFIX} return __layoutNycDom.summarizeLayoutNyc();`);
+    const stagingDom = await page.evaluate(playwrightEvaluateReturnScript(LAYOUT_NYC_DOM_PREFIX, '__layoutNycDom.summarizeLayoutNyc()'));
     const domGrade = gradeLayoutNycStagingDom(stagingDom, { tab, viewport: viewport.label });
     const refPath = layoutNycReferenceImagePath(refDir, tab, viewport.label);
     if (!refPath) {

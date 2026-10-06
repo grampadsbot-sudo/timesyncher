@@ -18,6 +18,7 @@ import {
   THING_CARD_FAIL_ON_SORT_CONTROLS,
   THING_CARD_TAG_FILTER_TABS,
 } from './shepherd-staging-smoke-thing-card-eval.mjs';
+import { playwrightEvaluateReturnScript } from './shepherd-staging-smoke-page-eval.mjs';
 
 const THING_CARD_DOM_EVAL_PREFIX = `const __thingCardDomApi = ${EVALUATE_THING_CARD_TAB_DOM_SOURCE};`;
 
@@ -31,14 +32,14 @@ async function disposeHandle(handle) {
 }
 
 async function evaluateTabDom(page) {
-  return page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.evaluateThingCardTabDom();`);
+  return page.evaluate(playwrightEvaluateReturnScript(THING_CARD_DOM_EVAL_PREFIX, '__thingCardDomApi.evaluateThingCardTabDom()'));
 }
 
 async function runSortButtonsProbe(page, { tab, viewport, dom, artifactPath }) {
-  const readOrder = () => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.readThingCardRowOrder();`);
-  const clickButton = (which) => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.clickThingCardSortButton(${JSON.stringify(which)});`);
-  const clickLabel = (which) => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.clickThingCardColumnSortLabel(${JSON.stringify(which)});`);
-  const readSortLabels = () => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.readSortButtonLabels();`);
+  const readOrder = () => page.evaluate(playwrightEvaluateReturnScript(THING_CARD_DOM_EVAL_PREFIX, '__thingCardDomApi.readThingCardRowOrder()'));
+  const clickButton = (which) => page.evaluate(playwrightEvaluateReturnScript(THING_CARD_DOM_EVAL_PREFIX, `__thingCardDomApi.clickThingCardSortButton(${JSON.stringify(which)})`));
+  const clickLabel = (which) => page.evaluate(playwrightEvaluateReturnScript(THING_CARD_DOM_EVAL_PREFIX, `__thingCardDomApi.clickThingCardColumnSortLabel(${JSON.stringify(which)})`));
+  const readSortLabels = () => page.evaluate(playwrightEvaluateReturnScript(THING_CARD_DOM_EVAL_PREFIX, '__thingCardDomApi.readSortButtonLabels()'));
 
   const beforeCrop = artifactPath(`thing-card-${tab}-${viewport}-sort-before.png`);
   const panelBefore = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
