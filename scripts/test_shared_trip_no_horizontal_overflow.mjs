@@ -168,6 +168,25 @@ try {
       if (measure.scrollWidth > measure.innerWidth) failures.push({ width, label, ...measure });
       if (tabShotRoot) {
         await page.screenshot({ path: path.join(tabShotRoot, `${fileStem}-${width}.png`) });
+        if (fileStem === 'flights') {
+          const sortClip = await page.evaluate(() => {
+            const header = document.querySelector('[data-ts-list-sort-header]');
+            if (!header) return null;
+            const box = header.getBoundingClientRect();
+            return {
+              x: Math.max(0, Math.floor(box.left - 8)),
+              y: Math.max(0, Math.floor(box.top - 4)),
+              width: Math.min(window.innerWidth, Math.ceil(box.width + 16)),
+              height: Math.min(140, Math.ceil(box.height + 12)),
+            };
+          });
+          if (sortClip) {
+            await page.screenshot({
+              path: path.join(tabShotRoot, `flights-sort-after-${width}.png`),
+              clip: sortClip,
+            });
+          }
+        }
       }
       if (artifactRoot && ['Cars', 'Hotels', 'Restaurants'].includes(label)) {
         const file = path.join(artifactRoot, `${label.toLowerCase()}-${width}.png`);
@@ -177,6 +196,35 @@ try {
           return { x: 0, y: Math.max(0, top - 8), width: window.innerWidth, height: Math.min(560, window.innerHeight - Math.max(0, top - 8)) };
         }, label);
         await page.screenshot({ path: file, clip });
+      }
+      if (width === 390 && label === 'Hotels') {
+        const sort = await page.evaluate(() => {
+          const names = () => [...document.querySelectorAll('[data-shared-live-tab="hotels"] strong')].map((el) => el.textContent.trim());
+          const click = (which) => {
+            const header = document.querySelector('[data-ts-list-sort-header]');
+            const btn = [...(header ? header.querySelectorAll('button') : [])].find((el) => String(el.textContent || '').trim().toLowerCase().startsWith(which));
+            if (!btn) return false;
+            btn.click();
+            return true;
+          };
+          return new Promise((resolve) => {
+            const started = click('name');
+            setTimeout(() => {
+              const first = names();
+              click('name');
+              setTimeout(() => {
+                const loose = [...document.querySelectorAll('button')].filter((el) => /^(name|price)/i.test(String(el.textContent || '').trim()) && !el.closest('[data-ts-list-sort-header]'));
+                resolve({ started, first, second: names(), loose: loose.length });
+              }, 120);
+            }, 120);
+          });
+        });
+        assert.equal(sort.started, true, 'Name column label missing');
+        assert.equal(sort.loose, 0, 'separate Name/Price pills are still visible');
+        assert.ok(sort.first.length >= 2, 'hotels need two rows to check name sort');
+        const byName = (dir) => (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }) * dir;
+        assert.deepEqual([...sort.first].sort(byName(1)), sort.first);
+        assert.deepEqual([...sort.second].sort(byName(-1)), sort.second);
       }
     }
   }

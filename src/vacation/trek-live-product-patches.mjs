@@ -1,5 +1,6 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
+import { listColumnSortBundleExpr } from './list-column-sort.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
@@ -143,7 +144,14 @@ export function patchThingLogoChipAlignment(source = '') {
     if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
       throw new Error('trek bundle missing anchor for category tab emoji ink centering');
     }
-    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+    const sortPrefix = js.includes('function tsListColumnSort(') ? '' : listColumnSortBundleExpr();
+    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${sortPrefix}${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+  } else if (!js.includes('function tsListColumnSort(')) {
+    const sortAnchor = 'function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return';
+    if (!js.includes(sortAnchor)) {
+      throw new Error('trek bundle missing tsPaintTabEmoji anchor for list column sort injection');
+    }
+    js = js.replace(sortAnchor, `${listColumnSortBundleExpr()}${sortAnchor}`);
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
@@ -301,6 +309,9 @@ const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onCli
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
 const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:0}';
 
+const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}';
+const LIST_SORT_PATCH = 'Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"price",dir:"asc"},onSort:ui,pillStyle:Hi})';
+
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
@@ -346,6 +357,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(TIMELINE_ICON_NEEDLE)) {
     throw new Error('timeline logo and icon patch did not apply');
   }
+  if (js.includes(LIST_SORT_NEEDLE)) js = js.replace(LIST_SORT_NEEDLE, LIST_SORT_PATCH);
   return js;
 }
 
