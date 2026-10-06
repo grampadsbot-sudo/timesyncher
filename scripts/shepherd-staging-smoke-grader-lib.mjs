@@ -39,7 +39,7 @@ export async function gradeCoffeeReplyRows(rows = [], opts = {}) {
   };
 }
 
-/** Budget tab must not show dollar amounts absent from API budget lines. */
+/** Budget tab must not show dollar amounts absent from planned lines and saved __budgetTargets. */
 
 export const LOGO_CENTER_TOLERANCE_PX = 1.5;
 

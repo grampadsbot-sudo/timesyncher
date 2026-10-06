@@ -135,7 +135,7 @@ export async function runSharedSiteBudgetCheck({ page, prep, artifactPath }) {
       },
     };
   }
-  const budgetCheck = await sharedBudgetTabCheck(page, sharedJson.budget || []);
+  const budgetCheck = await sharedBudgetTabCheck(page, sharedJson.budget || [], sharedJson);
   const budgetShot = artifactPath('shared-budget.png');
   await page.screenshot({ path: budgetShot, fullPage: true });
   let appFail = null;

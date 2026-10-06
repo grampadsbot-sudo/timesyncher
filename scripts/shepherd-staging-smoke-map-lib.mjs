@@ -1,5 +1,8 @@
 /** Map / budget grading for staging smoke (browser + offline). */
 
+import { budgetGateAllowedAmounts } from '../src/vacation/shared-trip-api-budget.mjs';
+import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
+
 const MAUI_MAP_BOUNDS = {
   latMin: 20.5,
   latMax: 21.1,
@@ -307,13 +310,24 @@ export function gradeLeafletProductMap(mapState, consoleErrors = []) {
 }
 
 
-export function budgetHardcodedHits(pageText, budgetLines = []) {
-  const allowed = new Set(
-    (budgetLines || [])
-      .map((b) => Number(b.total_price ?? b.amount ?? b.total))
-      .filter((n) => Number.isFinite(n))
-      .flatMap((n) => [n, Math.round(n * 100) / 100]),
-  );
+function addAllowedAmount(allowed, n) {
+  if (!Number.isFinite(n)) return;
+  allowed.add(n);
+  allowed.add(Math.round(n * 100) / 100);
+}
+
+export function budgetHardcodedHits(pageText, budgetLines = [], shared = null) {
+  const allowed = new Set();
+  if (shared) {
+    const prepared = prepareSharedTripForLiveApp(shared);
+    for (const n of budgetGateAllowedAmounts(prepared)) {
+      addAllowedAmount(allowed, n);
+    }
+  } else {
+    for (const b of budgetLines || []) {
+      addAllowedAmount(allowed, Number(b.total_price ?? b.amount ?? b.total));
+    }
+  }
   const hits = [];
   const re = /\$\s*([\d,]+(?:\.\d{2})?)/g;
   let m;

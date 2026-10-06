@@ -219,6 +219,17 @@ function visibleAmountSet(rows = [], shared = {}) {
   return amounts;
 }
 
+/** Dollar amounts Gate B BUD may show on the Budget tab (planned + saved targets only). */
+export function budgetGateAllowedAmounts(shared = {}) {
+  const rows = budgetRowsFromShared(shared);
+  const allowed = visibleAmountSet(rows, shared);
+  for (const line of Array.isArray(shared.budget) ? shared.budget : []) {
+    const n = Number(line.total_price ?? line.amount ?? line.total);
+    if (Number.isFinite(n)) allowed.add(n);
+  }
+  return allowed;
+}
+
 /** Align API `budget` lines with live Budget tab dollar amounts (TREK zt/ua/Mo rules). */
 export function syncSharedTripApiBudget(shared = {}) {
   if (!shared?.permissions?.share_budget) return shared;
