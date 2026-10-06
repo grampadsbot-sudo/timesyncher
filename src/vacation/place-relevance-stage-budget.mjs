@@ -60,8 +60,29 @@ function rowCategoryKey(row) {
   return String(row?.category || '').trim().toLowerCase();
 }
 
+const RELEVANCE_JUDGE_SOURCE_ORDER = ['brave', 'prior_db', 'osm'];
+
+function relevanceJudgeSourceRank(row) {
+  const source = String(row?.source || '').trim();
+  const index = RELEVANCE_JUDGE_SOURCE_ORDER.indexOf(source);
+  return index === -1 ? RELEVANCE_JUDGE_SOURCE_ORDER.length : index;
+}
+
+/** Brave hits must reach Jev before OSM island noise consumes the per-category cap (check 6 / 6b). */
+export function orderRowsForRelevanceJudge(rows = []) {
+  return [...(Array.isArray(rows) ? rows : [])].sort((left, right) => {
+    const sourceDelta = relevanceJudgeSourceRank(left) - relevanceJudgeSourceRank(right);
+    if (sourceDelta !== 0) return sourceDelta;
+    const leftRank = Number(left?.providerRank);
+    const rightRank = Number(right?.providerRank);
+    const leftOrder = Number.isFinite(leftRank) ? leftRank : 999;
+    const rightOrder = Number.isFinite(rightRank) ? rightRank : 999;
+    return leftOrder - rightOrder;
+  });
+}
+
 export function capRowsForRelevanceJudge(rows = [], category = '') {
-  const list = Array.isArray(rows) ? rows : [];
+  const list = orderRowsForRelevanceJudge(rows);
   const judgedPerCategory = new Map();
   const toJudge = [];
   let skipped = 0;

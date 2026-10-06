@@ -8,6 +8,7 @@ import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
   KIHEI_LODGING_GEOCODE,
   MAUI_D2_GEOCODE,
+  PAIA_AREA_GEOCODE,
   PAIA_FISH_MARKET_BRAVE,
 } from './fixtures/place-search-maui-d2-geocode.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
@@ -28,6 +29,9 @@ function nominatimStub() {
     const q = decodeURIComponent(href);
     if (/Kihei/i.test(q)) {
       return { ok: true, json: async () => [KIHEI_LODGING_GEOCODE] };
+    }
+    if (/Paia/i.test(q) && !/Fish Market/i.test(q)) {
+      return { ok: true, json: async () => [PAIA_AREA_GEOCODE] };
     }
     return { ok: true, json: async () => [MAUI_D2_GEOCODE] };
   };

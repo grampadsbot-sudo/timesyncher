@@ -1,3 +1,5 @@
+import { lodgingAreaNameFromText } from './lodging-anchor.mjs';
+import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { distanceMeters } from './place-search-same-place.mjs';
 
@@ -19,6 +21,32 @@ function placeCoords(row = {}) {
   const lng = finite(row?.lng ?? row?.longitude);
   if (lat === null || lng === null) return null;
   return { lat, lng };
+}
+
+/** Geocode label for named_place anchor-radius (town in target, lodging area, not whole-island destination). */
+export function resolveNamedPlaceRadiusGeocodeLabel({
+  namedTarget = '',
+  namedArea = '',
+  searchAnchor = null,
+  destination = '',
+  lodging = '',
+  statedLodgingArea = '',
+} = {}) {
+  const fromTarget = lodgingAreaNameFromText(namedTarget);
+  if (fromTarget) return fromTarget;
+  const stated = String(statedLodgingArea || '').trim();
+  if (stated) return stated;
+  const anchorSource = String(searchAnchor?.source || '').trim();
+  const anchorText = String(searchAnchor?.text || '').trim();
+  if (anchorText && (anchorSource === 'named_anchor' || anchorSource === 'stated_lodging_area')) {
+    return anchorText;
+  }
+  const fromLodging = lodgingAreaNameFromText(lodging);
+  if (fromLodging) return fromLodging;
+  const area = String(namedArea || '').trim();
+  const dest = String(destination || '').trim();
+  if (area && dest && !nominatimLabelsEquivalent(area, dest)) return area;
+  return '';
 }
 
 /** Label geocoded to break named_place score ties (relevance area, then non-lodging anchor). */

@@ -80,6 +80,7 @@ export async function runCustomerChatPlaceSearch({
   tripStatedLodgingArea = '',
   lodging = '',
   lodgingPoint = null,
+  statedLodgingArea = '',
   tripId = '',
   tripDestinationCenter = null,
   db = null,
@@ -123,6 +124,9 @@ export async function runCustomerChatPlaceSearch({
       tripDestinationCenter,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
+      statedLodgingArea: classification?.anchorIsLodging === true
+        ? (String(statedLodgingArea || tripStatedLodgingArea || '').trim())
+        : '',
       keepAreaText: classification?.anchorIsLodging === true && !lodging,
       queries: plan.queries,
       relevanceTarget: clean(classification?.target, 240),
@@ -215,6 +219,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     tripDestination: tripPlaceContext.tripDestination || tripDestination,
     tripResolvedArea: tripPlaceContext.tripResolvedArea,
     tripStatedLodgingArea: tripPlaceContext.tripStatedLodgingArea,
+    statedLodgingArea: tripPlaceContext.tripStatedLodgingArea,
     lodging: lodgingAnchor.text,
     lodgingPoint: lodgingAnchor.point,
     tripId,

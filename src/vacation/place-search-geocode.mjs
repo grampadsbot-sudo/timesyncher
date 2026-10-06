@@ -439,6 +439,18 @@ export async function resolveSearchContext(
     }
     console.error(`Nominatim returned no coordinates for lodging "${lodgingLabel}".`);
   }
+  const statedLodgingArea = String(options.statedLodgingArea || '').trim();
+  if (statedLodgingArea && statedLodgingArea !== lodgingLabel) {
+    const found = await tryGeocodeLabel(fetchImpl, statedLodgingArea, providerLog, readJson, options);
+    if (found) {
+      return {
+        center: { ...found, geocoded: 'lodging', geocodeIdentity: statedLodgingArea },
+        locationText: statedLodgingArea,
+        compactLocality: found.compactLocality || compactLocalityText(null, statedLodgingArea),
+      };
+    }
+    console.error(`Nominatim returned no coordinates for stated lodging area "${statedLodgingArea}".`);
+  }
   if (!destinationLabel && !lodgingLabel) {
     fail('Place search needs a destination.', 'missing_destination');
   }
