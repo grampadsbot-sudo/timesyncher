@@ -233,7 +233,7 @@ assert.equal(blank.error, null);
 assert.doesNotMatch(routeSource, /TimeSyncher Vacation Admin Test|placeTitle/);
 assert.doesNotMatch(turnSource, /function thingPattern|placeTitle/);
 assert.match(routeSource, /resolveIntakePlace/);
-assert.match(classifySource, /runPublicResearch/);
+assert.match(resolvePlaceSource, /runPublicResearch/);
 assert.doesNotMatch(classifySource, /places\.googleapis|maps\.googleapis|google places/i);
 const adminSource = fs.readFileSync(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(adminSource, /TimeSyncher Vacation Admin Test/);
