@@ -10,7 +10,7 @@ import {
   apiThingTagsForTab,
   EVALUATE_THING_CARD_TAB_DOM_SOURCE,
   gradeThingCardHarnessResult,
-  gradeThingCardSortByLabel,
+  gradeThingCardSortButtons,
   gradeThingCardTabScan,
   normalizeThingCardTagLabel,
   populatedThingCardTabs,
@@ -34,9 +34,11 @@ async function evaluateTabDom(page) {
   return page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.evaluateThingCardTabDom();`);
 }
 
-async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
+async function runSortButtonsProbe(page, { tab, viewport, dom, artifactPath }) {
   const readOrder = () => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.readThingCardRowOrder();`);
+  const clickButton = (which) => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.clickThingCardSortButton(${JSON.stringify(which)});`);
   const clickLabel = (which) => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.clickThingCardColumnSortLabel(${JSON.stringify(which)});`);
+  const readSortLabels = () => page.evaluate(`${THING_CARD_DOM_EVAL_PREFIX} return __thingCardDomApi.readSortButtonLabels();`);
 
   const beforeCrop = artifactPath(`thing-card-${tab}-${viewport}-sort-before.png`);
   const panelBefore = await page.$('[data-shared-live-tab], .logo-list, [data-trip-directory]');
@@ -51,22 +53,36 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
     sortControlMatches: dom.sortControlMatches,
   };
 
-  if ((dom.rows || []).length >= 2 && dom.columnSortLabels?.name) {
-    await clickLabel('name');
+  const hasPills = (dom.sortControlMatches || []).length >= 1;
+
+  if ((dom.rows || []).length >= 2 && hasPills) {
+    await clickButton('name');
     await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
     orders.nameAfterFirst = (await readOrder()).titles;
-    await clickLabel('name');
+    orders.nameActiveAfterFirst = (await readSortLabels()).name;
+    await clickButton('name');
     await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
     orders.nameAfterSecond = (await readOrder()).titles;
-  }
 
-  if ((dom.rows || []).length >= 2 && dom.columnSortLabels?.price) {
-    await clickLabel('price');
+    await clickButton('price');
     orders.priceClicked = true;
     await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
     const afterPrice = await readOrder();
     orders.priceAfter = afterPrice.rowTexts;
+    orders.priceActiveAfterClick = (await readSortLabels()).price;
     orders.priceDirection = 'asc';
+  }
+
+  if ((dom.rows || []).length >= 2 && (dom.columnSortLabels?.name || dom.columnSortLabels?.price)) {
+    const beforeCol = await readOrder();
+    const colClick = dom.columnSortLabels?.name
+      ? await clickLabel('name')
+      : await clickLabel('price');
+    if (colClick?.clicked) {
+      await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
+      const afterCol = await readOrder();
+      orders.columnLabelSorted = beforeCol.titles.join('\0') !== afterCol.titles.join('\0');
+    }
   }
 
   const afterCrop = artifactPath(`thing-card-${tab}-${viewport}-sort-after.png`);
@@ -76,22 +92,23 @@ async function runSortByLabelProbe(page, { tab, viewport, dom, artifactPath }) {
     await disposeHandle(panelAfter);
   }
 
-  const sortByLabel = gradeThingCardSortByLabel({
+  const sortButtons = gradeThingCardSortButtons({
     tab,
     viewport,
+    sortControlMatches: dom.sortControlMatches,
     columnSortLabels: dom.columnSortLabels,
     rows: dom.rows,
     orders,
   });
 
   return {
-    sortByLabel,
-    sortByLabelGate: {
-      ...sortByLabel.gate,
-      status: sortByLabel.status,
-      rowSortExercised: sortByLabel.rowSortExercised,
-      priceSortExercised: sortByLabel.priceSortExercised,
-      priceStatus: sortByLabel.priceStatus,
+    sortButtons,
+    sortButtonsGate: {
+      ...sortButtons.gate,
+      status: sortButtons.status,
+      rowSortExercised: sortButtons.rowSortExercised,
+      priceSortExercised: sortButtons.priceSortExercised,
+      priceStatus: sortButtons.priceStatus,
       beforeCrop,
       afterCrop,
       orders,
@@ -253,7 +270,7 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
         }
       }
       const expectedRows = (gradeSharedTabLogoUrlRecords(sharedJson, tab).placeCount) || 0;
-      const sortProbe = await runSortByLabelProbe(page, {
+      const sortProbe = await runSortButtonsProbe(page, {
         tab,
         viewport: viewport.label,
         dom,
@@ -265,7 +282,7 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
         sortControls: dom.sortControls,
         sortControlMatches: dom.sortControlMatches,
         columnSortLabels: dom.columnSortLabels,
-        sortByLabel: sortProbe.sortByLabel,
+        sortButtons: sortProbe.sortButtons,
         filterTags: dom.filterTags,
         thingTags,
         apiThingTags,
@@ -292,7 +309,7 @@ export async function runSharedSiteThingCardCheck({ page, prep, artifactPath, se
         sortControls: dom.sortControls,
         sortControlMatches: dom.sortControlMatches,
         columnSortLabels: dom.columnSortLabels,
-        sortByLabelGate: sortProbe.sortByLabelGate,
+        sortButtonsGate: sortProbe.sortButtonsGate,
         tagFilterParity: graded.tagFilterParity,
         failures: graded.failures,
         pass: graded.pass,

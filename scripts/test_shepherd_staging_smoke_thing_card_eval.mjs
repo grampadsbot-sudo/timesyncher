@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {
   apiThingTagsForTab,
   forbiddenSortControlsFromMatches,
-  gradeThingCardSortByLabel,
-  gradeThingCardSortByLabelHarness,
+  gradeThingCardSortButtons,
+  gradeThingCardSortButtonsHarness,
   gradeThingCardTabScan,
   gradeThingCardHarnessResult,
   gradeThingCardTagFilterParity,
@@ -32,7 +32,7 @@ const tabs = populatedThingCardTabs(sharedJson);
 assert.ok(tabs.includes('cars'));
 assert.ok(tabs.includes('hotels'));
 
-assert.equal(thingCardFailOnSortControlsFromEnv({}), true);
+assert.equal(thingCardFailOnSortControlsFromEnv({}), false);
 assert.equal(thingCardFailOnSortControlsFromEnv({ THING_CARD_FAIL_ON_SORT_CONTROLS: '0' }), false);
 assert.equal(thingCardFailOnSortControlsFromEnv({ THING_CARD_FAIL_ON_SORT_CONTROLS: 'true' }), true);
 
@@ -50,13 +50,13 @@ const sortScan = {
 };
 const inkOk = { 0: { inkPresent: true } };
 
-const sortPresentFlagOff = gradeThingCardTabScan(sortScan, inkOk, { failOnSortControls: false });
-assert.equal(sortPresentFlagOff.pass, true);
-assert.equal(sortPresentFlagOff.failures.some((f) => f.rule === 'sort_control'), false);
+const sortPresentDefault = gradeThingCardTabScan(sortScan, inkOk);
+assert.equal(sortPresentDefault.pass, true);
+assert.equal(sortPresentDefault.failures.some((f) => f.rule === 'sort_control'), false);
 
-const failSortDefault = gradeThingCardTabScan(sortScan, inkOk);
-assert.equal(failSortDefault.pass, false);
-assert.ok(failSortDefault.failures.some((f) => f.rule === 'sort_control'));
+const failSortFlagOn = gradeThingCardTabScan(sortScan, inkOk, { failOnSortControls: true });
+assert.equal(failSortFlagOn.pass, false);
+assert.ok(failSortFlagOn.failures.some((f) => f.rule === 'sort_control'));
 
 const columnOnlyGrade = gradeThingCardTabScan({
   tab: 'cars',
@@ -79,7 +79,7 @@ const failSummary = gradeThingCardTabScan({
   sortControlMatches: [],
   rows: [{ index: 0, title: 'Hertz', summaryText: '', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: true } }, { failOnSortControls: false });
+}, { 0: { inkPresent: true } });
 assert.equal(failSummary.pass, false);
 
 const failInk = gradeThingCardTabScan({
@@ -89,7 +89,7 @@ const failInk = gradeThingCardTabScan({
   sortControlMatches: [],
   rows: [{ index: 0, title: 'Hertz', summaryText: 'OGG pickup', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: false, inkError: 'ink_below_min_mass' } }, { failOnSortControls: false });
+}, { 0: { inkPresent: false, inkError: 'ink_below_min_mass' } });
 assert.equal(failInk.pass, false);
 
 const pass = gradeThingCardTabScan({
@@ -113,72 +113,94 @@ assert.equal(priceOrderOk([55, 45], 'asc'), false);
 assert.equal(priceOrderOk([null, 45, 55], 'asc'), true);
 assert.equal(priceOrderOk([45, null, 55], 'asc'), false);
 
-const sortLabelNotEnough = gradeThingCardSortByLabel({
+const sortButtonsNotEnough = gradeThingCardSortButtons({
   tab: 'cars',
   viewport: '390',
-  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  sortControlMatches: pillMatches,
   rows: [{ title: 'Hertz' }],
   orders: {},
 });
-assert.equal(sortLabelNotEnough.status, 'not_enough_rows');
-assert.equal(sortLabelNotEnough.pass, true);
-assert.equal(sortLabelNotEnough.failures.length, 0);
+assert.equal(sortButtonsNotEnough.status, 'not_enough_rows');
+assert.equal(sortButtonsNotEnough.pass, true);
+assert.equal(sortButtonsNotEnough.failures.length, 0);
 
-const sortLabelPass = gradeThingCardSortByLabel({
+const sortButtonsPass = gradeThingCardSortButtons({
   tab: 'cars',
   viewport: '1280',
-  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  sortControlMatches: pillMatches,
   rows: [{ title: 'Alamo' }, { title: 'Hertz' }],
   orders: {
     nameAfterFirst: ['Alamo', 'Hertz'],
     nameAfterSecond: ['Hertz', 'Alamo'],
+    nameActiveAfterFirst: 'Name ↑',
     priceAfter: ['Alamo $45', 'Hertz $55'],
+    priceActiveAfterClick: 'Price ↑',
     priceDirection: 'asc',
   },
 });
-assert.equal(sortLabelPass.pass, true);
-assert.equal(sortLabelPass.priceSortExercised, true);
+assert.equal(sortButtonsPass.pass, true);
+assert.equal(sortButtonsPass.priceSortExercised, true);
 
-const sortLabelPriceNotExercised = gradeThingCardSortByLabel({
+const sortButtonsPriceNotExercised = gradeThingCardSortButtons({
   tab: 'hotels',
   viewport: '390',
-  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  sortControlMatches: pillMatches,
   rows: [{ title: 'Westin' }, { title: 'Hyatt' }],
   orders: {
     nameAfterFirst: ['Hyatt', 'Westin'],
     nameAfterSecond: ['Westin', 'Hyatt'],
+    nameActiveAfterFirst: 'Name ↑',
     priceAfter: ['Westin stay', 'Hyatt stay'],
     priceClicked: true,
     priceDirection: 'asc',
   },
 });
-assert.equal(sortLabelPriceNotExercised.priceStatus, 'price_not_exercised');
-assert.equal(sortLabelPriceNotExercised.priceSortExercised, false);
-assert.equal(sortLabelPriceNotExercised.pass, true);
+assert.equal(sortButtonsPriceNotExercised.priceStatus, 'price_not_exercised');
+assert.equal(sortButtonsPriceNotExercised.priceSortExercised, false);
+assert.equal(sortButtonsPriceNotExercised.pass, true);
 
-const sortLabelFailName = gradeThingCardSortByLabel({
+const sortButtonsFailName = gradeThingCardSortButtons({
   tab: 'cars',
   viewport: '390',
-  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  sortControlMatches: pillMatches,
   rows: [{ title: 'Alamo' }, { title: 'Hertz' }],
   orders: {
     nameAfterFirst: ['Hertz', 'Alamo'],
     nameAfterSecond: ['Hertz', 'Alamo'],
+    nameActiveAfterFirst: 'Name ↑',
     priceAfter: ['Alamo $45', 'Hertz $55'],
+    priceActiveAfterClick: 'Price ↑',
     priceDirection: 'asc',
   },
 });
-assert.equal(sortLabelFailName.pass, false);
+assert.equal(sortButtonsFailName.pass, false);
 
-const sortLabelMissing = gradeThingCardSortByLabel({
+const sortButtonsMissing = gradeThingCardSortButtons({
   tab: 'cars',
   viewport: '390',
-  columnSortLabels: { name: null, price: null },
+  sortControlMatches: [],
   rows: [{ title: 'Alamo' }, { title: 'Hertz' }],
   orders: {},
 });
-assert.equal(sortLabelMissing.pass, false);
-assert.ok(sortLabelMissing.failures.some((f) => f.detail.includes('missing Name')));
+assert.equal(sortButtonsMissing.pass, false);
+assert.ok(sortButtonsMissing.failures.some((f) => f.detail.includes('missing Name')));
+
+const sortButtonsColumnLabels = gradeThingCardSortButtons({
+  tab: 'cars',
+  viewport: '390',
+  sortControlMatches: pillMatches,
+  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  rows: [{ title: 'Alamo' }, { title: 'Hertz' }],
+  orders: {
+    nameAfterFirst: ['Alamo', 'Hertz'],
+    nameAfterSecond: ['Hertz', 'Alamo'],
+    nameActiveAfterFirst: 'Name ↑',
+    priceAfter: ['Alamo $45', 'Hertz $55'],
+    priceActiveAfterClick: 'Price ↑',
+    priceDirection: 'asc',
+  },
+});
+assert.equal(sortButtonsColumnLabels.pass, false);
 
 const carsSortGate = {
   status: 'ok',
@@ -195,9 +217,9 @@ const hotelOneRowNoSortFail = gradeThingCardTabScan({
   sortControlMatches: [],
   rows: [{ index: 0, title: 'Westin', summaryText: 'stay', requiresLogo: true }],
   expectedRows: 1,
-  sortByLabel: { pass: true, status: 'not_enough_rows', failures: [] },
-}, { 0: { inkPresent: true } }, { failOnSortControls: false });
-assert.equal(hotelOneRowNoSortFail.failures.some((f) => f.rule === 'SORT-BY-LABEL'), false);
+  sortButtons: { pass: true, status: 'not_enough_rows', failures: [] },
+}, { 0: { inkPresent: true } });
+assert.equal(hotelOneRowNoSortFail.failures.some((f) => f.rule === 'SORT-BUTTONS'), false);
 
 const harnessCarsExercised = gradeThingCardHarnessResult({
   tabs: ['cars', 'hotels'],
@@ -208,7 +230,7 @@ const harnessCarsExercised = gradeThingCardHarnessResult({
       rowCount: 1,
       pass: true,
       failures: [],
-      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+      sortButtonsGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
     },
     {
       tab: 'cars',
@@ -216,7 +238,7 @@ const harnessCarsExercised = gradeThingCardHarnessResult({
       rowCount: 2,
       pass: true,
       failures: [],
-      sortByLabelGate: carsSortGate,
+      sortButtonsGate: carsSortGate,
     },
     {
       tab: 'hotels',
@@ -224,7 +246,7 @@ const harnessCarsExercised = gradeThingCardHarnessResult({
       rowCount: 1,
       pass: true,
       failures: [],
-      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+      sortButtonsGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
     },
     {
       tab: 'cars',
@@ -232,16 +254,16 @@ const harnessCarsExercised = gradeThingCardHarnessResult({
       rowCount: 2,
       pass: true,
       failures: [],
-      sortByLabelGate: carsSortGate,
+      sortButtonsGate: carsSortGate,
     },
   ],
 });
 assert.equal(
-  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('>=2 rows')),
+  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BUTTONS' && String(f.detail).includes('>=2 rows')),
   false,
 );
 assert.equal(
-  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('priced rows')),
+  harnessCarsExercised.failures.some((f) => f.rule === 'SORT-BUTTONS' && String(f.detail).includes('priced rows')),
   false,
 );
 
@@ -254,7 +276,7 @@ const harnessAllUnderTwoRows = gradeThingCardHarnessResult({
       rowCount: 1,
       pass: true,
       failures: [],
-      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+      sortButtonsGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
     },
   ],
 });
@@ -276,7 +298,7 @@ const harnessPriceNotExercised = gradeThingCardHarnessResult({
       rowCount: 1,
       pass: true,
       failures: [],
-      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+      sortButtonsGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
     },
     {
       tab: 'cars',
@@ -284,7 +306,7 @@ const harnessPriceNotExercised = gradeThingCardHarnessResult({
       rowCount: 2,
       pass: true,
       failures: [],
-      sortByLabelGate: priceNotExercisedGate,
+      sortButtonsGate: priceNotExercisedGate,
     },
     {
       tab: 'hotels',
@@ -292,7 +314,7 @@ const harnessPriceNotExercised = gradeThingCardHarnessResult({
       rowCount: 1,
       pass: true,
       failures: [],
-      sortByLabelGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
+      sortButtonsGate: { status: 'not_enough_rows', rowCount: 1, rowSortExercised: false },
     },
     {
       tab: 'cars',
@@ -300,20 +322,20 @@ const harnessPriceNotExercised = gradeThingCardHarnessResult({
       rowCount: 2,
       pass: true,
       failures: [],
-      sortByLabelGate: priceNotExercisedGate,
+      sortButtonsGate: priceNotExercisedGate,
     },
   ],
 });
 assert.equal(harnessPriceNotExercised.pass, false);
 assert.ok(
   harnessPriceNotExercised.failures.some(
-    (f) => f.rule === 'SORT-BY-LABEL' && String(f.detail).includes('priced rows'),
+    (f) => f.rule === 'SORT-BUTTONS' && String(f.detail).includes('priced rows'),
   ),
 );
 
 assert.deepEqual(
-  gradeThingCardSortByLabelHarness([
-    { viewport: '390', rowCount: 2, sortByLabelGate: carsSortGate, pass: true, failures: [] },
+  gradeThingCardSortButtonsHarness([
+    { viewport: '390', rowCount: 2, sortButtonsGate: carsSortGate, pass: true, failures: [] },
   ]),
   [],
 );
@@ -363,7 +385,7 @@ const tagScanPass = gradeThingCardTabScan({
   apiThingTags: ['Seafood'],
   rows: [{ index: 0, title: 'Fish Hopper', summaryText: 'dinner', requiresLogo: true }],
   expectedRows: 1,
-}, { 0: { inkPresent: true } }, { failOnSortControls: false });
+}, { 0: { inkPresent: true } });
 assert.equal(tagScanPass.pass, true);
 
 const harness = gradeThingCardHarnessResult({
