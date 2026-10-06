@@ -59,13 +59,13 @@ export function jevRelevanceJudgeConcurrency(env = process.env) {
 export function capRowsForRelevanceJudge(rows = [], category = '') {
   const list = Array.isArray(rows) ? rows : [];
   const cap = firstPassSearchLimit(category);
-  const prior = [];
-  const live = [];
-  for (const row of list) {
-    if (String(row?.source || '').trim() === 'prior_db') prior.push(row);
-    else live.push(row);
-  }
-  return { prior, live: live.slice(0, cap), judgedCap: cap, liveTotal: live.length };
+  const toJudge = list.slice(0, cap);
+  return {
+    toJudge,
+    judgedCap: cap,
+    totalRows: list.length,
+    skipped: Math.max(0, list.length - toJudge.length),
+  };
 }
 
 export function throwRelevanceStageBudgetExceeded({ elapsedMs, budgetMs, judged, remaining }) {

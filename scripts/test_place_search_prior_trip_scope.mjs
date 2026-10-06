@@ -107,7 +107,7 @@ const scopedSearch = await searchPlaces({
     throw new Error(`unexpected fetch ${href}`);
   },
 });
-assert.equal(judgedPrior, false, 'prior_db rows must not call Jev relevance');
+assert.equal(judgedPrior, true);
 assert.equal(scopedSearch.places.some((place) => /hyatt/i.test(place.title)), false);
 assert.ok(scopedSearch.places.some((place) => place.title === 'Kihei Harbor Cafe'));
 
@@ -119,21 +119,21 @@ const webListing = {
 assert.equal(bravePlaceSearchRows({ results: [], web: { results: [webListing] } }, 'local').length, 0);
 assert.equal(braveLocalPlaceResult(webListing), false);
 
-let priorJudgeCalls = 0;
 const relevance = await attachPlaceRelevance(
   [{ source: 'prior_db', title: 'Saved Grill', category: 'restaurant', externalId: 'p1', address: 'Kihei' }],
-  async (url) => {
+  async (url, options = {}) => {
     const href = String(url);
-    if (href.includes(OPENROUTER_HOST)) priorJudgeCalls += 1;
-    throw new Error('prior_db must not call Jev relevance');
+    if (!href.includes(OPENROUTER_HOST)) throw new Error(href);
+    const raw = options.body ? JSON.parse(String(options.body)) : {};
+    assert.equal(raw.state?.name, 'Saved Grill');
+    return { ok: true, json: async () => ({ answers: { relevance: { choice: 1 } } }) };
   },
   { OPENROUTER_API_KEY: 'test' },
   { target: 'grill', area: 'Kihei' },
   { requireOpenRouterKey: (env) => String(env.OPENROUTER_API_KEY || '') },
 );
-assert.equal(priorJudgeCalls, 0);
-assert.equal(relevance.places.length, 1);
-assert.equal(relevance.places[0].source, 'prior_db');
+assert.equal(relevance.places.length, 0);
+assert.equal(relevance.rejections[0].source, 'prior_db');
 
 const inserts = [];
 const db = async (strings, ...values) => {

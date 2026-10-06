@@ -49,7 +49,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
   const target = String(relevanceContext.target || '').trim();
   const area = String(relevanceContext.area || relevanceContext.locationText || '').trim();
   const category = String(relevanceContext.category || '').trim();
-  const { prior, live, judgedCap, liveTotal } = capRowsForRelevanceJudge(rows, category);
+  const { toJudge, judgedCap, skipped } = capRowsForRelevanceJudge(rows, category);
   let judgedCount = 0;
   const stageGuard = () => {
     const elapsedMs = Date.now() - stageStarted;
@@ -58,11 +58,11 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
         elapsedMs,
         budgetMs: stageBudgetMs,
         judged: judgedCount,
-        remaining: live.length - judgedCount,
+        remaining: toJudge.length - judgedCount,
       });
     }
   };
-  const judged = await scoreRowsWithConcurrency(live, async (row) => {
+  const judged = await scoreRowsWithConcurrency(toJudge, async (row) => {
     stageGuard();
     const remainingMs = stageBudgetMs - (Date.now() - stageStarted);
     const callTimeoutMs = Math.min(perCallTimeoutMs, Math.max(1, remainingMs));
@@ -79,7 +79,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
     judgedCount += 1;
     return { row, jevScore: Number(jevScore) };
   }, concurrency, stageGuard);
-  const scored = prior.map((row) => ({ ...row, jevScore: 5 }));
+  const scored = [];
   const rejections = [];
   for (const { row, jevScore } of judged) {
     if (jevScore >= minimum) {
@@ -102,7 +102,7 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
     relevanceStageMs: Date.now() - stageStarted,
     relevanceJudgeCalls: judged.length,
     relevanceJudgeCap: judgedCap,
-    relevanceJudgeSkipped: Math.max(0, liveTotal - live.length),
+    relevanceJudgeSkipped: skipped,
     relevanceStageBudgetMs: stageBudgetMs,
   };
 }
