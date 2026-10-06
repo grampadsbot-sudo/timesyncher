@@ -25,8 +25,8 @@ function patchCarBeGrid(js = '') {
   if (start < 0 || end < 0) {
     throw new Error('shared trip Oe() car header grid patch did not apply');
   }
-  const oldBe = js.slice(start, end + '})]}),'.length);
-  return `${js.slice(0, start)}${OE_CAR_BE_GRID_PATCH}${js.slice(end + '})]}),'.length)}`;
+  const oldBe = js.slice(start, end);
+  return `${js.slice(0, start)}${OE_CAR_BE_GRID_PATCH},${js.slice(end + '})]}),'.length)}`;
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
