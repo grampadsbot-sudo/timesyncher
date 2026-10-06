@@ -290,7 +290,7 @@ const TAB_ROW_OVERFLOW_NEEDLE = 'maxWidth:1120,width:"100%",boxSizing:"border-bo
 const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
 const LIST_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const LIST_SUMMARY_PATCH = 'Rn=Bs(rr(G)||Co(G)||Fl(G)||vr(G)||Zr(G))';
-const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})';
+const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}' ;
 const LIST_SORT_PATCH = `${listColumnSortBundleExpr()},Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"price",dir:"asc"},onSort:ui,pillStyle:Hi})`;
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
