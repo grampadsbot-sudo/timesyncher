@@ -1,5 +1,5 @@
 import { planFactsForReply } from '../src/vacation/reply-plan-entitlement.mjs';
-import { modelVisibleTripContext } from '../src/vacation/provider-result-context.mjs';
+import { modelVisibleTripContext, namedSearchAreaAwayFromLodgingReplyLine } from '../src/vacation/provider-result-context.mjs';
 import { perFactGapAskRuleLines } from '../src/vacation/gap-ask-reply-context.mjs';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -15,9 +15,7 @@ export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisi
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
-
-// Bake-off map only. dialog-runners/tier_models.json must match these four ids.
-// A drifted file, a tier outside 1-4, or any gpt-*mini model refuses the reply.
+// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply.
 const BAKEOFF_TIER_MODELS = {
   1: 'google/gemini-2.5-flash-lite',
   2: 'qwen/qwen3-235b-a22b-2507',
@@ -586,7 +584,8 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const planLine = String(context.planLine || '').trim();
   const configuredSeat = Number(context.seatDollars);
   const seatDollars = Number.isFinite(configuredSeat) && configuredSeat > 0 ? configuredSeat : null;
-  const tripRaw = modelVisibleTripContext(context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null);
+  const tripSource = context.tripContext && typeof context.tripContext === 'object' ? context.tripContext : null;
+  const tripRaw = modelVisibleTripContext(tripSource);
   const itinerary = Array.isArray(tripRaw?.itinerary) ? tripRaw.itinerary.filter(Boolean).slice(0, 12) : [];
   const dates = String(tripRaw?.dates || '').trim();
   const roster = String(tripRaw?.roster || '').trim();
@@ -596,7 +595,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const customerInput = {};
   const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
-    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope') continue;
+    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope' || key === 'namedSearchAwayFromStatedLodging') continue;
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
@@ -633,6 +632,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
       ? `Destination lock: ${lock}. This is the only place for this trip. Do not move the customer to any other city or island.`
       : 'If the customer has named a destination, stay there. Do not invent a different city or island.',
     sourcedPlaceRule(),
+    namedSearchAreaAwayFromLodgingReplyLine(tripSource),
     ...(unscheduledOpen ? [] : [`Notes: name the day (required) and place only if it helps (${rules?.notes_where || 'day_required_place_optional'}). Never say "Thing" to the customer.`]),
     'Item34 ban: never say "splitting payments", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.',
     'Do not say seat to the customer; say collaborator or person joining instead.',
