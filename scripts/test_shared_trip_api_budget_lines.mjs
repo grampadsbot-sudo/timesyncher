@@ -58,7 +58,54 @@ const budgetTabText = [
 const hits = budgetHardcodedHits(budgetTabText, shared.budget);
 assert.deepEqual(hits, [], `budget tab amounts must match API lines: ${JSON.stringify(hits)}`);
 
-const emptyBudget = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
-assert.deepEqual(emptyBudget.budget, []);
+const gateHotelA = 2001;
+const gateHotelB = 2002;
+const gateCarHertz = 2003;
+const gateCarAlamo = 2004;
+const gateShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [
+    { id: gateHotelA, name: 'Hyatt Regency Maui Resort & Spa', category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
+    { id: gateHotelB, name: "The Westin Maui Resort & Spa, Ka'anapali", category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
+    { id: gateCarHertz, name: 'Hertz', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+    { id: gateCarAlamo, name: 'Alamo rental', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+  ],
+  thingOverrides: {
+    __budgetTargets: { 'overall:Cars': '200' },
+    [`place:${gateCarHertz}`]: { price: 45, category: 'car' },
+    [`place:${gateCarAlamo}`]: { price: 55, category: 'car' },
+  },
+});
+
+const gateAllowed = new Set(gateShared.budget.map((line) => Number(line.total_price)));
+assert.equal(gateAllowed.has(0), true, 'unpriced hotel rows and $0 bucket headers must be on API budget');
+assert.equal(gateAllowed.has(45), true);
+assert.equal(gateAllowed.has(55), true);
+assert.equal(gateAllowed.has(100), true, 'trip and cars planned totals must be on API budget');
+assert.equal(gateAllowed.has(200), true, 'trip budget cap from __budgetTargets must be on API budget');
+
+const gateBodySnippet = [
+  'Overall trip budget',
+  'Trip total',
+  '$100 / $200',
+  'Under by $100',
+  'Hotel',
+  '$0 /',
+  '$0 timeline',
+  'Hyatt Regency Maui Resort & Spa',
+  'Add price',
+  "The Westin Maui Resort & Spa, Ka'anapali",
+  'Cars',
+  '$100 /',
+  'Under by $100',
+  'Hertz',
+  '$45',
+  'Alamo rental',
+].join('\n');
+const gateHits = budgetHardcodedHits(gateBodySnippet, gateShared.budget);
+assert.deepEqual(gateHits, [], `Gate B budget tab scrape must match API lines: ${JSON.stringify(gateHits)}`);
+
+const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
+assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
 
 console.log('shared trip API budget lines sync passed');

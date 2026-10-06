@@ -7,7 +7,6 @@ import {
   GN_RENDER_PATCH,
   KI_EMPTY_PATCH,
   KI_RENDER_PATCH,
-  patchThingDetailRatings,
   patchThingLogoChipAlignment,
   LIST_LOGO_PATCH,
   QN_EMPTY_PATCH,
@@ -16,6 +15,7 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
+import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';

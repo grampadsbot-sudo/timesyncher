@@ -47,13 +47,17 @@ export async function blockVacationAppReplyIdCitation({
   customerLive,
   base,
   storeReplyFailure,
+  turnActionResults = null,
+  replyClaimContext = null,
 }) {
   try {
-    assertCustomerReplyShippable(replyText, tripId);
+    assertCustomerReplyShippable(replyText, tripId, turnActionResults, replyClaimContext);
     return null;
   } catch (error) {
-    if (error?.name !== 'reply_id_citation_blocked' && error?.name !== 'reply_place_search_provider_leak') throw error;
-    const replyFailure = 'reply_id_citation_blocked';
+    if (error?.name !== 'reply_id_citation_blocked' && error?.name !== 'reply_place_search_provider_leak' && error?.name !== 'reply_action_claim_blocked') throw error;
+    const replyFailure = error?.name === 'reply_action_claim_blocked'
+      ? 'reply_action_claim_blocked'
+      : 'reply_id_citation_blocked';
     payload.replyFailure = replyFailure;
     customerLive.replyFailure = replyFailure;
     attachBlockedFirstIntakeDraft(payload, {

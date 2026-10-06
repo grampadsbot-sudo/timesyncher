@@ -9,6 +9,7 @@ import { liveTurnRecord } from './live-app-turn.mjs';
 import { appReplyTelemetry, logVacationAppReplyTelemetry } from './reply-telemetry.mjs';
 import { attachBlockedFirstIntakeDraft } from './blocked-turn-payload.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
+import { replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { rewriteBlockedActionClaim } from './reply-action-claim-rewrite.mjs';
 import { savedThingFieldsForTurn } from './turn-saved-thing-ids.mjs';
 
@@ -188,9 +189,13 @@ export async function persistVacationAppOutboundReply({
 }
 
 export async function commitShippedRewrite(db, session, pending, finished, { recordCustomerThingNotes, publishIntakeShare }) {
-  const claimContext = pending.intent && typeof pending.intent === 'object'
-    ? { activeCollaborators: Array.isArray(pending.intent.activeCollaborators) ? pending.intent.activeCollaborators : [] }
-    : null;
+  const claimContext = replyClaimContextFromIntent({
+    ...(pending.intent && typeof pending.intent === 'object' ? pending.intent : {}),
+    turnActionResults: pending.turnActionResults || null,
+    classification: pending.turnActionResults?.invite
+      ? { inviteeName: pending.turnActionResults.invite.inviteeName }
+      : null,
+  });
   try {
     assertCustomerReplyShippable(finished.reply, pending.tripId, pending.turnActionResults || null, claimContext);
   } catch (error) {
