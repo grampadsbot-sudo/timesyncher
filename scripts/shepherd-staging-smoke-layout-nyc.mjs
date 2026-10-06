@@ -71,12 +71,10 @@ const EVALUATE_LAYOUT_NYC_DOM_SOURCE = `(() => {
 })()`;
 
 const LAYOUT_NYC_DOM_PREFIX = `const __layoutNycDom = ${EVALUATE_LAYOUT_NYC_DOM_SOURCE};`;
-export const LAYOUT_NYC_LIST_SORT_TABS = new Set(['flights', 'hotels', 'cars']);
-const LIST_SORT_TABS = LAYOUT_NYC_LIST_SORT_TABS;
+const LIST_SORT_TABS = new Set(['flights', 'hotels', 'cars']);
+const LAYOUT_NYC_OPENROUTER_INFRA_HTTP_STATUSES = new Set([429, 502, 503, 504]);
 
-export const LAYOUT_NYC_OPENROUTER_INFRA_HTTP_STATUSES = new Set([429, 502, 503, 504]);
-
-export function layoutNycColumnSortLabelsEmpty(columnSortLabels = {}) {
+function layoutNycColumnSortLabelsEmpty(columnSortLabels = {}) {
   return !columnSortLabels?.name && !columnSortLabels?.price;
 }
 
