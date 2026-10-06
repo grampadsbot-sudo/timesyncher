@@ -152,57 +152,30 @@ export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
   return { ...shared, thingOverrides };
 }
 
-/** Trip total target on the Budget tab (sum of per-bucket targets). */
+/** Trip total target on the Budget tab (sum of saved per-bucket targets only). */
 export function tripBudgetTargetTotal(shared = {}) {
-  return BUDGET_BUCKETS.reduce((acc, bucket) => acc + bucketTargetAmount(shared, bucket), 0);
-}
-
-function otherThingsExpenseCategory(categoryLower = '') {
-  const fr = String(categoryLower || '').toLowerCase();
-  return [
-    'entertainment',
-    'event',
-    'tour',
-    'sightseeing',
-    'music',
-    'workout',
-    'fitness',
-    'gym',
-    'artist',
-    'theatre',
-    'theater',
-    'broadway',
-    'transport',
-    'other',
-  ].some((token) => fr.includes(token));
-}
-
-function expenseDerivedBucketTarget(shared = {}, bucket = '') {
-  const expenses = Array.isArray(shared.expenses) ? shared.expenses : [];
-  return expenses
-    .filter((expense) => {
-      const category = String(expense.category || '').toLowerCase();
-      if (bucket === 'Restaurants' && !category.includes('restaurant')) return false;
-      if (bucket === OTHER_THINGS_BUCKET && !otherThingsExpenseCategory(category)) return false;
-      if (bucket === 'Stores') return false;
-      if (bucket === 'Flights' && !category.includes('flight')) return false;
-      if (bucket === 'Hotel' && !category.includes('hotel')) return false;
-      return true;
-    })
-    .reduce((sum, expense) => sum + (Number(expense.total_price) || 0), 0);
+  let sum = 0;
+  let any = false;
+  for (const bucket of BUDGET_BUCKETS) {
+    const amount = bucketTargetAmount(shared, bucket);
+    if (amount === null) continue;
+    any = true;
+    sum += amount;
+  }
+  return any ? sum : null;
 }
 
 function bucketTargetAmount(shared = {}, bucket = '') {
   const targets = readBudgetTargetsMap(shared);
   const key = budgetTargetKey(bucket);
-  if (targets && typeof targets === 'object' && Object.prototype.hasOwnProperty.call(targets, key)) {
-    const raw = targets[key];
-    if (raw === '' || raw === null || raw === undefined) return 0;
-    const cleaned = String(raw).replace(/[^0-9.]/g, '');
-    if (!cleaned) return 0;
-    return Math.round(Number(cleaned) || 0);
+  if (!targets || !Object.prototype.hasOwnProperty.call(targets, key)) {
+    return null;
   }
-  return Math.round(expenseDerivedBucketTarget(shared, bucket) || 0);
+  const raw = targets[key];
+  if (raw === '' || raw === null || raw === undefined) return 0;
+  const cleaned = String(raw).replace(/[^0-9.]/g, '');
+  if (!cleaned) return 0;
+  return Math.round(Number(cleaned) || 0);
 }
 
 function rowsInBucket(rows = [], bucket = '') {
@@ -226,9 +199,10 @@ function visibleAmountSet(rows = [], shared = {}) {
     const target = bucketTargetAmount(shared, bucket);
     const bucketRows = rowsInBucket(rows, bucket);
     const planned = bucketRows.length ? bucketPlannedTotal(rows, bucket) : 0;
-    amounts.add(target);
     if (!bucketRows.length) continue;
     amounts.add(planned);
+    if (target === null) continue;
+    amounts.add(target);
     if (target > 0) {
       amounts.add(Math.abs(planned - target));
     }
@@ -236,9 +210,11 @@ function visibleAmountSet(rows = [], shared = {}) {
   const tripPlanned = rows.reduce((acc, row) => acc + row.amount, 0);
   const tripTarget = tripBudgetTargetTotal(shared);
   amounts.add(tripPlanned);
-  amounts.add(tripTarget);
-  if (tripTarget > 0) {
-    amounts.add(Math.abs(tripPlanned - tripTarget));
+  if (tripTarget !== null) {
+    amounts.add(tripTarget);
+    if (tripTarget > 0) {
+      amounts.add(Math.abs(tripPlanned - tripTarget));
+    }
   }
   return amounts;
 }

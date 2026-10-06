@@ -56,6 +56,14 @@ export async function registerLayoutSpineChecks(spineCtx) {
         },
       });
       out.checkLAYOUT = layout;
+      if (layout.infraBlocked) {
+        return {
+          pass: false,
+          checkStatus: 'INFRA_BLOCKED',
+          infraDetail: layout.infraDetail || { reason: layout.infraReason || 'layout_nyc_openrouter' },
+          http: 200,
+        };
+      }
       return { pass: layout.pass, http: 200 };
     }).finally(async () => {
       if (!sharedBrowser) await chromeLayout.close().catch((err) => {

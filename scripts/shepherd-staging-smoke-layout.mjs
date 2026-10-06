@@ -162,7 +162,8 @@ export async function runLayoutHarnessCheck({
     }
   }
   const layoutNyc = await runLayoutNycHarnessBlock({ page, sharedUrl, artifactPath, setStage });
-  if (layoutNyc && !layoutNyc.pass) pass = false;
+  const layoutNycInfraBlocked = Boolean(layoutNyc?.infraBlocked);
+  if (layoutNyc && !layoutNyc.pass && !layoutNycInfraBlocked) pass = false;
   const shareUrlTiming = shareAppGuard ? {
     customerShareUrlSeenMs: shareAppGuard.customerShareUrlSeenMs ?? null,
     sharedApiFirst200Ms: shareAppGuard.sharedApiFirst200Ms ?? null,
@@ -174,6 +175,9 @@ export async function runLayoutHarnessCheck({
     applicability: LAYOUT_RULE_APPLICABILITY,
     shareUrlTiming,
     layoutNyc,
+    infraBlocked: layoutNycInfraBlocked,
+    infraReason: layoutNyc?.infraDetail?.reason || null,
+    infraDetail: layoutNyc?.infraDetail || null,
   };
 }
 
