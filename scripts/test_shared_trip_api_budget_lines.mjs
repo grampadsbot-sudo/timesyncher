@@ -94,7 +94,7 @@ const gateBodySnippet = [
   '$100 / $200',
   'Under by $100',
   'Hotel',
-  '$0 /',
+  '$0',
   '$0 timeline',
   'Hyatt Regency Maui Resort & Spa',
   'Add price',
@@ -137,8 +137,56 @@ const metadataShared = prepareSharedTripForLiveApp(
 );
 assert.equal(tripBudgetTargetTotal(metadataShared), 200);
 assert.equal(metadataShared.budget.some((line) => Number(line.total_price) === 200), true);
-const metadataGateHits = budgetHardcodedHits(gateBodySnippet, metadataShared.budget);
+const metadataGateSnippet = [
+  'Overall trip budget',
+  'Trip total',
+  '$100 / $200',
+  'Under by $100',
+  'Cars',
+  '$100 /',
+  'Under by $100',
+  'Hertz',
+  '$45',
+  'Alamo rental',
+].join('\n');
+const metadataGateHits = budgetHardcodedHits(metadataGateSnippet, metadataShared.budget);
 assert.deepEqual(metadataGateHits, [], `metadata budget targets must sync to API: ${JSON.stringify(metadataGateHits)}`);
+
+const unsetTargetsShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [
+    { id: gateHotelA, name: 'Hyatt Regency Maui Resort & Spa', category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
+    { id: gateHotelB, name: "The Westin Maui Resort & Spa, Ka'anapali", category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
+    { id: gateCarHertz, name: 'Hertz', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+    { id: gateCarAlamo, name: 'Alamo rental', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+  ],
+  thingOverrides: {
+    [`place:${gateCarHertz}`]: { price: 45, category: 'car' },
+    [`place:${gateCarAlamo}`]: { price: 55, category: 'car' },
+  },
+});
+assert.equal(tripBudgetTargetTotal(unsetTargetsShared), null, 'unset __budgetTargets must not invent trip cap');
+const unsetAllowed = new Set(unsetTargetsShared.budget.map((line) => Number(line.total_price)));
+assert.equal(unsetAllowed.has(200), false, 'unset targets must not put fake $200 on API budget');
+assert.equal(unsetAllowed.has(100), true);
+assert.equal(unsetAllowed.has(45), true);
+assert.equal(unsetAllowed.has(55), true);
+assert.equal(unsetAllowed.has(0), true);
+const unsetBodySnippet = [
+  'Overall trip budget',
+  'Trip total',
+  '$100',
+  'Hotel',
+  '$0',
+  '$0 timeline',
+  'Cars',
+  '$100',
+  '$100 timeline',
+  'Hertz',
+  '$45',
+].join('\n');
+const unsetHits = budgetHardcodedHits(unsetBodySnippet, unsetTargetsShared.budget);
+assert.deepEqual(unsetHits, [], `unset budget targets must match API (no / $200): ${JSON.stringify(unsetHits)}`);
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
