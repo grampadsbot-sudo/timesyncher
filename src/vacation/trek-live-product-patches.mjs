@@ -1,7 +1,7 @@
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
-import { dayItineraryBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
+import { dayItineraryBundleExpr, dayTimelineMediaBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
 
@@ -346,23 +346,26 @@ function applySharedThingCardPatches(source = '') {
     js = js.replace('wd=(G,Re)=>', `${thingCardBundleExpr()},wd=(G,Re)=>`);
   }
   if (js.includes(WD_RETURN_NEEDLE)) js = js.replace(WD_RETURN_NEEDLE, WD_RETURN_PATCH);
-  if (js.includes('wd=(G,Re)=>') && !js.includes('tsRenderDayItinerary=')) {
-    js = js.replace('wd=(G,Re)=>', `${dayItineraryBundleExpr()},wd=(G,Re)=>`);
-  }
-  if (js.includes(MC_CALL_NEEDLE)) js = js.replace(MC_CALL_NEEDLE, MC_CALL_PATCH);
-  const dayStart = js.indexOf(DAY_ROW_START);
-  const dayEnd = dayStart >= 0 ? js.indexOf(DAY_ROW_END, dayStart) : -1;
-  if (dayStart >= 0 && dayEnd > dayStart) {
-    js = js.slice(0, dayStart) + DAY_ROW_PATCH + js.slice(dayEnd + DAY_ROW_END.length);
-  }
+  js = applyDayTimelineMediaPatches(js);
   return js;
 }
 
-const MC_CALL_NEEDLE = 'sr=`<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details" data-day-things-flow="1">${Rn.map(zr=>wd(zr,G)).join("")}</main></section>`;return sr';
-const MC_CALL_PATCH = 'sr=tsRenderDayItinerary({titleHtml:an(la.title||"Trip"),openingHtml:Su(G,Re,Rn.map(zr=>zr.item)),dayMediaHtml:tsItineraryDayMedia(G),cardsHtml:Rn.map(zr=>wd(zr,G)).join(""),styleHtml:""});return sr';
-const DAY_ROW_START = 'Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."}),Re.map((ua,Rn)=>';
-const DAY_ROW_END = '})]},`${ua.type}-${Rn}-${ua.title}`)})';
-const DAY_ROW_PATCH = 'n.jsx("div",{"data-day-itinerary-mount":"1",dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({titleHtml:an(G.title||("Day "+G.day_number)),openingHtml:"",dayMediaHtml:tsItineraryDayMedia(G),cardsHtml:Re.map(ua=>wd({item:ua.item,row:ua},G)).join(""),styleHtml:tsDayWebStyle})}})';
+const DAY_TIMELINE_BODY_NEEDLE = 'children:[Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
+const DAY_TIMELINE_BODY_PATCH = 'children:[(()=>{const dm=tsItineraryDayMedia(G);return dm?n.jsx("div",{style:{marginBottom:4},dangerouslySetInnerHTML:{__html:`<div data-itinerary-day-media="1" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px">${dm}</div>`}}):null})(),Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
+const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
+const DAY_TITLE_NR_PATCH = 'children:Pn}),!' + ROW_TYPE_SKIP + '.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1",style:{fontSize:12,fontWeight:400,marginTop:3,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,(()=>{const html=tsItineraryRowMedia(ua.item,ua.type);return html?n.jsx("div",{dangerouslySetInnerHTML:{__html:html}}):null})(),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
+
+function applyDayTimelineMediaPatches(source = '') {
+  let js = String(source || '');
+  if (!js.includes('tsItineraryDayMedia=') && js.includes('wd=(G,Re)=>')) {
+    js = js.replace('wd=(G,Re)=>', `${dayTimelineMediaBundleExpr()},wd=(G,Re)=>`);
+  }
+  if (js.includes(DAY_TIMELINE_BODY_NEEDLE)) {
+    js = js.replace(DAY_TIMELINE_BODY_NEEDLE, DAY_TIMELINE_BODY_PATCH);
+  }
+  if (js.includes(DAY_TITLE_NR_NEEDLE)) js = js.replace(DAY_TITLE_NR_NEEDLE, DAY_TITLE_NR_PATCH);
+  return js;
+}
 const SU_TIMELINE_PN = '<div class="style2-timeline">${Rn}</div>${Pn}</section>';
 const SU_TIMELINE = '<div class="style2-timeline">${Rn}</div></section>';
 const BODY_SUMMARY_NEEDLE = 'Pn=rr(zt)||Co(zt)||Fl(zt)';
@@ -379,9 +382,11 @@ export function applyItineraryKeepsakePass(source = '') {
   if (js.includes(BODY_SUMMARY_NEEDLE)) js = js.replace(BODY_SUMMARY_NEEDLE, BODY_SUMMARY_PATCH);
   if (js.includes(ROW_MEDIA_NEEDLE)) js = js.replace(ROW_MEDIA_NEEDLE, ROW_MEDIA_PATCH);
   if (js.includes(WD_RETURN_NEEDLE)) js = js.replace(WD_RETURN_NEEDLE, WD_RETURN_PATCH);
-  if (js.includes(MC_CALL_NEEDLE)) js = js.replace(MC_CALL_NEEDLE, MC_CALL_PATCH);
   if (js.includes(VIDEO_QR_HIDE) && !js.includes(VIDEO_QR_UNHIDE)) js = js.replace(VIDEO_QR_HIDE, `${VIDEO_QR_HIDE}${VIDEO_QR_UNHIDE}`);
   if (js.includes(DAY_GALLERY_NEEDLE)) js = js.replace(DAY_GALLERY_NEEDLE, '');
+  if (!js.includes('tsItineraryDayMedia=') && js.includes('wd=(G,Re)=>')) {
+    js = js.replace('wd=(G,Re)=>', `${dayItineraryBundleExpr()},wd=(G,Re)=>`);
+  }
   return js;
 }
 

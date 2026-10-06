@@ -1,4 +1,4 @@
-/** Thing-card HTML shared by Style-two `wd()` and shared-trip category tabs. */
+/** Shared thing-card HTML for category tabs; day timeline stays native NYC TREK React. */
 
 function text(value) {
   if (typeof value === 'string') return value.trim();
@@ -39,10 +39,10 @@ export function thingCardBundleExpr() {
   return `tsRenderThingCard=${renderThingCardHtml.toString()}`;
 }
 
-const THING_CARD_WEB_CSS = '.thing{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;color:#111827;box-sizing:border-box}.thing-head{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start;min-width:0}.thing-head h3{font-size:15px;margin:0;font-weight:800}.thing-head [data-row-summary="1"]{font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155}.thing p{font-size:12px;line-height:1.4;font-weight:400;color:#334155;margin:6px 0 0}.style2-thing-meta:empty{display:none}.thing-meta{font-size:12px;color:#475569}[data-itinerary-day-media="1"],[data-itinerary-row-media="1"]{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}[data-itinerary-day-media="1"]{margin:0 0 12px}[data-itinerary-row-media="1"]{margin-top:8px}[data-itinerary-day-media="1"] .print-media-card,[data-itinerary-row-media="1"] .print-media-card{display:block;margin:0;width:88px;max-width:100%}[data-itinerary-day-media="1"] .print-media-card>img,[data-itinerary-row-media="1"] .print-media-card>img{width:88px;max-width:100%;height:auto;max-height:72px;object-fit:contain;border-radius:8px;border:1px solid #e5e7eb;background:#f8fafc}[data-itinerary-day-media="1"] .print-media-card.video,[data-itinerary-row-media="1"] .print-media-card.video{display:inline-block!important;width:72px}[data-itinerary-day-media="1"] .print-media-qr,[data-itinerary-row-media="1"] .print-media-qr{width:72px;height:72px;object-fit:contain;background:#fff}';
+const THING_CARD_TAB_CSS = '.thing{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;color:#111827;box-sizing:border-box}.thing-head{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start;min-width:0}.thing-head h3{font-size:15px;margin:0;font-weight:800}.thing-head [data-row-summary="1"]{font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155}.thing p{font-size:12px;line-height:1.4;font-weight:400;color:#334155;margin:6px 0 0}.style2-thing-meta:empty{display:none}.thing-meta{font-size:12px;color:#475569}';
 
 export function thingCardWebStyleTag() {
-  return `<style data-itinerary-print-css="web">${THING_CARD_WEB_CSS}</style>`;
+  return `<style data-itinerary-print-css="web">${THING_CARD_TAB_CSS}</style>`;
 }
 
 function thingCardSummaryText(place = {}, override = {}) {
@@ -101,14 +101,14 @@ export function thingCardBodyHtml(paragraphs = []) {
   return paragraphs.map((part) => `<p>${printEscape(part)}</p>`).join('');
 }
 
+/** Style-two PDF day page shell (keepsake markup); not used for web Day-by-Day. */
 export function renderDayItineraryHtml(fields = {}) {
   const titleHtml = fields.titleHtml || '';
   const openingHtml = fields.openingHtml || '';
   const cardsHtml = fields.cardsHtml || '';
-  const styleHtml = fields.styleHtml || '';
   const dayMedia = text(fields.dayMediaHtml);
   const dayMediaHtml = dayMedia ? `<div class="itinerary-media" data-itinerary-day-media="1">${dayMedia}</div>` : '';
-  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1" data-day-itinerary="1">${styleHtml}<h1>${titleHtml}</h1>${openingHtml}${dayMediaHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
+  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${titleHtml}</h1>${openingHtml}${dayMediaHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
 }
 
 function itineraryDayMedia(G) {
@@ -124,6 +124,28 @@ function itineraryDayMedia(G) {
   return photos + videos;
 }
 
+function itineraryRowMediaInline(item, type) {
+  const rowType = String(type || '');
+  if (/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(rowType)) return '';
+  const rows = (typeof fo == 'function' ? fo(item) : []).filter((Oo) => {
+    if (!Oo) return false;
+    return !/bind[- ]?proof|neon file bind proof/i.test([Oo.filename, Oo.original_name, Oo.originalName, Oo.caption, Oo.url, Oo.public_url, Oo.id].join(' '));
+  });
+  const photos = rows.filter((Oo) => Oo.kind !== 'video').map(Ba).join('');
+  const videos = rows.filter((Oo) => Oo.kind === 'video').map((Oo) => {
+    const fig = Ba(Oo);
+    return fig.includes('</figure>')
+      ? fig.replace('</figure>', '<figcaption style="font-size:10px;color:#64748b;margin-top:4px;text-align:center">Scan to play video</figcaption></figure>')
+      : fig;
+  }).join('');
+  if (!photos && !videos) return '';
+  return `<div data-itinerary-row-media="1" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;align-items:flex-start">${photos}${videos}</div>`;
+}
+
+export function dayTimelineMediaBundleExpr() {
+  return `tsItineraryDayMedia=${itineraryDayMedia.toString()},tsItineraryRowMedia=${itineraryRowMediaInline.toString()}`;
+}
+
 export function dayItineraryBundleExpr() {
-  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},tsDayWebStyle=${JSON.stringify(thingCardWebStyleTag())},tsItineraryDayMedia=${itineraryDayMedia.toString()}`;
+  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},${dayTimelineMediaBundleExpr()}`;
 }
