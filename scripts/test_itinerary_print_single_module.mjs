@@ -44,7 +44,7 @@ assert.match(bundle, /return tsRenderThingCard\(/);
 assert.doesNotMatch(bundle, /tsRenderDayItinerary=/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount/);
 assert.match(bundle, /gridTemplateColumns:"74px 22px 1fr"/);
-assert.match(bundle, /tsItineraryDayMedia=function itineraryDayMedia/);
+assert.match(bundle, /tsItineraryTimelineMediaCss=function itineraryTimelineMediaStyleTag/);
 assert.match(bundle, /tsItineraryRowMedia=function itineraryRowMediaInline/);
 assert.match(bundle, /data-row-summary="1"/);
 

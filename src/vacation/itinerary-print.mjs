@@ -16,6 +16,23 @@ export function thingCardBundleExpr() {
   return `tsRenderThingCard=${renderThingCardHtml.toString()}`;
 }
 
+/** Keepsake style-2 print-media-card sizing, scoped to shared day timeline only. */
+export function itineraryTimelineMediaStyleTag() {
+  const scope = '[data-ts-day-timeline="1"]';
+  const css = [
+    `${scope} .print-media-card{margin:0 8px 8px 0;width:92px;max-width:92px;display:inline-block;vertical-align:top;text-align:center;break-inside:avoid}`,
+    `${scope} .print-media-card>img:not(.print-media-qr){width:92px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #e5e7eb;background:#f8fafc;display:block}`,
+    `${scope} .print-media-card.video>img.print-media-qr{width:72px;height:72px;object-fit:contain;background:#fff;border:1px solid #e5e7eb;border-radius:10px;display:block}`,
+    `${scope} .print-media-card figcaption{font:400 10px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:#64748b;margin-top:4px}`,
+    `${scope} [data-itinerary-day-media="1"],${scope} [data-itinerary-row-media="1"]{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}`,
+  ].join('');
+  return `<style data-itinerary-timeline-media-css="1">${css}</style>`;
+}
+
+export function itineraryTimelineMediaStyleBundleExpr() {
+  return `tsItineraryTimelineMediaCss=${itineraryTimelineMediaStyleTag.toString()}`;
+}
+
 function itineraryDayMedia(G) {
   const rows = (typeof li == 'function' ? li(G) : []).filter((Oo) => {
     if (!Oo) return false;
@@ -44,9 +61,9 @@ function itineraryRowMediaInline(item, type) {
       : fig;
   }).join('');
   if (!photos && !videos) return '';
-  return `<div data-itinerary-row-media="1" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;align-items:flex-start">${photos}${videos}</div>`;
+  return `<div data-itinerary-row-media="1">${photos}${videos}</div>`;
 }
 
 export function dayTimelineMediaBundleExpr() {
-  return `tsItineraryDayMedia=${itineraryDayMedia.toString()},tsItineraryRowMedia=${itineraryRowMediaInline.toString()}`;
+  return `${itineraryTimelineMediaStyleBundleExpr()},tsItineraryDayMedia=${itineraryDayMedia.toString()},tsItineraryRowMedia=${itineraryRowMediaInline.toString()}`;
 }

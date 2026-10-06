@@ -383,7 +383,8 @@ function applySharedThingCardPatches(source = '') {
 }
 
 const DAY_TIMELINE_BODY_NEEDLE = 'children:[Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
-const DAY_TIMELINE_BODY_PATCH = 'children:[(()=>{const dm=tsItineraryDayMedia(G);return dm?n.jsx("div",{style:{marginBottom:4},dangerouslySetInnerHTML:{__html:`<div data-itinerary-day-media="1" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px">${dm}</div>`}}):null})(),Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
+const DAY_TIMELINE_BODY_PATCH = 'children:[(()=>{const css=tsItineraryTimelineMediaCss();return css?n.jsx("div",{dangerouslySetInnerHTML:{__html:css}}):null})(),(()=>{const dm=tsItineraryDayMedia(G);return dm?n.jsx("div",{style:{marginBottom:4},dangerouslySetInnerHTML:{__html:`<div data-itinerary-day-media="1">${dm}</div>`}}):null})(),Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
+const DAY_TIMELINE_BODY_CSS_NEEDLE = 'children:[(()=>{const dm=tsItineraryDayMedia(G);return dm?n.jsx("div",{style:{marginBottom:4},dangerouslySetInnerHTML:{__html:`<div data-itinerary-day-media="1" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px">${dm}</div>`}}):null})(),Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."})';
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
 const DAY_TITLE_NR_PATCH = 'children:Pn}),!' + ROW_TYPE_SKIP + '.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1",style:{fontSize:12,fontWeight:400,marginTop:3,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,(()=>{const html=tsItineraryRowMedia(ua.item,ua.type);return html?n.jsx("div",{dangerouslySetInnerHTML:{__html:html}}):null})(),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
 
@@ -394,6 +395,8 @@ function applyDayTimelineMediaPatches(source = '') {
   }
   if (js.includes(DAY_TIMELINE_BODY_NEEDLE)) {
     js = js.replace(DAY_TIMELINE_BODY_NEEDLE, DAY_TIMELINE_BODY_PATCH);
+  } else if (js.includes(DAY_TIMELINE_BODY_CSS_NEEDLE)) {
+    js = js.replace(DAY_TIMELINE_BODY_CSS_NEEDLE, DAY_TIMELINE_BODY_PATCH);
   }
   if (js.includes(DAY_TITLE_NR_NEEDLE)) js = js.replace(DAY_TITLE_NR_NEEDLE, DAY_TITLE_NR_PATCH);
   return js;
