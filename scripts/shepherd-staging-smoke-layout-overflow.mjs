@@ -1,6 +1,6 @@
 /** Harness-only horizontal overflow probe (in-browser + offline fixtures). */
 
-export function parentOverflowClipsX(style) {
+function parentOverflowClipsX(style) {
   const clips = (v) => v === 'hidden' || v === 'clip' || v === 'auto' || v === 'scroll';
   return clips(style.overflowX) || clips(style.overflow);
 }
