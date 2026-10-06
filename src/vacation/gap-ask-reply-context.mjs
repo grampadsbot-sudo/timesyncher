@@ -173,15 +173,32 @@ export function perFactGapAskRuleLines(tripRaw = {}) {
   ].filter(Boolean);
 }
 
-export function inviteContactAskRequired(tripContext) {
+function inviteContactAskRequired(tripContext) {
   return tripContext?.inviteContactAsk === true;
 }
 
-export function inviteContactAskReplySatisfied(reply) {
+function inviteContactAskReplySatisfied(reply) {
   const body = String(reply || '').trim();
   if (!body) return false;
   if (/\b(?:e-?mail|email address)\b/i.test(body)) return true;
   return /\?/.test(body) && /\b(?:name|wife|husband|spouse|partner|companion|her|his|their)\b/i.test(body);
+}
+
+export function liveReplyInviteContactFailure({ drafting, tripContext, reply } = {}) {
+  if (inviteContactAskRequired(drafting) && !inviteContactAskRequired(tripContext)) {
+    return 'invite_contact_ask_facts_missing';
+  }
+  if (inviteContactAskRequired(tripContext)) {
+    const body = String(reply || '').trim();
+    if (body && !inviteContactAskReplySatisfied(body)) return 'invite_contact_ask_reply_required';
+  }
+  return null;
+}
+
+export function inviteContactLiveReplySystemExtra(tripContext) {
+  return inviteContactAskRequired(tripContext)
+    ? 'After acknowledging their lodging answer, ask for their travel companion name and email so you can send the trip invite. Do not skip that question.'
+    : '';
 }
 
 export async function draftingFactsForLiveReply(draftingFactsFn, history, customerTurn, mergedTrip, env, tripId) {

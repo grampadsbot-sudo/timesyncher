@@ -15,11 +15,13 @@ import {
   annotateLiveTurnGapAnswer,
   draftingFactsForLiveReply,
   draftingGapFields,
-  inviteContactAskReplySatisfied,
-  inviteContactAskRequired,
+  inviteContactLiveReplySystemExtra,
+  liveReplyInviteContactFailure,
   mergeSavedTripGapFields,
-  savedTripGapFields,
 } from './gap-ask-reply-context.mjs';
+import { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
+
+export { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
@@ -1397,44 +1399,6 @@ function cleanCandidate(text) {
   return applyUpsellPolicy(text);
 }
 
-export async function loadSavedTripRecord(session, env = process.env) {
-  const tripId = session?.trip_id || session?.tripId;
-  if (!tripId || !env?.DATABASE_URL) return null;
-  try {
-    const { sql } = await import('./db.mjs');
-    const db = sql(env);
-    const trips = await db`select destination, start_date, end_date, metadata from trips where id = ${tripId} limit 1`;
-    const row = trips[0];
-    if (!row) return null;
-    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-    const thingRows = await db`select title, category, metadata from trip_things where trip_id = ${tripId} order by created_at asc`;
-    return {
-      start: row.start_date || '',
-      end: row.end_date || '',
-      destination: String(row.destination || '').trim(),
-      things: thingRows.map((thing) => {
-        const thingMeta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
-        const sourceRef = thingMeta.sourceRef && typeof thingMeta.sourceRef === 'object' ? thingMeta.sourceRef : null;
-        return {
-          title: thing.title,
-          category: thing.category || thingMeta.category || '',
-          who: thingMeta.who || '',
-          whenLabel: thingMeta.whenLabel || '',
-          customerWhen: thingMeta.customerWhen || '',
-          notes: thingMeta.notes || [],
-          ...(sourceRef ? { sourceRef } : {}),
-        };
-      }),
-      party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
-      rule: meta.intakeRule || '',
-      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
-      ...savedTripGapFields(meta),
-    };
-  } catch {
-    return null;
-  }
-}
-
 function joiningSeatRecord(session) {
   const seat = session?.metadata?.seat || session?.seat;
   const name = String(seat?.displayName || seat?.name || '').trim();
@@ -1513,14 +1477,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end,
     wantedThings, inTurnPlaceResults: inTurnProviderResults,
   });
-  if (inviteContactAskRequired(drafting) && !inviteContactAskRequired(tripContext)) {
-    return {
-      reply: null,
-      rules,
-      jev: null,
-      model: null,
-      reason: 'invite_contact_ask_facts_missing',
-    };
+  const inviteFactsFailure = liveReplyInviteContactFailure({ drafting, tripContext });
+  if (inviteFactsFailure) {
+    return { reply: null, rules, jev: null, model: null, reason: inviteFactsFailure };
   }
   intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
@@ -1596,9 +1555,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
-    inviteContactAskRequired(tripContext)
-      ? 'After acknowledging their lodging answer, ask for their travel companion name and email so you can send the trip invite. Do not skip that question.'
-      : '',
+    inviteContactLiveReplySystemExtra(tripContext),
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1637,14 +1594,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       reason: banned || model?.reason || 'live dispatcher returned no reply',
     };
   }
-  if (inviteContactAskRequired(tripContext) && !inviteContactAskReplySatisfied(reply)) {
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      reason: 'invite_contact_ask_reply_required',
-    };
+  const inviteReplyFailure = liveReplyInviteContactFailure({ tripContext, reply });
+  if (inviteReplyFailure) {
+    return { reply: null, rules, jev, model, reason: inviteReplyFailure };
   }
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
@@ -1769,7 +1721,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const interimReply = finished.log?.interimReply || { text: null, model: null, ms: null };
   if (finished.log) finished.log.interimReply = interimReply;
   if (finished.reply) {
-    if (inviteContactAskRequired(tripContext) && !inviteContactAskReplySatisfied(finished.reply)) {
+    const inviteRewriteFailure = liveReplyInviteContactFailure({ tripContext, reply: finished.reply });
+    if (inviteRewriteFailure) {
       return {
         reply: null,
         rules,
@@ -1777,7 +1730,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
         model: finished.model,
         quality: finished.quality,
         log: finished.log,
-        reason: 'invite_contact_ask_reply_required',
+        reason: inviteRewriteFailure,
       };
     }
     return {
