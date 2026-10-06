@@ -136,7 +136,7 @@ function expenseDerivedBucketTarget(shared = {}, bucket = '') {
     .filter((expense) => {
       const category = String(expense.category || '').toLowerCase();
       if (bucket === 'Restaurants' && !category.includes('restaurant')) return false;
-      if (bucket === 'Other Things' && !otherThingsExpenseCategory(category)) return false;
+      if (bucket === OTHER_THINGS_BUCKET && !otherThingsExpenseCategory(category)) return false;
       if (bucket === 'Stores') return false;
       if (bucket === 'Flights' && !category.includes('flight')) return false;
       if (bucket === 'Hotel' && !category.includes('hotel')) return false;
