@@ -485,6 +485,11 @@ export function applyThingPresentation(shared = {}, options = {}) {
     if (sourcedMenu.restaurantTags.length) extra.restaurantTags = sourcedMenu.restaurantTags;
     if (sourcedMenu.happyHour != null) extra.happyHour = sourcedMenu.happyHour;
     if (sourcedMenu.happyHourDetails) extra.happyHourDetails = sourcedMenu.happyHourDetails;
+    const source = sourceObject(place);
+    const neighborhood = String(source?.neighborhood || place.neighborhood || '').trim();
+    if (neighborhood) extra.neighborhood = neighborhood;
+    const area = String(source?.area || place.area || neighborhood || '').trim();
+    if (area) extra.area = area;
     put(place, extra);
   }
   const next = { ...shared, places, thingOverrides };

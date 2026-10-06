@@ -245,7 +245,6 @@ export function applyLiveProductPatches(patched = '', options = {}) {
   if (js.includes(LIST_LOGO_PATCH) && js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
   }
-  if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
   if (served && !js.includes('AI-assisted vacation itinerary planning')) {
     throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
