@@ -15,7 +15,7 @@ import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-sh
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.PR225_R5_ARTIFACT_ROOT || '/opt/cursor/artifacts/pr225-nyc-sbs-r5';
+const outRoot = process.env.PR225_SBS_OUT || process.env.PR225_R5_ARTIFACT_ROOT || '/opt/cursor/artifacts/pr225-nyc-sbs-r6';
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
 const prodBundleUrl = `${travelBase}/assets/${bundleName}`;
@@ -27,6 +27,16 @@ const CASES = [
 const WIDTHS = [
   { width: 390, tag: '390' },
   { width: 1280, tag: '1280' },
+];
+const TAB_LABELS = [
+  'Day-by-Day',
+  'Flights',
+  'Hotels',
+  'Cars',
+  'Restaurants',
+  'Stores',
+  'The Rest',
+  'Budget',
 ];
 
 function loadPuppeteer() {
@@ -179,6 +189,39 @@ async function captureHeader(page, tabLabel) {
   return { png: shot, chips: meta.areaButtons };
 }
 
+async function measureListContainer(page, tabLabel) {
+  await page.evaluate((want) => {
+    for (const btn of document.querySelectorAll('button,[role="tab"]')) {
+      if (btn.getAttribute('aria-label') === want) btn.click();
+    }
+    window.scrollTo(0, 0);
+    if (document.scrollingElement) document.scrollingElement.scrollLeft = 0;
+  }, tabLabel);
+  await new Promise((r) => setTimeout(r, 400));
+  return page.evaluate((want) => {
+    const climb = (start) => {
+      let el = start;
+      for (let i = 0; i < 30 && el; i += 1) {
+        const cs = getComputedStyle(el);
+        const maxW = parseFloat(cs.maxWidth);
+        const r = el.getBoundingClientRect();
+        if (Number.isFinite(maxW) && maxW >= 1110 && maxW <= 1130 && r.width >= 1000) {
+          return { left: r.left, right: r.right };
+        }
+        el = el.parentElement;
+      }
+      return null;
+    };
+    const tabBtn = [...document.querySelectorAll('button,[role="tab"]')].find((b) => b.getAttribute('aria-label') === want);
+    const fromTab = tabBtn ? climb(tabBtn.parentElement) : null;
+    if (fromTab) return fromTab;
+    const nameBtn = [...document.querySelectorAll('button')].find((b) => /^Name$/i.test((b.textContent || '').trim()));
+    const fromSort = nameBtn ? climb(nameBtn.parentElement) : null;
+    if (fromSort) return fromSort;
+    throw new Error(`list container not found for ${want}`);
+  }, tabLabel);
+}
+
 const tripPayload = finalizeServedSharedTripPayload(applyCapturedLogos(buildNycPr225SharedTrip()));
 const bundlePath = `/assets/${bundleName}`;
 const prodJs = patchSharedTripHostnameForLocalHarness((await loadProdBundle()).toString('utf8'));
@@ -197,6 +240,7 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
 });
 
+const edgeLines = [];
 try {
   for (const { width, tag } of WIDTHS) {
     for (const [tabLabel, stem, expectedChips] of CASES) {
@@ -221,6 +265,33 @@ try {
           pixelDiff(ref, got);
         }
       }
+    }
+  }
+
+  for (const tabLabel of TAB_LABELS) {
+    let prodRect;
+    {
+      const app = await startServer({ html, js: prodJs, css, tripPayload, bundlePath });
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1280, height: 800 });
+      await page.goto(`${app.origin}/shared/${NYC_PR225_SLUG}/`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+      await page.waitForFunction(() => /Day-by-Day/i.test(document.body?.innerText || ''), { timeout: 90000 });
+      prodRect = await measureListContainer(page, tabLabel);
+      await page.close();
+      await app.close();
+    }
+    {
+      const app = await startServer({ html, js: patchedJs, css, tripPayload, bundlePath });
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1280, height: 800 });
+      await page.goto(`${app.origin}/shared/${NYC_PR225_SLUG}/`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+      await page.waitForFunction(() => /Day-by-Day/i.test(document.body?.innerText || ''), { timeout: 90000 });
+      const servedRect = await measureListContainer(page, tabLabel);
+      assert.ok(Math.abs(prodRect.left - servedRect.left) <= 2, `${tabLabel} left edge prod=${prodRect.left} served=${servedRect.left}`);
+      assert.ok(Math.abs(prodRect.right - servedRect.right) <= 2, `${tabLabel} right edge prod=${prodRect.right} served=${servedRect.right}`);
+      edgeLines.push(`${tabLabel}: L prod=${prodRect.left.toFixed(1)} served=${servedRect.left.toFixed(1)} | R prod=${prodRect.right.toFixed(1)} served=${servedRect.right.toFixed(1)}`);
+      await page.close();
+      await app.close();
     }
   }
 
@@ -257,4 +328,5 @@ try {
   await browser.close();
 }
 
-console.log('PR225 area chips layout gate (a)+(b) passed');
+console.log('PR225 area chips layout gate (a)+(b)+(c) passed');
+console.log(`gate1280-edges: ${edgeLines.join('; ')}`);

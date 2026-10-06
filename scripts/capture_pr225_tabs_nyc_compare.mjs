@@ -16,8 +16,8 @@ import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.argv[2] || process.env.PR225_SBS_OUT || '/opt/cursor/artifacts/pr225-nyc-sbs-r5';
-const zipPath = process.env.PR225_SBS_ZIP || '/opt/cursor/artifacts/pr225-nyc-sbs-r5.zip';
+const outRoot = process.argv[2] || process.env.PR225_SBS_OUT || '/opt/cursor/artifacts/pr225-nyc-sbs-r6';
+const zipPath = process.env.PR225_SBS_ZIP || '/opt/cursor/artifacts/pr225-nyc-sbs-r6.zip';
 const slug = NYC_PR225_SLUG;
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
