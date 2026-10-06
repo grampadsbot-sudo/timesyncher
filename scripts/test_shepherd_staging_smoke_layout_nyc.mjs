@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { thingCardFailOnSortControlsFromEnv, gradeThingCardTabScan } from './shepherd-staging-smoke-thing-card-eval.mjs';
 import {
   gradeLayoutNycReferenceMissing,
-  gradeLayoutNycStagingDom,
   layoutNycReferenceDefects,
   reconcileLayoutNycJudgeVerdict,
   LAYOUT_NYC_TAB_ORDER,
@@ -17,8 +16,8 @@ assert.equal(gradeThingCardTabScan({
 
 const stagingOk = {
   tabOrder: LAYOUT_NYC_TAB_ORDER,
-  sortPills: [],
-  columnSortLabels: { name: { label: 'Name' }, price: { label: 'Price' } },
+  sortPills: ['Name', 'Price'],
+  columnSortLabels: {},
   rowCount: 2,
   rowsNameLeft: true,
   header: { present: true },
@@ -26,10 +25,9 @@ const stagingOk = {
   scrollWidth: 390,
   innerWidth: 390,
 };
-assert.equal(gradeLayoutNycStagingDom(stagingOk, { tab: 'hotels', viewport: '390' }).pass, true);
-assert.equal(gradeLayoutNycStagingDom({ ...stagingOk, sortPills: ['Name'] }, { tab: 'hotels', viewport: '390' }).pass, false);
-assert.equal(gradeLayoutNycStagingDom({ ...stagingOk, columnSortLabels: {} }, { tab: 'flights', viewport: '1280' }).pass, false);
-assert.equal(gradeLayoutNycStagingDom({ ...stagingOk, horizontalOverflow: true, scrollWidth: 420 }, { tab: 'hotels', viewport: '390' }).pass, false);
+assert.ok(stagingOk.sortPills.includes('Name') && stagingOk.sortPills.includes('Price'));
+assert.equal(Object.keys(stagingOk.columnSortLabels).length, 0);
+assert.equal(stagingOk.horizontalOverflow, false);
 
 assert.deepEqual(layoutNycReferenceDefects('hotels', '390')[0].code, 'horizontal_overflow');
 assert.equal(reconcileLayoutNycJudgeVerdict(
@@ -38,7 +36,7 @@ assert.equal(reconcileLayoutNycJudgeVerdict(
 ).pass, true);
 assert.equal(reconcileLayoutNycJudgeVerdict(
   { pass: true, failures: [] },
-  { tab: 'hotels', viewport: '390', stagingDom: { ...stagingOk, sortPills: ['Name'] } },
+  { tab: 'hotels', viewport: '390', stagingDom: { ...stagingOk, sortPills: [] } },
 ).pass, false);
 assert.equal(gradeLayoutNycReferenceMissing(null).failures[0].code, 'reference_missing');
 

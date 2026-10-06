@@ -9,11 +9,13 @@ import { createRequire } from 'node:module';
 
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { LOGO_TAB_SETTLE_MS, stitchLogoChipCropsPng } from './shepherd-staging-smoke-logo-metrics.mjs';
+import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-shared-trip.mjs';
+import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-tabs';
-const slug = 'intake-435a4d049b1d';
+const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs';
+const slug = NYC_PR225_SLUG;
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
   || `https://${['travel', 'timesyncher', 'com'].join('.')}`;
@@ -152,8 +154,8 @@ async function captureTab(page, label) {
 }
 
 async function main() {
-  const fixture = JSON.parse(await readFile(path.join(root, 'scripts/fixtures/intake-435a4d049b1d.json'), 'utf8'));
-  const tripPayload = finalizeServedSharedTripPayload(fixture);
+  const fixture = buildNycPr225SharedTrip();
+  const tripPayload = finalizeServedSharedTripPayload(applyCapturedLogos(fixture));
   tripPayload.trip = {
     ...tripPayload.trip,
     title: `TimeSyncher ${tripPayload.trip?.title || 'trip'}`,
@@ -212,7 +214,10 @@ async function main() {
     await browser.close();
   }
 
-  console.log(JSON.stringify({ outRoot, bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
+  console.log(JSON.stringify({ outRoot, zip: '/opt/cursor/artifacts/pr225-nyc-sbs.zip', bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
+
+  const { execFileSync } = await import('node:child_process');
+  execFileSync('zip', ['-qr', '/opt/cursor/artifacts/pr225-nyc-sbs.zip', '.'], { cwd: outRoot });
 }
 
 void main().catch((err) => {

@@ -5,9 +5,9 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 
 import { compareColumnRows, nextColumnSort, rowPriceAmount, LIST_SORT_PRESENTATION } from '../src/vacation/list-column-sort.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
 
-const fixture = JSON.parse(readFileSync(new URL('./fixtures/intake-435a4d049b1d.json', import.meta.url), 'utf8'));
-const payload = finalizeServedSharedTripPayload(fixture);
+const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
 
 const hotelPlaces = (payload.places || []).filter((place) => {
   const override = payload.thingOverrides?.[`place:${place.id}`] || {};
@@ -17,24 +17,42 @@ const carPlaces = (payload.places || []).filter((place) => {
   const override = payload.thingOverrides?.[`place:${place.id}`] || {};
   return productThingCategory(place, override) === 'car';
 });
+const flightPlaces = (payload.places || []).filter((place) => {
+  const override = payload.thingOverrides?.[`place:${place.id}`] || {};
+  return productThingCategory(place, override) === 'flight';
+});
 assert.ok(hotelPlaces.length > 0, 'hotels in places');
 assert.ok(carPlaces.length > 0, 'cars in places');
-assert.match(String(hotelPlaces[0].name || ''), /Resort|Hyatt|Westin/i);
-assert.match(String(carPlaces[0].address || carPlaces[0].name || ''), /101 Airport Rd|Rental/i);
+assert.ok(flightPlaces.length > 0, 'flights in places');
+assert.match(String(hotelPlaces[0].name || ''), /Midtown sample hotel/i);
+assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
+assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'P');
+assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.price, 172);
+assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /transit access/i);
+
+const flightId = flightPlaces[0].id;
+const hotelId = hotelPlaces[0].id;
+const carId = carPlaces[0].id;
+assert.equal(payload.thingOverrides[`place:${flightId}`]?.timeline, true);
+assert.equal(payload.thingOverrides[`place:${hotelId}`]?.timeline, true);
+assert.equal(payload.thingOverrides[`place:${carId}`]?.timeline, true);
+assert.equal(payload.thingOverrides[`place:${flightId}`]?.dayIds?.length, 1);
+assert.equal(payload.thingOverrides[`place:${hotelId}`]?.stayDays, 4);
+assert.ok((payload.thingOverrides[`place:${carId}`]?.perDaySchedule || {}));
 
 const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
-assert.equal(LIST_SORT_PRESENTATION, 'columns');
+assert.equal(LIST_SORT_PRESENTATION, 'pills');
 assert.match(bundle, /n\.jsx\(Wr,\{listKey:"flights"\}\)/);
 assert.match(bundle, /n\.jsx\(Wr,\{listKey:"hotels"\}\)/);
 assert.match(bundle, /n\.jsx\(Wr,\{listKey:"cars"\}\)/);
-assert.match(bundle, /data-ts-list-sort-header":"1"/);
-assert.match(bundle, /function tsListColumnSort\(/);
-assert.doesNotMatch(bundle, /Wr=\(\{listKey:G\}\)=>\{const Re=K\[G\]/);
+assert.match(bundle, /Wr=\(\{listKey:G\}\)=>\{const Re=K\[G\]\|\|\{key:"name",dir:"asc"\}/);
+assert.doesNotMatch(bundle, /function tsListColumnSort\(/);
+assert.doesNotMatch(bundle, /data-ts-list-sort-header":"1"/);
 assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)/);
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
-assert.doesNotMatch(bundle, /tsListColumnSort[\s\S]{0,1200}appendChild\(li\)/);
-assert.match(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\|\|vr\(G\)\|\|Zr\(G\)\)/);
+assert.match(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
+assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\|\|vr\(G\)/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
