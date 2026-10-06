@@ -1,4 +1,5 @@
-import { providerFailureMessage, resolveSearchContext, tryGeocodeLabel } from './place-search-geocode.mjs';
+import { providerFailureMessage, tryGeocodeLabel } from './place-search-geocode.mjs';
+import { resolveSearchContext } from './place-search-resolve-context.mjs';
 import { resolveSearchAnchorGeocode } from './place-search-anchor-geocode.mjs';
 import {
   everyPlaceResultProviderErrored,
@@ -39,7 +40,6 @@ export async function runPlaceProviderPass({
   dest,
   lodging,
   lodgingPoint,
-  statedLodgingArea = '',
   keepAreaText = false,
   tripDestinationCenter = null,
   tripDestinationLabel = '',
@@ -61,6 +61,7 @@ export async function runPlaceProviderPass({
   readJson,
   fail,
 }) {
+  const statedLodgingArea = String(relevanceContext?.statedLodgingArea || '').trim();
   const providerLog = [];
   const providerTimings = {
     contextMs: 0,

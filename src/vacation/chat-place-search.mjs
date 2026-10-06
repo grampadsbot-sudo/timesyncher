@@ -124,7 +124,7 @@ export async function runCustomerChatPlaceSearch({
       tripDestinationCenter,
       lodging: classification?.anchorIsLodging === true ? lodging : '',
       lodgingPoint: classification?.anchorIsLodging === true ? lodgingPoint : null,
-      statedLodgingArea: classification?.anchorIsLodging === true
+      relevanceStatedLodgingArea: classification?.anchorIsLodging === true
         ? (String(statedLodgingArea || tripStatedLodgingArea || '').trim())
         : '',
       keepAreaText: classification?.anchorIsLodging === true && !lodging,

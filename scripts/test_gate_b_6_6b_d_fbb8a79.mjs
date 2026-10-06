@@ -117,7 +117,7 @@ const chat6b = await runCustomerChatPlaceSearch({
   lodgingPoint: null,
   env,
   searchImpl: async (options) => {
-    assert.equal(options.statedLodgingArea, 'Kaanapali');
+    assert.equal(options.relevanceStatedLodgingArea, 'Kaanapali');
     return searchPlaces({
       ...options,
       fetchImpl: async (url, opts) => {
@@ -181,7 +181,7 @@ const dSave = await searchPlaces({
   }],
   relevanceTarget: 'Paia Fish Market',
   relevanceArea: 'Maui',
-  statedLodgingArea: 'Paia',
+  relevanceStatedLodgingArea: 'Paia',
   searchAnchor: { text: 'Maui', source: 'destination' },
   env,
   fetchImpl: async (url, options = {}) => {
