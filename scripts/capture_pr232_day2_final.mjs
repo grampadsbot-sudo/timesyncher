@@ -489,7 +489,7 @@ for (const width of widths) {
 }
 
 report.layoutMatchPass = report.captures.every((c) => c.layoutChecks?.pass);
-report.captureRound = 2;
+report.captureRound = 3;
 
 await browser.close();
 await writeFile(path.join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
