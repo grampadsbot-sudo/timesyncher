@@ -110,6 +110,53 @@ function budgetTargetKey(bucket) {
   return `overall:${bucket}`;
 }
 
+function budgetTargetsRecord(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+}
+
+/** Same map the live Budget tab reads via `thingOverrides.__budgetTargets` (plus saved trip metadata). */
+export function readBudgetTargetsMap(shared = {}) {
+  const merged = {};
+  const tripMeta = shared?.trip?.metadata;
+  const meta = budgetTargetsRecord(tripMeta) || {};
+  const sources = [
+    budgetTargetsRecord(meta.__budgetTargets),
+    budgetTargetsRecord(meta.thingOverrides?.__budgetTargets),
+    budgetTargetsRecord(meta.preCollaboratorSnapshot?.thingOverrides?.__budgetTargets),
+    budgetTargetsRecord(shared?.thingOverrides?.__budgetTargets),
+  ];
+  for (const source of sources) {
+    if (!source) continue;
+    for (const [key, raw] of Object.entries(source)) {
+      if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
+      merged[key] = raw;
+    }
+  }
+  return merged;
+}
+
+/** Promote saved bucket targets from trip metadata onto `thingOverrides.__budgetTargets` before API budget sync. */
+export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
+  const meta = trip?.metadata && typeof trip.metadata === 'object' && !Array.isArray(trip.metadata)
+    ? trip.metadata
+    : {};
+  const fromMeta = readBudgetTargetsMap({ ...shared, trip: { ...shared.trip, metadata: meta } });
+  if (!Object.keys(fromMeta).length) return shared;
+  const thingOverrides = {
+    ...(shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {}),
+    __budgetTargets: {
+      ...(shared.thingOverrides?.__budgetTargets || {}),
+      ...fromMeta,
+    },
+  };
+  return { ...shared, thingOverrides };
+}
+
+/** Trip total target on the Budget tab (sum of per-bucket targets). */
+export function tripBudgetTargetTotal(shared = {}) {
+  return BUDGET_BUCKETS.reduce((acc, bucket) => acc + bucketTargetAmount(shared, bucket), 0);
+}
+
 function otherThingsExpenseCategory(categoryLower = '') {
   const fr = String(categoryLower || '').toLowerCase();
   return [
@@ -146,7 +193,7 @@ function expenseDerivedBucketTarget(shared = {}, bucket = '') {
 }
 
 function bucketTargetAmount(shared = {}, bucket = '') {
-  const targets = shared?.thingOverrides?.__budgetTargets;
+  const targets = readBudgetTargetsMap(shared);
   const key = budgetTargetKey(bucket);
   if (targets && typeof targets === 'object' && Object.prototype.hasOwnProperty.call(targets, key)) {
     const raw = targets[key];
@@ -176,18 +223,18 @@ function visibleAmountSet(rows = [], shared = {}) {
     }
   }
   for (const bucket of BUDGET_BUCKETS) {
-    const bucketRows = rowsInBucket(rows, bucket);
-    if (!bucketRows.length) continue;
-    const planned = bucketPlannedTotal(rows, bucket);
     const target = bucketTargetAmount(shared, bucket);
-    amounts.add(planned);
+    const bucketRows = rowsInBucket(rows, bucket);
+    const planned = bucketRows.length ? bucketPlannedTotal(rows, bucket) : 0;
     amounts.add(target);
+    if (!bucketRows.length) continue;
+    amounts.add(planned);
     if (target > 0) {
       amounts.add(Math.abs(planned - target));
     }
   }
   const tripPlanned = rows.reduce((acc, row) => acc + row.amount, 0);
-  const tripTarget = BUDGET_BUCKETS.reduce((acc, bucket) => acc + bucketTargetAmount(shared, bucket), 0);
+  const tripTarget = tripBudgetTargetTotal(shared);
   amounts.add(tripPlanned);
   amounts.add(tripTarget);
   if (tripTarget > 0) {
