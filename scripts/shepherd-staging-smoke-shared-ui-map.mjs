@@ -385,11 +385,11 @@ export async function mapSharedTripState(page, url) {
   };
 }
 
-export async function sharedBudgetTabCheck(page, budgetLines = []) {
+export async function sharedBudgetTabCheck(page, budgetLines = [], shared = null) {
   const clicked = await clickSharedTabByKeyword(page, 'budget');
   await new Promise((r) => setTimeout(r, 1500));
   const bodyText = await page.evaluate(() => document.body?.innerText || '');
-  const hardcoded = budgetHardcodedHits(bodyText, budgetLines);
+  const hardcoded = budgetHardcodedHits(bodyText, budgetLines, shared);
   const tabPresent = await sharedTabPresent(page, 'budget');
   const pageErrors = await page.evaluate(() => ({
     mapError: !!document.querySelector('[data-ts-trip-map-error]'),

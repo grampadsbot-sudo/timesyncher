@@ -59,7 +59,7 @@ const budgetTabText = [
   '$55',
   '$500',
 ].join(' ');
-const hits = budgetHardcodedHits(budgetTabText, shared.budget);
+const hits = budgetHardcodedHits(budgetTabText, shared.budget, shared);
 assert.deepEqual(hits, [], `budget tab amounts must match API lines: ${JSON.stringify(hits)}`);
 
 const gateHotelA = 2001;
@@ -106,8 +106,23 @@ const gateBodySnippet = [
   '$45',
   'Alamo rental',
 ].join('\n');
-const gateHits = budgetHardcodedHits(gateBodySnippet, gateShared.budget);
+const gateHits = budgetHardcodedHits(gateBodySnippet, gateShared.budget, gateShared);
 assert.deepEqual(gateHits, [], `Gate B budget tab scrape must match API lines: ${JSON.stringify(gateHits)}`);
+
+const staleGateBudget = gateShared.budget.filter((line) => Number(line.total_price) !== 200);
+const staleGateHits = budgetHardcodedHits(gateBodySnippet, staleGateBudget, gateShared);
+assert.deepEqual(
+  staleGateHits,
+  [],
+  `BUD must allow saved targets when API budget[] is stale: ${JSON.stringify(staleGateHits)}`,
+);
+
+const gateForeignHits = budgetHardcodedHits(`${gateBodySnippet}\nMystery $999`, gateShared.budget, gateShared);
+assert.equal(
+  gateForeignHits.some((hit) => hit.amount === 999),
+  true,
+  'with __budgetTargets, unknown tab amounts must still fail BUD',
+);
 
 const metadataTrip = {
   id: tripId,
@@ -149,7 +164,7 @@ const metadataGateSnippet = [
   '$45',
   'Alamo rental',
 ].join('\n');
-const metadataGateHits = budgetHardcodedHits(metadataGateSnippet, metadataShared.budget);
+const metadataGateHits = budgetHardcodedHits(metadataGateSnippet, metadataShared.budget, metadataShared);
 assert.deepEqual(metadataGateHits, [], `metadata budget targets must sync to API: ${JSON.stringify(metadataGateHits)}`);
 
 const unsetTargetsShared = prepareSharedTripForLiveApp({
@@ -185,8 +200,19 @@ const unsetBodySnippet = [
   'Hertz',
   '$45',
 ].join('\n');
-const unsetHits = budgetHardcodedHits(unsetBodySnippet, unsetTargetsShared.budget);
+const unsetHits = budgetHardcodedHits(unsetBodySnippet, unsetTargetsShared.budget, unsetTargetsShared);
 assert.deepEqual(unsetHits, [], `unset budget targets must match API (no / $200): ${JSON.stringify(unsetHits)}`);
+
+const inventedTargetHits = budgetHardcodedHits(
+  `${unsetBodySnippet}\nTrip total $100 / $200`,
+  unsetTargetsShared.budget,
+  unsetTargetsShared,
+);
+assert.equal(
+  inventedTargetHits.some((hit) => hit.amount === 200),
+  true,
+  'unset __budgetTargets must still fail invented / $200 targets in the DOM',
+);
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
