@@ -61,7 +61,7 @@ function stayDays(place = {}, override = {}) {
   return 7;
 }
 
-export function trekBudgetBucket(category = '') {
+function trekBudgetBucket(category = '') {
   const cat = text(category).toLowerCase();
   if (cat === 'restaurant') return 'Restaurants';
   if (cat === 'store') return 'Stores';
