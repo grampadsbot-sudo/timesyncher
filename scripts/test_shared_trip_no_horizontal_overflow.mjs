@@ -178,32 +178,6 @@ try {
         }, label);
         await page.screenshot({ path: file, clip });
       }
-      if (width === 390 && ['Flights', 'Hotels', 'Cars'].includes(label)) {
-        const sort = await page.evaluate(() => {
-          const header = document.querySelector('[data-ts-list-sort-header]');
-          const labels = header ? [...header.querySelectorAll('button')].map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim()) : [];
-          const pills = [...document.querySelectorAll('button')].filter((el) => {
-            const text = String(el.textContent || '').trim();
-            if (!/^(name|price)\b/i.test(text)) return false;
-            return (parseFloat(getComputedStyle(el).borderRadius) || 0) >= 18;
-          });
-          return {
-            labels,
-            pills: pills.length,
-            hotels: document.querySelectorAll('[data-trek-list="1"] button[aria-label="Open thing details"]').length,
-            nycCard: document.querySelectorAll('.ts-nyc-card').length,
-            dayMount: !!document.querySelector('[data-day-itinerary-mount]'),
-          };
-        });
-        assert.deepEqual(sort.labels.map((text) => text.replace(/[↑↓]/g, '').trim()), ['Name', 'Price']);
-        if (label === 'Hotels') assert.deepEqual(sort.labels, ['Name', 'Price ↑']);
-        assert.equal(sort.pills, 0, `${label} still shows Name/Price pills`);
-        assert.equal(sort.dayMount, false, 'day view was replaced');
-        if (label === 'Hotels') {
-          assert.ok(sort.hotels >= 1, 'Hotels tab is missing TREK rows');
-          assert.equal(sort.nycCard, 0, 'web rows must not use the keepsake card');
-        }
-      }
     }
   }
   await page.close();

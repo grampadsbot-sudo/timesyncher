@@ -1,4 +1,3 @@
-import { listColumnSortBundleExpr } from './list-column-sort.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
@@ -290,8 +289,6 @@ const TAB_ROW_OVERFLOW_NEEDLE = 'maxWidth:1120,width:"100%",boxSizing:"border-bo
 const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
 const LIST_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const LIST_SUMMARY_PATCH = 'Rn=Bs(rr(G)||Co(G)||Fl(G)||vr(G)||Zr(G))';
-const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}' ;
-const LIST_SORT_PATCH = `${listColumnSortBundleExpr()},Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"name",dir:"asc"},onSort:ui})`;
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
@@ -329,7 +326,6 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(KI_EMPTY_NEEDLE)) js = js.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
   if (js.includes(TAB_ROW_OVERFLOW_NEEDLE)) js = js.replace(TAB_ROW_OVERFLOW_NEEDLE, TAB_ROW_OVERFLOW_PATCH);
   if (js.includes(LIST_SUMMARY_NEEDLE)) js = js.replace(LIST_SUMMARY_NEEDLE, LIST_SUMMARY_PATCH);
-  if (js.includes(LIST_SORT_NEEDLE)) js = js.replace(LIST_SORT_NEEDLE, LIST_SORT_PATCH);
   return js;
 }
 

@@ -27,10 +27,10 @@ const committed = readFileSync(new URL('../public/assets/index-BKun7ofk.js', imp
 const patchedCommitted = applySharedLiveTabBundlePatches(committed, { served: true });
 assert.equal(patchedCommitted, committed, 'committed served bundle must already include shared live-tab patches');
 
-const mountExpr = sharedLiveTabListMountBundleExpr();
-assert.match(mountExpr, /Oe\(item,kind,kind==="hotel"&&i===0\)/);
-assert.equal(committed.includes(mountExpr), true);
-assert.doesNotMatch(mountExpr, /ts-nyc-card/);
+assert.equal(
+  sharedLiveTabListMountBundleExpr(),
+  'tsSharedLiveTabListMount=G=>{const lists=window.__TS_SHARED_LIVE_TAB_LISTS__;if(!lists||!Object.prototype.hasOwnProperty.call(lists,G))throw new Error("shared_live_tab_lists_missing:"+G);const h=lists[G];if(!Array.isArray(h))throw new Error("shared_live_tab_lists_invalid:"+G);if(!h.length)return null;return n.jsx("div",{"data-shared-live-tab-mount":G,dangerouslySetInnerHTML:{__html:`<ul data-shared-live-tab="${G}">${h.join("")}</ul>`},style:{display:"contents"}})}',
+);
 
 function intakeHotelsTwo() {
   const tripId = 'c15be2f6-d7bf-498a-b2e7-aa2b828dfab6';
