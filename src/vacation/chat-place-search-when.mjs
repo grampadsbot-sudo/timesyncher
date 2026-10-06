@@ -137,7 +137,16 @@ function inTurnPlaceResultFromTripThing(inserted) {
   const name = String(inserted?.title || '').trim();
   const id = String(inserted?.id || '').trim();
   if (!name || !id) return null;
-  return { name, title: name, sourceRef: { source: 'trip_thing', id } };
+  const loc = inserted?.location && typeof inserted.location === 'object' ? inserted.location : {};
+  const lat = Number(loc.lat);
+  const lng = Number(loc.lng);
+  const category = String(inserted?.category || 'restaurant').trim().toLowerCase();
+  return {
+    name,
+    title: name,
+    sourceRef: { source: 'trip_thing', id },
+    ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, category } : {}),
+  };
 }
 
 export function workerInputAfterInTurnPlaceSearch({

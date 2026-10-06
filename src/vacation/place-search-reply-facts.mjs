@@ -128,6 +128,17 @@ export function attachSearchArea(facts, classification) {
   return { ...facts, searchArea };
 }
 
+export function attachPlaceSearchTurnScope(facts, classification, searchDiagnostics = {}) {
+  let next = attachSearchArea(facts, classification);
+  if (!next) return next;
+  const searchArea = String(next.searchArea || '').trim();
+  const policy = searchDiagnostics?.anchorRadiusPolicy;
+  if (searchArea && policy && typeof policy === 'object') {
+    next = { ...next, placeSearchAreaScope: policy };
+  }
+  return next;
+}
+
 export function applyPlaceSearchReplyFacts(tripContext, facts) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
   if (!facts || typeof facts !== 'object') return tripContext;

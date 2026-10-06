@@ -6,7 +6,7 @@ import { loadTripLodgingThing, lodgingAnchorFromThing } from './lodging-anchor.m
 import { loadTripPlaceSearchContext, resolvePlaceSearchAreaDetail, resolvePlaceSearchRelevanceArea } from './place-search-anchor.mjs';
 import { placeSearchDiagnosticsFromError } from './place-search-failure-diagnostics.mjs';
 import {
-  attachSearchArea,
+  attachPlaceSearchTurnScope,
   inTurnPlaceSearchSoftNoResults,
   placeSearchClientError,
 } from './place-search-reply-facts.mjs';
@@ -291,7 +291,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     set payload = ${payload}
     where id = ${turnId}
   `;
-  const replyFacts = attachSearchArea(placeSearchSavedReplyFacts, classification);
+  const replyFacts = attachPlaceSearchTurnScope(placeSearchSavedReplyFacts, classification, chatSearch.search);
   return {
     kind: 'ok',
     placeResults,
