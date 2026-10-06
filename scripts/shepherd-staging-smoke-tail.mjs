@@ -11,6 +11,7 @@ import {
   gradeAskD2Reply,
   gradeInvClaimFirstReply,
   gradeInvClaimAfterLodgingReply,
+  resolvePaiaD2CustomerTurnId,
 } from './shepherd-staging-smoke-lib.mjs';
 import {
   postItinerary,
@@ -212,12 +213,20 @@ export function buildTailIndependentParallelChecks(ctx) {
           select id, body, speaker, payload, created_at, request_id
           from transcript_turns where trip_id=${dTripId} and speaker='customer' order by created_at asc` : [];
         const dCustomerTurnIds = dTurns.map((t) => t.id);
+        const d2CustomerTurnId = resolvePaiaD2CustomerTurnId({
+          dCustomerTurnIds,
+          d2: {
+            customerTurnId: d2Db?.id || null,
+            requestId: d2Db?.request_id || null,
+            turnResponse: d2.json,
+          },
+        }, dTurns);
         const dExtraRows = attributeDThingRows({
           things: dAllThings,
           customerTurns: dTurns,
           turnResponses: [
             { turnId: d1Db?.id, json: d1.json },
-            { turnId: d2Db?.id, json: d2.json },
+            { turnId: d2CustomerTurnId || d2Db?.id, json: d2.json },
           ].filter((r) => r.turnId),
         });
         const dExtraFailures = gradeDExtraRows(dExtraRows);
@@ -240,7 +249,7 @@ export function buildTailIndependentParallelChecks(ctx) {
             unschedReply: d2UnschedGrade.pass,
             jev: d2UnschedGrade.jev,
             targetKind: d2Persist.targetKind,
-            customerTurnId: d2Db?.id || null,
+            customerTurnId: d2CustomerTurnId,
             requestId: d2Db?.request_id || null,
             turnResponse: d2.json,
           },
@@ -332,13 +341,18 @@ export async function runShepherdSmokeTail(ctx) {
     const d2Block = out.checkD?.d2 || {};
     const replyText = d2Block.replyEvidence || d2Block.turnResponse?.reply || d2Block.reply || '';
     const grade = await gradeAskD2Reply(replyText, { customerTurn: 'save Paia Fish Market' });
+    const d2CustomerTurnId = d2Block.customerTurnId
+      || resolvePaiaD2CustomerTurnId(out.checkD || {});
+    if (grade.pass && d2CustomerTurnId && !d2Block.customerTurnId) {
+      out.checkD = { ...(out.checkD || {}), d2: { ...d2Block, customerTurnId: d2CustomerTurnId } };
+    }
     out.checkASKD2 = {
       replyText: String(replyText || '').slice(0, 2000),
       jev: grade.jev,
-      d2CustomerTurnId: d2Block.customerTurnId || null,
+      d2CustomerTurnId,
       dTripId: out.checkD?.dTripId || null,
     };
-    const pass = Boolean(d2Block.customerTurnId) && grade.pass;
+    const pass = Boolean(d2CustomerTurnId) && grade.pass;
     return { pass, http: d2Block.http || 200 };
   }, { timeoutMs: 60000 });
 
