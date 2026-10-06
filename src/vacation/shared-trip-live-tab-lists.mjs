@@ -1,6 +1,7 @@
 import { applyProductKeepsakeOverrides, productThingCategory } from './keepsake-product-overrides.mjs';
 import { applyThingPresentation } from './intake-shared-trip.mjs';
 import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
+import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
@@ -21,7 +22,8 @@ function escapeHtml(value) {
 export function prepareSharedTripForLiveApp(shared = {}) {
   const presented = applyThingPresentation(shared);
   const keepsake = applyProductKeepsakeOverrides(presented);
-  return applyLiveAppListRowFields(keepsake);
+  const withListFields = applyLiveAppListRowFields(keepsake);
+  return syncSharedTripApiBudget(withListFields);
 }
 
 function placeSourceUrl(place = {}) {
