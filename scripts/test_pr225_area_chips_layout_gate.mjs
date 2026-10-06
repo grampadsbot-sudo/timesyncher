@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225 gate (a)+(b): Hotels/Restaurants chip header pixel match prod + exact chip text. */
+/** PR #225 gate (a)+(b): chip tabs pixel match prod + exact chip text @390/1280. */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -15,7 +15,7 @@ import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-sh
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.PR225_SBS_OUT || process.env.PR225_R5_ARTIFACT_ROOT || '/opt/cursor/artifacts/pr225-nyc-sbs-r6';
+const outRoot = process.env.PR225_SBS_OUT || process.env.PR225_R7_ARTIFACT_ROOT || '/opt/cursor/artifacts/pr225-nyc-sbs-r7';
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
 const prodBundleUrl = `${travelBase}/assets/${bundleName}`;
@@ -23,6 +23,28 @@ const prodBundleUrl = `${travelBase}/assets/${bundleName}`;
 const CASES = [
   ['Hotels', 'hotels', ['All areas', 'Midtown / Central Park South']],
   ['Restaurants', 'restaurants', ['All areas', 'Citywide / Flexible']],
+  ['Stores', 'stores', ['All areas', 'Midtown / Central Park South']],
+  [
+    'The Rest',
+    'events',
+    [
+      'All areas',
+      'Citywide / Flexible',
+      'All types',
+      'event',
+      'Family Event',
+      'tickets',
+      'bar',
+      'music',
+      'workout',
+      'artist',
+      'theatre',
+      'sightseeing',
+      'tour',
+      'transport',
+      'other',
+    ],
+  ],
 ];
 const WIDTHS = [
   { width: 390, tag: '390' },
@@ -152,17 +174,24 @@ async function captureHeader(page, tabLabel) {
     if (document.scrollingElement) document.scrollingElement.scrollLeft = 0;
   }, tabLabel);
   await new Promise((r) => setTimeout(r, 500));
-  const meta = await page.evaluate(() => {
-    const areaButtons = [...document.querySelectorAll('button')].filter((b) => {
-      const t = (b.textContent || '').trim();
-      return t === 'All areas' || (t.includes('/') && t.length > 8);
-    });
+  const meta = await page.evaluate((wantTab) => {
+    const rowLabels = (seedText) => {
+      const seed = [...document.querySelectorAll('button')].find((b) => (b.textContent || '').replace(/\s+/g, ' ').trim() === seedText);
+      if (!seed || !seed.parentElement) return [];
+      return [...seed.parentElement.querySelectorAll('button')].map((b) => (b.textContent || '').replace(/\s+/g, ' ').trim());
+    };
+    const areaRow = rowLabels('All areas');
+    const typeRow = wantTab === 'The Rest' ? rowLabels('All types') : [];
+    const labels = [...areaRow, ...typeRow];
     const sortButtons = [...document.querySelectorAll('button')].filter((b) => {
       const t = (b.textContent || '').replace(/\s+/g, ' ').trim();
       return t === 'Name' || /^Price\b/.test(t);
     });
-    const nodes = [...areaButtons, ...sortButtons];
-    const labels = areaButtons.map((b) => (b.textContent || '').replace(/\s+/g, ' ').trim());
+    const chipButtons = [...document.querySelectorAll('button')].filter((b) => {
+      const t = (b.textContent || '').replace(/\s+/g, ' ').trim();
+      return areaRow.includes(t) || typeRow.includes(t);
+    });
+    const nodes = [...chipButtons, ...sortButtons];
     if (!nodes.length) {
       return { clip: { x: 0, y: 0, width: window.innerWidth, height: 1 }, areaButtons: labels };
     }
@@ -184,7 +213,7 @@ async function captureHeader(page, tabLabel) {
       },
       areaButtons: labels,
     };
-  });
+  }, tabLabel);
   const shot = await page.screenshot({ type: 'png', encoding: 'binary', clip: meta.clip });
   return { png: shot, chips: meta.areaButtons };
 }

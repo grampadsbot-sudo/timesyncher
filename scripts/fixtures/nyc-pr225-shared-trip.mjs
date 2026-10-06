@@ -111,6 +111,7 @@ function nycThings() {
           url: 'https://example-store.test/',
           source: 'brave',
           summary: 'Good stop for travel essentials near the hotel.',
+          neighborhood: 'Midtown / Central Park South',
           timeline: false,
         },
       },
@@ -127,6 +128,7 @@ function nycThings() {
         sourceRecord: {
           source: 'customer',
           summary: 'Timed entry; buy tickets before the trip.',
+          neighborhood: 'Citywide / Flexible',
           timeline: false,
         },
       },

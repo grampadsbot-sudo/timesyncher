@@ -701,8 +701,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('$n=gt.filter(') || !js.includes('$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
     throw new Error('Store list chips must be saved tags on listed Things, not the fixed store vocabulary.');
   }
-  if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
-    throw new Error('Rest type chips must be types present on Things in that Rest list.');
+  if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
+    throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
   }
   if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
     throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
