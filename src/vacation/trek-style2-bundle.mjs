@@ -214,7 +214,7 @@ const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()
 const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e||"").replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi,"").replace(/\s+(Summary|Keepsake Style 2)$/i,"").trim()||"Vacation";const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));const logos=Array.from(document.querySelectorAll("img.tiny-logo,img.thing-logo"));await Promise.all(logos.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/svg\\+xml/i.test(x)&&x.includes("%3Csvg")){r.setAttribute("data-logo-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(!/\\/ts-thing-logos\\//i.test(z)&&!/\\/ts-thing-logos\\//i.test(x))return;const U=await fetch(z,{cache:"reload"});if(!U.ok)return;const txt=await U.text();if(!txt.includes("<svg"))return;r.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(txt);r.setAttribute("data-logo-inlined","1")}catch{}}));document.querySelectorAll(".print-brand,.pdf-final-logo,.pdf-page-counter,.page-count,.style2-cover").forEach(r=>r.remove());document.querySelectorAll("[data-end-continuous] .map-box,[data-post-itinerary] .map-box,[data-endlist-maps] .map-box,[data-end-continuous] .static-print-map").forEach(r=>r.remove());document.querySelectorAll("[data-last-logo-page]").forEach(r=>r.remove());const logoOn=!!document.querySelector(\'[data-config-logo="1"]\');if(logoOn&&!document.querySelector("[data-last-page-logo]")){const pages=Array.from(document.querySelectorAll(".page"));const lastContent=[...pages].reverse().find(r=>!r.matches(".daily-map-page,[data-day-map-page],[data-last-logo-page]")&&(r.querySelector(".thing,.style2-thing,.daily-thing,.logo-list li,[data-list-row],.story-card")||r.getAttribute("data-post-itinerary")==="1"))||pages[pages.length-1];if(lastContent){lastContent.setAttribute("data-last-content-page","1");const z=document.createElement("div");z.className="ts-last-page-logo";z.setAttribute("data-last-page-logo","1");z.setAttribute("data-brand-lockup","timesyncher-hourglass-vacation");z.setAttribute("data-hourglass-between","1");z.innerHTML=\'<span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="" /><span>Vacation</span>\';lastContent.appendChild(z)}}if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${seTitle.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
-const DS_PATCH = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=ha(G))==null?void 0:Re.timeline)??hl(G)}';
+const DS_PATCH = 'Ds=G=>{var Re,on;return on=(Re=ha(G))==null?void 0:Re.timeline,on==null?(Mi(G)?!1:hl(G)):!!on}';
 
 const OP_GRID_NEEDLE = '<div class="daily-grid">${js}<main class="daily-details">';
 const OP_GRID_PATCH = '<div class="daily-grid" data-two-col="1" style="display:table;width:100%;table-layout:fixed">${js}<main class="daily-details" data-two-col-details="1" style="display:table-cell;width:62%;vertical-align:top">';
@@ -253,7 +253,7 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map((Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi)).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
@@ -402,7 +402,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
-  patched = applyLiveProductPatches(patched);
+  patched = applyLiveProductPatches(patched, { served });
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
@@ -673,19 +673,12 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
   }
-  const servedSharedHotelsCars = js.includes('tsSharedLiveTabListMount=G=>');
+  const servedSharedHotelsCars = js.includes('vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))')
+    && js.includes('vi(bc,"cars").map(G=>Oe(G))')
+    && !js.includes('tsSharedLiveTabListMount');
   if (servedSharedHotelsCars) {
-    if (!js.includes('tsSharedLiveTabListMount=G=>')) {
-      throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
-    }
-    if (js.includes('Gn=tsPad(Fs.filter') || js.includes('ki=tsPad(Cc.filter')) {
-      throw new Error('Hotels/Cars live tabs must not filter catalog rows in the bundle.');
-    }
-    if (js.includes('vi(kn,"hotels")')) {
-      throw new Error('Served shared Hotels tab must mount liveTabLists.hotels, not catalog kn rows.');
-    }
-    if (!js.includes('tsSharedLiveTabListMount("hotels")') || !js.includes('tsSharedLiveTabListMount("cars")')) {
-      throw new Error('Served shared Hotels and Cars tabs must call tsSharedLiveTabListMount for each tab.');
+    if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
+      throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
     }
     if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
@@ -705,11 +698,14 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('ci=ot.filter(') || !js.includes('ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
     throw new Error('Restaurant list chips must be saved tags on listed Things, not canned catalog names.');
   }
-  if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
-    throw new Error('Rest type chips must be types present on Things in that Rest list.');
+  if (js.includes('$n=gt.filter(') || !js.includes('$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
+    throw new Error('Store list chips must be saved tags on listed Things, not the fixed store vocabulary.');
   }
-  if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE) || js.includes('named=(')) {
-    throw new Error('List logos must use the trip logo URL or render nothing.');
+  if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
+    throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
+  }
+  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
@@ -720,8 +716,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_PATCH) || !js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
-    throw new Error('Style two live budget timeline-selected Gt rows did not apply.');
+  if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
+    throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
@@ -756,8 +752,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
     throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
   }
-  if (!js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('Print list logos must use the source logo URL or stay empty.');
+  if (js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('Print list logos must not use served LIST_LOGO_PATCH blanking.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');

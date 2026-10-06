@@ -20,8 +20,8 @@ assert.doesNotMatch(js, /\["googleRating","yelpRating","thirdPartyRating"\]\.som
 const restaurantsAt = js.indexOf('q==="restaurants"&&');
 assert.ok(restaurantsAt > 0);
 const restaurantsBlock = js.slice(restaurantsAt, restaurantsAt + 900);
+assert.match(restaurantsBlock, /ci\.length>0&&/);
 assert.match(restaurantsBlock, /children:"All tags"/);
-assert.doesNotMatch(restaurantsBlock, /ci\.length>0&&/);
 
 const shared = sharedTripFromIntake({
   trip: {

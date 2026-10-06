@@ -13,17 +13,17 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /className:"tiny-logo",src:zt/);
-assert.match(rendered, /display:"inline-grid",placeItems:"center"/);
-assert.match(rendered, /i==="car"\?"🚗"/);
-assert.match(rendered, /data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center/);
-assert.match(rendered, /data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:16,height:16,minWidth:16,minHeight:16,display:"grid",placeItems:"center"/);
+assert.match(rendered, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
+assert.match(rendered, /children:\[n\.jsx\("span",\{children:ua\}\),zt&&n\.jsx\("img"/);
+assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
+assert.doesNotMatch(rendered, /className:"tiny-logo",src:zt/);
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);
+assert.match(rendered, /data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center/);
 assert.doesNotMatch(rendered, /translateY\(-0\.5px\)/);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G,size:Re=28})=>{noop}'),
-  /missing dc\(\) anchor/,
+  /missing upstream dc\(\) logo chain/,
 );
 
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');

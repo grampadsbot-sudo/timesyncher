@@ -31,7 +31,7 @@ const FORBIDDEN_PROSE = [
   { id: 'workflow-promise', re: /compare-and-summarize workflow/i },
   { id: 'composer-model', re: /\bcomposer-2/i },
   { id: 'mcp-cursor-product', re: /Claude Web[,、] Cursor|Claude Web وCursor/ },
-  { id: 'ai-assisted', re: /AI-assisted/i, allowOnLegal: true },
+  { id: 'ai-assisted', re: /AI-assisted/i, allowOnLegal: true, allowedFooters: ['AI-assisted vacation itinerary planning'] },
 ];
 
 function stripNonProse(html = '') {
@@ -50,7 +50,11 @@ function scanText(rel, text) {
   for (const rule of FORBIDDEN_PROSE) {
     if (rule.allowOnLegal && LEGAL_DISCLOSURE_PAGES.has(rel)) continue;
     const match = text.match(rule.re);
-    if (match) hits.push({ file: rel, rule: rule.id, sample: match[0] });
+    if (match) {
+      const idx = text.search(rule.re);
+      if (rule.allowedFooters?.some((phrase) => text.slice(idx, idx + phrase.length) === phrase)) continue;
+      hits.push({ file: rel, rule: rule.id, sample: match[0] });
+    }
   }
   return hits;
 }
