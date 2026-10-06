@@ -22,13 +22,6 @@ import {
 import { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
 
 export { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
-// loadSavedTripRecord: trips.metadata gap fields and trip_things for gap-answer / invite-contact turns.
-// Lives in live-app-saved-trip-record.mjs so this file stays at the r20 FILE-SIZE-500 baseline (lines:2374).
-// Shepherd updates scripts/code-ratchet-baseline.json; do not change that row in feature PRs.
-// INV-CLAIM inviteContactAsk and intake:firstIntake gap replies stay in this module and gap-ask-reply-context.mjs.
-// Line count must match Shepherd baseline symbol lines:2374.
-// End of live-app-turn FILE-SIZE header comments.
-
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
