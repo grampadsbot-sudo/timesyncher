@@ -18,6 +18,7 @@ import {
   layoutAppFailShareUrlBeforeApi,
   scanChatDomShareUrlVisible,
 } from './shepherd-staging-smoke-layout-share-guard.mjs';
+import { runLayoutNycHarnessBlock } from './shepherd-staging-smoke-layout-nyc.mjs';
 
 async function waitForChatAppReady(page) {
   await page.waitForFunction(() => {
@@ -160,12 +161,20 @@ export async function runLayoutHarnessCheck({
       if (!row.pass) pass = false;
     }
   }
+  const layoutNyc = await runLayoutNycHarnessBlock({ page, sharedUrl, artifactPath, setStage });
+  if (layoutNyc && !layoutNyc.pass) pass = false;
   const shareUrlTiming = shareAppGuard ? {
     customerShareUrlSeenMs: shareAppGuard.customerShareUrlSeenMs ?? null,
     sharedApiFirst200Ms: shareAppGuard.sharedApiFirst200Ms ?? null,
     shareSlug: shareAppGuard.shareSlug,
   } : null;
-  return { pass, probes, applicability: LAYOUT_RULE_APPLICABILITY, shareUrlTiming };
+  return {
+    pass,
+    probes,
+    applicability: LAYOUT_RULE_APPLICABILITY,
+    shareUrlTiming,
+    layoutNyc,
+  };
 }
 
 export function summarizeLayoutFailures(probes) {

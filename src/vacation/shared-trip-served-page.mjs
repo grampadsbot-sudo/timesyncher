@@ -1,5 +1,4 @@
 import {
-  SHARED_LIVE_TAB_KEYS,
   buildSharedLiveTabLists,
   prepareSharedTripForLiveApp,
   renderSharedLiveTabListHtml,
@@ -9,11 +8,14 @@ function assertLiveTabListKeys(liveTabLists = {}) {
   if (!liveTabLists || typeof liveTabLists !== 'object') {
     throw new Error('shared_live_tab_lists_missing');
   }
-  for (const key of SHARED_LIVE_TAB_KEYS) {
-    if (!Object.prototype.hasOwnProperty.call(liveTabLists, key)) {
-      throw new Error(`shared_live_tab_lists_${key}_key_missing`);
-    }
-    if (!Array.isArray(liveTabLists[key])) throw new Error('shared_live_tab_lists_invalid_shape');
+  if (!Object.prototype.hasOwnProperty.call(liveTabLists, 'hotels')) {
+    throw new Error('shared_live_tab_lists_hotels_key_missing');
+  }
+  if (!Object.prototype.hasOwnProperty.call(liveTabLists, 'cars')) {
+    throw new Error('shared_live_tab_lists_cars_key_missing');
+  }
+  if (!Array.isArray(liveTabLists.hotels) || !Array.isArray(liveTabLists.cars)) {
+    throw new Error('shared_live_tab_lists_invalid_shape');
   }
 }
 

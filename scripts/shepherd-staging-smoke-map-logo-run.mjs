@@ -9,6 +9,7 @@ import {
   runSharedSiteLogoCheck,
   runSharedSiteMapCheck,
 } from './shepherd-staging-smoke-shared-ui.mjs';
+import { runSharedSiteThingCardCheck } from './shepherd-staging-smoke-thing-card.mjs';
 import { createLogoStageTimestamps } from './shepherd-staging-smoke-logo-metrics.mjs';
 import { runBindThingMediaCacheCheck } from './shepherd-staging-smoke-bind-thing-media-cache.mjs';
 
@@ -108,5 +109,11 @@ export async function runShepherdSmokeMapBudLogoChecks(ctx) {
       return { pass: false, http: 200 };
     }
     return { pass: logo?.pass ?? false, http: 200 };
+  });
+
+  await runDedicatedSharedCheck(ctx, 'THING-CARD', LOGO_CHECK_TIMEOUT_MS, async ({ page, prep, artifactPath, setStage }) => {
+    const thingCard = await runSharedSiteThingCardCheck({ page, prep, artifactPath, setStage });
+    out.checkTHINGCARD = thingCard.checkTHINGCARD;
+    return { pass: thingCard.pass, http: 200 };
   });
 }
