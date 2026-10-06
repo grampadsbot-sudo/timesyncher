@@ -2,6 +2,7 @@
 scripts/test_access_plan_checkout.mjs
 scripts/test_admin_place_key_probe.mjs
 scripts/test_api_route_bundle.mjs
+scripts/test_approved_look_drift.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_bind_thing_media_cache.mjs
 scripts/test_build_used_vs_tip.mjs
@@ -23,6 +24,7 @@ scripts/test_vacation_per_fact_ask_reply_rules.mjs
 scripts/test_intake_lodging_thing_hotel.mjs
 scripts/test_intake_lodging_lookup_miss.mjs
 scripts/test_intake_lodging_category_accept.mjs
+scripts/test_itinerary_print_single_module.mjs
 scripts/test_place_search_lodging_anchor.mjs
 scripts/test_place_search_kihei_taco_osm_relevance.mjs
 scripts/test_place_search_kihei_caffe_title.mjs
@@ -46,6 +48,7 @@ scripts/test_trip_map_harness_hook_bundle.mjs
 scripts/test_shared_logo_chip_center_bundle.mjs
 scripts/test_shared_category_tab_icon_center_bundle.mjs
 scripts/test_served_customer_copy_no_internal_terms.mjs
+scripts/test_shared_tab_thing_cards.mjs
 scripts/test_shared_tab_category_css_blast_radius.mjs
 scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
