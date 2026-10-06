@@ -24,6 +24,7 @@ function nycThings() {
           summary: 'Nonstop morning option; good if you want to land before lunch.',
           price: 248,
           timeline: true,
+          fareDirection: 'one-way',
           logoUrl: 'https://www.jetblue.com/favicon.ico',
         },
       },
@@ -66,7 +67,7 @@ function nycThings() {
         sourceRecord: {
           url: 'https://www.priceline.com/favicon.ico',
           source: 'brave',
-          rentalCompany: 'P',
+          rentalCompany: 'Priceline opaque',
           carType: 'Toyota Corolla or similar',
           vehicleClass: 'Toyota Corolla or similar',
           summary: 'Compact automatic; pick up near JFK AirTrain.',

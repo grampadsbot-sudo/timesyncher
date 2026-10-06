@@ -102,14 +102,8 @@ const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,colo
 
 export function patchThingLogoChipAlignment(source = '') {
   let js = String(source || '');
-  if (js.includes(THING_LOGO_CHIP_DC_PADDING_NEEDLE)) {
-    js = js.replace(THING_LOGO_CHIP_DC_PADDING_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
-  } else if (!js.includes('className:"tiny-logo",src:zt')) {
-    if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE)) js = js.replace(THING_LOGO_CHIP_DC_V1_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
-    else if (js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) js = js.replace(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
-    else if (!js.includes('data-ts-logo-chip":"1"')) {
-      throw new Error('trek bundle missing dc() anchor for thing logo chip centering patch');
-    }
+  if (!js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE) && !js.includes('onError:Rn=>{Rn.currentTarget.style.display="none"}')) {
+    throw new Error('trek bundle missing upstream dc() logo chain (emoji under img on error)');
   }
   if (js.includes(MAP_MARKER_LOGO_NEEDLE)) js = js.replace(MAP_MARKER_LOGO_NEEDLE, MAP_MARKER_LOGO_PATCH);
   else if (!js.includes('data-ts-logo-chip="1" style="width:30px')) {
@@ -149,11 +143,8 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
-  if (!js.includes('display:"inline-grid",placeItems:"center"')) {
-    throw new Error('thing logo chip centering patch did not apply');
-  }
-  if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE) || js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) {
-    throw new Error('thing logo chip centering patch did not apply');
+  if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
+    throw new Error('category tab icon centering patch did not apply');
   }
   return js;
 }
@@ -233,17 +224,26 @@ export function patchTripMapHarnessHook(source = '') {
   return js;
 }
 
+const DN_HOST_NEEDLE = 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)';
+const DN_HOST_PATCH = 'dn=typeof window<"u"&&(/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/(^127\\.0\\.0\\.1$|^localhost$)/i.test(window.location.hostname))';
+
+export function patchSharedTripHostnameForLocalHarness(js = '') {
+  const source = String(js || '');
+  if (!source.includes(DN_HOST_NEEDLE)) return source;
+  return source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+}
+
 export function applyLiveProductPatches(patched = '') {
   let js = stripHotelBrandNameGuessing(String(patched || ''));
-  if (js.includes(LIST_LOGO_NEEDLE)) js = js.replace(LIST_LOGO_NEEDLE, LIST_LOGO_PATCH);
-  else if (js.includes(LIST_LOGO_PATCH_NEEDLE)) js = js.replace(LIST_LOGO_PATCH_NEEDLE, LIST_LOGO_PATCH);
+  if (js.includes(LIST_LOGO_PATCH) && js.includes(LIST_LOGO_NEEDLE)) {
+    throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
+  }
   if (js.includes(REST_ALL_TAGS_NEEDLE)) js = js.replace(REST_ALL_TAGS_NEEDLE, REST_ALL_TAGS_PATCH);
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
-  if (js.includes(SERVED_FOOTER_AI_ASSISTED_NEEDLE)) {
-    js = js.replace(SERVED_FOOTER_AI_ASSISTED_NEEDLE, '');
-  } else if (js.includes('AI-assisted vacation itinerary planning')) {
-    throw new Error('served bundle still contains AI-assisted footer copy');
+  if (!js.includes('AI-assisted vacation itinerary planning')) {
+    throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
   }
+  if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
   js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
@@ -298,6 +298,16 @@ const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onCli
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
 const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:0}';
 
+const CAR_TIMELINE_CHECKBOX_NEEDLE = '!Mi(G)&&n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",justifyContent:"flex-end",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap"},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"';
+const CAR_TIMELINE_CHECKBOX_PATCH = 'n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",justifyContent:"flex-end",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap"},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"';
+
+const CAR_DAY_LOOP_NEEDLE = 'for(const wn of zt){if(!wn)continue;const Qi=xl(mr(wn)||wn.name||wn.description||"")||xl(wn.name||wn.description||"");if(Qi&&/flight/i.test(wn.name||"")){';
+const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDays=Yi(wn).map(ua=>ve(ua)).filter(Boolean);if(tsCarDays.length){const tsCarStart=Math.min(...tsCarDays),tsCarEnd=Math.max(...tsCarDays);if(G.day_number===tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Pickup: ${mr(wn)}`,item:wn,status:hs(wn)})}if(G.day_number===tsCarEnd&&tsCarEnd!==tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Drop-off: ${mr(wn)}`,item:wn,status:hs(wn)})}}}if(!wn)continue;if(Mi(wn))continue;const Qi=xl(mr(wn)||wn.name||wn.description||"")||xl(wn.name||wn.description||"");if(Qi&&/flight/i.test(wn.name||"")){';
+
+const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
+const FLIGHT_EU_PATCH = 'tsFareLbl=G=>{const v=String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase();return v.includes("round")?"round trip":v.includes("one")?"one-way":""},fareLbl=tsFareLbl(G),fareLine=fareLbl?`${Rn||String(bi(G)||"").trim()} ${fareLbl}`.trim():Rn||"";return[fareLine,ua,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
@@ -333,6 +343,20 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
+  if (js.includes(CAR_TIMELINE_CHECKBOX_NEEDLE)) {
+    js = js.replace(CAR_TIMELINE_CHECKBOX_NEEDLE, CAR_TIMELINE_CHECKBOX_PATCH);
+  } else if (!js.includes('checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx("button",{"aria-label":"Open thing details"')) {
+    throw new Error('car timeline checkbox patch did not apply');
+  }
+  if (js.includes(CAR_DAY_LOOP_NEEDLE)) js = js.replace(CAR_DAY_LOOP_NEEDLE, CAR_DAY_LOOP_PATCH);
+  else if (!js.includes('title:`Pickup: ${mr(wn)}`')) {
+    throw new Error('car pickup/drop-off day timeline patch did not apply');
+  }
+  if (js.includes(FLIGHT_EU_NEEDLE)) js = js.replace(FLIGHT_EU_NEEDLE, FLIGHT_EU_PATCH);
+  else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
+  else if (!js.includes('tsFareLbl=G=>')) {
+    throw new Error('flight fare direction row patch did not apply');
+  }
   if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {
     throw new Error('shared budget category patch did not apply');
   }

@@ -704,8 +704,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
     throw new Error('Rest type chips must be types present on Things in that Rest list.');
   }
-  if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE) || js.includes('named=(')) {
-    throw new Error('List logos must use the trip logo URL or render nothing.');
+  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
@@ -752,8 +752,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
     throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
   }
-  if (!js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('Print list logos must use the source logo URL or stay empty.');
+  if (js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('Print list logos must not use served LIST_LOGO_PATCH blanking.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');

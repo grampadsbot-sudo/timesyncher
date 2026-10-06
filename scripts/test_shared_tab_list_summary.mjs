@@ -26,7 +26,8 @@ assert.ok(carPlaces.length > 0, 'cars in places');
 assert.ok(flightPlaces.length > 0, 'flights in places');
 assert.match(String(hotelPlaces[0].name || ''), /Midtown sample hotel/i);
 assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
-assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'P');
+assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'Priceline opaque');
+assert.equal(payload.thingOverrides[`place:${flightPlaces[0].id}`]?.fareDirection, 'one-way');
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.price, 172);
 assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /transit access/i);
 

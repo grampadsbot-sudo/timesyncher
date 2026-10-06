@@ -158,6 +158,7 @@ export function applyLiveAppListRowFields(shared = {}) {
         ? { ...place.category, name: place.category.name || 'Flight' }
         : { name: 'Flight', icon: '✈️' };
       override.category = 'flight';
+      copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
     } else if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);

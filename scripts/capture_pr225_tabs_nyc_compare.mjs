@@ -8,13 +8,15 @@ import { deflateSync } from 'node:zlib';
 import { createRequire } from 'node:module';
 
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { patchSharedTripHostnameForLocalHarness } from '../src/vacation/trek-live-product-patches.mjs';
 import { LOGO_TAB_SETTLE_MS, stitchLogoChipCropsPng } from './shepherd-staging-smoke-logo-metrics.mjs';
+import { clickSharedTabByKeyword } from './shepherd-staging-smoke-shared-ui.mjs';
 import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-shared-trip.mjs';
 import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs';
+const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-nyc-sbs-r2';
 const slug = NYC_PR225_SLUG;
 const bundleName = 'index-BMaU4y5m.js';
 const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
@@ -109,6 +111,57 @@ async function startServer({ html, js, css, tripPayload, logo, bundlePath }) {
     if (pathname === bundlePath) return send(res, 200, js, 'text/javascript; charset=utf-8');
     if (pathname === '/assets/index-CbEHlMj6.css') return send(res, 200, css, 'text/css; charset=utf-8');
     if (pathname === '/manifest.webmanifest') return send(res, 200, '{}', 'application/manifest+json');
+    if (pathname === '/post-purchase-gate.mjs') {
+      try {
+        return send(res, 200, await readFile(path.join(root, 'public/post-purchase-gate.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
+    if (pathname === '/ts-timeline-icon-patch.js') {
+      try {
+        return send(res, 200, await readFile(path.join(root, 'public/ts-timeline-icon-patch.js'), 'utf8'), 'text/javascript; charset=utf-8');
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
+    if (pathname === '/ts-car-brand-filter.js' || pathname === '/ts-thing-media-overlay.js') {
+      try {
+        return send(res, 200, await readFile(path.join(root, 'public', pathname.slice(1)), 'utf8'), 'text/javascript; charset=utf-8');
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
+    if (pathname === '/ts-thing-media/bindings.json') {
+      try {
+        return send(res, 200, await readFile(path.join(root, 'public/ts-thing-media/bindings.json'), 'utf8'), 'application/json; charset=utf-8');
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
+    if (pathname === '/src/onboarding/eula-markdown.mjs') {
+      try {
+        return send(res, 200, await readFile(path.join(root, 'src/onboarding/eula-markdown.mjs'), 'utf8'), 'text/javascript; charset=utf-8');
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
+    if (pathname.endsWith('/edit-access')) {
+      return send(res, 200, '{"canEdit":false}', 'application/json; charset=utf-8');
+    }
+    if (pathname.startsWith('/icons/')) {
+      try {
+        const rel = pathname.slice(1);
+        const filePath = pathname.endsWith('timesyncher-icon-black-transparent.png')
+          ? path.join(root, 'public/icons/icon.svg')
+          : path.join(root, 'public', rel);
+        const body = await readFile(filePath);
+        const type = filePath.endsWith('.svg') ? 'image/svg+xml' : filePath.endsWith('.png') ? 'image/png' : 'application/octet-stream';
+        return send(res, 200, body, type);
+      } catch {
+        return send(res, 404, 'no', 'text/plain');
+      }
+    }
     if (pathname.endsWith('.png') || pathname.endsWith('.ico') || pathname.endsWith('.svg')) return send(res, 200, logo, 'image/png');
     if (/^\/shared\/[^/]+\/?$/.test(pathname)) return send(res, 200, html, 'text/html; charset=utf-8');
     const sharedMatch = pathname.match(/^\/api\/shared\/([^/]+)\/?$/);
@@ -122,7 +175,7 @@ async function startServer({ html, js, css, tripPayload, logo, bundlePath }) {
         return send(res, 404, 'no', 'text/plain');
       }
     }
-    if (pathname.startsWith('/api/')) return send(res, 200, '{}', 'application/json');
+    if (pathname.startsWith('/api/')) return send(res, 200, '{"ok":true,"notices":[],"bindings":[],"media":[]}', 'application/json; charset=utf-8');
     send(res, 404, 'no', 'text/plain');
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -134,8 +187,8 @@ async function startServer({ html, js, css, tripPayload, logo, bundlePath }) {
 }
 
 async function captureTab(page, label) {
-  const clicked = await page.evaluate((want) => {
-    for (const btn of document.querySelectorAll('button')) {
+  let clicked = await page.evaluate((want) => {
+    for (const btn of document.querySelectorAll('button,[role="tab"]')) {
       if (btn.getAttribute('aria-label') === want) {
         btn.click();
         return true;
@@ -143,10 +196,39 @@ async function captureTab(page, label) {
     }
     return false;
   }, label);
+  if (!clicked) {
+    const keywords = [];
+    const norm = String(label || '')
+      .replace(/\p{Extended_Pictographic}/gu, '')
+      .trim()
+      .toLowerCase();
+    if (norm.includes('day-by-day') || norm.includes('day by day')) keywords.push('day-by-day', 'day');
+    else if (norm.includes('rest')) keywords.push('rest', 'event');
+    else if (norm.includes('hotel')) keywords.push('hotels', 'hotel');
+    else if (norm.includes('flight')) keywords.push('flights', 'flight');
+    else if (norm.includes('car')) keywords.push('cars', 'car');
+    else keywords.push(norm, norm.split(/\s+/)[0]);
+    for (const kw of [...new Set(keywords.filter(Boolean))]) {
+      if (await clickSharedTabByKeyword(page, kw)) {
+        clicked = true;
+        break;
+      }
+    }
+  }
   if (!clicked) throw new Error(`tab not found: ${label}`);
   await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
   const clip = await page.evaluate((want) => {
-    const tab = [...document.querySelectorAll('button')].find((btn) => btn.getAttribute('aria-label') === want);
+    const tab = [...document.querySelectorAll('button,[role="tab"]')].find((btn) => btn.getAttribute('aria-label') === want)
+      || [...document.querySelectorAll('button,[role="tab"]')].find((btn) => {
+        const normalize = (text) => String(text || '')
+          .replace(/\p{Extended_Pictographic}/gu, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+        const target = normalize(want);
+        const combined = normalize([btn.textContent, btn.getAttribute('title'), btn.getAttribute('aria-label')].join(' '));
+        return combined.includes(target) || (target.includes('day') && combined.includes('day-by-day'));
+      });
     const top = tab ? tab.getBoundingClientRect().top : 0;
     return { x: 0, y: Math.max(0, top - 8), width: window.innerWidth, height: Math.min(560, window.innerHeight - Math.max(0, top - 8)) };
   }, label);
@@ -162,7 +244,7 @@ async function main() {
     description: `TimeSyncher ${tripPayload.trip?.description || ''}`.trim(),
   };
   const bundlePath = `/assets/${bundleName}`;
-  const prodBundle = await loadProdBundle();
+  const prodBundle = patchSharedTripHostnameForLocalHarness((await loadProdBundle()).toString('utf8'));
   const [htmlRaw, css, patchedBundle] = await Promise.all([
     readFile(path.join(root, 'shared-app.html'), 'utf8'),
     readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 'utf8'),
@@ -191,12 +273,25 @@ async function main() {
         await page.setRequestInterception(true);
         page.on('request', (request) => {
           const url = request.url();
-          if (url.startsWith(app.origin) || url.startsWith('data:') || url.startsWith('blob:')) request.continue();
-          else request.abort('blockedbyclient');
+          if (
+            url.startsWith(app.origin)
+            || url.startsWith('data:')
+            || url.startsWith('blob:')
+            || url.includes('fonts.googleapis.com')
+            || url.includes('fonts.gstatic.com')
+            || url.includes('unpkg.com/leaflet')
+          ) {
+            request.continue();
+          } else {
+            request.abort('blockedbyclient');
+          }
         });
         await page.setViewport({ width: viewport.width, height: viewport.height });
         await page.goto(`${app.origin}/shared/${slug}/`, { waitUntil: 'domcontentloaded', timeout: 90000 });
-        await page.waitForFunction(() => /TimeSyncher/.test(document.body?.innerText || ''), { timeout: 90000 });
+        await page.waitForFunction(
+          () => /Day-by-Day/i.test(document.body?.innerText || ''),
+          { timeout: 90000 },
+        );
         for (const [label, stem] of TABS) {
           const shot = await captureTab(page, label);
           await writeFile(path.join(outRoot, `${bundleLabel}-${stem}-${viewport.tag}.png`), shot);
@@ -214,10 +309,10 @@ async function main() {
     await browser.close();
   }
 
-  console.log(JSON.stringify({ outRoot, zip: '/opt/cursor/artifacts/pr225-nyc-sbs.zip', bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
+  console.log(JSON.stringify({ outRoot, zip: '/opt/cursor/artifacts/pr225-nyc-sbs-r2.zip', bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
 
   const { execFileSync } = await import('node:child_process');
-  execFileSync('zip', ['-qr', '/opt/cursor/artifacts/pr225-nyc-sbs.zip', '.'], { cwd: outRoot });
+  execFileSync('zip', ['-qr', '/opt/cursor/artifacts/pr225-nyc-sbs-r2.zip', '.'], { cwd: outRoot });
 }
 
 void main().catch((err) => {
