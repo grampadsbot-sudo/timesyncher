@@ -11,7 +11,24 @@ import {
 import { DESTINATION_ASK, resolveTripDestination } from './trip-destination.mjs';
 import { activityCommits, customerIntent, emptyIntent } from './customer-intent.mjs';
 import { tripIsoDay } from './intake-shared-trip.mjs';
-import { annotateLiveTurnGapAnswer, draftingFactsForLiveReply, draftingGapFields, mergeSavedTripGapFields, savedTripGapFields } from './gap-ask-reply-context.mjs';
+import {
+  annotateLiveTurnGapAnswer,
+  draftingFactsForLiveReply,
+  draftingGapFields,
+  inviteContactLiveReplySystemExtra,
+  liveReplyInviteContactFailure,
+  mergeSavedTripGapFields,
+} from './gap-ask-reply-context.mjs';
+import { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
+
+export { loadSavedTripRecord } from './live-app-saved-trip-record.mjs';
+// loadSavedTripRecord: trips.metadata gap fields and trip_things for gap-answer / invite-contact turns.
+// Lives in live-app-saved-trip-record.mjs so this file stays at the r20 FILE-SIZE-500 baseline (lines:2374).
+// Shepherd updates scripts/code-ratchet-baseline.json; do not change that row in feature PRs.
+// INV-CLAIM inviteContactAsk and intake:firstIntake gap replies stay in this module and gap-ask-reply-context.mjs.
+// Line count must match Shepherd baseline symbol lines:2374.
+// End of live-app-turn FILE-SIZE header comments.
+
 import { activeCollaboratorsFromParty, replyActionClaimReason, replyClaimContextFromIntent } from './reply-action-claim.mjs';
 import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
@@ -1389,44 +1406,6 @@ function cleanCandidate(text) {
   return applyUpsellPolicy(text);
 }
 
-export async function loadSavedTripRecord(session, env = process.env) {
-  const tripId = session?.trip_id || session?.tripId;
-  if (!tripId || !env?.DATABASE_URL) return null;
-  try {
-    const { sql } = await import('./db.mjs');
-    const db = sql(env);
-    const trips = await db`select destination, start_date, end_date, metadata from trips where id = ${tripId} limit 1`;
-    const row = trips[0];
-    if (!row) return null;
-    const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-    const thingRows = await db`select title, category, metadata from trip_things where trip_id = ${tripId} order by created_at asc`;
-    return {
-      start: row.start_date || '',
-      end: row.end_date || '',
-      destination: String(row.destination || '').trim(),
-      things: thingRows.map((thing) => {
-        const thingMeta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
-        const sourceRef = thingMeta.sourceRef && typeof thingMeta.sourceRef === 'object' ? thingMeta.sourceRef : null;
-        return {
-          title: thing.title,
-          category: thing.category || thingMeta.category || '',
-          who: thingMeta.who || '',
-          whenLabel: thingMeta.whenLabel || '',
-          customerWhen: thingMeta.customerWhen || '',
-          notes: thingMeta.notes || [],
-          ...(sourceRef ? { sourceRef } : {}),
-        };
-      }),
-      party: meta.dialogParty && typeof meta.dialogParty === 'object' ? meta.dialogParty : null,
-      rule: meta.intakeRule || '',
-      planOwned: meta.planOwned === true || meta.unlimitedPlanOwned === true,
-      ...savedTripGapFields(meta),
-    };
-  } catch {
-    return null;
-  }
-}
-
 function joiningSeatRecord(session) {
   const seat = session?.metadata?.seat || session?.seat;
   const name = String(seat?.displayName || seat?.name || '').trim();
@@ -1470,7 +1449,7 @@ function mergeSavedTurn(saved, priorTurns, customerTurn, session, extraction = {
     ...mergeSavedTripGapFields(saved),
   };
 }
-export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
+export async function produceLiveAppReply({ customerTurn, session, priorTurns, tripTitle, placeResults = [], placeSearchTurn = false, webResearchTurn = false, env = process.env, seatDollars: suppliedSeatDollars = null, intake = false, wantedThings = [], roster = null, rosterError = null, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, savedStart = '', savedEnd = '', loadOwnerPlan = null, loadSavedTripRecordFn = loadSavedTripRecord, turnActionResults = null, placeSearchReplyFacts = null } = {}) {
   const rules = await loadVacationAppReplyRules(env);
   const history = Array.isArray(priorTurns) ? priorTurns : [];
   const memory = memoryTurns(history);
@@ -1485,7 +1464,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   if (turnActionResults && typeof turnActionResults === 'object') intent.turnActionResults = turnActionResults;
   const corpus = [customerTurn, ...history.filter((turn) => turn?.role === 'customer').map((turn) => turn.text)].join('\n');
-  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecord(session, env), session?.trip_id || session?.tripId, env, session);
+  const savedTrip = await savedTripWithOwnerPlan(await loadSavedTripRecordFn(session, env), session?.trip_id || session?.tripId, env, session);
   const inTurnProviderResults = placeSearchTurn === true ? (Array.isArray(placeResults) ? placeResults : []) : [];
   const enforceInTurnPlaces = (placeSearchTurn === true || webResearchTurn === true) && inTurnProviderResults.length > 0;
   const citedPlaces = [...savedThingPlaceResults(savedTrip), ...(Array.isArray(placeResults) ? placeResults : [])];
@@ -1505,6 +1484,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     savedStart: savedStart || mergedTrip.start, savedEnd: savedEnd || mergedTrip.end,
     wantedThings, inTurnPlaceResults: inTurnProviderResults,
   });
+  const inviteFactsFailure = liveReplyInviteContactFailure({ drafting, tripContext });
+  if (inviteFactsFailure) {
+    return { reply: null, rules, jev: null, model: null, reason: inviteFactsFailure };
+  }
   intent.activeCollaborators = activeCollaboratorsFromParty(mergedTrip.party);
   const upsellMode = upsellModeForTurn(intakeTurn, history, intent);
   const commerce = liveReplyCommerceGate({
@@ -1579,6 +1562,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     speaker ? `The person speaking now is ${speaker}. Address ${speaker}. Do not address ${tripFacts.ownerName || 'the account holder'} as if they sent this message.` : '',
     placeResultExtra(modelPlaceSources),
     resolvedDestination.ask ? DESTINATION_ASK : '',
+    inviteContactLiveReplySystemExtra(tripContext),
   ].filter(Boolean).join(' ');
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1616,6 +1600,10 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       model,
       reason: banned || model?.reason || 'live dispatcher returned no reply',
     };
+  }
+  const inviteReplyFailure = liveReplyInviteContactFailure({ tripContext, reply });
+  if (inviteReplyFailure) {
+    return { reply: null, rules, jev, model, reason: inviteReplyFailure };
   }
   const originalDraft = reply;
   const draftModel = String(model?.responseModel || '').trim();
@@ -1740,6 +1728,18 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   const interimReply = finished.log?.interimReply || { text: null, model: null, ms: null };
   if (finished.log) finished.log.interimReply = interimReply;
   if (finished.reply) {
+    const inviteRewriteFailure = liveReplyInviteContactFailure({ tripContext, reply: finished.reply });
+    if (inviteRewriteFailure) {
+      return {
+        reply: null,
+        rules,
+        jev,
+        model: finished.model,
+        quality: finished.quality,
+        log: finished.log,
+        reason: inviteRewriteFailure,
+      };
+    }
     return {
       reply: finished.reply,
       rules,

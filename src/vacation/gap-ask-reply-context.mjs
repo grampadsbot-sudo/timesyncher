@@ -43,10 +43,11 @@ function lodgingFilledThisTurn(saved = {}, merged = {}, { wantedThings = [] } = 
 
 function detectGapAnswerTurn(saved = {}, merged = {}, options = {}) {
   const lastAsked = String(merged?.lastAskedGap || saved?.lastAskedGap || '').trim();
-  if (!lastAsked) return { gapAnswerTurn: false };
-  if (lastAsked === 'lodging' && lodgingFilledThisTurn(saved, merged, options)) {
+  const lodgingAskOpen = saved?.lodgingAsk === true || merged?.lodgingAsk === true;
+  if (lodgingFilledThisTurn(saved, merged, options) && (lastAsked === 'lodging' || (lodgingAskOpen && !lastAsked))) {
     return { gapAnswerTurn: true, gapFilledThisTurn: 'lodging' };
   }
+  if (!lastAsked) return { gapAnswerTurn: false };
   const explicit = String(merged?.gapFilledThisTurn || '').trim();
   if (explicit && explicit === lastAsked) return { gapAnswerTurn: true, gapFilledThisTurn: explicit };
   return { gapAnswerTurn: false };
@@ -108,6 +109,7 @@ function askSignalsForGap(gap, things, trip) {
       persistGapAsk: {
         lastAskedGap: 'invite_contact',
         invite_contact_needed: true,
+        inviteContactAsk: true,
         lodgingAsk: false,
         needsCustomerInput: ['invite_contact'],
       },
@@ -147,7 +149,9 @@ export function draftingGapFields(record = {}, things = []) {
 }
 
 export function gapAskReplyPromptTripRaw(tripSource, postIntake, visibleTripContext) {
-  const gapAskPromptTurn = postIntake === true || tripSource?.gapAnswerTurn === true;
+  const gapAskPromptTurn = postIntake === true
+    || tripSource?.gapAnswerTurn === true
+    || tripSource?.inviteContactAsk === true;
   let tripRaw = visibleTripContext(tripSource);
   if (!gapAskPromptTurn && tripRaw && typeof tripRaw === 'object') {
     tripRaw = { ...tripRaw };
@@ -169,10 +173,39 @@ export function perFactGapAskRuleLines(tripRaw = {}) {
   ].filter(Boolean);
 }
 
+function inviteContactAskRequired(tripContext) {
+  return tripContext?.inviteContactAsk === true;
+}
+
+function inviteContactAskReplySatisfied(reply) {
+  const body = String(reply || '').trim();
+  if (!body) return false;
+  if (/\b(?:e-?mail|email address)\b/i.test(body)) return true;
+  return /\?/.test(body) && /\b(?:name|wife|husband|spouse|partner|companion|her|his|their)\b/i.test(body);
+}
+
+export function liveReplyInviteContactFailure({ drafting, tripContext, reply } = {}) {
+  if (inviteContactAskRequired(drafting) && !inviteContactAskRequired(tripContext)) {
+    return 'invite_contact_ask_facts_missing';
+  }
+  if (inviteContactAskRequired(tripContext)) {
+    const body = String(reply || '').trim();
+    if (body && !inviteContactAskReplySatisfied(body)) return 'invite_contact_ask_reply_required';
+  }
+  return null;
+}
+
+export function inviteContactLiveReplySystemExtra(tripContext) {
+  return inviteContactAskRequired(tripContext)
+    ? 'After acknowledging their lodging answer, ask for their travel companion name and email so you can send the trip invite. Do not skip that question.'
+    : '';
+}
+
 export async function draftingFactsForLiveReply(draftingFactsFn, history, customerTurn, mergedTrip, env, tripId) {
   const things = Array.isArray(mergedTrip?.things) ? mergedTrip.things : [];
-  const { persistGapAsk } = replyGapAskSignals(mergedTrip, things);
+  const { fields, persistGapAsk } = replyGapAskSignals(mergedTrip, things);
+  const enriched = { ...mergedTrip, ...fields };
   const id = String(tripId || '').trim();
   if (persistGapAsk && id) await persistTripGapAskState(env, id, persistGapAsk);
-  return draftingFactsFn(history, customerTurn, mergedTrip);
+  return draftingFactsFn(history, customerTurn, enriched);
 }

@@ -1,4 +1,5 @@
 import { postJevDecisions } from '../../scripts/vacation-app-reply-rules.mjs';
+import { jevRelevanceJudgeTimeoutMs } from './place-relevance-stage-budget.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { parseJevRelevanceScoreAnswer } from './place-relevance-score-parse.mjs';
 
@@ -12,7 +13,13 @@ function throwRelevanceJudgeFailed(message, extra = {}) {
   throw new PlaceSearchError(message, 'relevance_judge_failed', extra);
 }
 
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '' } = {}) {
+function judgeFailureExtra(error, extra = {}) {
+  const name = String(error?.name || '').trim();
+  const timedOut = name === 'TimeoutError' || name === 'AbortError';
+  return timedOut ? { judgeTimedOut: true, ...extra } : extra;
+}
+
+export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', target = '', area = '', env = process.env, timeoutMs = null } = {}) {
   if (!apiKey || !fetchImpl) {
     throwRelevanceJudgeFailed('Jev relevance judge refused to run. Missing OPENROUTER_API_KEY.');
   }
@@ -48,11 +55,23 @@ export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '', t
   };
   let response;
   let responseText = '';
+  const judgeTimeoutMs = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? Number(timeoutMs)
+    : jevRelevanceJudgeTimeoutMs(env);
   try {
-    response = await postJevDecisions({ payload, apiKey, fetchImpl, title: 'TimeSyncher Vacation POI' });
+    response = await postJevDecisions({
+      payload,
+      apiKey,
+      fetchImpl,
+      title: 'TimeSyncher Vacation POI',
+      timeoutMs: judgeTimeoutMs,
+    });
     responseText = typeof response.text === 'function' ? await response.text() : '';
   } catch (error) {
-    throwRelevanceJudgeFailed(`Jev relevance judge request failed: ${capSnippet(error?.message || error)}`);
+    throwRelevanceJudgeFailed(
+      `Jev relevance judge request failed: ${capSnippet(error?.message || error)}`,
+      judgeFailureExtra(error, { judgeTimeoutMs }),
+    );
   }
   if (!response?.ok) {
     throwRelevanceJudgeFailed(

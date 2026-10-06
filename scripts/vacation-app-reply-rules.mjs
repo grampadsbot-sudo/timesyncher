@@ -457,8 +457,8 @@ function normalizeDecisions(body) {
   };
 }
 
-export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI' } = {}) {
-  return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(20000) });
+export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000 } = {}) {
+  return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
 }
 
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {

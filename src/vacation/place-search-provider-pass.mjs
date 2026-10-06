@@ -328,12 +328,28 @@ export async function runPlaceProviderPass({
           ...diagnosticsBase(),
           judgeHttpStatus: Number.isFinite(Number(error?.judgeHttpStatus)) ? Number(error.judgeHttpStatus) : null,
           judgeBodySnippet: String(error?.judgeBodySnippet || '').trim() || null,
+          ...(error?.judgeTimedOut === true ? { judgeTimedOut: true } : {}),
+          ...(Number.isFinite(Number(error?.judgeTimeoutMs)) ? { judgeTimeoutMs: Number(error.judgeTimeoutMs) } : {}),
+          ...(Number.isFinite(Number(error?.judgeStageBudgetMs)) ? { judgeStageBudgetMs: Number(error.judgeStageBudgetMs) } : {}),
+          ...(Number.isFinite(Number(error?.relevanceStageMs)) ? { relevanceStageMs: Number(error.relevanceStageMs) } : {}),
         },
       );
     }
     throw error;
   }
   providerTimings.relevanceMs = Date.now() - relevanceStarted;
+  if (Number.isFinite(Number(relevance?.relevanceStageMs))) {
+    providerTimings.relevanceStageMs = Number(relevance.relevanceStageMs);
+  }
+  if (Number.isFinite(Number(relevance?.relevanceJudgeCalls))) {
+    providerTimings.relevanceJudgeCalls = Number(relevance.relevanceJudgeCalls);
+  }
+  if (Number.isFinite(Number(relevance?.relevanceJudgeSkipped))) {
+    providerTimings.relevanceJudgeSkipped = Number(relevance.relevanceJudgeSkipped);
+  }
+  if (Number.isFinite(Number(relevance?.relevanceStageBudgetMs))) {
+    providerTimings.relevanceStageBudgetMs = Number(relevance.relevanceStageBudgetMs);
+  }
   let places = relevance.places;
   const relevanceRejections = relevance.rejections;
   const singleNamedPlaceQuery = placeQueries.length === 1

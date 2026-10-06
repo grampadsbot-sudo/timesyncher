@@ -124,6 +124,8 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
     classification,
     firstIntake,
     jobKind: queuedJobType,
+    savedTripTitle: trip?.title || '',
+    savedTripDestination: trip?.destination || '',
   });
   const customerLive = liveTurnRecord({
     turnIndex: customerTurnIndex,
@@ -302,7 +304,7 @@ export async function queueVacationAppTurn(db, session, trip, body, hooks, intak
         webResearchTurn: activeWebResearchTurn,
         env: env,
         seatDollars: seat ? null : configuredSeatDollars(env),
-        intake: classification.ok === true && classification.intake === true,
+        intake: firstIntake,
         wantedThings: intakeExtractedThings(placeSearchTurn, classification, webResearchTurn),
         roster: Array.isArray(classification.roster) ? classification.roster : [],
         rosterError: classification.ok === true ? null : (classification.error || 'trip intake classification failed'),

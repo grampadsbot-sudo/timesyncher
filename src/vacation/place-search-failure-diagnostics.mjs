@@ -119,6 +119,8 @@ export function placeSearchDiagnosticsFromError(error) {
     'anchorRadiusRejected',
     'judgeHttpStatus',
     'judgeBodySnippet',
+    'judgeTimedOut',
+    'judgeTimeoutMs',
     'providerErrors',
     'braveLookups',
     'anchorRadiusPolicy',

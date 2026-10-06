@@ -582,7 +582,7 @@ export async function searchPlaces({
       placeQueries,
       osmCategoryFilter,
       searchAnchor,
-      relevanceContext: { target: placeTarget, area: placeArea },
+      relevanceContext: { target: placeTarget, area: placeArea, category: osmCategoryFilter[0] || placeQueries[0]?.category || '' },
       tripId,
       db,
       priorPlaces,

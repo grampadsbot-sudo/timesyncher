@@ -17,6 +17,7 @@ import {
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const classifySource = fs.readFileSync(new URL('../src/vacation/trip-intake-classify.mjs', import.meta.url), 'utf8');
+const resolvePlaceSource = fs.readFileSync(new URL('../src/vacation/trip-intake-resolve-place.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(turnSource, /function isLongIntake|function intakeFacts|add\('Gardens'|add\('Kailua-Kona house'/);
 assert.doesNotMatch(`${turnSource}\n${routeSource}\n${classifySource}`, /\b(?:isLongIntake|intakeFacts|postIntakeUpsellTurn|ensureNamedThings)\b/);
 assert.doesNotMatch(turnSource, /later in the week|laterFridayLabel|function whoIn|'Marcus', 'Aunt'/);
@@ -162,6 +163,19 @@ assert.equal(notFirst.destinationError, 'trip place was not in the extraction');
 assert.equal(notFirst.titleError, 'trip title was not in the extraction');
 assert.equal(notFirst.intakeError, null);
 
+const savedTitleFields = tripIntakeJobFields({
+  requestText: 'What hotel are we at?',
+  receivedAt: '2026-09-27T12:05:00.000Z',
+  classification: followUp,
+  firstIntake: false,
+  jobKind: 'trip_intake',
+  savedTripTitle: 'Maui Mar 10–17 2027',
+  savedTripDestination: 'Maui',
+});
+assert.equal(savedTitleFields.title, 'Maui Mar 10–17 2027');
+assert.equal(savedTitleFields.titleError, null);
+assert.equal(savedTitleFields.destination, 'Maui');
+
 const failed = await classifyTripIntake({
   text: lisbon,
   env,
@@ -219,7 +233,7 @@ assert.equal(blank.error, null);
 assert.doesNotMatch(routeSource, /TimeSyncher Vacation Admin Test|placeTitle/);
 assert.doesNotMatch(turnSource, /function thingPattern|placeTitle/);
 assert.match(routeSource, /resolveIntakePlace/);
-assert.match(classifySource, /runPublicResearch/);
+assert.match(resolvePlaceSource, /runPublicResearch/);
 assert.doesNotMatch(classifySource, /places\.googleapis|maps\.googleapis|google places/i);
 const adminSource = fs.readFileSync(new URL('../routes/admin-onboardings.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(adminSource, /TimeSyncher Vacation Admin Test/);
