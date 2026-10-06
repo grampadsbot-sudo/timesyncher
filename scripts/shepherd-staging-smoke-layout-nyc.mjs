@@ -113,12 +113,16 @@ export function gradeLayoutNycStagingDom(summary = {}, { tab, viewport } = {}) {
     && summary.tabOrder.join('\0') !== LAYOUT_NYC_TAB_ORDER.join('\0')) {
     failLayoutNyc(failures, tabKey, vp, `tab pill order mismatch: [${summary.tabOrder.join(', ')}]`);
   }
-  if ((summary.sortPills || []).length) {
-    failLayoutNyc(failures, tabKey, vp, 'staging must not show Name/Price sort pills (use column labels)');
-  }
-  if (LIST_SORT_TABS.has(tabKey) && (summary.rowCount || 0) >= 1
-    && (!summary.columnSortLabels?.name || !summary.columnSortLabels?.price)) {
-    failLayoutNyc(failures, tabKey, vp, 'missing Name/Price column labels above list');
+  if (LIST_SORT_TABS.has(tabKey) && (summary.rowCount || 0) >= 1) {
+    const pills = summary.sortPills || [];
+    const hasName = pills.some((p) => /^name\b/i.test(String(p)));
+    const hasPrice = pills.some((p) => /^price\b/i.test(String(p)));
+    if (!hasName || !hasPrice) {
+      failLayoutNyc(failures, tabKey, vp, 'missing Name/Price sort buttons above list');
+    }
+    if (summary.columnSortLabels?.name || summary.columnSortLabels?.price) {
+      failLayoutNyc(failures, tabKey, vp, 'staging must use sort buttons, not clickable column labels');
+    }
   }
   if ((summary.rowCount || 0) > 0 && summary.rowsNameLeft === false) {
     failLayoutNyc(failures, tabKey, vp, 'list rows must place name on the left');
@@ -134,19 +138,36 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
   const kept = [];
   const expectedDiffs = [];
   const nycDefects = layoutNycReferenceDefects(tab, viewport);
+  const stagingHasSortButtons = () => {
+    const pills = stagingDom?.sortPills || [];
+    return pills.some((p) => /^name\b/i.test(String(p))) && pills.some((p) => /^price\b/i.test(String(p)));
+  };
   for (const f of verdict.failures || []) {
     const reason = String(f.reason || f.detail || '');
     const lower = reason.toLowerCase();
-    if (/nyc.*pill|reference.*pill|left.*pill|sort pill/.test(lower) && !(stagingDom?.sortPills || []).length) {
-      expectedDiffs.push({ kind: 'nyc_sort_pills', reason });
+    if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
+      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
     } else if (nycDefects.some((d) => d.code === 'horizontal_overflow') && /nyc.*overflow|left.*clip|reference.*horizontal/.test(lower)) {
       expectedDiffs.push({ kind: 'nyc_horizontal_overflow', reason });
-    } else if (/staging.*pill|right.*pill/.test(lower)) {
+    } else if (/column label|label.*sort|header.*sort/.test(lower) && (stagingDom?.columnSortLabels?.name || stagingDom?.columnSortLabels?.price)) {
       kept.push({ rule: 'LAYOUT-NYC', detail: reason });
+    } else if (/missing.*sort|sort button|name.*price.*button/.test(lower) && LIST_SORT_TABS.has(String(tab || '').toLowerCase())) {
+      const pills = stagingDom?.sortPills || [];
+      const hasName = pills.some((p) => /^name\b/i.test(String(p)));
+      const hasPrice = pills.some((p) => /^price\b/i.test(String(p)));
+      if (!hasName || !hasPrice) kept.push({ rule: 'LAYOUT-NYC', detail: reason });
     } else if (reason) kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
   }
-  if ((stagingDom?.sortPills || []).length) {
-    kept.push({ rule: 'LAYOUT-NYC', detail: 'staging must not show Name/Price sort pills' });
+  if (LIST_SORT_TABS.has(String(tab || '').toLowerCase())) {
+    const pills = stagingDom?.sortPills || [];
+    const hasName = pills.some((p) => /^name\b/i.test(String(p)));
+    const hasPrice = pills.some((p) => /^price\b/i.test(String(p)));
+    if (!hasName || !hasPrice) {
+      kept.push({ rule: 'LAYOUT-NYC', detail: 'missing Name/Price sort buttons above list' });
+    }
+    if (stagingDom?.columnSortLabels?.name || stagingDom?.columnSortLabels?.price) {
+      kept.push({ rule: 'LAYOUT-NYC', detail: 'staging must use sort buttons, not clickable column labels' });
+    }
   }
   return { pass: kept.length === 0, failures: kept, expectedDifferences: expectedDiffs, nycReferenceDefects: nycDefects };
 }
@@ -156,9 +177,9 @@ async function judgeLayoutNycPair({ comparePath, tab, viewport, stagingDom, apiK
   if (!key) return { pass: false, failures: [{ rubricItem: 'harness', reason: 'OPENROUTER_API_KEY missing' }] };
   const nycDefects = layoutNycReferenceDefects(tab, viewport);
   const prompt = `Side-by-side PNG LEFT=NYC reference RIGHT=staging. Judge layout/structure only; ignore text and logos.
-EXPECTED: NYC may have Name/Price sort pills above list; staging must use column labels in list header, not pills.
+EXPECTED: Both NYC and staging use Name/Price sort buttons above list (not clickable column header labels). Sort button placement differences vs NYC are not failures.
 NYC known defects (do not match): ${JSON.stringify(nycDefects)}. Staging must not overflow at 390.
-FAIL staging pills, missing column labels on Flights/Hotels/Cars, bad tab order, header/row layout mismatch, staging overflow.
+FAIL missing sort buttons on Flights/Hotels/Cars, clickable column-label sort on staging, bad tab order, header/row layout mismatch, staging overflow.
 Return JSON {pass:boolean,failures:[{rubricItem,reason}]}.
 DOM: pills=${JSON.stringify(stagingDom?.sortPills || [])} labels=${JSON.stringify(stagingDom?.columnSortLabels || {})} overflow=${Boolean(stagingDom?.horizontalOverflow)} tab=${tab} vp=${viewport}`;
   const pngB64 = readFileSync(comparePath).toString('base64');

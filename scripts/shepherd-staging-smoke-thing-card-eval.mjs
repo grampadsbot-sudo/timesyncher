@@ -2,7 +2,7 @@
 
 import { logoChipInkPresent } from './lib/logo-pixel-ink-grade.mjs';
 import { gradeSharedTabLogoUrlRecords } from './shepherd-staging-smoke-grader-lib.mjs';
-import { gradeThingCardSortByLabelHarness } from './shepherd-staging-smoke-thing-card-sort.mjs';
+import { gradeThingCardSortButtonsHarness } from './shepherd-staging-smoke-thing-card-sort.mjs';
 
 const THING_CARD_TAB_KEYWORDS = ['cars', 'hotels', 'restaurants', 'stores', 'flights', 'events'];
 
@@ -149,13 +149,13 @@ export function gradeThingCardTagFilterParity({
 
 export function thingCardFailOnSortControlsFromEnv(env = process.env) {
   const raw = env?.THING_CARD_FAIL_ON_SORT_CONTROLS;
-  if (raw == null || String(raw).trim() === '') return true;
+  if (raw == null || String(raw).trim() === '') return false;
   const v = String(raw).trim().toLowerCase();
   if (v === '0' || v === 'false' || v === 'no') return false;
   return v === '1' || v === 'true' || v === 'yes';
 }
 
-/** Default on; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `0`/`false`/`no` to allow standalone Name/Price sort pills. */
+/** Default off; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to forbid standalone Name/Price sort pills. */
 export const THING_CARD_FAIL_ON_SORT_CONTROLS = thingCardFailOnSortControlsFromEnv();
 
 export function thingCardSortControlLabel(text) {
@@ -172,8 +172,8 @@ export function forbiddenSortControlsFromMatches(sortControlMatches = []) {
 }
 
 export {
-  gradeThingCardSortByLabel,
-  gradeThingCardSortByLabelHarness,
+  gradeThingCardSortButtons,
+  gradeThingCardSortButtonsHarness,
   isAscendingNameOrder,
   isDescendingNameOrder,
   priceOrderOk,
@@ -228,8 +228,8 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
   });
   for (const f of tagParity.failures) failures.push(f);
 
-  if (scan.sortByLabel?.failures?.length) {
-    for (const f of scan.sortByLabel.failures) failures.push(f);
+  if (scan.sortButtons?.failures?.length) {
+    for (const f of scan.sortButtons.failures) failures.push(f);
   }
 
   for (const row of rows) {
@@ -290,7 +290,7 @@ export function gradeThingCardHarnessResult({ tabs = [], probes = [] } = {}) {
       failures.push({ rule: 'required_tab', tab, detail: `missing probe for required tab ${tab}` });
     }
   }
-  for (const f of gradeThingCardSortByLabelHarness(probes)) failures.push(f);
+  for (const f of gradeThingCardSortButtonsHarness(probes)) failures.push(f);
   return { pass: failures.length === 0, failures, probes };
 }
 

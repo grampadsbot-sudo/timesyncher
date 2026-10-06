@@ -9,11 +9,11 @@ import {
   LAYOUT_NYC_TAB_ORDER,
 } from './shepherd-staging-smoke-layout-nyc.mjs';
 
-assert.equal(thingCardFailOnSortControlsFromEnv({}), true);
+assert.equal(thingCardFailOnSortControlsFromEnv({}), false);
 assert.equal(gradeThingCardTabScan({
   tab: 'cars', viewport: '390', sortControls: ['Name'], sortControlMatches: [{ label: 'Name' }],
   rows: [{ index: 0, title: 'Hertz', summaryText: 'x', requiresLogo: true }], expectedRows: 1,
-}, { 0: { inkPresent: true } }).pass, false);
+}, { 0: { inkPresent: true } }).pass, true);
 
 const stagingOk = {
   tabOrder: LAYOUT_NYC_TAB_ORDER,
@@ -38,10 +38,11 @@ const stagingColumns = {
 };
 assert.equal(reconcileLayoutNycJudgeVerdict(
   { pass: false, failures: [{ reason: 'NYC left shows sort pills' }] },
-  { tab: 'hotels', viewport: '390', stagingDom: stagingColumns },
+  { tab: 'hotels', viewport: '390', stagingDom: stagingOk },
 ).pass, true);
 assert.equal(gradeLayoutNycStagingDom({ ...stagingColumns, columnSortLabels: {} }, { tab: 'hotels', viewport: '390' }).pass, false);
 assert.equal(gradeLayoutNycReferenceMissing(null).failures[0].code, 'reference_missing');
-assert.equal(gradeLayoutNycStagingDom(stagingColumns, { tab: 'hotels', viewport: '390' }).pass, true);
+assert.equal(gradeLayoutNycStagingDom(stagingOk, { tab: 'hotels', viewport: '390' }).pass, true);
+assert.equal(gradeLayoutNycStagingDom(stagingColumns, { tab: 'hotels', viewport: '390' }).pass, false);
 
 console.log('shepherd layout-nyc tests passed');

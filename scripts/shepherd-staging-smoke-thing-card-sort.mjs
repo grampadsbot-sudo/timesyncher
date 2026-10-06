@@ -1,4 +1,4 @@
-/** SORT-BY-LABEL tab + harness grading (Shepherd thing-card). */
+/** SORT-BUTTONS tab + harness grading (Shepherd thing-card). */
 
 function rowTitlesFromScanRows(rows = []) {
   return (rows || []).map((r) => String(r?.title || '').trim()).filter(Boolean);
@@ -11,6 +11,26 @@ function parseThingCardRowPrice(rowText = '') {
 
 function rowPriceTextsFromScanRows(rows = []) {
   return (rows || []).map((r) => `${r?.title || ''} ${r?.summaryText || ''}`);
+}
+
+function sortPillBase(label = '') {
+  const text = String(label || '').replace(/\s+/g, ' ').trim();
+  const base = text.replace(/\s*[↑↓]\s*$/, '').trim().toLowerCase();
+  if (base === 'name' || base === 'price') return base;
+  return null;
+}
+
+function sortPillsFromMatches(sortControlMatches = []) {
+  const out = { name: null, price: null };
+  for (const m of sortControlMatches || []) {
+    const base = sortPillBase(m?.label);
+    if (base && !out[base]) out[base] = m;
+  }
+  return out;
+}
+
+function labelHasSortArrow(label = '') {
+  return /[↑↓]/.test(String(label || ''));
 }
 
 export function isAscendingNameOrder(titles = []) {
@@ -51,9 +71,10 @@ export function priceOrderOk(prices = [], direction = 'asc') {
   return pricedIdx.length >= 1 || unpricedIdx.length >= 2;
 }
 
-export function gradeThingCardSortByLabel({
+export function gradeThingCardSortButtons({
   tab = 'unknown',
   viewport = null,
+  sortControlMatches = [],
   columnSortLabels = {},
   rows = [],
   orders = {},
@@ -62,14 +83,15 @@ export function gradeThingCardSortByLabel({
   const rowCount = (rows || []).length;
   const titles = rowTitlesFromScanRows(rows);
   const rowTexts = rowPriceTextsFromScanRows(rows);
+  const pills = sortPillsFromMatches(sortControlMatches);
   const gate = {
-    rule: 'SORT-BY-LABEL',
+    rule: 'SORT-BUTTONS',
     tab,
     viewport,
     rowCount,
+    sortControlMatches,
     columnSortLabels,
     orders,
-    sortControlMatches: orders.sortControlMatches,
   };
 
   if (rowCount < 2) {
@@ -84,20 +106,39 @@ export function gradeThingCardSortByLabel({
     };
   }
 
-  if (!columnSortLabels?.name) {
+  if (!pills.name) {
     failures.push({
-      rule: 'SORT-BY-LABEL',
+      rule: 'SORT-BUTTONS',
       tab,
       viewport,
-      detail: 'missing Name column label',
+      detail: 'missing Name sort button above list',
     });
   }
-  if (!columnSortLabels?.price) {
+  if (!pills.price) {
     failures.push({
-      rule: 'SORT-BY-LABEL',
+      rule: 'SORT-BUTTONS',
       tab,
       viewport,
-      detail: 'missing Price column label',
+      detail: 'missing Price sort button above list',
+    });
+  }
+
+  if (columnSortLabels?.name || columnSortLabels?.price) {
+    failures.push({
+      rule: 'SORT-BUTTONS',
+      tab,
+      viewport,
+      detail: 'column header labels must not be clickable sort controls',
+      columnSortLabels,
+    });
+  }
+
+  if (orders.columnLabelSorted) {
+    failures.push({
+      rule: 'SORT-BUTTONS',
+      tab,
+      viewport,
+      detail: 'column label click reordered rows (labels must not sort)',
     });
   }
 
@@ -107,38 +148,47 @@ export function gradeThingCardSortByLabel({
   let priceSortExercised = false;
   let priceStatus = null;
 
-  if (columnSortLabels?.name) {
+  if (pills.name) {
     if (!isAscendingNameOrder(nameAfterFirst)) {
       failures.push({
-        rule: 'SORT-BY-LABEL',
+        rule: 'SORT-BUTTONS',
         tab,
         viewport,
-        detail: `Name click did not sort ascending: [${nameAfterFirst.join(', ')}]`,
+        detail: `Name button did not sort ascending: [${nameAfterFirst.join(', ')}]`,
         observed: nameAfterFirst,
       });
     }
     if (nameAfterSecond.length >= 2
       && nameAfterFirst.join('\0') === nameAfterSecond.join('\0')) {
       failures.push({
-        rule: 'SORT-BY-LABEL',
+        rule: 'SORT-BUTTONS',
         tab,
         viewport,
-        detail: 'second Name click did not reverse or change order',
+        detail: 'second Name button click did not reverse or change order',
         observed: nameAfterSecond,
       });
     }
     if (nameAfterSecond.length >= 2 && isAscendingNameOrder(nameAfterSecond)) {
       failures.push({
-        rule: 'SORT-BY-LABEL',
+        rule: 'SORT-BUTTONS',
         tab,
         viewport,
-        detail: `second Name click still ascending: [${nameAfterSecond.join(', ')}]`,
+        detail: `second Name button click still ascending: [${nameAfterSecond.join(', ')}]`,
         observed: nameAfterSecond,
+      });
+    }
+    if (nameAfterFirst.length >= 2 && !labelHasSortArrow(orders.nameActiveAfterFirst)) {
+      failures.push({
+        rule: 'SORT-BUTTONS',
+        tab,
+        viewport,
+        detail: 'active Name sort button missing direction arrow after click',
+        observed: orders.nameActiveAfterFirst,
       });
     }
   }
 
-  if (columnSortLabels?.price) {
+  if (pills.price) {
     if (priceAfter.length >= 2) {
       const prices = priceAfter.map((text) => parseThingCardRowPrice(text));
       const pricedCount = prices.filter((p) => p != null && !Number.isNaN(p)).length;
@@ -149,15 +199,24 @@ export function gradeThingCardSortByLabel({
         if (!priceOrderOk(prices, dir)) {
           priceStatus = 'failed';
           failures.push({
-            rule: 'SORT-BY-LABEL',
+            rule: 'SORT-BUTTONS',
             tab,
             viewport,
-            detail: `Price click order invalid (${dir}): prices=${JSON.stringify(prices)}`,
+            detail: `Price button order invalid (${dir}): prices=${JSON.stringify(prices)}`,
             observed: priceAfter,
           });
         } else {
           priceStatus = 'ok';
           priceSortExercised = true;
+          if (!labelHasSortArrow(orders.priceActiveAfterClick)) {
+            failures.push({
+              rule: 'SORT-BUTTONS',
+              tab,
+              viewport,
+              detail: 'active Price sort button missing direction arrow after click',
+              observed: orders.priceActiveAfterClick,
+            });
+          }
         }
       }
     } else if (orders.priceClicked) {
@@ -184,9 +243,9 @@ export function gradeThingCardSortByLabel({
   };
 }
 
-function probeSortByLabelMeta(probe = {}) {
-  const gate = probe.sortByLabelGate || {};
-  const sort = probe.sortByLabel || {};
+function probeSortButtonsMeta(probe = {}) {
+  const gate = probe.sortButtonsGate || {};
+  const sort = probe.sortButtons || {};
   return {
     rowCount: probe.rowCount ?? gate.rowCount ?? 0,
     status: gate.status ?? sort.status,
@@ -196,26 +255,26 @@ function probeSortByLabelMeta(probe = {}) {
   };
 }
 
-export function gradeThingCardSortByLabelHarness(probes = []) {
+export function gradeThingCardSortButtonsHarness(probes = []) {
   const failures = [];
   const viewports = [...new Set((probes || []).map((p) => p.viewport).filter(Boolean))];
   for (const viewport of viewports) {
     const vpProbes = (probes || []).filter((p) => p.viewport === viewport && !p.skipped);
     const rowExercised = vpProbes.some((p) => {
-      const meta = probeSortByLabelMeta(p);
+      const meta = probeSortButtonsMeta(p);
       return meta.rowCount >= 2 && meta.status !== 'not_enough_rows';
     });
     if (!rowExercised) {
       failures.push({
-        rule: 'SORT-BY-LABEL',
+        rule: 'SORT-BUTTONS',
         viewport,
         detail: `no tab exercised with >=2 rows at viewport ${viewport}`,
       });
     }
-    const priceExercised = vpProbes.some((p) => probeSortByLabelMeta(p).priceSortExercised === true);
+    const priceExercised = vpProbes.some((p) => probeSortButtonsMeta(p).priceSortExercised === true);
     if (!priceExercised) {
       failures.push({
-        rule: 'SORT-BY-LABEL',
+        rule: 'SORT-BUTTONS',
         viewport,
         detail: `no tab with >=2 priced rows sorted correctly at viewport ${viewport}`,
       });

@@ -112,6 +112,28 @@ export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
     }
     return null;
   }
+  function findSortPill(which) {
+    for (const el of document.querySelectorAll('button,[role="button"]')) {
+      if (!isVisible(el)) continue;
+      if (sortColumnBase(el.textContent) !== which) continue;
+      const row = el.closest('[data-ts-list-sort-header],[data-list-sort-header]') || el.parentElement;
+      if (isListColumnHeaderRow(row)) continue;
+      if (!isPillSortButton(el)) {
+        const pr = el.parentElement;
+        if (!(pr && getComputedStyle(pr).flexWrap === 'wrap')) continue;
+      }
+      return el;
+    }
+    return null;
+  }
+  function readSortButtonLabels() {
+    const out = { name: null, price: null };
+    for (const which of ['name', 'price']) {
+      const el = findSortPill(which);
+      if (el) out[which] = String(el.textContent || '').replace(/\\s+/g, ' ').trim();
+    }
+    return out;
+  }
   return {
     evaluateThingCardTabDom() {
       const matches = sortControlMatches();
@@ -144,6 +166,15 @@ export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
       if (!btn) return { clicked: false, which };
       btn.click();
       return { clicked: true, which, label: String(btn.textContent || '').replace(/\\s+/g, ' ').trim() };
+    },
+    clickThingCardSortButton(which) {
+      const btn = findSortPill(which);
+      if (!btn) return { clicked: false, which };
+      btn.click();
+      return { clicked: true, which, label: String(btn.textContent || '').replace(/\\s+/g, ' ').trim() };
+    },
+    readSortButtonLabels() {
+      return readSortButtonLabels();
     },
     readThingCardRowOrder() {
       const rows = rowNodes();
