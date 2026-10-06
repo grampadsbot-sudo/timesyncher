@@ -683,6 +683,15 @@ export function assertPatchedStyleTwo(source = '') {
     if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
     }
+    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
+      throw new Error('Served shared Oe() rows must expose Gate B list row markers.');
+    }
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
+      throw new Error('Served shared Hotels/Cars tabs must expose data-shared-live-tab panels.');
+    }
+    if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
+      throw new Error('Served shared dc() logo chips must expose data-ts-logo-chip for Gate B.');
+    }
   } else if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
     throw new Error('Live Hotels/Cars tabs must filter trip catalog rows in the vacation bundle.');
   }

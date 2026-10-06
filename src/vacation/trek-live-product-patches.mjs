@@ -158,6 +158,15 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(CME_CAR_TYPE_NEEDLE)) js = js.replace(CME_CAR_TYPE_NEEDLE, CME_CAR_TYPE_PATCH);
   if (js.includes(CME_CAR_HEURISTIC_NEEDLE)) js = js.replace(CME_CAR_HEURISTIC_NEEDLE, CME_CAR_HEURISTIC_PATCH);
+  if (js.includes(THING_LOGO_CHIP_DC_PADDING_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_PADDING_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (js.includes(THING_LOGO_CHIP_DC_V1_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_V1_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (js.includes(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE)) {
+    js = js.replace(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
+  } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
+    throw new Error('trek bundle dc() logo chip patch did not apply');
+  }
   if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
@@ -341,6 +350,32 @@ const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|Ameri
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
 
+const OE_LIST_ROW_PREP_NEEDLE = 'Xr=fo(G);return Sa?n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"},children:[n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto"';
+const OE_LIST_ROW_PREP_PATCH = 'Xr=fo(G);const tsRowLogo=_l(G),tsRowHasLogo=tsRowLogo?"1":"0";return Sa?n.jsxs("li",{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo||"","data-thing-category":It(G),style:{listStyle:"none",background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"},children:[n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto"';
+const OE_LIST_ROW_ALT_NEEDLE = '},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details"';
+const OE_LIST_ROW_ALT_PATCH = '},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo||"","data-thing-category":It(G),style:{listStyle:"none",background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details"';
+const HOTELS_TAB_PANEL_NEEDLE = 'q==="hotels"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"hotels"})';
+const HOTELS_TAB_PANEL_PATCH = 'q==="hotels"&&n.jsxs("div",{"data-shared-live-tab":"hotels",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"hotels"})';
+const CARS_TAB_PANEL_NEEDLE = 'q==="cars"&&n.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"cars"})';
+const CARS_TAB_PANEL_PATCH = 'q==="cars"&&n.jsxs("div",{"data-shared-live-tab":"cars",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"cars"})';
+
+export function patchSharedTripOeListRows(source = '') {
+  let js = String(source || '');
+  if (js.includes(OE_LIST_ROW_PREP_NEEDLE)) {
+    js = js.replace(OE_LIST_ROW_PREP_NEEDLE, OE_LIST_ROW_PREP_PATCH);
+  } else if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
+    throw new Error('shared trip Oe() list row marker patch did not apply');
+  }
+  if (js.includes(OE_LIST_ROW_ALT_NEEDLE)) {
+    js = js.replace(OE_LIST_ROW_ALT_NEEDLE, OE_LIST_ROW_ALT_PATCH);
+  } else if (!js.includes('tsRowHasLogo,"data-logo-src":tsRowLogo')) {
+    throw new Error('shared trip Oe() compact list row marker patch did not apply');
+  }
+  if (js.includes(HOTELS_TAB_PANEL_NEEDLE)) js = js.replace(HOTELS_TAB_PANEL_NEEDLE, HOTELS_TAB_PANEL_PATCH);
+  if (js.includes(CARS_TAB_PANEL_NEEDLE)) js = js.replace(CARS_TAB_PANEL_NEEDLE, CARS_TAB_PANEL_PATCH);
+  return js;
+}
+
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
@@ -450,6 +485,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
+  }
+  js = patchSharedTripOeListRows(js);
+  if (served) {
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
+      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    }
+    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
+      throw new Error('served shared Oe() rows missing Gate B list row markers');
+    }
   }
   return js;
 }
