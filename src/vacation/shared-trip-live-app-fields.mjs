@@ -1,4 +1,5 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -111,7 +112,7 @@ export function applyLiveAppListRowFields(shared = {}) {
     );
     const category = productThingCategory(place, override);
 
-    const logoUrl = explicitLogo(place, override, source);
+    const logoUrl = resolveThingLogoUrl(place, override) || explicitLogo(place, override, source);
     if (logoUrl) {
       override.logoUrl = logoUrl;
       if (!text(place.logoUrl)) place.logoUrl = logoUrl;

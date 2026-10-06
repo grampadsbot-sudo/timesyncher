@@ -1,3 +1,5 @@
+import { transportKind } from './intake-transport-kind.mjs';
+
 const CATEGORY_ICONS = {
   flight: '✈️',
   hotel: '🧳',
@@ -112,6 +114,16 @@ export function resolveThingType(thing = {}, override = {}, rowType = '') {
     thing.category_icon,
     thing.category?.icon,
   ];
+
+  const kind = transportKind(thing);
+  if (kind === 'flight') return 'flight';
+  if (kind === 'car') {
+    for (const candidate of candidates) {
+      if (normalizeThingType(candidate) === 'hotel') return 'hotel';
+    }
+    return 'car';
+  }
+
   for (const candidate of candidates) {
     const normalized = normalizeThingType(candidate);
     if (normalized && normalized !== 'other') return normalized;
