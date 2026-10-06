@@ -13,18 +13,28 @@ import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { patchSharedTripHostnameForLocalHarness } from '../src/vacation/trek-live-product-patches.mjs';
 import {
+  captureTabClip,
+  clickSharedTab,
+  measureListRowLogoCentering,
+} from './lib/itinerary-fresh-gate-metrics.mjs';
+import {
   buildNycCraigKimDaybydayTrip,
+  expectedSummariesOnDay,
+  listStoredSummaries,
+  NYC_CONFLICT_DAY,
   NYC_DAYBYDAY_SLUG,
+  STORED_SUMMARY_FIELD,
 } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r2';
-const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r2.zip';
+const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r3';
+const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r3.zip';
 const ref390 = process.env.DAYBYDAY_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-390_48df.png';
 const ref1280 = process.env.DAYBYDAY_REF_1280 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-1280_c76e.png';
 const MAX_RATIO = 0.035;
-const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 2);
+const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 3);
+const EXPECTED_SUMMARIES = listStoredSummaries();
 const UPSTREAM = '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
 const prodBundleName = 'index-BMaU4y5m.js';
@@ -195,7 +205,7 @@ function stitch(left, right) {
   return out;
 }
 
-async function captureDay(page, dayNumber) {
+async function captureDay(page, dayNumber, { assertStored = false } = {}) {
   await page.evaluate((n) => {
     for (const btn of document.querySelectorAll('button')) {
       if ((btn.textContent || '').replace(/\s+/g, ' ').trim() === `Day ${n}`) btn.click();
@@ -234,7 +244,19 @@ async function captureDay(page, dayNumber) {
     const emptyMedia = [...card.querySelectorAll('a[style*="width:42px"],a[style*="width:58px"]')].filter((a) => !a.querySelector('img,video'));
     const imgs = [...card.querySelectorAll('img')].map((img) => img.naturalWidth);
     const summaryCount = card.querySelectorAll('[data-row-summary="1"]').length;
+    const storedSummaryTexts = [...card.querySelectorAll('[data-row-summary="1"][data-summary-stored="1"]')].map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim());
+    const conflictCount = [...card.querySelectorAll('div')].filter((el) => /Conflict with/i.test(el.textContent || '')).length;
     const videoQrCount = card.querySelectorAll('[data-row-video-qr="1"]').length;
+    const logoRows = [...card.querySelectorAll('[data-ts-timeline-icon="1"]')].map((icon) => {
+      let grid = icon.parentElement;
+      while (grid && grid !== card && grid.children.length < 3) grid = grid.parentElement;
+      const title = grid?.querySelector('[data-ts-timeline-title="1"]') || grid?.querySelector('button');
+      if (!title || !grid?.querySelector('[data-row-summary="1"][data-summary-stored="1"]')) return null;
+      const chipRect = icon.getBoundingClientRect();
+      const nameRect = title.getBoundingClientRect();
+      const deltaPx = Math.abs((chipRect.top + chipRect.height / 2) - (nameRect.top + nameRect.height / 2));
+      return { deltaPx, pass: deltaPx <= 4.5 };
+    }).filter(Boolean);
     const r = card.getBoundingClientRect();
     return {
       clip: { x: r.x, y: r.y, width: r.width, height: r.height },
@@ -244,15 +266,44 @@ async function captureDay(page, dayNumber) {
       emptyMedia: emptyMedia.length,
       imgs,
       summaryCount,
+      storedSummaryTexts,
+      conflictCount,
       videoQrCount,
+      logoRows,
+      logoCenterPass: logoRows.length > 0 && logoRows.every((row) => row.pass),
     };
   }, dayNumber);
   if (!meta || meta.error) throw new Error(`day ${dayNumber} card not found (${JSON.stringify(meta)})`);
+  if (assertStored) {
+    for (const text of expectedSummariesOnDay(dayNumber)) {
+      assert.ok(meta.storedSummaryTexts.includes(text), `day ${dayNumber} missing stored summary: ${text}`);
+    }
+  }
   const shot = await page.screenshot({ type: 'png', clip: meta.clip });
   return { png: PNG.sync.read(shot), shot, meta };
 }
 
-async function shotPage(js, html, css, tripPayload, width) {
+async function captureListTab(page, tag, tabLabel) {
+  const clicked = await clickSharedTab(page, tabLabel);
+  assert.ok(clicked, `${tabLabel} tab not found @${tag}`);
+  await new Promise((r) => setTimeout(r, 450));
+  try {
+    await page.waitForFunction(
+      () => /Zabar|Strand Book/i.test(document.body?.innerText || ''),
+      { timeout: 15000 },
+    );
+  } catch (err) {
+    assert.ok(String(err?.message || err).includes('timeout'), err);
+  }
+  const logoCenter = await measureListRowLogoCentering(page);
+  const clip = await captureTabClip(page);
+  const shot = await page.screenshot({ type: 'png', clip });
+  const png = PNG.sync.read(shot);
+  const masks = [{ x: 0, y: clip.y + 80, width: clip.width, height: Math.max(0, clip.height - 80) }];
+  return { png, shot, meta: { clip, masks, logoCenter } };
+}
+
+async function shotPage(js, html, css, tripPayload, width, { candidate = false } = {}) {
   const server = await startServer({ html, css, js, tripPayload });
   const browser = await loadPuppeteer().launch({
     headless: true,
@@ -272,8 +323,11 @@ async function shotPage(js, html, css, tripPayload, width) {
     });
     await new Promise((r) => setTimeout(r, 400));
     const days = {};
-    for (const day of [1, 2]) days[day] = await captureDay(page, day);
-    return days;
+    for (const day of [1, 2, NYC_CONFLICT_DAY]) {
+      days[day] = await captureDay(page, day, { assertStored: candidate });
+    }
+    const listTab = await captureListTab(page, String(width), 'Stores');
+    return { days, listTab };
   } finally {
     await browser.close();
     await server.close();
@@ -294,10 +348,10 @@ await copyFile(ref1280, path.join(outRoot, 'approved-reference-1280.png'));
 const results = [];
 for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1280' }]) {
   const reference = await shotPage(beforeJs, html, css, tripPayload, width);
-  const candidate = await shotPage(afterJs, html, css, tripPayload, width);
-  for (const day of [1, 2]) {
-    const left = reference[day];
-    const right = candidate[day];
+  const candidate = await shotPage(afterJs, html, css, tripPayload, width, { candidate: true });
+  for (const day of [1, 2, NYC_CONFLICT_DAY]) {
+    const left = reference.days[day];
+    const right = candidate.days[day];
     assert.ok(left.meta && right.meta);
     assert.equal(right.meta.emptyMedia, 0, `day ${day} @${tag} empty media`);
     assert.ok(right.meta.imgs.every((nw) => nw > 0), `day ${day} @${tag} unloaded imgs`);
@@ -324,7 +378,10 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
       rowTitles: right.meta.rows.map((r) => r.title),
       maskRects: masks.length,
       summaryCount: right.meta.summaryCount,
+      conflictCount: right.meta.conflictCount,
       videoQrCount: right.meta.videoQrCount,
+      logoCenterPass: right.meta.logoCenterPass,
+      logoRows: right.meta.logoRows,
     });
     assert.ok(unmasked.ratio <= MAX_RATIO, `day ${day} @${tag} TREK drift ${unmasked.ratio}`);
     if (day === 1 && tag === '390') {
@@ -333,15 +390,56 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
     if (day === 2 && tag === '390') {
       assert.ok(right.meta.videoQrCount >= 1, 'expected video QR thumb on day card');
     }
+    if (day === NYC_CONFLICT_DAY && tag === '390') {
+      assert.ok(right.meta.conflictCount >= 1, 'expected conflict chrome on conflict day');
+      for (const text of [EXPECTED_SUMMARIES[606], EXPECTED_SUMMARIES[607]]) {
+        assert.ok(right.meta.storedSummaryTexts.includes(text), `conflict day missing stored summary: ${text}`);
+      }
+    }
+  }
+  for (const stem of ['stores']) {
+    const left = reference.listTab;
+    const right = candidate.listTab;
+    if (tag === '390') {
+      const day1 = results.find((row) => row.day === 1 && row.tag === '390');
+      assert.ok(day1?.logoCenterPass, 'day 1 timeline logo/name vertical centering @390');
+      if (right.meta.logoCenter?.rows?.length) {
+        assert.ok(right.meta.logoCenter.pass, `Stores tab logo/name centering @${tag}`);
+      }
+    }
+    const clip = right.meta.clip;
+    const masks = (right.meta.masks || []).map((m) => ({
+      x: m.x - clip.x,
+      y: m.y - clip.y,
+      width: m.width,
+      height: m.height,
+    }));
+    const unmasked = diffOutsideMasks(left.png, right.png, masks);
+    const masked = diffInsideMasks(left.png, right.png, masks);
+    const base = `${stem}-${tag}`;
+    await writeFile(path.join(outRoot, `${base}-reference-crop.png`), left.shot);
+    await writeFile(path.join(outRoot, `${base}-candidate-crop.png`), right.shot);
+    await writeFile(path.join(outRoot, `${base}-side-by-side.png`), PNG.sync.write(stitch(left.png, right.png)));
+    results.push({
+      shot: stem,
+      tag,
+      unmasked,
+      masked,
+      logoCenter: right.meta.logoCenter,
+    });
+    assert.ok(unmasked.ratio <= MAX_RATIO, `${stem} @${tag} TREK drift ${unmasked.ratio}`);
   }
 }
 
 const structural = {
   summaries: Math.max(0, ...results.map((r) => r.summaryCount || 0)),
   videoQrs: Math.max(0, ...results.map((r) => r.videoQrCount || 0)),
+  conflicts: Math.max(0, ...results.map((r) => r.conflictCount || 0)),
+  storedSummaryField: STORED_SUMMARY_FIELD,
 };
 assert.ok(structural.summaries >= 1, 'row summaries missing');
 assert.ok(structural.videoQrs >= 1, 'video QR thumbs missing');
+assert.ok(structural.conflicts >= 1, 'conflict day missing');
 
 await writeFile(path.join(outRoot, 'gate-results.json'), JSON.stringify({ round: ROUND, results, structural }, null, 2));
 execFileSync('zip', ['-qr', zipPath, '.'], { cwd: outRoot });

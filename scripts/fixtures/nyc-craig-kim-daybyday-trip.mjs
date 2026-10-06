@@ -1,10 +1,39 @@
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
-import { applyLiveAppTimelineSelections } from '../../src/vacation/shared-trip-live-app-fields.mjs';
+import {
+  applyLiveAppTimelineSelections,
+  assignPlaceToTripDays,
+} from '../../src/vacation/shared-trip-live-app-fields.mjs';
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
+export const NYC_CONFLICT_DAY = 3;
+/** Live TREK reads one-line copy via ha(place).summary → rr(place). */
+export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
 const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
+
+const SUMMARIES = {
+  601: 'Nonstop morning option; good if you want to land before lunch.',
+  602: 'UWS grocery stop for picnic supplies.',
+  603: 'Check-in window; drop bags before dinner.',
+  604: 'Ferry and grounds; keep tickets on phone.',
+  605: 'Browse rare room if time allows.',
+  606: 'Overlap window A: matinee tickets already held.',
+  607: 'Overlap window B: friend meetup at the same hour.',
+};
+
+export function listStoredSummaries() {
+  return { ...SUMMARIES };
+}
+
+export function expectedSummariesOnDay(dayNumber) {
+  const idsByDay = {
+    1: [602],
+    2: [604, 605],
+    3: [606, 607],
+  };
+  return (idsByDay[dayNumber] || []).map((id) => SUMMARIES[id]);
+}
 
 function buildPayload() {
   const categories = {
@@ -25,11 +54,13 @@ function buildPayload() {
   const assignments = Object.fromEntries(days.map((day) => [String(day.id), []]));
   const thingOverrides = {};
   const rows = [
-    { day: 1, time: '10:30', name: 'JetBlue BOS → JFK', cat: 'flight', id: 601, summary: 'Nonstop morning option; good if you want to land before lunch.' },
-    { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, summary: 'UWS grocery stop for picnic supplies.', photo: true },
-    { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603, summary: 'Check-in window; drop bags before dinner.' },
-    { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, summary: 'Ferry and grounds; keep tickets on phone.', photo: true, video: true },
-    { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605, summary: 'Browse rare room if time allows.' },
+    { day: 1, time: '10:30', name: 'JetBlue BOS → JFK', cat: 'flight', id: 601 },
+    { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, photo: true },
+    { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603 },
+    { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
+    { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
+    { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Broadway matinee', cat: 'activity', id: 606 },
+    { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
   ];
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
@@ -38,7 +69,7 @@ function buildPayload() {
       id: row.id,
       trip_id: 99,
       name: row.name,
-      description: row.summary,
+      description: '',
       lat: 40.78,
       lng: -73.96,
       address: 'New York, NY',
@@ -60,7 +91,18 @@ function buildPayload() {
       notes: '',
       place,
     });
-    thingOverrides[`place:${row.id}`] = { timeline: true, category: row.cat, summary: row.summary };
+    const override = {
+      timeline: true,
+      category: row.cat,
+      summary: SUMMARIES[row.id],
+    };
+    if (row.id === 601) {
+      override.logoUrl = 'https://www.jetblue.com/favicon.ico';
+    }
+    if (row.id === 603) {
+      override.logoUrl = 'https://www.hilton.com/favicon.ico';
+    }
+    thingOverrides[`place:${row.id}`] = override;
   }
   const reservations = rows.map((row) => {
     const day = days.find((d) => d.day_number === row.day);
@@ -139,7 +181,24 @@ function buildPayload() {
     });
   }
   const timelineIds = rows.map((row) => row.id);
-  const withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
+  let withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
+  const conflictDay = days.find((d) => d.day_number === NYC_CONFLICT_DAY);
+  if (conflictDay) {
+    const dayKey = String(conflictDay.id);
+    withTimeline = assignPlaceToTripDays(withTimeline, 606, [NYC_CONFLICT_DAY]);
+    withTimeline = assignPlaceToTripDays(withTimeline, 607, [NYC_CONFLICT_DAY]);
+    const schedules = {
+      606: { startTime: '14:00', duration: '90 min' },
+      607: { startTime: '14:30', duration: '60 min' },
+    };
+    for (const [placeId, slot] of Object.entries(schedules)) {
+      const key = `place:${placeId}`;
+      withTimeline.thingOverrides[key] = {
+        ...(withTimeline.thingOverrides[key] || {}),
+        perDaySchedule: { [dayKey]: slot },
+      };
+    }
+  }
   return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
 }
 

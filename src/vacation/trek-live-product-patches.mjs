@@ -320,7 +320,7 @@ const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈�
 const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
 const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
-const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,marginTop:0,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,boxSizing:"border-box",flex:"0 0 16px"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:16,height:16,maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:16,height:16,display:"block"}})})})';
+const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,boxSizing:"border-box",flex:"0 0 auto"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,maxWidth:"100%",maxHeight:"100%",objectFit:"contain",objectPosition:"center center",display:"block"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:ua.isConflict?18:22,height:ua.isConflict?18:22},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,display:"block"}})})})';
 const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:"16px",height:16,display:"inline-flex",alignItems:"center",color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
@@ -328,7 +328,12 @@ const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:
 
 const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i';
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
-const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing",style:{fontSize:12,fontWeight:400,marginTop:3,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
+const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{fontSize:12,fontWeight:400,marginTop:3,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
+
+const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
+const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
+const OE_LIST_NAME_CELL_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
+const OE_LIST_NAME_CELL_PATCH = 'n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",minHeight:28,lineHeight:"16px"},children:Zn})';
 
 const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
 const NR_VIDEO_THUMB_PATCH = 'gr.kind==="video"?n.jsx("img",{src:Hc(gr.url),alt:"",loading:"lazy",className:"print-media-qr","data-row-video-qr":"1",style:{width:"100%",height:"100%",objectFit:"contain",background:"#fff"}})';
@@ -405,6 +410,14 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(NR_VIDEO_THUMB_NEEDLE)) js = js.replace(NR_VIDEO_THUMB_NEEDLE, NR_VIDEO_THUMB_PATCH);
   else if (served && !js.includes('data-row-video-qr":"1"')) {
     throw new Error('live media video QR thumb patch did not apply');
+  }
+  if (js.includes(OE_ROW_SUMMARY_NEEDLE)) js = js.replace(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
+  else if (served && js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))')) {
+    throw new Error('live tab row summary must read stored rr() only');
+  }
+  if (js.includes(OE_LIST_NAME_CELL_NEEDLE)) js = js.replace(OE_LIST_NAME_CELL_NEEDLE, OE_LIST_NAME_CELL_PATCH);
+  else if (served && !js.includes('data-ts-list-row-name":"1"')) {
+    throw new Error('live tab list-row name cell centering patch did not apply');
   }
   if (js.includes(CAR_TIMELINE_CHECKBOX_NEEDLE)) {
     js = js.replace(CAR_TIMELINE_CHECKBOX_NEEDLE, CAR_TIMELINE_CHECKBOX_PATCH);

@@ -19,3 +19,11 @@ Committed JPEGs for the `nyc-craig-kim-june-2026` shared-trip harness. The QR as
 ## `video-scan-qr.png`
 
 - Local QR code image for the Day 2 video binding (not from Wikimedia).
+
+## Stored one-line descriptions (day-by-day gate fixture)
+
+Editable copy for timeline/list rows is **not** invented at render. It lives on each place’s thing override:
+
+- **Field path:** `thingOverrides[place:<placeId>].summary` (served to the live bundle as `ha(place).summary`, read in UI via `rr(place)`).
+- **Fixture source:** `scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs` → `SUMMARIES` map keyed by place id (601–607).
+- **Conflict day:** Day 3 (`NYC_CONFLICT_DAY`) includes overlapping rows 606/607 with the same stored `summary` field on each override.
