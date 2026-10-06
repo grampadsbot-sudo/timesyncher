@@ -59,7 +59,7 @@ function buildPayload() {
     { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603 },
     { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
     { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
-    { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Broadway matinee', cat: 'activity', id: 606 },
+    { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
     { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
   ];
   for (const row of rows) {

@@ -28,12 +28,12 @@ import {
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r3';
-const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r3.zip';
+const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r4';
+const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r4.zip';
 const ref390 = process.env.DAYBYDAY_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-390_48df.png';
 const ref1280 = process.env.DAYBYDAY_REF_1280 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-1280_c76e.png';
 const MAX_RATIO = 0.035;
-const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 3);
+const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 4);
 const EXPECTED_SUMMARIES = listStoredSummaries();
 const UPSTREAM = '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
@@ -247,6 +247,19 @@ async function captureDay(page, dayNumber, { assertStored = false } = {}) {
     const storedSummaryTexts = [...card.querySelectorAll('[data-row-summary="1"][data-summary-stored="1"]')].map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim());
     const conflictCount = [...card.querySelectorAll('div')].filter((el) => /Conflict with/i.test(el.textContent || '')).length;
     const videoQrCount = card.querySelectorAll('[data-row-video-qr="1"]').length;
+    const rectsOverlap = (a, b, tol = 2) => !(a.bottom <= b.top + tol || b.bottom <= a.top + tol || a.right <= b.left + tol || b.right <= a.left + tol);
+    const conflictLineLayouts = [...card.querySelectorAll('[data-ts-conflict-label="1"]')].map((label) => {
+      const panel = label.parentElement;
+      const title = panel?.querySelector('[data-ts-timeline-title="1"]');
+      const summary = panel?.querySelector('[data-row-summary="1"][data-summary-stored="1"]');
+      if (!title || !summary) return { ok: false, reason: 'missing-nodes' };
+      const lr = label.getBoundingClientRect();
+      const tr = title.getBoundingClientRect();
+      const sr = summary.getBoundingClientRect();
+      const orderOk = lr.bottom <= tr.top + 2 && tr.bottom <= sr.top + 2;
+      const noOverlap = !rectsOverlap(lr, tr) && !rectsOverlap(tr, sr) && !rectsOverlap(lr, sr);
+      return { ok: orderOk && noOverlap, orderOk, noOverlap };
+    });
     const logoRows = [...card.querySelectorAll('[data-ts-timeline-icon="1"]')].map((icon) => {
       let grid = icon.parentElement;
       while (grid && grid !== card && grid.children.length < 3) grid = grid.parentElement;
@@ -268,6 +281,8 @@ async function captureDay(page, dayNumber, { assertStored = false } = {}) {
       summaryCount,
       storedSummaryTexts,
       conflictCount,
+      conflictLineLayoutPass: conflictLineLayouts.length > 0 && conflictLineLayouts.every((row) => row.ok),
+      conflictLineLayouts,
       videoQrCount,
       logoRows,
       logoCenterPass: logoRows.length > 0 && logoRows.every((row) => row.pass),
@@ -382,6 +397,7 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
       videoQrCount: right.meta.videoQrCount,
       logoCenterPass: right.meta.logoCenterPass,
       logoRows: right.meta.logoRows,
+      conflictLineLayoutPass: right.meta.conflictLineLayoutPass,
     });
     assert.ok(unmasked.ratio <= MAX_RATIO, `day ${day} @${tag} TREK drift ${unmasked.ratio}`);
     if (day === 1 && tag === '390') {
@@ -390,11 +406,12 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
     if (day === 2 && tag === '390') {
       assert.ok(right.meta.videoQrCount >= 1, 'expected video QR thumb on day card');
     }
-    if (day === NYC_CONFLICT_DAY && tag === '390') {
-      assert.ok(right.meta.conflictCount >= 1, 'expected conflict chrome on conflict day');
+    if (day === NYC_CONFLICT_DAY) {
+      assert.ok(right.meta.conflictCount >= 1, `expected conflict chrome on conflict day @${tag}`);
       for (const text of [EXPECTED_SUMMARIES[606], EXPECTED_SUMMARIES[607]]) {
         assert.ok(right.meta.storedSummaryTexts.includes(text), `conflict day missing stored summary: ${text}`);
       }
+      assert.ok(right.meta.conflictLineLayoutPass, `conflict callout title/summary/label must not overlap @${tag}`);
     }
   }
   for (const stem of ['stores']) {
