@@ -176,6 +176,7 @@ scripts/test_trip_intake_invitee_classification.mjs
 scripts/test_assign_dates_weekday_ambiguity.mjs
 scripts/test_chat_extraction_saturday_day.mjs
 scripts/test_turn_invite_reply_facts_claim.mjs
+scripts/test_gate_b_cl_kim_invite_reply.mjs
 scripts/test_no_trip_turn_invite_reply_facts.mjs
 scripts/test_roster_pending_invite_reply_facts.mjs
 scripts/test_place_search_reply_provider_leak.mjs

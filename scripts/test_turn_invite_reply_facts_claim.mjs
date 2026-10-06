@@ -7,13 +7,15 @@ import {
 import { applyTurnInviteReplyFacts, turnInviteReplyFacts } from '../src/vacation/turn-invite-reply-facts.mjs';
 
 const inviteOk = {
-  invite: { ok: true, code: 'collaborator_invite_sent', inviteeEmail: 'kim@example.com' },
+  invite: { ok: true, code: 'collaborator_invite_sent', inviteeEmail: 'kim@example.com', inviteeName: 'Kim' },
 };
 
 const facts = turnInviteReplyFacts(inviteOk);
 assert.equal(facts?.turnInvite?.ok, true);
 assert.match(facts?.turnInvite?.detail || '', /emailed to kim@example\.com/i);
-assert.match(facts?.turnInvite?.detail || '', /joins once they accept/i);
+assert.match(facts?.turnInvite?.detail || '', /pending until they accept/i);
+assert.equal(facts?.turnInvite?.inviteeName, 'Kim');
+assert.match(facts?.turnInviteRule || '', /pending/i);
 
 const tripContext = applyTurnInviteReplyFacts({ itinerary: [] }, inviteOk);
 assert.equal(tripContext.turnInvite.inviteeEmail, 'kim@example.com');
@@ -29,6 +31,14 @@ assert.equal(
 assert.equal(
   replyActionClaimReason('Kim joining the trip — great!', inviteOk, pendingContext),
   REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP,
+);
+assert.equal(
+  replyActionClaimReason('I invited Kim — exciting to have Kim joining the trip soon!', inviteOk, pendingContext),
+  REPLY_ACTION_CLAIM_COLLABORATOR_NOT_ON_TRIP,
+);
+assert.equal(
+  replyActionClaimReason('I emailed the invite to kim@example.com; it is pending until Kim accepts.', inviteOk, pendingContext),
+  '',
 );
 
 const activeContext = { activeCollaborators: ['Kim Brooks'] };
