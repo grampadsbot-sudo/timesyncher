@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-import { renderThingCardHtml } from '../src/vacation/itinerary-print.mjs';
+import { renderDayItineraryHtml, renderThingCardHtml } from '../src/vacation/itinerary-print.mjs';
 
 const root = new URL('..', import.meta.url);
 const moduleRel = 'src/vacation/itinerary-print.mjs';
@@ -76,5 +76,12 @@ const described = renderThingCardHtml({
   bodyHtml: '<p>Summary</p>',
 });
 assert.match(described, /<h3>Place<\/h3><div data-row-summary="1" data-summary-thing-only="1">Short from summary<\/div>/);
+
+const dayWithMedia = renderDayItineraryHtml({
+  titleHtml: 'Day',
+  dayMediaHtml: '<figure class="print-media-card" data-print-media="bound"></figure>',
+});
+assert.match(dayWithMedia, /data-itinerary-day-media="1"/);
+assert.doesNotMatch(renderDayItineraryHtml({ titleHtml: 'Day' }), /data-itinerary-day-media/);
 
 console.log('itinerary print single-module test passed');
