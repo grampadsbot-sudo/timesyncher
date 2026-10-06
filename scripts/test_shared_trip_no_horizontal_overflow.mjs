@@ -180,32 +180,13 @@ try {
       }
       if (width === 390 && label === 'Hotels') {
         const sort = await page.evaluate(() => {
-          const names = () => [...document.querySelectorAll('[data-shared-live-tab="hotels"] strong')].map((el) => el.textContent.trim());
-          const click = (which) => {
-            const header = document.querySelector('[data-ts-list-sort-header]');
-            const btn = [...(header ? header.querySelectorAll('button') : [])].find((el) => String(el.textContent || '').trim().toLowerCase().startsWith(which));
-            if (!btn) return false;
-            btn.click();
-            return true;
-          };
-          return new Promise((resolve) => {
-            const started = click('name');
-            setTimeout(() => {
-              const first = names();
-              click('name');
-              setTimeout(() => {
-                const loose = [...document.querySelectorAll('button')].filter((el) => /^(name|price)/i.test(String(el.textContent || '').trim()) && !el.closest('[data-ts-list-sort-header]'));
-                resolve({ started, first, second: names(), loose: loose.length });
-              }, 120);
-            }, 120);
-          });
+          const controls = [...document.querySelectorAll('button')].filter((el) => /^(name|price)\b/i.test(String(el.textContent || '').trim()));
+          const cards = document.querySelectorAll('[data-shared-live-tab="hotels"] [data-thing-card="1"]');
+          return { controls: controls.length, cards: cards.length, header: !!document.querySelector('[data-ts-list-sort-header]') };
         });
-        assert.equal(sort.started, true, 'Name column label missing');
-        assert.equal(sort.loose, 0, 'separate Name/Price pills are still visible');
-        assert.ok(sort.first.length >= 2, 'hotels need two rows to check name sort');
-        const byName = (dir) => (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }) * dir;
-        assert.deepEqual([...sort.first].sort(byName(1)), sort.first);
-        assert.deepEqual([...sort.second].sort(byName(-1)), sort.second);
+        assert.equal(sort.controls, 0, 'Name/Price sort is still visible');
+        assert.equal(sort.header, false, 'Name/Price column header is still visible');
+        assert.ok(sort.cards >= 1, 'Hotels tab is missing NYC thing cards');
       }
     }
   }

@@ -1,6 +1,6 @@
+import { dayItineraryBundleExpr, thingCardBundleExpr } from './itinerary-print.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
-import { listColumnSortBundleExpr } from './list-column-sort.mjs';
 import { sharedLiveTabListMountBundleExpr } from './shared-live-tab-list-mount.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(!raw||/^data:image\\/svg\\+xml/i.test(raw))return "";if(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw))return "";return raw}';
@@ -291,7 +291,7 @@ const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:
 const LIST_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const LIST_SUMMARY_PATCH = 'Rn=Bs(rr(G)||Co(G)||Fl(G)||vr(G)||Zr(G))';
 const LIST_SORT_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:[n.jsxs("button",{onClick:()=>ui(G,"name"),style:Hi(Re.key==="name"),children:["Name",zt("name")]}),n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})]})}' ;
-const LIST_SORT_PATCH = `${listColumnSortBundleExpr()},Wr=({listKey:G})=>tsListColumnSort({listKey:G,sort:K[G]||{key:"price",dir:"asc"},onSort:ui,pillStyle:Hi})`;
+const LIST_SORT_PATCH = 'Wr=()=>null';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
@@ -356,4 +356,22 @@ export function patchThingDetailRatings(source = '') {
     js = js.slice(0, reviewStart) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
   }
   return js.replaceAll('placeholder:"4.6"', 'placeholder:""').replaceAll('placeholder:"4.4"', 'placeholder:""');
+}
+
+const WD_NYC_RETURN_NEEDLE = 'return`<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">${Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`}<div><h3>${an(Bs(mr(zt)))}</h3>${bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:""}</div></div>${sr}${Xr?`<div class="reviews">${Xr}</div>`:""}${zr}</article>`';
+const WD_NYC_RETURN_PATCH = 'return tsRenderThingCard({surface:"print",logoHtml:Rn?`<img class="tiny-logo" src="${an(Rn)}" alt="" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),summaryHtml:an(Bs(rr(zt)||Fl(zt)||vr(zt)||"")),timeHtml:an(Mo)})';
+const MC_NYC_NEEDLE = 'sr=`<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details" data-day-things-flow="1">${Rn.map(zr=>wd(zr,G)).join("")}</main></section>`;return sr';
+const MC_NYC_PATCH = 'sr=tsRenderDayItinerary({surface:"print",titleHtml:an(la.title||"Trip"),openingHtml:Su(G,Re,Rn.map(zr=>zr.item)),rowsHtml:Rn.map(zr=>wd(zr,G)).join(""),styleHtml:""});return sr';
+const DAY_TIMELINE_NEEDLE = "Re.length===0&&n.jsx(\"div\",{style:{fontSize:12,color:\"#9ca3af\"},children:\"No timeline-tagged things yet for this day.\"}),Re.map((ua,Rn)=>{cc(ua.item);const Pn=Bs(ua.title),Zn=!ua.time,sr=wl(ua.item,ua.type),Xr=ua.type===\"travel\"||ua.type===\"travel-to-thing\"?\"\":_l(ua.item);ua.isConflict||ua.status;const zr=[\"travel\",\"travel-to-thing\",\"flight\",\"transport\",\"hotel-wake\",\"hotel-event\",\"hotel-sleep\",\"hotel-checkout\"].includes(ua.type)?[]:fo(ua.item);return n.jsxs(\"div\",{style:{display:\"grid\",gridTemplateColumns:\"74px 22px 1fr\",gap:10,alignItems:\"start\",marginBottom:ua.isConflict?8:0},children:[n.jsxs(\"div\",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?\"#b91c1c\":ua.time?\"#111827\":\"#9ca3af\",textAlign:\"right\",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):\"\",ua.endTime?n.jsxs(n.Fragment,{children:[n.jsx(\"br\",{}),n.jsx(\"span\",{style:{fontWeight:500,color:ua.isConflict?\"#ef4444\":\"#9ca3af\"},children:Yo(ua.endTime)})]}):null]}),n.jsxs(\"div\",{style:{display:\"flex\",flexDirection:\"column\",alignItems:\"center\"},children:[n.jsx(\"div\",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:\"flex\",alignItems:\"center\",justifyContent:\"center\",boxSizing:\"border-box\"},children:Xr?n.jsx(\"img\",{src:Xr,alt:\"\",loading:\"lazy\",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:\"contain\",display:\"block\",filter:\"drop-shadow(0 1px 1px rgba(15,23,42,0.12))\"}}):n.jsx(\"span\",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:\"grid\",placeItems:\"center\"},children:sr})}),n.jsx(\"div\",{style:{width:2,minHeight:29,background:ua.isConflict?\"#fecaca\":\"#d1d5db\",marginTop:3}})]}),n.jsxs(\"div\",{style:ua.isConflict?{marginLeft:26,borderLeft:\"3px solid #60a5fa\",paddingLeft:12,background:\"#eff6ff\",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(\"div\",{style:{display:\"flex\",alignItems:\"center\",gap:8,color:\"#b91c1c\",fontSize:11,fontWeight:900,marginBottom:6},children:[n.jsx(\"span\",{style:{width:34,height:2,background:\"#ef4444\",display:\"inline-block\"}}),\"Conflict with \",Bs(ua.conflictWith||\"another timeline item\")]}),n.jsx(\"button\",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:\"transparent\",cursor:\"pointer\",fontSize:13,fontWeight:600,lineHeight:1.15,color:\"#111827\",textDecoration:\"underline\",textDecorationColor:\"#cbd5e1\",textUnderlineOffset:3,textAlign:\"left\"},children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})]})]},`${ua.type}-${Rn}-${ua.title}`)})";
+const DAY_TIMELINE_PATCH = "n.jsx(\"div\",{\"data-day-itinerary-mount\":\"1\",onClick:(ev)=>{const row=ev.target.closest(\"[data-thing-id]\");if(row)Ne(row.getAttribute(\"data-thing-id\"))},dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({surface:\"web\",titleHtml:an(Bs(G.title||(\"Day \"+G.day_number))),openingHtml:\"\",rowsHtml:Re.map((ua)=>tsRenderThingCard({surface:\"web\",thingId:an(String(Qt(ua.item)||\"\")),timeHtml:ua.time?an(Yo(ua.time)):\"\",logoHtml:_l(ua.item)?`<img class=\"tiny-logo\" src=\"${an(_l(ua.item))}\" alt=\"\" />`:`<span class=\"thing-emoji\">${an(wl(ua.item,ua.type))}</span>`,nameHtml:an(Bs(ua.title)),summaryHtml:an(Bs(rr(ua.item)||\"\"))})).join(\"\"),styleHtml:tsDayWebStyle})}})";
+
+export function applyNycItineraryModule(source = '') {
+  let js = String(source || '');
+  if (js.includes('wd=(G,Re)=>') && !js.includes('tsRenderThingCard=')) {
+    js = js.replace('wd=(G,Re)=>', `${thingCardBundleExpr()},${dayItineraryBundleExpr()},wd=(G,Re)=>`);
+  }
+  if (js.includes('tsRenderThingCard=') && js.includes(WD_NYC_RETURN_NEEDLE)) js = js.replace(WD_NYC_RETURN_NEEDLE, WD_NYC_RETURN_PATCH);
+  if (js.includes('tsRenderDayItinerary=') && js.includes(MC_NYC_NEEDLE)) js = js.replace(MC_NYC_NEEDLE, MC_NYC_PATCH);
+  if (js.includes('tsRenderDayItinerary=') && js.includes(DAY_TIMELINE_NEEDLE)) js = js.replace(DAY_TIMELINE_NEEDLE, DAY_TIMELINE_PATCH);
+  return js;
 }

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 import {
   applyLiveProductPatches,
+  applyNycItineraryModule,
   applySharedLiveTabBundlePatches,
   GN_EMPTY_PATCH,
   GN_RENDER_PATCH,
@@ -509,7 +510,7 @@ function dropServedTrekCallers(source) {
 export function renderServedTrekBundle(raw) {
   const stripped = stripCannedBundle(raw);
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
-  const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
+  const js = applyNycItineraryModule(stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched))));
   assertServedBundleClean(js);
   return js;
 }
@@ -876,7 +877,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(THING_META_CSS_PATCH) || js.includes('padding:12px 124px 12px 12px') || js.includes('.style2-thing-meta{position:absolute')) {
     throw new Error('style2-thing-meta must be static so titles do not overlap day/time.');
   }
-  if (!js.includes(WD_META_PATCH) || !js.includes(DOC_TITLE_PATCH) || !js.includes(SE_TITLE_PATCH)) {
+  if ((!js.includes(WD_META_PATCH) && !js.includes('tsRenderThingCard=')) || !js.includes(DOC_TITLE_PATCH) || !js.includes(SE_TITLE_PATCH)) {
     throw new Error('wd() meta, document.title, and _se title must drop brand prefix and absolute day/time.');
   }
   if (!js.includes('[data-endlist-maps="0"] .map-box') || !js.includes('[data-post-itinerary="1"]{break-before:page')) {
@@ -936,7 +937,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(THING_BREAK_PATCH) || js.includes('.style2-details{display:grid;grid-template-columns:1fr;gap:10px}') || js.includes('column-count:2') || js.includes('overflow-wrap:anywhere')) {
     throw new Error('Style two Mc() must 2-col grid (not CSS columns / overflow-wrap:anywhere letter-stack).');
   }
-  if (!js.includes('<div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">') || js.includes('<div class="thing-head"><div class="style2-thing-meta">')) {
+  if ((!js.includes('<div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">') && !js.includes('tsRenderThingCard=')) || js.includes('<div class="thing-head"><div class="style2-thing-meta">')) {
     throw new Error('wd() meta must sit above thing-head, not in the 34px logo grid track (letter-stacked titles).');
   }
   if (js.includes('[data-style2-centered-day]{display:block!important;break-after:page') || js.includes('style="break-inside:avoid;page-break-inside:avoid;width:auto;max-width:100%"')) {

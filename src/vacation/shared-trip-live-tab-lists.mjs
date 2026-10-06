@@ -1,3 +1,4 @@
+import { renderThingCardHtml } from './itinerary-print.mjs';
 import { applyProductKeepsakeOverrides, productThingCategory } from './keepsake-product-overrides.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
@@ -137,16 +138,15 @@ function listRowHtml({ place, override, tab, category, onLogoMissing }) {
   const name = escapeHtml(place.name || place.title || 'Place');
   const summary = escapeHtml(reservationSummaryLine(place, override));
   const tabAttr = escapeHtml(tab);
-  const summaryHtml = `<span data-list-summary="1" style="display:block;font-size:12px;font-weight:400;line-height:1.35;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${summary}</span>`;
-  const textHtml = `<span style="min-width:0;overflow:hidden"><strong>${name}</strong>${summaryHtml}</span>`;
-  const rowStyle = 'display:flex;align-items:center;gap:8px;min-width:0;max-width:100%';
+  const rowStyle = 'display:block;min-width:0;max-width:100%;list-style:none';
+  const logoHtml = logoUrl ? logoChipHtml({ src: escapeHtml(logoUrl), category }) : '';
+  const card = renderThingCardHtml({ surface: 'web', logoHtml, nameHtml: name, summaryHtml: summary });
   if (!logoUrl) {
     onLogoMissing?.(place);
-    return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="${rowStyle}">${textHtml}</li>`;
+    return `<li data-list-row="1" data-has-logo="0" data-shared-tab="${tabAttr}" style="${rowStyle}">${card}</li>`;
   }
   const src = escapeHtml(logoUrl);
-  const chip = logoChipHtml({ src, category });
-  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="${rowStyle}">${chip}${textHtml}</li>`;
+  return `<li data-list-row="1" data-has-logo="1" data-logo-src="${src}" data-shared-tab="${tabAttr}" data-thing-category="${escapeHtml(category)}" style="${rowStyle}">${card}</li>`;
 }
 
 function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {}) {
