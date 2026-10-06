@@ -12,3 +12,6 @@ scripts/test_shared_trip_tab_row_counts_chrome.mjs browser: shared-app API place
 scripts/test_shared_trip_cars_tab_logo_served_chrome.mjs browser: shared Cars tab brand img.tiny-logo at 390/1280 needs puppeteer-core and Chrome, which the offline job does not install
 scripts/test_shared_trip_live_tab_logo_chip_chrome.mjs browser: shared live-tab Hertz sizeless SVG logo chip paint and garbage fallback need puppeteer-core and Chrome, which the offline job does not install
 scripts/test_served_page_layout.mjs browser: served app-shell layout needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_no_horizontal_overflow.mjs browser: shared trip scrollWidth at 390 and 1280 needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_pr225_cars_tab_overflow.mjs browser: PR225 NYC Cars tab overflow harness needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_pr225_served_tabs_overflow.mjs browser: PR225 NYC all-tab scrollWidth harness needs puppeteer-core and Chrome, which the offline job does not install

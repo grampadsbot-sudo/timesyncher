@@ -51,8 +51,6 @@ scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
 scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
-scripts/test_pr225_cars_tab_overflow.mjs
-scripts/test_pr225_served_tabs_overflow.mjs
 scripts/test_provider_env.mjs
 scripts/test_keepsake_style2.mjs
 scripts/test_real_app_entry.mjs
@@ -133,7 +131,6 @@ scripts/test_collaborator_web_access_redirect.mjs
 scripts/test_shared_place_logo_and_category.mjs
 scripts/test_shared_tab_list_summary.mjs
 scripts/test_shared_trip_live_tab_logos.mjs
-scripts/test_shared_trip_no_horizontal_overflow.mjs
 scripts/test_shared_trip_served_live_tab_mount.mjs
 scripts/test_shared_tab_filter_chips.mjs
 scripts/test_trip_thing_logo_metadata.mjs
