@@ -17,6 +17,7 @@ import {
   clickSharedTab,
   measureListRowLogoCentering,
 } from './lib/itinerary-fresh-gate-metrics.mjs';
+import { diffInsideMasks, diffOutsideMasks, stitch } from './lib/itinerary-fresh-gate-png.mjs';
 import {
   buildNycCraigKimDaybydayTrip,
   expectedSummariesOnDay,
@@ -25,15 +26,19 @@ import {
   NYC_DAYBYDAY_SLUG,
   STORED_SUMMARY_FIELD,
 } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-shared-trip.mjs';
+import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
-const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r4';
-const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r4.zip';
-const ref390 = process.env.DAYBYDAY_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-390_48df.png';
-const ref1280 = process.env.DAYBYDAY_REF_1280 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-1280_c76e.png';
+const outRoot = process.env.ITINERARY_FRESH_OUT || '/opt/cursor/artifacts/itinerary-fresh-r5-logo';
+const zipPath = process.env.ITINERARY_FRESH_ZIP || '/opt/cursor/artifacts/itinerary-fresh-r5-logo.zip';
+const ref390 = process.env.DAYBYDAY_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-390_e8cc.png';
+const ref1280 = process.env.DAYBYDAY_REF_1280 || '/home/ubuntu/.cursor/projects/workspace/uploads/daybyday-1280_3843.png';
+const refHotels390 = process.env.HOTELS_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/hotels-390_e3d5.png';
+const refCars390 = process.env.CARS_REF_390 || '/home/ubuntu/.cursor/projects/workspace/uploads/cars-390_e9b0.png';
 const MAX_RATIO = 0.035;
-const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 4);
+const ROUND = Number(process.env.ITINERARY_FRESH_ROUND || 5);
 const EXPECTED_SUMMARIES = listStoredSummaries();
 const UPSTREAM = '06e47169699ffdee8accf48e74b0a247a8793ebc^:public/assets/upstream/index-BKun7ofk.js';
 const travelBase = `https://${['travel', 'timesyncher', 'com'].join('.')}`;
@@ -103,7 +108,7 @@ async function startServer({ html, js, css, tripPayload }) {
     }
     if (/^\/shared\/[^/]+\/?$/.test(pathname)) return send(res, 200, html, 'text/html; charset=utf-8');
     const m = pathname.match(/^\/api\/shared\/([^/]+)\/?$/);
-    if (m && decodeURIComponent(m[1]) === NYC_DAYBYDAY_SLUG) {
+    if (m) {
       return send(res, 200, JSON.stringify(tripPayload), 'application/json; charset=utf-8');
     }
     if (pathname.startsWith('/api/')) return send(res, 200, '{"ok":true,"notices":[],"bindings":[],"media":[]}', 'application/json; charset=utf-8');
@@ -112,97 +117,6 @@ async function startServer({ html, js, css, tripPayload }) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const { port } = server.address();
   return { origin: `http://127.0.0.1:${port}`, close: () => new Promise((r) => server.close(r)) };
-}
-
-function downscale(png, factor = 4) {
-  const w = Math.max(1, Math.floor(png.width / factor));
-  const h = Math.max(1, Math.floor(png.height / factor));
-  const out = new PNG({ width: w, height: h });
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      const sx = Math.min(png.width - 1, x * factor);
-      const sy = Math.min(png.height - 1, y * factor);
-      const si = (png.width * sy + sx) << 2;
-      const di = (w * y + x) << 2;
-      out.data[di] = png.data[si];
-      out.data[di + 1] = png.data[si + 1];
-      out.data[di + 2] = png.data[si + 2];
-      out.data[di + 3] = 255;
-    }
-  }
-  return out;
-}
-
-function diffOutsideMasks(a, b, masks, factor = 4) {
-  const da = downscale(a, factor);
-  const db = downscale(b, factor);
-  const w = Math.min(da.width, db.width);
-  const h = Math.min(da.height, db.height);
-  let compared = 0;
-  let mism = 0;
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      const fx = x * factor;
-      const fy = y * factor;
-      if (masks.some((m) => fx >= m.x && fx < m.x + m.width && fy >= m.y && fy < m.y + m.height)) continue;
-      compared += 1;
-      const j = (da.width * y + x) << 2;
-      const k = (db.width * y + x) << 2;
-      if (Math.abs(da.data[j] - db.data[k]) > 18
-        || Math.abs(da.data[j + 1] - db.data[k + 1]) > 18
-        || Math.abs(da.data[j + 2] - db.data[k + 2]) > 18) mism += 1;
-    }
-  }
-  return { ratio: compared ? mism / compared : 0, mism, compared };
-}
-
-function diffInsideMasks(a, b, masks, factor = 4) {
-  const da = downscale(a, factor);
-  const db = downscale(b, factor);
-  const w = Math.min(da.width, db.width);
-  const h = Math.min(da.height, db.height);
-  let compared = 0;
-  let mism = 0;
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < w; x += 1) {
-      const fx = x * factor;
-      const fy = y * factor;
-      if (!masks.some((m) => fx >= m.x && fx < m.x + m.width && fy >= m.y && fy < m.y + m.height)) continue;
-      compared += 1;
-      const j = (da.width * y + x) << 2;
-      const k = (db.width * y + x) << 2;
-      if (Math.abs(da.data[j] - db.data[k]) > 18
-        || Math.abs(da.data[j + 1] - db.data[k + 1]) > 18
-        || Math.abs(da.data[j + 2] - db.data[k + 2]) > 18) mism += 1;
-    }
-  }
-  return { ratio: compared ? mism / compared : 0, mism, compared };
-}
-
-function stitch(left, right) {
-  const h = Math.max(left.height, right.height);
-  const out = new PNG({ width: left.width + right.width, height: h });
-  for (let y = 0; y < h; y += 1) {
-    for (let x = 0; x < left.width; x += 1) {
-      if (y >= left.height) continue;
-      const si = (left.width * y + x) << 2;
-      const di = (out.width * y + x) << 2;
-      out.data[di] = left.data[si];
-      out.data[di + 1] = left.data[si + 1];
-      out.data[di + 2] = left.data[si + 2];
-      out.data[di + 3] = 255;
-    }
-    for (let x = 0; x < right.width; x += 1) {
-      if (y >= right.height) continue;
-      const si = (right.width * y + x) << 2;
-      const di = (out.width * y + left.width + x) << 2;
-      out.data[di] = right.data[si];
-      out.data[di + 1] = right.data[si + 1];
-      out.data[di + 2] = right.data[si + 2];
-      out.data[di + 3] = 255;
-    }
-  }
-  return out;
 }
 
 async function captureDay(page, dayNumber, { assertStored = false } = {}) {
@@ -260,15 +174,25 @@ async function captureDay(page, dayNumber, { assertStored = false } = {}) {
       const noOverlap = !rectsOverlap(lr, tr) && !rectsOverlap(tr, sr) && !rectsOverlap(lr, sr);
       return { ok: orderOk && noOverlap, orderOk, noOverlap };
     });
+    const iconCount = card.querySelectorAll('[data-ts-timeline-icon="1"]').length;
     const logoRows = [...card.querySelectorAll('[data-ts-timeline-icon="1"]')].map((icon) => {
-      let grid = icon.parentElement;
-      while (grid && grid !== card && grid.children.length < 3) grid = grid.parentElement;
-      const title = grid?.querySelector('[data-ts-timeline-title="1"]') || grid?.querySelector('button');
-      if (!title || !grid?.querySelector('[data-row-summary="1"][data-summary-stored="1"]')) return null;
+      let rowGrid = icon.parentElement;
+      while (rowGrid && rowGrid !== card) {
+        if (rowGrid.children?.length >= 3 && [...rowGrid.children].some((ch) => ch.contains(icon))) break;
+        rowGrid = rowGrid.parentElement;
+      }
+      const title = rowGrid?.querySelector('[data-ts-timeline-title="1"]');
+      if (!title) return null;
       const chipRect = icon.getBoundingClientRect();
       const nameRect = title.getBoundingClientRect();
-      const deltaPx = Math.abs((chipRect.top + chipRect.height / 2) - (nameRect.top + nameRect.height / 2));
-      return { deltaPx, pass: deltaPx <= 4.5 };
+      const titleLineHeight = parseFloat(getComputedStyle(title).lineHeight) || 16;
+      const titleMid = nameRect.top + Math.min(titleLineHeight, nameRect.height) / 2;
+      const deltaPx = Math.abs((chipRect.top + chipRect.height / 2) - titleMid);
+      return {
+        deltaPx,
+        pass: deltaPx <= 4.5,
+        title: (title.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48),
+      };
     }).filter(Boolean);
     const r = card.getBoundingClientRect();
     return {
@@ -284,6 +208,7 @@ async function captureDay(page, dayNumber, { assertStored = false } = {}) {
       conflictLineLayoutPass: conflictLineLayouts.length > 0 && conflictLineLayouts.every((row) => row.ok),
       conflictLineLayouts,
       videoQrCount,
+      iconCount,
       logoRows,
       logoCenterPass: logoRows.length > 0 && logoRows.every((row) => row.pass),
     };
@@ -298,14 +223,18 @@ async function captureDay(page, dayNumber, { assertStored = false } = {}) {
   return { png: PNG.sync.read(shot), shot, meta };
 }
 
-async function captureListTab(page, tag, tabLabel) {
+async function captureListTab(page, tag, tabLabel, waitRe = /Zabar|Strand Book/i, { requireListRows = false } = {}) {
   const clicked = await clickSharedTab(page, tabLabel);
   assert.ok(clicked, `${tabLabel} tab not found @${tag}`);
   await new Promise((r) => setTimeout(r, 450));
+  if (requireListRows) {
+    await page.waitForSelector('[data-ts-list-row-name="1"]', { timeout: 20000 });
+  }
   try {
     await page.waitForFunction(
-      () => /Zabar|Strand Book/i.test(document.body?.innerText || ''),
+      (reSource) => new RegExp(reSource, 'i').test(document.body?.innerText || ''),
       { timeout: 15000 },
+      waitRe.source,
     );
   } catch (err) {
     assert.ok(String(err?.message || err).includes('timeout'), err);
@@ -318,7 +247,7 @@ async function captureListTab(page, tag, tabLabel) {
   return { png, shot, meta: { clip, masks, logoCenter } };
 }
 
-async function shotPage(js, html, css, tripPayload, width, { candidate = false } = {}) {
+async function shotPage(js, html, css, tripPayload, slug, width, { candidate = false } = {}) {
   const server = await startServer({ html, css, js, tripPayload });
   const browser = await loadPuppeteer().launch({
     headless: true,
@@ -328,7 +257,7 @@ async function shotPage(js, html, css, tripPayload, width, { candidate = false }
   try {
     const page = await browser.newPage();
     await page.setViewport({ width, height: 1500, deviceScaleFactor: 1 });
-    await page.goto(`${server.origin}/shared/${NYC_DAYBYDAY_SLUG}`, { waitUntil: 'networkidle2', timeout: 120000 });
+    await page.goto(`${server.origin}/shared/${slug}`, { waitUntil: 'networkidle2', timeout: 120000 });
     await page.waitForFunction(() => document.querySelector('[data-ts-day-timeline="1"], div[style*="borderRadius:14"][style*="border:1px solid var(--border-faint"]'), { timeout: 60000 });
     await page.evaluate(() => {
       for (const btn of document.querySelectorAll('button,[role="tab"]')) {
@@ -349,6 +278,34 @@ async function shotPage(js, html, css, tripPayload, width, { candidate = false }
   }
 }
 
+async function shotPr225ListTabs(js, html, css, width) {
+  const tripPayload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
+  const server = await startServer({ html, css, js, tripPayload });
+  const browser = await loadPuppeteer().launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome-stable',
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width, height: 1500, deviceScaleFactor: 1 });
+    await page.goto(`${server.origin}/shared/${NYC_PR225_SLUG}`, { waitUntil: 'networkidle2', timeout: 120000 });
+    await page.waitForFunction(() => /Midtown sample hotel|Priceline opaque/i.test(document.body?.innerText || ''), { timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 500));
+    const tabs = {};
+    for (const { label, stem, waitRe } of [
+      { label: 'Hotels', stem: 'hotels', waitRe: /Midtown sample hotel/i },
+      { label: 'Cars', stem: 'cars', waitRe: /Priceline opaque/i },
+    ]) {
+      tabs[stem] = await captureListTab(page, String(width), label, waitRe, { requireListRows: true });
+    }
+    return tabs;
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+}
+
 const tripPayload = buildNycCraigKimDaybydayTrip();
 const [html, css, beforeJs, afterJs] = await Promise.all([
   readFile(path.join(root, 'shared-app.html'), 'utf8'),
@@ -359,11 +316,17 @@ const [html, css, beforeJs, afterJs] = await Promise.all([
 await mkdir(outRoot, { recursive: true });
 await copyFile(ref390, path.join(outRoot, 'approved-reference-390.png'));
 await copyFile(ref1280, path.join(outRoot, 'approved-reference-1280.png'));
+await copyFile(refHotels390, path.join(outRoot, 'approved-reference-hotels-390.png'));
+await copyFile(refCars390, path.join(outRoot, 'approved-reference-cars-390.png'));
 
 const results = [];
+let pr225ListCandidate390 = null;
 for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1280' }]) {
-  const reference = await shotPage(beforeJs, html, css, tripPayload, width);
-  const candidate = await shotPage(afterJs, html, css, tripPayload, width, { candidate: true });
+  const reference = await shotPage(beforeJs, html, css, tripPayload, NYC_DAYBYDAY_SLUG, width);
+  const candidate = await shotPage(afterJs, html, css, tripPayload, NYC_DAYBYDAY_SLUG, width, { candidate: true });
+  if (tag === '390') {
+    pr225ListCandidate390 = await shotPr225ListTabs(afterJs, html, css, width);
+  }
   for (const day of [1, 2, NYC_CONFLICT_DAY]) {
     const left = reference.days[day];
     const right = candidate.days[day];
@@ -413,17 +376,13 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
       }
       assert.ok(right.meta.conflictLineLayoutPass, `conflict callout title/summary/label must not overlap @${tag}`);
     }
+    if (day === 1 || day === NYC_CONFLICT_DAY) {
+      assert.ok(right.meta.logoCenterPass, `day ${day} timeline icon/title vertical centering @${tag}`);
+    }
   }
   for (const stem of ['stores']) {
     const left = reference.listTab;
     const right = candidate.listTab;
-    if (tag === '390') {
-      const day1 = results.find((row) => row.day === 1 && row.tag === '390');
-      assert.ok(day1?.logoCenterPass, 'day 1 timeline logo/name vertical centering @390');
-      if (right.meta.logoCenter?.rows?.length) {
-        assert.ok(right.meta.logoCenter.pass, `Stores tab logo/name centering @${tag}`);
-      }
-    }
     const clip = right.meta.clip;
     const masks = (right.meta.masks || []).map((m) => ({
       x: m.x - clip.x,
@@ -445,6 +404,30 @@ for (const { width, tag } of [{ width: 390, tag: '390' }, { width: 1280, tag: '1
       logoCenter: right.meta.logoCenter,
     });
     assert.ok(unmasked.ratio <= MAX_RATIO, `${stem} @${tag} TREK drift ${unmasked.ratio}`);
+  }
+}
+
+if (pr225ListCandidate390) {
+  const baselineHotels = PNG.sync.read(await readFile(refHotels390));
+  const baselineCars = PNG.sync.read(await readFile(refCars390));
+  for (const { stem, baseline, refPng } of [
+    { stem: 'hotels', baseline: baselineHotels, refPng: refHotels390 },
+    { stem: 'cars', baseline: baselineCars, refPng: refCars390 },
+  ]) {
+    const right = pr225ListCandidate390[stem];
+    assert.ok(right?.meta?.logoCenter?.rows?.length, `${stem} tab rows @390`);
+    assert.ok(right.meta.logoCenter.pass, `${stem} tab logo/name vertical centering @390`);
+    const tag = '390';
+    const base = `${stem}-${tag}`;
+    await writeFile(path.join(outRoot, `${base}-reference-crop.png`), await readFile(refPng));
+    await writeFile(path.join(outRoot, `${base}-candidate-crop.png`), right.shot);
+    await writeFile(path.join(outRoot, `${base}-side-by-side.png`), PNG.sync.write(stitch(baseline, right.png)));
+    results.push({
+      shot: stem,
+      tag,
+      logoCenter: right.meta.logoCenter,
+      baseline: 'upload',
+    });
   }
 }
 

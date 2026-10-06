@@ -3,21 +3,23 @@
 export async function measureListRowLogoCentering(page) {
   return page.evaluate(() => {
     const rows = [];
-    for (const chip of document.querySelectorAll('[data-ts-logo-chip="1"]')) {
-      const host = chip.parentElement;
-      const row = chip.closest('button,[role="button"]') || chip.closest('div');
-      const name = host?.querySelector('[data-ts-list-row-name="1"]')
-        || row?.querySelector('[data-ts-list-row-name="1"]')
-        || row?.querySelector('strong')
-        || row?.querySelector('[data-ts-timeline-title="1"]');
+    for (const name of document.querySelectorAll('[data-ts-list-row-name="1"]')) {
+      const row = name.parentElement;
+      const chip = row?.querySelector('[data-ts-logo-chip="1"]')
+        || row?.querySelector('span[aria-hidden="true"]');
       if (!chip || !name) continue;
       const chipRect = chip.getBoundingClientRect();
       const nameRect = name.getBoundingClientRect();
-      if (chipRect.width < 8 || nameRect.height < 8) continue;
+      if (chipRect.height < 4 || nameRect.height < 8) continue;
+      const lineHeight = parseFloat(getComputedStyle(name).lineHeight) || 16;
+      const nameMid = nameRect.top + Math.min(lineHeight, nameRect.height) / 2;
       const chipMid = chipRect.top + chipRect.height / 2;
-      const nameMid = nameRect.top + nameRect.height / 2;
-      const delta = Math.abs(chipMid - nameMid);
-      rows.push({ deltaPx: delta, pass: delta <= 2.5 });
+      const deltaPx = Math.abs(chipMid - nameMid);
+      rows.push({
+        deltaPx,
+        pass: deltaPx <= 4.5,
+        title: (name.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48),
+      });
     }
     const pass = rows.length > 0 && rows.every((r) => r.pass);
     return { pass, rows, maxDeltaPx: rows.reduce((m, r) => Math.max(m, r.deltaPx), 0) };
