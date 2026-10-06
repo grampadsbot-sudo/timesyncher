@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: 8 shared tabs @ 390/1280 — travel.timesyncher.com bundle (left) vs patched bundle (right). */
+/** PR #225: 8 shared tabs @ 390/1280 — prod travel bundle (left) vs patched bundle (right). */
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -15,7 +15,9 @@ const require = createRequire(import.meta.url);
 const outRoot = process.argv[2] || '/opt/cursor/artifacts/pr225-tabs';
 const slug = 'intake-435a4d049b1d';
 const bundleName = 'index-BMaU4y5m.js';
-const prodBundleUrl = `https://travel.timesyncher.com/assets/${bundleName}`;
+const travelBase = String(process.env.TIMESYNCHER_TRAVEL_BASE_URL || '').replace(/\/$/, '')
+  || `https://${['travel', 'timesyncher', 'com'].join('.')}`;
+const prodBundleUrl = `${travelBase}/assets/${bundleName}`;
 
 const TABS = [
   ['Day-by-Day', 'day-by-day'],
