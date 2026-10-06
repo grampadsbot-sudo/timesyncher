@@ -17,7 +17,7 @@ export function thingCardBundleExpr() {
 }
 
 /** Keepsake style-2 print-media-card sizing, scoped to shared day timeline only. */
-export function itineraryTimelineMediaStyleTag() {
+function itineraryTimelineMediaStyleTag() {
   const scope = '[data-ts-day-timeline="1"]';
   const css = [
     `${scope} .print-media-card{margin:0 8px 8px 0;width:92px;max-width:92px;display:inline-block;vertical-align:top;text-align:center;break-inside:avoid}`,
@@ -29,7 +29,7 @@ export function itineraryTimelineMediaStyleTag() {
   return `<style data-itinerary-timeline-media-css="1">${css}</style>`;
 }
 
-export function itineraryTimelineMediaStyleBundleExpr() {
+function itineraryTimelineMediaStyleBundleExpr() {
   return `tsItineraryTimelineMediaCss=${itineraryTimelineMediaStyleTag.toString()}`;
 }
 
