@@ -17,6 +17,7 @@ import {
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 const classifySource = fs.readFileSync(new URL('../src/vacation/trip-intake-classify.mjs', import.meta.url), 'utf8');
+const resolvePlaceSource = fs.readFileSync(new URL('../src/vacation/trip-intake-resolve-place.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(turnSource, /function isLongIntake|function intakeFacts|add\('Gardens'|add\('Kailua-Kona house'/);
 assert.doesNotMatch(`${turnSource}\n${routeSource}\n${classifySource}`, /\b(?:isLongIntake|intakeFacts|postIntakeUpsellTurn|ensureNamedThings)\b/);
 assert.doesNotMatch(turnSource, /later in the week|laterFridayLabel|function whoIn|'Marcus', 'Aunt'/);
