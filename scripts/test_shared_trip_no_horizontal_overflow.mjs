@@ -178,15 +178,26 @@ try {
         }, label);
         await page.screenshot({ path: file, clip });
       }
-      if (width === 390 && label === 'Hotels') {
+      if (width === 390 && ['Flights', 'Hotels', 'Cars'].includes(label)) {
         const sort = await page.evaluate(() => {
-          const controls = [...document.querySelectorAll('button')].filter((el) => /^(name|price)\b/i.test(String(el.textContent || '').trim()));
-          const cards = document.querySelectorAll('[data-shared-live-tab="hotels"] [data-thing-card="1"]');
-          return { controls: controls.length, cards: cards.length, header: !!document.querySelector('[data-ts-list-sort-header]') };
+          const header = document.querySelector('[data-ts-list-sort-header]');
+          const labels = header ? [...header.querySelectorAll('button')].map((el) => String(el.textContent || '').replace(/\s+/g, ' ').trim()) : [];
+          const pills = [...document.querySelectorAll('button')].filter((el) => {
+            const text = String(el.textContent || '').trim();
+            if (!/^(name|price)\b/i.test(text)) return false;
+            return (parseFloat(getComputedStyle(el).borderRadius) || 0) >= 18;
+          });
+          return {
+            labels,
+            pills: pills.length,
+            hotels: document.querySelectorAll('[data-shared-live-tab="hotels"] [data-thing-card="1"]').length,
+            dayMount: !!document.querySelector('[data-day-itinerary-mount]'),
+          };
         });
-        assert.equal(sort.controls, 0, 'Name/Price sort is still visible');
-        assert.equal(sort.header, false, 'Name/Price column header is still visible');
-        assert.ok(sort.cards >= 1, 'Hotels tab is missing NYC thing cards');
+        assert.deepEqual(sort.labels.map((text) => text.replace(/[↑↓]/g, '').trim()), ['Name', 'Price']);
+        assert.equal(sort.pills, 0, `${label} still shows Name/Price pills`);
+        assert.equal(sort.dayMount, false, 'day view was replaced');
+        if (label === 'Hotels') assert.ok(sort.hotels >= 1, 'Hotels tab is missing thing cards');
       }
     }
   }

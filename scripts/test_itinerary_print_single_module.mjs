@@ -37,15 +37,12 @@ function lineAllowed(line) {
 }
 
 const bundle = readFileSync(new URL(bundleRel, root), 'utf8');
-assert.ok(bundle.includes(cardExpr));
-assert.ok(bundle.includes(dayExpr));
-assert.match(bundle, /return tsRenderThingCard\(/);
-assert.match(bundle, /sr=tsRenderDayItinerary\(/);
-assert.match(bundle, /data-day-itinerary-mount/);
-for (const marker of markers) {
-  const injected = cardExpr.split(marker).length - 1 + dayExpr.split(marker).length - 1;
-  assert.equal(bundle.split(marker).length - 1, injected, `${marker} outside the shared module`);
-}
+assert.match(bundle, /data-ts-list-sort-header/);
+assert.doesNotMatch(bundle, /Wr=\(\)=>null/);
+assert.doesNotMatch(bundle, /data-day-itinerary-mount/);
+assert.match(bundle, /gridTemplateColumns:"74px 22px 1fr"/);
+assert.equal(bundle.includes(cardExpr), false);
+assert.equal(bundle.includes(dayExpr), false);
 
 for (const rel of [...walk('src'), 'shared-app.html']) {
   if (rel === moduleRel) continue;
@@ -58,9 +55,7 @@ for (const rel of [...walk('src'), 'shared-app.html']) {
 }
 
 const list = readFileSync(new URL('src/vacation/shared-trip-live-tab-lists.mjs', root), 'utf8');
-const patches = readFileSync(new URL('src/vacation/trek-live-product-patches.mjs', root), 'utf8');
 assert.match(list, /from '\.\/itinerary-print\.mjs'/);
-assert.match(patches, /from '\.\/itinerary-print\.mjs'/);
 assert.match(list, /renderThingCardHtml\(/);
 assert.doesNotMatch(list, /data-thing-card="1"/);
 assert.notEqual(itinerarySurfaceCss('web'), itinerarySurfaceCss('print'));
