@@ -193,6 +193,7 @@ scripts/test_intake_hyatt_app_handler_route.mjs
 scripts/test_welcome_scope_trip_id_lodging_turn.mjs
 scripts/test_intake_lodging_resolve_providers.mjs
 scripts/test_intake_lodging_pick_rank.mjs
+scripts/test_itinerary_fresh_daybyday_bundle.mjs
 scripts/test_first_intake_no_consent_policy.mjs
 scripts/test_reply_live_path_qa.mjs
 scripts/test_first_intake_reply.mjs
