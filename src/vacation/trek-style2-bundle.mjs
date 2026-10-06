@@ -664,7 +664,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-summary-src="thing"')) {
     throw new Error('Style two list summaries must be marked Thing-stored (rr/Co), not PDF invent.');
   }
-  if (!js.includes(WD_MEDIA_PATCH)) {
+  if (!js.includes(WD_MEDIA_PATCH) && !js.includes('data-itinerary-row-media="1"')) {
     throw new Error('Style two daily-thing media filter did not apply.');
   }
   if (!js.includes(MN_CATEGORY_PATCH) || js.includes(MN_CATEGORY_NEEDLE)) {

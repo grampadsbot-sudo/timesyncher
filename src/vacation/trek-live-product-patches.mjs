@@ -331,7 +331,7 @@ const RESTAURANTS_LIST_NEEDLE = 'tsPad(Qn).map(G=>Oe(G))';
 const STORES_LIST_NEEDLE = 'tsPad(Gn).map(G=>Oe(G))';
 const REST_LIST_NEEDLE = 'tsPad(ki).map(G=>Oe(G))';
 const WD_RETURN_NEEDLE = 'return`<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">${Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`}<div><h3>${an(Bs(mr(zt)))}</h3>${bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:""}</div></div>${sr}${Xr?`<div class="reviews">${Xr}</div>`:""}${zr}</article>`';
-const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),priceHtml:bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:"",bodyHtml:sr,reviewsHtml:Xr?`<div class="reviews">${Xr}</div>`:"",mediaHtml:zr})';
+const WD_RETURN_PATCH = 'return tsRenderThingCard({metaHtml:an(Mo),logoHtml:Rn?`<img class="thing-logo" src="${an(Rn)}" />`:`<span class="thing-emoji">${an(Pc(zt))}</span>`,nameHtml:an(Bs(mr(zt))),priceHtml:bi(zt)?`<div class="thing-meta">${an(bi(zt))}</div>`:"",summaryHtml:!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String((ua&&ua.type)||""))&&!/^Travel (to|from)\\b/i.test(String((ua&&ua.title)||""))&&rr(zt)?`<div data-row-summary="1" data-summary-thing-only="1">${an(Bs(rr(zt)))}</div>`:"",bodyHtml:sr,reviewsHtml:Xr?`<div class="reviews">${Xr}</div>`:"",mediaHtml:zr})';
 
 function applySharedThingCardPatches(source = '') {
   let js = String(source || '');
@@ -358,10 +358,10 @@ function applySharedThingCardPatches(source = '') {
 }
 
 const MC_CALL_NEEDLE = 'sr=`<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1"><h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details" data-day-things-flow="1">${Rn.map(zr=>wd(zr,G)).join("")}</main></section>`;return sr';
-const MC_CALL_PATCH = 'sr=tsRenderDayItinerary({titleHtml:an(la.title||"Trip"),openingHtml:Su(G,Re,Rn.map(zr=>zr.item)),cardsHtml:Rn.map(zr=>wd(zr,G)).join(""),styleHtml:""});return sr';
+const MC_CALL_PATCH = 'sr=tsRenderDayItinerary({titleHtml:an(la.title||"Trip"),openingHtml:Su(G,Re,Rn.map(zr=>zr.item)),dayMediaHtml:tsItineraryDayMedia(G),cardsHtml:Rn.map(zr=>wd(zr,G)).join(""),styleHtml:""});return sr';
 const DAY_ROW_START = 'Re.length===0&&n.jsx("div",{style:{fontSize:12,color:"#9ca3af"},children:"No timeline-tagged things yet for this day."}),Re.map((ua,Rn)=>';
 const DAY_ROW_END = '})]},`${ua.type}-${Rn}-${ua.title}`)})';
-const DAY_ROW_PATCH = 'n.jsx("div",{"data-day-itinerary-mount":"1",dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({titleHtml:an(G.title||("Day "+G.day_number)),openingHtml:"",cardsHtml:Re.map(ua=>wd({item:ua.item,row:ua},G)).join(""),styleHtml:tsDayWebStyle})}})';
+const DAY_ROW_PATCH = 'n.jsx("div",{"data-day-itinerary-mount":"1",dangerouslySetInnerHTML:{__html:tsRenderDayItinerary({titleHtml:an(G.title||("Day "+G.day_number)),openingHtml:"",dayMediaHtml:tsItineraryDayMedia(G),cardsHtml:Re.map(ua=>wd({item:ua.item,row:ua},G)).join(""),styleHtml:tsDayWebStyle})}})';
 
 export function patchThingDetailRatings(source = '') {
   let js = String(source || '');

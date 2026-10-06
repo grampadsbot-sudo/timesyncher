@@ -28,17 +28,18 @@ export function renderThingCardHtml(fields = {}) {
   const logoHtml = fields.logoHtml || '';
   const nameHtml = fields.nameHtml || '';
   const priceHtml = fields.priceHtml || '';
+  const summaryHtml = fields.summaryHtml || '';
   const bodyHtml = fields.bodyHtml || '';
   const reviewsHtml = fields.reviewsHtml || '';
   const mediaHtml = fields.mediaHtml || '';
-  return `<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${metaHtml}</div><div class="thing-head">${logoHtml}<div><h3>${nameHtml}</h3>${priceHtml}</div></div>${bodyHtml}${reviewsHtml}${mediaHtml}</article>`;
+  return `<article class="thing style2-thing" data-thing-card="1"><div class="style2-thing-meta">${metaHtml}</div><div class="thing-head">${logoHtml}<div><h3>${nameHtml}</h3>${summaryHtml}${priceHtml}</div></div>${bodyHtml}${reviewsHtml}${mediaHtml}</article>`;
 }
 
 export function thingCardBundleExpr() {
   return `tsRenderThingCard=${renderThingCardHtml.toString()}`;
 }
 
-const THING_CARD_WEB_CSS = '.thing{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;color:#111827;box-sizing:border-box}.thing-head{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:center;min-width:0}.thing-head h3{font-size:15px;margin:0;font-weight:800}.thing p{font-size:12px;line-height:1.4;font-weight:400;color:#334155;margin:6px 0 0}.style2-thing-meta:empty{display:none}.thing-meta{font-size:12px;color:#475569}';
+const THING_CARD_WEB_CSS = '.thing{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px;background:#fff;color:#111827;box-sizing:border-box}.thing-head{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start;min-width:0}.thing-head h3{font-size:15px;margin:0;font-weight:800}.thing-head [data-row-summary="1"]{font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155}.thing p{font-size:12px;line-height:1.4;font-weight:400;color:#334155;margin:6px 0 0}.style2-thing-meta:empty{display:none}.thing-meta{font-size:12px;color:#475569}[data-itinerary-day-media="1"],[data-itinerary-row-media="1"]{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}[data-itinerary-day-media="1"]{margin:0 0 12px}[data-itinerary-row-media="1"]{margin-top:8px}[data-itinerary-day-media="1"] .print-media-card,[data-itinerary-row-media="1"] .print-media-card{display:block;margin:0;width:88px;max-width:100%}[data-itinerary-day-media="1"] .print-media-card>img,[data-itinerary-row-media="1"] .print-media-card>img{width:88px;max-width:100%;height:auto;max-height:72px;object-fit:contain;border-radius:8px;border:1px solid #e5e7eb;background:#f8fafc}[data-itinerary-day-media="1"] .print-media-card.video,[data-itinerary-row-media="1"] .print-media-card.video{display:inline-block!important;width:72px}[data-itinerary-day-media="1"] .print-media-qr,[data-itinerary-row-media="1"] .print-media-qr{width:72px;height:72px;object-fit:contain;background:#fff}';
 
 export function thingCardWebStyleTag() {
   return `<style data-itinerary-print-css="web">${THING_CARD_WEB_CSS}</style>`;
@@ -105,9 +106,24 @@ export function renderDayItineraryHtml(fields = {}) {
   const openingHtml = fields.openingHtml || '';
   const cardsHtml = fields.cardsHtml || '';
   const styleHtml = fields.styleHtml || '';
-  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1" data-day-itinerary="1">${styleHtml}<h1>${titleHtml}</h1>${openingHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
+  const dayMedia = text(fields.dayMediaHtml);
+  const dayMediaHtml = dayMedia ? `<div class="itinerary-media" data-itinerary-day-media="1">${dayMedia}</div>` : '';
+  return `<section class="page daily-page style2-page" data-print-ready="style2" data-day-things-2col="1" data-day-itinerary="1">${styleHtml}<h1>${titleHtml}</h1>${openingHtml}${dayMediaHtml}<main class="style2-details" data-day-things-flow="1">${cardsHtml}</main></section>`;
+}
+
+function itineraryDayMedia(G) {
+  const rows = (typeof li == 'function' ? li(G) : []).filter((Oo) => {
+    if (!Oo) return false;
+    const src = String(Oo.url || '');
+    if (/^data:image\//i.test(src)) return src.length > 12000;
+    const blob = [Oo.filename, Oo.original_name, Oo.originalName, Oo.caption, src.slice(0, 240), String(Oo.thumbnailUrl || '').slice(0, 240), Oo.id].join(' ');
+    return !/placeholder|1024.?1024|default[-_]?thumb|bind[- ]?proof|neon file bind proof/i.test(blob);
+  });
+  const photos = rows.filter((Oo) => Oo.kind !== 'video').map(Ba).join('');
+  const videos = rows.filter((Oo) => Oo.kind === 'video').map(Ba).join('');
+  return photos + videos;
 }
 
 export function dayItineraryBundleExpr() {
-  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},tsDayWebStyle=${JSON.stringify(thingCardWebStyleTag())}`;
+  return `tsRenderDayItinerary=${renderDayItineraryHtml.toString()},tsDayWebStyle=${JSON.stringify(thingCardWebStyleTag())},tsItineraryDayMedia=${itineraryDayMedia.toString()}`;
 }

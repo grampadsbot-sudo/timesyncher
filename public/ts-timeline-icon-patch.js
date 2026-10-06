@@ -97,6 +97,7 @@
       '.print-media-card{display:block!important;margin:0 0 8px;max-width:100%;width:auto}',
       '.print-media-card>img{width:100%;max-width:100%;height:auto!important;max-height:110px!important;object-fit:contain!important}',
       '.style2-page .print-media-card.video,.daily-page .print-media-card.video,.style2-day-media .print-media-card.video{display:none!important}',
+      '[data-itinerary-day-media="1"] .print-media-card.video,[data-itinerary-row-media="1"] .print-media-card.video{display:inline-block!important}',
       '.daily-map-page,[data-day-map-page="1"]{break-before:page!important;page-break-before:always!important;break-after:page!important;page-break-after:always!important;min-height:100vh!important;height:100vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}',
       '.daily-map-page .map-box,[data-day-map-page="1"] .map-box{flex:1 1 auto!important;width:100%;min-height:0!important}',
     ].join('');
