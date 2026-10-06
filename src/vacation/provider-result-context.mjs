@@ -1,3 +1,5 @@
+import { filterPlacesWithinRadius } from './place-search-radius-filter.mjs';
+
 function webResultAliases(name) {
   const aliases = new Set();
   const base = String(name || '').trim();
@@ -53,6 +55,40 @@ function areaOrLocalityPlaceRow(row) {
 
 function citableInTurnVenueRow(row) {
   return !rejectedOrPriorRow(row) && !areaOrLocalityPlaceRow(row);
+}
+
+function rowCoordinates(row) {
+  if (!row || typeof row !== 'object') return { lat: null, lng: null };
+  const lat = Number(row.lat ?? row.location?.lat);
+  const lng = Number(row.lng ?? row.location?.lng);
+  return {
+    lat: Number.isFinite(lat) ? lat : null,
+    lng: Number.isFinite(lng) ? lng : null,
+  };
+}
+
+/** Drop in-turn rows outside the turn's anchor radius policy (Kihei-scoped search, etc.). */
+export function filterInTurnPlaceRowsForAreaScope(rows = [], scope = null) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length || !scope || typeof scope !== 'object') return list;
+  const center = scope.center;
+  const centerLat = Number(center?.lat);
+  const centerLng = Number(center?.lng);
+  if (!Number.isFinite(centerLat) || !Number.isFinite(centerLng)) return list;
+  const radiusScope = String(scope.scope || '').trim();
+  const categoryFallback = String(scope.categoryFallback || 'restaurant').trim().toLowerCase() || 'restaurant';
+  const normalized = list.map((row) => {
+    const { lat, lng } = rowCoordinates(row);
+    const category = String(row.category || row.metadata?.categoryName || categoryFallback).trim().toLowerCase();
+    return { ...row, lat, lng, category };
+  });
+  const policyScope = radiusScope || 'lodging_anchor';
+  return filterPlacesWithinRadius(
+    normalized,
+    { lat: centerLat, lng: centerLng, label: String(center?.label || '').trim() },
+    (place) => String(place?.category || categoryFallback).trim().toLowerCase(),
+    policyScope,
+  ).places;
 }
 
 function rememberAllowName(rows, seen, raw) {
@@ -114,15 +150,18 @@ export const CUSTOMER_OWN_LODGING_CONTEXT_LABEL = "Customer's own lodging (conte
 
 export function modelVisibleTripContext(tripContext) {
   if (!tripContext || typeof tripContext !== 'object') return tripContext;
-  if (!Array.isArray(tripContext.citablePlaces) || !tripContext.citablePlaces.length) return tripContext;
-  const { tripReplyGate, ...rest } = tripContext;
+  if (!('tripReplyGate' in tripContext) && !('placeSearchAreaScope' in tripContext)) return tripContext;
+  const { tripReplyGate, placeSearchAreaScope, ...rest } = tripContext;
   return rest;
 }
 
 export function applyInTurnCitablePlaces(facts, inTurnResults) {
   if (!facts || typeof facts !== 'object') return facts;
   if (!Array.isArray(inTurnResults) || !inTurnResults.length) return facts;
-  const citablePlaces = citablePlaceTitles(inTurnResults);
+  const scopedRows = String(facts.searchArea || '').trim() && facts.placeSearchAreaScope
+    ? filterInTurnPlaceRowsForAreaScope(inTurnResults, facts.placeSearchAreaScope)
+    : inTurnResults;
+  const citablePlaces = citablePlaceTitles(scopedRows);
   const citableKeys = new Set(citablePlaces.map((title) => title.toLowerCase()));
   const notCitableAsResult = [];
   const remember = (row) => {

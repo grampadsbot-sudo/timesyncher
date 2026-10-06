@@ -2,6 +2,7 @@ import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
 import { applyPlaceSearchReplyFacts } from './place-search-reply-facts.mjs';
 import { statedLodgingLabelFromThings } from './intake-shared-trip.mjs';
 import { chatPlaceSearchSavedReplyFacts } from './chat-place-search-when.mjs';
+import { nominatimLabelsEquivalent } from './nominatim-label-equivalent.mjs';
 import { applyInTurnCitablePlaces, tripOwnedPlaceAllowRows } from './provider-result-context.mjs';
 import { tripIsoDay } from './intake-weekday-dates.mjs';
 import {
@@ -29,13 +30,25 @@ function applyTripReplyGate(ctx, things, inTurnPlaceResults) {
   const lodgingCtx = ctx.customerOwnLodgingContext && typeof ctx.customerOwnLodgingContext === 'object'
     ? ctx.customerOwnLodgingContext
     : null;
+  const searchArea = String(ctx.searchArea || '').trim();
+  const statedLodgingArea = String(ctx.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim();
+  const scopedToNamedSearchArea = searchArea
+    && (!statedLodgingArea || !nominatimLabelsEquivalent(searchArea, statedLodgingArea));
+  if (scopedToNamedSearchArea) {
+    return {
+      ...ctx,
+      tripReplyGate: tripOwnedPlaceAllowRows({
+        tripResolvedArea: searchArea,
+      }),
+    };
+  }
   return {
     ...ctx,
     tripReplyGate: tripOwnedPlaceAllowRows({
       destination: String(ctx.destination || '').trim(),
       lodging: String(ctx.lodging || lodgingCtx?.lodging || '').trim(),
-      tripStatedLodgingArea: String(ctx.statedLodgingArea || lodgingCtx?.statedLodgingArea || '').trim(),
-      tripResolvedArea: String(ctx.searchArea || '').trim(),
+      tripStatedLodgingArea: statedLodgingArea,
+      tripResolvedArea: searchArea || String(ctx.searchArea || '').trim(),
       things,
     }),
   };

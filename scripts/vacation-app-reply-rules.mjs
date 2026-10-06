@@ -596,7 +596,7 @@ export function replyRulesSystem(rules, destination, upsell, postIntake, custome
   const customerInput = {};
   const statedTripFields = new Set(['itinerary', 'dates', 'roster', 'rule']);
   for (const [key, value] of Object.entries(tripRaw || {})) {
-    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate') continue;
+    if (statedTripFields.has(key) || key === 'unscheduledDayRule' || key === 'tripReplyGate' || key === 'placeSearchAreaScope') continue;
     if (Array.isArray(value)) {
       const items = value.map((item) => String(item || '').trim()).filter(Boolean);
       if (items.length) customerInput[key] = items;
