@@ -57,7 +57,7 @@ async function loadProdBundle(cacheDir) {
   }
 }
 
-async function patchedBundle() {
+function patchedBundle() {
   const raw = execFileSync('git', ['show', UPSTREAM], { maxBuffer: 30 * 1024 * 1024 });
   return patchSharedTripHostnameForLocalHarness(renderServedTrekBundle(raw.toString('utf8')));
 }
