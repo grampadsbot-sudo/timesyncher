@@ -57,7 +57,8 @@ assert.equal(hotelAreas.includes('Unused area'), false);
 
 assert.match(bundle, /\$n=\[\.\.\.new Set\(tsListThings\(Fs\)\.flatMap\(Re=>vn\(Re\)/);
 assert.match(bundle, /ci=\[\.\.\.new Set\(tsListThings\(Oc\)\.flatMap\(Re=>or\(Re\)/);
-assert.match(bundle, /\[\.\.\.new Set\(tsListThings\(Cc\)\.map\(Re=>Yd\(Re\)\)\.filter\(Boolean\)\)\]/);
+assert.match(bundle, /Os\.map\(G=>n\.jsx\("button",\{onClick:\(\)=>Kn\(G\)/);
+assert.doesNotMatch(bundle, /\[\.\.\.new Set\(tsListThings\(Cc\)\.map\(Re=>Yd\(Re\)\)\.filter\(Boolean\)\)\]/);
 assert.match(bundle, /Oa=Array\.from\(new Set\(tn\.map\(G=>En\(G\)\)\.filter\(Boolean\)\)\)\.sort\(\)/);
 assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);

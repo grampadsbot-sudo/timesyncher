@@ -4,7 +4,6 @@ import crypto from 'node:crypto';
 
 import { gradeSharedTabLogoUrlRecords } from './shepherd-staging-smoke-grader-lib.mjs';
 import { HERTZ_KAHULUI_BRAVE } from './fixtures/place-search-brave-hertz-kahului.mjs';
-import { buildSharedLiveTabLists } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
@@ -98,9 +97,6 @@ const served = finalizeServedSharedTripPayload(shared);
 const carsGrade = gradeSharedTabLogoUrlRecords(served, 'cars');
 assert.ok(carsGrade.placeCount >= 1, `expected Cars tab places, got ${carsGrade.placeCount}`);
 assert.equal(carsGrade.records[0]?.category, 'Car');
-
-const liveLists = buildSharedLiveTabLists(shared);
-assert.equal(liveLists.cars.length, 1);
-assert.match(liveLists.cars[0], /Hertz Car Rental/);
+assert.match(String(served.places?.[0]?.name || served.places?.[0]?.title || ''), /Hertz Car Rental/);
 
 console.log('test_hertz_brave_car_persist_shared_e2e: ok');

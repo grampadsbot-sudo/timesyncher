@@ -403,7 +403,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
-  patched = applyLiveProductPatches(patched);
+  patched = applyLiveProductPatches(patched, { served });
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
@@ -675,19 +675,12 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
   }
-  const servedSharedHotelsCars = js.includes('tsSharedLiveTabListMount=G=>');
+  const servedSharedHotelsCars = js.includes('vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))')
+    && js.includes('vi(bc,"cars").map(G=>Oe(G))')
+    && !js.includes('tsSharedLiveTabListMount');
   if (servedSharedHotelsCars) {
-    if (!js.includes('tsSharedLiveTabListMount=G=>')) {
-      throw new Error('Served shared Hotels/Cars tabs must mount server liveTabLists HTML.');
-    }
     if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
-    }
-    if (js.includes('vi(kn,"hotels")')) {
-      throw new Error('Served shared Hotels tab must mount liveTabLists.hotels, not catalog kn rows.');
-    }
-    if (!js.includes('tsSharedLiveTabListMount("hotels")') || !js.includes('tsSharedLiveTabListMount("cars")')) {
-      throw new Error('Served shared Hotels and Cars tabs must call tsSharedLiveTabListMount for each tab.');
     }
     if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
@@ -710,11 +703,11 @@ export function assertPatchedStyleTwo(source = '') {
   if (js.includes('$n=gt.filter(') || !js.includes('$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))]')) {
     throw new Error('Store list chips must be saved tags on listed Things, not the fixed store vocabulary.');
   }
-  if (!js.includes(REST_TYPE_CHIPS_PATCH) || js.includes(REST_TYPE_CHIPS_NEEDLE)) {
-    throw new Error('Rest type chips must be types present on Things in that Rest list.');
+  if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
+    throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
   }
-  if (!js.includes(LIST_LOGO_PATCH) || js.includes(LIST_LOGO_NEEDLE) || js.includes('named=(')) {
-    throw new Error('List logos must use the trip logo URL or render nothing.');
+  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');
@@ -761,8 +754,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('data-print-media-ready') || !js.includes('b.size===3071') || !js.includes('bmp.width===1024')) {
     throw new Error('_se() must inline bound JPEG bytes and drop TREK 1024² 3071B stub canvases.');
   }
-  if (!js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('Print list logos must use the source logo URL or stay empty.');
+  if (js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('Print list logos must not use served LIST_LOGO_PATCH blanking.');
   }
   if (js.includes('ha(nr).story&&fo(nr).filter(Km).some(Oo=>Oo.kind==="photo"')) {
     throw new Error('Style two stories must not drop Summary./Story. when media is missing.');
