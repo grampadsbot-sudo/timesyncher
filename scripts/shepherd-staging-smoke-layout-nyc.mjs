@@ -1,6 +1,7 @@
 /** LAYOUT-NYC: staging shared tabs vs NYC reference screenshots (harness-only). */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { OPENROUTER_CHAT_COMPLETIONS_URL } from './vacation-app-reply-rules.mjs';
 import { parseVisualJudgeResponseText, VISUAL_JUDGE_MODEL } from './shepherd-staging-smoke-visual-judge.mjs';
 import { clickSharedTabByKeyword } from './shepherd-staging-smoke-shared-ui.mjs';
@@ -74,9 +75,16 @@ const LAYOUT_NYC_REFERENCE_DEFECTS = {
   hotels: { '390': [{ code: 'horizontal_overflow', detail: 'NYC Hotels rows clipped on the right at 390px' }] },
 };
 
-function layoutNycReferenceDir(env = process.env) {
+const DEFAULT_NYC_REFERENCE_DIR = join(
+  fileURLToPath(new URL('.', import.meta.url)),
+  'fixtures/nyc-final-reference',
+);
+
+export function layoutNycReferenceDir(env = process.env) {
   const raw = String(env.NYC_REFERENCE_DIR || env.TSV_NYC_REFERENCE_DIR || '').trim();
-  return raw && existsSync(raw) ? raw : null;
+  if (raw && existsSync(raw)) return raw;
+  if (existsSync(DEFAULT_NYC_REFERENCE_DIR)) return DEFAULT_NYC_REFERENCE_DIR;
+  return null;
 }
 
 function layoutNycReferenceImagePath(dir, tab, viewportLabel) {

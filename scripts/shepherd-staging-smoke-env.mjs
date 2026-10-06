@@ -106,6 +106,21 @@ async function fetchProjectEnvValueByKey(keyName, { env = process.env, fetchImpl
   throw new Error(`Failed to load Vercel env ${keyName}: HTTP ${lastStatus || 'unknown'}`);
 }
 
+/** Vercel decrypt responses sometimes return JSON-string-encoded plaintext. */
+export function unwrapVercelEnvPlainValue(raw) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  if (!value) return '';
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === 'string') return parsed.trim();
+    } catch (err) {
+      if (!(err instanceof SyntaxError)) throw err;
+    }
+  }
+  return value;
+}
+
 async function fetchV1EnvValue(envId, { env = process.env, fetchImpl = fetch } = {}) {
   const token = String(env.VERCEL_TOKEN || '').trim();
   if (!token) throw new Error('VERCEL_TOKEN is required to load staging smoke env.');
@@ -118,7 +133,7 @@ async function fetchV1EnvValue(envId, { env = process.env, fetchImpl = fetch } =
   );
   if (!res.ok) throw new Error(`Failed to load Vercel env ${envId}: HTTP ${res.status}`);
   const payload = await res.json();
-  const value = typeof payload?.value === 'string' ? payload.value.trim() : '';
+  const value = unwrapVercelEnvPlainValue(payload?.value);
   if (!value) throw new Error(`Empty Vercel env ${payload?.key || envId}.`);
   return { key: payload.key, value };
 }
