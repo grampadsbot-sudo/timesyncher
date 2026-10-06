@@ -158,11 +158,11 @@ async function main() {
     description: `TimeSyncher ${tripPayload.trip?.description || ''}`.trim(),
   };
   const bundlePath = `/assets/${bundleName}`;
-  const [htmlRaw, css, patchedBundle, prodBundle] = await Promise.all([
+  const prodBundle = await loadProdBundle();
+  const [htmlRaw, css, patchedBundle] = await Promise.all([
     readFile(path.join(root, 'shared-app.html'), 'utf8'),
     readFile(path.join(root, 'public/assets/index-CbEHlMj6.css'), 'utf8'),
     readFile(path.join(root, 'public/assets/index-BKun7ofk.js')),
-    loadProdBundle(),
   ]);
   const html = htmlRaw.replace("trek.src = '/assets/index-BKun7ofk.js'", `trek.src = '${bundlePath}'`);
   const logo = solidPng(18, [15, 118, 110]);
@@ -213,7 +213,7 @@ async function main() {
   console.log(JSON.stringify({ outRoot, bundleName, viewports: viewports.map((v) => v.tag), tabs: TABS.map((t) => t[1]) }));
 }
 
-main().catch((err) => {
+void main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
