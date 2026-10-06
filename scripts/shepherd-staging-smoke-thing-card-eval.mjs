@@ -2,6 +2,7 @@
 
 import { logoChipInkPresent } from './lib/logo-pixel-ink-grade.mjs';
 import { gradeSharedTabLogoUrlRecords } from './shepherd-staging-smoke-grader-lib.mjs';
+import { gradeThingCardSortByLabelHarness } from './shepherd-staging-smoke-thing-card-sort.mjs';
 
 const THING_CARD_TAB_KEYWORDS = ['cars', 'hotels', 'restaurants', 'stores', 'flights', 'events'];
 
@@ -148,12 +149,13 @@ export function gradeThingCardTagFilterParity({
 
 export function thingCardFailOnSortControlsFromEnv(env = process.env) {
   const raw = env?.THING_CARD_FAIL_ON_SORT_CONTROLS;
-  if (raw == null || String(raw).trim() === '') return false;
+  if (raw == null || String(raw).trim() === '') return true;
   const v = String(raw).trim().toLowerCase();
+  if (v === '0' || v === 'false' || v === 'no') return false;
   return v === '1' || v === 'true' || v === 'yes';
 }
 
-/** Default false; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to fail closed on Name/Price sort UI. */
+/** Default on; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `0`/`false`/`no` to allow standalone Name/Price sort pills. */
 export const THING_CARD_FAIL_ON_SORT_CONTROLS = thingCardFailOnSortControlsFromEnv();
 
 export function thingCardSortControlLabel(text) {
@@ -163,6 +165,19 @@ export function thingCardSortControlLabel(text) {
   if (/^price\b/i.test(label) && /[↑↓]/.test(label)) return label;
   return null;
 }
+
+/** Standalone pill sort controls (not list column header labels). */
+export function forbiddenSortControlsFromMatches(sortControlMatches = []) {
+  return (sortControlMatches || []).map((m) => m?.label).filter(Boolean);
+}
+
+export {
+  gradeThingCardSortByLabel,
+  gradeThingCardSortByLabelHarness,
+  isAscendingNameOrder,
+  isDescendingNameOrder,
+  priceOrderOk,
+} from './shepherd-staging-smoke-thing-card-sort.mjs';
 
 export function populatedThingCardTabs(sharedJson = {}) {
   const tabs = [];
@@ -182,12 +197,16 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
   const viewport = scan.viewport || null;
   const failOnSortControls = options.failOnSortControls ?? THING_CARD_FAIL_ON_SORT_CONTROLS;
   if (failOnSortControls) {
-    for (const sortLabel of scan.sortControls || []) {
+    const forbidden = scan.sortControls?.length
+      ? scan.sortControls
+      : forbiddenSortControlsFromMatches(scan.sortControlMatches);
+    for (const sortLabel of forbidden) {
       failures.push({
         rule: 'sort_control',
         tab,
         viewport,
         detail: `forbidden sort control: ${sortLabel}`,
+        sortControlMatches: scan.sortControlMatches,
       });
     }
   }
@@ -208,6 +227,10 @@ export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {
     apiThingTags: scan.apiThingTags,
   });
   for (const f of tagParity.failures) failures.push(f);
+
+  if (scan.sortByLabel?.failures?.length) {
+    for (const f of scan.sortByLabel.failures) failures.push(f);
+  }
 
   for (const row of rows) {
     const summary = String(row.summaryText || '').trim();
@@ -267,6 +290,7 @@ export function gradeThingCardHarnessResult({ tabs = [], probes = [] } = {}) {
       failures.push({ rule: 'required_tab', tab, detail: `missing probe for required tab ${tab}` });
     }
   }
+  for (const f of gradeThingCardSortByLabelHarness(probes)) failures.push(f);
   return { pass: failures.length === 0, failures, probes };
 }
 
@@ -278,66 +302,4 @@ export function rowInkGradeFromCom(com = {}) {
   };
 }
 
-/** Serialized for page.evaluate — keep self-contained. */
-export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
-  function tagFilterChips() {
-    for (const btn of document.querySelectorAll('button')) {
-      const st = getComputedStyle(btn);
-      if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
-      const label = String(btn.textContent || '').replace(/\\s+/g, ' ').trim();
-      if (label !== 'All tags') continue;
-      const row = btn.parentElement;
-      if (!row) continue;
-      const chips = [];
-      for (const chip of row.querySelectorAll('button')) {
-        const cst = getComputedStyle(chip);
-        if (cst.display === 'none' || cst.visibility === 'hidden') continue;
-        const text = String(chip.textContent || '').replace(/\\s+/g, ' ').trim();
-        if (text && text !== 'All tags') chips.push(text);
-      }
-      return chips;
-    }
-    return [];
-  }
-  function sortControls() {
-    const hits = [];
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      const st = getComputedStyle(el);
-      if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) continue;
-      const r = el.getBoundingClientRect();
-      if (r.width < 1 || r.height < 1) continue;
-      const label = String(el.textContent || '').replace(/\\s+/g, ' ').trim();
-      if (/^(name|price)(\\s*[↑↓])?$/i.test(label) || (/^price\\b/i.test(label) && /[↑↓]/.test(label))) {
-        hits.push(label);
-      }
-    }
-    return hits;
-  }
-  function rowNodes() {
-    const live = document.querySelector('[data-shared-live-tab]');
-    const scope = live || document;
-    return Array.from(scope.querySelectorAll('li[data-list-row="1"], li[data-has-logo="1"]')).filter((li) => {
-      const st = getComputedStyle(li);
-      const r = li.getBoundingClientRect();
-      return st.display !== 'none' && st.visibility !== 'hidden' && r.height > 4 && r.width > 20;
-    });
-  }
-  return function evaluateThingCardTabDom() {
-    const rows = rowNodes().map((li, index) => {
-      const summaryEl = li.querySelector('[data-list-summary], [data-row-summary]');
-      const title = li.querySelector('strong')?.textContent?.trim() || '';
-      const chip = li.querySelector('[data-ts-logo-chip], img.tiny-logo, .thing-emoji');
-      const img = li.querySelector('img.tiny-logo, [data-ts-logo-chip] img');
-      const src = img?.getAttribute('src') || li.getAttribute('data-logo-src') || '';
-      li.setAttribute('data-ts-thing-card-row-idx', String(index));
-      return {
-        index,
-        title,
-        summaryText: summaryEl ? String(summaryEl.textContent || '').trim() : '',
-        requiresLogo: Boolean(chip),
-        logoSrc: String(src || '').trim(),
-      };
-    });
-    return { sortControls: sortControls(), filterTags: tagFilterChips(), rows };
-  };
-})()`;
+export { EVALUATE_THING_CARD_TAB_DOM_SOURCE } from './shepherd-staging-smoke-thing-card-dom.mjs';
