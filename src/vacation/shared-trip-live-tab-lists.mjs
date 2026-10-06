@@ -129,12 +129,6 @@ function sharedLiveTabRowHtmlFragments(shared = {}, tabKeyword = '', options = {
   return rows.map((row) => listRowHtml({ ...row, tab, onLogoMissing }));
 }
 
-export function renderSharedLiveTabListHtml(shared = {}, tabKeyword = '', options = {}) {
-  const tab = text(tabKeyword).toLowerCase();
-  const items = sharedLiveTabRowHtmlFragments(shared, tab, options);
-  return `<ul data-shared-live-tab="${escapeHtml(tab)}">${items.join('')}</ul>`;
-}
-
 export function buildSharedLiveTabLists(shared = {}, options = {}) {
   const prepared = prepareSharedTripForLiveApp(shared);
   const onLogoMissing = options.onLogoMissing || logSharedLiveTabLogoMissing;

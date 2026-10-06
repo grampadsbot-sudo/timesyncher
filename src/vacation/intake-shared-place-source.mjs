@@ -22,6 +22,9 @@ export function placeSourceFieldsFromThing(thing = {}) {
     fields.website = pageUrl;
     fields.source_url = pageUrl;
   }
+  if (Array.isArray(thing.providerCategories) && thing.providerCategories.length) {
+    fields.providerCategories = thing.providerCategories;
+  }
   return fields;
 }
 

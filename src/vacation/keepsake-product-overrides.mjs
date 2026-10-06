@@ -36,11 +36,14 @@ export function resolveThingCoords(place = {}, override = {}) {
 
 function transportKindRecord(place = {}, override = {}) {
   const meta = place.metadata && typeof place.metadata === 'object' ? place.metadata : {};
+  const sourceRow = sourceObject(override.source, place.source, override.sourceRecord, place.sourceRecord);
+  const source = typeof sourceRow === 'string' ? sourceRow : text(sourceRow?.source);
   return {
     category: override.category || place.category?.name || place.category_name || place.category,
     category_name: place.category_name || place.category?.name,
     title: place.name || place.title,
     name: place.name || place.title,
+    source: source || text(override.source) || text(place.source),
     metadata: meta,
     providerCategories: place.providerCategories
       || meta.providerCategories

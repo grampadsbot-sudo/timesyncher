@@ -327,9 +327,6 @@ export function sharedTripFromIntake({ trip, things }) {
       ...(thing.logoUrl ? { logoUrl: thing.logoUrl } : {}),
       ...(thing.logoCaptureReason ? { logoCaptureReason: thing.logoCaptureReason } : {}),
       ...(point ? { lat: point.lat, lng: point.lng, ...(point.address ? { address: point.address } : {}) } : {}),
-      ...(Array.isArray(thing.providerCategories) && thing.providerCategories.length
-        ? { providerCategories: thing.providerCategories }
-        : {}),
     });
     const dayIds = [];
     thingOverrides[`place:${id}`] = {
