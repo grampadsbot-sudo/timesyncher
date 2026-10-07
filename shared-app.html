@@ -148,7 +148,13 @@
         overflow: hidden;
         padding-bottom: 0 !important;
       }
-      html[data-ts-trip] #root { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+      html[data-ts-trip] #root {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
       html[data-ts-trip] footer[data-build-stamp="1"] {
         position: static !important;
         flex: 0 0 auto;
