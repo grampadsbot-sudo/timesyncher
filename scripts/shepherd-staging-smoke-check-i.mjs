@@ -1,6 +1,23 @@
 import { evaluateCheckIOutbound } from './shepherd-staging-smoke-env.mjs';
 import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 
+/**
+ * Resolve the trip title for check I. Prefer the title already captured on
+ * state (set by check 5), but fall back to reading it from the trips table by
+ * tripId when check 5 early-returned before setting it.
+ */
+export async function resolveCheckITripTitle(state, db) {
+  if (state?.tripTitle) return state.tripTitle;
+  if (!state?.tripId || !db) return '';
+  const row = (await db`select title from trips where id=${state.tripId} limit 1`)[0];
+  return row?.title || '';
+}
+
+/** Check I title assertion: subject must contain the real trip title. */
+export function checkITitleOk(tripTitle, subject) {
+  return Boolean(tripTitle) && String(subject || '').includes(tripTitle);
+}
+
 export async function runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL }) {
   await runCheck('I', async ({ setStage }) => {
     setStage('collaborator invite Alex');
@@ -56,7 +73,8 @@ export async function runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL
       };
     }
     const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
-    const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
+    const tripTitle = await resolveCheckITripTitle(state, db);
+    const iTitleOk = checkITitleOk(tripTitle, outboundRow?.subject);
     const pass = inviteRes.status === 200 && iOutboundAll.length === 1
       && outboundEval.pass && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
