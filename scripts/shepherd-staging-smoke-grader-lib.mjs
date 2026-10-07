@@ -1,11 +1,6 @@
 /** Coffee + logo chip graders for staging smoke. */
 
 import {
-  gradeAskLodgingReplyQuestion,
-  gradeCoffeePlaceRowByJev,
-  jevBlockFromResult,
-} from './shepherd-staging-smoke-jev-reply-judge.mjs';
-import {
   gradeCarsHeadingLogoInk,
   gradeLogoChipInkPresence,
   logoChipInkPresent,
@@ -16,6 +11,7 @@ function coffeeRowLabel(row = {}) {
 }
 
 export async function gradeCoffeeReplyRows(rows = [], opts = {}) {
+  const { gradeCoffeePlaceRowByJev } = await import('./shepherd-staging-smoke-jev-reply-judge.mjs');
   let harnessError = false;
   const graded = [];
   for (const row of rows || []) {
@@ -378,6 +374,7 @@ export async function gradeAskLodging({
   env,
   fetchImpl,
 }) {
+  const { gradeAskLodgingReplyQuestion, jevBlockFromResult } = await import('./shepherd-staging-smoke-jev-reply-judge.mjs');
   const signals = persistedLodgingAskSignals(payload, turnJson);
   const replyEvidence = String(replyText || '');
   const replyGrade = await gradeAskLodgingReplyQuestion(replyEvidence, {
