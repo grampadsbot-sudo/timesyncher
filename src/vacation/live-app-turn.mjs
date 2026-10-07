@@ -1161,8 +1161,8 @@ export function interimProblems(turns) {
     const template = isTemplateInterim(text, prior?.text || '', interim?.judge);
     if (rewritten) {
       if (!text || template) problems.push(`turn ${turn.turnIndex} rewrite is missing an interim reply`);
-      else if (interim?.model !== 'google/gemini-2.5-flash-lite') {
-        problems.push(`turn ${turn.turnIndex} interim model is not google/gemini-2.5-flash-lite`);
+      else if (interim?.model !== INTERIM_MODEL) {
+        problems.push(`turn ${turn.turnIndex} interim model is not ${INTERIM_MODEL}`);
       }
     } else if (text) {
       problems.push(`turn ${turn.turnIndex} non-rewrite turn has an interim reply`);

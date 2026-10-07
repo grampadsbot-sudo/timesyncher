@@ -22,7 +22,7 @@ const loadTestOwnerPlan = loadTestSingleOwnerPlan;
 const intakeLive = { intake: true, priorTurns: [], session: { token: 'sess', trip_id: 'test-trip' }, env: { OPENROUTER_API_KEY: 'test-key', ...planEnv }, loadOwnerPlan: loadTestOwnerPlan };
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
-  'google/gemini-2.5-flash-lite',
+  'deepseek/deepseek-v4-flash',
   'qwen/qwen3-235b-a22b-2507',
   'deepseek/deepseek-v3.2',
   'qwen/qwen3-max',

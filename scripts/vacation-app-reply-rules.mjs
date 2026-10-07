@@ -17,11 +17,15 @@ export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 // Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply.
 const BAKEOFF_TIER_MODELS = {
-  1: 'google/gemini-2.5-flash-lite',
+  1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
   3: 'deepseek/deepseek-v3.2',
   4: 'qwen/qwen3-max',
 };
+export const OPENROUTER_T1_MAX_PRICE = { prompt: 0.15, completion: 0.40 };
+export function openRouterProviderForTier(modelTier) {
+  return Number(modelTier) === 1 ? { max_price: OPENROUTER_T1_MAX_PRICE } : undefined;
+}
 const BAKEOFF_MODEL_IDS = new Set(Object.values(BAKEOFF_TIER_MODELS));
 const BANNED_GPT_MINI = /gpt-.*mini/i;
 const TIER_MODELS_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dialog-runners/tier_models.json');
@@ -925,6 +929,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         model: responseModel,
         temperature: 0.55,
         max_tokens: 900,
+        ...(openRouterProviderForTier(modelTier) ? { provider: openRouterProviderForTier(modelTier) } : {}),
         messages: [
           {
             role: 'system',

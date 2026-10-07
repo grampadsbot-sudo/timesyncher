@@ -1,5 +1,7 @@
 /** Model extraction. Missing key or bad JSON throws. No keyword fallback. */
 
+import { bakeoffTierModels, openRouterProviderForTier } from '../../scripts/vacation-app-reply-rules.mjs';
+
 function parseJson(value) {
   const text = String(value || '').trim();
   const start = text.indexOf('{');
@@ -29,7 +31,8 @@ async function askModelJson(instructions, state, { fetchImpl = fetch, env = proc
     signal,
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: env.TIMESYNCHER_INTENT_MODEL || 'google/gemini-2.5-flash-lite',
+      model: env.TIMESYNCHER_INTENT_MODEL || bakeoffTierModels()[1],
+      ...(env.TIMESYNCHER_INTENT_MODEL ? {} : (openRouterProviderForTier(1) ? { provider: openRouterProviderForTier(1) } : {})),
       temperature: 0,
       messages: [
         { role: 'system', content: 'Return one JSON object. Do not write a customer reply.' },

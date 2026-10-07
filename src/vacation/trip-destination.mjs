@@ -1,4 +1,4 @@
-import { INTERIM_MODEL } from '../../scripts/vacation-app-reply-rules.mjs';
+import { INTERIM_MODEL, openRouterProviderForTier } from '../../scripts/vacation-app-reply-rules.mjs';
 
 const NONE = /^(none|missing|unknown)$/i;
 const CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -58,6 +58,7 @@ export async function openRouterDestinationComplete(corpus, env = process.env) {
     },
     body: JSON.stringify({
       model: INTERIM_MODEL,
+      ...(openRouterProviderForTier(1) ? { provider: openRouterProviderForTier(1) } : {}),
       temperature: 0,
       max_tokens: 40,
       messages: [

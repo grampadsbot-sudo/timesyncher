@@ -305,7 +305,7 @@ async function selfCheck() {
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ invented: true })])).length);
   assert.deepEqual(assertLiveTurns(liveDoc([sampleTurn(), appTurn()]), { requireRan: true }), []);
   assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'qwen/qwen3-235b-a22b-2507' })])).some((error) => /bake-off map/.test(error)), false);
-  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'google/gemini-2.5-flash-lite' })])).some((error) => /bake-off map/.test(error)), false);
+  assert.equal(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'deepseek/deepseek-v4-flash' })])).some((error) => /bake-off map/.test(error)), false);
   assert.ok(assertLiveTurns(liveDoc([sampleTurn(), appTurn({ modelId: 'vendor/not-on-bakeoff-1' })])).some((error) => /bake-off map/.test(error)));
   const bannedMini = 'gpt-' + '4.1-mini';
   assert.match(bannedMini, /gpt-.*mini/i);
@@ -369,8 +369,8 @@ async function selfCheck() {
   ])).some((error) => /not judged/.test(error)));
   assert.equal(isTemplateInterim('Got it. Thursday stays.', 'Thursday town walk'), true);
   assert.ok(interimProblems([
-    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 10 } },
-    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'google/gemini-2.5-flash-lite', ms: 11 } },
+    { turnIndex: 2, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'deepseek/deepseek-v4-flash', ms: 10 } },
+    { turnIndex: 4, role: 'app', interimReply: { text: 'Thursday town walk stays light.', model: 'deepseek/deepseek-v4-flash', ms: 11 } },
   ]).some((error) => /repeats across turns/.test(error)));
   process.stdout.write('live app jev tier self-check passed\n');
 }
