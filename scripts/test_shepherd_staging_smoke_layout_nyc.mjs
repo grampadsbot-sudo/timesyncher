@@ -12,6 +12,7 @@ import {
   layoutNycOpenRouterInfraHttpStatus,
   layoutNycReferenceDefects,
   layoutNycReferenceDir,
+  layoutNycVisionBundledTabHeaderRowClaim,
   layoutNycVisionSortOverflowClaim,
   reconcileLayoutNycJudgeVerdict,
   LAYOUT_NYC_TAB_ORDER,
@@ -132,5 +133,47 @@ const nycSortDiff = reconcileLayoutNycJudgeVerdict(
 );
 assert.equal(nycSortDiff.pass, true);
 assert.equal(nycSortDiff.expectedDifferences[0]?.kind, 'nyc_sort_buttons_layout');
+
+assert.ok(layoutNycVisionBundledTabHeaderRowClaim('FAIL bad tab order, header/row layout mismatch'));
+const gateBStagingDom = {
+  ...stagingOk,
+  sortPills: ['Name', 'Price ↑'],
+};
+const gateBJudge = reconcileLayoutNycJudgeVerdict(
+  {
+    pass: false,
+    failures: [
+      {
+        rubricItem: 'sort controls',
+        reason: "The staging version does not have 'Name' and 'Price' sort buttons above the list as expected.",
+      },
+      {
+        rubricItem: 'FAIL bad tab order, header/row layout mismatch',
+        reason: 'The tab order and header/row layout in the staging version do not match the expected structure.',
+      },
+    ],
+  },
+  { tab: 'flights', viewport: '390', stagingDom: gateBStagingDom },
+);
+assert.equal(gateBJudge.pass, true, 'DOM-trusted sort pills suppress bundled header/row vision fails');
+assert.ok(
+  gateBJudge.expectedDifferences.some((d) => d.kind === 'nyc_sort_buttons_layout'),
+  'records expected NYC sort pill layout delta',
+);
+
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'FAIL bad tab order, header/row layout mismatch',
+        reason: 'Header block missing on staging',
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: { ...gateBStagingDom, header: { present: false } } },
+  ).pass,
+  false,
+  'real header DOM miss stays fail-closed',
+);
 
 console.log('shepherd layout-nyc tests passed');

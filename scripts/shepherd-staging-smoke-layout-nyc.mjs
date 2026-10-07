@@ -87,11 +87,32 @@ export function layoutNycDomProvesSortButtonsNoOverflow(stagingDom = {}) {
   return true;
 }
 
+function layoutNycJudgeFailureText(failure = {}) {
+  return [failure.reason, failure.detail, failure.rubricItem].filter(Boolean).join(' ');
+}
+
 export function layoutNycVisionSortOverflowClaim(reason = '') {
   const lower = String(reason || '').toLowerCase();
   return /column label|label.*sort|header.*sort|clickable.*column/.test(lower)
     || /missing.*sort|sort button|sort control|name.*price.*button/.test(lower)
+    || /does not have.*name.*price|lacks.*name.*price|without.*name.*price.*sort/.test(lower)
     || /staging.*overflow|horizontal overflow|overflow.*390|scrollwidth|exceed.*viewport/.test(lower);
+}
+
+/** Vision often bundles missing sort pills into generic tab-order / header-row FAIL lines. */
+export function layoutNycVisionBundledTabHeaderRowClaim(text = '') {
+  const lower = String(text || '').toLowerCase();
+  return /header\/row|header.*row.*layout|tab order|layout mismatch/.test(lower)
+    || /bad tab order/.test(lower);
+}
+
+function layoutNycDomProvesListChromeOk(stagingDom = {}) {
+  const order = stagingDom?.tabOrder;
+  const tabOrderOk = Array.isArray(order) && order.length >= 4
+    && order.join('\0') === LAYOUT_NYC_TAB_ORDER.join('\0');
+  const headerOk = Boolean(stagingDom?.header?.present);
+  const rowsOk = stagingDom?.rowsNameLeft !== false;
+  return tabOrderOk && headerOk && rowsOk;
 }
 
 /** Flights/Hotels/Cars list-sort rubric must not apply to day-by-day, budget, stores, etc. */
@@ -204,14 +225,25 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
   };
   for (const f of verdict.failures || []) {
     const reason = String(f.reason || f.detail || '');
-    const lower = reason.toLowerCase();
-    if (!listSortTab && layoutNycNonListSortRubricClaim(reason)) {
+    const judgeText = layoutNycJudgeFailureText(f);
+    const lower = judgeText.toLowerCase();
+    if (!listSortTab && layoutNycNonListSortRubricClaim(judgeText)) {
       continue;
     }
-    if (domProvesSortOverflow && layoutNycVisionSortOverflowClaim(reason)) {
+    if (domProvesSortOverflow && layoutNycVisionSortOverflowClaim(judgeText)) {
       if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
-        expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+        expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
       }
+      continue;
+    }
+    if (
+      listSortTab
+      && domProvesSortOverflow
+      && stagingHasSortButtons()
+      && layoutNycDomProvesListChromeOk(stagingDom)
+      && layoutNycVisionBundledTabHeaderRowClaim(judgeText)
+    ) {
+      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
       continue;
     }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
