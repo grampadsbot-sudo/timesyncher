@@ -13,6 +13,15 @@ function relevanceRejectionReason(jevScore, minimum) {
   return `relevance_below_minimum_${score.toFixed(2)}`;
 }
 
+function placeRowKey(row = {}) {
+  return [
+    String(row.source || '').trim(),
+    String(row.externalId || row.title || '').trim(),
+    Number(row.lat),
+    Number(row.lng),
+  ].join('\0');
+}
+
 async function scoreRowsWithConcurrency(rows, scoreRow, concurrency, stageGuard) {
   const list = Array.isArray(rows) ? rows : [];
   if (!list.length) return [];
@@ -49,7 +58,8 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
   const target = String(relevanceContext.target || '').trim();
   const area = String(relevanceContext.area || relevanceContext.locationText || '').trim();
   const category = String(relevanceContext.category || '').trim();
-  const { toJudge, judgedCap, skipped } = capRowsForRelevanceJudge(rows, category);
+  const originalRows = Array.isArray(rows) ? rows : [];
+  const { toJudge, judgedCap, skipped } = capRowsForRelevanceJudge(originalRows, category);
   let judgedCount = 0;
   const stageGuard = () => {
     const elapsedMs = Date.now() - stageStarted;
@@ -79,14 +89,11 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
     judgedCount += 1;
     return { row, jevScore: Number(jevScore) };
   }, concurrency, stageGuard);
-  const scored = [];
+  const scoreByKey = new Map();
   const rejections = [];
   for (const { row, jevScore } of judged) {
-    if (jevScore >= minimum) {
-      scored.push({ ...row, jevScore });
-      continue;
-    }
-    if (rejections.length < 10) {
+    scoreByKey.set(placeRowKey(row), jevScore);
+    if (jevScore < minimum && rejections.length < 10) {
       rejections.push({
         title: String(row.title || '').trim(),
         address: String(row.address || '').trim(),
@@ -95,6 +102,12 @@ export async function attachPlaceRelevance(rows, fetchImpl, env, relevanceContex
         reason: relevanceRejectionReason(jevScore, minimum),
       });
     }
+  }
+  const scored = [];
+  for (const row of originalRows) {
+    const jevScore = scoreByKey.get(placeRowKey(row));
+    if (jevScore === undefined) continue;
+    if (jevScore >= minimum) scored.push({ ...row, jevScore });
   }
   return {
     places: scored,
