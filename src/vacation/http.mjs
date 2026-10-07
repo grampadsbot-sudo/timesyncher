@@ -1,7 +1,9 @@
 export function sendJson(res, status, body) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
-  res.setHeader('cache-control', 'no-store');
+  if (!res.getHeader || !res.getHeader('cache-control')) {
+    res.setHeader('cache-control', 'no-store');
+  }
   res.end(JSON.stringify(body, null, 2) + '\n');
 }
 

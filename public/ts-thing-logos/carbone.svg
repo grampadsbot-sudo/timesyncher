@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Carbone">
+  <rect width="64" height="64" rx="16" fill="#7f1d1d"/>
+  <ellipse cx="32" cy="38" rx="18" ry="12" fill="#fef2f2"/>
+  <path d="M18 38c4-6 10-9 14-9s10 3 14 9" fill="#b91c1c"/>
+  <path d="M14 18l4 22M18 18l-4 22" stroke="#facc15" stroke-width="2.5" fill="none"/>
+  <path d="M46 16c0 10 6 12 6 22h-4c0-10-6-12-6-22z" fill="#facc15"/>
+</svg>

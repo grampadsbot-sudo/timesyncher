@@ -1,0 +1,24 @@
+{
+  "shareToken": "las-vegas-vacation-3",
+  "trekTripId": 197,
+  "proofThing": {
+    "thingId": 8872,
+    "thingName": "Carbone at Aria",
+    "publicUrl": "/ts-thing-media/las-vegas-vacation-3/carbone-bind-proof.png"
+  },
+  "endpoints": {
+    "help": "GET /api/bind-thing-media",
+    "list": "GET /api/bind-thing-media?shareToken=las-vegas-vacation-3",
+    "bind": "POST /api/bind-thing-media",
+    "sharedWithMergedMedia": "GET /api/shared/las-vegas-vacation-3/",
+    "journeyBook": "/shared/las-vegas-vacation-3/journey",
+    "sharedItinerary": "/shared/las-vegas-vacation-3/"
+  },
+  "cli": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg --api https://<preview>",
+  "trekHostNativeJourneyBook": "node scripts/bind-thing-media.mjs --share-token las-vegas-vacation-3 --thing Carbone --file ./photo.jpg --apply-trek",
+  "auth": "TIMESYNCHER_MEDIA_BIND_TOKEN or TIMESYNCHER_ADMIN_TOKEN or TIMESYNCHER_WORKER_TOKEN. Preview and vacation-staging hosts allow POST without a token.",
+  "storage": "File/fileBase64 binds to Neon file_bytes when DATABASE_URL is set. Blob is optional and must not 500 when suspended. sourceUrl-only records an already-hosted URL.",
+  "sctMediaDirMissingHere": "/workspace/sct-runs/story-draft-20260907/media",
+  "mapOnly": "node scripts/bind-thing-media.mjs --map-only",
+  "notOnTripYet": ["High Roller", "Sphere", "Cirque O"]
+}

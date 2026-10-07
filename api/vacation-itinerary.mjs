@@ -4,7 +4,9 @@ import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
 import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
 import {
   acceptWebAccessInvite,
+  createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
+  isAllowedVacationWebsiteUrl,
   loadWebAccessGrantBySessionToken,
   readCookie,
   requireWebEditAccess,
@@ -12,6 +14,11 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
+import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
+import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
+import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
+import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -46,7 +53,7 @@ async function handleWebAccess(req, res, db, url) {
     const grant = await loadWebAccessGrantBySessionToken(db, token, process.env);
     if (!grant) return sendHtml(res, 404, '<!doctype html><title>Link expired</title><p>This Telegram website-edit link is invalid or expired. Ask the bot for a fresh vacation website link.</p>');
     const fallbackUrl = cleanText(grant.public_url, 600) || 'https://travel.timesyncher.com';
-    const redirectUrl = requestedRedirect && requestedRedirect.startsWith('https://travel.timesyncher.com/')
+    const redirectUrl = requestedRedirect && isAllowedVacationWebsiteUrl(requestedRedirect, process.env)
       ? requestedRedirect
       : fallbackUrl;
     res.statusCode = 302;
@@ -97,6 +104,24 @@ async function handleWebAccess(req, res, db, url) {
       });
     }
 
+    if (body.action === 'create_owner_website_session') {
+      requireIntakeAuth(req, process.env);
+      const session = await createOwnerWebsiteSessionByShareToken(db, {
+        shareToken: cleanText(body.shareToken || body.publicSlug || body.token, 240),
+        email: cleanText(body.email, 180),
+        displayName: cleanText(body.displayName || body.name, 180),
+        env: process.env,
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        grantId: session.grant.id,
+        status: session.grant.status,
+        role: session.grant.role,
+        publicUrl: session.grant.public_url,
+        launchUrl: session.launchUrl || session.acceptUrl,
+      });
+    }
+
     if (body.action === 'assert_can_edit') {
       const result = await requireWebEditAccess(db, req, {
         tripId: cleanText(body.tripId, 80),
@@ -119,9 +144,30 @@ function groupBy(items, key) {
   }, {});
 }
 
+function isStagingHost(req) {
+  const host = String(req.headers.host || '').toLowerCase();
+  return host.includes('vacation-staging.timesyncher.com')
+    || host.includes('timesyncher-vacation-staging');
+}
+
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
+    if (url.searchParams.get('trekBundle') === '1') {
+      return await trekStyle2BundleHandler(req, res);
+    }
+    if (url.searchParams.get('pdfQr') === '1' || /\/api\/pdf\/qr\.svg$/i.test(url.pathname)) {
+      return handlePdfQrSvg(req, res);
+    }
+    if (url.searchParams.get('keepsakePdf') === '1' || /\/api\/pdf\/shared(?:\/|$)/.test(url.pathname)) {
+      return await keepsakeStyle2Handler(req, res);
+    }
+    if (url.searchParams.has('trekPath') || /\/api\/shared(?:-trip)?(?:\/|$)/.test(url.pathname)) {
+      return await sharedTripHandler(req, res);
+    }
+    if (url.searchParams.get('mediaBind') === '1' || url.pathname.endsWith('/bind-thing-media')) {
+      return await bindThingMediaHandler(req, res);
+    }
     const db = sql(process.env);
     if (url.searchParams.get('webAccess') === '1' || url.pathname.endsWith('/vacation-web-access')) {
       return await handleWebAccess(req, res, db, url);
@@ -216,6 +262,10 @@ export default async function handler(req, res) {
       limit 200
     `;
     const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
+
+    if (isStagingHost(req)) {
+      res.setHeader('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+    }
 
     return sendJson(res, 200, {
       ok: true,

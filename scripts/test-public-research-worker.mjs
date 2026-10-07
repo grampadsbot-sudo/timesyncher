@@ -47,12 +47,7 @@ const dispatch = spawnSync(process.execPath, ['./product-gbrain-dispatch.mjs'], 
   env: { ...process.env, TIMESYNCHER_PUBLIC_RESEARCH_FIXTURE: fixturePath },
   encoding: 'utf8', timeout: 90000, maxBuffer: 3 * 1024 * 1024,
 });
-assert.equal(dispatch.status, 0, dispatch.stderr || dispatch.stdout);
-const e2e = JSON.parse(dispatch.stdout);
-assert.equal(e2e.result.researchSummary.status, 'first_pass_quality_gate_failed');
-assert.equal(e2e.result.researchSummary.sourceBackedCandidateCount, 1);
-const expectedPublicBase = (process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com').replace(/\/+$/, '');
-assert.match(e2e.result.webItineraryUrl, new RegExp(`^${expectedPublicBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/shared/`));
-assert.match(e2e.customerResponse, /still needs more source-backed options/i);
+assert.notEqual(dispatch.status, 0, 'under-min fixture must fail-closed before website fill');
+assert.match(dispatch.stderr || dispatch.stdout || '', /fail-closed|per-category mins|first-pass quality gates/);
 assert.ok(JSON.stringify(e2e).includes('sourceQuality'));
 console.log(JSON.stringify({ ok: true, checked: 'vacation-public-research-worker', placesFallbackCandidateCount: closed.sourceBackedCandidateCount, url: e2e.result.webItineraryUrl }));

@@ -19,6 +19,12 @@
     "test:checkout-coupons:legacy": "node scripts/test_checkout_coupons.mjs",
     "test:vacation-collaborators": "node scripts/test_vacation_collaborators.mjs",
     "test:vacation-web-access": "node scripts/test_vacation_web_access.mjs",
+    "test:timeline-icons": "node scripts/test_timeline_icons.mjs",
+    "test:thing-media-bind": "node scripts/test_bind_thing_media.mjs",
+    "test:keepsake-style2": "node scripts/test_keepsake_style2.mjs",
+    "test:first-pass-minimums": "node scripts/test_first_pass_minimums.mjs",
+    "test:tg-intake-gbrain": "node scripts/test_tg_intake_gbrain.mjs",
+    "bind:thing-media": "node scripts/bind-thing-media.mjs",
     "test:openclaw-control": "node scripts/test_openclaw_control.mjs",
     "eula:export-acceptance": "node scripts/export_eula_blob_acceptance.mjs",
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
@@ -32,6 +38,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@stripe/stripe-js": "^9.7.0",
     "@vercel/blob": "^2.3.3",
+    "qrcode": "^1.5.4",
     "stripe": "^22.2.0"
   }
 }

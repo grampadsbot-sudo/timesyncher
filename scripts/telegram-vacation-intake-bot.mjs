@@ -3,6 +3,7 @@
 import { execFile, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { INITIAL_BUILD_CUE, persistIntakeTurnToGbrain } from '../src/vacation/tg-intake-gbrain.mjs';
 
 const TELEGRAM_BOT_TOKEN = process.env.TIMESYNCHER_TELEGRAM_BOT_TOKEN || '';
 const API_BASE = (process.env.TIMESYNCHER_API_BASE_URL || 'https://vacation.timesyncher.com').replace(/\/+$/, '');
@@ -56,7 +57,9 @@ function isGenericQueuedAcknowledgement(value = '') {
     normalized.includes('will send the itinerary link when the first pass is ready') ||
     normalized.includes('will send the itinerary link when the next pass is ready') ||
     normalized.includes('updating the hosted timesyncher vacation itinerary now') ||
-    normalized.includes('processing the information you sent and setting up your timesyncher vacation')
+    normalized.includes('processing the information you sent and setting up your timesyncher vacation') ||
+    normalized.includes("i'm building your initial itinerary now") ||
+    normalized.includes('i am building your initial itinerary now')
   );
 }
 
@@ -1775,11 +1778,7 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
 
   const hostedReply = cleanText(turn.reply || turn.customerResponse || turn.answer, 4000);
   const bridgeNoWriteReply = supportNoWrite ? cleanText(supportDecision.reply, 4000) : '';
-  let reply = hostedReply || (supportNoWrite ? bridgeNoWriteReply : [
-    'I am processing the information you sent and setting up your TimeSyncher Vacation.',
-    '',
-    'Expect an initial vacation itinerary in about 10-20 minutes. You can keep sending updates here while I work on it.',
-  ].join('\n'));
+  let reply = hostedReply || (supportNoWrite ? bridgeNoWriteReply : INITIAL_BUILD_CUE);
   if (!supportNoWrite && turn.queued && isConcreteItineraryEditRequest(text) && isGenericQueuedAcknowledgement(reply)) {
     reply = editAcknowledgement(text);
   }
@@ -1800,6 +1799,14 @@ async function handleMessage(message, { cacheDir = '' } = {}) {
     sent = await sendMessage(chatId, reply, messageId, supportNoWrite ? null : replyMarkupForTurn(turn));
   }
   await recordDelivery({ transcriptId: turn.outboundTranscriptId, telegramMessageId: sent?.message_id });
+  persistIntakeTurnToGbrain({
+    prompt: text,
+    response: reply,
+    queued: Boolean(turn.queued),
+    telegramChatId: chatId,
+    inboundTranscriptId: turn.transcriptId || turn.inboundTranscriptId,
+    outboundTranscriptId: turn.outboundTranscriptId,
+  });
 }
 
 async function pollOnce() {

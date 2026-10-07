@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Miracle Mile Shops">
+  <rect width="64" height="64" rx="16" fill="#6b21a8"/>
+  <path d="M12 44c8-16 16-22 20-24 4 2 12 8 20 24" fill="none" stroke="#facc15" stroke-width="3"/>
+  <path d="M18 44c2-12 6-18 14-22 8 4 12 10 14 22" fill="#c4b5fd"/>
+  <rect x="28" y="36" width="8" height="10" fill="#6b21a8"/>
+  <circle cx="16" cy="20" r="3" fill="#fde68a"/><circle cx="48" cy="20" r="3" fill="#fde68a"/>
+</svg>

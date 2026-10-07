@@ -1,0 +1,57 @@
+---
+description: TimeSyncher Vacation Style one / Style two keepsake contract. Always apply. Patch-only product renderers. Hold certify.
+alwaysApply: true
+---
+
+# TimeSyncher Vacation — Cursor Project contract
+
+SoT: `bot-admin/messages/time-syncher/cursor-project-style-two-contract-20260916`
+Also: `bot-admin/messages/time-syncher/cursor-pstack-compliance-20260916`, `bot-admin/messages/time-syncher/pstack-compliance-cursor-20260916`
+
+Hold certify. No Cursor self-proof. Do not kick SCT/QA unless Thin explicitly orders it.
+
+## PERMANENT INVARIANT — Saved-story Thing media (in product print code)
+
+SoTs: `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`, `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
+
+Saved Story is a **flag on the Thing** (no separate Story entity). Style one `Ae()` / `fs()` and Style two `Ae(true)` print code MUST always embed that Thing’s bound media (`places[].bound_media`, `fo()`, `/ts-thing-media`) as **actual image bytes** (`printDataUrl`). Encode in `src/vacation/trek-style2-bundle.mjs` only — not Cursor memory. Placeholders while those URLs 200 = FAIL. TREK 1024²@3071B canvases and 960×640 color-card stubs = FAIL.
+
+## FIVE HARD RULES (verbatim)
+
+1. One Style-one + one Style-two renderer only — patch those existing product files; any new parallel export/print/PDF template path = FAIL.
+2. Keepsakes→Config is law — maps/sections print only when Config ON; OFF ⇒ omit; ignoring Config = FAIL.
+3. Golden bars re-PASS together after every change: centered Style-two itinerary; Style-one left when Style one; two-col Saved Stories + media; summary-before-story; end-of-book all-things continuous lists (no orphan category page-break); top margin; two-col logo+summary; Config maps; live HH when in set. Next candidate delivers BOTH Style one AND Style two.
+4. No Cursor self-proof — Keepsake QA live+PDF only.
+5. Load GBrain first — SoT pages + get_page skills/keepsake-qa/skill (+ pstack, timesyncher-vacation-verification). Feature Map entry required for any UI claim.
+
+## Point agents at these GBrain SoTs (load before layout churn)
+
+- `bot-admin/messages/time-syncher/repeatable-style-two-no-regress-20260915`
+- `bot-admin/messages/time-syncher/style-one-two-use-existing-renderer-20260910`
+- `bot-admin/messages/time-syncher/style-2-craig-config-maps-both-styles-20260916`
+- `bot-admin/messages/time-syncher/cursor-pstack-compliance-20260916`
+- `bot-admin/messages/time-syncher/style-2-qa-fail-55ca70b-20260916`
+- `bot-admin/messages/time-syncher/style-2-craig-fail-55ca70b-margin-maps-allthings-20260916`
+- `bot-admin/messages/time-syncher/style-2-craig-fail-55ca70b-no-category-pagebreak-20260916`
+- `bot-admin/messages/time-syncher/style-2-craig-fail-bed0620-20260916`
+- `bot-admin/messages/time-syncher/style-2-qa-fail-b396b63-20260916`
+- `bot-admin/messages/time-syncher/saved-story-flag-on-thing-20260916`
+- `bot-admin/messages/time-syncher/saved-story-media-in-print-code-20260916`
+- `skills/keepsake-qa/skill`
+- Feature Map: `features/README.md`
+
+## Product files (patch these; do not add a third export)
+
+- Style two dispatch + `Ae()` layout: `src/vacation/trek-style2-bundle.mjs` (product TREK `Ae()` / `Mc()` / `op()` / `so()` / `xa()`)
+- Style one = same `Ae()` with left `op()` days; Style two = `Ae(true)` with centered `Mc()` days
+- Shared trip GET (Thing-stored overlays, list pad): `src/vacation/shared-trip-handler.mjs`
+- Staging PDF 302 to product print (not travel `zu()`): `src/vacation/keepsake-style2-handler.mjs`
+- Product paths: Style two `…/journey?style=2` (`pdfReport=keepsake-style-2`); Style one `…/journey?style=1` (`pdfReport=keepsake`)
+
+`src/vacation/keepsake-style2.mjs` `renderStyle2Html` is **quarantined** — not a live export/print/PDF template.
+
+## Verification lever (required before further layout churn)
+
+- Skill: `timesyncher-vacation-verification` + `pstack`
+- Tests: `npm run test:keepsake-style2`
+- Keepsake QA decides PASS/FAIL on live+PDF. Cursor must not self-certify.

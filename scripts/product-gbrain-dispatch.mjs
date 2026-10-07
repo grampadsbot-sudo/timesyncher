@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
-import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { assertRequiredFirstPassMinimums, runPublicResearch } from './vacation-public-research-worker.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -1915,11 +1915,9 @@ async function buildArtifacts(job, manifest) {
   const initialItinerary = buildInitialItinerary({ requestText, destination, dates });
   const publicResearch = await runPublicResearch({ artifacts: { requestText, vacationName, unforgettableGoal, destination, dates, lodgingLane: lane }, targetMinutes: manifest.capabilityObject?.targetInitialResearchMinutes || 15, minMinutes: manifest.capabilityObject?.minimumInitialResearchMinutes || 10 });
   const researchedThings = publicResearch.candidates || [];
-  if ((job.request_type || job.job_type) === 'itinerary_research_update' && researchedThings.length === 0 && process.env.TIMESYNCHER_ALLOW_EMPTY_RESEARCH_PASS !== '1') {
-    throw new Error(`Public research pass produced no source-linked candidates; not sending a ready message. Status: ${publicResearch.status || 'unknown'}`);
-  }
-  if ((job.request_type || job.job_type) === 'itinerary_research_update' && publicResearch.status !== 'source_backed_research_complete' && process.env.TIMESYNCHER_ALLOW_INCOMPLETE_RESEARCH_PASS !== '1') {
-    throw new Error(`Public research pass did not meet first-pass quality gates; not sending a ready message. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
+  assertRequiredFirstPassMinimums(researchedThings, publicResearch.firstPassMinimums);
+  if (publicResearch.status !== 'source_backed_research_complete') {
+    throw new Error(`Public research pass did not meet first-pass quality gates; initial website fill is fail-closed. Status: ${publicResearch.status || 'unknown'}; counts=${JSON.stringify(publicResearch.categoryCounts || {})}; missingMinimums=${JSON.stringify(publicResearch.missingMinimums || {})}; missingReviews=${(publicResearch.missingReviews || []).length}; missingHappyHour=${(publicResearch.missingHappyHour || []).length}; missingCoordinates=${(publicResearch.missingCoordinates || []).length}`);
   }
   const trekSync = syncTrekItinerary(job, { requestText, vacationName, unforgettableGoal, destination, dates, researchedThings, createNewTrip });
   const webItineraryUrl = trekSync.url;
