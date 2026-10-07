@@ -56,7 +56,8 @@ export async function runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL
       };
     }
     const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
-    const iTitleOk = state.tripTitle && (outboundRow?.subject || '').includes(state.tripTitle);
+    const tripTitle = state.tripTitle || (state.tripId ? (await db`select title from trips where id=${state.tripId} limit 1`)[0]?.title : '');
+    const iTitleOk = tripTitle && (outboundRow?.subject || '').includes(tripTitle);
     const pass = inviteRes.status === 200 && iOutboundAll.length === 1
       && outboundEval.pass && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
