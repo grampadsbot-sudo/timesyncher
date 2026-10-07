@@ -27,7 +27,8 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
+import { buildLiveAppRewritePending } from './chat-place-search.mjs';
+import { finalizeInTurnPlaceShipReply, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
 import {
   placeResultExtra,
   unsourcedAgainstInTurnResults,
@@ -1557,6 +1558,8 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     resolvedDestination.ask ? DESTINATION_ASK : '',
     inviteContactLiveReplySystemExtra(tripContext),
   ].filter(Boolean).join(' ');
+  const tieredReplyTimeoutMs = enforceInTurnPlaces ? placeSearchTieredReplyTimeoutMs(env) : 0;
+  const inTurnPlaceCarry = { tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate };
   const modelArgs = (turnText, mode) => ({
     rules,
     jev,
@@ -1575,6 +1578,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     seat,
     planOwned: commerce.planOwned,
     systemExtra: draftExtra,
+    timeoutMs: tieredReplyTimeoutMs,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1584,15 +1588,25 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
-  const banned = appTextBanned(reply);
+  let banned = appTextBanned(reply);
   if (!reply || banned) {
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      reason: banned || model?.reason || 'live dispatcher returned no reply',
-    };
+    const recovered = finalizeInTurnPlaceShipReply(reply, enforceInTurnPlaces, inTurnProviderResults, inTurnPlaceCarry);
+    if (recovered.ok && recovered.reply) {
+      reply = recovered.reply;
+      banned = '';
+      if (model && typeof model === 'object') {
+        model.usedInTurnPlaceFallback = recovered.usedFallback === true;
+      }
+    } else {
+      return {
+        reply: null,
+        rules,
+        jev,
+        model,
+        reason: banned || model?.reason || 'live dispatcher returned no reply',
+        ...(recovered.blocked || {}),
+      };
+    }
   }
   const inviteReplyFailure = liveReplyInviteContactFailure({ tripContext, reply });
   if (inviteReplyFailure) {
@@ -1661,20 +1675,21 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
       reason: quality?.reason || 'quality_not_judged',
     };
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
-    if (blocked) return blocked;
-    return { reply: originalDraft, ...unjudged };
+    const unjudgedShip = finalizeInTurnPlaceShipReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, ...inTurnPlaceCarry });
+    if (!unjudgedShip.ok) return unjudgedShip.blocked;
+    return { reply: unjudgedShip.reply, ...unjudged };
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
-    if (blocked) return blocked;
+    const directShip = finalizeInTurnPlaceShipReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, ...inTurnPlaceCarry });
+    if (!directShip.ok) return directShip.blocked;
+    const shippedReplyText = directShip.reply;
     const shipped = stampShippedReply({
-      reply: originalDraft,
+      reply: shippedReplyText,
       quality,
       draftModel,
-      log: { ...baseLog, draftText: originalDraft, flagged: false },
-      draft: originalDraft,
+      log: { ...baseLog, draftText: shippedReplyText, flagged: false },
+      draft: shippedReplyText,
     });
     shipped.model.modelTier = model?.modelTier ?? jev?.modelTier ?? null;
     shipped.model.beats = model?.beats || null;
@@ -2069,7 +2084,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       holding: false,
     };
   }
-  const shippedText = choice.text;
+  let shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
       ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
@@ -2154,8 +2169,19 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     judgeMs,
   };
   if (pending.enforceInTurnPlaces) {
-    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripContext: pending.tripContext, tripPlaceAllowRows: pending.tripContext?.tripReplyGate });
-    if (blocked) return { ...blocked, log: { ...log, rewriteFailReason: blocked.reason, held: true } };
+    const rewriteShip = finalizeInTurnPlaceShipReply(shippedText, true, pending.inTurnPlaceResults, {
+      rules,
+      jev: pending.jev,
+      model: pending.model,
+      quality,
+      log: { ...log, held: true },
+      tripContext: pending.tripContext,
+      tripPlaceAllowRows: pending.tripContext?.tripReplyGate,
+    });
+    if (!rewriteShip.ok) {
+      return { ...rewriteShip.blocked, log: { ...log, rewriteFailReason: rewriteShip.blocked?.reason, held: true } };
+    }
+    shippedText = rewriteShip.reply;
   }
   const stamped = stampShippedReply({
     reply: shippedText,
