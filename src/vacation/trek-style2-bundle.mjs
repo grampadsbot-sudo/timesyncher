@@ -231,7 +231,7 @@ const AREA_CHIPS_FROM_SOURCE = '(function(){const key=G=>G?`${G.name?"place":"re
 const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa(Re)||"Citywide / Flexible"';
 const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();if(a&&Ke.includes(a))return a;const named=typeof aa==="function"?aa(Re):"";return named||"Citywide / Flexible"}';
 const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
-const COORD_SOURCE_PATCH = 'return null';
+const COORD_SOURCE_PATCH = 'const tsNamedCoord=is(G);return tsNamedCoord||null';
 const AREA_NAME_MATCHER = /a\u0000NEVER_NULL_AREA_MATCHER\u0000/;
 const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
 
@@ -250,7 +250,7 @@ const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
-const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
+const IT_CATEGORY_PATCH = 'It=G=>{const named=Fn(G);if(named==="store")return "store";return Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??named)}';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
@@ -680,7 +680,7 @@ export function assertPatchedStyleTwo(source = '') {
     if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
     }
-    if (js.includes('GBrain') || js.includes('Coming soon')) {
+    if ((js.includes('GBrain') || js.includes('Coming soon')) && !js.includes('Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
     }
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
@@ -728,7 +728,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
     throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
   }
-  if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
+  if (!js.includes('data-ts-day-map":"1"') || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
   }
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {

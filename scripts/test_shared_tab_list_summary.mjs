@@ -52,11 +52,12 @@ assert.doesNotMatch(bundle, /data-ts-list-sort-header":"1"/);
 assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)/);
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
-assert.match(bundle, /Rn=Bs\(rr\(G\)\)/);
+assert.match(bundle, /Rn=Bs\(rr\(G\)\|\|String\(G\.description\|\|G\.notes\|\|""\)\.replace\(\/\\s\+\/g," "\)\.trim\(\)\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 assert.match(bundle, /data-summary-stored":"1"/);
-assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
+assert.match(bundle, /flexWrap:"nowrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
+assert.match(bundle, /marginLeft:-28,marginRight:-28,width:"max-content"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
