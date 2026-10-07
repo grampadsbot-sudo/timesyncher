@@ -1,4 +1,5 @@
-import { providerFailureMessage, resolveSearchContext, tryGeocodeLabel } from './place-search-geocode.mjs';
+import { providerFailureMessage, tryGeocodeLabel } from './place-search-geocode.mjs';
+import { resolveSearchContext } from './place-search-resolve-context.mjs';
 import { resolveSearchAnchorGeocode } from './place-search-anchor-geocode.mjs';
 import {
   everyPlaceResultProviderErrored,
@@ -25,6 +26,7 @@ import {
 import { namedPlaceLookupFromQueries } from './place-search-named-target.mjs';
 import {
   finalizeNamedPlaceSearchResults,
+  resolveNamedPlaceRadiusGeocodeLabel,
   resolveNamedPlaceTieBreakLabel,
 } from './place-search-named-select.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
@@ -59,6 +61,7 @@ export async function runPlaceProviderPass({
   readJson,
   fail,
 }) {
+  const statedLodgingArea = String(relevanceContext?.statedLodgingArea || '').trim();
   const providerLog = [];
   const providerTimings = {
     contextMs: 0,
@@ -84,12 +87,14 @@ export async function runPlaceProviderPass({
       tripId,
       tripDestinationLabel: String(tripDestinationLabel || dest).trim(),
       turnNamedAnchor,
+      statedLodgingArea: String(statedLodgingArea || '').trim(),
     },
   );
   providerTimings.contextMs = Date.now() - contextStarted;
   const center = context.center;
   const locationText = context.locationText || dest;
   const namedPlaceLookup = namedPlaceLookupFromQueries(placeQueries);
+  const namedArea = String(relevanceContext?.area || '').trim();
   const braveCompactLocality = resolveBraveCompactLocality({
     namedPlaceLookup,
     searchAnchor,
@@ -111,8 +116,22 @@ export async function runPlaceProviderPass({
     });
     providerTimings.anchorGeocodeMs = Date.now() - anchorStarted;
   }
-  const queryCenter = resolvePlaceSearchQueryCenter({ namedPlaceLookup, anchorGeocode, context });
+  let queryCenter = resolvePlaceSearchQueryCenter({ namedPlaceLookup, anchorGeocode, context });
   const destinationRadiusCenter = anchorRadiusCenter(null, center);
+  if (namedPlaceLookup) {
+    const radiusLabel = resolveNamedPlaceRadiusGeocodeLabel({
+      namedTarget: String(placeQueries?.[0]?.target || '').trim(),
+      namedArea,
+      searchAnchor,
+      destination: dest,
+      lodging,
+      statedLodgingArea,
+    });
+    if (radiusLabel) {
+      const radiusGeocode = await tryGeocodeLabel(fetchImpl, radiusLabel, providerLog, readJson, { env });
+      queryCenter = anchorRadiusCenter(radiusGeocode, queryCenter);
+    }
+  }
   const radiusScope = namedPlaceLookup ? ANCHOR_RADIUS_SCOPE_DESTINATION : ANCHOR_RADIUS_SCOPE_LODGING;
   const radiusCenter = queryCenter;
   const primaryCategory = String(placeQueries?.[0]?.category || 'restaurant').trim().toLowerCase();
@@ -289,7 +308,6 @@ export async function runPlaceProviderPass({
 
   const dedupeMerges = [];
   const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
-  const namedArea = String(relevanceContext?.area || '').trim();
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({

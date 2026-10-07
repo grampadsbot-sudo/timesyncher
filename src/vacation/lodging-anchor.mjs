@@ -20,6 +20,13 @@ function lodgingAreaText(thing, location) {
   return locality || address || described || title;
 }
 
+export function lodgingAreaNameFromText(text = '') {
+  const value = String(text || '').trim();
+  if (!value) return '';
+  const match = value.match(LODGING_AREA_NAME_RE);
+  return match ? match[1].slice(0, 180) : '';
+}
+
 function lodgingAreaNameFromThing(thing = {}) {
   if (!thing || typeof thing !== 'object') return '';
   const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
@@ -33,9 +40,8 @@ function lodgingAreaNameFromThing(thing = {}) {
     String(location.address || thing.address || '').trim(),
     String(thing.description || '').trim(),
   ]) {
-    if (!text) continue;
-    const match = text.match(LODGING_AREA_NAME_RE);
-    if (match) return match[1].slice(0, 180);
+    const fromText = lodgingAreaNameFromText(text);
+    if (fromText) return fromText;
   }
   return '';
 }
