@@ -4,8 +4,7 @@ import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 export async function prepareMapLogoIntakeShare(ctx) {
   const { state, BASE, db } = ctx;
   await postItinerary(state.session, { tripId: state.tripId, text: "We're staying at the Westin Maui in Kaanapali." });
-  await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG $45 per day' });
-  await postItinerary(state.session, { tripId: state.tripId, text: 'Alamo rental car at OGG $55 per day' });
+  await postItinerary(state.session, { tripId: state.tripId, text: 'Hertz rental car at OGG $45 per day and Alamo rental car at OGG $55 per day' });
   const shareSlug = state.tripId ? intakeShareSlug(state.tripId) : '';
   let sharedApi = null;
   let sharedApiFirst200Ms = null;

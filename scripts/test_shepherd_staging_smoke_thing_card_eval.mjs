@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   apiThingTagsForTab,
   forbiddenSortControlsFromMatches,
@@ -399,5 +401,23 @@ assert.equal(harness.pass, false);
 
 assert.equal(rowInkGradeFromCom({ mass: 10 }).inkPresent, true);
 assert.equal(rowInkGradeFromCom({ mass: 1 }).inkPresent, false);
+
+// #267: the map-prep seed must yield two priced car rows so the Name/Price sort
+// pills can be exercised at both viewports. The seed is a literal message in
+// shepherd-staging-smoke-map-prep.mjs; assert it carries two distinct car names
+// and two distinct prices (offline-safe: no DB/classifier import).
+const mapPrepSource = readFileSync(
+  fileURLToPath(new URL('./shepherd-staging-smoke-map-prep.mjs', import.meta.url)),
+  'utf8',
+);
+const seedTextMatch = mapPrepSource.match(/text:\s*'([^']*rental car[^']*)'/);
+assert.ok(seedTextMatch, 'map-prep seed message with rental car text must be present');
+const seedText = seedTextMatch[1];
+const seedCarNames = [...seedText.matchAll(/\b(Hertz|Alamo|Avis|Enterprise|Budget|National|Dollar|Thrifty)\b/g)]
+  .map((m) => m[1]);
+assert.equal(new Set(seedCarNames).size, 2, `seed must name two distinct car vendors, got: ${seedCarNames.join(', ')}`);
+const seedPrices = [...seedText.matchAll(/\$\s*([\d,]+(?:\.\d+)?)/g)].map((m) => Number(m[1].replace(/,/g, '')));
+assert.equal(new Set(seedPrices).size, 2, `seed must carry two distinct prices, got: ${seedPrices.join(', ')}`);
+assert.ok(seedPrices.every((p) => Number.isFinite(p) && p > 0), 'seed prices must be positive numbers');
 
 console.log('shepherd thing-card eval tests passed');
