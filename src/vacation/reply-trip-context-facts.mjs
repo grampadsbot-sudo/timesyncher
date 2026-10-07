@@ -104,6 +104,27 @@ export function applySavedJobDatesToReplyFacts(facts, { savedStart = '', savedEn
   return out;
 }
 
+function inTurnSavedPlaceReplyFacts(things, inTurnPlaceResults, tripStart, tripEnd) {
+  if (!Array.isArray(inTurnPlaceResults) || !inTurnPlaceResults.length) return null;
+  const inTurnTitles = new Set();
+  for (const row of inTurnPlaceResults) {
+    const title = String(row?.title || row?.name || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (title) inTurnTitles.add(title);
+  }
+  if (!inTurnTitles.size) return null;
+  const savedRows = (Array.isArray(things) ? things : []).flatMap((thing) => {
+    const title = String(thing?.title || '').replace(/\s+/g, ' ').trim();
+    if (!title || !inTurnTitles.has(title.toLowerCase())) return [];
+    return [{
+      title,
+      whenLabel: String(thing?.whenLabel || '').trim(),
+      customerWhen: String(thing?.customerWhen || '').trim(),
+    }];
+  });
+  if (!savedRows.length) return null;
+  return chatPlaceSearchSavedReplyFacts(savedRows, tripStart, tripEnd);
+}
+
 function chatExtractionReplyFacts(wantedThings, tripStart, tripEnd) {
   const rows = (Array.isArray(wantedThings) ? wantedThings : []).flatMap((thing) => {
     const title = String(thing?.title || thing?.name || '').trim();
@@ -163,6 +184,9 @@ export async function enrichDraftingTripContext(tripContext, {
   ctx = applyPlaceSearchReplyFacts(ctx, placeSearchReplyFacts);
   if (!ctx.chatPlaceSearch) {
     ctx = applyPlaceSearchReplyFacts(ctx, chatExtractionReplyFacts(wantedThings, savedStart, savedEnd));
+  }
+  if (!ctx.chatPlaceSearch) {
+    ctx = applyPlaceSearchReplyFacts(ctx, inTurnSavedPlaceReplyFacts(things, inTurnPlaceResults, savedStart, savedEnd));
   }
   const tripId = String(session?.trip_id || session?.tripId || '').trim();
   let db = null;
