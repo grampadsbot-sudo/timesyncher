@@ -1,4 +1,6 @@
-import { callTieredModel, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+import { callTieredModel, INTERIM_MODEL, jevPrecall } from '../../scripts/vacation-app-reply-rules.mjs';
+
+const FIRST_INTAKE_REPLY_TIMEOUT_MS = 8000;
 import { appTextBanned, loadSavedTripRecord } from './live-app-turn.mjs';
 import { assertCustomerReplyShippable } from './reply-id-citation.mjs';
 import { applyTurnInviteReplyFacts } from './turn-invite-reply-facts.mjs';
@@ -102,6 +104,8 @@ export async function produceFirstIntakeReply({
       intakeReplyTurn: true,
       replyFacts: modelFacts,
       env,
+      forceModel: INTERIM_MODEL,
+      timeoutMs: FIRST_INTAKE_REPLY_TIMEOUT_MS,
       systemExtra: prompt,
     });
     if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
