@@ -87,7 +87,7 @@ export function layoutNycDomProvesSortButtonsNoOverflow(stagingDom = {}) {
   return true;
 }
 
-export function layoutNycJudgeFailureText(failure = {}) {
+function layoutNycJudgeFailureText(failure = {}) {
   return [failure.reason, failure.detail, failure.rubricItem].filter(Boolean).join(' ');
 }
 
@@ -106,7 +106,7 @@ export function layoutNycVisionBundledTabHeaderRowClaim(text = '') {
     || /bad tab order/.test(lower);
 }
 
-export function layoutNycDomProvesListChromeOk(stagingDom = {}) {
+function layoutNycDomProvesListChromeOk(stagingDom = {}) {
   const order = stagingDom?.tabOrder;
   const tabOrderOk = Array.isArray(order) && order.length >= 4
     && order.join('\0') === LAYOUT_NYC_TAB_ORDER.join('\0');
