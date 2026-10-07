@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_PUBLIC_BASE = 'https://vacation.timesyncher.com';
 
@@ -20,195 +22,26 @@ function text(value, max = 5000) {
   return String(value || '').trim().slice(0, max);
 }
 
-function slugFromText(value) {
-  const match = text(value, 3000).match(/\/shared\/([^/?#\s]+)/i);
-  return match?.[1] ? decodeURIComponent(match[1]) : '';
+export function explicitShareToken(input = {}) {
+  return text(input.token || input.shareToken || input.share_token, 180);
 }
 
-function targetToken(input) {
-  const requestText = text(input.requestText || input.request_text || '', 8000);
-  const explicit = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
-  const mentionsDavidson = /\b(caldwell|davidson)\b/i.test(requestText);
-  const mentionsOtherKnownTrip = /\b(las vegas|vegas|strip|jockey club|staycation|hawaii|waikiki|maui|kona|oahu)\b/i.test(requestText);
-  if (explicit) {
-    if (explicit === 'the-davidson-family-trip' && !mentionsDavidson && mentionsOtherKnownTrip) return '';
-    return explicit;
-  }
-  if (mentionsDavidson) return 'the-davidson-family-trip';
-  return '';
-}
-
-function inferCategory(title, requestText) {
-  const hay = `${title} ${requestText}`.toLowerCase();
-  if (/\bfamily_event\b|\bfamily event\b|grampa|grandpa|grandma|grandkid|homecooked|home-cooked|family|kids?|whiffle|tyler|torryn|keagan|cookout|reunion/.test(hay)) return 'family_event';
-  if (/\bflight|southwest|delta|united|american|jetblue|airport|las|boi|jfk|lga|ewr\b/.test(hay)) return 'flight';
-  if (/\bhotel|lodging|inn|suite|resort|marriott|hilton|hyatt\b/.test(hay)) return 'hotel';
-  if (/\brestaurant|breakfast|lunch|dinner|brewery|griddle|taco|thai|pasta|bolognese|tortilla|food|meal\b/.test(hay)) return 'restaurant';
-  if (/\bstore|farm|market|shopping|grocery|winery|wine\b/.test(hay)) return 'store';
-  if (/\bgym|workout|fitness|planet fitness\b/.test(hay)) return 'workout';
-  if (/\bhike|falls|park|topgolf|tour|museum|activity|event\b/.test(hay)) return 'event';
-  return 'event';
-}
-
-function parseTime(value) {
-  const source = text(value, 500);
-  const match = source.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i) || source.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
-  if (!match) return '';
-  let hour = Number(match[1]);
-  const minute = Number(match[2] || 0);
-  const meridiem = match[3]?.toLowerCase();
-  if (meridiem === 'pm' && hour < 12) hour += 12;
-  if (meridiem === 'am' && hour === 12) hour = 0;
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-}
-
-function parseDay(value) {
-  const source = text(value, 500);
-  const explicit = source.match(/\bday\s*(\d{1,2})\b/i);
-  if (explicit) return Number(explicit[1]);
-  const july = source.match(/\bjuly\s+(\d{1,2})\b/i);
-  if (july) {
-    const day = Number(july[1]);
-    if (day >= 8 && day <= 13) return day - 7;
-  }
-  return null;
-}
-
-function parseAddress(value) {
-  const source = text(value, 1000);
-  const match = source.match(/\b(\d{2,6}\s+[A-Za-z0-9 .'-]+(?:street|st|avenue|ave|road|rd|court|ct|drive|dr|lane|ln|boulevard|blvd|way|place|pl)\b[^.\n]{0,120})/i);
-  return match?.[1]?.replace(/[,;\s]+$/g, '').trim() || '';
-}
-
-function numberOrNull(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function cleanTitle(value) {
-  return text(value, 180)
-    .replace(/^\s*(?:add|create|put|include|schedule)\s+/i, '')
-    .replace(/^\s*(?:a\s+)?(?:family\s+event|event|timeline\s+item)\s+/i, '')
-    .replace(/\s+(?:to|on|for)\s+(?:the\s+)?(?:caldwell|davidson|vacation|trip|itinerary)\b.*$/i, '')
-    .replace(/\s+\b(?:to|on|for)\s+day\s+\d+\b.*$/i, '')
-    .replace(/\s+\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b.*$/i, '')
-    .replace(/^["'“”]+|["'“”]+$/g, '')
-    .replace(/[.;]+$/g, '')
-    .trim();
-}
-
-function extractQuotedAdds(requestText) {
-  const items = [];
-  for (const match of requestText.matchAll(/\b(?:add|create|put|include|schedule)\b[^"'“”\n]*["'“”]([^"'“”]{3,160})["'“”][^\n]*/gi)) {
-    items.push({ raw: match[0], title: cleanTitle(match[1]) });
-  }
-  return items;
-}
-
-function extractHotelCorrection(requestText) {
-  const source = text(requestText, 1200);
-  const match = source.match(/\b(?:hotel|lodging)\s+(?:was|is|at|will be|should be)\s+(?:the\s+)?([^.;\n]{3,120})/i)
-    || source.match(/\b(?:staying|stayed)\s+at\s+(?:the\s+)?([^.;\n]{3,120})/i);
-  if (!match) return [];
-  const title = cleanTitle(match[1]).replace(/^the\s+/i, '');
-  if (!title) return [];
-  return [{ raw: match[0], title, category: 'hotel', day: 1, summary: `Customer specified the hotel/lodging as ${title}.` }];
-}
-
-function extractLineAdds(requestText, skipQuotedAdds = false) {
-  if (skipQuotedAdds) return [];
-  const lines = text(requestText, 8000)
-    .split(/\n+/)
-    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
-    .filter(Boolean);
-  const items = [];
-  for (const line of lines) {
-    if (!/\b(add|create|put|include|schedule)\b/i.test(line)) continue;
-    const title = cleanTitle(line);
-    if (title.length >= 3 && !/\b(vacation|trip|itinerary|timeline|changes?|updates?)$/i.test(title)) {
-      items.push({ raw: line, title });
-    }
-  }
-  return items;
-}
-
-function requiresBroadEditRunner(requestText, structuredItems) {
-  if (structuredItems.length > 0) return false;
-  const source = text(requestText, 8000).toLowerCase();
-  const broadIntent = /\b(rename|title|description|access|share|member|family member|wife|husband|spouse|collaborator|permission|edit rights?|view rights?|remove|delete|keep|change|move|reorder|replace|make the shared website|shared website include)\b/.test(source);
-  if (!broadIntent) return false;
-  const simpleDateRepairOnly = parseDateRange({ requestText }) && !/\b(add|create|put|include|schedule|rename|title|description|access|share|member|collaborator|permission|remove|delete|move|reorder|replace)\b/.test(source);
-  return !simpleDateRepairOnly;
-}
-
-
-const CALDWELL_FAMILY_HOME = {
-  address: '12364 Nantes Court, Caldwell, ID 83607, United States',
-  lat: 43.6182767,
-  lng: -116.6397578,
-};
-
-function defaultFamilyAddress(category, requestText, token) {
-  if (category !== 'family_event') return null;
-  if (/\b(caldwell|davidson)\b/i.test(requestText) || token === 'the-davidson-family-trip') return CALDWELL_FAMILY_HOME;
-  return null;
-}
-
-function editItems(input) {
-  const requestText = text(input.requestText || input.request_text || '', 8000);
-  const structured = Array.isArray(input.editItems) ? input.editItems : [];
-  const quotedItems = extractQuotedAdds(requestText);
-  if (requiresBroadEditRunner(requestText, [...structured, ...quotedItems])) {
-    throw new Error('Request includes broad trip edit intent; use the Grok TREK agent edit runner.');
-  }
-  const requestAddress = parseAddress(requestText);
-  const items = structured.map((item) => ({
-    title: cleanTitle(item.title || item.name),
-    raw: text(item.raw || item.title || item.name, 500),
-    day: Number(item.day || item.dayNumber) || null,
-    time: parseTime(item.time || item.startTime || ''),
-    category: text(item.category || '', 40),
-    summary: text(item.summary || item.details || '', 800),
-    address: text(item.address || item.placeAddress || item.location || '', 500),
-    lat: numberOrNull(item.lat ?? item.latitude),
-    lng: numberOrNull(item.lng ?? item.longitude),
-  })).filter((item) => item.title);
-  items.push(...quotedItems, ...extractLineAdds(requestText, quotedItems.length > 0), ...extractHotelCorrection(requestText));
-  const seen = new Set();
-  const token = targetToken(input);
-  return items
-    .map((item) => {
-      const category = item.category || inferCategory(item.title, requestText);
-      const fallbackHome = defaultFamilyAddress(category, requestText, token);
-      const address = item.address || parseAddress(item.raw || '') || requestAddress || fallbackHome?.address || '';
+export function itemsFromValidatedWrites(writes = []) {
+  return (Array.isArray(writes) ? writes : [])
+    .map((write) => {
+      const day = Number(String(write.to || write.day || '').match(/day\s*(\d+)/i)?.[1] || write.day || 0) || null;
       return {
-        ...item,
-        day: item.day || parseDay(item.raw || requestText),
-        time: item.time || parseTime(item.raw || ''),
-        category,
-        summary: item.summary || 'Added from a TimeSyncher Vacation owner edit request.',
-        address,
-        lat: item.lat ?? (address === fallbackHome?.address ? fallbackHome.lat : null),
-        lng: item.lng ?? (address === fallbackHome?.address ? fallbackHome.lng : null),
+        op: write.op,
+        title: write.title,
+        matchTitle: write.title,
+        item_id: write.item_id,
+        day,
+        to: write.to,
+        from: write.from,
+        replacement: write.to,
       };
     })
-    .filter((item) => {
-      const key = item.title.toLowerCase();
-      if (!item.title || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-}
-
-function parseDateRange(input) {
-  const source = text(input.requestText || input.request_text || '', 5000);
-  const match = source.match(/\bjuly\s+(\d{1,2})\s*(?:-|to|through|thru)\s*(?:july\s*)?(\d{1,2}),?\s*(20\d{2})\b/i);
-  if (!match) return null;
-  const start = Number(match[1]);
-  const end = Number(match[2]);
-  const year = Number(match[3]);
-  if (start < 1 || end < start || end > 31) return null;
-  return { startDate: `${year}-07-${String(start).padStart(2, '0')}`, endDate: `${year}-07-${String(end).padStart(2, '0')}` };
+    .filter((item) => item.op && (item.title || item.item_id));
 }
 
 const pythonCode = String.raw`
@@ -324,6 +157,45 @@ def save_field(token, thing_key, fields, overrides):
 def matching_place(trip_id, title):
     return one('SELECT * FROM places WHERE trip_id=? AND lower(name)=lower(?) ORDER BY id LIMIT 1', (trip_id, title))
 
+def find_place_for_write(trip_id, item):
+    item_id = txt(item.get('item_id'), 180)
+    title = txt(item.get('title') or item.get('matchTitle'), 180)
+    if item_id:
+        row = one('SELECT * FROM places WHERE trip_id=? AND (notes=? OR cast(id as text)=?) ORDER BY id LIMIT 1', (trip_id, item_id, item_id))
+        if row:
+            return row
+    if title:
+        return matching_place(trip_id, title)
+    return None
+
+def apply_validated_write(trip_id, token, days, item, overrides):
+    op = txt(item.get('op'), 40)
+    if op == 'add_thing':
+        return insert_or_update_item(trip_id, token, days, item, overrides)
+    place = find_place_for_write(trip_id, item)
+    if not place:
+        raise RuntimeError('validated write target not found: ' + txt(item.get('title') or item.get('item_id'), 180))
+    place_id = int(place['id'])
+    if op == 'move_thing':
+        day_num = int(item.get('day') or 1)
+        if day_num < 1: day_num = 1
+        if day_num > len(days): day_num = len(days)
+        day_id = int(days[day_num - 1]['id'])
+        run('DELETE FROM day_assignments WHERE place_id=?', (place_id,))
+        order_row = one('SELECT COALESCE(MAX(order_index), -1) + 1 AS next_index FROM day_assignments WHERE day_id=?', (day_id,))
+        run('INSERT INTO day_assignments (day_id, place_id, order_index, notes, reservation_status, assignment_time) VALUES (?, ?, ?, ?, ?, ?)', (day_id, place_id, int(order_row['next_index']), place['notes'] or '', 'considering', None))
+        return {'action': 'moved', 'placeId': place_id, 'title': place['name'], 'day': day_num, 'op': op, 'category': item.get('category') or ''}
+    if op == 'remove_thing':
+        run('DELETE FROM day_assignments WHERE place_id=?', (place_id,))
+        run("UPDATE places SET reservation_status=? WHERE id=?", ('eliminated', place_id))
+        return {'action': 'removed', 'placeId': place_id, 'title': place['name'], 'op': op}
+    if op == 'update_thing':
+        new_title = txt(item.get('replacement') or item.get('to') or item.get('title'), 180)
+        if new_title:
+            run('UPDATE places SET name=? WHERE id=?', (new_title, place_id))
+        return {'action': 'updated', 'placeId': place_id, 'title': new_title or place['name'], 'op': op}
+    raise RuntimeError('unsupported validated write op: ' + op)
+
 def insert_or_update_item(trip_id, token, days, item, overrides):
     kind = item.get('category') or 'event'
     cat_name, color, icon = category_meta(kind)
@@ -376,31 +248,44 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     save_field(token, 'place:' + str(place_id), fields, overrides)
     return {'action': action, 'placeId': place_id, 'title': title, 'day': day_num, 'category': kind}
 
-trip = find_trip(payload.get('token') or '', payload.get('requestText') or '')
+apply_validated_only = bool(payload.get('applyValidatedOnly'))
+trip = find_trip(payload.get('token') or '', '' if apply_validated_only else (payload.get('requestText') or ''))
 if not trip:
     raise RuntimeError('No target TREK trip/share token could be identified for this edit request.')
 token = trip['share_token']
-date_range = payload.get('dateRange')
+date_range = None if apply_validated_only else payload.get('dateRange')
 days = ensure_days(int(trip['id']), date_range)
 items = payload.get('items') or []
-if not items and not date_range:
-    raise RuntimeError('No supported deterministic edit operations were parsed from the request.')
+if apply_validated_only:
+    if not items:
+        raise RuntimeError('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.')
+else:
+    raise RuntimeError('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.')
 overrides = load_overrides(token)
 results = []
 for item in items:
-    results.append(insert_or_update_item(int(trip['id']), token, days, item, overrides))
+    results.append(apply_validated_write(int(trip['id']), token, days, item, overrides))
 db.commit()
 base = (payload.get('publicBase') or 'https://vacation.timesyncher.com').rstrip('/')
-print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results) + (1 if date_range else 0)}))
+print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': base + '/shared/' + token + '/', 'updatedItems': results, 'dateRangeApplied': date_range, 'operationCount': len(results)}))
 `;
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
+  const validatedWrites = Array.isArray(input.validatedWrites) ? input.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
+  const items = itemsFromValidatedWrites(validatedWrites);
+  if (!items.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
   const payload = {
-    token: targetToken(input),
-    requestText: text(input.requestText || input.request_text || '', 8000),
-    items: editItems(input),
-    dateRange: parseDateRange(input),
+    token: explicitShareToken(input),
+    applyValidatedOnly: true,
+    requestText: '',
+    items,
+    dateRange: null,
     receivedAt: text(input.receivedAt || input.received_at || '', 80),
     publicBase: text(input.publicBase || process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE, 500).replace(/\/+$/, ''),
     dbPath: text(input.dbPath || process.env.TIMESYNCHER_TREK_DB_PATH || '', 500),
@@ -419,7 +304,10 @@ async function main() {
   console.log(out);
 }
 
-main().catch((error) => {
-  console.error(error.message || String(error));
-  process.exit(1);
-});
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(error.message || String(error));
+    process.exit(1);
+  });
+}

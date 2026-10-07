@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildCapabilityObject, assertCapabilityObject, assertCustomerRequestAllowed, assertToolingAllowed } from './product-capabilities.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
+import { actorFromLiveSession, gateTelegramIntakeEdit, pipelineWriteDecision, selectLiveLockedTripThings } from '../src/vacation/intake-edit-bridge.mjs';
 
 const DEFAULT_MANIFEST = new URL('./product-gbrain-manifest.json', import.meta.url).pathname;
 const MAX_TEXT = 12000;
@@ -1661,9 +1662,14 @@ function syncTrekItinerary(job, artifacts) {
 function applyTrekItineraryEdit(job, artifacts) {
   const script = path.join(SCRIPT_DIR, 'trek-itinerary-edit.mjs');
   if (!fs.existsSync(script)) throw new Error(`TREK edit script is missing: ${script}`);
+  const validatedWrites = Array.isArray(artifacts.validatedWrites) ? artifacts.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK edit requires pipeline validatedWrites; independent utterance re-parse is disabled.');
+  }
   const payload = {
     token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
-    requestText: artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '',
+    validatedWrites,
+    applyValidatedOnly: true,
     publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
   };
   const result = spawnSync(process.execPath, [script], {
@@ -1686,44 +1692,79 @@ function applyTrekItineraryEdit(job, artifacts) {
   return edit;
 }
 
-function applyTrekAgentEdit(job, artifacts, deterministicError) {
-  const script = path.join(SCRIPT_DIR, 'trek-agent-edit.mjs');
-  if (!fs.existsSync(script)) throw new Error(`TREK agent edit script is missing: ${script}`);
-  const payload = {
-    token: text(job.share_token || job.shared_token || job.payload?.shareToken || job.payload?.token || '', 180),
-    requestText: artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '',
-    publicBase: process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL || 'https://vacation.timesyncher.com',
-    deterministicError: text(deterministicError?.message || deterministicError || '', 1200),
-  };
-  const result = spawnSync(process.execPath, [script], {
-    input: JSON.stringify(payload),
-    encoding: 'utf8',
-    timeout: Number(process.env.TIMESYNCHER_TREK_AGENT_EDIT_WRAPPER_TIMEOUT_MS || 930000),
-    maxBuffer: 4 * 1024 * 1024,
+function applyTrekAgentEdit(job, artifacts) {
+  const validatedWrites = Array.isArray(artifacts.validatedWrites) ? artifacts.validatedWrites : [];
+  if (!validatedWrites.length) {
+    throw new Error('TREK agent edit requires pipeline validatedWrites; utterance re-parse is disabled.');
+  }
+  const edit = applyTrekItineraryEdit(job, {
+    validatedWrites,
+    applyValidatedOnly: true,
   });
-  if (result.status !== 0) {
-    throw new Error(`TREK broad edit failed after deterministic parser could not handle the request: ${text(result.stderr || result.stdout || 'unknown error', 1800)}`);
-  }
-  let edit;
-  try {
-    edit = JSON.parse(result.stdout.trim());
-  } catch {
-    throw new Error(`TREK broad edit returned invalid JSON: ${text(result.stdout, 500)}`);
-  }
-  smokeCheckTrekSync(edit);
-  edit.mode = edit.mode || 'grok_trek_agent_edit';
+  edit.mode = edit.mode || 'validated_trek_agent_edit';
   return edit;
 }
 
 function applyExistingTripEdit(job, artifacts) {
-  if (process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1') {
-    return applyTrekAgentEdit(job, artifacts, new Error('Forced broad TREK edit runner by environment.'));
+  const requestText = text(artifacts.requestText || job.request_text || job.input?.requestText || job.payload?.requestText || job.payload?.text || '');
+  const payload = { ...asObject(job.payload), ...asObject(job.input?.payload) };
+  const trip = { ...asObject(payload.trip), ...asObject(job.input?.trip) };
+  const tripId = trip.trip_id || trip.id || job.trip_id || '';
+  const items = selectLiveLockedTripThings({
+    tripId,
+    liveLockedThings: artifacts.liveLockedThings || job.liveLockedThings,
+    clientThings: artifacts.things,
+    payloadThings: payload.things,
+    tripItems: trip.items,
+  });
+  const gate = gateTelegramIntakeEdit({
+    text: requestText,
+    actor: actorFromLiveSession({
+      id: text(job.telegram_user_id || payload.telegramUserId || payload.actorId, 80) || 'unresolved',
+      telegramUserId: job.telegram_user_id || payload.telegramUserId,
+      customer_id: job.customer_id || payload.customerId || trip.customer_id,
+      trip_id: tripId,
+      metadata: payload.sessionMetadata || job.session_metadata || {},
+      collaborator: job.collaborator || (payload.collaboratorAuthorization?.reason === 'paid_collaborator'
+        ? { id: payload.collaboratorAuthorization.collaboratorId || 'paid', status: 'active' }
+        : null),
+      grant: job.grant || null,
+      publicLink: payload.publicLink === true,
+      loggedOut: payload.loggedOut === true || payload.session === null,
+      session: payload.session,
+      entitlement: job.entitlement || null,
+      unresolved: !job.customer_id && !payload.customerId && !trip.customer_id && payload.loggedOut !== true,
+    }),
+    trip: {
+      trip_id: tripId || 'trip-unspecified',
+      title: trip.title || 'Vacation',
+      publicUrl: trip.publicUrl || trip.public_url || '',
+      status: 'live',
+      items,
+      trek_rows: trip.trek_rows || [],
+    },
+  }, { persist: false });
+  const decision = pipelineWriteDecision(gate, { items });
+  if (!decision.allowTrekWrite) {
+    return {
+      mode: decision.mode || 'vacation_edit_pipeline_fail_closed',
+      operationCount: 0,
+      editApplied: false,
+      url: text(artifacts.webItineraryUrl || trip.publicUrl || trip.public_url || '', 500),
+      reason: decision.reason,
+      vacationEditPipeline: gate.compact,
+    };
   }
-  try {
-    return applyTrekItineraryEdit(job, artifacts);
-  } catch (error) {
-    return applyTrekAgentEdit(job, artifacts, error);
-  }
+  const writeArtifacts = {
+    validatedWrites: gate.receipt.planned_writes,
+    applyValidatedOnly: true,
+  };
+  const edit = process.env.TIMESYNCHER_FORCE_TREK_AGENT_EDIT === '1'
+    ? applyTrekAgentEdit(job, writeArtifacts)
+    : applyTrekItineraryEdit(job, writeArtifacts);
+  edit.vacationEditPipeline = gate.compact;
+  edit.editApplied = Boolean(edit.operationCount);
+  return edit;
 }
 
 function smokeCheckTrekSync(sync, options = {}) {
@@ -1848,14 +1889,23 @@ async function buildArtifacts(job, manifest) {
   }
   const createNewTrip = Boolean(payload.createNewTrip || payload.create_new_trip || job.createNewTrip || job.create_new_trip || isExplicitNewVacationRequest(ownRequestText));
   if (!createNewTrip && isConcreteItineraryEditRequest(ownRequestText)) {
-    const trekEdit = applyExistingTripEdit(job, { requestText });
+    const trekEdit = applyExistingTripEdit(job, {
+      requestText,
+      liveLockedThings: job.liveLockedThings,
+    });
+    const failClosed = trekEdit.mode === 'vacation_edit_pipeline_fail_closed'
+      || trekEdit.mode === 'vacation_edit_pipeline_skip'
+      || trekEdit.editApplied === false
+      || !trekEdit.operationCount;
     return {
       requestText,
       destination: extractDestination(requestText, payload, trip),
       dates: extractDates(requestText, payload, trip),
-      methods: trekEdit.mode === 'grok_trek_agent_edit'
-        ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
-        : ['travel.assistant.sync-trek-nomad'],
+      methods: failClosed
+        ? ['vacation-edit-pipeline']
+        : (trekEdit.mode === 'grok_trek_agent_edit'
+          ? ['travel.assistant.sync-trek-nomad', 'travel.assistant.grok-trek-agent-edit']
+          : ['travel.assistant.sync-trek-nomad']),
       lane: { primary: trekEdit.mode || 'deterministic_trek_edit' },
       vacationName: vacationNameFrom(job, payload, trip, ''),
       unforgettableGoal: unforgettableGoalFrom(job, payload),
@@ -1863,16 +1913,18 @@ async function buildArtifacts(job, manifest) {
       budgetItems: [],
       supportNotes: [{
         actor: process.env.TIMESYNCHER_WORKER_ID || 'TimeStopper',
-        note: `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`,
-        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [] },
+        note: failClosed
+          ? `Vacation edit pipeline fail-closed (${trekEdit.reason || 'no_validated_writes'}). Operations: 0`
+          : `${trekEdit.mode === 'grok_trek_agent_edit' ? 'Grok TREK agent edit' : 'Deterministic TREK edit'} applied to existing shared trip. Operations: ${trekEdit.operationCount || 0}`,
+        metadata: { requestedAt: new Date().toISOString(), webItineraryUrl: trekEdit.url || null, updatedItems: trekEdit.updatedItems || [], accessChanges: trekEdit.accessChanges || [], failClosed },
       }],
       initialItinerary: '',
       webItineraryUrl: trekEdit.url,
       researchedThings: [],
-      trekSync: trekEdit,
-      hostedSync: { skipped: true, reason: 'existing_trek_edit' },
-      publicResearch: { status: 'skipped_existing_trek_edit' },
-      editApplied: true,
+      trekSync: failClosed ? { ...trekEdit, operationCount: 0, editApplied: false } : trekEdit,
+      hostedSync: { skipped: true, reason: failClosed ? 'vacation_edit_pipeline_fail_closed' : 'existing_trek_edit' },
+      publicResearch: { status: failClosed ? 'vacation_edit_pipeline_fail_closed' : 'skipped_existing_trek_edit' },
+      editApplied: !failClosed,
       turnDecision: routerDecision,
       createNewTrip: false,
     };

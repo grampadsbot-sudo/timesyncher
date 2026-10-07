@@ -1,0 +1,837 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+export const REVIEWER_CI_COMMANDS = Object.freeze([
+  'node scripts/control-vacation.mjs doctor',
+  'node scripts/control-vacation.mjs dry-run --all-fixtures',
+  'node scripts/test_vacation_edit_pipeline.mjs',
+  'node scripts/test_vacation_trek_apply.mjs',
+  'node scripts/test_vacation_intake_pipeline_seam.mjs',
+]);
+
+export const CI_WORKFLOW_REL = '.github/workflows/vacation-verify.yml';
+export const CI_RECEIPT_REL = 'features/proof/vac-verify-ci/receipt.json';
+
+export function stripYamlComment(line = '') {
+  let inSingle = false;
+  let inDouble = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === "'" && !inDouble) inSingle = !inSingle;
+    else if (ch === '"' && !inSingle) inDouble = !inDouble;
+    else if (ch === '#' && !inSingle && !inDouble) return line.slice(0, i);
+  }
+  return line;
+}
+
+function unquote(value = '') {
+  const text = String(value || '').trim();
+  if ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'"))) {
+    return text.slice(1, -1);
+  }
+  return text;
+}
+
+export function parseWorkflowRunCommands(text = '') {
+  const commands = [];
+  let collecting = false;
+  let runIndent = 0;
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const stripped = stripYamlComment(raw);
+    if (collecting) {
+      const indent = raw.match(/^(\s*)/)[0].length;
+      const body = stripped.trim();
+      if (body && indent > runIndent) {
+        commands.push(body);
+        continue;
+      }
+      if (!body && indent > runIndent) continue;
+      collecting = false;
+    }
+    const match = stripped.match(/^(\s*)run:\s*(.*)$/);
+    if (!match) continue;
+    runIndent = match[1].length;
+    const rest = match[2].trim();
+    if (!rest || /^(?:[|>][-+]?)$/.test(rest)) {
+      collecting = true;
+      continue;
+    }
+    commands.push(unquote(rest));
+  }
+  return commands;
+}
+
+export function runCommandCovers(runLine, command) {
+  const core = String(runLine || '').split(/[|>]/)[0].trim();
+  return core === command || core.startsWith(`${command} `);
+}
+
+export function missingReviewerCiCommands(workflowText = '') {
+  const runs = parseWorkflowRunCommands(workflowText);
+  return REVIEWER_CI_COMMANDS.filter((command) => !runs.some((line) => runCommandCovers(line, command)));
+}
+
+export function gitRevParse(cwd = process.cwd(), rev = 'HEAD') {
+  const result = spawnSync('git', ['-C', cwd, 'rev-parse', rev], { encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.trim() : '';
+}
+
+export function githubRepoFromOrigin(cwd = process.cwd()) {
+  const result = spawnSync('git', ['-C', cwd, 'remote', 'get-url', 'origin'], { encoding: 'utf8' });
+  if (result.status !== 0) return '';
+  const url = result.stdout.trim();
+  const match = url.match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/i);
+  return match ? match[1] : '';
+}
+
+export function readCommittedCiReceipt(cwd = process.cwd()) {
+  const filePath = path.join(cwd, CI_RECEIPT_REL);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return { ok: false, reason: 'invalid_ci_receipt' };
+  }
+}
+
+function githubJson(url, token = '') {
+  const args = [
+    '-sS',
+    '-H', 'Accept: application/vnd.github+json',
+    '-H', 'User-Agent: timesyncher-vacation-verify',
+  ];
+  if (token) args.push('-H', `Authorization: Bearer ${token}`);
+  args.push('-w', '\n%{http_code}', url);
+  const result = spawnSync('curl', args, { encoding: 'utf8', timeout: 20000 });
+  if (!result.stdout) return { ok: false, error: result.stderr || 'curl_failed' };
+  const lines = result.stdout.replace(/\n$/, '').split('\n');
+  const code = lines.pop();
+  const body = lines.join('\n');
+  if (code !== '200') return { ok: false, error: `http_${code}` };
+  try {
+    return { ok: true, json: JSON.parse(body) };
+  } catch {
+    return { ok: false, error: 'invalid_json' };
+  }
+}
+
+function isVacationVerifyRun(run) {
+  if (!run || typeof run !== 'object') return false;
+  return run.path === CI_WORKFLOW_REL || run.name === 'vacation-verify';
+}
+
+export function githubListVacationVerifyRuns(repo, sha, token = '') {
+  if (!repo || !sha) return { ok: false, runs: [], error: 'missing_repo_or_sha' };
+  const url = `https://api.github.com/repos/${repo}/actions/runs?head_sha=${encodeURIComponent(sha)}&per_page=30`;
+  const fetched = githubJson(url, token);
+  if (!fetched.ok) return { ok: false, runs: [], error: fetched.error };
+  const runs = (fetched.json.workflow_runs || []).filter(isVacationVerifyRun);
+  return { ok: true, runs };
+}
+
+export function githubGetRun(repo, runId, token = '') {
+  if (!repo || !runId) return { ok: false, run: null, error: 'missing_repo_or_run' };
+  const fetched = githubJson(`https://api.github.com/repos/${repo}/actions/runs/${runId}`, token);
+  if (!fetched.ok) return { ok: false, run: null, error: fetched.error };
+  return { ok: true, run: fetched.json };
+}
+
+export function githubListJobs(repo, runId, token = '') {
+  if (!repo || !runId) return { ok: false, jobs: [], error: 'missing_repo_or_run' };
+  const fetched = githubJson(`https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs?per_page=30`, token);
+  if (!fetched.ok) return { ok: false, jobs: [], error: fetched.error };
+  return { ok: true, jobs: fetched.json.jobs || [] };
+}
+
+export function githubListArtifacts(repo, runId, token = '') {
+  if (!repo || !runId) return { ok: false, artifacts: [], error: 'missing_repo_or_run' };
+  const fetched = githubJson(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts?per_page=30`, token);
+  if (!fetched.ok) return { ok: false, artifacts: [], error: fetched.error };
+  return { ok: true, artifacts: fetched.json.artifacts || [] };
+}
+
+export function artifactNameForSha(sha) {
+  return `vacation-verify-${sha}`;
+}
+
+export function doctorArtifactNameForSha(sha) {
+  return `vacation-verify-gate-${sha}`;
+}
+
+export function markerArtifactNameForSha(sha) {
+  return `vacation-verify-doctor-${sha}`;
+}
+
+export function attestArtifactNameForSha(sha) {
+  return `vacation-verify-attest-${sha}`;
+}
+
+export function bindArtifactNameForSha(sha) {
+  return `vacation-verify-bind-${sha}`;
+}
+
+export function jobByName(jobs, name) {
+  return (jobs || []).find((row) => row && row.name === name);
+}
+
+export function receiptJobsMatchApi(receiptJobs, jobs) {
+  if (!receiptJobs || typeof receiptJobs !== 'object') return { ok: true };
+  for (const [name, conclusion] of Object.entries(receiptJobs)) {
+    const row = jobByName(jobs, name);
+    if (!row) return { ok: false, reason: `committed_receipt job ${name} missing` };
+    if (row.conclusion !== conclusion) {
+      return { ok: false, reason: `committed_receipt job ${name} conclusion=${row.conclusion || row.status || 'missing'}` };
+    }
+  }
+  return { ok: true };
+}
+
+export function producingBindJob(env = {}, jobs = []) {
+  const bindJob = jobByName(jobs, 'vacation-verify-bind');
+  return Boolean(
+    env.GITHUB_ACTIONS === 'true'
+    && env.GITHUB_JOB === 'vacation-verify-bind'
+    && env.GITHUB_RUN_ID
+    && bindJob
+    && bindJob.conclusion !== 'success'
+    && (bindJob.status === 'in_progress' || !bindJob.conclusion)
+  );
+}
+
+function artifactWithDigest(artifacts, name) {
+  return (artifacts || []).find((row) => (
+    row
+    && row.name === name
+    && typeof row.digest === 'string'
+    && row.digest.startsWith('sha256:')
+  ));
+}
+
+function sha256DigestField(value) {
+  return typeof value === 'string' && value.startsWith('sha256:') ? value : null;
+}
+
+export function doctorReportOk(checks = {}) {
+  return Boolean(
+    checks.feature_map
+    && checks.skill
+    && checks.pipeline_syntax
+    && checks.ci_workflow
+    && checks.ci_attestation
+    && checks.committed_proof
+  );
+}
+
+export function doctorJsonFieldsOk(value) {
+  let parsed = value;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return false;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+  if (!doctorReportOk(parsed.checks || {})) return false;
+  const attest = parsed.ci_attestation;
+  if (!attest || attest.ok !== true) return false;
+  if (attest.conclusion !== 'success' || attest.doctor_conclusion !== 'success' || attest.attest_conclusion !== 'success') {
+    return false;
+  }
+  if (!attest.run_id || !attest.job_id || !attest.doctor_job_id || !attest.gate_job_id || !attest.attest_job_id) {
+    return false;
+  }
+  if (!attest.bind_job_id) return false;
+  const bindInProgress = attest.bind_conclusion === 'in_progress';
+  if (!bindInProgress && (attest.bind_conclusion !== 'success' || !sha256DigestField(attest.bind_artifact_digest))) {
+    return false;
+  }
+  const committed = attest.committed_receipt;
+  const lag = attest.receipt_lag;
+  if (!committed || typeof committed !== 'object' || (lag !== 'head' && lag !== 'parent')) return false;
+  if (!committed.sha || !sha256DigestField(committed.bind_artifact_digest)) return false;
+  if (lag === 'head' && committed.sha !== attest.sha) return false;
+  if (lag === 'parent' && committed.sha === attest.sha) return false;
+  if (lag === 'parent' && !attest.run_id) return false;
+  if (!bindInProgress && lag === 'head' && committed.bind_artifact_digest !== attest.bind_artifact_digest) {
+    return false;
+  }
+  if (lag === 'parent' && !bindInProgress && !sha256DigestField(attest.bind_artifact_digest)) {
+    return false;
+  }
+  if (!bindInProgress && lag === 'parent' && committed.bind_artifact_digest === attest.bind_artifact_digest) {
+    return false;
+  }
+  if (attest.doctor_artifact_kind !== 'gate' || attest.doctor_job_artifact_kind !== 'marker') {
+    return false;
+  }
+  return Boolean(
+    sha256DigestField(attest.artifact_digest)
+    && sha256DigestField(attest.doctor_artifact_digest)
+    && sha256DigestField(attest.attest_artifact_digest)
+  );
+}
+
+export function doctorJsonOk(value) {
+  let parsed = value;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return false;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+  return parsed.ok === true && doctorJsonFieldsOk(parsed);
+}
+
+export function readDoctorJsonFile(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return { ok: false, reason: 'invalid_doctor_json' };
+  }
+}
+
+export function resolveDoctorJson(cwd = process.cwd(), env = {}, explicit) {
+  if (explicit !== undefined) return explicit;
+  const fromEnv = env.VACATION_VERIFY_DOCTOR_JSON;
+  if (!fromEnv) return undefined;
+  const resolved = path.isAbsolute(fromEnv) ? fromEnv : path.join(cwd, fromEnv);
+  const parsed = readDoctorJsonFile(resolved);
+  return parsed === null ? { ok: false, reason: 'doctor_json_unreadable' } : parsed;
+}
+
+export function githubAuthToken(env = process.env) {
+  const fromEnv = env.GITHUB_TOKEN || env.GH_TOKEN || '';
+  if (fromEnv) return fromEnv;
+  if (env !== process.env) return '';
+  const result = spawnSync('gh', ['auth', 'token'], { encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.trim() : '';
+}
+
+function walkDoctorJson(dir) {
+  const stack = [dir];
+  while (stack.length) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) stack.push(full);
+      else if (entry.name === 'doctor.json') return readDoctorJsonFile(full);
+    }
+  }
+  return null;
+}
+
+export function githubFetchArtifactDoctorJson(repo, artifactId, token = '') {
+  if (!repo || !artifactId) return { ok: false, reason: 'missing_artifact' };
+  if (!token) return { ok: false, reason: 'missing_token' };
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vac-verify-artifact-'));
+  const zipPath = path.join(tmp, 'artifact.zip');
+  try {
+    const downloaded = spawnSync('curl', [
+      '-sSL',
+      '-H', 'Accept: application/vnd.github+json',
+      '-H', 'User-Agent: timesyncher-vacation-verify',
+      '-H', `Authorization: Bearer ${token}`,
+      '-o', zipPath,
+      `https://api.github.com/repos/${repo}/actions/artifacts/${artifactId}/zip`,
+    ], { encoding: 'utf8', timeout: 30000 });
+    if (downloaded.status !== 0 || !fs.existsSync(zipPath) || fs.statSync(zipPath).size < 4) {
+      return { ok: false, reason: 'artifact_download_failed' };
+    }
+    const magic = fs.readFileSync(zipPath).subarray(0, 2);
+    if (magic.toString('hex') !== '504b') return { ok: false, reason: 'artifact_not_zip' };
+    const dest = path.join(tmp, 'unpacked');
+    fs.mkdirSync(dest);
+    const unzip = spawnSync('unzip', ['-qo', zipPath, '-d', dest], { encoding: 'utf8' });
+    if (unzip.status !== 0) return { ok: false, reason: 'artifact_unzip_failed' };
+    const parsed = walkDoctorJson(dest);
+    return parsed === null ? { ok: false, reason: 'doctor.json missing from artifact' } : parsed;
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+export function obtainBoundDoctorJson({
+  artifact,
+  repo,
+  token,
+  fetchDoctorJson,
+  explicit,
+} = {}) {
+  if (explicit !== undefined) return explicit;
+  if (typeof fetchDoctorJson === 'function') {
+    return fetchDoctorJson(repo, artifact, token);
+  }
+  return githubFetchArtifactDoctorJson(repo, artifact?.id, token);
+}
+
+export function attestVacationVerifyJob({
+  run,
+  jobs = [],
+  artifacts = [],
+  sha,
+  env = {},
+  repo,
+  token,
+  fetchDoctorJson,
+  doctorJson,
+  attestDoctorJson,
+  requireDoctorJson = true,
+} = {}) {
+  const fail = (reason) => ({
+    ok: false,
+    source: 'missing',
+    sha: sha || run?.head_sha || null,
+    run_id: run?.id ? String(run.id) : null,
+    job_id: null,
+    doctor_job_id: null,
+    gate_job_id: null,
+    attest_job_id: null,
+    bind_job_id: null,
+    conclusion: null,
+    doctor_conclusion: null,
+    gate_conclusion: null,
+    attest_conclusion: null,
+    bind_conclusion: null,
+    artifact_digest: null,
+    doctor_artifact_digest: null,
+    attest_artifact_digest: null,
+    bind_artifact_digest: null,
+    artifact_id: null,
+    doctor_artifact_id: null,
+    attest_artifact_id: null,
+    bind_artifact_id: null,
+    reason,
+  });
+  if (!isVacationVerifyRun(run) || !run?.id) return fail('not_vacation_verify_run');
+  if (run.head_sha !== sha) return fail('run_sha_mismatch');
+  const job = jobByName(jobs, 'vacation-verify');
+  if (!job) return fail('vacation-verify job missing');
+  if (job.conclusion !== 'success') {
+    return fail(`vacation-verify job conclusion=${job.conclusion || job.status || 'missing'}`);
+  }
+  const artifact = artifactWithDigest(artifacts, artifactNameForSha(sha));
+  if (!artifact) return fail('vacation-verify artifact digest missing');
+  const doctorJob = jobByName(jobs, 'vacation-verify-doctor');
+  if (!doctorJob) return fail('vacation-verify-doctor job missing');
+  if (doctorJob.conclusion !== 'success') {
+    return fail(`vacation-verify-doctor job conclusion=${doctorJob.conclusion || doctorJob.status || 'missing'}`);
+  }
+  const gateJob = jobByName(jobs, 'vacation-verify-gate');
+  if (!gateJob) return fail('vacation-verify-gate job missing');
+  if (gateJob.conclusion !== 'success') {
+    return fail(`vacation-verify-gate job conclusion=${gateJob.conclusion || gateJob.status || 'missing'}`);
+  }
+  const markerOnly = artifactWithDigest(artifacts, markerArtifactNameForSha(sha));
+  const doctorArtifact = artifactWithDigest(artifacts, doctorArtifactNameForSha(sha));
+  if (!doctorArtifact) {
+    return fail(markerOnly
+      ? 'vacation-verify-gate artifact digest missing (marker-only is not doctor proof)'
+      : 'vacation-verify-gate artifact digest missing');
+  }
+  const attestJob = jobByName(jobs, 'vacation-verify-attest');
+  if (!attestJob) return fail('vacation-verify-attest job missing');
+  if (attestJob.conclusion !== 'success') {
+    return fail(`vacation-verify-attest job conclusion=${attestJob.conclusion || attestJob.status || 'missing'}`);
+  }
+  const attestArtifact = artifactWithDigest(artifacts, attestArtifactNameForSha(sha));
+  if (!attestArtifact) return fail('vacation-verify-attest artifact digest missing');
+  const bindJob = jobByName(jobs, 'vacation-verify-bind');
+  const bindArtifact = artifactWithDigest(artifacts, bindArtifactNameForSha(sha));
+  const producingBind = producingBindJob(env, jobs);
+  if ((bindJob || bindArtifact) && !producingBind) {
+    if (!bindJob) return fail('vacation-verify-bind job missing');
+    if (bindJob.conclusion !== 'success') {
+      return fail(`vacation-verify-bind job conclusion=${bindJob.conclusion || bindJob.status || 'missing'}`);
+    }
+    if (!bindArtifact) return fail('vacation-verify-bind artifact digest missing');
+  }
+  if (doctorJson !== undefined && !doctorJsonOk(doctorJson)) {
+    return fail('doctor.json missing required fields');
+  }
+  if (attestDoctorJson !== undefined && !doctorJsonOk(attestDoctorJson)) {
+    return fail('attest doctor.json missing required fields');
+  }
+  const proofJson = doctorJson !== undefined
+    ? doctorJson
+    : obtainBoundDoctorJson({
+      artifact: bindArtifact || doctorArtifact,
+      repo,
+      token,
+      fetchDoctorJson,
+      explicit: undefined,
+    });
+  if (requireDoctorJson && !producingBind && !doctorJsonOk(proofJson)) {
+    return fail(proofJson?.reason || 'doctor.json missing required fields');
+  }
+  return {
+    ok: true,
+    sha,
+    run_id: String(run.id),
+    job_id: String(job.id),
+    doctor_job_id: String(doctorJob.id),
+    gate_job_id: String(gateJob.id),
+    attest_job_id: String(attestJob.id),
+    bind_job_id: bindJob?.id ? String(bindJob.id) : null,
+    conclusion: 'success',
+    doctor_conclusion: 'success',
+    gate_conclusion: 'success',
+    attest_conclusion: 'success',
+    bind_conclusion: bindJob?.conclusion === 'success' ? 'success' : (bindJob?.conclusion || bindJob?.status || null),
+    artifact_digest: artifact.digest,
+    doctor_artifact_digest: doctorArtifact.digest,
+    attest_artifact_digest: attestArtifact.digest,
+    bind_artifact_digest: bindArtifact?.digest || null,
+    artifact_id: String(artifact.id),
+    doctor_artifact_id: String(doctorArtifact.id),
+    attest_artifact_id: String(attestArtifact.id),
+    bind_artifact_id: bindArtifact?.id ? String(bindArtifact.id) : null,
+    doctor_artifact_kind: 'gate',
+    doctor_job_artifact_kind: 'marker',
+    marker_artifact_digest: markerOnly?.digest || null,
+    repo: null,
+  };
+}
+
+function loadRunJobsArtifacts(repo, runId, token, fetchJobs, fetchArtifacts) {
+  const jobs = fetchJobs
+    ? { ok: true, jobs: fetchJobs(repo, runId, token) || [] }
+    : githubListJobs(repo, runId, token);
+  const artifacts = fetchArtifacts
+    ? { ok: true, artifacts: fetchArtifacts(repo, runId, token) || [] }
+    : githubListArtifacts(repo, runId, token);
+  return { jobs, artifacts };
+}
+
+export function requireCommittedCiReceipt(receipt) {
+  if (receipt == null) return { ok: false, reason: 'committed_ci_receipt_missing' };
+  if (receipt.ok === false && receipt.reason === 'invalid_ci_receipt') {
+    return { ok: false, reason: 'invalid_ci_receipt' };
+  }
+  const receiptHarness = sha256DigestField(receipt.artifact_digest);
+  const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
+  const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
+  const conclusions = receipt.conclusion === 'success'
+    && receipt.workflow === 'vacation-verify'
+    && receipt.doctor_conclusion === 'success'
+    && receipt.attest_conclusion === 'success'
+    && receipt.bind_conclusion === 'success';
+  const bindJob = receipt.jobs && receipt.jobs['vacation-verify-bind'] === 'success';
+  if (!receipt.sha || !receipt.run_id || !receipt.bind_job_id || !receiptHarness || !receiptDoctor || !receiptAttest || !receiptBind || !conclusions || !bindJob) {
+    return { ok: false, reason: 'committed_ci_receipt_incomplete' };
+  }
+  return { ok: true };
+}
+
+export function committedReceiptShaAllowed(receiptSha, head, cwd = process.cwd()) {
+  if (!receiptSha || !head) return false;
+  if (receiptSha === head) return true;
+  const parent = gitRevParse(cwd, `${head}^`);
+  return Boolean(parent) && receiptSha === parent;
+}
+
+export function twoProofRelationship(receipt, live, { cwd = process.cwd(), head } = {}) {
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
+  const liveHead = head || live?.sha;
+  if (!live?.sha || !liveHead) return { ok: false, reason: 'committed_receipt_sha_lag' };
+  if (!committedReceiptShaAllowed(receipt.sha, liveHead, cwd)) {
+    return { ok: false, reason: 'committed_receipt_sha_lag' };
+  }
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
+  const liveBind = sha256DigestField(live.bind_artifact_digest);
+  const bindInProgress = live.bind_conclusion === 'in_progress';
+  if (receipt.sha === live.sha) {
+    if (bindInProgress) return { ok: true, receipt_lag: 'head' };
+    if (!live.run_id || !liveBind || receiptBind !== liveBind) {
+      return { ok: false, reason: 'committed_receipt_does_not_match_api' };
+    }
+    return { ok: true, receipt_lag: 'head' };
+  }
+  if (!live.run_id) return { ok: false, reason: 'live_head_bind_missing' };
+  if (!bindInProgress && !liveBind) {
+    return { ok: false, reason: 'live_head_bind_missing' };
+  }
+  if (String(receipt.run_id) === String(live.run_id) || (liveBind && receiptBind === liveBind)) {
+    return { ok: false, reason: 'committed_receipt_aliases_live_head' };
+  }
+  return { ok: true, receipt_lag: 'parent' };
+}
+
+function committedReceiptProof(receipt) {
+  return {
+    sha: receipt.sha,
+    run_id: String(receipt.run_id),
+    bind_job_id: receipt.bind_job_id || null,
+    artifact_digest: receipt.artifact_digest || null,
+    doctor_artifact_digest: receipt.doctor_artifact_digest || null,
+    attest_artifact_digest: receipt.attest_artifact_digest || null,
+    bind_artifact_digest: receipt.bind_artifact_digest || null,
+  };
+}
+
+function loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns) {
+  if (fetchRun) {
+    const run = fetchRun(repo, receipt.run_id, token);
+    return run ? { ok: true, run } : { ok: false, run: null };
+  }
+  if (fetchRuns) {
+    const runs = fetchRuns(repo, receipt.sha, token) || [];
+    const run = runs.find((row) => row && String(row.id) === String(receipt.run_id));
+    return run ? { ok: true, run } : { ok: false, run: null };
+  }
+  return githubGetRun(repo, receipt.run_id, token);
+}
+
+export function verifyCommittedCiReceipt(receipt, live, {
+  cwd = process.cwd(),
+  head,
+  repo,
+  token = '',
+  env = {},
+  fetchRun,
+  fetchRuns,
+  fetchJobs,
+  fetchArtifacts,
+  fetchDoctorJson,
+  doctorJson,
+  attestDoctorJson,
+} = {}) {
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
+  if (!committedReceiptShaAllowed(receipt.sha, head || live?.sha, cwd)) {
+    return { ok: false, reason: 'committed_receipt_sha_lag' };
+  }
+  if (live && receipt.sha === live.sha) {
+    const bound = bindCommittedReceipt(receipt, live);
+    if (!bound.ok) return bound;
+    if (receipt.jobs && fetchJobs) {
+      const jobsMatch = receiptJobsMatchApi(receipt.jobs, fetchJobs(repo, live.run_id, token) || []);
+      if (!jobsMatch.ok) return jobsMatch;
+    }
+    return twoProofRelationship(receipt, live, { cwd, head: head || live.sha });
+  }
+  const fetched = loadReceiptRun(receipt, repo, token, fetchRun, fetchRuns);
+  if (!fetched.ok || !fetched.run) return { ok: false, reason: 'committed_receipt_run_missing' };
+  const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
+  if (!extras.jobs.ok || !extras.artifacts.ok) {
+    return { ok: false, reason: extras.jobs.error || extras.artifacts.error || 'committed_receipt_run_missing' };
+  }
+  const attested = attestVacationVerifyJob({
+    run: fetched.run,
+    jobs: extras.jobs.jobs,
+    artifacts: extras.artifacts.artifacts,
+    sha: receipt.sha,
+    env,
+    repo,
+    token,
+    fetchDoctorJson,
+    doctorJson,
+    attestDoctorJson,
+    requireDoctorJson: false,
+  });
+  if (!attested.ok) return { ok: false, reason: attested.reason || 'committed_receipt_does_not_match_api' };
+  const jobsMatch = receiptJobsMatchApi(receipt.jobs, extras.jobs.jobs);
+  if (!jobsMatch.ok) return jobsMatch;
+  const bound = bindCommittedReceipt(receipt, attested);
+  if (!bound.ok) return bound;
+  return twoProofRelationship(receipt, live, { cwd, head: head || live?.sha });
+}
+
+export function bindCommittedReceipt(receipt, live) {
+  const required = requireCommittedCiReceipt(receipt);
+  if (!required.ok) return required;
+  const receiptHarness = sha256DigestField(receipt.artifact_digest);
+  const receiptDoctor = sha256DigestField(receipt.doctor_artifact_digest);
+  const receiptAttest = sha256DigestField(receipt.attest_artifact_digest);
+  const receiptBind = sha256DigestField(receipt.bind_artifact_digest);
+  const sameSha = receipt.sha === live.sha;
+  const sameRun = String(receipt.run_id) === String(live.run_id);
+  const sameDigest = Boolean(receiptHarness) && receiptHarness === live.artifact_digest;
+  const sameDoctor = Boolean(receiptDoctor) && receiptDoctor === live.doctor_artifact_digest;
+  const sameAttest = Boolean(receiptAttest) && receiptAttest === live.attest_artifact_digest;
+  const sameBind = Boolean(receiptBind) && receiptBind === live.bind_artifact_digest;
+  const sameDoctorJob = !receipt.doctor_job_id || String(receipt.doctor_job_id) === String(live.doctor_job_id);
+  const sameBindJob = String(receipt.bind_job_id) === String(live.bind_job_id);
+  const success = receipt.conclusion === 'success' && receipt.workflow === 'vacation-verify';
+  if (!sameSha || !sameRun || !sameDigest || !sameDoctor || !sameAttest || !sameBind || !sameDoctorJob || !sameBindJob || !success) {
+    return { ok: false, reason: 'committed_receipt_does_not_match_api' };
+  }
+  return { ok: true };
+}
+
+export function inspectCiAttestation({
+  cwd = process.cwd(),
+  env = process.env,
+  sha,
+  receipt,
+  doctorJson,
+  attestDoctorJson,
+  fetchDoctorJson,
+  fetchRuns,
+  fetchRun,
+  fetchJobs,
+  fetchArtifacts,
+} = {}) {
+  const head = sha || gitRevParse(cwd);
+  const repo = githubRepoFromOrigin(cwd);
+  const token = githubAuthToken(env);
+  const committed = receipt !== undefined ? receipt : readCommittedCiReceipt(cwd);
+  if (committed == null) {
+    return {
+      ok: false,
+      source: 'committed_receipt',
+      sha: head,
+      run_id: null,
+      job_id: null,
+      conclusion: null,
+      artifact_digest: null,
+      repo,
+      reason: 'committed_ci_receipt_missing',
+    };
+  }
+  const parsedDoctorJson = resolveDoctorJson(cwd, env, doctorJson);
+  const finish = (attestation, source) => {
+    if (!attestation.ok) return { ...attestation, source: attestation.source || 'missing', repo };
+    const bound = committed
+      ? verifyCommittedCiReceipt(committed, attestation, {
+        cwd,
+        head,
+        repo,
+        token,
+        env,
+        fetchRun,
+        fetchRuns,
+        fetchJobs,
+        fetchArtifacts,
+        fetchDoctorJson,
+        doctorJson: parsedDoctorJson,
+        attestDoctorJson,
+      })
+      : { ok: true };
+    if (!bound.ok) {
+      return {
+        ok: false,
+        source: 'committed_receipt',
+        sha: head,
+        run_id: attestation.run_id,
+        job_id: attestation.job_id,
+        doctor_job_id: attestation.doctor_job_id,
+        attest_job_id: attestation.attest_job_id,
+        conclusion: attestation.conclusion,
+        doctor_conclusion: attestation.doctor_conclusion,
+        attest_conclusion: attestation.attest_conclusion,
+        artifact_digest: attestation.artifact_digest,
+        doctor_artifact_digest: attestation.doctor_artifact_digest,
+        attest_artifact_digest: attestation.attest_artifact_digest,
+        artifact_id: attestation.artifact_id,
+        doctor_artifact_id: attestation.doctor_artifact_id,
+        attest_artifact_id: attestation.attest_artifact_id,
+        repo,
+        reason: bound.reason,
+      };
+    }
+    return {
+      ...attestation,
+      source,
+      repo,
+      receipt_lag: bound.receipt_lag,
+      committed_receipt: committedReceiptProof(committed),
+    };
+  };
+
+  const liveId = env.GITHUB_RUN_ID || '';
+  if (env.GITHUB_ACTIONS === 'true' && liveId) {
+    const fetched = fetchRun
+      ? { ok: true, run: fetchRun(repo, liveId, token) }
+      : githubGetRun(repo, liveId, token);
+    if (fetched.ok && fetched.run) {
+      const extras = loadRunJobsArtifacts(repo, fetched.run.id, token, fetchJobs, fetchArtifacts);
+      const attested = attestVacationVerifyJob({
+        run: fetched.run,
+        jobs: extras.jobs.jobs,
+        artifacts: extras.artifacts.artifacts,
+        sha: head,
+        env,
+        repo,
+        token,
+        fetchDoctorJson,
+        doctorJson: parsedDoctorJson,
+        attestDoctorJson,
+      });
+      if (attested.ok) return finish(attested, 'live_run');
+      if (!extras.jobs.ok || !extras.artifacts.ok) {
+        return {
+          ok: false,
+          source: 'live_run',
+          sha: head,
+          run_id: String(fetched.run.id),
+          job_id: null,
+          conclusion: null,
+          artifact_digest: null,
+          repo,
+          reason: extras.jobs.error || extras.artifacts.error || attested.reason,
+        };
+      }
+    }
+  }
+
+  const listed = fetchRuns
+    ? { ok: true, runs: fetchRuns(repo, head, token) || [] }
+    : githubListVacationVerifyRuns(repo, head, token);
+  if (!listed.ok) {
+    return {
+      ok: false,
+      source: 'missing',
+      sha: head,
+      run_id: null,
+      job_id: null,
+      conclusion: null,
+      artifact_digest: null,
+      repo,
+      reason: listed.error || 'github_api_failed',
+    };
+  }
+  for (const run of listed.runs || []) {
+    if (!isVacationVerifyRun(run) || run.head_sha !== head || !run.id) continue;
+    const extras = loadRunJobsArtifacts(repo, run.id, token, fetchJobs, fetchArtifacts);
+    if (!extras.jobs.ok || !extras.artifacts.ok) continue;
+    const attested = attestVacationVerifyJob({
+      run,
+      jobs: extras.jobs.jobs,
+      artifacts: extras.artifacts.artifacts,
+      sha: head,
+      env,
+      repo,
+      token,
+      fetchDoctorJson,
+      doctorJson: parsedDoctorJson,
+      attestDoctorJson,
+    });
+    if (attested.ok) return finish(attested, 'github_api');
+  }
+
+  return {
+    ok: false,
+    source: 'missing',
+    sha: head,
+    run_id: null,
+    job_id: null,
+    conclusion: null,
+    artifact_digest: null,
+    repo,
+    reason: 'no vacation-verify + vacation-verify-doctor + vacation-verify-gate + vacation-verify-attest job success + artifact digests for this SHA',
+  };
+}

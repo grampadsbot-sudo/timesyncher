@@ -1,0 +1,36 @@
+{
+  "id": "telegram-voice-multi-intent",
+  "surface": "telegram-voice",
+  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true, "identity": "owner-craig" },
+  "pageContext": { "kind": "timeline" },
+  "text": "Remove Topgolf Las Vegas and then move In-N-Out Burger to day 3. Also check if there is live music tonight.",
+  "transcript": "Remove Topgolf Las Vegas and then move In-N-Out Burger to day 3. Also check if there is live music tonight.",
+  "audio_path": "audio/kim-vegas-multi-clause.ogg",
+  "expected_clauses": 3,
+  "itinerary_before": [
+    { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" },
+    { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" }
+  ],
+  "itinerary_after": [
+    { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 3, "location": "day 3" }
+  ],
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "trek_rows": [{ "id": 41, "title": "Las Vegas Strip Vacation", "token": "las-vegas-strip-vacation" }],
+    "items": [
+      { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" },
+      { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" }
+    ]
+  },
+  "expect": {
+    "ok": true,
+    "intent_kinds": ["remove", "move", "research"],
+    "no_op_stops": ["unsupported_research"],
+    "write_ops": ["remove_thing", "move_thing"],
+    "expected_clauses": 3,
+    "dropped_clause": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "workflow": "vacation-verify",
+  "sha": "18ca97344a278c70c488eba2edb008f5807d8f93",
+  "run_id": "33823889530",
+  "run_url": "https://github.com/grampadsbot-sudo/timesyncher/actions/runs/33823889530",
+  "conclusion": "success",
+  "job_id": "100872283306",
+  "doctor_job_id": "100872328885",
+  "gate_job_id": "100872355356",
+  "attest_job_id": "100872399799",
+  "bind_job_id": "100872437393",
+  "jobs": {
+    "vacation-verify": "success",
+    "vacation-verify-doctor": "success",
+    "vacation-verify-gate": "success",
+    "vacation-verify-attest": "success",
+    "vacation-verify-bind": "success"
+  },
+  "doctor_conclusion": "success",
+  "attest_conclusion": "success",
+  "bind_conclusion": "success",
+  "artifact_digest": "sha256:e384d52fe394aec1f0cade32dce97b0223d557923917a279a414f84e49fea395",
+  "doctor_artifact_digest": "sha256:5a5ab6bc637542b68b8f65d7f16ee7ce1e8cc74b1559f1501083c3aac1c1aa6b",
+  "attest_artifact_digest": "sha256:fa61225fa26bc3f9c01bdc3022eb57fdab420aea56c7f8009569f5b94b572cff",
+  "bind_artifact_digest": "sha256:a01b8488aed7f0be41dcd4842bbe7d6a5f8a0ec3603af85a6f9c90f8b74b3968",
+  "artifact_id": "9919227053",
+  "doctor_artifact_id": "9919234875",
+  "attest_artifact_id": "9919239222",
+  "bind_artifact_id": "9919244913"
+}

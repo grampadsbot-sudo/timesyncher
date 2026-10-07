@@ -1,0 +1,43 @@
+{
+  "id": "shared-page-voice-day",
+  "surface": "shared-page-voice",
+  "actor": { "id": "owner-craig", "role": "owner", "authorized": true, "canEdit": true, "identity": "owner-craig" },
+  "pageContext": {
+    "kind": "day",
+    "day": 2,
+    "items": [
+      { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+      { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" }
+    ]
+  },
+  "text": "Remove In-N-Out Burger",
+  "transcript": "Remove In-N-Out Burger",
+  "audio_path": "audio/kim-vegas-voice.ogg",
+  "expected_clauses": 1,
+  "itinerary_before": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+    { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" },
+    { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" }
+  ],
+  "itinerary_after": [
+    { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+    { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" }
+  ],
+  "trip": {
+    "trip_id": "trip-vegas-live-001",
+    "title": "Las Vegas Strip Vacation",
+    "publicUrl": "https://travel.timesyncher.com/shared/las-vegas-strip-vacation/",
+    "status": "live",
+    "items": [
+      { "id": "thing-umekes", "trip_id": "trip-vegas-live-001", "title": "Umekes Fish Market Bar & Grill", "day": 2, "location": "day 2 13:00" },
+      { "id": "thing-inoahs", "trip_id": "trip-vegas-live-001", "title": "In-N-Out Burger", "day": 2, "location": "day 2 12:00" },
+      { "id": "thing-topgolf", "trip_id": "trip-vegas-live-001", "title": "Topgolf Las Vegas", "day": 3, "location": "day 3 16:00" }
+    ]
+  },
+  "expect": {
+    "ok": true,
+    "page_kind": "day",
+    "write_ops": ["remove_thing"],
+    "dropped_clause": false
+  }
+}

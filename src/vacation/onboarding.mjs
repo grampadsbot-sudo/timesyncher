@@ -5,11 +5,11 @@ import {
   loadDefaultEulaText,
   loadSessionPersistent,
 } from '../onboarding/eula-persistent-core.mjs';
+import { CURRENT_EULA_VERSION } from '../onboarding/current-eula-text.mjs';
 import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
 
 const DEFAULT_SITE_BASE = 'https://www.timesyncher.com';
 const DEFAULT_BOT_USERNAME = 'TimeSyncherVacationBot';
-const DEFAULT_EULA_VERSION = '2026-04-initial-draft';
 
 export function siteBase(env = process.env) {
   return String(env.TIMESYNCHER_SITE_BASE_URL || env.SITE_BASE_URL || DEFAULT_SITE_BASE).trim().replace(/\/+$/, '');
@@ -243,7 +243,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
   const sessionId = eulaSessionIdForOnboarding(row);
   const existing = await loadSessionPersistent(store, sessionId);
   if (existing && !existing.unavailableReason) {
-    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
+    const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION);
     return {
       sessionId,
       acceptUrl: eulaAcceptLink(row, env),
@@ -265,7 +265,7 @@ export async function ensureVacationEulaSession(row, { contact = {}, env = proce
     ],
     google: {},
     eula: {
-      version: env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION,
+      version: env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION,
       text: loadDefaultEulaText(),
     },
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
@@ -283,7 +283,7 @@ export async function vacationEulaStatus(row, env = process.env) {
   if (!row?.id || !row?.token) return { ok: false, status: 'missing', errors: ['onboarding session missing'] };
   const eula = await ensureVacationEulaSession(row, { env });
   const store = createPersistentStoreFromEnv(env);
-  const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || DEFAULT_EULA_VERSION);
+  const status = await activationStatusPersistent(store, eulaClientKeyForOnboarding(row), env.TIMESYNCHER_EULA_VERSION || CURRENT_EULA_VERSION);
   return {
     ...status,
     status: status.ok ? 'accepted' : eula?.status || 'pending',

@@ -1,0 +1,33 @@
+{
+  "id": "checkout-entitlements-missing",
+  "surface": "telegram-text",
+  "actor": { "id": "synthetic-owner-unpaid", "role": "owner", "authorized": true, "canEdit": true, "canUpload": false },
+  "pageContext": { "kind": "timeline" },
+  "text": "Checkout proof: do I have unlimited trips, photo upload, and video upload?",
+  "checkout": {
+    "account": {
+      "id": "cust-synthetic-verify-unpaid",
+      "email": "verify-gate-unpaid@example.test",
+      "plan": "single",
+      "entitlements": {
+        "plan": "single",
+        "unlimited_trips": false,
+        "photo_memories": false,
+        "video_memories": false
+      }
+    }
+  },
+  "trip": {
+    "trip_id": "trip-synthetic-unpaid-001",
+    "title": "Synthetic Unpaid Trip",
+    "publicUrl": "https://travel.timesyncher.com/shared/synthetic-unpaid-trip/",
+    "status": "live",
+    "items": []
+  },
+  "expect": {
+    "ok": true,
+    "write_ops": [],
+    "no_op_stops": ["checkout_entitlement"],
+    "response_includes": "does not have"
+  }
+}
