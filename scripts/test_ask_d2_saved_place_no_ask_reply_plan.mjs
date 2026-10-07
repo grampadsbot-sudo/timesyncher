@@ -77,6 +77,28 @@ const lodgedContext = await enrichDraftingTripContext({ ...lodgedFacts, lodging:
 });
 assert.equal(lodgedContext.lodgingAsk, undefined);
 
+const inTurnPlaceResults = [{
+  name: placeTitle,
+  title: placeTitle,
+  sourceRef: { source: 'trip_thing', id: 'paia-in-turn-save' },
+}];
+const livePathContext = await enrichDraftingTripContext(draftingFacts(
+  [{ role: 'customer', text: "add Mama's Fish House for Saturday" }],
+  customerTurn,
+  { things, span: { spanLabel: 'Mar 10 through Mar 17' } },
+), {
+  env: {},
+  things,
+  savedStart,
+  savedEnd,
+  inTurnPlaceResults,
+});
+assert.equal(livePathContext.chatPlaceSearch.unscheduled[0].notOnADay, true);
+const livePathSystem = replyRulesSystem({}, 'Maui', false, false, customerTurn, { tripContext: livePathContext });
+assert.doesNotMatch(livePathSystem, DAY_REQUIRED_NOTES);
+assert.doesNotMatch(livePathSystem, /\bwhich day works best\b/i);
+assert.match(livePathSystem, /not on a day/);
+
 console.log(JSON.stringify({
   ok: true,
   checked: 'ask-d2-saved-place-no-ask-reply-plan',
