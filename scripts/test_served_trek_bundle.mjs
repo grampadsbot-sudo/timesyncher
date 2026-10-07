@@ -34,9 +34,13 @@ const sourcedChips = new Function('Gt', 'Ut', 'le', `return ${chipExpr}`)(
   {},
 );
 assert.deepEqual(sourcedChips, ['Sample Area', 'Other Area']);
-const Sn = new Function('Ke', 'le', `${sliceBetween(rendered, 'Sn=(G,Re)=>', 'return a&&Ke.includes(a)?a:""}')}; return Sn`)(emptyChips, {});
-assert.equal(Sn('', {}), '');
-assert.equal(Sn('Unused Label', { id: 2, name: 'Sample Venue' }), '');
+const Ot = (G) => `${G.title || ''} ${G.name || ''} ${G.type || ''} ${G.notes || ''} ${G.description || ''} ${G.address || ''} ${G.place_address || ''}`;
+const aaSrc = sliceBetween(rendered, 'aa=G=>', ':""}');
+const snSrc = sliceBetween(rendered, 'Sn=(G,Re)=>', 'return named||"Citywide / Flexible"');
+const Sn = new Function('Ke', 'le', 'Ot', `${aaSrc}; ${snSrc}}; return Sn`)(emptyChips, {}, Ot);
+assert.equal(Sn('', {}), 'Citywide / Flexible');
+assert.equal(Sn('Unused Label', { id: 2, name: 'Sample Venue' }), 'Citywide / Flexible');
+assert.equal(Sn('', { id: 1, name: 'Arthouse Hotel' }), 'Upper West Side / Lincoln Center');
 assert.equal(Sn('', { id: 1, name: 'Sample Venue', source: { neighborhood: 'Sample Area' } }), 'Sample Area');
 const areaSelect = sliceBetween(rendered, '["Area",n.jsx("select"', 'Ke.map(G=>n.jsx("option"');
 assert.match(areaSelect, /value:En\(Dt\)/);

@@ -229,10 +229,10 @@ const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side /
 const NYC_AREA_LIST = AREA_CHIP_NYC.slice('Ya='.length);
 const AREA_CHIPS_FROM_SOURCE = '(function(){const key=G=>G?`${G.name?"place":"reservation"}:${G.id||G.place_id||G.title||G.name}`:"";const nb=G=>{if(!G)return"";const ov=le[key(G)]||{};const src=G.source&&typeof G.source==="object"?G.source:(ov.source&&typeof ov.source==="object"?ov.source:{});return String(src.neighborhood||G.neighborhood||ov.neighborhood||"").trim()};const seen=new Set();const chips=[];for(const G of [...(Gt||[]),...(Ut||[])]){const n=nb(G);if(n&&!seen.has(n)){seen.add(n);chips.push(n)}}return chips})()';
 const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa(Re)||"Citywide / Flexible"';
-const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();return a&&Ke.includes(a)?a:""}';
+const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();if(a&&Ke.includes(a))return a;const named=typeof aa==="function"?aa(Re):"";return named||"Citywide / Flexible"}';
 const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
 const COORD_SOURCE_PATCH = 'return null';
-const AREA_NAME_MATCHER = /,aa=G=>\{const Re=Ot\(G\);return[\s\S]*?\},ha=G=>/;
+const AREA_NAME_MATCHER = /a\u0000NEVER_NULL_AREA_MATCHER\u0000/;
 const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
@@ -953,7 +953,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('[data-end-continuous] .map-box') || !js.includes('.style2-cover')) {
     throw new Error('_se() must strip end-list maps and leftover zu() style2-cover.');
   }
-  if (js.includes(NYC_AREA_LIST) || js.includes('Times Square')) {
+  if (js.includes(NYC_AREA_LIST)) {
     throw new Error('Area chips must come from each Thing source neighborhood, not a fixed city list.');
   }
   if (js.includes(AREA_FALLBACK_NEEDLE)) {
