@@ -13,8 +13,10 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /data-tab-category":G\.id/);
-assert.match(rendered, /display:"inline-flex",alignItems:"center",verticalAlign:"middle",color:"transparent"/);
-assert.match(rendered, /\/icons\/tab-labels\//);
+assert.match(rendered, /display:"inline-grid",placeItems:"center",fontSize:14/);
+assert.match(rendered, /children:G\.icon/);
+assert.doesNotMatch(rendered, /\/icons\/tab-labels\//);
+assert.doesNotMatch(rendered, /tsPaintTabEmoji\(el,G\.icon\)/);
 assert.match(rendered, /function tsPaintTabEmoji\(/);
 assert.match(rendered, /AI-assisted itinerary planning/);
 

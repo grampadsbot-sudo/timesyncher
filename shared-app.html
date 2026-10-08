@@ -170,6 +170,10 @@
       .leaflet-popup-tip-container {
         overflow: visible !important;
       }
+      [data-ts-logo-chip]:has(> img.tiny-logo[style*="display: none"]),
+      [data-ts-logo-chip]:has(> img.tiny-logo[style*="display:none"]) {
+        display: none !important;
+      }
       [data-ts-logo-chip][data-tab-category] {
         display: inline-flex !important;
         align-items: center !important;
