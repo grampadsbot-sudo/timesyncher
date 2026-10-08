@@ -72,3 +72,89 @@ export function finalizeInTurnPlaceShipReply(reply, enforceInTurnPlaces, inTurnP
   );
   return { ok: false, blocked };
 }
+
+function inTurnPlaceReplyCarry(tripContext) {
+  return { tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate };
+}
+
+function tieredReplyTimeoutForInTurn(enforceInTurnPlaces, env = process.env) {
+  return enforceInTurnPlaces ? placeSearchTieredReplyTimeoutMs(env) : 0;
+}
+
+function recoverInTurnPlaceAfterBannedReply({
+  reply,
+  banned,
+  model,
+  enforceInTurnPlaces,
+  inTurnProviderResults,
+  carry,
+  failureBase,
+}) {
+  if (reply && !banned) return { continue: true, reply, banned, model };
+  const recovered = finalizeInTurnPlaceShipReply(reply, enforceInTurnPlaces, inTurnProviderResults, carry);
+  if (recovered.ok && recovered.reply) {
+    const nextModel = model && typeof model === 'object'
+      ? { ...model, usedInTurnPlaceFallback: recovered.usedFallback === true }
+      : model;
+    return { continue: true, reply: recovered.reply, banned: '', model: nextModel };
+  }
+  return {
+    continue: false,
+    result: {
+      reply: null,
+      ...failureBase,
+      model,
+      reason: banned || model?.reason || 'live dispatcher returned no reply',
+      ...(recovered.blocked || {}),
+    },
+  };
+}
+
+/** @returns {string|object} reply text, or blocked carry-through object */
+function shipInTurnPlaceSearchDraft(draft, enforceInTurnPlaces, inTurnPlaceResults, carry) {
+  const ship = finalizeInTurnPlaceShipReply(draft, enforceInTurnPlaces, inTurnPlaceResults, carry);
+  if (!ship.ok) return ship.blocked;
+  return ship.reply;
+}
+
+function applyInTurnRewriteShipGate(shippedText, pending, log, carry = {}) {
+  if (!pending.enforceInTurnPlaces) return { shippedText };
+  const rewriteShip = finalizeInTurnPlaceShipReply(shippedText, true, pending.inTurnPlaceResults, {
+    ...carry,
+    tripContext: pending.tripContext,
+    tripPlaceAllowRows: pending.tripContext?.tripReplyGate,
+    log: { ...log, held: true },
+  });
+  if (!rewriteShip.ok) {
+    return {
+      blocked: {
+        ...rewriteShip.blocked,
+        log: { ...log, rewriteFailReason: rewriteShip.blocked?.reason, held: true },
+      },
+    };
+  }
+  return { shippedText: rewriteShip.reply };
+}
+
+export function inTurnPlaceLiveReplyHooks(tripContext, enforceInTurnPlaces, env = process.env) {
+  const carry = inTurnPlaceReplyCarry(tripContext);
+  return {
+    timeoutMs: tieredReplyTimeoutForInTurn(enforceInTurnPlaces, env),
+    recoverBanned: ({ reply, banned, model, inTurnProviderResults, failureBase }) => recoverInTurnPlaceAfterBannedReply({
+      reply,
+      banned,
+      model,
+      enforceInTurnPlaces,
+      inTurnProviderResults,
+      carry,
+      failureBase,
+    }),
+    shipDraft: (draft, inTurnProviderResults, extra = {}) => shipInTurnPlaceSearchDraft(
+      draft,
+      enforceInTurnPlaces,
+      inTurnProviderResults,
+      { ...extra, ...carry },
+    ),
+    rewriteGate: (shippedText, pending, log, extra = {}) => applyInTurnRewriteShipGate(shippedText, pending, log, extra),
+  };
+}

@@ -28,9 +28,12 @@ const liveSource = readFileSync(
   fileURLToPath(new URL('../src/vacation/live-app-turn.mjs', import.meta.url)),
   'utf8',
 );
-assert.match(liveSource, /placeSearchTieredReplyTimeoutMs/);
-assert.match(liveSource, /finalizeInTurnPlaceShipReply/);
+assert.match(liveSource, /inTurnPlaceLiveReplyHooks/);
 assert.doesNotMatch(liveSource, /blockInTurnPlaceReply/);
+assert.match(
+  readFileSync(fileURLToPath(new URL('../src/vacation/in-turn-place-reply-fallback.mjs', import.meta.url)), 'utf8'),
+  /placeSearchTieredReplyTimeoutMs/,
+);
 
 const hertzMention = 'Near the hotel, grab tacos after stopping at Hertz.';
 const tripAllow = tripOwnedPlaceAllowRows({
