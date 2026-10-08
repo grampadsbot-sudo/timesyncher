@@ -41,7 +41,7 @@ const HOTEL_LINE_NEEDLE = 'gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:
 const HOTEL_LINE_PATCH = 'gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,width:"100%",minWidth:0,alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ha(G).roomType||ha(G).room_type||""})]})';
 
 const ROW_CLIP_NEEDLE = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"';
-const ROW_CLIP_PATCH = 'overflow:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:(bn(G)||Mi(G)||Zi(G))?"100%":(Sa?"max-content":"490px"),width:(!(bn(G)||Mi(G)||Zi(G))&&!Sa)?"490px":void 0';
+const ROW_CLIP_PATCH = 'overflow:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:(!Sa&&(bn(G)||Zi(G)))?"490px":(bn(G)||Mi(G)||Zi(G))?"100%":(Sa?"max-content":"490px"),width:(!Sa&&(bn(G)||Zi(G)||!(bn(G)||Mi(G)||Zi(G))))?"490px":void 0';
 
 function dropCallWithTrailingComma(js, startNeedle) {
   const start = js.indexOf(startNeedle);
@@ -105,7 +105,8 @@ export function applyApprovedLookPatches(source = '') {
   js = mustReplace(js, 'return Sa?n.jsxs("li",{"data-list-row":"1"', 'return (Sa||!(bn(G)||Mi(G)||Zi(G)))?n.jsxs("li",{"data-list-row":"1"', 'single-line list rows');
   js = mustReplace(js, 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))', 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}', 'events list types');
   js = mustReplace(js, 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(Boolean))).sort()', 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(a=>a&&a!=="Airport / Transit"))).sort()', 'area chips');
-  js = mustReplace(js, 'minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden"', 'minHeight:"100vh",width:"100%",overflowX:"visible"', 'page width bleed');
+  js = mustReplace(js, 'minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden"', 'minHeight:"100vh",width:"100%",overflowX:"visible",transform:q==="budget"?"translateX(-42px)":void 0', 'page width bleed');
+  js = mustReplace(js, 'children:[n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'children:[q==="budget"?n.jsx("div",{"aria-hidden":"true",style:{position:"absolute",left:491,top:0,width:1,height:1}}):null,n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'budget width spacer');
   if (!js.includes(BOTTOM_MAP_NEEDLE)) {
     throw new Error('approved look patch missed the extra day map');
   }
