@@ -16,7 +16,7 @@ export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisi
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
-// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 moved to deepseek/deepseek-v4-flash because google/gemini-2.5-flash-lite retires 2026-10-20.
+// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 retire rationale lives in tier_models.json source (former T1 was google/gemini-2.5-flash-lite).
 const BAKEOFF_TIER_MODELS = {
   1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
