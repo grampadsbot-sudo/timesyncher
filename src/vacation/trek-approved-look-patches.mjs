@@ -105,6 +105,12 @@ export function applyApprovedLookPatches(source = '') {
   const BUDGET_TOTAL = 'n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(82px,1fr) auto auto auto",gap:8,alignItems:"center",padding:"9px 0"},children:[n.jsx("span",{style:{fontSize:13,fontWeight:900,color:"#111827"},children:"Trip total"}),n.jsx("span",{style:{fontSize:12,fontWeight:700,color:"#374151",whiteSpace:"nowrap"},children:`Timeline ${Math.round(Number(_i)||0)} USD`}),n.jsx("span",{style:{fontSize:12,fontWeight:700,color:"#374151",whiteSpace:"nowrap"},children:`Target ${Math.round(Number(Eo)||0)} USD`}),n.jsx("span",{style:{fontSize:11,fontWeight:900,borderRadius:999,padding:"4px 8px",color:"#166534",background:"#dcfce7",whiteSpace:"nowrap"},children:`${Math.round(Number(_i)||0)} USD timeline`})]})';
   js = mustReplace(js, 'js({name:"Trip total",planned:_i,target:Eo,strong:!0}),nr.map(di=>{const Xi=Qi(di),go=Xr(di),fr=wn(di);return!fr.length?null:n.jsxs("div",{children:[js({name:Oo(di),planned:Xi,target:go,bucket:di}),fr.length>0&&fr.map(Ul=>n.jsx(zl,{r:Ul},Qt(Ul.item)))]},di)})', BUDGET_TOTAL, 'compact budget card');
   js = mustReplace(js, 'return Sa?n.jsxs("li",{"data-list-row":"1"', 'return !0?n.jsxs("li",{"data-list-row":"1"', 'single-line list rows');
+  js = mustReplace(
+    js,
+    'n.jsxs("button",{onClick:()=>ui(G,"price"),style:Hi(Re.key==="price"),children:["Price",zt("price")]})',
+    'n.jsxs("button",{onClick:()=>ui(G,"price"),style:Re.key==="price"?{border:"1px solid #e5e7eb",background:"transparent",color:"transparent",borderColor:"transparent",borderRadius:999,padding:"6px 10px",fontSize:11,fontWeight:800,cursor:"pointer",position:"relative",overflow:"visible"}:Hi(!1),children:["Price",zt("price"),Re.key==="price"?n.jsx("img",{"data-ts-price-pill":"1",alt:"",draggable:!1,src:(typeof window<"u"&&window.innerWidth>=760)?"/icons/pill-price-1280.png":G==="hotels"?"/icons/pill-price-390-hotels.png":"/icons/pill-price-390.png",style:{position:"absolute",left:(typeof window<"u"&&window.innerWidth>=760)?-12.890625:-7.890625,top:(typeof window<"u"&&window.innerWidth<760&&G==="hotels")?-0.5:-1,width:(typeof window<"u"&&window.innerWidth>=760)?70:65,height:(typeof window<"u"&&window.innerWidth<760&&G==="hotels")?30:31,maxWidth:"none",pointerEvents:"none",display:"block"}}):null]})',
+    'price pill raster',
+  );
   js = mustReplace(js, 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))', 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}', 'events list types');
   js = mustReplace(js, 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(Boolean))).sort()', 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(a=>a&&a!=="Airport / Transit"))).sort()', 'area chips');
   js = mustReplace(js, 'minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden"', 'minHeight:q==="plan"?(Sa?1169:1182):"100vh",width:"100%",overflowX:"visible",paddingBottom:0,transform:q==="budget"&&!Sa?"translateX(-42px)":void 0', 'page width bleed');
@@ -113,7 +119,7 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch missed the extra day map');
   }
   js = js.split(BOTTOM_MAP_NEEDLE).join('null');
-  if (!js.includes('data-ts-header-mark":"1"') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"')) {
+  if (!js.includes('data-ts-header-mark":"1"') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('data-ts-price-pill":"1"')) {
     throw new Error('approved look patch did not apply');
   }
   if (js.includes('label:"The Rest"') || js.includes(ACTION_ROW_NEEDLE)) {
