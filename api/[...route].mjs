@@ -9,6 +9,7 @@ import createPaymentIntent from '../routes/create-payment-intent.mjs';
 import eula from '../routes/eula.mjs';
 import onboardingSession from '../routes/onboarding-session.mjs';
 import stripeWebhook from '../routes/stripe-webhook.mjs';
+import thingLogo from '../routes/thing-logo.mjs';
 import trackClick from '../routes/track-click.mjs';
 import vacationItinerary from '../routes/vacation-itinerary.mjs';
 import vacationRequest from '../routes/vacation-request.mjs';
@@ -25,6 +26,7 @@ const handlers = {
   eula,
   'onboarding-session': onboardingSession,
   'stripe-webhook': stripeWebhook,
+  'thing-logo': thingLogo,
   'track-click': trackClick,
   'vacation-itinerary': vacationItinerary,
   'vacation-request': vacationRequest,

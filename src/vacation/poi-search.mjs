@@ -12,6 +12,7 @@ const braveCache = new Map();
 export function clearPoiCache() {
   cache.clear();
   braveCache.clear();
+  logoCache.clear();
 }
 
 export function geohash(lat, lng, precision = 6) {
@@ -142,6 +143,26 @@ async function fetchBrave(fetchImpl, braveKey, origin, category) {
     throw new Error(`Brave web search failed: HTTP ${status}`);
   }
   return bravePois(await response.json(), category);
+}
+
+const LOGO_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
+const logoCache = new Map();
+
+/** Web results for a Thing logo lookup. Empty when no Brave key is configured. */
+export async function searchThingLogoResults(query, { env = process.env, fetchImpl = globalThis.fetch, now = Date.now() } = {}) {
+  const q = String(query || '').trim();
+  const braveKey = braveSubscriptionKey(env);
+  if (!q || !braveKey || !fetchImpl) return [];
+  const hit = logoCache.get(q);
+  if (hit && hit.expiresAt > now) return hit.results;
+  const response = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?count=8&q=${encodeURIComponent(q)}`, {
+    headers: { 'X-Subscription-Token': braveKey, Accept: 'application/json' },
+  });
+  if (!response?.ok) throw new Error(`Brave logo search failed: HTTP ${Number(response?.status) || 0}`);
+  const payload = await response.json();
+  const results = Array.isArray(payload?.web?.results) ? payload.web.results : [];
+  logoCache.set(q, { expiresAt: now + LOGO_CACHE_MS, results });
+  return results;
 }
 
 const TAVILY_SEARCH_URL = 'https://api.tavily.com/search';

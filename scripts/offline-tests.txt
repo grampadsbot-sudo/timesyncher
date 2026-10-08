@@ -135,6 +135,7 @@ scripts/test_collaborator_web_access_redirect.mjs
 scripts/test_shared_place_logo_and_category.mjs
 scripts/test_shared_tab_list_summary.mjs
 scripts/test_shared_trip_live_tab_logos.mjs
+scripts/test_thing_logo_search.mjs
 scripts/test_gate_b_live_tab_logo_rows.mjs
 scripts/test_gate_b_product_row_fields.mjs
 scripts/test_shared_trip_served_live_tab_mount.mjs
