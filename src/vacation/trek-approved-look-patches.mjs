@@ -105,8 +105,8 @@ export function applyApprovedLookPatches(source = '') {
   js = mustReplace(js, 'return Sa?n.jsxs("li",{"data-list-row":"1"', 'return (Sa||!(bn(G)||Mi(G)||Zi(G)))?n.jsxs("li",{"data-list-row":"1"', 'single-line list rows');
   js = mustReplace(js, 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))', 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}', 'events list types');
   js = mustReplace(js, 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(Boolean))).sort()', 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(a=>a&&a!=="Airport / Transit"))).sort()', 'area chips');
-  js = mustReplace(js, 'minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden"', 'minHeight:"100vh",width:"100%",overflowX:"visible",transform:q==="budget"?"translateX(-42px)":void 0', 'page width bleed');
-  js = mustReplace(js, 'children:[n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'children:[q==="budget"?n.jsx("div",{"aria-hidden":"true",style:{position:"absolute",left:491,top:0,width:1,height:1}}):null,n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'budget width spacer');
+  js = mustReplace(js, 'minHeight:"100vh",width:"100%",maxWidth:"100vw",overflowX:"hidden"', 'minHeight:"100vh",width:"100%",overflowX:"visible",transform:q==="budget"&&!Sa?"translateX(-42px)":void 0', 'page width bleed');
+  js = mustReplace(js, 'children:[n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'children:[q==="budget"&&!Sa?n.jsx("div",{"aria-hidden":"true",style:{position:"absolute",left:491,top:0,width:1,height:1}}):null,n.jsxs("div",{style:{background:"linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)"', 'budget width spacer');
   if (!js.includes(BOTTOM_MAP_NEEDLE)) {
     throw new Error('approved look patch missed the extra day map');
   }
