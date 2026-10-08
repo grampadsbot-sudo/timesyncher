@@ -20,7 +20,7 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",maxZoom:19}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",maxZoom:17}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
 const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,maxZoom:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
 
