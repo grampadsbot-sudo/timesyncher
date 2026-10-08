@@ -161,6 +161,7 @@ scripts/test_welcome_after_intake_database.mjs
 scripts/test_void_stale_build.mjs
 scripts/test_brave_tavily_adapter.mjs
 scripts/test_customer_input_reply.mjs
+scripts/test_destination_extraction_chat_request.mjs
 scripts/test_g2c_thing_notes_destination.mjs
 scripts/test_g2d_jev_score_rewrite.mjs
 scripts/test_rewrite_ships_tier_draft.mjs
