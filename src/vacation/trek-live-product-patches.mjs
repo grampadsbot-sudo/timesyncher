@@ -1,7 +1,7 @@
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
-import { applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
+import { applyActivePillEdgePatch, applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 
@@ -167,7 +167,7 @@ export function patchThingLogoChipAlignment(source = '') {
   if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
-  return js;
+  return applyActivePillEdgePatch(js);
 }
 
 export function patchTripMapInitialView(source = '') {
