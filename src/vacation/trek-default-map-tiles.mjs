@@ -10,10 +10,10 @@ export const TREK_DEFAULT_MAP_TILE_URL =
 
 /**
  * Shared trip Day-by-Day Leaflet layer.
- * Gate B egress blocks `openstreetmap.fr` HOT (0% painted), serves OSMF
- * access-denied tiles from `tile.openstreetmap.org`, and often paints only
- * part of OpenTopo before capture. The German OSM Standard mirror is keyless,
- * colourful, and loads reliably in the Gate B sandbox (zoom 10 + tile kick).
+ * Gate B serves OSMF access-denied mono tiles from `tile.openstreetmap.org`
+ * and `tile.openstreetmap.de` (1 hue bucket, ~95% saturated). HOT on
+ * `openstreetmap.fr` does not paint there (0% tiles). OpenTopoMap is reachable
+ * and multi-hue when enough raster tiles finish before capture (zoom 9 + kick).
  */
 export const TREK_SHARED_DAY_MAP_TILE_URL =
-  'https://tile.openstreetmap.de/{z}/{x}/{y}.png';
+  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
