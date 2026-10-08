@@ -4,8 +4,8 @@ import {
   OPENROUTER_CHAT_COMPLETIONS_URL,
   bakeoffTierModels,
   openRouterAppKey,
-  openRouterProviderForTier,
 } from '../../scripts/vacation-app-reply-rules.mjs';
+import { openRouterProviderForTier } from '../../scripts/openrouter-tier-provider.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import {
   PLACE_SEARCH_CATEGORY_KEYS,
