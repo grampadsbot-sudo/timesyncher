@@ -7,7 +7,7 @@ const DETAIL_DAYS_GRID_PATCH = 'gridTemplateColumns:Mi(Dt)?"minmax(72px,auto) mi
 const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2},children:Qa.map';
 const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflow:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
-const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%",height:0,minHeight:0,overflow:"hidden",padding:0,margin:0';
+const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
