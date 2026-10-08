@@ -5,7 +5,8 @@ const TAB_ROW_OVERFLOW_FULLWIDTH_NEEDLE = 'maxWidth:"100%",width:"100%",minWidth
 const DETAIL_DAYS_GRID_NEEDLE = 'gridTemplateColumns:Mi(Dt)?"88px minmax(150px, 1fr) 128px":"88px 104px minmax(150px, 1fr) 128px"';
 const DETAIL_DAYS_GRID_PATCH = 'gridTemplateColumns:Mi(Dt)?"minmax(72px,auto) minmax(0,1fr) minmax(88px,auto)":"minmax(72px,auto) minmax(72px,auto) minmax(0,1fr) minmax(88px,auto)",width:"100%",minWidth:0,maxWidth:"100%",boxSizing:"border-box"';
 const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2},children:Qa.map';
-const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflow:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map';
+const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",overflowY:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",WebkitOverflowScrolling:"touch"},children:Qa.map';
+const DAY_PILL_ROW_CLIP_NEEDLE = 'display:"flex",gap:6,overflow:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
 
@@ -34,7 +35,8 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
     throw new Error('shared thing detail Days/Timeline grid overflow patch did not apply');
   }
   if (js.includes(DAY_PILL_ROW_NEEDLE)) js = js.replace(DAY_PILL_ROW_NEEDLE, DAY_PILL_ROW_PATCH);
-  else if (served && !js.includes('flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map')) {
+  else if (js.includes(DAY_PILL_ROW_CLIP_NEEDLE)) js = js.replace(DAY_PILL_ROW_CLIP_NEEDLE, DAY_PILL_ROW_PATCH);
+  else if (served && !js.includes('WebkitOverflowScrolling:"touch"},children:Qa.map')) {
     throw new Error('shared day pill row overflow patch did not apply');
   }
   if (js.includes(DAY_TIMELINE_GRID_NEEDLE)) js = js.replace(DAY_TIMELINE_GRID_NEEDLE, DAY_TIMELINE_GRID_PATCH);

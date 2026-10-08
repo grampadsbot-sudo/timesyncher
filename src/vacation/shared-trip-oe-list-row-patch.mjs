@@ -13,6 +13,15 @@ const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summ
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
 
+const OE_SR_LOGO_GRID_NEEDLE = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:(bn(G)||Mi(G)||Zi(G))?"16px minmax(0,1fr)":"minmax(0,1fr)",gap:6,alignItems:"center",width:"100%",minWidth:0},children:[(bn(G)||Mi(G)||Zi(G))?n.jsx("span",{style:{display:"grid",placeItems:"center",alignSelf:"center",width:16,minWidth:16,height:16,flex:"0 0 16px"},children:n.jsx(dc,{item:G,size:16})}):null,n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
+const OE_SR_LOGO_GRID_PATCH = 'tsRowList=bn(G)||Mi(G)||Zi(G),sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:!Sa&&tsRowList?"16px minmax(0,1fr)":"minmax(0,1fr)",gap:6,alignItems:"center",width:"100%",minWidth:0},children:[!Sa&&tsRowList?n.jsx("span",{style:{display:"grid",placeItems:"center",alignSelf:"center",width:16,minWidth:16,height:16,flex:"0 0 16px"},children:n.jsx(dc,{item:G,size:16})}):null,n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
+
+const OE_SA_LIST_ROW_NEEDLE = 'return Sa?n.jsxs("li",{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo||"","data-thing-category":It(G),style:{listStyle:"none",background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:0,maxWidth:"100%",width:"100%"},children:[n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,alignItems:"center",minWidth:0,maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),kl(G),';
+const OE_SA_LIST_ROW_PATCH = 'return Sa?n.jsxs("li",{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo||"","data-thing-category":It(G),style:{listStyle:"none",background:"var(--bg-card, white)",borderRadius:10,padding:"8px 10px",border:"1px solid var(--border-faint, #e5e7eb)",minWidth:0,overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:0,maxWidth:"100%",width:"100%",display:"grid",gridTemplateColumns:tsRowList?"16px minmax(0,1fr)":"minmax(0,1fr)",gap:6,alignItems:"center"},children:[tsRowList?n.jsx("span",{style:{display:"grid",placeItems:"center",alignSelf:"center"},children:n.jsx(dc,{item:G,size:16})}):null,n.jsxs("div",{style:{minWidth:0,display:"flex",flexDirection:"column",gap:0},children:[n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,alignItems:"center",minWidth:0,maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),kl(G),';
+
+const OE_SA_LIST_ROW_CLOSE_NEEDLE = '})]}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",{"data-list-row":"1"';
+const OE_SA_LIST_ROW_CLOSE_PATCH = '})]}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",{"data-list-row":"1"';
+
 const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
 
 function patchCarBeGrid(js = '') {
@@ -36,9 +45,22 @@ const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"a
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
 
 /** Gate B markers on served shared-trip Oe() catalog rows (li + data-shared-live-tab panels). */
-export function patchSharedTripOeListRows(source = '') {
+export function patchSharedTripOeListRows(source = '', options = {}) {
+  const phase = options.phase === 'afterApprovedLook' ? 'afterApprovedLook' : options.phase === 'beforeApprovedLook' ? 'beforeApprovedLook' : 'all';
   let js = String(source || '');
   if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;
+  if (phase === 'afterApprovedLook') {
+    return patchSharedTripOeListRowsAfterApprovedLook(js);
+  }
+  if (phase === 'beforeApprovedLook') {
+    return patchSharedTripOeListRowsBeforeApprovedLook(js);
+  }
+  js = patchSharedTripOeListRowsBeforeApprovedLook(js);
+  return patchSharedTripOeListRowsAfterApprovedLook(js);
+}
+
+function patchSharedTripOeListRowsBeforeApprovedLook(source = '') {
+  let js = String(source || '');
   js = patchCarBeGrid(js);
   if (js.includes(OE_HOTEL_JE_TITLE_NEEDLE)) {
     js = js.replace(OE_HOTEL_JE_TITLE_NEEDLE, OE_HOTEL_JE_TITLE_PATCH);
@@ -67,6 +89,26 @@ export function patchSharedTripOeListRows(source = '') {
   }
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
+  }
+  return js;
+}
+
+function patchSharedTripOeListRowsAfterApprovedLook(source = '') {
+  let js = String(source || '');
+  if (js.includes(OE_SR_LOGO_GRID_NEEDLE)) {
+    js = js.replace(OE_SR_LOGO_GRID_NEEDLE, OE_SR_LOGO_GRID_PATCH);
+  } else if (!js.includes('tsRowList=bn(G)||Mi(G)||Zi(G),sr=n.jsxs')) {
+    throw new Error('shared trip Oe() Sa row logo patch did not apply');
+  }
+  if (js.includes(OE_SA_LIST_ROW_NEEDLE)) {
+    js = js.replace(OE_SA_LIST_ROW_NEEDLE, OE_SA_LIST_ROW_PATCH);
+  } else if (!js.includes('alignItems:"center"},children:[tsRowList?n.jsx("span"')) {
+    throw new Error('shared trip Oe() Sa list row shell patch did not apply');
+  }
+  if (js.includes(OE_SA_LIST_ROW_CLOSE_NEEDLE)) {
+    js = js.replace(OE_SA_LIST_ROW_CLOSE_NEEDLE, OE_SA_LIST_ROW_CLOSE_PATCH);
+  } else if (!js.includes('compact:!0})]})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li"')) {
+    throw new Error('shared trip Oe() Sa list row close patch did not apply');
   }
   return js;
 }

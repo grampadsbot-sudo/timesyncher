@@ -505,8 +505,9 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
-  js = patchSharedTripOeListRows(js);
+  js = patchSharedTripOeListRows(js, { phase: 'beforeApprovedLook' });
   js = applyApprovedLookPatches(js);
+  js = patchSharedTripOeListRows(js, { phase: 'afterApprovedLook' });
   if (served) {
     if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
       throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');

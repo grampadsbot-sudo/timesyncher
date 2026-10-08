@@ -77,6 +77,28 @@ function mustReplace(js, needle, patch, label) {
   return js.replace(needle, patch);
 }
 
+/** Map sits after the day chip card, before the selected day's itinerary card. */
+function moveDayMapBeforeItinerary(js = '') {
+  let source = String(js || '');
+  const afterChips = '},G.id))})]}),Ki&&(()=>{const G=Ki';
+  const mapStart = 'n.jsx("div",{"data-ts-day-map":"1"';
+  const afterMap = '})})]}),dn&&(q==="hotels"';
+  const chipIdx = source.indexOf(afterChips);
+  const mapIdx = source.indexOf(mapStart);
+  const endIdx = source.indexOf(afterMap, mapIdx);
+  if (chipIdx < 0 || mapIdx < 0 || endIdx < 0 || mapIdx < chipIdx) {
+    throw new Error('approved look day map reorder anchors missing');
+  }
+  const mapBlock = source.slice(mapIdx, endIdx);
+  const withoutMap = source.slice(0, mapIdx) + source.slice(endIdx);
+  const insertAt = withoutMap.indexOf(afterChips);
+  if (insertAt < 0) {
+    throw new Error('approved look day map reorder insert point missing');
+  }
+  const insertPos = insertAt + '},G.id))})]}),'.length;
+  return `${withoutMap.slice(0, insertPos)}${mapBlock},${withoutMap.slice(insertPos)}`;
+}
+
 export function applyActivePillEdgePatch(js) {
   return js;
 }
@@ -97,7 +119,7 @@ export function applyApprovedLookPatches(source = '') {
   if (js.includes(MAP_SHELL_NEEDLE)) js = js.replace(MAP_SHELL_NEEDLE, MAP_SHELL_PATCH);
   if (js.includes(MAP_CANVAS_NEEDLE)) js = js.replace(MAP_CANVAS_NEEDLE, MAP_CANVAS_PATCH);
   if (js.includes(BSE_NEEDLE)) js = js.replace(BSE_NEEDLE, BSE_PATCH);
-  js = mustReplace(js, LOGO_GRID_NEEDLE, LOGO_GRID_PATCH, 'row logo column');
+  if (js.includes(LOGO_GRID_NEEDLE)) js = js.replace(LOGO_GRID_NEEDLE, LOGO_GRID_PATCH);
   if (js.includes(HOTEL_LINE_NEEDLE)) js = js.replace(HOTEL_LINE_NEEDLE, HOTEL_LINE_PATCH);
   if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
   js = mustReplace(js, '{id:"plan",label:"Day-by-Day",icon:"📅"}', '{id:"plan",label:"Day-by-Day",icon:"☀️"}', 'Day-by-Day sun icon');
@@ -121,6 +143,16 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch missed shared day map tile layer');
   }
   js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
+  js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
+  js = moveDayMapBeforeItinerary(js);
+  if (!js.includes('},G.id))})]}),n.jsx("div",{"data-ts-day-map":"1"') || !js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
+    const planIdx = js.indexOf('q==="plan"&&n.jsxs(n.Fragment');
+    const mapIdx = js.indexOf('{"data-ts-day-map":"1"', planIdx);
+    const kiIdx = js.indexOf('Ki&&(()=>{const G=Ki', planIdx);
+    if (planIdx < 0 || mapIdx < 0 || kiIdx < 0 || mapIdx > kiIdx) {
+      throw new Error('approved look day map is not before itinerary card');
+    }
+  }
   if (!js.includes('data-ts-day-map":"1"') || !js.includes('Yr.getState().settings.map_tile_url||')) {
     throw new Error('approved look patch did not wire shared day map to map_tile_url default');
   }
