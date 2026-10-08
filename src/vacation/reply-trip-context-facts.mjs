@@ -199,7 +199,7 @@ export async function enrichDraftingTripContext(tripContext, {
     }
   }
   ctx = await draftingLodgingFields(ctx, { things, db, tripId });
-  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults);
+  ctx = applyInTurnCitablePlaces(ctx, inTurnPlaceResults, things);
   if (!db || !session?.customer_id) {
     return applyUnscheduledDayStatus(applyTripReplyGate(ctx, things, inTurnPlaceResults));
   }

@@ -27,7 +27,8 @@ import { enrichDraftingTripContext } from './reply-trip-context-facts.mjs';
 import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
-import { blockInTurnPlaceReply, buildLiveAppRewritePending } from './chat-place-search.mjs';
+import { buildLiveAppRewritePending } from './chat-place-search.mjs';
+import { inTurnPlaceLiveReplyHooks } from './in-turn-place-reply-fallback.mjs';
 import {
   placeResultExtra,
   unsourcedAgainstInTurnResults,
@@ -1557,6 +1558,9 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     resolvedDestination.ask ? DESTINATION_ASK : '',
     inviteContactLiveReplySystemExtra(tripContext),
   ].filter(Boolean).join(' ');
+  const placeHooks = inTurnPlaceLiveReplyHooks(tripContext, enforceInTurnPlaces, env);
+
+  const shipInTurnDraft = (draft, extra = {}) => placeHooks.shipDraft(draft, inTurnProviderResults, extra);
   const modelArgs = (turnText, mode) => ({
     rules,
     jev,
@@ -1575,6 +1579,7 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     seat,
     planOwned: commerce.planOwned,
     systemExtra: draftExtra,
+    timeoutMs: placeHooks.timeoutMs,
   });
   let model = await callTieredModel(modelArgs(customerTurn, upsell));
   let reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
@@ -1584,15 +1589,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     reply = applyUpsellPolicy(model?.called && model.text ? String(model.text) : '', upsell, postIntake, customerTurn);
   }
   if (model && typeof model === 'object') model.genLatencyMs = Math.max(0, Date.now() - genStarted);
-  const banned = appTextBanned(reply);
+  let banned = appTextBanned(reply);
   if (!reply || banned) {
-    return {
-      reply: null,
-      rules,
-      jev,
-      model,
-      reason: banned || model?.reason || 'live dispatcher returned no reply',
-    };
+    const recovered = placeHooks.recoverBanned({ reply, banned, model, inTurnProviderResults, failureBase: { rules, jev } });
+    if (!recovered.continue) return recovered.result;
+    ({ reply, banned, model } = recovered);
   }
   const inviteReplyFailure = liveReplyInviteContactFailure({ tripContext, reply });
   if (inviteReplyFailure) {
@@ -1661,20 +1662,20 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
       log: { ...baseLog, draftText: originalDraft, flagged: false, rewriteFailReason: quality?.reason || 'quality_not_judged' },
       reason: quality?.reason || 'quality_not_judged',
     };
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { ...unjudged, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
-    if (blocked) return blocked;
-    return { reply: originalDraft, ...unjudged };
+    const unjudgedReply = shipInTurnDraft(originalDraft, unjudged);
+    if (unjudgedReply?.status) return unjudgedReply;
+    return { reply: unjudgedReply, ...unjudged };
   }
   const needsRewrite = mustRewriteQuality(quality);
   if (!needsRewrite) {
-    const blocked = blockInTurnPlaceReply(originalDraft, enforceInTurnPlaces, inTurnProviderResults, { rules, jev, tripContext, tripPlaceAllowRows: tripContext?.tripReplyGate });
-    if (blocked) return blocked;
+    const shippedReplyText = shipInTurnDraft(originalDraft, { rules, jev });
+    if (shippedReplyText?.status) return shippedReplyText;
     const shipped = stampShippedReply({
-      reply: originalDraft,
+      reply: shippedReplyText,
       quality,
       draftModel,
-      log: { ...baseLog, draftText: originalDraft, flagged: false },
-      draft: originalDraft,
+      log: { ...baseLog, draftText: shippedReplyText, flagged: false },
+      draft: shippedReplyText,
     });
     shipped.model.modelTier = model?.modelTier ?? jev?.modelTier ?? null;
     shipped.model.beats = model?.beats || null;
@@ -2069,7 +2070,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       holding: false,
     };
   }
-  const shippedText = choice.text;
+  let shippedText = choice.text;
   if (!choice.rewritten && !failReason) {
     failReason = choice.failReason === 'rewrite_fact_check_held'
       ? `rewrite_fact_check_held: ${rewriteErrors.join('; ')}`
@@ -2153,10 +2154,9 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
     rewritten: choice.rewritten === true,
     judgeMs,
   };
-  if (pending.enforceInTurnPlaces) {
-    const blocked = blockInTurnPlaceReply(shippedText, true, pending.inTurnPlaceResults, { rules, jev: pending.jev, model: pending.model, quality, log: { ...log, held: true }, tripContext: pending.tripContext, tripPlaceAllowRows: pending.tripContext?.tripReplyGate });
-    if (blocked) return { ...blocked, log: { ...log, rewriteFailReason: blocked.reason, held: true } };
-  }
+  const rewriteGate = inTurnPlaceLiveReplyHooks(pending.tripContext, pending.enforceInTurnPlaces, env).rewriteGate(shippedText, pending, log, { rules, jev: pending.jev, model: pending.model, quality });
+  if (rewriteGate.blocked) return rewriteGate.blocked;
+  shippedText = rewriteGate.shippedText;
   const stamped = stampShippedReply({
     reply: shippedText,
     quality,

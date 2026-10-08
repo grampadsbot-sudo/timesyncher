@@ -113,6 +113,7 @@ scripts/test_intake_lodging_geocode_failed_stated.mjs
 scripts/test_saved_thing_turn_ids.mjs
 scripts/test_place_search_named_place_brave_query.mjs
 scripts/test_gate_b_6_6b_d_fbb8a79.mjs
+scripts/test_gate_b_266_place_search_reply.mjs
 scripts/test_place_search_named_place_competing.mjs
 scripts/test_turn_classifier_turnkind_live_path.mjs
 scripts/test_place_search_target_kind_classifier.mjs

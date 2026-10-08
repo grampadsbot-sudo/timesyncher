@@ -191,7 +191,14 @@ export function modelVisibleTripContext(tripContext) {
   return rest;
 }
 
-export function applyInTurnCitablePlaces(facts, inTurnResults) {
+function savedTripContextOnlyTitle(thing = {}) {
+  const kind = String(thing?.kind || thing?.category || '').trim().toLowerCase();
+  if (['car', 'transport', 'rental'].includes(kind)) return true;
+  const title = String(thing?.title || thing?.name || '').trim();
+  return /rental car|car rental/i.test(title);
+}
+
+export function applyInTurnCitablePlaces(facts, inTurnResults, savedThings = []) {
   if (!facts || typeof facts !== 'object') return facts;
   if (!Array.isArray(inTurnResults) || !inTurnResults.length) return facts;
   const scopedRows = String(facts.searchArea || '').trim() && facts.placeSearchAreaScope
@@ -208,6 +215,9 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
     notCitableAsResult.push(title);
   };
   for (const item of facts.itinerary || []) remember(item);
+  for (const thing of Array.isArray(savedThings) ? savedThings : []) {
+    if (savedTripContextOnlyTitle(thing)) remember(thing?.title || thing?.name);
+  }
   for (const item of facts.survivingPriorDbTitles || []) remember(item);
   for (const item of facts.relevanceRejections || []) remember(item);
   for (const item of facts.priorPlaces || []) remember(item);
@@ -238,6 +248,9 @@ export function applyInTurnCitablePlaces(facts, inTurnResults) {
   if (notCitableAsResult.length) {
     replyFacts.notCitableAsResult = notCitableAsResult;
     replyFacts.notCitableAsResultRule = 'notCitableAsResult places are not results from this turn. Cite only citablePlaces.';
+    if (notCitableAsResult.some((title) => /hertz|alamo|rental car|car rental/i.test(String(title || '')))) {
+      replyFacts.savedCarContextRule = 'Saved rental cars are trip context only; never mention them in a place-search answer.';
+    }
   }
   return omitOutOfTurnSearchAreaLodging(replyFacts);
 }
