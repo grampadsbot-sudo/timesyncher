@@ -20,7 +20,7 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:Yr.getState().settings.map_tile_url||"${TREK_DEFAULT_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_DEFAULT_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",crossOrigin:!0}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
 const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/\{s\}\.[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
 
@@ -145,10 +145,18 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch missed shared day map tile layer');
   }
   js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
+  js = js.replace(
+    /n\.jsx\(fpe,\{url:Yr\.getState\(\)\.settings\.map_tile_url\|\|"https:\/\/\{s\}\.tile\.openstreetmap\.fr\/hot\/\{z\}\/\{x\}\/\{y\}\.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/g,
+    DAY_MAP_TILE_LAYER_PATCH,
+  );
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
   js = js.split('overflow:"hidden","data-ts-day-map":"1",').join('overflow:"hidden",');
   js = js.split('"data-ts-day-map":"1",height:').join('height:');
   js = moveDayMapBeforeItinerary(js);
+  js = js.split('})})]}),,Ki&&(()=>{const G=Ki').join('})})]}),q==="plan"&&Ki&&(()=>{const G=Ki');
+  if (!js.includes('q==="plan"&&Ki&&(()=>{const G=Ki')) {
+    js = js.split(',Ki&&(()=>{const G=Ki').join(',q==="plan"&&Ki&&(()=>{const G=Ki');
+  }
   js = js.split('style:{borderRadius:16,overflow:"hidden","data-ts-day-map":"1",height:').join('style:{borderRadius:16,overflow:"hidden",height:');
   if (!js.includes('},G.id))})]}),n.jsx("div",{"data-ts-day-map":"1"') || !js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
     const planIdx = js.indexOf('q==="plan"&&n.jsxs(n.Fragment');
@@ -158,8 +166,8 @@ export function applyApprovedLookPatches(source = '') {
       throw new Error('approved look day map is not before itinerary card');
     }
   }
-  if (!js.includes('data-ts-day-map":"1"') || !js.includes('Yr.getState().settings.map_tile_url||')) {
-    throw new Error('approved look patch did not wire shared day map to map_tile_url default');
+  if (!js.includes('data-ts-day-map":"1"') || !js.includes(TREK_DEFAULT_MAP_TILE_URL)) {
+    throw new Error('approved look patch did not wire shared day map to HOT tiles');
   }
   if (!js.includes('data-ts-header-mark":"1"') || !js.includes('timesyncher-icon-white-transparent.png') || !js.includes('Timesyncher Travel') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('icon:"☀️"')) {
     throw new Error('approved look patch did not apply');

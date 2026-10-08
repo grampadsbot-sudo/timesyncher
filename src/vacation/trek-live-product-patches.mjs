@@ -108,7 +108,7 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
-const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"block",fontSize:13,lineHeight:1,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(3px)":G.id==="stores"?"translateY(2px)":G.id==="events"?"translateY(2px)":"translateY(0px)"';
+const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"block",fontSize:13,lineHeight:1,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
 
 const BOOKINGS_TAB_ICON_V2_PATCH = `G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon})})`;
 
@@ -184,7 +184,7 @@ export function patchThingLogoChipAlignment(source = '') {
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?Re?"translateY(0px)":"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
   ];
-  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(3px)":G.id==="stores"?"translateY(2px)":G.id==="events"?"translateY(2px)":"translateY(0px)"';
+  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
   for (const needle of tabEmojiTransformNeedles) {
     if (js.includes(needle)) js = js.replaceAll(needle, tabEmojiTransformPatch);
   }
@@ -318,11 +318,16 @@ export function patchTripMapHarnessHook(source = '') {
 
 const DN_HOST_NEEDLE = 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)';
 const DN_HOST_PATCH = 'dn=typeof window<"u"&&(/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/(^127\\.0\\.0\\.1$|^localhost$)/i.test(window.location.hostname))';
+const DN_SHARED_PATH_NEEDLE = '||/timesyncher/i.test(`${la.title||""} ${la.description||""}`)';
+const DN_SHARED_PATH_PATCH = '||/timesyncher/i.test(`${la.title||""} ${la.description||""}`)||(typeof window<"u"&&/(^|\\/)shared\\//.test(window.location.pathname||""))';
 
 export function patchSharedTripHostnameForLocalHarness(js = '') {
-  const source = String(js || '');
-  if (!source.includes(DN_HOST_NEEDLE)) return source;
-  return source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  let source = String(js || '');
+  if (source.includes(DN_HOST_NEEDLE)) source = source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  if (source.includes(DN_SHARED_PATH_NEEDLE) && !source.includes('/(^|\\/)shared\\//.test(window.location.pathname||""))')) {
+    source = source.replace(DN_SHARED_PATH_NEEDLE, DN_SHARED_PATH_PATCH);
+  }
+  return source;
 }
 
 export function applyLiveProductPatches(patched = '', options = {}) {
@@ -336,6 +341,9 @@ export function applyLiveProductPatches(patched = '', options = {}) {
     throw new Error('served shared footer missing AI-assisted itinerary planning tagline');
   }
   if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  if (js.includes(DN_SHARED_PATH_NEEDLE) && !js.includes('/(^|\\/)shared\\//.test(window.location.pathname||""))')) {
+    js = js.replace(DN_SHARED_PATH_NEEDLE, DN_SHARED_PATH_PATCH);
+  }
   js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
