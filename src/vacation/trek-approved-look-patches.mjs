@@ -18,6 +18,11 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
+/** Keyless Carto basemap — same provider as the patched TREK trip map Leaflet fallback (`light_all`). */
+const SHARED_DAY_MAP_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const DAY_MAP_TILE_LAYER_NEEDLE = 'n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})';
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+
 const BOTTOM_MAP_NEEDLE = 'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12,boxShadow:"0 2px 12px rgba(0,0,0,0.08)"},children:n.jsxs(gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba}),La.map(G=>n.jsx(zx,{position:[G.lat,G.lng],icon:mDe(G),eventHandlers:{click:()=>Ne(Qt(G))},children:n.jsx(eZ,{children:mr(G)||G.name})},G.id))]})})';
 
 const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
@@ -113,6 +118,10 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch missed the day map');
   }
   js = js.split(mapOpen).join('n.jsx("div",{"data-ts-day-map":"1",style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12');
+  js = mustReplace(js, DAY_MAP_TILE_LAYER_NEEDLE, DAY_MAP_TILE_LAYER_PATCH, 'shared day map Carto tiles');
+  if (!js.includes('data-ts-day-map":"1"') || !js.includes('basemaps.cartocdn.com/light_all')) {
+    throw new Error('approved look patch did not apply Carto tiles on shared day map');
+  }
   if (!js.includes('data-ts-header-mark":"1"') || !js.includes('timesyncher-icon-white-transparent.png') || !js.includes('Timesyncher Travel') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('icon:"☀️"')) {
     throw new Error('approved look patch did not apply');
   }
