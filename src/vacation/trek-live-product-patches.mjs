@@ -1,3 +1,4 @@
+import { TREK_DEFAULT_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
@@ -25,9 +26,35 @@ const TRIP_MAP_INJECT_NEEDLE = 'function pze({places:e=[],dayPlaces:t=[]';
 const MAP_CENTER_PARIS_A = 'center:r=[48.8566,2.3522]';
 const MAP_CENTER_PARIS_B = 'center:z=[48.8566,2.3522]';
 
-const TRIP_MAP_VIEW_NEEDLE = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",or=[p.default_lat||48.8566,p.default_lng||2.3522],_t=p.default_zoom||10,Ua={fontFamily:';
+const CARTO_LIGHT_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
-const TRIP_MAP_VIEW_PATCH = 'No=p.map_tile_url||"https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r}),[z,r]),or=tsMapIv.ok?[tsMapIv.center.lat,tsMapIv.center.lng]:[NaN,NaN],_t=tsMapIv.ok?tsMapIv.zoom:2,Ua={fontFamily:';
+const TRIP_MAP_VIEW_NEEDLE = `No=p.map_tile_url||"${CARTO_LIGHT_TILE_URL}",or=[p.default_lat||48.8566,p.default_lng||2.3522],_t=p.default_zoom||10,Ua={fontFamily:`;
+
+const TRIP_MAP_VIEW_NEEDLE_HOT = `No=p.map_tile_url||"${TREK_DEFAULT_MAP_TILE_URL}",or=[p.default_lat||48.8566,p.default_lng||2.3522],_t=p.default_zoom||10,Ua={fontFamily:`;
+
+const TRIP_MAP_VIEW_PATCH = `No=p.map_tile_url||"${TREK_DEFAULT_MAP_TILE_URL}",tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r}),[z,r]),or=tsMapIv.ok?[tsMapIv.center.lat,tsMapIv.center.lng]:[NaN,NaN],_t=tsMapIv.ok?tsMapIv.zoom:2,Ua={fontFamily:`;
+
+export function patchDefaultMapTileFallbacks(source = '') {
+  let js = String(source || '');
+  const carto = CARTO_LIGHT_TILE_URL;
+  const fallback = TREK_DEFAULT_MAP_TILE_URL;
+  if (js.includes(`S_e="${carto}"`)) {
+    js = js.replace(`S_e="${carto}"`, `S_e="${fallback}"`);
+  }
+  if (js.includes(`tileUrl:A="${carto}"`)) {
+    js = js.replace(`tileUrl:A="${carto}"`, `tileUrl:A="${fallback}"`);
+  }
+  if (js.includes(`No=p.map_tile_url||"${carto}"`) && !js.includes(`No=p.map_tile_url||"${fallback}"`)) {
+    js = js.replaceAll(`No=p.map_tile_url||"${carto}"`, `No=p.map_tile_url||"${fallback}"`);
+  }
+  if (js.includes(`No=p.map_tile_url||"${fallback}"`) || js.includes(`S_e="${fallback}"`)) {
+    return js;
+  }
+  if (js.includes('map_tile_url') && js.includes(carto)) {
+    throw new Error('trek bundle still uses Carto light_all as map_tile_url fallback');
+  }
+  return js;
+}
 
 const TRIP_MAP_LOG_NEEDLE = 'return I.useEffect(()=>{if(!W&&r){const lt=setTimeout(()=>vn(!0),1500);return()=>clearTimeout(lt)}},[W,r]),W||!jn?';
 
@@ -182,6 +209,7 @@ export function patchTripMapInitialView(source = '') {
     js = js.replace(TRIP_MAP_INJECT_NEEDLE, `${TRIP_MAP_SNIPPET}${TRIP_MAP_INJECT_NEEDLE}`);
   }
   if (js.includes(TRIP_MAP_VIEW_NEEDLE)) js = js.replace(TRIP_MAP_VIEW_NEEDLE, TRIP_MAP_VIEW_PATCH);
+  else if (js.includes(TRIP_MAP_VIEW_NEEDLE_HOT)) js = js.replace(TRIP_MAP_VIEW_NEEDLE_HOT, TRIP_MAP_VIEW_PATCH);
   else if (js.includes('tsMapIv=I.useMemo') && !js.includes('tsMapIv=I.useMemo(()=>tsTripMapInitialView({places:z,trip:r})')) {
     throw new Error('trip map initial view patch did not apply (view needle missing)');
   }
@@ -208,6 +236,7 @@ export function patchTripMapInitialView(source = '') {
   if (!js.includes('map_mount_failed')) {
     throw new Error('trip map mount guard patch did not apply');
   }
+  js = patchDefaultMapTileFallbacks(js);
   return patchTripMapHarnessHook(js);
 }
 

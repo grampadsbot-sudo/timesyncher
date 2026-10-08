@@ -1,5 +1,7 @@
 /** Approved shared-trip look (issue 273). Screenshots win; only CSS differs for PDF. */
 
+import { TREK_DEFAULT_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
+
 const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
 
 const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
@@ -18,12 +20,9 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-/** Keyless Carto basemap — same provider as the patched TREK trip map Leaflet fallback (`light_all`). */
-const SHARED_DAY_MAP_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const DAY_MAP_TILE_LAYER_NEEDLE = 'n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})';
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:Yr.getState().settings.map_tile_url||"${TREK_DEFAULT_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
-const BOTTOM_MAP_NEEDLE = 'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12,boxShadow:"0 2px 12px rgba(0,0,0,0.08)"},children:n.jsxs(gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba}),La.map(G=>n.jsx(zx,{position:[G.lat,G.lng],icon:mDe(G),eventHandlers:{click:()=>Ne(Qt(G))},children:n.jsx(eZ,{children:mr(G)||G.name})},G.id))]})})';
+const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/\{s\}\.[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
 
 const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
 const MAP_SHELL_PATCH = 'className:"w-full h-full relative",style:{height:"100%",width:"100%"},children:';
@@ -118,9 +117,12 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch missed the day map');
   }
   js = js.split(mapOpen).join('n.jsx("div",{"data-ts-day-map":"1",style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12');
-  js = mustReplace(js, DAY_MAP_TILE_LAYER_NEEDLE, DAY_MAP_TILE_LAYER_PATCH, 'shared day map Carto tiles');
-  if (!js.includes('data-ts-day-map":"1"') || !js.includes('basemaps.cartocdn.com/light_all')) {
-    throw new Error('approved look patch did not apply Carto tiles on shared day map');
+  if (!DAY_MAP_TILE_LAYER_RE.test(js)) {
+    throw new Error('approved look patch missed shared day map tile layer');
+  }
+  js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
+  if (!js.includes('data-ts-day-map":"1"') || !js.includes('Yr.getState().settings.map_tile_url||')) {
+    throw new Error('approved look patch did not wire shared day map to map_tile_url default');
   }
   if (!js.includes('data-ts-header-mark":"1"') || !js.includes('timesyncher-icon-white-transparent.png') || !js.includes('Timesyncher Travel') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('icon:"☀️"')) {
     throw new Error('approved look patch did not apply');
