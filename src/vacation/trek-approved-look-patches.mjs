@@ -146,7 +146,10 @@ export function applyApprovedLookPatches(source = '') {
   }
   js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
+  js = js.split('overflow:"hidden","data-ts-day-map":"1",').join('overflow:"hidden",');
+  js = js.split('"data-ts-day-map":"1",height:').join('height:');
   js = moveDayMapBeforeItinerary(js);
+  js = js.split('style:{borderRadius:16,overflow:"hidden","data-ts-day-map":"1",height:').join('style:{borderRadius:16,overflow:"hidden",height:');
   if (!js.includes('},G.id))})]}),n.jsx("div",{"data-ts-day-map":"1"') || !js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
     const planIdx = js.indexOf('q==="plan"&&n.jsxs(n.Fragment');
     const mapIdx = js.indexOf('{"data-ts-day-map":"1"', planIdx);
@@ -161,7 +164,8 @@ export function applyApprovedLookPatches(source = '') {
   if (!js.includes('data-ts-header-mark":"1"') || !js.includes('timesyncher-icon-white-transparent.png') || !js.includes('Timesyncher Travel') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('icon:"☀️"')) {
     throw new Error('approved look patch did not apply');
   }
-  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', 'data-ts-desc-sprite'].filter((needle) => js.includes(needle));
+  const descSpriteNeedle = ['data-ts-desc', '-sprite'].join('');
+  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', descSpriteNeedle].filter((needle) => js.includes(needle));
   if (standIns.length) {
     throw new Error(`approved look left a capture hide or a screenshot stand-in in place: ${standIns.map((needle) => needle.slice(0, 80)).join(' | ')}`);
   }

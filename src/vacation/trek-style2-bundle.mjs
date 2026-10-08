@@ -256,7 +256,7 @@ const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
-const MAP_HEIGHT_PATCH = '"data-ts-day-map":"1",height:dn?420:300,marginBottom:12';
+const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
 
 const NOTICES_FETCH_CALLER = 'async fetch(){if(!(t().fetching||t().loaded)){e({fetching:!0});try{const i=await Rt.get("/system-notices/active");e({notices:i.data,loaded:!0,fetching:!1})}catch(i){console.warn("[systemNotices] failed to fetch:",i),e({loaded:!0,fetching:!1})}}},';
 const APP_CONFIG_CALLER = 'getAppConfig:()=>Rt.get("/auth/app-config").then(e=>e.data),';
@@ -686,8 +686,8 @@ export function assertPatchedStyleTwo(source = '') {
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
       throw new Error('Served shared Oe() rows must expose Gate B list row markers.');
     }
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('Served shared Hotels/Cars tabs must expose data-shared-live-tab panels.');
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"') || !js.includes('data-shared-live-tab":"flights"')) {
+      throw new Error('Served shared Hotels/Cars/Flights tabs must expose data-shared-live-tab panels.');
     }
     if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
       throw new Error('Served shared dc() logo chips must expose data-ts-logo-chip for Gate B.');

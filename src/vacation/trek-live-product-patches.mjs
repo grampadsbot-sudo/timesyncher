@@ -108,7 +108,7 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
-const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"block",fontSize:13,lineHeight:1,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
+const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"block",fontSize:13,lineHeight:1,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(3px)":G.id==="stores"?"translateY(2px)":G.id==="events"?"translateY(2px)":"translateY(0px)"';
 
 const BOOKINGS_TAB_ICON_V2_PATCH = `G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon})})`;
 
@@ -179,11 +179,12 @@ export function patchThingLogoChipAlignment(source = '') {
   const tabEmojiTransformNeedles = [
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(3px)":G.id==="stores"?"translateY(2px)":G.id==="events"?"translateY(2px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(0.5px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?Re?"translateY(0px)":"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
   ];
-  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
+  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(3px)":G.id==="stores"?"translateY(2px)":G.id==="events"?"translateY(2px)":"translateY(0px)"';
   for (const needle of tabEmojiTransformNeedles) {
     if (js.includes(needle)) js = js.replaceAll(needle, tabEmojiTransformPatch);
   }
@@ -550,8 +551,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   js = applyApprovedLookPatches(js);
   js = patchSharedTripOeListRows(js, { phase: 'afterApprovedLook' });
   if (served) {
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"') || !js.includes('data-shared-live-tab":"flights"')) {
+      throw new Error('served shared Hotels/Cars/Flights tab panels missing data-shared-live-tab anchor');
     }
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
       throw new Error('served shared Oe() rows missing Gate B list row markers');

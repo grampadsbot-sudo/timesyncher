@@ -58,6 +58,8 @@ assert.match(bundle, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /data-shared-live-tab":"hotels"/);
 assert.match(bundle, /data-shared-live-tab":"cars"/);
+assert.match(bundle, /data-shared-live-tab":"flights"/);
+assert.match(bundle, /return tsRowList\?n\.jsxs\("li",\{"data-list-row":"1"/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 
 const fixture = JSON.parse(
