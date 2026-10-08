@@ -20,12 +20,12 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",maxZoom:17}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",maxZoom:19,updateWhenIdle:!1,fadeAnimation:!1,keepBuffer:12}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
-const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,maxZoom:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
 
 const DAY_MAP_CONTAINER_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:';
+const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
 
 const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
 const MAP_SHELL_PATCH = 'className:"w-full h-full relative",style:{height:"100%",width:"100%"},children:';
@@ -154,7 +154,12 @@ export function applyApprovedLookPatches(source = '') {
   );
   if (js.includes(DAY_MAP_CONTAINER_NEEDLE)) {
     js = js.replace(DAY_MAP_CONTAINER_NEEDLE, DAY_MAP_CONTAINER_PATCH);
-  } else if (!js.includes('whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:')) {
+  } else if (js.includes('whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:')) {
+    js = js.replace(
+      'whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:',
+      'whenReady:function(){tsKickDayMapTiles(this)},fadeAnimation:!1,children:[n.jsx(fpe,{url:',
+    );
+  } else if (!js.includes('whenReady:function(){tsKickDayMapTiles(this)},fadeAnimation:!1,children:[n.jsx(fpe,{url:')) {
     throw new Error('approved look patch missed shared day map MapContainer whenReady');
   }
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');

@@ -8,11 +8,5 @@
 export const TREK_DEFAULT_MAP_TILE_URL =
   'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 
-/**
- * Shared trip Day-by-Day Leaflet layer.
- * `tile.openstreetmap.org` serves a single-hue “access denied” PNG to datacenter
- * capture (Gate B: 1 hue bucket, ~95% saturated). OSM HOT is the PDF style but
- * is often unreachable from the same hosts. OpenTopoMap is keyless and multi-hue.
- */
-export const TREK_SHARED_DAY_MAP_TILE_URL =
-  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+/** Shared trip Day-by-Day Leaflet layer (same colourful HOT style as the app default). */
+export const TREK_SHARED_DAY_MAP_TILE_URL = TREK_DEFAULT_MAP_TILE_URL;

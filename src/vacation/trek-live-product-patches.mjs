@@ -138,6 +138,7 @@ const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
 const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
+const DAY_MAP_KICK_FN = `function tsKickDayMapTiles(map){if(!map)return;var kick=function(){map.invalidateSize(!0);map.eachLayer(function(layer){layer.redraw&&layer.redraw();});};kick();requestAnimationFrame(kick);setTimeout(kick,200);setTimeout(kick,600);} `;
 const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji||node.tagName==="CANVAS")return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(!chip)return;chip.style.setProperty("display","inline-grid","important");chip.style.setProperty("place-items","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important");var btn=chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label&&label.style.display!=="none"){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}} `;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
@@ -208,6 +209,12 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
   } else if (!js.includes('"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0')) {
     throw new Error('trek bundle missing category tab button anchor for data-tab patch');
+  }
+  if (!js.includes('function tsKickDayMapTiles(')) {
+    if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
+      throw new Error('trek bundle missing anchor for day map tile kick helper');
+    }
+    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${DAY_MAP_KICK_FN}${TAB_EMOJI_INK_ANCHOR}`);
   }
   if (!js.includes('function tsPaintTabEmoji(')) {
     if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
