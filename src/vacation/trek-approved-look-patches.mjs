@@ -83,14 +83,16 @@ function moveDayMapBeforeItinerary(js = '') {
   const afterChips = '},G.id))})]}),Ki&&(()=>{const G=Ki';
   const mapStart = 'n.jsx("div",{"data-ts-day-map":"1"';
   const afterMap = '})})]}),dn&&(q==="hotels"';
+  const mapClose = '})})]}),';
   const chipIdx = source.indexOf(afterChips);
   const mapIdx = source.indexOf(mapStart);
   const endIdx = source.indexOf(afterMap, mapIdx);
   if (chipIdx < 0 || mapIdx < 0 || endIdx < 0 || mapIdx < chipIdx) {
     throw new Error('approved look day map reorder anchors missing');
   }
-  const mapBlock = source.slice(mapIdx, endIdx);
-  const withoutMap = source.slice(0, mapIdx) + source.slice(endIdx);
+  const mapEnd = endIdx + mapClose.length;
+  const mapBlock = source.slice(mapIdx, mapEnd);
+  const withoutMap = source.slice(0, mapIdx) + source.slice(mapEnd);
   const insertAt = withoutMap.indexOf(afterChips);
   if (insertAt < 0) {
     throw new Error('approved look day map reorder insert point missing');
