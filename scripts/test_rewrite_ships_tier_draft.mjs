@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { liveTurnRecord, produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 
 const TIER_MODEL = 'deepseek/deepseek-v3.2';
-const HOLDING_MODEL = 'google/gemini-2.5-flash-lite';
+const HOLDING_MODEL = 'deepseek/deepseek-v4-flash';
 const DRAFT = 'We have corrected Thursday into a town walk.';
 const REWRITE = 'The garden morning moved, and we have corrected the week around it.';
 const HOLDING = 'Thursday can stay a town walk.';

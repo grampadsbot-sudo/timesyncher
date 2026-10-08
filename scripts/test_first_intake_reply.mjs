@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { bakeoffTierModels, replyRulesSystem } from './vacation-app-reply-rules.mjs';
+import { bakeoffTierModels, INTERIM_MODEL, replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import {
   FIRST_INTAKE_GAP_INSTRUCTION,
   FIRST_INTAKE_QUESTION_INSTRUCTION,
@@ -22,7 +22,7 @@ const loadTestOwnerPlan = loadTestSingleOwnerPlan;
 const intakeLive = { intake: true, priorTurns: [], session: { token: 'sess', trip_id: 'test-trip' }, env: { OPENROUTER_API_KEY: 'test-key', ...planEnv }, loadOwnerPlan: loadTestOwnerPlan };
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
-  'google/gemini-2.5-flash-lite',
+  'deepseek/deepseek-v4-flash',
   'qwen/qwen3-235b-a22b-2507',
   'deepseek/deepseek-v3.2',
   'qwen/qwen3-max',
@@ -284,7 +284,7 @@ try {
   assert.equal(produced.reply, voiceReply);
   assert.equal(produced.reason, null);
   assert.equal(produced.jev.modelTier, 1);
-  assert.equal(produced.model.responseModel, tiers[1]);
+  assert.equal(produced.model.responseModel, INTERIM_MODEL);
   assert.equal(Number.isFinite(produced.jev.jevLatencyMs), true);
   assert.equal(Number.isFinite(produced.model.genLatencyMs), true);
   const stored = liveTurnRecord({
@@ -419,7 +419,7 @@ try {
     if (target.includes('/api/alpha/decisions')) return jevOk(2);
     if (target.includes('/chat/completions')) {
       chatCalls.push(body);
-      assert.equal(body.model, tiers[3]);
+      assert.equal(body.model, INTERIM_MODEL);
       assert.doesNotMatch(body.model, /gpt-.*mini/i);
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
       assert.doesNotMatch(system, leakWord);
@@ -437,7 +437,7 @@ try {
   assert.equal(chatCalls.length, 1);
   assert.equal(tierThree.reply, voiceReply);
   assert.equal(tierThree.jev.modelTier, 3);
-  assert.equal(tierThree.model.responseModel, tiers[3]);
+  assert.equal(tierThree.model.responseModel, INTERIM_MODEL);
 
   chatCalls.length = 0;
   globalThis.fetch = async (url) => {

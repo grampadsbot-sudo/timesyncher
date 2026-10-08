@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { callTieredModel, replyRulesSystem } from './vacation-app-reply-rules.mjs';
 import { draftingFacts } from '../src/vacation/live-app-turn.mjs';
 
-const MODEL = 'google/gemini-2.5-flash-lite';
+const MODEL = 'deepseek/deepseek-v4-flash';
 const cannedQuestion = /what(?:'s| is) your preferred airline|which airline|do you need a (?:car|flight)|rent a car|book a flight|preferred airline\?/i;
 
 const rulesSource = await readFile(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');

@@ -94,7 +94,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (href.includes('/chat/completions')) {
     const user = body.messages?.find((message) => message.role === 'user')?.content || '';
     const model = body.model;
-    if (model === 'google/gemini-2.5-flash-lite') {
+    if (model === 'deepseek/deepseek-v4-flash') {
       const system = body.messages?.find((message) => message.role === 'system')?.content || '';
       if (/"template"/.test(system) && /canShip/.test(system)) {
         return json({
@@ -144,7 +144,7 @@ try {
   assert.equal(low.log.rewriterChange, 'Named only the walk from this turn.');
   assert.equal(low.log.draftModel, 'qwen/qwen3-235b-a22b-2507');
   assert.equal(low.log.rewriteModel, low.log.draftModel);
-  assert.equal(low.log.interimReply.model, 'google/gemini-2.5-flash-lite');
+  assert.equal(low.log.interimReply.model, 'deepseek/deepseek-v4-flash');
   assert.match(low.log.interimReply.text, /Thursday town walk/);
   const rewriteCall = calls.find((call) => String(call.body?.messages?.find((message) => message.role === 'user')?.content || '').includes('WHAT_I_CHANGED'));
   assert.equal(rewriteCall.body.model, 'qwen/qwen3-235b-a22b-2507');
@@ -169,7 +169,7 @@ try {
     rewriteAttempts: held.log.rewriteAttempts,
   })}`;
   assert.match(audit, /^quality: 1 · rewrite drafted, held: /);
-  assert.equal(held.log.interimReply.model, 'google/gemini-2.5-flash-lite');
+  assert.equal(held.log.interimReply.model, 'deepseek/deepseek-v4-flash');
 
   calls.length = 0;
   const high = await produceLiveAppReply({
@@ -184,7 +184,7 @@ try {
   assert.equal(high.log.rewriteModel, null);
   assert.equal(high.quality.jevNote, null);
   assert.equal(calls.some((call) => {
-    if (call.body?.model !== 'google/gemini-2.5-flash-lite') return false;
+    if (call.body?.model !== 'deepseek/deepseek-v4-flash') return false;
     const system = String(call.body?.messages?.find((message) => message.role === 'system')?.content || '');
     return !/reply none/.test(system) && !/Do not write a customer reply/.test(system);
   }), false);
