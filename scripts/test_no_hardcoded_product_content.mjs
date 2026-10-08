@@ -137,7 +137,7 @@ assert.equal(patched.includes(areaFallback), false);
 assert.equal(patched.includes(coordNeedle), false);
 assert.equal(patched.includes('||"unpriced"'), false);
 assert.match(patched, /src\.neighborhood/);
-assert.match(patched, /return\[1,2\];return null/);
+assert.match(patched, /return\[1,2\];const tsNamedCoord=is\(G\);return tsNamedCoord\|\|null/);
 assert.match(patched, /children:ie\(G\)\|\|""/);
 const flightLine = patched.split('\n').find((line) => line.startsWith('Rn='));
 assert.equal(new Function('bi', 'G', `${flightLine}; return Rn`)(() => '', {}), '');
@@ -164,9 +164,10 @@ const chips = new Function('Gt', 'Ut', 'le', `return ${chipExpr}`)(
 );
 assert.deepEqual(chips, ['Sample Area', 'Other Area']);
 
-const Sn = new Function('Ke', 'le', `${sliceBetween(patched, 'Sn=(G,Re)=>', 'return a&&Ke.includes(a)?a:""}')}; return Sn`)([], {});
-assert.equal(Sn('Unused Label', { id: 2, name: 'No neighborhood' }), '');
+const Sn = new Function('Ke', 'le', `${sliceBetween(patched, 'Sn=(G,Re)=>', 'return named||"Citywide / Flexible"}')}; return Sn`)([], {});
+assert.equal(Sn('Unused Label', { id: 2, name: 'No neighborhood' }), 'Citywide / Flexible');
 assert.equal(Sn('', { id: 1, name: 'Dinner', source: { neighborhood: 'Sample Area' } }), 'Sample Area');
-assert.equal(Sn('Harbor', { id: 4, name: 'Pier' }), '');
+assert.equal(Sn('Harbor', { id: 4, name: 'Pier' }), 'Citywide / Flexible');
+assert.equal(new Function('Ke', 'le', `${sliceBetween(patched, 'Sn=(G,Re)=>', 'return named||"Citywide / Flexible"}')}; return Sn`)(['Harbor'], {})('Harbor', { id: 4, name: 'Pier' }), 'Harbor');
 
 process.stdout.write('hardcoded product content test passed\n');

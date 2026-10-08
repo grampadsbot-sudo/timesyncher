@@ -14,7 +14,7 @@ assert.equal(rendered, committed);
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-summary-stored":"1"/);
 assert.match(committed, /data-ts-list-row-name":"1"/);
-assert.match(committed, /Rn=Bs\(rr\(G\)\)/);
+assert.match(committed, /Rn=Bs\(rr\(G\)\|\|String\(G\.description\|\|G\.notes\|\|""\)\.replace\(\/\\s\+\/g," "\)\.trim\(\)\)/);
 assert.match(committed, /data-row-video-qr":"1"/);
 assert.match(committed, /zr\.length\?n\.jsx\(Nr,\{items:zr/);
 
