@@ -31,7 +31,7 @@ const FORBIDDEN_PROSE = [
   { id: 'workflow-promise', re: /compare-and-summarize workflow/i },
   { id: 'composer-model', re: /\bcomposer-2/i },
   { id: 'mcp-cursor-product', re: /Claude Web[,、] Cursor|Claude Web وCursor/ },
-  { id: 'ai-assisted', re: /AI-assisted/i, allowOnLegal: true, allowedFooters: ['AI-assisted itinerary planning', 'AI-assisted vacation itinerary planning'] },
+  { id: 'ai-assisted', re: /AI-assisted/i, allowOnLegal: true, allowedFooters: ['AI-assisted vacation itinerary planning'] },
 ];
 
 function stripNonProse(html = '') {
@@ -66,9 +66,8 @@ const renderedBundle = renderServedTrekBundle(raw.toString('utf8'));
 const committedBundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(renderedBundle, committedBundle, 'committed served bundle must match renderServedTrekBundle');
 
-const APPROVED_CARS_CARD = 'Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.';
 const hits = [];
-hits.push(...scanText('public/assets/index-BKun7ofk.js', renderedBundle.split(APPROVED_CARS_CARD).join(' ')));
+hits.push(...scanText('public/assets/index-BKun7ofk.js', renderedBundle));
 for (const rel of CUSTOMER_HTML) {
   const source = readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
   hits.push(...scanText(rel, stripNonProse(source)));

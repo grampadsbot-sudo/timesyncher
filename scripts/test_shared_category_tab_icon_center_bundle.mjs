@@ -15,7 +15,7 @@ const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /data-tab-category":G\.id/);
 assert.match(rendered, /display:"inline-flex",alignItems:"center",verticalAlign:"middle"\},children:G\.label\}/);
 assert.match(rendered, /function tsPaintTabEmoji\(/);
-assert.match(rendered, /AI-assisted itinerary planning/);
+assert.match(rendered, /AI-assisted vacation itinerary planning/);
 
 const atR20Tip = execFileSync('git', ['show', '9986132:public/assets/index-BKun7ofk.js'], {
   maxBuffer: 25 * 1024 * 1024,

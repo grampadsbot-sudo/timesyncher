@@ -214,7 +214,7 @@ const SE_NEEDLE = 'function _se({title:e,html:t,styles:i}){return I.useEffect(()
 const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e||"").replace(/^TimeSyncher Vacation\s*[—–-]\s*/gi,"").replace(/\s+(Summary|Keepsake Style 2)$/i,"").trim()||"Vacation";const seGo=()=>{if(typeof document>"u"||!t)return;if(document.body&&document.body.getAttribute("data-ae-print")==="1")return;const c=async()=>{const imgs=Array.from(document.querySelectorAll(".print-media-card>img:not(.print-media-qr)"));await Promise.all(imgs.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/(jpeg|jpg|png|webp);base64,/i.test(x)&&x.length>12000){r.setAttribute("data-print-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(/^data:/i.test(z)&&z.length<12000){r.remove();return}const U=await fetch(z,{cache:"reload"});if(!U.ok){r.remove();return}const b=await U.blob();if(b.size<4096||b.size===3071){r.remove();return}let bmp=null;try{bmp=await createImageBitmap(b)}catch{}if(bmp&&bmp.width===1024&&bmp.height===1024&&b.size<8192){r.remove();return}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});r.src=data;r.setAttribute("data-print-inlined","1")}catch{r.remove()}}));const logos=Array.from(document.querySelectorAll("img.tiny-logo,img.thing-logo"));await Promise.all(logos.map(async r=>{const x=r.getAttribute("src")||"";if(/^data:image\\/svg\\+xml/i.test(x)&&x.includes("%3Csvg")){r.setAttribute("data-logo-inlined","1");return}try{const z=new URL(x,document.baseURI).href;if(!/\\/ts-thing-logos\\//i.test(z)&&!/\\/ts-thing-logos\\//i.test(x))return;const U=await fetch(z,{cache:"reload"});if(!U.ok)return;const txt=await U.text();if(!txt.includes("<svg"))return;r.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(txt);r.setAttribute("data-logo-inlined","1")}catch{}}));document.querySelectorAll(".print-brand,.pdf-final-logo,.pdf-page-counter,.page-count,.style2-cover").forEach(r=>r.remove());document.querySelectorAll("[data-end-continuous] .map-box,[data-post-itinerary] .map-box,[data-endlist-maps] .map-box,[data-end-continuous] .static-print-map").forEach(r=>r.remove());document.querySelectorAll("[data-last-logo-page]").forEach(r=>r.remove());const logoOn=!!document.querySelector(\'[data-config-logo="1"]\');if(logoOn&&!document.querySelector("[data-last-page-logo]")){const pages=Array.from(document.querySelectorAll(".page"));const lastContent=[...pages].reverse().find(r=>!r.matches(".daily-map-page,[data-day-map-page],[data-last-logo-page]")&&(r.querySelector(".thing,.style2-thing,.daily-thing,.logo-list li,[data-list-row],.story-card")||r.getAttribute("data-post-itinerary")==="1"))||pages[pages.length-1];if(lastContent){lastContent.setAttribute("data-last-content-page","1");const z=document.createElement("div");z.className="ts-last-page-logo";z.setAttribute("data-last-page-logo","1");z.setAttribute("data-brand-lockup","timesyncher-hourglass-vacation");z.setAttribute("data-hourglass-between","1");z.innerHTML=\'<span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="" /><span>Vacation</span>\';lastContent.appendChild(z)}}if(document.body)document.body.setAttribute("data-print-media-ready","1")};document.open(),document.write(`<!doctype html><html><head><base href="${(typeof location<"u"&&location.origin)||"https://vacation-staging.timesyncher.com"}/" /><title>${seTitle.replace(/[&<>\\"]/g,"")}</title>${i}</head><body data-ae-print="1" data-print-ready="style2">${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()};seGo();I.useEffect(()=>{seGo()},[e,t,i]);return n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}';
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
-const DS_PATCH = 'Ds=G=>{var Re;if(/flight option/i.test(String(G.name||G.title||"")))return!0;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
+const DS_PATCH = 'Ds=G=>{var Re,on;return on=(Re=ha(G))==null?void 0:Re.timeline,on==null?(Mi(G)?!1:hl(G)):!!on}';
 
 const OP_GRID_NEEDLE = '<div class="daily-grid">${js}<main class="daily-details">';
 const OP_GRID_PATCH = '<div class="daily-grid" data-two-col="1" style="display:table;width:100%;table-layout:fixed">${js}<main class="daily-details" data-two-col-details="1" style="display:table-cell;width:62%;vertical-align:top">';
@@ -229,14 +229,14 @@ const AREA_CHIP_NYC = 'Ya=["Upper West Side / Lincoln Center","Upper West Side /
 const NYC_AREA_LIST = AREA_CHIP_NYC.slice('Ya='.length);
 const AREA_CHIPS_FROM_SOURCE = '(function(){const key=G=>G?`${G.name?"place":"reservation"}:${G.id||G.place_id||G.title||G.name}`:"";const nb=G=>{if(!G)return"";const ov=le[key(G)]||{};const src=G.source&&typeof G.source==="object"?G.source:(ov.source&&typeof ov.source==="object"?ov.source:{});return String(src.neighborhood||G.neighborhood||ov.neighborhood||"").trim()};const seen=new Set();const chips=[];for(const G of [...(Gt||[]),...(Ut||[])]){const n=nb(G);if(n&&!seen.has(n)){seen.add(n);chips.push(n)}}return chips})()';
 const AREA_FALLBACK_NEEDLE = 'Sn=(G,Re)=>Ke.includes(String(G||""))?String(G):aa(Re)||"Citywide / Flexible"';
-const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();if(a&&Ke.includes(a))return a;const named=typeof aa==="function"?aa(Re):"";return named||"Citywide / Flexible"}';
+const AREA_FALLBACK_PATCH = 'Sn=(G,Re)=>{const key=Re?`${Re.name?"place":"reservation"}:${Re.id||Re.place_id||Re.title||Re.name}`:"";const ov=le[key]||{};const src=Re&&Re.source&&typeof Re.source==="object"?Re.source:(ov.source&&typeof ov.source==="object"?ov.source:{});const n=String((src&&src.neighborhood)||(Re&&Re.neighborhood)||ov.neighborhood||"").trim();if(n)return n;const a=String(G||"").trim();return a&&Ke.includes(a)?a:""}';
 const COORD_NAME_MAP_NEEDLE = 'const Zn=is(G);return Zn||null';
-const COORD_SOURCE_PATCH = 'const tsNamedCoord=is(G);return tsNamedCoord||null';
-const AREA_NAME_MATCHER = /a\u0000NEVER_NULL_AREA_MATCHER\u0000/;
+const COORD_SOURCE_PATCH = 'return null';
+const AREA_NAME_MATCHER = /,aa=G=>\{const Re=Ot\(G\);return[\s\S]*?\},ha=G=>/;
 const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
-const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
 const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
 const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
@@ -250,7 +250,7 @@ const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
-const IT_CATEGORY_PATCH = 'It=G=>{const named=Fn(G);if(named==="store")return "store";if(/\\bflight\\b/i.test(String(G.name||G.title||"")))return "flight";if(named==="music"||named==="tour"||named==="sightseeing"||named==="tickets"||named==="bar"||named==="theatre"||named==="workout"||named==="artist")return named;return Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??named)}';
+const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
@@ -680,7 +680,7 @@ export function assertPatchedStyleTwo(source = '') {
     if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
     }
-    if ((js.includes('GBrain') || js.includes('Coming soon')) && !js.includes('Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.')) {
+    if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
     }
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
@@ -728,7 +728,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
     throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
   }
-  if (!js.includes('data-ts-day-map":"1"') || js.includes(MAP_HEIGHT_NEEDLE)) {
+  if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
   }
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
@@ -953,7 +953,7 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('[data-end-continuous] .map-box') || !js.includes('.style2-cover')) {
     throw new Error('_se() must strip end-list maps and leftover zu() style2-cover.');
   }
-  if (js.includes(NYC_AREA_LIST)) {
+  if (js.includes(NYC_AREA_LIST) || js.includes('Times Square')) {
     throw new Error('Area chips must come from each Thing source neighborhood, not a fixed city list.');
   }
   if (js.includes(AREA_FALLBACK_NEEDLE)) {

@@ -1,7 +1,6 @@
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
-import { applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 
@@ -81,11 +80,11 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:22,height:22,minWidth:22,minHeight:22,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 22px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:22,height:22},children:n.jsx("canvas",{width:44,height:44,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:22,height:22,display:"block"}})})})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
-const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
+const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
 
 const TAB_BUTTON_LINE_HEIGHT_NEEDLE = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,background:q===G.id?';
 
@@ -99,7 +98,7 @@ const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
 const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
-const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}}var cssSize=22,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var font='22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';function paint(dx,dy){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2+dx,cssSize/2+dy)}paint(0,0);var img=ctx.getImageData(0,0,node.width,node.height);var minX=1e9,minY=1e9,maxX=-1,maxY=-1,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y}}if(maxX>=0)paint((node.width/2-(minX+maxX)/2)/dpr,(node.height/2-(minY+maxY)/2)/dpr)}`;
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
@@ -261,8 +260,8 @@ export function applyLiveProductPatches(patched = '', options = {}) {
     throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
   }
   if (js.includes(LOGO_SELECTOR_NEEDLE)) js = js.replace(LOGO_SELECTOR_NEEDLE, LOGO_SELECTOR_PATCH);
-  if (served && !js.includes('AI-assisted itinerary planning')) {
-    throw new Error('served shared footer missing AI-assisted itinerary planning tagline');
+  if (served && !js.includes('AI-assisted vacation itinerary planning')) {
+    throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
   }
   if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
   js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
@@ -327,7 +326,7 @@ const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.ite
 const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
 
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
-const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G)||String(G.description||G.notes||"").replace(/\\s+/g," ").trim())';
+const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
 const OE_LIST_LOGO_WRAP_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_LIST_LOGO_WRAP_PATCH = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
@@ -367,13 +366,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     if (!js.includes(HOTELS_TAB_CATALOG_NEEDLE)) {
       throw new Error('served shared Hotels tab missing vi(kn,"hotels") Oe row anchor');
     }
-    if (!js.includes(CARS_TAB_PLACEHOLDER_NEEDLE) && !js.includes(CARS_TAB_SERVED_PATCH)) {
+    if (js.includes(CARS_TAB_PLACEHOLDER_NEEDLE)) {
+      js = js.replace(CARS_TAB_PLACEHOLDER_NEEDLE, CARS_TAB_SERVED_PATCH);
+    } else if (!js.includes(CARS_TAB_SERVED_PATCH)) {
       throw new Error('served shared Cars tab missing vi(bc,"cars") Oe row anchor');
     }
     if (js.includes('tsSharedLiveTabListMount') || js.includes('data-shared-live-tab-mount')) {
       throw new Error('served shared bundle still mounts liveTabLists HTML');
     }
-    if ((js.includes('GBrain') || js.includes('Coming soon')) && !js.includes('Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.')) {
+    if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('served shared bundle still contains internal or placeholder customer copy');
     }
   }
@@ -477,7 +478,12 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  js = applyApprovedLookPatches(js);
+  const TWO_LINE_ROW_NEEDLE = 'return Sa?n.jsxs("li",{"data-list-row":"1"';
+  const TWO_LINE_ROW_PATCH = 'return (Sa||!(bn(G)||Mi(G)||Zi(G)))?n.jsxs("li",{"data-list-row":"1"';
+  if (js.includes(TWO_LINE_ROW_NEEDLE)) js = js.replace(TWO_LINE_ROW_NEEDLE, TWO_LINE_ROW_PATCH);
+  else if (served && !js.includes(TWO_LINE_ROW_PATCH)) {
+    throw new Error('served list rows missing the one-line branch');
+  }
   if (served) {
     if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
       throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
