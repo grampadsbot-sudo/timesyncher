@@ -17,9 +17,7 @@ const committed = readFileSync(new URL('../public/assets/index-BKun7ofk.js', imp
 assert.equal(bundle, committed, 'committed served bundle must match renderServedTrekBundle');
 
 assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
-assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const tsOwn=_l\(G\),\[tsSeen,tsSetSeen\]=I\.useState\(\{\}\)/);
-assert.match(bundle, /tsLogoSearch\(G,mr\(G\),It\(G\)\)/);
-assert.doesNotMatch(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{[^}]*Pc\(G\)/);
+assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);

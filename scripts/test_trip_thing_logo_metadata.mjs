@@ -51,9 +51,7 @@ assert.equal(place.logoUrl, 'https://lodging.example/favicon.ico');
 assert.equal(override.logoUrl, 'https://lodging.example/favicon.ico');
 
 const bundle = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
-assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const tsOwn=_l\(G\),\[tsSeen,tsSetSeen\]=I\.useState\(\{\}\)/);
-assert.match(bundle, /tsLogoSearch\(G,mr\(G\),It\(G\)\)/);
-assert.doesNotMatch(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{[^}]*Pc\(G\)/);
+assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
 
 console.log('trip thing logo metadata tests passed');

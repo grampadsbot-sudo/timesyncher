@@ -28,7 +28,7 @@ Swim backup copy uses NWS, then Open-Meteo, for the trip location and dates. A m
 
 ## Intake classifier
 
-Trip intake uses OpenRouter Jev decisions (`typesafe/jev-1.13` by default) for the trip_intake gate, then structured extraction on bake-off tier 1 from `dialog-runners/tier_models.json` (`deepseek/deepseek-v4-flash`). A `gpt-*-mini` model is not called.
+The screenshot classifier defaults to `google/gemini-2.5-flash-lite` on OpenRouter. A `gpt-*-mini` model is not called.
 
 ## Live tabs
 

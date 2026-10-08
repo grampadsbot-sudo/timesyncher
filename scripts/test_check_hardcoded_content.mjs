@@ -529,7 +529,7 @@ assert.deepEqual(scanText(bakeoffFile, `${bakeoffLine}\n`).filter((finding) => f
 assert.deepEqual(classify(scanText('src/vacation/same-line-other-file.mjs', `${bakeoffLine}\n`), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
 assert.deepEqual(classify(scanText('src/vacation/model-join.mjs', "const id = ['gpt-', '4.1-mini'].join('');\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
 assert.deepEqual(classify(scanText('src/vacation/model-template.mjs', "const id = `gpt-${'4.1-mini'}`;\n"), []).fail.map((finding) => [finding.rule, finding.symbol_or_pattern]), [['EVASION', 'gpt-4.1-mini']]);
-assert.equal(scanText('src/vacation/allowed-model-concat.mjs', "const id = 'deepseek/' + 'deepseek-v4-flash';\n").some((finding) => finding.rule === 'EVASION'), false);
+assert.equal(scanText('src/vacation/allowed-model-concat.mjs', "const id = 'google/' + 'gemini-2.5-flash-lite';\n").some((finding) => finding.rule === 'EVASION'), false);
 
 const renamed = scanText('src/vacation/content-rename.mjs', readFixture('content-rename.mjs'));
 assert.equal(renamed.some((finding) => finding.symbol_or_pattern === 'RANGE_END' || finding.symbol_or_pattern === 'inventory:B12'), false);
@@ -560,8 +560,7 @@ assert.equal(bareRun.status, 1, bareRun.stdout);
 for (const id of ['grok-4', 'grok-3-mini', 'gpt-4o', 'claude-3-5-sonnet', 'gemini-2.0-flash']) {
   assert.match(bareRun.stderr, new RegExp(`FAIL\\tMODEL-BARE\\tsrc/vacation/model-bare\\.mjs:\\d+\\t${id}`));
 }
-const retiredT1Bare = `gemini-2.5-${'flash' + '-' + 'lite'}`;
-assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, new RegExp(retiredT1Bare.replaceAll('.', '\\.')));
+assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /gemini-2\.5-flash-lite/);
 assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-235b-a22b-2507/);
 assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /deepseek-v3\.2/);
 assert.doesNotMatch(`${bareRun.stdout}\n${bareRun.stderr}`, /qwen3-max/);

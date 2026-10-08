@@ -88,7 +88,7 @@ const env = {
   TIMESYNCHER_JEV_CLASSIFY_URL: 'https://jev.example/api/alpha/decisions',
 };
 const TIER_MODEL = 'deepseek/deepseek-v3.2';
-const HOLDING_MODEL = 'deepseek/deepseek-v4-flash';
+const HOLDING_MODEL = 'google/gemini-2.5-flash-lite';
 
 const originalFetch = globalThis.fetch;
 let capturedSystem = '';

@@ -163,8 +163,8 @@ assert.equal(isTemplateInterim('The town walk on Thursday can stay light.', 'Thu
 assert.equal(isTemplateInterim('I am building the itinerary.', 'Build the itinerary and send an email invite.', judgedBlock), true);
 assert.equal(isTemplateInterim('I am building the itinerary from that now. View access lets them see the days. Edit access lets them add notes after you approve an email invite.', 'Please build the itinerary and send an email invite.', judgedShip), false);
 assert.deepEqual(interimProblems([
-  { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'deepseek/deepseek-v4-flash', ms: 400, judge: judgedShip } },
-  { turnIndex: 4, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'deepseek/deepseek-v4-flash', ms: 500, judge: judgedShip } },
+  { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 400, judge: judgedShip } },
+  { turnIndex: 4, role: 'app', quality: { rewritten: true }, interimReply: { text: 'The town walk on Thursday can stay light.', model: 'google/gemini-2.5-flash-lite', ms: 500, judge: judgedShip } },
 ]), ['interim reply repeats across turns 2 and 4']);
 assert.deepEqual(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: null, model: null, ms: null } },
@@ -173,7 +173,7 @@ assert.match(interimProblems([
   { turnIndex: 2, role: 'app', quality: { rewritten: true }, interimReply: { text: null, model: null, ms: null } },
 ])[0], /missing an interim/);
 assert.match(interimProblems([
-  { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'deepseek/deepseek-v4-flash', ms: 200 } },
+  { turnIndex: 2, role: 'app', quality: { rewritten: false }, interimReply: { text: 'Thursday stays a town walk.', model: 'google/gemini-2.5-flash-lite', ms: 200 } },
 ])[0], /non-rewrite turn has an interim/);
 assert.equal(dialogPackTitle('Big Island Family'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
 assert.equal(dialogPackTitle('Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134'), 'Dialog Pack \u2014 Big Island Family v7 Tier 1\u20134');
@@ -751,7 +751,7 @@ const jevRewrite = liveDoc({
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
     rewriterChange: 'Kept the harbor morning and named only the walk.',
-    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'deepseek/deepseek-v4-flash', ms: 900, judge: { judged: true, template: false, canShip: true } },
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900, judge: { judged: true, template: false, canShip: true } },
     flagged: false,
   } : turn)),
 });
@@ -779,7 +779,7 @@ const heldDraft = liveDoc({
     text: 'The harbor walk still opens the morning, and the afternoon stays open for Craig.',
     held: true,
     quality: { judged: true, score: 4.03, rewritten: false, model: 'typesafe/jev-1.13', judgeMs: 400, draft: 'Start with the harbor walk, then keep the afternoon open.' },
-    shippedModel: 'deepseek/deepseek-v4-flash',
+    shippedModel: 'google/gemini-2.5-flash-lite',
     draftModel: 'qwen/qwen3-235b-a22b-2507',
     rewriteModel: 'qwen/qwen3-235b-a22b-2507',
     rewriteText: 'Tuesday stays a swim on the beach.',
@@ -789,7 +789,7 @@ const heldDraft = liveDoc({
     jevScoreRewrite: 3,
     jevNote: null,
     jevNoteReason: 'jev_no_free_text',
-    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'deepseek/deepseek-v4-flash', ms: 900, judge: { judged: true, template: false, canShip: true } },
+    interimReply: { text: 'The harbor morning can stay loose while I shape the walk.', model: 'google/gemini-2.5-flash-lite', ms: 900, judge: { judged: true, template: false, canShip: true } },
     rewriteAttempts: [{ text: 'Tuesday stays a swim on the beach.', model: 'qwen/qwen3-235b-a22b-2507', score: 3, ms: 1200, error: 'rewrite_near_draft' }],
   } : turn)),
 });
@@ -828,7 +828,7 @@ assert.match(text, /no_gpt5mini/);
 assert.match(text, /qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /deepseek\/deepseek-v3.2/);
 assert.match(text, /qwen\/qwen3-max/);
-assert.match(text, /deepseek\/deepseek-v4-flash/);
+assert.match(text, /google\/gemini-2.5-flash-lite/);
 assert.doesNotMatch(text, /gpt-4\.1-mini/);
 assert.match(text, /Full interleaved transcript/);
 assert.match(text, /T2 APP/);
@@ -847,7 +847,7 @@ assert.match(text, /Session wall time is 3000ms/);
 assert.match(text, /draftModel: qwen\/qwen3-235b-a22b-2507/);
 assert.match(text, /flagged: false/);
 assert.match(jevRewritePdf, /interimReply\.text: The\s+harbor\s+morning/);
-assert.match(jevRewritePdf, /interimReply\.model: deepseek\/deepseek-v4-flash/);
+assert.match(jevRewritePdf, /interimReply\.model: google\/gemini-2\.5-flash-lite/);
 assert.match(jevRewritePdf, /interimReply\.ms:\s*900/);
 assert.doesNotMatch(text, /not judged/);
 assert.match(text, /v7 Tier 1–4|v7 Tier 1.4/);
@@ -983,12 +983,12 @@ assert.match(extractPdfText(fs.readFileSync(outPath)), /T2 APP/);
 
 const timingLine = formatLiveTimingLine({
   gen: 750,
-  model: 'deepseek/deepseek-v4-flash',
+  model: 'google/gemini-2.5-flash-lite',
   tier: 1,
   jevMs: 222,
   maxTokens: 900,
 });
-assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=deepseek/deepseek-v4-flash tier=1 max_tokens=900');
+assert.equal(timingLine, 'timing: jev=222ms gen=750ms model=google/gemini-2.5-flash-lite tier=1 max_tokens=900');
 assert.equal(timingLine.includes('zev'), false);
 const poison = {
   deploy_banner: 'live 0123456789abcdef0123456789abcdef01234567 https://vacation-staging.timesyncher.com',
@@ -1008,7 +1008,7 @@ const poison = {
     app: true,
     text: 'Monday swim stays on the Big Island.',
     quality: 'quality: 4 — Clear day shape.',
-    timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 zev=222ms max_tokens=900',
+    timing: 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 zev=222ms max_tokens=900',
   }],
 };
 const poisoned = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
@@ -1038,7 +1038,7 @@ assert.notEqual(bannedPack.status, 0);
 assert.match(bannedPack.stderr?.toString() || '', /split-payment jargon/);
 const unjudged = {
   ...poison,
-  turns: [{ ...poison.turns[0], quality: 'quality: not judged', timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 jev=222ms max_tokens=900' }],
+  turns: [{ ...poison.turns[0], quality: 'quality: not judged', timing: 'timing: gen=750ms model=google/gemini-2.5-flash-lite tier=1 jev=222ms max_tokens=900' }],
 };
 const unjudgedPack = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
   input: JSON.stringify(unjudged),
@@ -1063,7 +1063,7 @@ assert.match(stampedText, /build used vs tip:/);
 assert.match(stampedText, /equals the tip/);
 assert.match(stampedText, /Dialog Pack — Big Island Family v7 Tier 1–4/);
 assert.doesNotMatch(stampedText, /session-token/);
-assert.match(stampedText, /T1 deepseek\/deepseek-v4-flash/);
+assert.match(stampedText, /T1 google\/gemini-2.5-flash-lite/);
 const publisherSource = fs.readFileSync(script, 'utf8');
 assert.equal(publisherSource.includes('transcript.buildSha ='), false);
 

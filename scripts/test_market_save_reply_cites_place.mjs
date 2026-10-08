@@ -80,7 +80,7 @@ assert.match(areaDropped?.reason || '', /not from in-turn provider results/);
 
 const placeSearchReplyFacts = attachSearchArea(saved.placeSearchReplyFacts, classification);
 assert.equal(placeSearchReplyFacts.searchArea, MARKET_SEARCH_ANCHOR);
-const HOLDING_MODEL = 'deepseek/deepseek-v4-flash';
+const HOLDING_MODEL = 'google/gemini-2.5-flash-lite';
 const env = {
   OPENROUTER_API_KEY: 'test-key',
   TIMESYNCHER_JEV_CLASSIFY_URL: 'https://jev.example/api/alpha/decisions',

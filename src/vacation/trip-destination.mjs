@@ -1,4 +1,4 @@
-import { openRouterTier1BakeoffModelId, openRouterTier1CompactCallSpread } from '../../scripts/openrouter-tier-provider.mjs';
+import { INTERIM_MODEL } from '../../scripts/vacation-app-reply-rules.mjs';
 
 const NONE = /^(none|missing|unknown)$/i;
 const CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -46,22 +46,6 @@ export async function resolveTripDestination({ saved = '', texts = [], complete 
   return { destination: '', ask: true, source: '' };
 }
 
-export function destinationExtractionChatRequest(corpus) {
-  return {
-    model: openRouterTier1BakeoffModelId(),
-    ...openRouterTier1CompactCallSpread(1),
-    temperature: 0,
-    max_tokens: 40,
-    messages: [
-      {
-        role: 'system',
-        content: 'Read the customer chat. If they named where the trip is, reply with only that place in their words. If they did not name a place, reply none. Do not invent a place.',
-      },
-      { role: 'user', content: String(corpus || '') },
-    ],
-  };
-}
-
 export async function openRouterDestinationComplete(corpus, env = process.env) {
   const key = String(env?.OPENROUTER_API_KEY || env?.TIMESYNCHER_OPENROUTER_API_KEY || '').trim();
   if (!key) throw new Error('destination_extraction_unavailable');
@@ -72,7 +56,18 @@ export async function openRouterDestinationComplete(corpus, env = process.env) {
       'content-type': 'application/json',
       accept: 'application/json',
     },
-    body: JSON.stringify(destinationExtractionChatRequest(corpus)),
+    body: JSON.stringify({
+      model: INTERIM_MODEL,
+      temperature: 0,
+      max_tokens: 40,
+      messages: [
+        {
+          role: 'system',
+          content: 'Read the customer chat. If they named where the trip is, reply with only that place in their words. If they did not name a place, reply none. Do not invent a place.',
+        },
+        { role: 'user', content: String(corpus || '') },
+      ],
+    }),
     signal: AbortSignal.timeout(20000),
   });
   const body = await response.json().catch(() => ({}));

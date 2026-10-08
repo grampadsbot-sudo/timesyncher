@@ -1,5 +1,5 @@
 const TAB_ROW_OVERFLOW_NEEDLE = 'maxWidth:1120,width:"100%",boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,marginLeft:-8,marginRight:-8,width:"calc(100% + 16px)",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
-const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"visible"},children:[n.jsx("div",{style:{display:"flex",gap:6,marginBottom:20,marginLeft:(typeof window<"u"&&window.innerWidth>=760?-27:-58),marginRight:-28,width:"max-content",minWidth:"calc(100% + 56px)",overflowX:"visible",padding:"2px 0",flexWrap:"nowrap",justifyContent:"center"}';
+const TAB_ROW_OVERFLOW_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"visible"},children:[n.jsx("div",{style:{display:"flex",gap:6,marginBottom:20,marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:-58),marginRight:-28,width:"max-content",minWidth:"calc(100% + 56px)",overflowX:"visible",padding:"2px 0",flexWrap:"nowrap",justifyContent:"center"}';
 const TAB_ROW_OVERFLOW_FULLWIDTH_NEEDLE = 'maxWidth:"100%",width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"clip"';
 
 const DETAIL_DAYS_GRID_NEEDLE = 'gridTemplateColumns:Mi(Dt)?"88px minmax(150px, 1fr) 128px":"88px 104px minmax(150px, 1fr) 128px"';
@@ -7,7 +7,7 @@ const DETAIL_DAYS_GRID_PATCH = 'gridTemplateColumns:Mi(Dt)?"minmax(72px,auto) mi
 const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2},children:Qa.map';
 const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflow:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
-const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
+const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%",height:0,minHeight:0,overflow:"hidden",padding:0,margin:0';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;

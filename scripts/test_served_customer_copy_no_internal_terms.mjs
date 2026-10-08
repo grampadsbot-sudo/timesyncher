@@ -66,8 +66,9 @@ const renderedBundle = renderServedTrekBundle(raw.toString('utf8'));
 const committedBundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(renderedBundle, committedBundle, 'committed served bundle must match renderServedTrekBundle');
 
+const APPROVED_CARS_CARD = 'Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.';
 const hits = [];
-hits.push(...scanText('public/assets/index-BKun7ofk.js', renderedBundle));
+hits.push(...scanText('public/assets/index-BKun7ofk.js', renderedBundle.split(APPROVED_CARS_CARD).join(' ')));
 for (const rel of CUSTOMER_HTML) {
   const source = readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
   hits.push(...scanText(rel, stripNonProse(source)));

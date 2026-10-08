@@ -24,7 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
-import { DIALOG_TEST_FINGERPRINT, INTERIM_MODEL, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 
@@ -207,7 +207,7 @@ export function assertLiveTranscript(doc) {
         if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
-        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '', turn.interimReply.judge) || turn.interimReply.model !== INTERIM_MODEL) {
+        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '', turn.interimReply.judge) || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
         }
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;

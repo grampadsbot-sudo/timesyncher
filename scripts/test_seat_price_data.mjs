@@ -46,7 +46,7 @@ globalThis.fetch = async (url, init = {}) => {
   if (user.includes('PRICE UNSET')) {
     return json({ model: body.model, choices: [{ message: { content: 'Thursday stays open.' } }] });
   }
-  if (body.model === 'deepseek/deepseek-v4-flash') {
+  if (body.model === 'google/gemini-2.5-flash-lite') {
     return json({ model: body.model, choices: [{ message: { content: 'The plan for Ada is $19, paid by you.' } }] });
   }
   return json({ model: body.model, choices: [{ message: { content: 'Thursday draft stays open for the plan.' } }] });
@@ -76,7 +76,7 @@ try {
   });
   assert.equal(priced.reply, 'Thursday draft stays open for the plan.');
   const mainDollars = dollarHits((call, system) => system.includes('vacation-app producer'));
-  const interimDollars = dollarHits((call, system) => system.includes('State this line exactly') && call.body?.model === 'deepseek/deepseek-v4-flash');
+  const interimDollars = dollarHits((call, system) => system.includes('State this line exactly') && call.body?.model === 'google/gemini-2.5-flash-lite');
   assert.ok(mainDollars.length > 0, 'main reply path received no price');
   assert.ok(interimDollars.length > 0, 'interim reply path received no price');
   assert.equal(mainDollars[0], 19);

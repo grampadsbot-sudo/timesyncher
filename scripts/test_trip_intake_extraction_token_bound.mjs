@@ -10,7 +10,7 @@ import {
 } from '../src/vacation/trip-intake-classify.mjs';
 
 const tierModel = bakeoffTierModels()[1];
-assert.equal(tierModel, 'deepseek/deepseek-v4-flash');
+assert.equal(tierModel, 'google/gemini-2.5-flash-lite');
 
 const schema = tripIntakeExtractionJsonSchema();
 const bound = tripIntakeExtractionMaxTokens(schema);
@@ -24,7 +24,6 @@ assert.equal(request.model, tierModel);
 assert.equal(request.max_tokens, bound);
 assert.equal(request.temperature, 0);
 assert.equal(request.provider.require_parameters, true);
-assert.deepEqual(request.provider.max_price, { prompt: 0.15, completion: 0.40 });
 assert.equal(request.response_format.type, 'json_schema');
 assert.equal(request.response_format.json_schema.strict, true);
 assert.equal(request.response_format.json_schema.name, 'trip_intake_extraction');
