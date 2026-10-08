@@ -20,12 +20,13 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",crossOrigin:!0,maxZoom:17,updateWhenIdle:!1,fadeAnimation:!1,keepBuffer:16}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",detectRetina:!1,maxZoom:17,updateWhenIdle:!1,fadeAnimation:!1,keepBuffer:16}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
-const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,detectRetina:!1)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
 
 const DAY_MAP_CONTAINER_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:9,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
+const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:8,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
+const DAY_MAP_CONTAINER_ZOOM9_NEEDLE = 'gpe,{center:Ia,zoom:9,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
 const DAY_MAP_CONTAINER_ZOOM10_NEEDLE = 'gpe,{center:Ia,zoom:10,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
 const DAY_MAP_CONTAINER_ZOOM11_KICK_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
 
@@ -156,6 +157,8 @@ export function applyApprovedLookPatches(source = '') {
   );
   if (js.includes(DAY_MAP_CONTAINER_NEEDLE)) {
     js = js.replace(DAY_MAP_CONTAINER_NEEDLE, DAY_MAP_CONTAINER_PATCH);
+  } else if (js.includes(DAY_MAP_CONTAINER_ZOOM9_NEEDLE)) {
+    js = js.replace(DAY_MAP_CONTAINER_ZOOM9_NEEDLE, DAY_MAP_CONTAINER_PATCH);
   } else if (js.includes(DAY_MAP_CONTAINER_ZOOM10_NEEDLE)) {
     js = js.replace(DAY_MAP_CONTAINER_ZOOM10_NEEDLE, DAY_MAP_CONTAINER_PATCH);
   } else if (js.includes(DAY_MAP_CONTAINER_ZOOM11_KICK_NEEDLE)) {
