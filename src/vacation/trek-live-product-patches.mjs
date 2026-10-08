@@ -85,11 +85,11 @@ const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.i
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
-const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
+const BOOKINGS_TAB_LABEL_PATCH = 'n.jsxs("span",{style:Re?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle",color:"transparent"},children:[G.label,n.jsx("img",{alt:"","aria-hidden":"true",draggable:!1,src:"/icons/tab-labels/"+G.id+"-"+(q===G.id?"on":"off")+".png",style:{position:"absolute",left:{plan:39.06,flights:37.58,hotels:37.03,cars:24.48,restaurants:36.78,stores:36.08,events:36.63,budget:36.81}[G.id],top:9,width:{plan:72,flights:46,hotels:44,cars:44,restaurants:80,stores:42,events:44,budget:48}[G.id],height:{plan:17,flights:16,hotels:16,cars:18,restaurants:17,stores:16,events:16,budget:18}[G.id],pointerEvents:"none"}})]})';
 
 const TAB_BUTTON_LINE_HEIGHT_NEEDLE = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,background:q===G.id?';
 
-const TAB_BUTTON_LINE_HEIGHT_PATCH = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",lineHeight:1,gap:4,background:q===G.id?';
+const TAB_BUTTON_LINE_HEIGHT_PATCH = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",lineHeight:1,gap:4,position:"relative",background:q===G.id?';
 
 const TAB_BUTTON_DATA_TAB_NEEDLE = 'n.jsxs("button",{title:Re?G.label:void 0,"aria-label":G.label,onClick:()=>{W(G.id)},style:{';
 
@@ -127,12 +127,12 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
-  } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})')) {
+  } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle",color:"transparent"')) {
     throw new Error('trek bundle missing category tab label anchor for centering patch');
   }
   if (js.includes(TAB_BUTTON_LINE_HEIGHT_NEEDLE)) {
     js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
-  } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
+  } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,position:"relative",background:q===G.id?')) {
     throw new Error('trek bundle missing category tab button anchor for line-height patch');
   }
   if (js.includes(TAB_BUTTON_DATA_TAB_NEEDLE)) {
