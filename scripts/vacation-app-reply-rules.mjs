@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openRouterProviderSpread } from './openrouter-tier-provider.mjs';
+import { openRouterProviderSpread, openRouterTier1CompactReasoningSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
@@ -16,7 +16,7 @@ export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisi
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
-// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply.
+// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 moved to deepseek/deepseek-v4-flash because google/gemini-2.5-flash-lite retires 2026-10-20.
 const BAKEOFF_TIER_MODELS = {
   1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
@@ -841,7 +841,7 @@ export async function jevChooseRewrite({ customerTurn, draft, options, env = pro
 export const INTERIM_MODEL = BAKEOFF_TIER_MODELS[1];
 export const TIERED_REPLY_TIMEOUT_MS = 20000;
 
-export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
+export async function callTieredModel({ rules, jev, customerTurn, stage, screen, destination, memory, upsell, postIntake = false, env = process.env, forceModel = '', timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {
   const modelTier = Number(jev?.modelTier);
   const responseModel = forceModel || openRouterChatModelForTier(modelTier);
   if ((!forceModel && !jev?.jevRan) || !isBakeoffModelId(responseModel)) {
@@ -867,11 +867,14 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
     planLine,
     seatDollars,
     seat,
-    planOwned, intakeReplyTurn, replyFacts,
+    planOwned,
+    intakeReplyTurn,
+    replyFacts,
+    tier1CompactReasoning: tier1CompactReasoning || forceModel === INTERIM_MODEL,
   });
 }
 
-async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
+async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null, tier1CompactReasoning = false }) {
   const key = appOpenRouterKey(env);
   if (!key) {
     return {
@@ -901,6 +904,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         temperature: 0.55,
         max_tokens: 900,
         ...openRouterProviderSpread(modelTier),
+        ...openRouterTier1CompactReasoningSpread(tier1CompactReasoning ? 1 : 0),
         messages: [
           {
             role: 'system',
