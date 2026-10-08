@@ -184,7 +184,7 @@ export function patchThingLogoChipAlignment(source = '') {
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?Re?"translateY(0px)":"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
   ];
-  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
+  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":G.id==="restaurants"?"translateY(1.5px)":"translateY(0px)"';
   for (const needle of tabEmojiTransformNeedles) {
     if (js.includes(needle)) js = js.replaceAll(needle, tabEmojiTransformPatch);
   }

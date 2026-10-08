@@ -1,6 +1,6 @@
 /** Approved shared-trip look (issue 273). Screenshots win; only CSS differs for PDF. */
 
-import { TREK_DEFAULT_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
+import { TREK_SHARED_DAY_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
 
 const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
 
@@ -20,9 +20,12 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_DEFAULT_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",crossOrigin:!0}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",maxZoom:19}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
-const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/\{s\}\.[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,maxZoom:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+
+const DAY_MAP_CONTAINER_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:';
+const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:';
 
 const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
 const MAP_SHELL_PATCH = 'className:"w-full h-full relative",style:{height:"100%",width:"100%"},children:';
@@ -146,9 +149,14 @@ export function applyApprovedLookPatches(source = '') {
   }
   js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
   js = js.replace(
-    /n\.jsx\(fpe,\{url:Yr\.getState\(\)\.settings\.map_tile_url\|\|"https:\/\/\{s\}\.tile\.openstreetmap\.fr\/hot\/\{z\}\/\{x\}\/\{y\}\.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/g,
+    /n\.jsx\(fpe,\{url:Yr\.getState\(\)\.settings\.map_tile_url\|\|"https:\/\/\{s\}\.tile\.openstreetmap\.fr\/hot\/\{z\}\/\{x\}\/\{y\}\.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/g,
     DAY_MAP_TILE_LAYER_PATCH,
   );
+  if (js.includes(DAY_MAP_CONTAINER_NEEDLE)) {
+    js = js.replace(DAY_MAP_CONTAINER_NEEDLE, DAY_MAP_CONTAINER_PATCH);
+  } else if (!js.includes('whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:')) {
+    throw new Error('approved look patch missed shared day map MapContainer whenReady');
+  }
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
   js = js.split('overflow:"hidden","data-ts-day-map":"1",').join('overflow:"hidden",');
   js = js.split('"data-ts-day-map":"1",height:').join('height:');
@@ -166,8 +174,8 @@ export function applyApprovedLookPatches(source = '') {
       throw new Error('approved look day map is not before itinerary card');
     }
   }
-  if (!js.includes('data-ts-day-map":"1"') || !js.includes(TREK_DEFAULT_MAP_TILE_URL)) {
-    throw new Error('approved look patch did not wire shared day map to HOT tiles');
+  if (!js.includes('data-ts-day-map":"1"') || !js.includes(TREK_SHARED_DAY_MAP_TILE_URL)) {
+    throw new Error('approved look patch did not wire shared day map tiles');
   }
   if (!js.includes('data-ts-header-mark":"1"') || !js.includes('timesyncher-icon-white-transparent.png') || !js.includes('Timesyncher Travel') || !js.includes('data-ts-day-map":"1"') || !js.includes('label:"Events"') || !js.includes('icon:"☀️"')) {
     throw new Error('approved look patch did not apply');
