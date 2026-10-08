@@ -12,7 +12,7 @@ import {
 
 const tiers = bakeoffTierModels();
 assert.deepEqual(Object.values(tiers), [
-  'google/gemini-2.5-flash-lite',
+  'deepseek/deepseek-v4-flash',
   'qwen/qwen3-235b-a22b-2507',
   'deepseek/deepseek-v3.2',
   'qwen/qwen3-max',

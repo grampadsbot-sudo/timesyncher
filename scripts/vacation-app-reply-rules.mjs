@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { openRouterProviderSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
 export const SHARED_REPLY_PIPELINE = 'jev_precall_then_tiered_model';
@@ -17,7 +18,7 @@ export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
 // Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply.
 const BAKEOFF_TIER_MODELS = {
-  1: 'google/gemini-2.5-flash-lite',
+  1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
   3: 'deepseek/deepseek-v3.2',
   4: 'qwen/qwen3-max',
@@ -870,32 +871,6 @@ export async function callTieredModel({ rules, jev, customerTurn, stage, screen,
   });
 }
 
-async function callGrokTieredModel({ url, rules, jev, customerTurn, stage, screen, modelTier, responseModel, env }) {
-  assertSharedReplyTargetAllowed(url, 'tiered model');
-  const token = text(env.TIMESYNCHER_GROK_ROUTER_TOKEN || env.TIMESYNCHER_TIERED_MODEL_TOKEN, 500);
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json',
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(replyRequestBody({ rules, jev, customerTurn, stage, screen, modelTier, responseModel })),
-      signal: AbortSignal.timeout(20000),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok || body.ok === false) {
-      return { called: false, via: 'grok-router', modelTier, responseModel, reason: text(body.error || `tiered model HTTP ${response.status}`, 300) };
-    }
-    const answer = text(body.answer || body.reply || body.customerResponse || body.text, 3500);
-    if (!answer) return { called: false, via: 'grok-router', modelTier, responseModel, reason: 'tiered model returned an empty reply' };
-    return { called: true, via: 'grok-router', modelTier, responseModel: text(body.model || responseModel, 120), text: answer };
-  } catch (error) {
-    return { called: false, via: 'grok-router', modelTier, responseModel, reason: text(error?.message || error, 300) };
-  }
-}
-
 async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, screen, modelTier, responseModel, destination, memory, upsell, postIntake = false, env, timeoutMs = 0, systemExtra = '', tripContext = null, planTable = null, planLine = '', seatDollars = null, seat = null, planOwned = false, intakeReplyTurn = false, replyFacts = null }) {
   const key = appOpenRouterKey(env);
   if (!key) {
@@ -925,6 +900,7 @@ async function callOpenRouterTieredChat({ rules, jev, customerTurn, stage, scree
         model: responseModel,
         temperature: 0.55,
         max_tokens: 900,
+        ...openRouterProviderSpread(modelTier),
         messages: [
           {
             role: 'system',

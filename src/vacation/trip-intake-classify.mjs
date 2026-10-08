@@ -5,6 +5,7 @@ import {
   bakeoffTierModels,
   openRouterAppKey,
 } from '../../scripts/vacation-app-reply-rules.mjs';
+import { openRouterProviderForTier } from '../../scripts/openrouter-tier-provider.mjs';
 import { intakeThingHasProperName } from './intake-thing-name.mjs';
 import {
   PLACE_SEARCH_CATEGORY_KEYS,
@@ -83,7 +84,7 @@ export function tripIntakeExtractionChatRequest({ message, model }) {
     model,
     temperature: 0,
     max_tokens: tripIntakeExtractionMaxTokens(),
-    provider: { require_parameters: true },
+    provider: { require_parameters: true, ...openRouterProviderForTier(1) },
     response_format: tripIntakeExtractionJsonSchema(),
     messages: [
       { role: 'system', content: THING_SYSTEM },
