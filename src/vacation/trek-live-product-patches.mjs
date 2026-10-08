@@ -108,7 +108,19 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:G.icon})';
+const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"block",fontSize:13,lineHeight:1,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
+
+const BOOKINGS_TAB_ICON_V2_PATCH = `G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon})})`;
+
+const BOOKINGS_TAB_EMOJI_INNER_GRID_NEEDLE = '{"data-ts-tab-emoji":"1",style:{display:"grid",placeItems:"center",fontSize:13,lineHeight:1,width:16,height:16},children:G.icon}';
+
+const BOOKINGS_TAB_EMOJI_INNER_GRID_PATCH = `{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon}`;
+
+const BOOKINGS_TAB_EMOJI_INNER_FLAT_NEEDLE = '{"data-ts-tab-emoji":"1",style:{display:"block",fontSize:13,lineHeight:1,transform:"translateY(-1px)"},children:G.icon}';
+
+const BOOKINGS_TAB_LUCIDE_NEEDLE = '}):n.jsx(G.Icon,{size:13})';
+
+const BOOKINGS_TAB_LUCIDE_PATCH = '}):n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx(G.Icon,{size:13})})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
@@ -151,6 +163,35 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(BOOKINGS_TAB_ICON_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
   } else if (!js.includes('data-tab-category":G.id')) {
     throw new Error('trek bundle missing category tab icon anchor for centering patch');
+  }
+  if (js.includes(BOOKINGS_TAB_EMOJI_INNER_GRID_NEEDLE)) {
+    js = js.replaceAll(BOOKINGS_TAB_EMOJI_INNER_GRID_NEEDLE, BOOKINGS_TAB_EMOJI_INNER_GRID_PATCH);
+  }
+  if (js.includes(BOOKINGS_TAB_EMOJI_INNER_FLAT_NEEDLE)) {
+    js = js.replaceAll(BOOKINGS_TAB_EMOJI_INNER_FLAT_NEEDLE, BOOKINGS_TAB_EMOJI_INNER_GRID_PATCH);
+  }
+  if (js.includes('display:"inline-grid",placeItems:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"block"')) {
+    js = js.replaceAll(
+      'display:"inline-grid",placeItems:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"block"',
+      'display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"block"',
+    );
+  }
+  const tabEmojiTransformNeedles = [
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":"translateY(0px)"',
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(0.5px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
+    'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?Re?"translateY(0px)":"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
+  ];
+  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"';
+  for (const needle of tabEmojiTransformNeedles) {
+    if (js.includes(needle)) js = js.replaceAll(needle, tabEmojiTransformPatch);
+  }
+  if (!js.includes('G.id==="flights"?"translateY(1px)"') && !js.includes('G.id==="flights"?Re?"translateY(1px)":"translateY(1px)"')) {
+    throw new Error('category tab emoji ink nudge patch did not apply');
+  }
+  if (js.includes(BOOKINGS_TAB_LUCIDE_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_LUCIDE_NEEDLE, BOOKINGS_TAB_LUCIDE_PATCH);
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
