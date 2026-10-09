@@ -3,11 +3,11 @@ import { TREK_STATIC_MAP_TILE_HOST } from './trek-default-map-tiles.mjs';
 export const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
 export const XA_STATIC_MAP_TILE_PATCH = `static-map-tile" src="${TREK_STATIC_MAP_TILE_HOST}/`;
 
-const STATIC_DAY_MAP_PATCH =
-  'n.jsx("div",{className:"static-day-map-host",style:{width:"100%",height:"100%",position:"relative",overflow:"hidden"},dangerouslySetInnerHTML:{__html:xa((La||[]).filter(function(G){return G!=null&&G.lat!=null&&G.lng!=null}),dn?Math.max(280,(typeof window!=="undefined"?window.innerWidth:390)-32):1100,dn?420:300)}})';
+const DAY_MAP_LEAFLET_TILE_NEEDLE =
+  'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"';
 
-const LEAFLET_DAY_MAP_RE =
-  /n\.jsxs\(gpe,\{center:Ia,zoom:\d+,zoomControl:!1,attributionControl:!1,style:\{width:"100%",height:"100%"\},children:\[n\.jsx\(fpe,\{url:"https:\/\/[^"]+"[^]*?\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\),La\.map\(G=>n\.jsx\(zx,\{position:\[G\.lat,G\.lng\],icon:mDe\(G\),eventHandlers:\{click:\(\)=>Ne\(Qt\(G\)\)\},children:n\.jsx\(eZ,\{children:mr\(G\)\|\|G\.name\}\)\},G\.id\)\)\]\}\)/;
+const DAY_MAP_LEAFLET_TILE_PATCH =
+  'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"';
 
 const MAP_OPEN_MARKERS = [
   [
@@ -20,7 +20,7 @@ const MAP_OPEN_MARKERS = [
   ],
 ];
 
-/** Keepsake `xa()` tiles + static day map below the day itinerary (issue #283). */
+/** OpenTopo on keepsake `xa()` + live day Leaflet (issue #283); keep Leaflet DOM for Gate B vs base. */
 export function patchDayByDayKeepsakeMap(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');
@@ -45,10 +45,10 @@ export function patchDayByDayKeepsakeMap(source = '', options = {}) {
     }
   }
 
-  if (LEAFLET_DAY_MAP_RE.test(js)) {
-    js = js.replace(LEAFLET_DAY_MAP_RE, STATIC_DAY_MAP_PATCH);
-  } else if (served && !js.includes('static-day-map-host')) {
-    throw new Error('day-by-day map patch missed Leaflet day map block');
+  if (js.includes(DAY_MAP_LEAFLET_TILE_NEEDLE)) {
+    js = js.split(DAY_MAP_LEAFLET_TILE_NEEDLE).join(DAY_MAP_LEAFLET_TILE_PATCH);
+  } else if (served && js.includes('gpe,{center:Ia,zoom:11') && !js.includes('tile.opentopomap.org')) {
+    throw new Error('day-by-day map patch missed Leaflet OpenTopo tile layer');
   }
 
   if (served) {
@@ -58,8 +58,8 @@ export function patchDayByDayKeepsakeMap(source = '', options = {}) {
     if (planIdx < 0 || mapIdx < 0 || timelineIdx < 0 || mapIdx < timelineIdx) {
       throw new Error('day-by-day map must render below the day itinerary card');
     }
-    if (!js.includes('static-day-map-host') || !js.includes(TREK_STATIC_MAP_TILE_HOST)) {
-      throw new Error('day-by-day map must use keepsake xa() static OpenTopo tiles');
+    if (!js.includes('gpe,{center:Ia,zoom:11') || !js.includes('tile.opentopomap.org')) {
+      throw new Error('day-by-day map must use Leaflet with OpenTopo tiles');
     }
     if (!js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
       throw new Error('day-by-day map must follow the selected-day timeline IIFE');
