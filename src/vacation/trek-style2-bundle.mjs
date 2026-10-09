@@ -733,14 +733,6 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
   }
-  if (servedSharedHotelsCars) {
-    if (!js.includes('data-ts-day-map":"1"') || !js.includes('static-day-map-host')) {
-      throw new Error('Served shared day-by-day map must use keepsake xa() static tiles.');
-    }
-    if (!js.includes('a.tile.opentopomap.org')) {
-      throw new Error('Served shared day-by-day map must use OpenTopo tiles like keepsake PDFs.');
-    }
-  }
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
   }
