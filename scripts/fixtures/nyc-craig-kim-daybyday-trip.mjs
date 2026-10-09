@@ -20,6 +20,22 @@ const SUMMARIES = {
   605: 'Browse rare room if time allows.',
   606: 'Overlap window A: matinee tickets already held.',
   607: 'Overlap window B: friend meetup at the same hour.',
+  610: 'Classic Italian; reserve the earliest table you can get.',
+  611: 'Evening set; arrive early for will-call pickup.',
+};
+
+const NYC_COORDS = {
+  601: { lat: 40.6413, lng: -73.7781 },
+  602: { lat: 40.7886, lng: -73.9767 },
+  603: { lat: 40.7454, lng: -73.9933 },
+  604: { lat: 40.6892, lng: -74.0445 },
+  605: { lat: 40.7373, lng: -73.9903 },
+  606: { lat: 40.758, lng: -73.9855 },
+  607: { lat: 40.7536, lng: -73.9832 },
+  608: { lat: 40.7549, lng: -73.984 },
+  609: { lat: 40.7527, lng: -73.9772 },
+  610: { lat: 40.726, lng: -73.9997 },
+  611: { lat: 40.7725, lng: -73.9838 },
 };
 
 export function listStoredSummaries() {
@@ -28,7 +44,7 @@ export function listStoredSummaries() {
 
 export function expectedSummariesOnDay(dayNumber) {
   const idsByDay = {
-    1: [602],
+    1: [602, 610, 611],
     2: [604, 605],
     3: [606, 607],
   };
@@ -58,6 +74,8 @@ function buildPayload() {
     { day: 1, time: '10:30', name: 'JetBlue BOS → JFK', cat: 'flight', id: 601 },
     { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, photo: true },
     { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603 },
+    { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
+    { day: 1, time: '20:30', name: 'Jazz at Lincoln Center', cat: 'activity', id: 611 },
     { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
     { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
     { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
@@ -68,13 +86,14 @@ function buildPayload() {
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];
+    const coords = NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 };
     const place = {
       id: row.id,
       trip_id: 99,
       name: row.name,
       description: '',
-      lat: 40.78,
-      lng: -73.96,
+      lat: coords.lat,
+      lng: coords.lng,
       address: 'New York, NY',
       category_id: kind.id,
       category_name: kind.name,
@@ -115,6 +134,15 @@ function buildPayload() {
     }
     if (row.id === 603) {
       override.logoUrl = 'https://www.hilton.com/favicon.ico';
+    }
+    if (row.id === 602) {
+      override.logoUrl = 'https://www.zabars.com/favicon.ico';
+    }
+    if (row.id === 610) {
+      override.logoUrl = 'https://www.carbonegreenwichvillage.com/favicon.ico';
+    }
+    if (row.id === 611) {
+      override.logoUrl = 'https://www.jazz.org/favicon.ico';
     }
     thingOverrides[`place:${row.id}`] = override;
   }

@@ -16,6 +16,7 @@ import {
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
+import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -412,6 +413,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }
+  patched = patchDayByDayKeepsakeMap(patched, { served });
   if (patched.includes(PAGE_PAD_NEEDLE)) {
     patched = patched.replace(PAGE_PAD_NEEDLE, PAGE_PAD_PATCH);
   }
@@ -730,6 +732,14 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
+  }
+  if (servedSharedHotelsCars) {
+    if (!js.includes('data-ts-day-map":"1"') || !js.includes('static-day-map-host')) {
+      throw new Error('Served shared day-by-day map must use keepsake xa() static tiles.');
+    }
+    if (!js.includes('a.tile.opentopomap.org')) {
+      throw new Error('Served shared day-by-day map must use OpenTopo tiles like keepsake PDFs.');
+    }
   }
   if (!js.includes(QN_EMPTY_PATCH) || !js.includes(GN_EMPTY_PATCH)) {
     throw new Error('Style two live tab empty-state pad check did not apply.');
