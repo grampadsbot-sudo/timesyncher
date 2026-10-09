@@ -22,7 +22,7 @@ assert.doesNotMatch(vacationApp, />Itinerary<\/button>/);
 assert.match(sharedApp, /index-BKun7ofk\.js/);
 assert.doesNotMatch(sharedApp, /index-0J54vUO3\.js/);
 assert.doesNotMatch(sharedApp, /index-TimeSyncherVacationLogin\.js/);
-assert.match(bundle, /Vacation Day View/);
+assert.match(bundle, /Map day view/);
 assert.match(bundle, /timeline-rail/);
 assert.match(bundle, /Open thing details/);
 assert.match(bundle, /Day-by-Day/);
