@@ -3,12 +3,6 @@ import { TREK_STATIC_MAP_TILE_HOST } from './trek-default-map-tiles.mjs';
 export const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
 export const XA_STATIC_MAP_TILE_PATCH = `static-map-tile" src="${TREK_STATIC_MAP_TILE_HOST}/`;
 
-const DAY_MAP_LEAFLET_TILE_NEEDLE =
-  'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"';
-
-const DAY_MAP_LEAFLET_TILE_PATCH =
-  'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:"https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"';
-
 const MAP_OPEN_MARKERS = [
   [
     'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?420:300,marginBottom:12',
@@ -20,7 +14,7 @@ const MAP_OPEN_MARKERS = [
   ],
 ];
 
-/** OpenTopo on keepsake `xa()` + live day Leaflet (issue #283); keep Leaflet DOM for Gate B vs base. */
+/** Keepsake `xa()` OpenTopo + `data-ts-day-map` on live Leaflet (Gate B: Leaflet/OSM unchanged vs base). */
 export function patchDayByDayKeepsakeMap(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');
@@ -45,12 +39,6 @@ export function patchDayByDayKeepsakeMap(source = '', options = {}) {
     }
   }
 
-  if (js.includes(DAY_MAP_LEAFLET_TILE_NEEDLE)) {
-    js = js.split(DAY_MAP_LEAFLET_TILE_NEEDLE).join(DAY_MAP_LEAFLET_TILE_PATCH);
-  } else if (served && js.includes('gpe,{center:Ia,zoom:11') && !js.includes('tile.opentopomap.org')) {
-    throw new Error('day-by-day map patch missed Leaflet OpenTopo tile layer');
-  }
-
   if (served) {
     const planIdx = js.indexOf('q==="plan"&&n.jsxs(n.Fragment');
     const mapIdx = js.indexOf('{"data-ts-day-map":"1"', planIdx);
@@ -58,8 +46,8 @@ export function patchDayByDayKeepsakeMap(source = '', options = {}) {
     if (planIdx < 0 || mapIdx < 0 || timelineIdx < 0 || mapIdx < timelineIdx) {
       throw new Error('day-by-day map must render below the day itinerary card');
     }
-    if (!js.includes('gpe,{center:Ia,zoom:11') || !js.includes('tile.opentopomap.org')) {
-      throw new Error('day-by-day map must use Leaflet with OpenTopo tiles');
+    if (!js.includes('gpe,{center:Ia,zoom:11')) {
+      throw new Error('day-by-day map must keep Leaflet day map (Gate B vs base)');
     }
     if (!js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
       throw new Error('day-by-day map must follow the selected-day timeline IIFE');
