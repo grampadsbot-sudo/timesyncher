@@ -1,3 +1,4 @@
+import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
@@ -256,6 +257,9 @@ export function patchSharedTripHostnameForLocalHarness(js = '') {
 export function applyLiveProductPatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = stripHotelBrandNameGuessing(String(patched || ''));
+  if (js.includes(XA_STATIC_MAP_TILE_NEEDLE)) {
+    js = js.replaceAll(XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH);
+  }
   if (js.includes(LIST_LOGO_PATCH) && js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
   }

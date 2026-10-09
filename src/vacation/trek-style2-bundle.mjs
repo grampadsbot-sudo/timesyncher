@@ -16,6 +16,7 @@ import {
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
+import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -412,6 +413,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }
+  patched = patchDayByDayKeepsakeMap(patched, { served });
   if (patched.includes(PAGE_PAD_NEEDLE)) {
     patched = patched.replace(PAGE_PAD_NEEDLE, PAGE_PAD_PATCH);
   }
