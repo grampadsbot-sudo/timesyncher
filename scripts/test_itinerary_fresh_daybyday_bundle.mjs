@@ -18,6 +18,9 @@ assert.match(committed, /data-ts-list-row-name":"1"/);
 assert.match(committed, /Rn=Bs\(rr\(G\)\|\|String\(G\.description\|\|G\.notes\|\|""\)\.replace\(\/\\s\+\/g," "\)\.trim\(\)\)/);
 assert.match(committed, /data-row-video-qr":"1"/);
 assert.match(committed, /zr\.length\?n\.jsx\(Nr,\{items:zr/);
+assert.match(committed, /data-ts-day-map":"1"/);
+assert.match(committed, /gpe,\{center:Ia,zoom:11/);
+assert.match(committed, /a\.tile\.opentopomap\.org/);
 
 assert.match(committed, /data-ts-day-map":"1"/);
 assert.doesNotMatch(committed, /static-day-map-host/);
