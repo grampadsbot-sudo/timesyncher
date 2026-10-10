@@ -39,7 +39,8 @@ const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
 const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
 const TIMELINE_ICON_PATCH_V132 = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:0,alignSelf:"center",display:"grid",placeItems:"center",boxSizing:"border-box",position:"relative",transform:ua.isConflict?"none":(/^Travel (to|from)\\b/i.test(String(ua.title||""))||/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(String(ua.title||""))?"translateY(3px)":"none")},children:n.jsxs(n.Fragment,{children:[n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr}),Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",onError:ev=>{ev.currentTarget.style.display="none"},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))",position:"absolute",inset:0,margin:"auto",background:"#f8fafc"}}):null]})})';
-const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:0,alignSelf:"center",display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box",transform:ua.isConflict?"none":(/^Travel (to|from)\\b/i.test(String(ua.title||""))||/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(String(ua.title||""))?"translateY(3px)":"none")},children:Xr?n.jsxs(n.Fragment,{children:[n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"none",placeItems:"center"},children:sr}),n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",onError:ev=>{ev.currentTarget.style.display="none";const p=ev.currentTarget.parentElement,e=p&&p.querySelector("[data-ts-tab-emoji]");e&&(e.style.display="grid")},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}})]}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr})})';
+const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:1,alignSelf:"start",display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box",transform:"none"},children:Xr?n.jsxs(n.Fragment,{children:[n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"none",placeItems:"center"},children:sr}),n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",onError:ev=>{ev.currentTarget.style.display="none";const p=ev.currentTarget.parentElement,e=p&&p.querySelector("[data-ts-tab-emoji]");e&&(e.style.display="grid")},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}})]}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr})})';
+const TIMELINE_ICON_PATCH_PRIOR = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:0,alignSelf:"center",display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box",transform:ua.isConflict?"none":(/^Travel (to|from)\\b/i.test(String(ua.title||""))||/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(String(ua.title||""))?"translateY(3px)":"none")},children:Xr?n.jsxs(n.Fragment,{children:[n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"none",placeItems:"center"},children:sr}),n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",onError:ev=>{ev.currentTarget.style.display="none";const p=ev.currentTarget.parentElement,e=p&&p.querySelector("[data-ts-tab-emoji]");e&&(e.style.display="grid")},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}})]}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr})})';
 const TIMELINE_SR_NEEDLE = 'sr=wl(ua.item,ua.type),Xr=ua.type==="travel"||ua.type==="travel-to-thing"?"":_l(ua.item)';
 const TIMELINE_SR_PATCH = 'sr=(()=>{const ic=wl(ua.item,ua.type);if(ic)return ic;const tt=String(ua.title||"");if(/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(tt)||/flight option/i.test(String(ua.item&&ua.item.name||"")))return"✈️";return ic||"📍"})(),Xr=ua.type==="travel"||ua.type==="travel-to-thing"?"":_l(ua.item)';
 const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
@@ -84,9 +85,14 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 const BUDGET_ROW_LABEL_NEEDLE = 'children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
 const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
 
+const IE_NEEDLE = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"":"")},be=';
+const IE_PATCH = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"").trim();const plain=zt.replace(/[^0-9.]/g,"");if(plain&&/^\\d+(?:\\.\\d+)?$/.test(plain)){const n=Number(plain);if(Number.isFinite(n)&&n>0)return`$${Math.round(n).toLocaleString()}`}const fromDollar=((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""));if(fromDollar)return fromDollar;if(/quote\\s*tbd/i.test(zt))return"";return""},be=';
+
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
-const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fareLbl?`${fromIe} ${fareLbl}`.trim():fromIe;const price=Rn||String(bi(G)||"").trim();if(!price||!/\\d/.test(String(price)))return"";const amt=`$${String(price).replace(/^\\$/,"")}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_FARE_VR_NEEDLE = 'const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fareLbl?`${fromIe} ${fareLbl}`.trim():fromIe;const price=Rn||String(bi(G)||"").trim();if(!price||!/\\d/.test(String(price)))return"";const amt=`$${String(price).replace(/^\\$/,"")}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_FARE_VR_PATCH = 'const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fareLbl?`${fromIe} ${fareLbl}`.trim():fromIe;const fromVr=(()=>{const n=Vr(G);return Number.isFinite(n)&&n>0&&n<1e12?`$${Math.round(n).toLocaleString()}`:""})();if(fromVr)return fareLbl?`${fromVr} ${fareLbl}`.trim():fromVr;const price=Rn||String(bi(G)||"").trim();if(!price||!/\\d/.test(String(price)))return"";const amt=`$${String(price).replace(/^\\$/,"")}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fareLbl?`${fromIe} ${fareLbl}`.trim():fromIe;const fromVr=(()=>{const n=Vr(G);return Number.isFinite(n)&&n>0&&n<1e12?`$${Math.round(n).toLocaleString()}`:""})();if(fromVr)return fareLbl?`${fromVr} ${fareLbl}`.trim():fromVr;const price=Rn||String(bi(G)||"").trim();if(!price||!/\\d/.test(String(price)))return"";const amt=`$${String(price).replace(/^\\$/,"")}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_PATCH_PRIOR = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(price)?price:`$$${price}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
 const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
@@ -133,10 +139,14 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
-  if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) {
-    js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
-  } else if (served && !js.includes('/flight option/i.test(raw)?raw:mr(Xi)})(di.item)')) {
-    throw new Error('budget row flight-option label patch did not apply');
+  if (js.includes(BUDGET_ROW_LABEL_PATCH)) {
+    js = js.replace(BUDGET_ROW_LABEL_PATCH, BUDGET_ROW_LABEL_NEEDLE);
+  } else if (served && !js.includes('children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"')) {
+    throw new Error('budget row labels must use mr() for staging parity');
+  }
+  if (js.includes(IE_NEEDLE)) js = js.replace(IE_NEEDLE, () => IE_PATCH);
+  else if (served && !js.includes('plain&&/^\\d+(?:\\.\\d+)?$/.test(plain)')) {
+    throw new Error('list price ie() numeric-string patch did not apply');
   }
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_SR_NEEDLE)) js = js.replace(TIMELINE_SR_NEEDLE, TIMELINE_SR_PATCH);
@@ -144,6 +154,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('timeline row icon emoji fallback patch did not apply');
   }
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
+  else if (js.includes(TIMELINE_ICON_PATCH_PRIOR)) js = js.replace(TIMELINE_ICON_PATCH_PRIOR, TIMELINE_ICON_PATCH);
   else if (js.includes(TIMELINE_ICON_PATCH_V132)) js = js.replace(TIMELINE_ICON_PATCH_V132, TIMELINE_ICON_PATCH);
   else if (served && js.includes('position:"absolute",inset:0,margin:"auto",background:"#f8fafc"') && !js.includes('e&&(e.style.display="grid")')) {
     throw new Error('timeline logo and icon patch did not apply');
@@ -217,7 +228,9 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && js.includes('Southwest)\u0008/i')) {
     throw new Error('flight airline regex patch did not apply');
   }
-  if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE)) {
+  if (js.includes(FLIGHT_EU_FARE_VR_NEEDLE)) {
+    js = js.replace(FLIGHT_EU_FARE_VR_NEEDLE, () => FLIGHT_EU_FARE_VR_PATCH);
+  } else if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE)) {
     js = js.replace(FLIGHT_EU_FARE_AMT_NEEDLE, () => FLIGHT_EU_FARE_AMT_PATCH);
   } else if (served && js.includes('const price=Rn||String(bi(G)||"").trim();return fareLbl') && !js.includes('const amt=/^\\$/.test(price)')) {
     throw new Error('flight fare dollar patch did not apply');
@@ -230,7 +243,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (js.includes(FLIGHT_EU_BROKEN_AMT)) js = js.replace(FLIGHT_EU_BROKEN_AMT, () => FLIGHT_EU_BROKEN_AMT_FIX);
   else if (js.includes(FLIGHT_EU_NEEDLE_BAD)) {
     js = js.replace(/return\[\(v=>[\s\S]*?\}\)\(\),ua,Pn!=null&&Pn\.start\?Yo\(Pn\.start\):"",Pn!=null&&Pn\.end\?Yo\(Pn\.end\):""\]\},Qo=\(\{item:G\}\)=>/, () => FLIGHT_EU_PATCH);
-  } else if (served && !js.includes('const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))')) {
+  } else if (served && (!js.includes('const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))') || !js.includes('const fromVr=(()=>{const n=Vr(G)'))) {
     throw new Error('flight fare direction row patch did not apply');
   }
   if (served && js.includes(FLIGHT_EU_BROKEN_AMT)) {

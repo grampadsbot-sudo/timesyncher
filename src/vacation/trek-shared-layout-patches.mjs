@@ -9,7 +9,8 @@ const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",overflowY:"hid
 const DAY_PILL_ROW_CLIP_NEEDLE = 'display:"flex",gap:6,overflow:"hidden",paddingBottom:2,flexWrap:"nowrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box",marginRight:-12},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_PATCH_PRIOR = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
-const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"center",minWidth:0,maxWidth:"100%"';
+const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
+const DAY_TIMELINE_GRID_CENTER = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"center",minWidth:0,maxWidth:"100%"';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
@@ -41,6 +42,7 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
     throw new Error('shared day pill row overflow patch did not apply');
   }
   if (js.includes(DAY_TIMELINE_GRID_NEEDLE)) js = js.replace(DAY_TIMELINE_GRID_NEEDLE, DAY_TIMELINE_GRID_PATCH);
+  else if (js.includes(DAY_TIMELINE_GRID_CENTER)) js = js.replace(DAY_TIMELINE_GRID_CENTER, DAY_TIMELINE_GRID_PATCH);
   else if (js.includes(DAY_TIMELINE_GRID_PATCH_PRIOR)) js = js.replace(DAY_TIMELINE_GRID_PATCH_PRIOR, DAY_TIMELINE_GRID_PATCH);
   else if (served && js.includes('gridTemplateColumns:"74px 22px 1fr"')) {
     throw new Error('shared day timeline grid overflow patch did not apply');
