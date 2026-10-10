@@ -1,4 +1,4 @@
-import { captureThingLogo, NAMED_THING_LOGOS } from './thing-logo-capture.mjs';
+import { captureThingLogo } from './thing-logo-capture.mjs';
 
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
@@ -31,7 +31,7 @@ export function isGenericDescription(value = '') {
   return false;
 }
 
-export function parsePriceValue(value) {
+function parsePriceValue(value) {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return Math.round(value);
@@ -77,7 +77,7 @@ function flightDescription(title = '', source = {}) {
     times.includes('→') || times.includes('-') ? `schedule ${times}` : times,
     stops ? `${stops} stops` : 'nonstop when available',
     duration ? `${duration} block` : '',
-    'worth it if the timing beats a connection; skip if you need a late checkout',
+    'worth it if the timing beats a connection; pass if you need a late hotel departure',
   ].filter(Boolean);
   return text(bits.join('; '), 4000);
 }
@@ -104,7 +104,7 @@ function restaurantDescription(title = '', source = {}, raw = '') {
   const priceLevel = text(source.priceLevel || source.price_level || '', 40);
   const bits = [
     `${cuisine} spot`,
-    vibe || 'reservation-friendly dining room',
+    vibe || 'table-service dining room',
     priceLevel || 'mid-range check',
     'go for a sit-down meal; skip if you need a quick counter bite',
   ].filter(Boolean);
@@ -306,5 +306,3 @@ export function rowNeedsProductEnrichment(row = {}) {
   }
   return false;
 }
-
-export { NAMED_THING_LOGOS };
