@@ -9,7 +9,8 @@ import {
   intakeExtractedThings,
   runCustomerChatPlaceSearch,
 } from '../src/vacation/chat-place-search.mjs';
-import { placeToTripThing } from '../src/vacation/place-search.mjs';
+import { noteToTripThing, placeToTripThing } from '../src/vacation/place-search.mjs';
+import { persistChatIntakePlaceThing } from '../src/vacation/chat-intake-place-persist.mjs';
 import { sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 import { placeResultExtra } from '../src/vacation/provider-result-context.mjs';
@@ -237,25 +238,37 @@ const failed = await applyChatPlaceSearchForVacationTurn({
   db: failDb,
   tripId: 'trip-fail',
   requestId: 'req-fail',
-  classification: placeClassification(SCT_QUERIES[1]),
+  classification: {
+    ...placeClassification(SCT_QUERIES[1]),
+    target: 'Empty Pier',
+    targetKind: 'named_place',
+    category: 'restaurant',
+  },
   placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: failPayload,
   customerLive: {},
   turnId: 'turn-fail',
-  searchImpl: async () => ({ places: [], notes: [] }),
+  searchImpl: async () => ({ places: [], notes: [], providers: [] }),
 });
 assert.equal(failed.kind, 'failed');
 assert.equal(failed.placeSearch.status, 'failed');
 assert.equal(Array.isArray(failed.placeSearch.providers), true);
-assert.equal(failInserts.length, 0);
+assert.equal(failInserts.length, 1);
+const failMeta = JSON.parse(failInserts[0].find((value) => typeof value === 'string' && value.includes('needsDetails')));
+assert.equal(failMeta.needsDetails, true);
 
 const errorDb = mockDb();
 const errored = await applyChatPlaceSearchForVacationTurn({
   db: errorDb.db,
   tripId: 'trip-err',
   requestId: 'req-err',
-  classification: placeClassification(SCT_QUERIES[2]),
+  classification: {
+    ...placeClassification(SCT_QUERIES[2]),
+    target: 'Early Coffee',
+    targetKind: 'named_place',
+    category: 'restaurant',
+  },
   placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: { wantedThings: [] },
@@ -267,10 +280,35 @@ const errored = await applyChatPlaceSearchForVacationTurn({
 });
 assert.equal(errored.kind, 'failed');
 assert.match(errored.error, /Brave Place Search failed/);
-assert.equal(errorDb.inserts.length, 0);
+assert.equal(errorDb.inserts.length, 1);
 
 const thing = placeToTripThing(mockPlace(SCT_QUERIES[0]));
 assert.equal(thing.metadata.sourceRef.id, SCT_QUERIES[0].mockId);
+
+const webNote = noteToTripThing({
+  source: 'tavily',
+  title: 'Forecast',
+  category: 'decision',
+  description: 'Rain',
+  url: 'https://example.com/f',
+});
+assert.deepEqual(webNote.location, {});
+
+const { db: intakeDb, inserts: intakeInserts } = mockDb();
+const intakeSaved = await persistChatIntakePlaceThing(intakeDb, {
+  tripId: 'trip-intake-hit',
+  category: 'restaurant',
+  title: 'Saved Bistro',
+  destinationHint: 'Seattle',
+  searchImpl: async () => ({
+    places: [mockPlace({ mockId: 'brave-bistro', provider: 'brave', category: 'restaurant', title: 'Saved Bistro' })],
+    providers: [],
+  }),
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+});
+assert.equal(Number(intakeSaved.location.lat), 47.609);
+assert.equal(intakeSaved.metadata.sourceRef.id, 'brave-bistro');
+assert.equal(intakeInserts.length, 1);
 
 const inTurnRows = [{
   name: 'Mock El Camión',
@@ -296,7 +334,7 @@ console.log(JSON.stringify({
     'wantedThings_cleared_no_chat_extraction',
     'placeResultExtra_names_only_no_internal_ids',
     'classifier_runs_on_place_search_turn',
-    'empty_provider_place_search_failed_no_inserts',
+    'empty_provider_place_search_keeps_unresolved_things',
     'invented_place_name_blocks_in_turn_reply',
     'sourced_place_name_allows_in_turn_reply',
   ],

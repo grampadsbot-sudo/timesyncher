@@ -57,21 +57,44 @@ export async function insertIntakeTripThingRow(
     description = '',
     metadata = {},
     startsAt = null,
+    destinationHint = '',
+    detailText = '',
+    searchPlacesImpl,
+    fetchImpl = globalThis.fetch,
     env = process.env,
   },
 ) {
-  const written = await insertTripThing(db, {
-    tripId,
-    requestId: null,
-    thing: {
+  const { isChatIntakeGeocodableThing, persistChatIntakePlaceThing } = await import('./chat-intake-place-persist.mjs');
+  let written;
+  if (isChatIntakeGeocodableThing({ category })) {
+    written = await persistChatIntakePlaceThing(db, {
+      tripId,
+      requestId: null,
       category,
       title,
       description,
       metadata: { ...metadata, source: metadata?.source || 'chat_extraction' },
-      starts_at: startsAt,
-    },
-    env,
-  });
+      startsAt,
+      destinationHint,
+      detailText,
+      env,
+      fetchImpl,
+      searchImpl: searchPlacesImpl,
+    });
+  } else {
+    written = await insertTripThing(db, {
+      tripId,
+      requestId: null,
+      thing: {
+        category,
+        title,
+        description,
+        metadata: { ...metadata, source: metadata?.source || 'chat_extraction' },
+        starts_at: startsAt,
+      },
+      env,
+    });
+  }
   if (!written?.id) {
     throw new TripThingInsertError(`insertIntakeTripThingRow returned no row for title "${String(title || '').trim()}"`);
   }
@@ -82,19 +105,27 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
   const item = tripThingRow(thing);
   if (!item) return null;
   const normalizedTripId = String(tripId || '').trim();
-  if (normalizedTripId && item.source) {
+  if (normalizedTripId) {
     const existingRows = await db`
-      select id, title, location
+      select id, title, location, source, metadata
       from trip_things
       where trip_id = ${normalizedTripId}::uuid
-        and source in ('prior_db', 'osm', 'brave', 'tavily')
     `;
     const candidate = { title: item.title, ...locationPoint(item.location) };
     for (const row of existingRows) {
       const loc = row?.location && typeof row.location === 'object' ? row.location : {};
-      if (samePlace(candidate, { title: row.title, ...locationPoint(loc) })) {
+      if (!samePlace(candidate, { title: row.title, ...locationPoint(loc) })) continue;
+      const rowSource = String(row?.source || '').trim();
+      if (item.source && !rowSource) {
+        const { upgradeTripThingInPlace } = await import('./chat-intake-place-persist.mjs');
+        const upgraded = await upgradeTripThingInPlace(db, normalizedTripId, row.id, requestId, thing, env);
+        if (upgraded?.id) return { ...upgraded, deduped: true };
+      }
+      if (item.source && ['prior_db', 'osm', 'brave', 'tavily'].includes(rowSource)) {
         return { ...item, source: item.source, id: String(row.id), deduped: true };
       }
+      if (item.source) continue;
+      return { ...item, source: item.source, id: String(row.id), deduped: true };
     }
   }
   const rows = await db`
