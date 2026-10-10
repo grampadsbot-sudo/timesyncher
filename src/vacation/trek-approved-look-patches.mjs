@@ -47,7 +47,6 @@ const SUMMARY_LINE_NEEDLE = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summa
 const SUMMARY_LINE_PATCH = 'null';
 
 const HOTEL_LINE_NEEDLE = 'gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
-const HOTEL_LINE_PATCH = 'gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,width:"100%",minWidth:0,alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ha(G).roomType||ha(G).room_type||""})]})';
 
 const ROW_CLIP_NEEDLE = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"';
 const ROW_CLIP_PATCH = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:0,maxWidth:"100%",width:"100%"';
@@ -82,28 +81,32 @@ function mustReplace(js, needle, patch, label) {
   return js.replace(needle, patch);
 }
 
-/** Map sits after the day chip card, before the selected day's itinerary card. */
-function moveDayMapBeforeItinerary(js = '') {
+/** Map sits below the selected day's itinerary card (Gate B structure). */
+function moveDayMapAfterItinerary(js = '') {
   let source = String(js || '');
-  const afterChips = '},G.id))})]}),Ki&&(()=>{const G=Ki';
   const mapStart = 'n.jsx("div",{"data-ts-day-map":"1"';
-  const afterMap = '})})]}),dn&&(q==="hotels"';
-  const mapClose = '})})]}),';
-  const chipIdx = source.indexOf(afterChips);
+  const beforeKi = '})})]}),q==="plan"&&Ki&&(()=>{const G=Ki';
+  const afterKiClose = '})]})]})})(),';
   const mapIdx = source.indexOf(mapStart);
-  const endIdx = source.indexOf(afterMap, mapIdx);
-  if (chipIdx < 0 || mapIdx < 0 || endIdx < 0 || mapIdx < chipIdx) {
+  const kiIdx = source.indexOf('q==="plan"&&Ki&&(()=>{const G=Ki');
+  if (mapIdx < 0 || kiIdx < 0) {
     throw new Error('approved look day map reorder anchors missing');
   }
-  const mapEnd = endIdx + mapClose.length;
-  const mapBlock = source.slice(mapIdx, mapEnd);
-  const withoutMap = source.slice(0, mapIdx) + source.slice(mapEnd);
-  const insertAt = withoutMap.indexOf(afterChips);
-  if (insertAt < 0) {
-    throw new Error('approved look day map reorder insert point missing');
+  if (mapIdx > kiIdx) {
+    return source;
   }
-  const insertPos = insertAt + '},G.id))})]}),'.length;
-  return `${withoutMap.slice(0, insertPos)}${mapBlock},${withoutMap.slice(insertPos)}`;
+  const mapEnd = source.indexOf(beforeKi, mapIdx);
+  if (mapEnd < 0) {
+    throw new Error('approved look day map block end missing');
+  }
+  const mapBlock = source.slice(mapIdx, mapEnd + '})})]}),'.length);
+  const withoutMap = source.slice(0, mapIdx) + source.slice(mapEnd + '})})]}),'.length);
+  const insertAt = withoutMap.indexOf(`${afterKiClose}dn&&(q==="hotels"`);
+  if (insertAt < 0) {
+    throw new Error('approved look day map insert-after-itinerary anchor missing');
+  }
+  const insertPos = insertAt + afterKiClose.length;
+  return `${withoutMap.slice(0, insertPos)}${mapBlock}${withoutMap.slice(insertPos)}`;
 }
 
 export function applyActivePillEdgePatch(js) {
@@ -139,7 +142,12 @@ export function applyApprovedLookPatches(source = '') {
   if (js.includes(MAP_CANVAS_NEEDLE)) js = js.replace(MAP_CANVAS_NEEDLE, MAP_CANVAS_PATCH);
   if (js.includes(BSE_NEEDLE)) js = js.replace(BSE_NEEDLE, BSE_PATCH);
   if (js.includes(LOGO_GRID_NEEDLE)) js = js.replace(LOGO_GRID_NEEDLE, LOGO_GRID_PATCH);
-  if (js.includes(HOTEL_LINE_NEEDLE)) js = js.replace(HOTEL_LINE_NEEDLE, HOTEL_LINE_PATCH);
+  if (js.includes('gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,width:"100%",minWidth:0,alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),n.jsx("span"')) {
+    js = js.replace(
+      'gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,width:"100%",minWidth:0,alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ha(G).roomType||ha(G).room_type||""})]})',
+      HOTEL_LINE_NEEDLE,
+    );
+  }
   if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
   js = mustReplace(js, '{id:"plan",label:"Day-by-Day",icon:"📅"}', '{id:"plan",label:"Day-by-Day",icon:"☀️"}', 'Day-by-Day sun icon');
   js = mustReplace(js, 'padding:"7px 7px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600', 'padding:Re?"5px 15px":"6px 15px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.2px"', 'tab pill size');
@@ -191,18 +199,18 @@ export function applyApprovedLookPatches(source = '') {
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
   js = js.split('overflow:"hidden","data-ts-day-map":"1",').join('overflow:"hidden",');
   js = js.split('"data-ts-day-map":"1",height:').join('height:');
-  js = moveDayMapBeforeItinerary(js);
   js = js.split('})})]}),,Ki&&(()=>{const G=Ki').join('})})]}),q==="plan"&&Ki&&(()=>{const G=Ki');
   if (!js.includes('q==="plan"&&Ki&&(()=>{const G=Ki')) {
     js = js.split(',Ki&&(()=>{const G=Ki').join(',q==="plan"&&Ki&&(()=>{const G=Ki');
   }
+  js = moveDayMapAfterItinerary(js);
   js = js.split('style:{borderRadius:16,overflow:"hidden","data-ts-day-map":"1",height:').join('style:{borderRadius:16,overflow:"hidden",height:');
-  if (!js.includes('},G.id))})]}),n.jsx("div",{"data-ts-day-map":"1"') || !js.includes('})(),n.jsx("div",{"data-ts-day-map":"1"')) {
+  if (!js.includes('})]})]})})(),n.jsx("div",{"data-ts-day-map":"1"')) {
     const planIdx = js.indexOf('q==="plan"&&n.jsxs(n.Fragment');
     const mapIdx = js.indexOf('{"data-ts-day-map":"1"', planIdx);
     const kiIdx = js.indexOf('Ki&&(()=>{const G=Ki', planIdx);
-    if (planIdx < 0 || mapIdx < 0 || kiIdx < 0 || mapIdx > kiIdx) {
-      throw new Error('approved look day map is not before itinerary card');
+    if (planIdx < 0 || mapIdx < 0 || kiIdx < 0 || mapIdx < kiIdx) {
+      throw new Error('approved look day map is not below itinerary card');
     }
   }
   if (
