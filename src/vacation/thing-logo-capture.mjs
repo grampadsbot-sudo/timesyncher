@@ -114,6 +114,10 @@ export function logoCaptureMissReason(thing = {}, override = {}) {
     override.iconUrl,
     thing.logoUrl,
     thing.iconUrl,
+    thing.image_url,
+    thing.imageUrl,
+    override.image_url,
+    override.imageUrl,
   ];
   for (const value of explicit) {
     const logo = usableLogo(value);
@@ -166,6 +170,10 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     override.iconUrl,
     thing.logoUrl,
     thing.iconUrl,
+    thing.image_url,
+    thing.imageUrl,
+    override.image_url,
+    override.imageUrl,
   ];
   for (const value of explicit) {
     const logo = usableLogo(value);
