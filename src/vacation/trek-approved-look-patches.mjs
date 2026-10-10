@@ -2,12 +2,6 @@
 
 import { TREK_SHARED_DAY_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
 
-const STATIC_DAY_MAP_PATCH =
-  'n.jsx("div",{className:"static-day-map-host",style:{width:"100%",height:"100%",position:"relative",overflow:"hidden"},dangerouslySetInnerHTML:{__html:xa((La||[]).filter(function(G){return G!=null&&G.lat!=null&&G.lng!=null}),dn?Math.max(280,(typeof window!=="undefined"?window.innerWidth:390)-32):1100,dn?420:300)}})';
-
-const LEAFLET_DAY_MAP_RE =
-  /n\.jsxs\(gpe,\{center:Ia,zoom:\d+,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:\{width:"100%",height:"100%"\},whenReady:function\(\)\{tsKickDayMapTiles\(this\)\},children:\[n\.jsx\(fpe,\{url:"https:\/\/[^"]+"[^]*?\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\),La\.map\(G=>n\.jsx\(zx,\{position:\[G\.lat,G\.lng\],icon:mDe\(G\),eventHandlers:\{click:\(\)=>Ne\(Qt\(G\)\)\},children:n\.jsx\(eZ,\{children:mr\(G\)\|\|G\.name\}\)\},G\.id\)\)\]\}\)/;
-
 const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
 
 const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
@@ -26,15 +20,14 @@ const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("d
 
 const DAY_MAP = '';
 
-const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"",referrerPolicy:"strict-origin-when-cross-origin",detectRetina:!1,maxZoom:17,updateWhenIdle:!1,fadeAnimation:!1,keepBuffer:16}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
+const DAY_MAP_TILE_ATTRIBUTION = '© OpenStreetMap contributors';
 
-const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,detectRetina:!1)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+const DAY_MAP_TILE_LAYER_PATCH = `n.jsx(fpe,{url:"${TREK_SHARED_DAY_MAP_TILE_URL}",attribution:"${DAY_MAP_TILE_ATTRIBUTION}",referrerPolicy:"strict-origin-when-cross-origin"}),n.jsx(gDe,{places:La,fallbackCenter:ba})`;
 
-const DAY_MAP_CONTAINER_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_PATCH = 'gpe,{center:Ia,zoom:8,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_ZOOM9_NEEDLE = 'gpe,{center:Ia,zoom:9,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_ZOOM10_NEEDLE = 'gpe,{center:Ia,zoom:10,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
-const DAY_MAP_CONTAINER_ZOOM11_KICK_NEEDLE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:{width:"100%",height:"100%"},whenReady:function(){tsKickDayMapTiles(this)},children:[n.jsx(fpe,{url:';
+const DAY_MAP_TILE_LAYER_RE = /n\.jsx\(fpe,\{url:"https:\/\/[^"]+",attribution:"[^"]*",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,detectRetina:!1)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/;
+
+const DAY_MAP_KICKED_CONTAINER_RE = /gpe,\{center:Ia,zoom:\d+,zoomControl:!1,attributionControl:!1,fadeAnimation:!1,style:\{width:"100%",height:"100%"\},whenReady:function\(\)\{tsKickDayMapTiles\(this\)\},children:\[n\.jsx\(fpe,\{url:/g;
+const DAY_MAP_CONTAINER_RESTORE = 'gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:';
 
 const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
 const MAP_SHELL_PATCH = 'className:"w-full h-full relative",style:{height:"100%",width:"100%"},children:';
@@ -175,29 +168,20 @@ export function applyApprovedLookPatches(source = '') {
   }
   js = js.replace(DAY_MAP_TILE_LAYER_RE, DAY_MAP_TILE_LAYER_PATCH);
   js = js.replace(
-    /n\.jsx\(fpe,\{url:Yr\.getState\(\)\.settings\.map_tile_url\|\|"https:\/\/\{s\}\.tile\.openstreetmap\.fr\/hot\/\{z\}\/\{x\}\/\{y\}\.png",attribution:"",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/g,
+    /n\.jsx\(fpe,\{url:Yr\.getState\(\)\.settings\.map_tile_url\|\|"https:\/\/\{s\}\.tile\.openstreetmap\.fr\/hot\/\{z\}\/\{x\}\/\{y\}\.png",attribution:"[^"]*",referrerPolicy:"strict-origin-when-cross-origin"(?:,crossOrigin:!0)?(?:,detectRetina:!1)?(?:,maxZoom:\d+)?(?:,updateWhenIdle:!1)?(?:,fadeAnimation:!1)?(?:,keepBuffer:\d+)?\}\),n\.jsx\(gDe,\{places:La,fallbackCenter:ba\}\)/g,
     DAY_MAP_TILE_LAYER_PATCH,
   );
-  if (js.includes(DAY_MAP_CONTAINER_NEEDLE)) {
-    js = js.replace(DAY_MAP_CONTAINER_NEEDLE, DAY_MAP_CONTAINER_PATCH);
-  } else if (js.includes(DAY_MAP_CONTAINER_ZOOM9_NEEDLE)) {
-    js = js.replace(DAY_MAP_CONTAINER_ZOOM9_NEEDLE, DAY_MAP_CONTAINER_PATCH);
-  } else if (js.includes(DAY_MAP_CONTAINER_ZOOM10_NEEDLE)) {
-    js = js.replace(DAY_MAP_CONTAINER_ZOOM10_NEEDLE, DAY_MAP_CONTAINER_PATCH);
-  } else if (js.includes(DAY_MAP_CONTAINER_ZOOM11_KICK_NEEDLE)) {
-    js = js.replace(DAY_MAP_CONTAINER_ZOOM11_KICK_NEEDLE, DAY_MAP_CONTAINER_PATCH);
-  } else if (js.includes('whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:')) {
-    js = js.replace(
-      'whenReady:function(){this.invalidateSize(!0)},children:[n.jsx(fpe,{url:',
-      'whenReady:function(){tsKickDayMapTiles(this)},fadeAnimation:!1,children:[n.jsx(fpe,{url:',
-    );
-  } else if (!js.includes('whenReady:function(){tsKickDayMapTiles(this)},fadeAnimation:!1,children:[n.jsx(fpe,{url:') && !js.includes('static-day-map-host')) {
-    throw new Error('approved look patch missed shared day map MapContainer whenReady');
+  if (DAY_MAP_KICKED_CONTAINER_RE.test(js)) {
+    js = js.replace(DAY_MAP_KICKED_CONTAINER_RE, DAY_MAP_CONTAINER_RESTORE);
   }
-  if (LEAFLET_DAY_MAP_RE.test(js)) {
-    js = js.replace(LEAFLET_DAY_MAP_RE, STATIC_DAY_MAP_PATCH);
-  } else if (!js.includes('static-day-map-host') && js.includes('whenReady:function(){tsKickDayMapTiles(this)}')) {
-    throw new Error('approved look patch missed shared day map Leaflet block');
+  if (js.includes('static-day-map-host')) {
+    throw new Error('approved look day map must use live Leaflet, not static xa() tiles');
+  }
+  if (!js.includes('gpe,{center:Ia,zoom:11,zoomControl:!1,attributionControl:!1,style:{width:"100%",height:"100%"},children:[n.jsx(fpe,{url:')) {
+    throw new Error('approved look day map must keep Leaflet MapContainer at zoom 11');
+  }
+  if (!js.includes('La.map(G=>n.jsx(zx,{position:[G.lat,G.lng],icon:mDe(G),eventHandlers:{click:()=>Ne(Qt(G))}')) {
+    throw new Error('approved look day map must render clickable Leaflet pins');
   }
   js = js.split('overflow:"hidden","data-ts-day-map":"1",height:').join('overflow:"hidden",height:');
   js = js.split('overflow:"hidden","data-ts-day-map":"1",').join('overflow:"hidden",');
@@ -218,7 +202,8 @@ export function applyApprovedLookPatches(source = '') {
   }
   if (
     !js.includes('data-ts-day-map":"1"')
-    || (!js.includes('static-day-map-host') && !js.includes(TREK_SHARED_DAY_MAP_TILE_URL))
+    || !js.includes(TREK_SHARED_DAY_MAP_TILE_URL)
+    || !js.includes(DAY_MAP_TILE_ATTRIBUTION)
   ) {
     throw new Error('approved look patch did not wire shared day map tiles');
   }

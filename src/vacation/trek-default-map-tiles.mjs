@@ -8,9 +8,9 @@
 export const TREK_DEFAULT_MAP_TILE_URL =
   'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 
-/** OpenTopo raster host for static day-map tiles (`xa()` img grid). */
+/** OpenTopo raster host for keepsake static day-map tiles (`xa()` img grid). */
 export const TREK_STATIC_MAP_TILE_HOST = 'https://a.tile.opentopomap.org';
 
-/** Legacy Leaflet template (keepsake defaults); live day map uses `xa()` static tiles. */
+/** Live shared day-by-day Leaflet map (standard OSM raster). */
 export const TREK_SHARED_DAY_MAP_TILE_URL =
-  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
