@@ -44,6 +44,28 @@ function detailBagFrom(thing = {}) {
   return { ...bag };
 }
 
+function detailBagHasExplicitFields(bag = {}) {
+  return Object.values(bag).some((value) => text(value));
+}
+
+/** Skip title-only itinerary lines on customer stubs; search/enriched things still get notes. */
+function shouldApplyAutoDetailFields(thing = {}) {
+  const bag = detailBagFrom(thing);
+  if (detailBagHasExplicitFields(bag)) return true;
+  const meta = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const source = text(thing.source || meta.source, 80).toLowerCase();
+  if (['brave', 'osm', 'tavily', 'google-places'].includes(source)) return true;
+  const record = sourceRecordFrom(thing);
+  if (!record) return false;
+  return Boolean(
+    text(record.address)
+    || text(record.phone)
+    || text(record.hours)
+    || record.rating != null
+    || text(record.longDetails),
+  );
+}
+
 function copyIfBlank(target, key, ...values) {
   if (text(target[key])) return;
   for (const value of values) {
@@ -245,6 +267,9 @@ export function thingDetailOverrideFields(thing = {}) {
   const bag = detailBagFrom(thing);
   const fromRecord = detailFieldsFromPlace({}, thing);
   const merged = { ...fromRecord, ...bag };
+  if (!shouldApplyAutoDetailFields(thing) && !text(bag.itineraryNote || bag.itinerary_note)) {
+    delete merged.itineraryNote;
+  }
   const override = {};
   for (const [key, value] of Object.entries(merged)) {
     if (value === null || value === undefined || value === '') continue;
@@ -260,7 +285,8 @@ export function thingDetailOverrideFields(thing = {}) {
   if (merged.thirdPartyReviewCount && !text(override.count)) override.thirdPartyReviewCount = merged.thirdPartyReviewCount;
   if (merged.itineraryNote) {
     override.itineraryNote = merged.itineraryNote;
-    if (!text(override.summary)) override.summary = merged.itineraryNote;
+    const explicitNote = text(bag.itineraryNote || bag.itinerary_note);
+    if (explicitNote && !text(override.summary)) override.summary = merged.itineraryNote;
   }
   if (merged.category) override.category = merged.category;
   return override;
