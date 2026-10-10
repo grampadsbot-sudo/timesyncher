@@ -36,7 +36,7 @@ const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈�
 const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
 const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
-const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
+const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:0,alignSelf:"center",display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr})})';
 const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
@@ -51,9 +51,12 @@ const RR_SUMMARY_NEEDLE = 'rr=G=>ha(G).summary??""';
 const RR_SUMMARY_PATCH = 'rr=G=>{const generic=/^Documented NYC option/i;const clean=s=>String(s||"").replace(/\\s+/g," ").trim();const ok=s=>{const t=clean(s);return t&&!generic.test(t)?t:""};const ov=ha(G),src=G.source&&typeof G.source==="object"?G.source:(ov.sourceRecord&&typeof ov.sourceRecord==="object"?ov.sourceRecord:{});for(const cand of[ov.summary,src.summary,src.description,ov.longDetails,ov.story,G.notes,G.description]){const t=ok(cand);if(t)return t}const co=Co(G);return ok(co)}';
 const OE_ROW_SUMMARY_FLIGHT_META = 'Pn=(()=>{if(bn(G)){const parts=eu(G);const line=[parts[1],parts[2],parts[3]].map(zt=>String(zt||"").trim()).filter(Boolean).join(" · ");return line||Rn}return Rn})(),';
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G)),Pn=(Mi(G),Rn),';
-const OE_ROW_SUMMARY_PATCH = `Rn=Bs(rr(G)||""),${OE_ROW_SUMMARY_FLIGHT_META}`;
+const OE_ROW_SUMMARY_RN = 'Rn=Bs((()=>{const r=rr(G);if(r)return r;const g=/^Documented NYC option/i;const c=String(Co(G)||"").replace(/\\s+/g," ").trim();return c&&!g.test(c)?c:""})()),';
+const OE_ROW_SUMMARY_PATCH = `${OE_ROW_SUMMARY_RN}${OE_ROW_SUMMARY_FLIGHT_META}`;
 const OE_ROW_SUMMARY_LEGACY_NEEDLE = 'Rn=Bs(rr(G)||String(G.description||G.notes||"").replace(/\\s+/g," ").trim()),Pn=(Mi(G),Rn),';
 const OE_ROW_SUMMARY_LEGACY_PATCH = OE_ROW_SUMMARY_PATCH;
+const OE_ROW_SUMMARY_BROKEN_NEEDLE = 'Rn=Bs(rr(G)||""),Pn=(()=>{if(bn(G)){const parts=eu(G);const line=[parts[1],parts[2],parts[3]].map(zt=>String(zt||"").trim()).filter(Boolean).join(" · ");return line||Rn}return Rn})(),';
+const OE_ROW_SUMMARY_BROKEN_PATCH = OE_ROW_SUMMARY_PATCH;
 const OE_LIST_LOGO_WRAP_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_LIST_LOGO_WRAP_PATCH = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
@@ -74,7 +77,8 @@ const CAR_DAY_LOOP_NEEDLE = 'for(const wn of zt){if(!wn)continue;const Qi=xl(mr(
 const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDays=Yi(wn).map(ua=>ve(ua)).filter(Boolean);if(tsCarDays.length){const tsCarStart=Math.min(...tsCarDays),tsCarEnd=Math.max(...tsCarDays);if(G.day_number===tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Pickup: ${(ha(wn).rentalCompany||mr(wn))}`,item:wn,status:hs(wn)})}if(G.day_number===tsCarEnd&&tsCarEnd!==tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Drop-off: ${(ha(wn).rentalCompany||mr(wn))}`,item:wn,status:hs(wn)})}}}if(!wn)continue;if(Mi(wn))continue;const Qi=xl(mr(wn)||wn.name||wn.description||"")||xl(wn.name||wn.description||"");if(Qi&&/flight/i.test(wn.name||"")){';
 
 const BUDGET_ROW_LABEL_NEEDLE = 'children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
-const BUDGET_ROW_LABEL_PATCH = 'children:(tsBudgetRowLabel=Xi=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
+const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
+const BUDGET_ROW_LABEL_PRIOR = 'children:(tsBudgetRowLabel=Xi=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
 
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
@@ -122,8 +126,11 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
-  if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
-  else if (served && !js.includes('tsBudgetRowLabel=Xi=>')) {
+  if (js.includes(BUDGET_ROW_LABEL_PRIOR)) {
+    js = js.replace(BUDGET_ROW_LABEL_PRIOR, BUDGET_ROW_LABEL_PATCH);
+  } else if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) {
+    js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
+  } else if (served && !js.includes('/flight option/i.test(raw)?raw:mr(Xi)})(di.item)')) {
     throw new Error('budget row flight-option label patch did not apply');
   }
   js = patchBudgetSavedTargetsOnly(js, { served });
@@ -148,6 +155,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   }
   if (js.includes(OE_ROW_SUMMARY_LEGACY_NEEDLE)) {
     js = js.replace(OE_ROW_SUMMARY_LEGACY_NEEDLE, OE_ROW_SUMMARY_LEGACY_PATCH);
+  } else if (js.includes(OE_ROW_SUMMARY_BROKEN_NEEDLE)) {
+    js = js.replace(OE_ROW_SUMMARY_BROKEN_NEEDLE, OE_ROW_SUMMARY_BROKEN_PATCH);
   } else if (js.includes(OE_ROW_SUMMARY_NEEDLE)) {
     js = js.replace(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
   } else if (served && (js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))') || js.includes('Pn=(Mi(G),Rn)'))) {
