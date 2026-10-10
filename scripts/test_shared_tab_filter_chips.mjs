@@ -73,7 +73,7 @@ const offTimeline = [flight, hotelRow, car, cafe, shop, rest];
 const Qt = (item) => `place:${item.id}`;
 const budgetIds = [...new Map([].concat([flight], [hotelRow], [car], [cafe], [shop], [rest]).filter(Boolean).map((item) => [Qt(item), item])).keys()];
 assert.deepEqual(budgetIds.sort(), offTimeline.map(Qt).sort());
-assert.match(bundle, /\[\]\.concat\(\(function\(\)\{const tsSeen=new Set,tsOut=\[\];for\(const Xi of \[\]\.concat\(\(Gt\|\|\[\]\)\.filter\(bn\),\(Ut\|\|\[\]\)\.filter\(bn\)\)\)/);
+assert.match(bundle, /\[\]\.concat\(\(function\(\)\{const tsSeen=new Set,tsOut=\[\];for\(const Xi of \[\]\.concat\(\(Gt\|\|\[\]\)\.filter\(bn\),\(Ut\|\|\[\]\)\.filter\(bn\),\(Gt\|\|\[\]\)\.filter\(G=>\/flight option\/i\.test\(String\(G\.name\|\|G\.title\|\|""\)\)\)\)\)/);
 assert.match(bundle, /Xi==="car"\?"Cars"/);
 assert.doesNotMatch(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
 assert.match(bundle, /data-logo-src":Xr/);
