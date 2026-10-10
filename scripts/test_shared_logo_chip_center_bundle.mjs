@@ -13,7 +13,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /onLoad:Rn=>\{const img=Rn\.currentTarget,box=img\.getBoundingClientRect\(\)/);
+assert.match(rendered, /onLoad:Rn=>\{const img=Rn\.currentTarget;requestAnimationFrame\(\(\)=>\{const box=img\.getBoundingClientRect\(\)/);
 assert.match(rendered, /onError:Rn=>tsShowChipEmoji\(Rn\.currentTarget\)/);
 assert.match(rendered, /querySelector\("\[data-ts-chip-emoji\]"\)/);
 assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);

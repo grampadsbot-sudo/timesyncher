@@ -52,7 +52,7 @@ assert.equal(rendered, committed);
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
-assert.match(rendered, /onLoad:Rn=>\{const img=Rn\.currentTarget,box=img\.getBoundingClientRect\(\)/);
+assert.match(rendered, /onLoad:Rn=>\{const img=Rn\.currentTarget;requestAnimationFrame\(\(\)=>\{const box=img\.getBoundingClientRect\(\)/);
 assert.match(rendered, /onError:Rn=>tsShowChipEmoji\(Rn\.currentTarget\)/);
 assert.match(rendered, /querySelector\("\[data-ts-chip-emoji\]"\)/);
 assert.match(rendered, /i==="car"\?"🚗"/);
