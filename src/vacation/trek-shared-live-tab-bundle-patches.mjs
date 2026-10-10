@@ -47,6 +47,8 @@ const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|flight|transport|hotel-wake|hot
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
 const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
 
+const RR_SUMMARY_NEEDLE = 'rr=G=>ha(G).summary??""';
+const RR_SUMMARY_PATCH = 'rr=G=>{const s=String(ha(G).summary||"").trim();if(s&&!/^Documented NYC option/i.test(s))return s;const ov=ha(G),src=G.source&&typeof G.source==="object"?G.source:(ov.sourceRecord&&typeof ov.sourceRecord==="object"?ov.sourceRecord:{}),alt=String(src.summary||src.description||G.description||"").replace(/\\s+/g," ").trim();return alt&&!/^Documented NYC option/i.test(alt)?alt:""}';
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G)||String(G.description||G.notes||"").replace(/\\s+/g," ").trim())';
 const OE_LIST_LOGO_WRAP_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
@@ -129,6 +131,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(NR_VIDEO_THUMB_NEEDLE)) js = js.replace(NR_VIDEO_THUMB_NEEDLE, NR_VIDEO_THUMB_PATCH);
   else if (served && !js.includes('data-row-video-qr":"1"')) {
     throw new Error('live media video QR thumb patch did not apply');
+  }
+  if (js.includes(RR_SUMMARY_NEEDLE)) js = js.replace(RR_SUMMARY_NEEDLE, RR_SUMMARY_PATCH);
+  else if (served && js.includes('rr=G=>ha(G).summary??""')) {
+    throw new Error('live tab row summary rr() generic-seed filter did not apply');
   }
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) js = js.replace(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
   else if (served && js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))')) {

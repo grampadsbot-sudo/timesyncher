@@ -108,7 +108,7 @@ const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16
 
 const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
-const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"grid",placeItems:"center",fontSize:13,lineHeight:1,width:16,height:16,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(0px)":G.id==="plan"?"translateY(0px)":G.id==="restaurants"?"translateY(-1px)":"translateY(0px)"';
+const BOOKINGS_TAB_EMOJI_INNER_STYLE = 'display:"grid",placeItems:"center",fontSize:13,lineHeight:1,width:16,height:16,transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-3px)":G.id==="budget"?"translateY(-1px)":G.id==="flights"?"translateY(0px)":G.id==="plan"?"translateY(0px)":G.id==="restaurants"?"translateY(-1px)":"translateY(0px)"';
 
 const BOOKINGS_TAB_ICON_V2_PATCH = `G.icon?n.jsx("span",{...tsTabCatChip(G),style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon})})`;
 const BOOKINGS_TAB_ICON_V2_LEGACY = `G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{${BOOKINGS_TAB_EMOJI_INNER_STYLE}},children:G.icon})})`;
@@ -194,11 +194,11 @@ export function patchThingLogoChipAlignment(source = '') {
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
     'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?Re?"translateY(0px)":"translateY(1px)":G.id==="plan"?"translateY(0.5px)":"translateY(0px)"',
   ];
-  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-2px)":G.id==="flights"?"translateY(0px)":G.id==="plan"?"translateY(0px)":G.id==="restaurants"?"translateY(-1px)":"translateY(0px)"';
+  const tabEmojiTransformPatch = 'transform:G.id==="hotels"?"translateY(-3px)":G.id==="cars"?"translateY(-3px)":G.id==="budget"?"translateY(-1px)":G.id==="flights"?"translateY(0px)":G.id==="plan"?"translateY(0px)":G.id==="restaurants"?"translateY(-1px)":"translateY(0px)"';
   for (const needle of tabEmojiTransformNeedles) {
     if (js.includes(needle)) js = js.replaceAll(needle, tabEmojiTransformPatch);
   }
-  if (!js.includes('G.id==="flights"?"translateY(0px)"') && !js.includes('G.id==="restaurants"?"translateY(-1px)"')) {
+  if (!js.includes('G.id==="flights"?"translateY(0px)"') || !js.includes('G.id==="cars"?"translateY(-3px)"') || !js.includes('G.id==="budget"?"translateY(-1px)"')) {
     throw new Error('category tab emoji ink nudge patch did not apply');
   }
   if (js.includes(BOOKINGS_TAB_LUCIDE_NEEDLE)) {
