@@ -266,7 +266,8 @@ export function unresolvedThingsFromPlaceClassification(classification = {}) {
     push(item?.name || item?.title, kind);
   }
   const target = clean(classification?.target, 240);
-  if (target) {
+  const targetKind = normalizePlaceSearchTargetKind(classification?.targetKind);
+  if (target && targetKind === 'named_place') {
     const category = normalizePlaceSearchCategory(classification?.category) || 'activity';
     push(target, category);
   }
