@@ -11,18 +11,11 @@ const BUDGET_IS_PATCH = 'children:Xi==null?`${Re(di)} timeline`:Xi?`${fr?"Under"
 const BUDGET_TARGET_PLACEHOLDER_NEEDLE = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"0",inputMode:"decimal"';
 const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"",inputMode:"decimal"';
 
-/** Budget tab: only show/sync targets saved on thingOverrides.__budgetTargets (no expense-derived defaults). */
+/** Budget tab polish: keep upstream planned amounts on rows; only patch totals/placeholder copy. */
 export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');
-  if (js.includes(BUDGET_SR_NEEDLE)) js = js.replace(BUDGET_SR_NEEDLE, BUDGET_SR_PATCH);
-  else if (served && js.includes('String(Zn(di,Xi)||"")')) {
-    throw new Error('budget saved-target-only sr() patch did not apply');
-  }
-  if (js.includes(BUDGET_XR_NEEDLE)) js = js.replace(BUDGET_XR_NEEDLE, BUDGET_XR_PATCH);
-  else if (served && !js.includes('if(!Object.prototype.hasOwnProperty.call(go,fr))return null')) {
-    throw new Error('budget nullable Xr() patch did not apply');
-  }
+  void served;
   if (js.includes(BUDGET_EO_NEEDLE)) js = js.replace(BUDGET_EO_NEEDLE, BUDGET_EO_PATCH);
   if (js.includes(BUDGET_JS_SPAN_NEEDLE)) js = js.replace(BUDGET_JS_SPAN_NEEDLE, BUDGET_JS_SPAN_PATCH);
   if (js.includes(BUDGET_IS_NEEDLE)) js = js.replace(BUDGET_IS_NEEDLE, BUDGET_IS_PATCH);

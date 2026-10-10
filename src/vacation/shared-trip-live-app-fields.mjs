@@ -2,6 +2,7 @@ import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import {
   buildCategoryDescription,
+  ensureMinWordDescription,
   isGenericDescription,
   MIN_PRODUCT_DESCRIPTION_WORDS,
 } from './trip-thing-enrichment.mjs';
@@ -215,6 +216,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (built) summary = built;
     }
     if (summary) {
+      summary = ensureMinWordDescription(summary, { category });
       override.summary = summary;
       if (!text(place.description) || summaryNeedsEnrichment(place.description)) {
         place.description = summary;

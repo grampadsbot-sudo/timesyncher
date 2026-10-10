@@ -53,7 +53,7 @@ assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
 assert.match(bundle, /Rn=Bs\(\(\(\)=>/);
-assert.match(bundle, /if\(bn\(G\)\)\{const parts=eu\(G\)/);
+assert.match(bundle, /Pn=Rn,/);
 assert.doesNotMatch(bundle, /tsBudgetRowLabel/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 assert.match(bundle, /data-summary-stored":"1"/);

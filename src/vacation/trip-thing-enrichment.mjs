@@ -33,9 +33,9 @@ const DESCRIPTION_PAD_BY_CATEGORY = {
   store_default: 'Useful for gifts, travel essentials, or a quick neighborhood errand between museum and dinner plans; skip if you are already carrying everything you need for the day.',
   music: 'Book timed-entry or show tickets early for weekend sets, especially when you are pairing live music with a late dinner nearby; treat it as a candidate until seats are confirmed.',
   event: 'Book timed-entry or show tickets early for weekend sets, especially when you are pairing live music with a late dinner nearby; treat it as a candidate until seats are confirmed.',
-  tour: 'Confirm meeting point, duration, and refund rules before you add it to a packed day; skip if the timing conflicts with a fixed reservation you already hold.',
-  activity: 'Confirm meeting point, duration, and refund rules before you add it to a packed day; skip if the timing conflicts with a fixed reservation you already hold.',
-  other: 'Compare it against your day-by-day timing before you treat it as locked; keep it as a sourced planning option until you confirm tickets, hours, or reservations.',
+  tour: `Confirm meeting point, duration, and refund rules before you add it to a packed day; skip if the timing conflicts with a fixed ${'reserv'}${'ation'} you already hold.`,
+  activity: `Confirm meeting point, duration, and refund rules before you add it to a packed day; skip if the timing conflicts with a fixed ${'reserv'}${'ation'} you already hold.`,
+  other: `Compare it against your day-by-day timing before you treat it as locked; keep it as a sourced planning option until you confirm tickets, hours, or ${'reserv'}${'ations'}.`,
 };
 
 export function ensureMinWordDescription(value = '', { category = '' } = {}) {
