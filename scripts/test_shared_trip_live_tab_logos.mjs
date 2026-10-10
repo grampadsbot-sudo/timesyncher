@@ -19,7 +19,7 @@ assert.equal(bundle, committed, 'committed served bundle must match renderServed
 assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
-assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
+assert.match(bundle, /className:"tiny-logo",src:ztOk,alt:""/);
 assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
 assert.doesNotMatch(bundle, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
 assert.match(bundle, /AI-assisted itinerary planning/);
