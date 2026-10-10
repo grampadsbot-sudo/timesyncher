@@ -151,7 +151,6 @@ export function applyApprovedLookPatches(source = '') {
   if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
   js = mustReplace(js, '{id:"plan",label:"Day-by-Day",icon:"📅"}', '{id:"plan",label:"Day-by-Day",icon:"☀️"}', 'Day-by-Day sun icon');
   js = mustReplace(js, 'padding:"7px 7px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600', 'padding:Re?"5px 15px":"6px 15px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.2px"', 'tab pill size');
-  js = mustReplace(js, 'Os=["event","family_event","tickets","bar","music","workout","artist","theatre","sightseeing","tour","transport","other"]', 'Os=["event","music","sightseeing","tour","transport","other"]', 'Events type chips');
   js = mustReplace(js, '/whole foods|juice generation|grocery|market|store|pharmacy|snacks|celery juice|supplies/i', '/whole foods|juice generation|grocery|market|store|pharmacy|snacks|celery juice|supplies|zabar|tiffany|bergdorf|saks|nordstrom|macy|apple fifth|moma design|strand book|chelsea market|pure green/i', 'store name categories');
   const FOOTER_NEEDLE = 'n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24},children:n.jsx("img",{src:"/icons/timesyncher-icon-black-transparent.png",alt:"TimeSyncher",width:"20",height:"20"})}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"Vacation"}),n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
   const FOOTER_PATCH = 'n.jsx("img",{src:"/icons/icon-512x512.png",alt:"",width:"18",height:"18",style:{display:"block",width:18,height:18,borderRadius:4}}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700},children:"TimeSyncher Travel · AI-assisted itinerary planning"})';
@@ -164,7 +163,12 @@ export function applyApprovedLookPatches(source = '') {
     'compact budget card with full row list',
   );
   js = mustReplace(js, 'children:[n.jsxs("div",{style:{padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f3f4f6"},children:[n.jsx("div",{style:{width:28,height:28,borderRadius:"50%"', 'children:[n.jsxs("div",{style:{padding:(typeof window<"u"&&window.innerWidth>=760)?"16px 16px 12px":"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f3f4f6"},children:[n.jsx("div",{style:{width:28,height:28,borderRadius:"50%"', 'day card header padding');
-  js = mustReplace(js, 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))', 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}', 'events list types');
+  const JO_NARROW = 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}';
+  const JO_ORIG = 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))';
+  if (js.includes(JO_NARROW)) js = js.replace(JO_NARROW, JO_ORIG);
+  const OS_NARROW = 'Os=["event","music","sightseeing","tour","transport","other"]';
+  const OS_ORIG = 'Os=["event","family_event","tickets","bar","music","workout","artist","theatre","sightseeing","tour","transport","other"]';
+  if (js.includes(OS_NARROW)) js = js.replace(OS_NARROW, OS_ORIG);
   js = mustReplace(js, 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(Boolean))).sort()', 'Oa=Array.from(new Set(tn.map(G=>En(G)).filter(a=>a&&a!=="Airport / Transit"))).sort()', 'area chips');
   const mapOpen = 'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12';
   const mapOpen420 = 'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?420:300,marginBottom:12';
