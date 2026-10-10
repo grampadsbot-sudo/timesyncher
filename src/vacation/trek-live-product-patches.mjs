@@ -353,9 +353,9 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
-const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
-const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(price)?price:`$$${price}`;return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
-const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
 const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
@@ -398,7 +398,6 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
-  if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);

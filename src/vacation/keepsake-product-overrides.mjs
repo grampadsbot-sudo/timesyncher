@@ -80,6 +80,9 @@ function copyBlank(next, key, ...values) {
 function applySourcedFields(place = {}, override = {}) {
   const source = sourceObject(override.source, place.source, override.sourceRecord, place.sourceRecord);
   const next = { ...override };
+  copyBlank(next, 'url', place.url, place.website, place.source_url, source?.url, source?.website);
+  copyBlank(next, 'website', place.website, place.url, place.source_url, source?.website, source?.url);
+  copyBlank(next, 'logoUrl', place.logoUrl, place.image_url, source?.logoUrl, source?.logo);
   copyBlank(next, 'summary', place.summary, source?.summary);
   copyBlank(next, 'longDetails', place.longDetails, source?.longDetails, source?.details);
   copyBlank(next, 'happyHourDetails', place.happyHourDetails, source?.happyHourDetails);

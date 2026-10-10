@@ -15,10 +15,9 @@ import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-mini
 import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
-import { writeRatings } from './write-ratings.mjs';
-import { placeToTripThing, sourceRecordFor, sourceRefFor } from './place-to-trip-thing.mjs';
-export { placeToTripThing } from './place-to-trip-thing.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
+import { sourceRecordFor, sourceRefFor } from './place-search-record.mjs';
+import { noteToTripThing, placeToTripThing } from './place-search-trip-thing.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
@@ -624,6 +623,8 @@ export async function searchPlaces({
   };
 }
 
+export { placeToTripThing, noteToTripThing } from './place-search-trip-thing.mjs';
+
 export function placeToResearchCandidate(place, destination = '') {
   return {
     category: place.category,
@@ -643,28 +644,6 @@ export function placeToResearchCandidate(place, destination = '') {
       externalId: place.externalId || '',
       sourceRef: sourceRefFor(place),
       jevScore: place.jevScore ?? 0,
-    },
-  };
-}
-
-export function noteToTripThing(note) {
-  const sourceRecord = sourceRecordFor({ ...note, source: 'tavily' });
-  const sourceRef = sourceRefFor({ ...note, source: 'tavily' });
-  return {
-    category: note.category,
-    subtype: 'tavily',
-    title: note.title,
-    description: note.description || '',
-    source: 'tavily',
-    location: {},
-    links: note.url ? [{ label: 'tavily', url: note.url }] : [],
-    ratings: writeRatings({ sourceRecord }),
-    metadata: {
-      source: 'tavily',
-      externalId: note.externalId || note.url || '',
-      sourceRef,
-      sourceRecord,
-      jevScore: note.jevScore ?? 0,
     },
   };
 }

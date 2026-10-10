@@ -15,6 +15,7 @@ import {
   descriptionPassesDetailJudge,
   resolvedPresentationCategory,
 } from '../src/vacation/thing-detail-fields.mjs';
+import { isGenericDescription } from '../src/vacation/trip-thing-enrichment.mjs';
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchThingDetailFields } from '../src/vacation/trek-thing-detail-fields-patch.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
@@ -120,5 +121,24 @@ assert.doesNotMatch(bundle, /Open details for summary/);
 assert.match(bundle, /Itinerary note/);
 assert.match(bundle, /ha\(G\)\.itineraryNote/);
 assert.match(bundle, /It\(Dt\)==="bar"\)&&n\.jsxs\("label",\{style:Hn,children:\["Happy hour details"/);
+
+const nycEnrichment = JSON.parse(
+  readFileSync(new URL('./fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
+);
+const nycNames = Object.keys(nycEnrichment);
+assert.equal(nycNames.length, 63, 'NYC ccab fixture should document 63 places');
+const nycDescriptions = nycNames.map((name) => String(nycEnrichment[name]?.description || '').trim());
+assert.equal(nycDescriptions.length, new Set(nycDescriptions).size, 'each NYC fixture place needs a unique description');
+for (const [name, record] of Object.entries(nycEnrichment)) {
+  const description = String(record?.description || '').trim();
+  assert.ok(description, `missing description for ${name}`);
+  assert.equal(isGenericDescription(description), false, `generic description for ${name}`);
+  if (record?.website) {
+    assert.ok(record.logoUrl, `logo expected when website exists: ${name}`);
+  }
+  if (record?.price != null) {
+    assert.ok(Number(record.price) > 0, `price must be positive for ${name}`);
+  }
+}
 
 console.log('gate b product row field tests passed');

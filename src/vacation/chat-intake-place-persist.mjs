@@ -1,6 +1,7 @@
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { placeToTripThing, queriesFromWantedThings, searchPlaces } from './place-search.mjs';
+import { rowNeedsProductEnrichment } from './trip-thing-enrichment.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
@@ -246,7 +247,7 @@ export async function persistChatIntakePlaceThing(db, {
   if (resolved) {
     const merged = {
       ...resolved,
-      description: clean(description, 4000) || resolved.description || existing?.description || '',
+      description: resolved.description || clean(description, 4000) || existing?.description || '',
       starts_at: startsAt || existing?.starts_at || null,
       metadata: {
         ...baseMeta,
@@ -361,7 +362,8 @@ export function rowEligibleForChatPlaceBackfill(row = {}) {
   if (!['null', 'customer_stated', 'chat_extraction', 'customer-turn', 'long-intake'].includes(source)) return false;
   const category = clean(row?.category, 80).toLowerCase();
   if (!isChatIntakeGeocodableThing({ category })) return false;
-  return !thingHasCoordinates(row);
+  if (!thingHasCoordinates(row)) return true;
+  return rowNeedsProductEnrichment(row);
 }
 
 export function rowNeedsDetailBackfill(row = {}) {
