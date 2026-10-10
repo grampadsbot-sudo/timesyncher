@@ -129,10 +129,9 @@ export function applyApprovedLookPatches(source = '') {
     return js;
   }
   js = mustReplace(js, HEADER_NEEDLE, HEADER_PATCH, 'shared header');
-  if (!js.includes(ACTION_ROW_NEEDLE)) {
-    throw new Error('approved look patch missed header action row');
+  if (!js.includes(ACTION_ROW_NEEDLE) && !js.includes('data-print-menu-root')) {
+    throw new Error('approved look patch missed header admin/keepsake controls');
   }
-  js = dropCallWithTrailingComma(js, ACTION_ROW_NEEDLE);
   js = mustReplace(js, EVENTS_TAB_NEEDLE, EVENTS_TAB_PATCH, 'Events tab label');
   js = mustReplace(js, DAY_HEADING_NEEDLE, DAY_HEADING_PATCH, 'map day heading');
   js = mustReplace(js, 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,opacity:.5,maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})', 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,color:"rgba(255,255,255,0.5)",maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})', 'subtitle ink');
@@ -228,7 +227,7 @@ export function applyApprovedLookPatches(source = '') {
     throw new Error('approved look patch did not apply');
   }
   const descSpriteNeedle = ['data-ts-desc', '-sprite'].join('');
-  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', descSpriteNeedle].filter((needle) => js.includes(needle));
+  const standIns = ['label:"The Rest"', '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', descSpriteNeedle].filter((needle) => js.includes(needle));
   if (standIns.length) {
     throw new Error(`approved look left a capture hide or a screenshot stand-in in place: ${standIns.map((needle) => needle.slice(0, 80)).join(' | ')}`);
   }

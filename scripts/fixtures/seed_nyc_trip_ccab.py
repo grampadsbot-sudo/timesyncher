@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-off seed for local NYC screenshot run. Names only from repo sources (see SOURCES in report)."""
+"""One-off seed for local NYC screenshot run. Names and enrichment from nyc_ccab_place_enrichment.json."""
 from __future__ import annotations
 import json
 import re
@@ -9,47 +9,23 @@ from pathlib import Path
 ROOT = Path("/workspace")
 DB = ROOT / "trek-src/server/data/travel.db"
 TOKEN = "8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y"
-
-LINKS_FILES = [
-    ROOT / "scripts/update_trek_official_links.py",
-    ROOT / "scripts/fix_remaining_trek_links.py",
-]
-
-STORE_BASELINES = {
-    "zabar's": "Zabar's",
-    "tiffany & co. the landmark": "Tiffany & Co. The Landmark",
-    "bergdorf goodman": "Bergdorf Goodman",
-    "saks fifth avenue": "Saks Fifth Avenue",
-    "nordstrom nyc flagship": "Nordstrom NYC Flagship",
-    "macy's herald square": "Macy's Herald Square",
-    "apple fifth avenue": "Apple Fifth Avenue",
-    "moma design store - 53rd street": "MoMA Design Store - 53rd Street",
-    "strand book store": "Strand Book Store",
-    "chelsea market": "Chelsea Market",
-}
+ENRICHMENT_PATH = ROOT / "scripts/fixtures/nyc_ccab_place_enrichment.json"
 
 
-def extract_link_script_names() -> list[str]:
-    names: list[str] = []
-    for path in LINKS_FILES:
-        text = path.read_text(encoding="utf-8")
-        for m in re.finditer(r"'([^']+)'\s*:\s*'https?://", text):
-            names.append(m.group(1))
-    return names
+def load_enrichment() -> dict[str, dict]:
+    payload = json.loads(ENRICHMENT_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise SystemExit(f"Expected object in {ENRICHMENT_PATH}")
+    return payload
 
 
-def all_documented_names() -> list[str]:
-    seen: set[str] = set()
-    out: list[str] = []
-    for n in extract_link_script_names() + list(STORE_BASELINES.values()):
-        key = n.strip().lower()
-        if key and key not in seen:
-            seen.add(key)
-            out.append(n.strip())
-    return sorted(out, key=str.lower)
+def all_documented_names(enrichment: dict[str, dict]) -> list[str]:
+    return sorted(enrichment.keys(), key=str.lower)
 
 
-def infer_category(name: str) -> str:
+def infer_category(name: str, record: dict | None = None) -> str:
+    if record and record.get("category"):
+        return str(record["category"])
     t = name.lower()
     if re.search(r"\bflight\b|southwest|jetblue|united|delta|american|\blas\b|\bjfk\b|\blga\b|\bewr\b", t):
         return "flight"
@@ -71,8 +47,14 @@ def infer_category(name: str) -> str:
 def main() -> None:
     if not DB.exists():
         raise SystemExit(f"Database not found: {DB}. Start TREK server once to initialize schema.")
+    if not ENRICHMENT_PATH.exists():
+        raise SystemExit(f"Missing enrichment fixture: {ENRICHMENT_PATH}")
 
-    names = all_documented_names()
+    enrichment = load_enrichment()
+    names = all_documented_names(enrichment)
+    if len(names) < 1:
+        raise SystemExit("nyc_ccab_place_enrichment.json has no places")
+
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
@@ -80,7 +62,7 @@ def main() -> None:
     existing = cur.execute("SELECT id FROM trips WHERE title = ?", ("Craig / Kim NYC June 2026",)).fetchone()
     if existing:
         trip_id = int(existing["id"])
-        print(json.dumps({"status": "exists", "trip_id": trip_id, "token": TOKEN}))
+        print(json.dumps({"status": "exists", "trip_id": trip_id, "token": TOKEN, "places": len(names)}))
         con.close()
         return
 
@@ -127,13 +109,37 @@ def main() -> None:
     }
 
     for idx, name in enumerate(names):
-        cat = infer_category(name)
+        record = enrichment.get(name) or {}
+        cat = infer_category(name, record)
         cat_id = cat_map.get(cat, 10)
         day_id = day_ids[idx % len(day_ids)]
+        description = str(record.get("description") or record.get("summary") or "").strip()
+        if not description:
+            raise SystemExit(f"Missing description for documented place: {name}")
+        price = record.get("price")
+        website = record.get("website")
+        logo_url = record.get("logoUrl")
+        lat = record.get("lat")
+        lng = record.get("lng")
+        address = record.get("address")
         cur.execute(
-            """INSERT INTO places (trip_id, name, description, category_id, currency, reservation_status, transport_mode)
-               VALUES (?, ?, ?, ?, 'USD', 'considering', 'walking')""",
-            (trip_id, name, f"Documented NYC option ({cat})", cat_id),
+            """INSERT INTO places (
+                 trip_id, name, description, lat, lng, address, category_id, price, currency,
+                 reservation_status, notes, website, transport_mode, image_url
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'USD', 'considering', ?, ?, 'walking', ?)""",
+            (
+                trip_id,
+                name,
+                description,
+                lat,
+                lng,
+                address,
+                cat_id,
+                price,
+                description,
+                website,
+                logo_url,
+            ),
         )
         place_id = int(cur.lastrowid)
         cur.execute(

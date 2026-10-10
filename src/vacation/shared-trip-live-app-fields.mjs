@@ -1,8 +1,22 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import {
+  buildCategoryDescription,
+  isGenericDescription,
+  MIN_PRODUCT_DESCRIPTION_WORDS,
+} from './trip-thing-enrichment.mjs';
 
 function text(value) {
   return String(value || '').trim();
+}
+
+function wordCount(value = '') {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function summaryNeedsEnrichment(summary = '') {
+  const row = text(summary);
+  return !row || isGenericDescription(row) || wordCount(row) < MIN_PRODUCT_DESCRIPTION_WORDS;
 }
 
 function sourceObject(...rows) {
@@ -189,9 +203,24 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'vehicleClass', source?.vehicleClass, source?.carType, source?.model);
     }
 
-    const summary = pickSummary(place, override, source);
+    let summary = pickSummary(place, override, source);
+    if (summaryNeedsEnrichment(summary)) {
+      const built = buildCategoryDescription({
+        category,
+        title: place.name || place.title,
+        sourceRecord: source || {},
+        address: place.address || source?.address,
+        rawDescription: place.description || source?.description || summary,
+      });
+      if (built) summary = built;
+    }
     if (summary) {
       override.summary = summary;
+      if (!text(place.description) || summaryNeedsEnrichment(place.description)) {
+        place.description = summary;
+      }
+      if (!text(override.details)) override.details = summary;
+      if (!text(override.longDetails)) override.longDetails = summary;
     } else if (category === 'hotel' || category === 'car') {
       const priceLabel = price != null ? `$${Math.round(price).toLocaleString('en-US')}` : '';
       const location = text(place.address || source?.address || source?.postal_address?.displayAddress);

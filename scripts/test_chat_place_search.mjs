@@ -9,7 +9,12 @@ import {
   intakeExtractedThings,
   runCustomerChatPlaceSearch,
 } from '../src/vacation/chat-place-search.mjs';
-import { placeToTripThing } from '../src/vacation/place-search.mjs';
+import { noteToTripThing, placeToTripThing } from '../src/vacation/place-search.mjs';
+import {
+  persistChatIntakePlaceThing,
+  rowEligibleForChatPlaceBackfill,
+} from '../src/vacation/chat-intake-place-persist.mjs';
+import { runChatIntakePlaceBackfill } from './backfill_chat_intake_places.mjs';
 import { sourcedPlaceRule } from './vacation-app-reply-rules.mjs';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 import { placeResultExtra } from '../src/vacation/provider-result-context.mjs';
@@ -237,25 +242,37 @@ const failed = await applyChatPlaceSearchForVacationTurn({
   db: failDb,
   tripId: 'trip-fail',
   requestId: 'req-fail',
-  classification: placeClassification(SCT_QUERIES[1]),
+  classification: {
+    ...placeClassification(SCT_QUERIES[1]),
+    target: 'Empty Pier',
+    targetKind: 'named_place',
+    category: 'restaurant',
+  },
   placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: failPayload,
   customerLive: {},
   turnId: 'turn-fail',
-  searchImpl: async () => ({ places: [], notes: [] }),
+  searchImpl: async () => ({ places: [], notes: [], providers: [] }),
 });
 assert.equal(failed.kind, 'failed');
 assert.equal(failed.placeSearch.status, 'failed');
 assert.equal(Array.isArray(failed.placeSearch.providers), true);
-assert.equal(failInserts.length, 0);
+assert.equal(failInserts.length, 1);
+const failMeta = JSON.parse(failInserts[0].find((value) => typeof value === 'string' && value.includes('needsDetails')));
+assert.equal(failMeta.needsDetails, true);
 
 const errorDb = mockDb();
 const errored = await applyChatPlaceSearchForVacationTurn({
   db: errorDb.db,
   tripId: 'trip-err',
   requestId: 'req-err',
-  classification: placeClassification(SCT_QUERIES[2]),
+  classification: {
+    ...placeClassification(SCT_QUERIES[2]),
+    target: 'Early Coffee',
+    targetKind: 'named_place',
+    category: 'restaurant',
+  },
   placeSearchTurn: true,
   tripDestination: 'Seattle',
   payload: { wantedThings: [] },
@@ -267,10 +284,35 @@ const errored = await applyChatPlaceSearchForVacationTurn({
 });
 assert.equal(errored.kind, 'failed');
 assert.match(errored.error, /Brave Place Search failed/);
-assert.equal(errorDb.inserts.length, 0);
+assert.equal(errorDb.inserts.length, 1);
 
 const thing = placeToTripThing(mockPlace(SCT_QUERIES[0]));
 assert.equal(thing.metadata.sourceRef.id, SCT_QUERIES[0].mockId);
+
+const webNote = noteToTripThing({
+  source: 'tavily',
+  title: 'Forecast',
+  category: 'decision',
+  description: 'Rain',
+  url: 'https://example.com/f',
+});
+assert.deepEqual(webNote.location, {});
+
+const { db: intakeDb, inserts: intakeInserts } = mockDb();
+const intakeSaved = await persistChatIntakePlaceThing(intakeDb, {
+  tripId: 'trip-intake-hit',
+  category: 'restaurant',
+  title: 'Saved Bistro',
+  destinationHint: 'Seattle',
+  searchImpl: async () => ({
+    places: [mockPlace({ mockId: 'brave-bistro', provider: 'brave', category: 'restaurant', title: 'Saved Bistro' })],
+    providers: [],
+  }),
+  env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+});
+assert.equal(Number(intakeSaved.location.lat), 47.609);
+assert.equal(intakeSaved.metadata.sourceRef.id, 'brave-bistro');
+assert.equal(intakeInserts.length, 1);
 
 const inTurnRows = [{
   name: 'Mock El Camión',
@@ -285,6 +327,77 @@ assert.doesNotMatch(
   /\(id:/,
 );
 
+function mockBackfillDb() {
+  const tripThings = [];
+  const db = async (strings, ...values) => {
+    const sql = String(strings[0] || '');
+    if (/from trip_things tt/i.test(sql)) {
+      return tripThings.map((row) => ({ ...row, destination: 'Seattle' }));
+    }
+    if (/from trip_things/i.test(sql) && /select id, title, location, source, metadata/i.test(sql)) {
+      return tripThings.map((row) => ({ ...row }));
+    }
+    if (/insert into trip_things/i.test(sql)) {
+      const row = {
+        id: `thing-${tripThings.length + 1}`,
+        title: values[4],
+        category: values[2],
+        location: JSON.parse(values[10]),
+        metadata: JSON.parse(values[13]),
+        source: values[14],
+        description: values[5] || '',
+        starts_at: values[6] || null,
+        trip_id: values[0],
+      };
+      tripThings.push(row);
+      return [{ id: row.id }];
+    }
+    if (/update trip_things/i.test(sql)) return [];
+    if (/from trips/i.test(sql) && /start_date/i.test(sql)) {
+      return [{ start_date: '2026-03-07', end_date: '2026-03-13' }];
+    }
+    return [];
+  };
+  return { db, tripThings };
+}
+
+await assert.rejects(() => runChatIntakePlaceBackfill({
+  db: async () => [],
+  env: { DATABASE_URL: 'postgres://prod-main.example/db' },
+}), /production/);
+
+const { db: backfillDb, tripThings: backfillRows } = mockBackfillDb();
+backfillRows.push({
+  id: 'row-1',
+  trip_id: 'trip-a',
+  category: 'restaurant',
+  title: 'Needs Search',
+  location: {},
+  metadata: { source: 'chat_extraction', needsDetails: true },
+  source: null,
+  description: '',
+  starts_at: null,
+});
+const backfillCounts = await runChatIntakePlaceBackfill({
+  db: backfillDb,
+  env: { DATABASE_URL: 'postgres://staging.example/db', OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'key' },
+  searchImpl: async () => ({
+    places: [{
+      source: 'osm',
+      title: 'Needs Search',
+      category: 'restaurant',
+      lat: 47.6,
+      lng: -122.3,
+      address: 'Seattle',
+      externalId: 'osm-1',
+    }],
+    providers: [],
+  }),
+});
+assert.equal(backfillCounts.searched, 1);
+assert.equal(backfillCounts.found, 1);
+assert.equal(rowEligibleForChatPlaceBackfill({ category: 'restaurant', location: {}, metadata: { source: 'chat_extraction' } }), true);
+
 console.log(JSON.stringify({
   ok: true,
   checked: 'chat-place-search',
@@ -296,7 +409,8 @@ console.log(JSON.stringify({
     'wantedThings_cleared_no_chat_extraction',
     'placeResultExtra_names_only_no_internal_ids',
     'classifier_runs_on_place_search_turn',
-    'empty_provider_place_search_failed_no_inserts',
+    'empty_provider_place_search_keeps_unresolved_things',
+    'chat_intake_backfill_staging_guard_and_counts',
     'invented_place_name_blocks_in_turn_reply',
     'sourced_place_name_allows_in_turn_reply',
   ],
