@@ -16,11 +16,11 @@ const bundle = renderServedTrekBundle(raw.toString('utf8'));
 const committed = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(bundle, committed, 'committed served bundle must match renderServedTrekBundle');
 
-assert.match(bundle, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
+assert.match(bundle, /tsBrandFromName=ua=>/);
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
 assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width:Re,height:Re/);
 assert.match(bundle, /className:"tiny-logo",src:ztOk,alt:""/);
-assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
+assert.match(bundle, /onError:Rn=>\{tsShowChipEmoji\(Rn\.currentTarget\)\}/);
 assert.doesNotMatch(bundle, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
 assert.match(bundle, /AI-assisted itinerary planning/);
 
@@ -28,9 +28,9 @@ const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
 const car = payload.places.find((place) => String(place.name || '').includes('Priceline'));
 assert.equal(payload.thingOverrides[`place:${car.id}`]?.rentalCompany, 'Priceline opaque');
 
-const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
+const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 1500);
 assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
-assert.match(dcSnippet, /children:zt\?\[n\.jsx\("img"/, 'logo chip uses img or emoji fallback');
-assert.match(dcSnippet, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/, 'broken logo URL hides img so emoji shows');
+assert.match(dcSnippet, /className:"tiny-logo"/, 'logo chip uses img or emoji fallback');
+assert.match(dcSnippet, /onError:Rn=>\{tsShowChipEmoji\(Rn\.currentTarget\)\}/, 'broken logo URL hides img so emoji shows');
 
 console.log('shared trip live tab logo tests passed');

@@ -247,12 +247,13 @@ const MN_CATEGORY_NEEDLE = 'Mn=G=>{const Re=String(G||"").toLowerCase();return R
 const MN_CATEGORY_PATCH = 'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("restaurant")?"restaurant":Re.includes("hotel")||Re.includes("lodging")||Re.includes("accommodation")||Re.includes("resort")?"hotel":Re.includes("car")||Re.includes("rental")?"car":';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
+const LIST_LOGO_BRAND_PATCH = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);const tsBrandFromName=ua=>{const m=String(ua||"").match(/\\b(jetblue|southwest|united|delta|american|hertz|alamo|avis|enterprise|national|hyatt)\\b/i);if(!m)return"";const b=m[1].toLowerCase();return b==="jetblue"?"https://www.jetblue.com/favicon.ico":b==="southwest"?"https://www.southwest.com/favicon.ico":b==="united"?"https://www.united.com/favicon.ico":b==="delta"?"https://www.delta.com/favicon.ico":b==="american"?"https://www.aa.com/favicon.ico":b==="hertz"?"https://www.hertz.com/favicon.ico":b==="alamo"?"https://www.alamo.com/favicon.ico":b==="avis"?"https://www.avis.com/favicon.ico":b==="enterprise"?"https://www.enterprise.com/favicon.ico":b==="national"?"https://www.nationalcar.com/favicon.ico":b==="hyatt"?"https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico":""};const nm=String(G.name||G.title||Re.title||"");const branded=tsBrandFromName(nm);const raw=Re.logoUrl||Re.iconUrl||G.logoUrl||"";if(raw&&!/google\\.com\\/s2\\/favicons/i.test(String(raw)))return raw;if(branded)return branded;if(raw)return raw;return oi(cc(G))}';
 
 const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>{const named=Fn(G);if(named==="store")return "store";if(/\\bflight\\b/i.test(String(G.name||G.title||"")))return "flight";if(named==="music"||named==="tour"||named==="sightseeing"||named==="tickets"||named==="bar"||named==="theatre"||named==="workout"||named==="artist")return named;return Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??named)}';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).concat((Ut||[]).filter(bn)).concat(kn||[],tn||[]).concat(Qa.flatMap(di=>Ci(di)).map(di=>di==null?void 0:di.item).filter(Xi=>Xi&&(/flight option/i.test(String(Xi.name||Xi.title||""))||/\\b(LAS|JFK|LGA|EWR|BOS)[-–]/.test(String(Xi.name||Xi.title||""))))).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).concat((function(){const tsSeen=new Set,tsOut=[];for(const Xi of [].concat(Gt||[],Ut||[])) if(Xi&&bn(Xi)){const k=Qt(Xi);if(!tsSeen.has(k)){tsSeen.add(k);tsOut.push(Xi)}}return tsOut})()).concat(kn||[],tn||[]).concat(Qa.flatMap(di=>Ci(di)).map(di=>di==null?void 0:di.item).filter(Xi=>Xi&&(/flight option/i.test(String(Xi.name||Xi.title||""))||/\\b(LAS|JFK|LGA|EWR|BOS)[-–]/.test(String(Xi.name||Xi.title||""))||/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(String(Xi.name||Xi.title||""))))).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
@@ -405,9 +406,8 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (patched.includes(MO_BUDGET_NEEDLE)) {
-    patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
-  }
+  if (patched.includes(MO_BUDGET_NEEDLE)) patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
+  if (patched.includes(LIST_LOGO_NEEDLE)) patched = patched.replace(LIST_LOGO_NEEDLE, LIST_LOGO_BRAND_PATCH);
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.split(MAP_HEIGHT_NEEDLE).join(MAP_HEIGHT_PATCH);
   }
@@ -712,8 +712,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(REST_TYPE_CHIPS_NEEDLE) || js.includes(REST_TYPE_CHIPS_PATCH)) {
     throw new Error('Rest type chips must use TREK Os.map list, not fixture-derived types.');
   }
-  if (!js.includes(LIST_LOGO_NEEDLE) || js.includes(LIST_LOGO_PATCH)) {
-    throw new Error('List logos must use TREK _l() chain (logoUrl, favicon oi(cc)), not LIST_LOGO_PATCH.');
+  if (!js.includes('tsBrandFromName=ua=>') || js.includes(LIST_LOGO_PATCH)) {
+    throw new Error('List logos must use brand-aware TREK _l() (logoUrl, tsBrandFromName, oi(cc)), not LIST_LOGO_PATCH.');
   }
   if (!js.includes('data-logo-src=') || !js.includes('data:image\\/svg\\+xml')) {
     throw new Error('Print end-list rows must mark data-logo-src and skip data-URI letter tiles.');

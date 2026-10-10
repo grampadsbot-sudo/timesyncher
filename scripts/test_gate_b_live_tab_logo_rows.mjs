@@ -51,8 +51,8 @@ const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import
 assert.match(bundle, /"data-ts-tab":G\.id,"data-tab":G\.id/);
 assert.match(
   bundle,
-  /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/,
-  'served bundle keeps TREK _l logo chain; favicon backfill is via resolveThingLogoUrl',
+  /tsBrandFromName=ua=>/,
+  'served bundle keeps brand-aware _l logo chain',
 );
 assert.match(bundle, /"data-list-row":"1","data-has-logo":tsRowHasLogo/);
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
