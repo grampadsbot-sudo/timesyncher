@@ -42,6 +42,12 @@ export function categoryFor(thing) {
   const rawCategory = String(thing.category || '').trim().toLowerCase();
   const pinned = PINNED_CATEGORY[rawCategory];
   if (pinned) {
+    if (rawCategory === 'restaurant' || rawCategory === 'bar' || rawCategory === 'store') {
+      const named = sourceCategoryName(thing);
+      if (named && !new RegExp(`^${rawCategory}$`, 'i').test(named)) {
+        return { category_name: named, category_icon: '', category: pinned[2] };
+      }
+    }
     return { category_name: pinned[0], category_icon: pinned[1], category: pinned[2] };
   }
   const inferTransport = rawCategory !== 'activity';
@@ -72,7 +78,6 @@ export function categoryFor(thing) {
     transport: ['Transport', '🚕', 'transport'],
     attraction: ['Attraction', '🏛️', 'attraction'],
     bar: ['Bar', '☕', 'bar'],
-    activity: ['activity', '🎯', 'activity'],
     tour: ['tour', '🎟️', 'tour'],
   }[key];
   if (known) return { category_name: known[0], category_icon: known[1], category: known[2] };
