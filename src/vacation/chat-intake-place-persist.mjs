@@ -132,7 +132,7 @@ async function findExistingChatIntakeRow(db, tripId, title) {
   return null;
 }
 
-function rowNeedsPlaceSearch(row = {}) {
+export function rowNeedsPlaceSearch(row = {}) {
   const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   if (meta.needsDetails === true) return true;
   const source = String(row?.source || meta.source || '').trim().toLowerCase();

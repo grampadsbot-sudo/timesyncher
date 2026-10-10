@@ -117,9 +117,12 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
       if (!samePlace(candidate, { title: row.title, ...locationPoint(loc) })) continue;
       const rowSource = String(row?.source || '').trim();
       if (item.source && !rowSource) {
-        const { upgradeTripThingInPlace } = await import('./chat-intake-place-persist.mjs');
-        const upgraded = await upgradeTripThingInPlace(db, normalizedTripId, row.id, requestId, thing, env);
-        if (upgraded?.id) return { ...upgraded, deduped: true };
+        const { rowNeedsPlaceSearch, upgradeTripThingInPlace } = await import('./chat-intake-place-persist.mjs');
+        if (rowNeedsPlaceSearch(row)) {
+          const upgraded = await upgradeTripThingInPlace(db, normalizedTripId, row.id, requestId, thing, env);
+          if (upgraded?.id) return { ...upgraded, deduped: true };
+        }
+        return { ...item, source: item.source, id: String(row.id), deduped: true };
       }
       if (item.source && ['prior_db', 'osm', 'brave', 'tavily'].includes(rowSource)) {
         return { ...item, source: item.source, id: String(row.id), deduped: true };
