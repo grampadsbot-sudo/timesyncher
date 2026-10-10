@@ -7,11 +7,12 @@ import {
   mergeBindingsIntoShared,
   isKeepsakeJunkMedia,
   stripKeepsakeJunkMedia,
-  neonRawMediaPath,
   proofPngBuffer,
   resolveThingFromShared,
   isPhotoBinding,
   isVideoBinding,
+  isFunctionMediaProxyUrl,
+  resolveDirectMediaPublicUrl,
   sniffMediaType,
   toPublicBinding,
 } from '../src/vacation/thing-media-bind.mjs';
@@ -115,18 +116,14 @@ assert.match(vercel, /keepsakePdf/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 
 const pngBytes = proofPngBuffer({ label: 'neon' });
-const neonChoice = chooseMediaStorage({
+const blobRequired = chooseMediaStorage({
   bytes: pngBytes,
   sourceUrl: '',
   blobUrl: '',
   hasDatabase: true,
-  origin: 'https://vacation-staging.timesyncher.com',
-  shareToken: 'sample-trip',
-  bindingId: 'bind-neon-1',
 });
-assert.equal(neonChoice.storageProvider, 'neon');
-assert.equal(neonChoice.storeBytes, true);
-assert.equal(neonChoice.publicUrl, `https://vacation-staging.timesyncher.com${neonRawMediaPath('sample-trip', 'bind-neon-1')}`);
+assert.equal(blobRequired.error, 'blob-required');
+assert.equal(blobRequired.publicUrl, '');
 
 const urlChoice = chooseMediaStorage({
   bytes: null,
@@ -158,6 +155,13 @@ assert.equal(isPhotoBinding({
   publicUrl: mislabeled.publicUrl,
 }), false);
 assert.equal(sniffMediaType(Buffer.from('....ftypisom........'), 'x.bin', 'application/octet-stream'), 'video/mp4');
+assert.equal(isFunctionMediaProxyUrl('https://x/api/vacation-telegram-turn?action=media-download'), true);
+assert.equal(isFunctionMediaProxyUrl('https://cdn.blob.vercel-storage.com/x.jpg'), false);
+assert.equal(resolveDirectMediaPublicUrl({
+  id: 'b1',
+  publicUrl: 'https://vacation-staging.timesyncher.com/api/bind-thing-media?shareToken=t&id=1&raw=1',
+  metadata: { blobUrl: 'https://abc.public.blob.vercel-storage.com/photo.jpg' },
+}), 'https://abc.public.blob.vercel-storage.com/photo.jpg');
 
 const hotelShared = {
   trip: { id: 41 },
