@@ -64,6 +64,10 @@ import {
   intakeExtractedThings,
   runVacationAppInTurnSearch,
 } from '../src/vacation/chat-place-search.mjs';
+import {
+  detailTextFromChatTurn,
+  refreshUnresolvedChatIntakePlaces,
+} from '../src/vacation/chat-intake-place-persist.mjs';
 import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
 import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
 import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
@@ -691,6 +695,10 @@ async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = nul
       description: thing.description,
       metadata: { ...metadata, source: metadata.source },
       startsAt: scheduled.starts_at,
+      destinationHint: extractedDestination || tripDestination,
+      detailText: detailTextFromChatTurn(text, thing),
+      searchPlacesImpl,
+      fetchImpl,
       env,
     });
   }
@@ -799,6 +807,10 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
         description: thing.description || '',
         metadata: { ...metadata, source: metadata.source },
         startsAt: thing.starts_at || null,
+        destinationHint: extractedDestination,
+        detailText: detailTextFromChatTurn(text, thing),
+        searchPlacesImpl,
+        fetchImpl,
         env,
       });
       if (insertedId) savedThingIds.push(insertedId);
@@ -828,6 +840,16 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
     `;
     if (updated[0]?.id) savedThingIds.push(updated[0].id);
   }
+  await refreshUnresolvedChatIntakePlaces(db, {
+    tripId,
+    requestId: null,
+    text,
+    things: next,
+    destinationHint: extractedDestination,
+    env,
+    fetchImpl,
+    searchImpl: searchPlacesImpl,
+  });
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   const itinerary = await loadTripThings(db, tripId);
   itinerary.savedThingIds = savedThingIds;

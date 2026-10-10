@@ -298,6 +298,7 @@ async function persistCustomerStatedLodgingThing(db, tripId, requestId, title = 
         source: 'customer_stated',
         intakeSource: 'chat_extraction',
         customerStatedLodging: true,
+        needsDetails: true,
       },
     },
   });
