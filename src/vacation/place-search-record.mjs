@@ -12,6 +12,18 @@ export function sourceRecordFor(place) {
       ...embedded,
       source: String(place.source || embedded.source || '').trim(),
       url: String(place.url || embedded.url || embedded.website || '').trim(),
+      ...(embedded.rating == null && place.rating != null ? { rating: place.rating } : {}),
+      ...(embedded.count == null && embedded.ratingCount == null && place.ratingCount != null
+        ? { count: place.ratingCount }
+        : {}),
+      ...(embedded.categoryName == null && place.categoryName
+        ? { categoryName: String(place.categoryName).trim() }
+        : {}),
+      ...(embedded.providerCategories == null
+        && Array.isArray(place.providerCategories)
+        && place.providerCategories.length
+        ? { providerCategories: place.providerCategories }
+        : {}),
     };
   }
   return {
