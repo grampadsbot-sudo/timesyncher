@@ -80,18 +80,6 @@ function logoChipLoadInline() {
     'if(!chip||chip.dataset.tsLogoFailed===\'1\')return;',
     'var box=img.getBoundingClientRect();',
     'if(box.width<4||box.height<4||img.naturalWidth<1||img.naturalHeight<1){' + fail + 'return;}',
-    'try{',
-    'var cv=document.createElement(\'canvas\');cv.width=10;cv.height=10;',
-    'var ctx=cv.getContext(\'2d\',{willReadFrequently:true});',
-    'if(!ctx){return;}',
-    'ctx.drawImage(img,0,0,10,10);',
-    'var px=ctx.getImageData(0,0,10,10).data,ink=false;',
-    'for(var i=0;i<px.length;i+=4){',
-    'if(px[i+3]<8)continue;',
-    'if(px[i]<248||px[i+1]<248||px[i+2]<248){ink=true;break;}',
-    '}',
-    'if(!ink){' + fail + '}',
-    '}catch(e){}',
   ].join('');
 }
 
