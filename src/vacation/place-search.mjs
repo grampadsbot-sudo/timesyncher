@@ -17,6 +17,7 @@ import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
 import { mergeLogoMetadata } from './trip-thing-logo-metadata.mjs';
+import { enrichSearchPlace } from './trip-thing-enrichment.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
@@ -248,11 +249,11 @@ function sourceRefFor(place) {
 
 function sourceRecordFor(place) {
   const embedded = place?.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
-  if (embedded && (embedded.id || embedded.icon_category || embedded.categories || embedded.class || embedded.type || embedded.osm_tags)) {
+  if (embedded) {
     return {
       ...embedded,
       source: String(place.source || embedded.source || '').trim(),
-      url: String(place.url || embedded.url || '').trim(),
+      url: String(place.url || embedded.url || embedded.website || '').trim(),
     };
   }
   return {
@@ -655,33 +656,37 @@ export async function searchPlaces({
 }
 
 export function placeToTripThing(place) {
-  const sourceRecord = sourceRecordFor(place);
-  const sourceRef = sourceRefFor(place);
+  const enriched = enrichSearchPlace({ ...place });
+  const sourceRecord = sourceRecordFor(enriched);
+  const sourceRef = sourceRefFor(enriched);
+  const price = enriched.price ?? sourceRecord?.price ?? null;
   const baseMetadata = {
-    source: place.source,
-    externalId: place.externalId || '',
+    source: enriched.source,
+    externalId: enriched.externalId || '',
     sourceRef,
     sourceRecord,
-    jevScore: place.jevScore ?? 0,
-    ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
-    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
-      ? { providerCategories: place.providerCategories }
+    jevScore: enriched.jevScore ?? 0,
+    ...(price != null ? { price } : {}),
+    ...(enriched.categoryName ? { categoryName: String(enriched.categoryName).trim() } : {}),
+    ...(Array.isArray(enriched.providerCategories) && enriched.providerCategories.length
+      ? { providerCategories: enriched.providerCategories }
       : {}),
   };
   return {
-    category: placePersistCategory(place),
-    subtype: place.source,
-    title: place.title,
-    description: place.address || '',
-    source: place.source,
+    category: placePersistCategory(enriched),
+    subtype: enriched.source,
+    title: enriched.title,
+    description: enriched.description || enriched.address || '',
+    source: enriched.source,
     location: {
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address || '',
+      lat: enriched.lat,
+      lng: enriched.lng,
+      address: enriched.address || '',
     },
-    links: place.url ? [{ label: place.source, url: place.url }] : [],
+    links: enriched.url ? [{ label: enriched.source, url: enriched.url }] : [],
     ratings: writeRatings({ sourceRecord }),
-    metadata: mergeLogoMetadata(baseMetadata, { ...place, sourceRecord }),
+    metadata: mergeLogoMetadata(baseMetadata, { ...enriched, sourceRecord }),
+    ...(price != null ? { price } : {}),
   };
 }
 
@@ -709,24 +714,33 @@ export function placeToResearchCandidate(place, destination = '') {
 }
 
 export function noteToTripThing(note) {
-  const sourceRecord = sourceRecordFor({ ...note, source: 'tavily' });
-  const sourceRef = sourceRefFor({ ...note, source: 'tavily' });
+  const enriched = enrichSearchPlace({
+    ...note,
+    source: 'tavily',
+    url: note.url || '',
+    address: note.address || '',
+  });
+  const sourceRecord = sourceRecordFor({ ...enriched, source: 'tavily' });
+  const sourceRef = sourceRefFor({ ...enriched, source: 'tavily' });
+  const price = enriched.price ?? sourceRecord?.price ?? null;
   return {
-    category: note.category,
+    category: enriched.category,
     subtype: 'tavily',
-    title: note.title,
-    description: note.description || '',
+    title: enriched.title,
+    description: enriched.description || '',
     source: 'tavily',
     location: {},
-    links: note.url ? [{ label: 'tavily', url: note.url }] : [],
+    links: enriched.url ? [{ label: 'tavily', url: enriched.url }] : [],
     ratings: writeRatings({ sourceRecord }),
-    metadata: {
+    metadata: mergeLogoMetadata({
       source: 'tavily',
-      externalId: note.externalId || note.url || '',
+      externalId: enriched.externalId || enriched.url || '',
       sourceRef,
       sourceRecord,
-      jevScore: note.jevScore ?? 0,
-    },
+      jevScore: enriched.jevScore ?? 0,
+      ...(price != null ? { price } : {}),
+    }, { ...enriched, sourceRecord }),
+    ...(price != null ? { price } : {}),
   };
 }
 

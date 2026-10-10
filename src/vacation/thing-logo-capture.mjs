@@ -9,6 +9,11 @@ export const NAMED_THING_LOGOS = {
   budget: 'https://www.budget.com/favicon.ico',
   national: 'https://www.nationalcar.com/favicon.ico',
   hyatt: 'https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico',
+  jetblue: 'https://www.jetblue.com/favicon.ico',
+  southwest: 'https://www.southwest.com/favicon.ico',
+  united: 'https://www.united.com/favicon.ico',
+  delta: 'https://www.delta.com/favicon.ico',
+  american: 'https://www.aa.com/favicon.ico',
 };
 
 const BRAND_LOGO_RULES = [
@@ -19,6 +24,11 @@ const BRAND_LOGO_RULES = [
   [/\bbudget\b/i, NAMED_THING_LOGOS.budget],
   [/\bnational\b/i, NAMED_THING_LOGOS.national],
   [/\bhyatt\b/i, NAMED_THING_LOGOS.hyatt],
+  [/\bjetblue\b/i, NAMED_THING_LOGOS.jetblue],
+  [/\bsouthwest\b/i, NAMED_THING_LOGOS.southwest],
+  [/\bunited\b/i, NAMED_THING_LOGOS.united],
+  [/\bdelta\b/i, NAMED_THING_LOGOS.delta],
+  [/\bamerican\b/i, NAMED_THING_LOGOS.american],
 ];
 
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
