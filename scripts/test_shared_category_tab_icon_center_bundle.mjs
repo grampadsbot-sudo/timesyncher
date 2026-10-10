@@ -15,6 +15,8 @@ const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /data-tab-category":G\.id/);
 assert.match(rendered, /display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:13/);
 assert.match(rendered, /transform:G\.id==="hotels"\?"translateY\(-3px\)"/);
+assert.match(rendered, /G\.id==="flights"\?"translateY\(0px\)"/);
+assert.match(rendered, /G\.id==="restaurants"\?"translateY\(-1px\)"/);
 assert.match(rendered, /children:G\.icon/);
 assert.doesNotMatch(rendered, /\/icons\/tab-labels\//);
 assert.doesNotMatch(rendered, /tsPaintTabEmoji\(el,G\.icon\)/);
