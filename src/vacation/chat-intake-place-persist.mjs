@@ -138,6 +138,14 @@ export function rowNeedsPlaceSearch(row = {}) {
   const source = String(row?.source || meta.source || '').trim().toLowerCase();
   if (source === 'customer_stated') return true;
   if (['prior_db', 'osm', 'brave', 'tavily'].includes(source)) return false;
+  const intakeSource = String(meta.intakeSource || '').trim().toLowerCase();
+  const metaSource = String(meta.source || '').trim().toLowerCase();
+  const fromChatIntake = metaSource === 'chat_extraction'
+    || intakeSource === 'chat_extraction'
+    || metaSource === 'long-intake'
+    || metaSource === 'customer-turn'
+    || intakeSource === 'customer-turn';
+  if (!fromChatIntake) return false;
   return !thingHasCoordinates({ location: row?.location });
 }
 
