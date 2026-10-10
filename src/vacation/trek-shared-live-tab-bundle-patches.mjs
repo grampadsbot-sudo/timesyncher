@@ -27,7 +27,8 @@ const TAB_MOBILE_MEDIA_PATCH = 'zt.call(window,"(max-width: 759px)").matches';
 const FLIGHT_QO_GRID_COLLAPSED = 'Qo=({item:G})=>{const parts=eu(G);return n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,width:"100%"},children:parts[0]||""})}';
 const FLIGHT_QO_GRID_NEEDLE = 'Qo=({item:G})=>n.jsx("span",{style:{display:"grid",gridTemplateColumns:"minmax(54px, 1fr) 44px 54px 54px",gap:8,width:"100%",alignItems:"center"},children:eu(G).map((Re,zt)=>n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re},zt))})';
 const FLIGHT_QO_GRID_PATCH_PRIOR = 'Qo=({item:G})=>n.jsx("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:eu(G).map((Re,zt)=>n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:zt===1?"#0f766e":void 0,fontWeight:zt===1?900:void 0,flexShrink:zt===1?0:void 0},children:Re},zt))})';
-const FLIGHT_QO_GRID_PATCH = 'Qo=({item:G})=>{const[ua,Rn,Pn,fr]=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) max-content max-content max-content",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ua}),Rn?n.jsx("span",{"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:Rn}):null,Pn?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Pn}):null,fr?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:fr}):null]})}';
+const FLIGHT_QO_GRID_PATCH = 'Qo=({item:G})=>{const[ua,Rn,Pn,fr]=eu(G);const Rp=Rn||ie(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) max-content max-content max-content",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ua}),Rp?n.jsx("span",{"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:Rp}):null,Pn?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Pn}):null,fr?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:fr}):null]})}';
+const FLIGHT_QO_GRID_PATCH_PRIOR2 = 'Qo=({item:G})=>{const[ua,Rn,Pn,fr]=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) max-content max-content max-content",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ua}),Rn?n.jsx("span",{"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:Rn}):null,Pn?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Pn}):null,fr?n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:fr}):null]})}';
 const OTHER_BUCKET = 'Other ' + 'Thi' + 'ngs';
 const BUDGET_BUCKET_NEEDLE = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":"' + OTHER_BUCKET + '"}';
 const BUDGET_BUCKET_PATCH = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":Xi==="car"?"Cars":"' + OTHER_BUCKET + '"}';
@@ -89,11 +90,12 @@ const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String(Xi.name||Xi.ti
 
 const BI_NEEDLE = 'bi=G=>ha(G).price??G.price??"",Vr=G=>';
 const BI_PATCH_PRIOR = 'bi=G=>{const d=ha(G).price??G.price??"";if(d!=null&&String(d).trim())return d;const b=[ha(G).summary,ha(G).description,ha(G).longDetails,G.description,G.notes,Fl(G),Co(G),mr(G)].join(" ");const m=b.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||b.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);return m?Number(String(m[1]).replace(/,/g,""))||String(m[0]).replace(/\\s+/g,""):""},Vr=G=>';
-const BI_PATCH = 'bi=G=>{const ov=le[Qt(G)]||{};const d=ha(G).price??G.price??ov.price??"";if(d!=null&&String(d).trim()!=="")return d;const b=[ha(G).summary,ha(G).description,ha(G).longDetails,ov.details,ov.summary,G.description,G.notes,Fl(G),Co(G),mr(G)].join(" ");const m=b.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||b.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);return m?Number(String(m[1]).replace(/,/g,""))||String(m[0]).replace(/\\s+/g,""):""},Vr=G=>';
+const BI_PATCH_V1 = 'bi=G=>{const ov=le[Qt(G)]||{};const d=ha(G).price??G.price??ov.price??"";if(d!=null&&String(d).trim()!=="")return d;const b=[ha(G).summary,ha(G).description,ha(G).longDetails,ov.details,ov.summary,G.description,G.notes,Fl(G),Co(G),mr(G)].join(" ");const m=b.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||b.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);return m?Number(String(m[1]).replace(/,/g,""))||String(m[0]).replace(/\\s+/g,""):""},Vr=G=>';
+const BI_PATCH = 'bi=G=>{const ov=le[Qt(G)]||{};const md=G.metadata&&typeof G.metadata==="object"?G.metadata:{};const src=md.sourceRecord&&typeof md.sourceRecord==="object"?md.sourceRecord:{};const d=ha(G).price??G.price??ov.price??md.price??src.price??"";if(d!=null&&String(d).trim()!=="")return d;const b=[ha(G).summary,ha(G).description,ha(G).longDetails,ov.details,ov.summary,G.description,G.notes,Fl(G),Co(G),mr(G),rr(G)].join(" ");const m=b.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||b.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);return m?Number(String(m[1]).replace(/,/g,""))||String(m[0]).replace(/\\s+/g,""):""},Vr=G=>';
 
 const IE_NEEDLE = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"":"")},be=';
 const IE_NEEDLE_QUOTE_TBD = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")},be=';
-const IE_PATCH = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"").trim();const plain=zt.replace(/[^0-9.]/g,"");if(plain&&/^\\d+(?:\\.\\d+)?$/.test(plain)){const n=Number(plain);if(Number.isFinite(n)&&n>0)return`$${Math.round(n).toLocaleString()}`}const fromDollar=((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""));if(fromDollar)return fromDollar;const tsB=[ha(G).summary,ha(G).description,(le[Qt(G)]||{}).details,G.notes,G.description,Fl(G),Co(G)].join(" ");const tsM=tsB.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||tsB.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);if(tsM)return`$${Math.round(Number(String(tsM[1]).replace(/,/g,""))).toLocaleString()}`;if(/quote\\s*tbd/i.test(zt))return"";return""},be=';
+const IE_PATCH = 'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"").trim();const plain=zt.replace(/[^0-9.]/g,"");if(plain&&/^\\d+(?:\\.\\d+)?$/.test(plain)){const n=Number(plain);if(Number.isFinite(n)&&n>0)return`$${Math.round(n).toLocaleString()}`}const fromDollar=((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""));if(fromDollar)return fromDollar;const tsB=[ha(G).summary,ha(G).description,(le[Qt(G)]||{}).details,G.notes,G.description,Fl(G),Co(G),mr(G),rr(G)].join(" ");const tsM=tsB.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||tsB.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);if(tsM)return`$${Math.round(Number(String(tsM[1]).replace(/,/g,""))).toLocaleString()}`;if(/quote\\s*tbd/i.test(zt))return"";return""},be=';
 const EU_ZT_LINE_NEEDLE = 'const Re=String(mr(G)||""),zt=`${Re} ${rr(G)} ${Co(G)} ${Fl(G)}`,ua=';
 const EU_ZT_LINE_PATCH = 'const Re=String(mr(G)||""),zt=`${Re} ${rr(G)} ${Co(G)} ${Fl(G)} ${ha(G).summary||""} ${(le[Qt(G)]||{}).details||""} ${G.notes||""} ${G.description||""}`.replace(/\\s+/g," ").trim(),ua=';
 const FLIGHT_EU_FARE_FROMZt_NEEDLE = 'if(fromVr)return fareLbl?`${fromVr} ${fareLbl}`.trim():fromVr;const price=Rn||String(bi(G)||"").trim();';
@@ -141,6 +143,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('shared tab mobile breakpoint patch did not apply');
   }
   if (js.includes(FLIGHT_QO_GRID_COLLAPSED)) js = js.replace(FLIGHT_QO_GRID_COLLAPSED, FLIGHT_QO_GRID_PATCH);
+  else if (js.includes(FLIGHT_QO_GRID_PATCH_PRIOR2)) js = js.replace(FLIGHT_QO_GRID_PATCH_PRIOR2, FLIGHT_QO_GRID_PATCH);
   else if (js.includes(FLIGHT_QO_GRID_PATCH_PRIOR)) js = js.replace(FLIGHT_QO_GRID_PATCH_PRIOR, FLIGHT_QO_GRID_PATCH);
   else if (js.includes(FLIGHT_QO_GRID_NEEDLE)) js = js.replace(FLIGHT_QO_GRID_NEEDLE, FLIGHT_QO_GRID_PATCH);
   else if (served && !js.includes('data-ts-list-price":"1"')) {
@@ -150,14 +153,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
-  if (js.includes(BUDGET_ROW_LABEL_PATCH)) {
-    js = js.replace(BUDGET_ROW_LABEL_PATCH, BUDGET_ROW_LABEL_NEEDLE);
-  } else if (served && !js.includes('children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"')) {
-    throw new Error('budget row labels must use mr() for staging parity');
+  if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) {
+    js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
+  } else if (served && !js.includes('/flight option/i.test(raw)?raw:mr')) {
+    throw new Error('budget row flight-option label patch did not apply');
   }
   if (js.includes(BI_NEEDLE)) js = js.replace(BI_NEEDLE, BI_PATCH);
   else if (js.includes(BI_PATCH_PRIOR)) js = js.replace(BI_PATCH_PRIOR, BI_PATCH);
-  else if (served && !js.includes('ov=le[Qt(G)]||{}')) {
+  else if (js.includes(BI_PATCH_V1)) js = js.replace(BI_PATCH_V1, BI_PATCH);
+  else if (served && !js.includes('md.price??src.price')) {
     throw new Error('list row bi() sourced price patch did not apply');
   }
   if (js.includes(IE_NEEDLE)) js = js.replace(IE_NEEDLE, () => IE_PATCH);
@@ -170,10 +174,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (served && !js.includes('/flight option/i.test(String(ua.item&&ua.item.name||"")))return"✈️"')) {
     throw new Error('timeline row icon emoji fallback patch did not apply');
   }
-  if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
-  else if (js.includes(TIMELINE_ICON_PATCH_PRIOR)) js = js.replace(TIMELINE_ICON_PATCH_PRIOR, TIMELINE_ICON_PATCH);
-  else if (js.includes(TIMELINE_ICON_PATCH_V132)) js = js.replace(TIMELINE_ICON_PATCH_V132, TIMELINE_ICON_PATCH);
-  else if (js.includes(TIMELINE_ICON_MT_NEEDLE)) js = js.replace(TIMELINE_ICON_MT_NEEDLE, TIMELINE_ICON_MT_PATCH);
+  if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH_PRIOR);
+  else if (js.includes(TIMELINE_ICON_PATCH)) js = js.replace(TIMELINE_ICON_PATCH, TIMELINE_ICON_PATCH_PRIOR);
+  else if (js.includes(TIMELINE_ICON_PATCH_V132)) js = js.replace(TIMELINE_ICON_PATCH_V132, TIMELINE_ICON_PATCH_PRIOR);
+  else if (js.includes(TIMELINE_ICON_MT_NEEDLE)) js = js.replace(TIMELINE_ICON_MT_NEEDLE, 'marginTop:0,alignSelf:"center"');
   else if (served && js.includes('position:"absolute",inset:0,margin:"auto",background:"#f8fafc"') && !js.includes('e&&(e.style.display="grid")')) {
     throw new Error('timeline logo and icon patch did not apply');
   }
