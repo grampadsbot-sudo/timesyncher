@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { patchThingDetailFields } from '../src/vacation/trek-thing-detail-fields-patch.mjs';
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
+import { thingDetailCompletenessForPlace } from '../src/vacation/gate-b-thing-detail-completeness.mjs';
+import { rowNeedsDetailBackfill } from '../src/vacation/chat-intake-place-persist.mjs';
 
 assert.equal(
   resolveThingLogoUrl({ name: 'Hertz', category_name: 'Car' }, { category: 'car' }),
@@ -29,10 +32,14 @@ const hotelOverride = payload.thingOverrides[`place:${hotel.id}`] || {};
 assert.match(String(hotelOverride.summary || ''), /transit access/i);
 assert.equal(hotelOverride.price, 389);
 
-const bundle = readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
+const bundle = patchThingDetailFields(readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8'));
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:J\(G\)\|\|"Rental"\}\)/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:Re\}\)/);
 assert.doesNotMatch(bundle, /Open details for summary/);
+assert.match(bundle, /Itinerary note/);
+assert.match(bundle, /ha\(G\)\.itineraryNote/);
+assert.equal(rowNeedsDetailBackfill({ category: 'bar', location: { lat: 40.7, lng: -74 } }), true);
+assert.equal(thingDetailCompletenessForPlace(hotel, hotelOverride).category, 'hotel');
 
 console.log('gate b product row field tests passed');

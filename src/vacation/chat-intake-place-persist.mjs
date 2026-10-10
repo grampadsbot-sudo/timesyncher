@@ -5,6 +5,7 @@ import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
 import { samePlace } from './place-search-same-place.mjs';
+import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detail-enrichment.mjs';
 
 const GEOCODABLE_KINDS = new Set(['grocery', 'market', 'restaurant', 'store', 'garden', 'activity', 'hotel', 'car']);
 
@@ -216,7 +217,22 @@ export async function persistChatIntakePlaceThing(db, {
         fetchImpl,
         searchImpl,
       });
-      if (outcome.ok && outcome.place) resolved = placeToTripThing(outcome.place);
+      if (outcome.ok && outcome.place) {
+        const baseThing = placeToTripThing(outcome.place);
+        try {
+          const enrichment = await enrichPlaceDetail({
+            place: outcome.place,
+            destination,
+            category: category || existing?.category || 'activity',
+            env,
+            fetchImpl,
+          });
+          resolved = applyEnrichedDetailToTripThing(baseThing, enrichment);
+        } catch (error) {
+          console.error(`chat intake detail enrichment failed for "${name}": ${String(error?.message || error)}`);
+          resolved = baseThing;
+        }
+      }
     } catch (error) {
       console.error(`chat intake place search failed for "${name}": ${String(error?.message || error)}`);
     }
@@ -346,6 +362,18 @@ export function rowEligibleForChatPlaceBackfill(row = {}) {
   const category = clean(row?.category, 80).toLowerCase();
   if (!isChatIntakeGeocodableThing({ category })) return false;
   return !thingHasCoordinates(row);
+}
+
+export function rowNeedsDetailBackfill(row = {}) {
+  const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  if (meta.detailEnriched === true) return false;
+  const category = clean(row?.category, 80).toLowerCase();
+  const detailCategories = new Set(['flight', 'hotel', 'car', 'bar', 'restaurant', 'tour', 'attraction']);
+  if (!isChatIntakeGeocodableThing({ category }) && !detailCategories.has(category)) return false;
+  const loc = row?.location && typeof row.location === 'object' ? row.location : {};
+  const lat = Number(loc.lat);
+  const lng = Number(loc.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
 export async function persistChatPlaceSearchMisses(db, {

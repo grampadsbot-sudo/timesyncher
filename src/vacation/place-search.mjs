@@ -16,7 +16,8 @@ import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { writeRatings } from './write-ratings.mjs';
-import { mergeLogoMetadata } from './trip-thing-logo-metadata.mjs';
+import { placeToTripThing, sourceRecordFor, sourceRefFor } from './place-to-trip-thing.mjs';
+export { placeToTripThing } from './place-to-trip-thing.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
@@ -237,37 +238,6 @@ function ratingFromRecord(record) {
   if (rating != null) fields.rating = rating;
   if (count != null) fields.ratingCount = count;
   return fields;
-}
-
-function sourceRefFor(place) {
-  const source = String(place?.source || '').trim();
-  const id = String(place?.externalId || place?.url || '').trim();
-  if (!source || !id) return null;
-  return { source, id };
-}
-
-function sourceRecordFor(place) {
-  const embedded = place?.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
-  if (embedded && (embedded.id || embedded.icon_category || embedded.categories || embedded.class || embedded.type || embedded.osm_tags)) {
-    return {
-      ...embedded,
-      source: String(place.source || embedded.source || '').trim(),
-      url: String(place.url || embedded.url || '').trim(),
-    };
-  }
-  return {
-    source: place.source,
-    url: place.url || '',
-    ...(place.rating != null ? { rating: place.rating } : {}),
-    ...(place.ratingCount != null ? { count: place.ratingCount } : {}),
-    ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
-    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
-      ? { providerCategories: place.providerCategories }
-      : {}),
-    ...(place.nominatimClass ? { class: place.nominatimClass } : {}),
-    ...(place.nominatimType ? { type: place.nominatimType } : {}),
-    ...(place.nominatimTourism ? { tourism: place.nominatimTourism } : {}),
-  };
 }
 
 function openRouterKey(env) {
@@ -651,37 +621,6 @@ export async function searchPlaces({
     ...placeSearchDiagnostics,
     elapsedMs: Date.now() - started,
     sourceCounts: countSources(places),
-  };
-}
-
-export function placeToTripThing(place) {
-  const sourceRecord = sourceRecordFor(place);
-  const sourceRef = sourceRefFor(place);
-  const baseMetadata = {
-    source: place.source,
-    externalId: place.externalId || '',
-    sourceRef,
-    sourceRecord,
-    jevScore: place.jevScore ?? 0,
-    ...(place.categoryName ? { categoryName: String(place.categoryName).trim() } : {}),
-    ...(Array.isArray(place.providerCategories) && place.providerCategories.length
-      ? { providerCategories: place.providerCategories }
-      : {}),
-  };
-  return {
-    category: placePersistCategory(place),
-    subtype: place.source,
-    title: place.title,
-    description: place.address || '',
-    source: place.source,
-    location: {
-      lat: place.lat,
-      lng: place.lng,
-      address: place.address || '',
-    },
-    links: place.url ? [{ label: place.source, url: place.url }] : [],
-    ratings: writeRatings({ sourceRecord }),
-    metadata: mergeLogoMetadata(baseMetadata, { ...place, sourceRecord }),
   };
 }
 

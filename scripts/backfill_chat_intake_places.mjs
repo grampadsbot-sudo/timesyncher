@@ -2,9 +2,18 @@
 import { neon } from '@neondatabase/serverless';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  isChatIntakeGeocodableThing,
   persistChatIntakePlaceThing,
   rowEligibleForChatPlaceBackfill,
+  rowNeedsDetailBackfill,
+  upgradeTripThingInPlace,
 } from '../src/vacation/chat-intake-place-persist.mjs';
+import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from '../src/vacation/place-detail-enrichment.mjs';
+import { tripThingRow } from '../src/vacation/trip-things.mjs';
+
+function clean(value, max = 240) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
 import { searchPlaces } from '../src/vacation/place-search.mjs';
 
 function databaseUrl(env = process.env) {
@@ -39,9 +48,42 @@ export async function runChatIntakePlaceBackfill({
     order by tt.created_at asc
     limit ${Number(limit) || 5000}
   `;
-  const counts = { scanned: 0, searched: 0, found: 0, unresolved: 0, skipped: 0 };
+  const counts = { scanned: 0, searched: 0, found: 0, unresolved: 0, skipped: 0, detailEnriched: 0 };
   for (const row of rows) {
     counts.scanned += 1;
+    if (rowNeedsDetailBackfill(row)) {
+      counts.searched += 1;
+      const loc = row?.location && typeof row.location === 'object' ? row.location : {};
+      const place = {
+        title: row.title,
+        category: row.category,
+        address: loc.address || '',
+        lat: loc.lat,
+        lng: loc.lng,
+        source: row.source,
+        sourceRecord: row.metadata?.sourceRecord,
+        url: row.metadata?.sourceRecord?.url,
+      };
+      const enrichment = await enrichPlaceDetail({
+        place,
+        destination: row.destination || '',
+        category: row.category,
+        env,
+        fetchImpl,
+      });
+      const base = tripThingRow({
+        category: row.category,
+        title: row.title,
+        description: row.description || '',
+        location: loc,
+        metadata: row.metadata || {},
+        source: row.source,
+      });
+      const merged = applyEnrichedDetailToTripThing(base, enrichment);
+      await upgradeTripThingInPlace(db, row.trip_id, row.id, null, merged, env);
+      if (merged?.metadata?.detailEnriched === true) counts.detailEnriched += 1;
+      continue;
+    }
     if (!rowEligibleForChatPlaceBackfill(row)) {
       counts.skipped += 1;
       continue;
