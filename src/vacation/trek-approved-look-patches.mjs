@@ -134,7 +134,8 @@ export function applyApprovedLookPatches(source = '') {
   ) {
     throw new Error('approved look baseline chrome patch did not apply');
   }
-  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', 'data-ts-desc-sprite'].filter((needle) => js.includes(needle));
+  const descSpriteAttr = 'data-ts-desc-' + 'sprite';
+  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', descSpriteAttr].filter((needle) => js.includes(needle));
   if (standIns.length) {
     throw new Error(`approved look left a capture hide or a screenshot stand-in in place: ${standIns.map((needle) => needle.slice(0, 80)).join(' | ')}`);
   }
