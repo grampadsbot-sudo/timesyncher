@@ -1,49 +1,43 @@
 import { searchTavily } from './poi-search.mjs';
+import { extractDetailFromSearchResults } from './place-detail-extract.mjs';
 import {
   detailFieldsFromPlace,
   mergeThingDetailMetadata,
   missingDetailFieldsForCategory,
   text,
 } from './thing-detail-fields.mjs';
+import { logoUrlFromSearchPlace } from './trip-thing-enrichment.mjs';
 
-function snippetsFromTavily(results = []) {
-  return results.map((row) => text(row.content, 1800)).filter(Boolean);
+function mergeRecords(...rows) {
+  const out = {};
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    for (const [key, value] of Object.entries(row)) {
+      if (value === null || value === undefined || value === '') continue;
+      if (Array.isArray(value) && !value.length) continue;
+      out[key] = value;
+    }
+  }
+  return out;
 }
 
-function heuristicFieldsFromSnippets(snippets = [], title = '') {
-  const blob = snippets.join('\n');
-  const fields = {};
-  const phone = blob.match(/(?:\+1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}/);
-  if (phone) fields.phone = phone[0];
-  const google = blob.match(/Google[^0-9]*([0-5](?:\.\d)?)\s*(?:\/|\s*out of\s*5)?(?:\s*\(([\d,]+)\s*reviews?\))?/i);
-  if (google) {
-    fields.googleRating = google[1];
-    if (google[2]) fields.googleReviewCount = google[2].replace(/,/g, '');
+function detailSearchQueries({ title, destination, category }) {
+  const name = text(title, 200);
+  const dest = text(destination, 160);
+  const base = [name, dest].filter(Boolean).join(' ');
+  const cat = text(category, 40).toLowerCase();
+  const queries = [
+    `${base} Google Yelp TripAdvisor reviews ratings`,
+    `${base} official website hours phone address menu`,
+    `${base} price cost reputation dishes highlights`,
+  ];
+  if (cat === 'restaurant' || cat === 'bar') {
+    queries.push(`${base} happy hour days times deals`);
   }
-  const yelp = blob.match(/Yelp[^0-9]*([0-5](?:\.\d)?)/i);
-  if (yelp) fields.yelpRating = yelp[1];
-  const hours = blob.match(/(?:hours|open)[^:\n]{0,20}[:\s-]+([^\n.]{8,120})/i);
-  if (hours) fields.hours = text(hours[1], 240);
-  const happyHour = blob.match(/happy hour[^.\n]{0,40}[:\s-]+([^\n.]{8,240})/i);
-  if (happyHour) {
-    fields.happyHour = true;
-    fields.happyHourDetails = text(happyHour[0], 1200);
-  }
-  const quotes = [...blob.matchAll(/“([^”]{20,220})”|"([^"]{20,220})"/g)]
-    .map((match) => text(match[1] || match[2], 1000))
-    .filter(Boolean)
-    .slice(0, 3);
-  quotes.forEach((quote, index) => {
-    fields[`review${index + 1}`] = quote;
-    fields[`review${index + 1}Source`] = 'Web search';
-  });
-  const paragraphs = snippets.filter((row) => row.split(/\s+/).length >= 30);
-  if (paragraphs.length) fields.longDetails = text(paragraphs[0], 3000);
-  if (!fields.longDetails && blob.split(/\s+/).length >= 30) fields.longDetails = text(blob, 3000);
-  if (fields.longDetails && title) {
-    fields.itineraryNote = text(`${title} — ${fields.longDetails.split(/\s+/).slice(0, 12).join(' ')}`, 280);
-  }
-  return fields;
+  if (cat === 'flight') queries.push(`${base} airline flight number schedule layover duration fare`);
+  if (cat === 'car') queries.push(`${base} rental car pickup return vehicle class price`);
+  if (cat === 'hotel') queries.push(`${base} hotel check-in check-out nightly rate amenities`);
+  return queries.map((row) => text(row, 320)).filter(Boolean);
 }
 
 export async function enrichPlaceDetail({
@@ -52,6 +46,7 @@ export async function enrichPlaceDetail({
   category = '',
   env = process.env,
   fetchImpl = globalThis.fetch,
+  searchImpl = searchTavily,
 } = {}) {
   const title = text(place.title || place.name, 240);
   const cat = text(category || place.category, 80).toLowerCase() || 'activity';
@@ -64,19 +59,42 @@ export async function enrichPlaceDetail({
     source: place.source || place.sourceRecord?.source || 'search',
     url: text(place.url || base.website, 500),
   };
-  const query = text(`${title} ${destination} ${place.address || ''} reviews rating hours phone happy hour`, 320);
-  let extracted = {};
-  try {
-    const tavily = await searchTavily(query, { env, fetchImpl, maxResults: 5 });
-    extracted = heuristicFieldsFromSnippets(snippetsFromTavily(tavily.results || []), title);
-    sourceRecord = { ...sourceRecord, ...extracted };
-  } catch (error) {
-    console.error(`place detail enrichment skipped for "${title}": ${String(error?.message || error)}`);
+  const mergedResults = [];
+  const seenUrls = new Set();
+  for (const query of detailSearchQueries({ title, destination, category: cat })) {
+    try {
+      const tavily = await searchImpl(query, { env, fetchImpl, maxResults: 6 });
+      for (const row of tavily.results || []) {
+        const url = text(row.url, 500);
+        if (url && seenUrls.has(url)) continue;
+        if (url) seenUrls.add(url);
+        mergedResults.push(row);
+      }
+    } catch (error) {
+      console.error(`place detail enrichment query failed for "${title}": ${String(error?.message || error)}`);
+    }
   }
+  const extracted = extractDetailFromSearchResults({
+    results: mergedResults,
+    title,
+    category: cat,
+    website: sourceRecord.url || sourceRecord.website,
+  });
+  const logoUrl = logoUrlFromSearchPlace(
+    { ...place, ...extracted, title, category: cat, url: extracted.website || sourceRecord.url },
+    { ...sourceRecord, ...extracted },
+  );
+  if (logoUrl) extracted.logoUrl = logoUrl;
+  if (place.lat != null && place.lng != null) {
+    extracted.lat = place.lat;
+    extracted.lng = place.lng;
+  }
+  sourceRecord = mergeRecords(sourceRecord, extracted);
   const mergedPlace = { ...place, ...sourceRecord, category: cat, title };
   const detail = detailFieldsFromPlace(mergedPlace, { category: cat, title });
   detail.title = title;
   detail.category = cat;
+  if (Array.isArray(sourceRecord.summarySourceUrls)) detail.summarySourceUrls = sourceRecord.summarySourceUrls;
   const missing = missingDetailFieldsForCategory(detail, cat);
   return {
     detail,
@@ -101,7 +119,7 @@ export function applyEnrichedDetailToTripThing(thing = {}, enrichment = {}) {
   });
   return {
     ...thing,
-    description: text(detail.longDetails || thing.description, 4000) || thing.description,
+    description: text(detail.longDetails || detail.summary || thing.description, 4000) || thing.description,
     metadata,
   };
 }
