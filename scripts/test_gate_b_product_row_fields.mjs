@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 import { rowNeedsDetailBackfill } from '../src/vacation/chat-intake-place-persist.mjs';
@@ -19,7 +20,50 @@ import { extractDetailFromSearchResults } from '../src/vacation/place-detail-ext
 import { isGenericDescription } from '../src/vacation/trip-thing-enrichment.mjs';
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchLiveProductDetailBundle } from '../src/vacation/trek-thing-detail-patches.mjs';
+import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
+
+const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
+const upstreamRaw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/upstream/index-BKun7ofk.js`], {
+  maxBuffer: 20 * 1024 * 1024,
+}).toString('utf8');
+const servedBundle = renderServedTrekBundle(upstreamRaw);
+assert.match(servedBundle, /tsDetailCapturePayload=Dt=>/);
+assert.doesNotMatch(servedBundle, /function tsDetailCapturePayload\(/);
+
+function extractDetailCaptureRunner(bundle) {
+  const marker = 'tsDetailCapturePayload=Dt=>{';
+  const start = bundle.indexOf(marker);
+  assert.ok(start >= 0, 'scoped tsDetailCapturePayload');
+  const end = bundle.indexOf('},Sn=', start);
+  assert.ok(end >= 0, 'tsDetailCapturePayload must close before Sn=');
+  const expr = bundle.slice(start, end + 1);
+  return new Function(
+    'Dt',
+    'ha',
+    'It',
+    'mr',
+    `return (${expr})(Dt)`,
+  );
+}
+
+const runDetailCapture = extractDetailCaptureRunner(servedBundle);
+const captureDt = { id: 42, name: 'Sample Cocktail Bar', category: 'bar' };
+const captureHa = () => ({
+  address: 'Midtown, New York, NY',
+  review1: 'The negroni is perfectly balanced and the bartenders know their classics without leaning too sweet.',
+  review1Rating: '5',
+  review1Source: 'Google',
+  summary: 'A serious cocktail bar with a reliable happy hour and strong martini program for Midtown regulars.',
+  summarySourceUrls: ['https://example-bar.test/'],
+});
+assert.doesNotThrow(() => {
+  const payload = runDetailCapture(captureDt, captureHa, () => 'bar', () => 'Sample Cocktail Bar');
+  const parsed = JSON.parse(payload);
+  assert.equal(parsed.category, 'bar');
+  assert.equal(parsed.title, 'Sample Cocktail Bar');
+  assert.equal(parsed.reviews.length, 1);
+}, 'detail capture payload must not throw ReferenceError when ha is in scope');
 
 assert.equal(
   resolveThingLogoUrl({ name: 'Hertz', category_name: 'Car' }, { category: 'car' }),

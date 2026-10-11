@@ -8,14 +8,20 @@ const TS_DETAIL_CAPTURE_MISPLACED = `function tsDetailCapturePayload(Dt){${TS_DE
 
 const HA_SCOPE_NEEDLE = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=(G,Re)=>{';
 const HA_SCOPE_PATCH = `ha=G=>tsFillOv(le[Qt(G)]||{},G),tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=(G,Re)=>{`;
+const HA_SCOPE_NEEDLE_BEFORE_SN = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=';
+const HA_SCOPE_PATCH_BEFORE_SN = `ha=G=>tsFillOv(le[Qt(G)]||{},G),tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=`;
 
 export function patchThingDetailCapture(source = '') {
   let js = String(source || '');
   if (js.includes(TS_DETAIL_CAPTURE_MISPLACED)) {
     js = js.replace(TS_DETAIL_CAPTURE_MISPLACED, '');
   }
-  if (!js.includes('tsDetailCapturePayload=Dt=>{') && js.includes(HA_SCOPE_NEEDLE)) {
-    js = js.replace(HA_SCOPE_NEEDLE, HA_SCOPE_PATCH);
+  if (!js.includes('tsDetailCapturePayload=Dt=>{')) {
+    if (js.includes(HA_SCOPE_NEEDLE)) {
+      js = js.replace(HA_SCOPE_NEEDLE, HA_SCOPE_PATCH);
+    } else if (js.includes(HA_SCOPE_NEEDLE_BEFORE_SN)) {
+      js = js.replace(HA_SCOPE_NEEDLE_BEFORE_SN, HA_SCOPE_PATCH_BEFORE_SN);
+    }
   }
   if (js.includes(DETAIL_PANEL_NEEDLE)) {
     js = js.replace(DETAIL_PANEL_NEEDLE, DETAIL_PANEL_PATCH);
