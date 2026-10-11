@@ -15,9 +15,7 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
-import { patchThingDetailCapture } from './trek-thing-detail-capture-patch.mjs';
-import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
-import { patchThingDetailFields } from './trek-thing-detail-fields-patch.mjs';
+import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
@@ -490,7 +488,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(STYLE2_DETAILS_NEEDLE)) {
     patched = patched.replace(STYLE2_DETAILS_NEEDLE, STYLE2_DETAILS_PATCH);
   }
-  const finished = stripTripView(patchThingDetailFields(patchThingDetailRatings(patched)), { gear: !served });
+  const finished = stripTripView(patchThingDetailPanel(patched), { gear: !served });
   return served ? finished : stripMissingPriceLabel(finished);
 }
 

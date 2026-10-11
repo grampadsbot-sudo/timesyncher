@@ -4,9 +4,7 @@ import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
-import { patchThingDetailCapture } from './trek-thing-detail-capture-patch.mjs';
-import { patchThingDetailFields } from './trek-thing-detail-fields-patch.mjs';
-import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
+import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -285,7 +283,7 @@ export function applyLiveProductPatches(patched = '', options = {}) {
   js = js.replace(/Claude Desktop, Work laptop/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Laptop di lavoro/g, 'Example client, Work laptop');
   js = js.replace(/Claude Desktop, Werklaptop/g, 'Example client, Work laptop');
-  return patchThingDetailCapture(patchThingDetailFields(patchThingDetailRatings(patchTripMapInitialView(js))));
+  return patchLiveProductDetailBundle(patchTripMapInitialView(js));
 }
 
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';

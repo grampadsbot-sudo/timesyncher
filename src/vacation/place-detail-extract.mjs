@@ -3,7 +3,7 @@ import { descriptionPassesDetailJudge, text } from './thing-detail-fields.mjs';
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 const HAPPY_HOUR_CATEGORIES = new Set(['restaurant', 'bar']);
 
-export function wordCount(value = '') {
+function wordCount(value = '') {
   return text(value, 20000).split(/\s+/).filter(Boolean).length;
 }
 
@@ -16,7 +16,7 @@ function publicUrl(value) {
   }
 }
 
-export function reviewSourceFromUrl(url = '') {
+function reviewSourceFromUrl(url = '') {
   const row = text(url, 500).toLowerCase();
   if (!row) return '';
   if (/google\.(com|[a-z]{2,3}\/maps)|maps\.google|g\.co\/maps/.test(row)) return 'Google';
@@ -67,7 +67,7 @@ function uniqueReviews(rows = []) {
   return out;
 }
 
-export function extractReviewsFromResults(results = [], title = '') {
+function extractReviewsFromResults(results = [], title = '') {
   const collected = [];
   for (const result of results) {
     const url = publicUrl(result.url);
@@ -110,7 +110,7 @@ function collectSummaryUrls(results = [], reviewUrls = new Set()) {
   return urls;
 }
 
-export function buildSummaryFromResults({
+function buildSummaryFromResults({
   results = [],
   title = '',
   reviews = {},
@@ -145,7 +145,7 @@ export function buildSummaryFromResults({
   return { summary, summarySourceUrls };
 }
 
-export function extractContactFieldsFromBlob(blob = '') {
+function extractContactFieldsFromBlob(blob = '') {
   const fields = {};
   const phone = blob.match(/(?:\+1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}/);
   if (phone) fields.phone = phone[0];
@@ -172,7 +172,7 @@ export function extractContactFieldsFromBlob(blob = '') {
   return fields;
 }
 
-export function extractHappyHourFromBlob(blob = '') {
+function extractHappyHourFromBlob(blob = '') {
   const fields = {};
   const days = blob.match(/happy hour[^.\n]{0,30}(?:mon|tue|wed|thu|fri|sat|sun)[^\n.]{0,80}/i);
   const times = blob.match(/happy hour[^.\n]{0,40}(\d{1,2}(?::\d{2})?\s*(?:am|pm)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
@@ -263,11 +263,4 @@ export function extractDetailFromSearchResults({
     fields.itineraryNote = text(`${title} — ${fields.summary || fields.longDetails}`.split(/\s+/).slice(0, 14).join(' '), 280);
   }
   return fields;
-}
-
-export function reviewWordCountOk(fields = {}, index = 1) {
-  const body = text(fields[`review${index}`], 2000);
-  const source = text(fields[`review${index}Source`], 40);
-  if (wordCount(body) < 25) return false;
-  return REVIEW_SOURCES.has(source);
 }

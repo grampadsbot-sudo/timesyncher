@@ -18,9 +18,7 @@ import {
 import { extractDetailFromSearchResults } from '../src/vacation/place-detail-extract.mjs';
 import { isGenericDescription } from '../src/vacation/trip-thing-enrichment.mjs';
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
-import { patchThingDetailCapture } from '../src/vacation/trek-thing-detail-capture-patch.mjs';
-import { patchThingDetailFields } from '../src/vacation/trek-thing-detail-fields-patch.mjs';
-import { patchThingDetailRatings } from '../src/vacation/trek-thing-detail-ratings-patch.mjs';
+import { patchLiveProductDetailBundle } from '../src/vacation/trek-thing-detail-patches.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
 
 assert.equal(
@@ -128,10 +126,8 @@ const thing = placeToTripThing({
 assert.match(String(thing.metadata?.thingDetail?.itineraryNote || ''), /Harbor Cafe/i);
 assert.equal(thing.metadata?.thingDetail?.thirdPartyRating, '4.5');
 
-const bundle = patchThingDetailCapture(
-  patchThingDetailFields(
-    patchThingDetailRatings(readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8')),
-  ),
+const bundle = patchLiveProductDetailBundle(
+  readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8'),
 );
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:J\(G\)\|\|"Rental"\}\)/);
