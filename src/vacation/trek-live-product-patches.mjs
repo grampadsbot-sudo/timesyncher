@@ -107,7 +107,7 @@ const DETAIL_TIMELINE_EMOJI_PATCH = 'style:{fontSize:ua.isConflict?14:17,lineHei
 
 const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon})';
 
-const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
+const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
 const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
 
@@ -143,16 +143,38 @@ export function patchThingLogoChipAlignment(source = '') {
   if (js.includes(DETAIL_TIMELINE_EMOJI_NEEDLE)) {
     js = js.replace(DETAIL_TIMELINE_EMOJI_NEEDLE, DETAIL_TIMELINE_EMOJI_PATCH);
   }
+  if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_PATCH);
+  } else if (js.includes('transform:"translateY(-0.5px)"},children:G.icon}')) {
+    throw new Error('trek bundle missing bookings tab icon needle for centering patch');
+  }
+  if (js.includes(BOOKINGS_TAB_ICON_V2_PATCH) || js.includes('ref:function(el){tsPaintTabEmoji(el,G.icon)}')) {
+    throw new Error('trek bundle must not paint category tab icons on canvas');
+  }
+  if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
+    js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
+  } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label')) {
+    throw new Error('trek bundle missing category tab label anchor for centering patch');
+  }
+  if (js.includes(TAB_BUTTON_LINE_HEIGHT_NEEDLE)) {
+    js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
+  } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
+    throw new Error('trek bundle missing category tab button anchor for line-height patch');
+  }
   if (js.includes(TAB_BUTTON_DATA_TAB_NEEDLE)) {
     js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
   } else if (!js.includes('"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0')) {
     throw new Error('trek bundle missing category tab button anchor for data-tab patch');
   }
-  if (js.includes('function tsPaintTabEmoji(')) {
-    throw new Error('trek bundle must keep upstream tab emoji rendering for Gate B baseline');
-  }
-  if (js.includes('ref:function(el){tsPaintTabEmoji(el,G.icon)}')) {
-    throw new Error('trek bundle must not paint category tab icons on canvas');
+  if (!js.includes('function tsPaintTabEmoji(')) {
+    if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
+      throw new Error('trek bundle missing anchor for category tab emoji ink centering');
+    }
+    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+  } else if (js.includes(TAB_EMOJI_LABEL_STYLE_NEEDLE)) {
+    js = js.replace(TAB_EMOJI_LABEL_STYLE_NEEDLE, TAB_EMOJI_LABEL_STYLE_PATCH);
+  } else if (!js.includes('if(label.style.display!=="none")')) {
+    throw new Error('trek bundle missing tsPaintTabEmoji mobile label guard');
   }
   if (js.includes('function tsListColumnSort(')) {
     throw new Error('trek bundle must not inject tsListColumnSort (use original Wr sort pills)');
