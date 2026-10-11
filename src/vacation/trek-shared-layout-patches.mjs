@@ -1,6 +1,6 @@
 const TAB_ROW_OVERFLOW_NEEDLE = 'maxWidth:1120,width:"100%",boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,marginLeft:-8,marginRight:-8,width:"calc(100% + 16px)",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
 const TAB_ROW_OVERFLOW_CLIP_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"clip",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
-const TAB_ROW_APPROVED_WRAP_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"visible"},children:[n.jsx("div",{style:{display:"flex",gap:6,marginBottom:20,marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:-58),marginRight:-28,width:"max-content",minWidth:"calc(100% + 56px)",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
+const TAB_ROW_APPROVED_WRAP_PATCH = 'maxWidth:1120,width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"visible"},children:[n.jsx("div",{style:{display:"flex",gap:6,marginBottom:20,marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:0),marginRight:(typeof window<"u"&&window.innerWidth>=760?-28:0),width:"max-content",minWidth:"calc(100% + 56px)",overflowX:"visible",padding:"2px 0",flexWrap:"wrap",justifyContent:"center"}';
 const TAB_ROW_OVERFLOW_FULLWIDTH_NEEDLE = 'maxWidth:"100%",width:"100%",minWidth:0,boxSizing:"border-box",margin:"0 auto",padding:"20px 16px",overflowX:"clip"},children:[n.jsx("div",{style:{display:"flex",gap:3,marginBottom:20,minWidth:0,maxWidth:"100%",overflowX:"clip"';
 
 const DETAIL_DAYS_GRID_NEEDLE = 'gridTemplateColumns:Mi(Dt)?"88px minmax(150px, 1fr) 128px":"88px 104px minmax(150px, 1fr) 128px"';
@@ -19,6 +19,11 @@ export function patchSharedTabRowOverflow(source = '', options = {}) {
     js = js.replace(TAB_ROW_OVERFLOW_FULLWIDTH_NEEDLE, TAB_ROW_APPROVED_WRAP_PATCH);
   } else if (js.includes('flexWrap:"nowrap",justifyContent:"center"}')) {
     js = js.replace('flexWrap:"nowrap",justifyContent:"center"}', 'flexWrap:"wrap",justifyContent:"center"}');
+  } else if (js.includes('marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:-58),marginRight:-28,width:"max-content"')) {
+    js = js.replace(
+      'marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:-58),marginRight:-28,width:"max-content"',
+      'marginLeft:(typeof window<"u"&&window.innerWidth>=760?-28:0),marginRight:(typeof window<"u"&&window.innerWidth>=760?-28:0),width:"max-content"',
+    );
   } else if (served && js.includes('marginLeft:-8,marginRight:-8,width:"calc(100% + 16px)"')) {
     throw new Error('shared tab row overflow patch did not apply');
   } else if (served && !js.includes('flexWrap:"wrap",justifyContent:"center"')) {
