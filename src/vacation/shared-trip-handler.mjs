@@ -131,6 +131,13 @@ export async function intakeSharedResponse(shareToken, db = null) {
   return finalizeServedSharedTripPayload(withBudgetTargets);
 }
 
+async function offlineApprovedSharedResponse(shareToken) {
+  if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) return null;
+  const mod = await import(new URL('../../scripts/fixtures/gate-b-approved-shared-trip.mjs', import.meta.url).href);
+  if (String(shareToken || '') !== mod.GATE_B_APPROVED_SHARED_SLUG) return null;
+  return mod.buildGateBApprovedSharedTrip();
+}
+
 function sendSlugMiss(res, shareToken) {
   const miss = slugMissError(shareToken);
   logSharedTripFailure(miss.code, shareToken, miss);
@@ -148,9 +155,15 @@ async function respondSharedTripGet(req, res, shareToken) {
   try {
     const local = await intakeSharedResponse(shareToken);
     if (local) return sendJson(res, 200, local);
+    const offline = await offlineApprovedSharedResponse(shareToken);
+    if (offline) return sendJson(res, 200, offline);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
     return await proxyConfiguredUpstream(req, res, shareToken);
   } catch (error) {
+    if (error?.code === 'shared_trip_upstream_unconfigured') {
+      const offline = await offlineApprovedSharedResponse(shareToken);
+      if (offline) return sendJson(res, 200, offline);
+    }
     logSharedTripFailure('shared_trip_lookup_failed', shareToken, error);
     return sendJson(res, 500, {
       ok: false,

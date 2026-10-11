@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { publicApiRequest } from '../api/[...route].mjs';
 import sharedTripHandler, { intakeSharedResponse, useSharedTripDatabase } from '../src/vacation/shared-trip-handler.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { GATE_B_APPROVED_SHARED_SLUG } from './fixtures/gate-b-approved-shared-trip.mjs';
 
 const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
 
@@ -106,4 +107,17 @@ assert.match(notFound.json.customerMessage, /vacation app/i);
 assert.equal(String(notFound.json.customerMessage).includes('shared_trip_slug_not_found'), false);
 
 useSharedTripDatabase(null);
+const oldUpstream = process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL;
+delete process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL;
+try {
+  const offline = await invokeSharedGet(`/api/shared/${GATE_B_APPROVED_SHARED_SLUG}/`);
+  assert.equal(offline.status, 200, offline.json);
+  assert.ok(Array.isArray(offline.json.places) && offline.json.places.length > 0, 'offline gate b fixture places');
+  const wrong = await invokeSharedGet('/api/shared/not-the-gate-b-slug/');
+  assert.equal(wrong.status, 500);
+} finally {
+  if (oldUpstream) process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = oldUpstream;
+  else delete process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL;
+}
+
 console.log('shared trip boot fetch tests passed');
