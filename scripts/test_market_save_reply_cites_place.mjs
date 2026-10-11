@@ -38,7 +38,7 @@ const db = async (strings, ...values) => {
   if (/insert into trip_things/i.test(text)) return [{ id: crypto.randomUUID() }];
   if (/count\(\*\)/i.test(text) && /trip_things/i.test(text)) return [{ n: 1 }];
   if (/select\s+start_date,\s*end_date/i.test(text)) {
-    return [{ start_date: '2027-03-10', end_date: '2027-03-17' }];
+    return [{ start_date: '2027-03-10', end_date: '2027-03-17', destination: 'Maui' }];
   }
   if (/update trips/i.test(text)) {
     const patch = values.find((value) => value?.publicSlug)

@@ -90,28 +90,6 @@ function priceFromRecords(place = {}, override = {}, source = null) {
   return priceFromTextFields(place, override, source);
 }
 
-function pickSummary(place = {}, override = {}, source = null) {
-  const address = text(place.address || source?.address);
-  const description = text(place.description);
-  const notes = text(place.notes);
-  const meta = placeMetadata(place);
-  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
-  return firstPresent(
-    override.summary,
-    place.summary,
-    source?.summary,
-    source?.pickSummary,
-    source?.whyPick,
-    metaRecord?.summary,
-    metaRecord?.pickSummary,
-    metaRecord?.whyPick,
-    source?.description,
-    metaRecord?.description,
-    description && description !== address ? description : '',
-    notes && notes !== address ? notes : '',
-  );
-}
-
 function pickLongDetails(place = {}, override = {}, source = null) {
   return firstPresent(
     override.longDetails,
@@ -187,20 +165,6 @@ export function applyLiveAppListRowFields(shared = {}) {
         source?.vehicle,
       );
       copyIfBlank(override, 'vehicleClass', source?.vehicleClass, source?.carType, source?.model);
-    }
-
-    const summary = pickSummary(place, override, source);
-    if (summary) {
-      override.summary = summary;
-    } else if (category === 'hotel' || category === 'car') {
-      const priceLabel = price != null ? `$${Math.round(price).toLocaleString('en-US')}` : '';
-      const location = text(place.address || source?.address || source?.postal_address?.displayAddress);
-      const bits = [
-        category === 'car' ? text(override.rentalCompany || rentalCompanyFromTitle(place.name)) : text(place.name),
-        location,
-        priceLabel && category === 'car' ? `${priceLabel} per day` : priceLabel,
-      ].filter(Boolean);
-      if (bits.length) override.summary = bits.join(' · ');
     }
 
     const longDetails = pickLongDetails(place, override, source);

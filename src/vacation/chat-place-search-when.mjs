@@ -1,6 +1,8 @@
 import { assignDatesScheduling } from './intake-shared-trip.mjs';
 import { scheduleChatThing } from './chat-thing-schedule.mjs';
 import { tripIsoDay } from './intake-weekday-dates.mjs';
+import { rowNeedsDetailBackfill } from './chat-intake-place-persist.mjs';
+import { applyEnrichedDetailToTripThing, enrichPlaceDetail } from './place-detail-enrichment.mjs';
 import { activeCollaboratorsFromParty, partyNamesFromDialogParty } from './reply-action-claim.mjs';
 import { insertTripThing } from './trip-things.mjs';
 
@@ -181,23 +183,62 @@ export function workerInputAfterInTurnPlaceSearch({
   };
 }
 
-export async function insertStampedChatPlaceThings(db, { tripId, requestId, things, classification }) {
+async function enrichChatSavedPlaceThing(thing, { destination = '', env = process.env, fetchImpl = globalThis.fetch } = {}) {
+  if (!rowNeedsDetailBackfill(thing)) return thing;
+  const dest = clean(destination, 180);
+  if (!dest) return thing;
+  const loc = thing?.location && typeof thing.location === 'object' ? thing.location : {};
+  const meta = thing?.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  try {
+    const enrichment = await enrichPlaceDetail({
+      place: {
+        title: thing.title,
+        category: thing.category,
+        address: loc.address || '',
+        lat: loc.lat,
+        lng: loc.lng,
+        source: thing.source,
+        sourceRecord: meta.sourceRecord,
+        url: meta.sourceRecord?.url,
+      },
+      destination: dest,
+      category: thing.category,
+      env,
+      fetchImpl,
+    });
+    return applyEnrichedDetailToTripThing(thing, enrichment);
+  } catch (error) {
+    console.error(`chat place save detail enrichment failed for "${clean(thing?.title, 240)}": ${String(error?.message || error)}`);
+    return thing;
+  }
+}
+
+export async function insertStampedChatPlaceThings(db, {
+  tripId,
+  requestId,
+  things,
+  classification,
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+} = {}) {
   const tripDateRows = await db`
-    select start_date, end_date
+    select start_date, end_date, destination
     from trips
     where id = ${tripId}
     limit 1
   `;
   const tripStart = tripDateRows[0]?.start_date || '';
   const tripEnd = tripDateRows[0]?.end_date || '';
+  const destinationHint = clean(tripDateRows[0]?.destination, 180);
   const placeResults = [];
   const savedForFacts = [];
   for (const thing of Array.isArray(things) ? things : []) {
     const stamped = stampChatSavedPlaceThing(thing, classification);
-    const meta = stamped?.metadata && typeof stamped.metadata === 'object' ? stamped.metadata : {};
-    const scheduled = scheduleChatThing(stamped, { start_date: tripStart, end_date: tripEnd });
+    const enriched = await enrichChatSavedPlaceThing(stamped, { destination: destinationHint, env, fetchImpl });
+    const meta = enriched?.metadata && typeof enriched.metadata === 'object' ? enriched.metadata : {};
+    const scheduled = scheduleChatThing(enriched, { start_date: tripStart, end_date: tripEnd });
     const scheduledThing = {
-      ...stamped,
+      ...enriched,
       starts_at: scheduled.starts_at,
       metadata: {
         ...meta,
@@ -209,7 +250,7 @@ export async function insertStampedChatPlaceThings(db, { tripId, requestId, thin
     };
     const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
     savedForFacts.push({
-      title: inserted?.title || stamped.title,
+      title: inserted?.title || enriched.title,
       whenLabel: meta.whenLabel || '',
       customerWhen: meta.customerWhen || '',
     });
