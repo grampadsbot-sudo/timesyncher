@@ -110,7 +110,9 @@ export function applyApprovedLookPatches(source = '') {
   js = mustReplace(js, LOGO_GRID_NEEDLE, LOGO_GRID_PATCH, 'row logo column');
   if (js.includes(ROW_GRID_NEEDLE)) js = js.replace(ROW_GRID_NEEDLE, ROW_GRID_PATCH);
   if (js.includes(SUMMARY_LINE_NEEDLE)) js = js.replace(SUMMARY_LINE_NEEDLE, SUMMARY_LINE_PATCH);
-  if (js.includes(HOTEL_LINE_NEEDLE)) js = js.replace(HOTEL_LINE_NEEDLE, HOTEL_LINE_PATCH);
+  if (js.includes(HOTEL_LINE_PATCH) || js.includes('ha(G).roomType||ha(G).room_type')) {
+    js = js.replace(HOTEL_LINE_PATCH, HOTEL_LINE_NEEDLE);
+  }
   if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
   js = mustReplace(js, '{id:"plan",label:"Day-by-Day",icon:"📅"}', '{id:"plan",label:"Day-by-Day",icon:"☀️"}', 'Day-by-Day sun icon');
   js = mustReplace(js, TAB_PILL_NEEDLE, TAB_PILL_PATCH, 'tab pill size');
