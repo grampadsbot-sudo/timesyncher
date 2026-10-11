@@ -723,14 +723,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
-  if (js.includes(MO_BUDGET_NEEDLE)) {
-    if (js.includes('[].concat(rs,Po,bc,Oc,Fs,Cc)')) {
-      throw new Error('Style two live budget must use timeline-only Mo rows for Gate B baseline.');
-    }
-    if (js.includes(BUDGET_EMPTY_NEEDLE) && !js.includes('return!fr.length?null:')) {
-      throw new Error('Style two live budget must apply BUDGET_EMPTY for Gate B baseline.');
-    }
+  if (js.includes(MO_BUDGET_NEEDLE) && (js.includes('[].concat(rs,Po,bc,Oc,Fs,Cc)') || (js.includes('return!Xi&&!go&&!fr.length?null:') && !js.includes('return!fr.length?null:')))) {
+    throw new Error('Style two live budget must use timeline-only Mo rows and BUDGET_EMPTY for Gate B baseline.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
