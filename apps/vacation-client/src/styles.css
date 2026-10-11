@@ -1,12 +1,12 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  --bg: #09090b;
-  --card: #111827;
-  --border: #374151;
-  --text: #f9fafb;
-  --muted: #9ca3af;
-  --accent: #f5d37b;
+  --bg: #eef1f4;
+  --card: #ffffff;
+  --border: #d1d5db;
+  --text: #111827;
+  --muted: #64748b;
+  --accent: #1e293b;
 }
 
 * {
@@ -80,7 +80,7 @@ body {
   right: 0;
   top: calc(100% + 4px);
   min-width: 160px;
-  background: #0f172a;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px;
@@ -88,7 +88,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
 .tsv-header-popover a,
@@ -101,7 +101,7 @@ body {
 }
 
 .tsv-header-popover a:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .tsv-header-popover-note {
@@ -139,8 +139,9 @@ body {
 }
 
 .tsv-tab.is-active {
+  background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent);
+  color: #ffffff;
 }
 
 .tsv-tab-icon-chip {
@@ -539,4 +540,145 @@ body {
   padding: 24px;
   max-width: 520px;
   margin: 40px auto;
+}
+
+.tsv-budget-screen {
+  padding: 0 8px 16px;
+}
+
+.tsv-budget-panel {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px 12px 10px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.tsv-budget-overall-title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.tsv-budget-trip-total,
+.tsv-budget-bucket-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
+  gap: 4px 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tsv-budget-trip-icon,
+.tsv-budget-bucket-icon {
+  font-size: 18px;
+  line-height: 1;
+  width: 22px;
+  text-align: center;
+}
+
+.tsv-budget-trip-label,
+.tsv-budget-bucket-label {
+  font-weight: 800;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.tsv-budget-target-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.tsv-budget-target-input {
+  width: 36px;
+  padding: 2px 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  background: #fff;
+  color: #0f172a;
+}
+
+.tsv-budget-timeline-pill {
+  grid-column: 2 / -1;
+  justify-self: end;
+  font-size: 11px;
+  font-weight: 800;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.tsv-budget-variance-pill {
+  grid-column: 1 / -1;
+  justify-self: end;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.tsv-budget-bucket {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.tsv-budget-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tsv-budget-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.tsv-budget-line-name {
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: underline;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tsv-budget-line-amount {
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.tsv-budget-logo-chip {
+  flex-shrink: 0;
+}
+
+@media (min-width: 900px) {
+  .tsv-budget-trip-total,
+  .tsv-budget-bucket-head {
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto;
+  }
+  .tsv-budget-timeline-pill,
+  .tsv-budget-variance-pill {
+    grid-column: auto;
+    justify-self: end;
+  }
 }
