@@ -1,6 +1,5 @@
 import { transportKind } from './intake-transport-kind.mjs';
 import { normalizeThingType } from './timeline-icons.mjs';
-import { isGenericDescription } from './trip-thing-enrichment.mjs';
 import { writeRatings } from './write-ratings.mjs';
 
 const NON_TRANSPORT_CATEGORIES = new Set([
@@ -276,32 +275,25 @@ export function mergeThingDetailMetadata(metadata = {}, detail = {}) {
   return next;
 }
 
-function summaryAllowedOnSharedListRow(value = '') {
-  const row = text(value, 500);
-  if (!row) return false;
-  if (isGenericDescription(row)) return true;
-  return wordCount(row) <= 20;
-}
-
-/** Drop enriched list-row copy from ha() overrides; detail fields stay in metadata.thingDetail. */
-function stripSharedListHaFields(override = {}, { explicitItinerary = '' } = {}) {
-  const out = { ...override };
-  if (!summaryAllowedOnSharedListRow(out.summary)) {
-    delete out.summary;
-  }
-  if (!text(explicitItinerary)) {
-    delete out.itineraryNote;
-    delete out.itinerary_note;
-  } else {
-    out.itineraryNote = text(explicitItinerary);
-  }
-  return out;
-}
-
 export function thingDetailOverrideFields(thing = {}) {
   const bag = detailBagFrom(thing);
+  const record = sourceRecordFrom(thing) || {};
   const fromRecord = detailFieldsFromPlace({}, thing);
   const merged = { ...fromRecord, ...bag };
+  const explicitItinerary = text(
+    bag.itineraryNote
+    || bag.itinerary_note
+    || record.itineraryNote
+    || record.itinerary_note,
+  );
+  if (explicitItinerary) merged.itineraryNote = explicitItinerary;
+  else {
+    delete merged.itineraryNote;
+    delete merged.itinerary_note;
+  }
+  if (!shouldApplyAutoDetailFields(thing) && !explicitItinerary) {
+    delete merged.itineraryNote;
+  }
   const override = {};
   for (const [key, value] of Object.entries(merged)) {
     if (value === null || value === undefined || value === '') continue;
@@ -379,8 +371,7 @@ export function missingDetailFieldsForCategory(fields = {}, category = 'other') 
 export function applyThingDetailOverrides(shared = {}) {
   const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
   const thingOverrides = { ...(shared.thingOverrides || {}) };
-  for (let index = 0; index < places.length; index += 1) {
-    const place = places[index];
+  for (const place of places) {
     const key = `place:${place.id}`;
     const prior = thingOverrides[key] || {};
     const mergedThing = {
@@ -394,23 +385,7 @@ export function applyThingDetailOverrides(shared = {}) {
       },
       sourceRecord: place.sourceRecord,
     };
-    const fullOverride = { ...thingDetailOverrideFields(mergedThing), ...prior };
-    const record = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
-    const detailBag = { ...(place.metadata?.thingDetail || {}), ...prior };
-    const explicitItinerary = text(
-      detailBag.itineraryNote
-      || detailBag.itinerary_note
-      || record.itineraryNote
-      || record.itinerary_note,
-    );
-    places[index] = {
-      ...place,
-      metadata: {
-        ...(place.metadata || {}),
-        thingDetail: { ...(place.metadata?.thingDetail || {}), ...fullOverride },
-      },
-    };
-    thingOverrides[key] = stripSharedListHaFields(fullOverride, { explicitItinerary });
+    thingOverrides[key] = { ...thingDetailOverrideFields(mergedThing), ...prior };
   }
   return { ...shared, places, thingOverrides };
 }
