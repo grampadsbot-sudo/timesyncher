@@ -37,11 +37,16 @@ const OE_CATALOG_ROW_PREP_SHELL_NEEDLE = 'return(bn(G)||Mi(G)||Zi(G))?n.jsxs("li
 const OE_SA_LIST_ROW_CLOSE_NEEDLE = '})]}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",{"data-list-row":"1"';
 const OE_SA_LIST_ROW_CLOSE_PATCH = '})]}),null,n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]})]},`${It(G)}-${Qt(G)}-${ua}`):n.jsxs("li",{"data-list-row":"1"';
 
-const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
+const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
+
+const OE_CAR_BE_GRID_PRIOR = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
 
 function patchCarBeGrid(js = '') {
-  if (js.includes('be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%"')) {
+  if (js.includes('"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}')) {
     return js;
+  }
+  if (js.includes(OE_CAR_BE_GRID_PRIOR)) {
+    return js.replace(OE_CAR_BE_GRID_PRIOR, OE_CAR_BE_GRID_PATCH);
   }
   const start = js.indexOf('be=({item:G})=>');
   const endMarker = "})]}),je=({item:G,title:Re})=>";
@@ -54,7 +59,8 @@ function patchCarBeGrid(js = '') {
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
-const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PRIOR = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
 
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
@@ -79,7 +85,9 @@ function patchSharedTripOeListRowsBeforeApprovedLook(source = '') {
   js = patchCarBeGrid(js);
   if (js.includes(OE_HOTEL_JE_TITLE_NEEDLE)) {
     js = js.replace(OE_HOTEL_JE_TITLE_NEEDLE, OE_HOTEL_JE_TITLE_PATCH);
-  } else if (!js.includes('je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')) {
+  } else if (js.includes(OE_HOTEL_JE_TITLE_PRIOR)) {
+    js = js.replace(OE_HOTEL_JE_TITLE_PRIOR, OE_HOTEL_JE_TITLE_PATCH);
+  } else if (!js.includes('"data-ts-list-price":"1",style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}')) {
     throw new Error('shared trip Oe() hotel header patch did not apply');
   }
   if (js.includes(WR_SORT_ROW_NEEDLE)) {
