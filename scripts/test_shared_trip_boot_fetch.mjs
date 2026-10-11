@@ -142,5 +142,6 @@ await import('../apps/vacation-client/test/tabNav.unit.mjs');
 await import('../apps/vacation-client/test/dayTimeline.unit.mjs');
 await import('../apps/vacation-client/test/budget.unit.mjs');
 await import('../apps/vacation-client/test/detail.unit.mjs');
+await import('../apps/vacation-client/test/keepsake.unit.mjs');
 
 console.log('shared trip boot fetch tests passed');

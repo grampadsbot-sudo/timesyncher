@@ -46,6 +46,7 @@ export type SharedTripPayload = {
   budget?: BudgetLine[];
   permissions?: Record<string, boolean>;
   forecast?: unknown[];
+  media?: Array<Record<string, unknown>>;
 };
 
 export type TabId =

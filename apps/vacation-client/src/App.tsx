@@ -3,9 +3,11 @@ import { ThingDetailPanel } from './components/ThingDetailPanel';
 import { TripShell } from './components/TripShell';
 import { useSharedTrip } from './hooks/useSharedTrip';
 import { useTabFromUrl } from './hooks/useTabFromUrl';
+import { isKeepsakeJourneyLocation } from './lib/keepsakeModel.mjs';
 import { BudgetScreen } from './screens/BudgetScreen';
 import { CategoryTabScreen } from './screens/CategoryTabScreen';
 import { DayByDayScreen } from './screens/DayByDayScreen';
+import { KeepsakeJourneyScreen } from './screens/KeepsakeJourneyScreen';
 import type { SharedPlace } from './types/sharedTrip';
 
 export default function App() {
@@ -40,6 +42,14 @@ export default function App() {
 
   const trip = tripState.data;
   const token = tripState.token;
+
+  const journeyView = isKeepsakeJourneyLocation(
+    window.location.pathname,
+    new URLSearchParams(window.location.search),
+  );
+  if (journeyView) {
+    return <KeepsakeJourneyScreen trip={trip} shareToken={token} />;
+  }
 
   let body = null;
   if (tab === 'day-by-day') {

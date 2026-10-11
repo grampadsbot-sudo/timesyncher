@@ -21,7 +21,21 @@ export function TripHeaderActions({ shareToken, permissions }: Props) {
     );
   }, [permissions]);
 
-  const journeyHref = `/shared/${encodeURIComponent(shareToken)}/journey`;
+  const journeyHref = (() => {
+    const path = window.location.pathname || '';
+    if (path.includes('vacation-app-next.html') || path === '/') {
+      const params = new URLSearchParams(window.location.search);
+      params.set('journey', '1');
+      params.set('style', '1');
+      params.set('printMode', 'report');
+      params.set('pdfReport', 'keepsake');
+      if (!params.get('token') && !params.get('slug')) {
+        params.set('token', shareToken);
+      }
+      return `${path.includes('.html') ? path : '/vacation-app-next.html'}?${params.toString()}`;
+    }
+    return `/shared/${encodeURIComponent(shareToken)}/journey?style=1&printMode=report&pdfReport=keepsake`;
+  })();
   const printKeepsakeHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/keepsake.pdf`;
   const printStyleTwoHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`;
 
