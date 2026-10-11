@@ -148,13 +148,11 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(DETAIL_TIMELINE_EMOJI_NEEDLE, DETAIL_TIMELINE_EMOJI_PATCH);
   }
   if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
-    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_ATTR_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_ATTR_PATCH);
-  } else if (js.includes(TAB_ICON_TRANSFORM_NEEDLE)) {
-    js = js.replace(TAB_ICON_TRANSFORM_NEEDLE, BOOKINGS_TAB_ICON_ATTR_PATCH);
+    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_FLEX_PATCH);
+  } else if (js.includes(BOOKINGS_TAB_ICON_ATTR_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_ATTR_PATCH, BOOKINGS_TAB_ICON_FLEX_PATCH);
   } else if (
-    !js.includes('"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid"')
+    !js.includes('"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex"')
   ) {
     throw new Error('trek bundle missing bookings tab icon markers for Gate B');
   }
