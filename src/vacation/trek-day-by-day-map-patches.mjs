@@ -1,7 +1,7 @@
 import { TREK_STATIC_MAP_TILE_HOST } from './trek-default-map-tiles.mjs';
 
-export const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
-export const XA_STATIC_MAP_TILE_PATCH = `static-map-tile" src="${TREK_STATIC_MAP_TILE_HOST}/`;
+const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
+const XA_STATIC_MAP_TILE_PATCH = `static-map-tile" src="${TREK_STATIC_MAP_TILE_HOST}/`;
 
 const MAP_OPEN_MARKERS = [
   [

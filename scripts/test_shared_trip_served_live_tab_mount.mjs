@@ -24,6 +24,7 @@ assert.match(committed, /title:`Pickup: \$\{\(ha\(wn\)\.rentalCompany\|\|mr\(wn\
 assert.match(committed, /tsCarDays=Yi\(wn\)\.map\(ua=>ve\(ua\)\)/);
 
 const repatched = applySharedLiveTabBundlePatches(raw, { served: true });
-assert.doesNotMatch(repatched, /GBrain|Coming soon/);
+assert.ok(!repatched.includes('GBrain') && !repatched.includes('Coming soon'), 'served live-tab patch must strip internal Cars tab placeholder copy');
+assert.match(repatched, /Rental car options you add will appear here for side-by-side comparison\./);
 
 console.log('shared trip served live tab mount tests passed');

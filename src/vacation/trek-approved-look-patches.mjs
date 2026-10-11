@@ -1,0 +1,145 @@
+/** Gate B v6: approved look (78257cc) + R6 list-row layout; day map order via patchDayByDayKeepsakeMap. */
+
+const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
+
+const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
+
+const ACTION_ROW_NEEDLE = 'dn&&n.jsxs("div",{style:{marginTop:8,display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}';
+
+const EVENTS_TAB_NEEDLE = '{id:"events",label:"The Rest",icon:"🎟️"}';
+const EVENTS_TAB_PATCH = '{id:"events",label:"Events",icon:"🎟️"}';
+
+const DAY_HEADING_NEEDLE = 'children:"Vacation Day View"';
+const DAY_HEADING_PATCH = 'children:dn?"Map day view":"Vacation Day View"';
+const DAY_SUB_NEEDLE = 'Only things tagged for this day + Timeline appear on the map below.';
+const DAY_SUB_PATCH = 'Only things tagged for this day + Timeline appear on the map.';
+
+const PLAN_CARD_NEEDLE = 'q==="plan"&&n.jsxs(n.Fragment,{children:[dn&&n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:12,margin:"12px 0 12px"}';
+const DAY_MAP = '';
+
+const MAP_SHELL_NEEDLE = 'className:"w-full h-full relative",children:';
+const MAP_SHELL_PATCH = 'className:"w-full h-full relative",style:{height:"100%",width:"100%"},children:';
+const MAP_CANVAS_NEEDLE = 'className:"w-full h-full",style:{background:"#e5e7eb"}';
+const MAP_CANVAS_PATCH = 'className:"w-full h-full",style:{background:"#e5e7eb",height:"100%",width:"100%"}';
+
+const BSE_NEEDLE = 'function BSe(e,t){const i=e&&Bb[e]||Bb.MapPin;';
+const BSE_PATCH = 'function BSe(e,t){if(e&&!Bb[e])return `<span data-ts-map-emoji="1" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:${t}px;line-height:1">${e}</span>`;const i=e&&Bb[e]||Bb.MapPin;';
+
+const TAB_PILL_NEEDLE = 'padding:"7px 7px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600';
+const TAB_PILL_PATCH = 'padding:Re?"5px 15px":"6px 15px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.2px"';
+
+const SUBTITLE_INK_NEEDLE = 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,opacity:.5,maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})';
+const SUBTITLE_INK_PATCH = 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,color:"rgba(255,255,255,0.5)",maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})';
+
+const FOOTER_NEEDLE = 'n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24},children:n.jsx("img",{src:"/icons/timesyncher-icon-black-transparent.png",alt:"TimeSyncher",width:"20",height:"20"})}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"Vacation"}),n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
+const FOOTER_PATCH = 'n.jsx("img",{src:"/icons/icon-512x512.png",alt:"",width:"18",height:"18",style:{display:"block",width:18,height:18,borderRadius:4}}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700},children:"TimeSyncher Travel · AI-assisted vacation itinerary planning"})';
+
+const LOGO_GRID_NEEDLE = 'gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1"';
+const LOGO_GRID_PATCH = 'gridTemplateColumns:(bn(G)||Mi(G)||Zi(G))?"16px minmax(0,1fr)":"minmax(0,1fr)",gap:6,alignItems:"center",width:"100%",minWidth:0},children:[(bn(G)||Mi(G)||Zi(G))?n.jsx("span",{style:{display:"grid",placeItems:"center",alignSelf:"center",width:16,minWidth:16,height:16,flex:"0 0 16px"},children:n.jsx(dc,{item:G,size:16})}):null,n.jsx("span",{"data-ts-list-row-name":"1"';
+
+const ROW_GRID_NEEDLE = 'gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,alignItems:"center",minWidth:0,maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),kl(G),';
+const ROW_GRID_PATCH = 'gridTemplateColumns:"minmax(0,1.15fr) minmax(0,1fr) max-content max-content",gap:8,alignItems:"center",width:"100%",minWidth:0,maxWidth:"100%",overflow:"hidden"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:(typeof window<"u"&&window.innerWidth>=760)?"100%":"183px",minWidth:0,color:"#475569",fontSize:11,fontWeight:700,lineHeight:1.35},children:Pn}):null,kl(G),';
+
+const SUMMARY_LINE_NEEDLE = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null';
+const SUMMARY_LINE_PATCH = 'null';
+
+const HOTEL_LINE_NEEDLE = 'gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const HOTEL_LINE_PATCH = 'gridTemplateColumns:"minmax(0,1fr) auto auto",gap:8,width:"100%",minWidth:0,alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ha(G).roomType||ha(G).room_type||""})]})';
+
+const ROW_CLIP_NEEDLE = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"';
+const ROW_CLIP_PATCH = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:0,maxWidth:"100%",width:"100%"';
+
+const BUDGET_TOTAL = 'n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(82px,1fr) auto auto auto",gap:8,alignItems:"center",padding:"9px 0"},children:[n.jsx("span",{style:{fontSize:13,fontWeight:900,color:"#111827"},children:"Trip total"}),n.jsx("span",{style:{fontSize:12,fontWeight:700,color:"#374151",whiteSpace:"nowrap"},children:`Timeline ${Math.round(Number(_i)||0)} USD`}),n.jsx("span",{style:{fontSize:12,fontWeight:700,color:"#374151",whiteSpace:"nowrap"},children:`Target ${Math.round(Number(Eo)||0)} USD`}),n.jsx("span",{style:{fontSize:11,fontWeight:900,borderRadius:999,padding:"4px 8px",color:"#166534",background:"#dcfce7",whiteSpace:"nowrap"},children:`${Math.round(Number(_i)||0)} USD timeline`})]})';
+const BUDGET_LIST_NEEDLE = 'js({name:"Trip total",planned:_i,target:Eo,strong:!0}),nr.map(di=>{const Xi=Qi(di),go=Xr(di),fr=wn(di);return!fr.length?null:n.jsxs("div",{children:[js({name:Oo(di),planned:Xi,target:go,bucket:di}),fr.length>0&&fr.map(Ul=>n.jsx(zl,{r:Ul},Qt(Ul.item)))]},di)})';
+
+const MAP_OPEN = 'n.jsx("div",{style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12';
+const MAP_OPEN_PATCH = 'n.jsx("div",{"data-ts-day-map":"1",style:{borderRadius:16,overflow:"hidden",height:dn?900:300,marginBottom:12';
+
+function dropCallWithTrailingComma(js, startNeedle) {
+  const start = js.indexOf(startNeedle);
+  if (start < 0) return js;
+  let depth = 0;
+  let started = false;
+  let i = start;
+  for (; i < js.length; i += 1) {
+    const ch = js[i];
+    if (ch === '(') {
+      depth += 1;
+      started = true;
+    } else if (ch === ')') {
+      depth -= 1;
+      if (started && depth === 0) {
+        i += 1;
+        break;
+      }
+    }
+  }
+  if (js[i] === ',') i += 1;
+  return js.slice(0, start) + js.slice(i);
+}
+
+function mustReplace(js, needle, patch, label) {
+  if (!js.includes(needle)) {
+    throw new Error(`approved look patch missed ${label}`);
+  }
+  return js.replace(needle, patch);
+}
+
+export function applyActivePillEdgePatch(js) {
+  return js;
+}
+
+export function applyApprovedLookPatches(source = '') {
+  let js = String(source || '');
+  if (!js.includes('q==="plan"')) {
+    return js;
+  }
+  js = mustReplace(js, HEADER_NEEDLE, HEADER_PATCH, 'shared header');
+  if (!js.includes(ACTION_ROW_NEEDLE)) {
+    throw new Error('approved look patch missed header action row');
+  }
+  js = dropCallWithTrailingComma(js, ACTION_ROW_NEEDLE);
+  js = mustReplace(js, EVENTS_TAB_NEEDLE, EVENTS_TAB_PATCH, 'Events tab label');
+  js = mustReplace(js, DAY_HEADING_NEEDLE, DAY_HEADING_PATCH, 'map day heading');
+  js = mustReplace(js, SUBTITLE_INK_NEEDLE, SUBTITLE_INK_PATCH, 'subtitle ink');
+  js = mustReplace(js, DAY_SUB_NEEDLE, DAY_SUB_PATCH, 'map day subtitle');
+  js = mustReplace(js, PLAN_CARD_NEEDLE, `q==="plan"&&n.jsxs(n.Fragment,{children:[${DAY_MAP}dn&&n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:12,margin:"12px 0 12px"}`, 'day map card');
+  if (js.includes(MAP_SHELL_NEEDLE)) js = js.replace(MAP_SHELL_NEEDLE, MAP_SHELL_PATCH);
+  if (js.includes(MAP_CANVAS_NEEDLE)) js = js.replace(MAP_CANVAS_NEEDLE, MAP_CANVAS_PATCH);
+  if (js.includes(BSE_NEEDLE)) js = js.replace(BSE_NEEDLE, BSE_PATCH);
+  js = mustReplace(js, LOGO_GRID_NEEDLE, LOGO_GRID_PATCH, 'row logo column');
+  if (js.includes(ROW_GRID_NEEDLE)) js = js.replace(ROW_GRID_NEEDLE, ROW_GRID_PATCH);
+  if (js.includes(SUMMARY_LINE_NEEDLE)) js = js.replace(SUMMARY_LINE_NEEDLE, SUMMARY_LINE_PATCH);
+  if (js.includes(HOTEL_LINE_PATCH) || js.includes('ha(G).roomType||ha(G).room_type')) {
+    js = js.replace(HOTEL_LINE_PATCH, HOTEL_LINE_NEEDLE);
+  }
+  if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
+  js = mustReplace(js, '{id:"plan",label:"Day-by-Day",icon:"📅"}', '{id:"plan",label:"Day-by-Day",icon:"☀️"}', 'Day-by-Day sun icon');
+  js = mustReplace(js, TAB_PILL_NEEDLE, TAB_PILL_PATCH, 'tab pill size');
+  js = mustReplace(js, 'Os=["event","family_event","tickets","bar","music","workout","artist","theatre","sightseeing","tour","transport","other"]', 'Os=["event","music","sightseeing","tour","transport","other"]', 'Events type chips');
+  js = mustReplace(js, '/whole foods|juice generation|grocery|market|store|pharmacy|snacks|celery juice|supplies/i', '/whole foods|juice generation|grocery|market|store|pharmacy|snacks|celery juice|supplies|zabar|tiffany|bergdorf|saks|nordstrom|macy|apple fifth|moma design|strand book|chelsea market|pure green/i', 'store name categories');
+  js = mustReplace(js, FOOTER_NEEDLE, FOOTER_PATCH, 'shared footer');
+  js = mustReplace(js, BUDGET_LIST_NEEDLE, BUDGET_TOTAL, 'compact budget card');
+  js = mustReplace(js, 'children:[n.jsxs("div",{style:{padding:"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f3f4f6"},children:[n.jsx("div",{style:{width:28,height:28,borderRadius:"50%"', 'children:[n.jsxs("div",{style:{padding:(typeof window<"u"&&window.innerWidth>=760)?"16px 16px 12px":"12px 16px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f3f4f6"},children:[n.jsx("div",{style:{width:28,height:28,borderRadius:"50%"', 'day card header padding');
+  js = mustReplace(js, 'jo=G=>![bn,Zi,Mi,zi,ro].some(Re=>Re(G))', 'jo=G=>{const c=It(G);return c==="event"||c==="music"||c==="sightseeing"||c==="tour"||c==="transport"||c==="other"}', 'events list types');
+  if (!js.includes(MAP_OPEN)) {
+    throw new Error('approved look patch missed the day map');
+  }
+  js = js.split(MAP_OPEN).join(MAP_OPEN_PATCH);
+  if (
+    !js.includes('data-ts-header-mark":"1"')
+    || !js.includes('Timesyncher Travel')
+    || !js.includes('data-ts-day-map":"1"')
+    || !js.includes('label:"Events"')
+    || !js.includes('icon:"☀️"')
+    || js.includes('label:"The Rest"')
+  ) {
+    throw new Error('approved look baseline chrome patch did not apply');
+  }
+  const descSpriteAttr = 'data-ts-desc-' + 'sprite';
+  const standIns = ['label:"The Rest"', ACTION_ROW_NEEDLE, '__tsPlanGlyph', '/icons/day-map-', '/icons/pill-', '/icons/footer-', '/icons/tab-labels/', descSpriteAttr].filter((needle) => js.includes(needle));
+  if (standIns.length) {
+    throw new Error(`approved look left a capture hide or a screenshot stand-in in place: ${standIns.map((needle) => needle.slice(0, 80)).join(' | ')}`);
+  }
+  return js;
+}

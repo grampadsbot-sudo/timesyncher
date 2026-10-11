@@ -16,7 +16,6 @@ import {
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
-import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
@@ -412,7 +411,6 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }
-  patched = patchDayByDayKeepsakeMap(patched, { served });
   if (patched.includes(PAGE_PAD_NEEDLE)) {
     patched = patched.replace(PAGE_PAD_NEEDLE, PAGE_PAD_PATCH);
   }
@@ -681,14 +679,13 @@ export function assertPatchedStyleTwo(source = '') {
     if (!js.includes('Gn=tsPad(Fs.filter') || !js.includes('ki=tsPad(Cc.filter')) {
       throw new Error('Stores and The Rest must list trip rows so their chips match the list.');
     }
-    if (js.includes('GBrain') || js.includes('Coming soon')) {
-      throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
-    }
+    if (js.includes('GBrain') || js.includes('Coming soon')) throw new Error('Served shared bundle must not expose internal names or placeholder copy.');
+    if (!js.includes('data-ts-header-mark":"1"') || !js.includes('Timesyncher Travel')) throw new Error('Served shared bundle must expose approved Travel header chrome.');
     if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
       throw new Error('Served shared Oe() rows must expose Gate B list row markers.');
     }
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('Served shared Hotels/Cars tabs must expose data-shared-live-tab panels.');
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"') || !js.includes('data-shared-live-tab":"flights"')) {
+      throw new Error('Served shared Hotels/Cars/Flights tabs must expose data-shared-live-tab panels.');
     }
     if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
       throw new Error('Served shared dc() logo chips must expose data-ts-logo-chip for Gate B.');
@@ -726,8 +723,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
-    throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
+  if (js.includes('return!Xi&&!go&&!fr.length?null:') && !js.includes('return!fr.length?null:')) {
+    throw new Error('Style two live budget must apply BUDGET_EMPTY for Gate B baseline.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
