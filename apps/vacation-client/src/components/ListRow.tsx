@@ -59,8 +59,13 @@ export function ListRow({
     const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
-      <li className="tsv-row tsv-row-flight" data-ts-list-row="1">
-        <button type="button" className="tsv-row-main tsv-row-flight-main" onClick={() => onOpen(place)}>
+      <li className="tsv-row tsv-row-flight" data-ts-list-row="1" data-list-row="1">
+        <button
+          type="button"
+          className="tsv-row-main tsv-row-flight-main"
+          aria-label="Open thing details"
+          onClick={() => onOpen(place)}
+        >
           <LogoChip place={place} trip={trip} />
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}
@@ -90,9 +95,14 @@ export function ListRow({
     const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
-      <li className="tsv-row tsv-row-car" data-ts-list-row="1">
+      <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1">
         <div className="tsv-row-car-grid">
-          <button type="button" className="tsv-row-car-main" onClick={() => onOpen(place)}>
+          <button
+            type="button"
+            className="tsv-row-car-main"
+            aria-label="Open thing details"
+            onClick={() => onOpen(place)}
+          >
             <span className="tsv-row-car-head">
               <LogoChip place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
@@ -125,8 +135,8 @@ export function ListRow({
         : `$${numeric}`;
 
   return (
-    <li className="tsv-row" data-ts-list-row="1">
-      <button type="button" className="tsv-row-main" onClick={() => onOpen(place)}>
+    <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
+      <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
         <LogoChip place={place} trip={trip} />
         <span className="tsv-row-name" data-ts-list-row-name="1">
           {name}

@@ -40,10 +40,13 @@ assert.equal(described.handler, 'shared');
 assert.match(described.url, /trekPath=intake-0123456789ab/);
 
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
-assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(token\)\}\//);
-assert.match(sharedApp, /data-shared-boot-error/);
-assert.match(sharedApp, /showSharedBootError/);
-assert.doesNotMatch(sharedApp, /appendSharedTrekBundle\(\);\s*\}\)\.catch/);
+assert.doesNotMatch(sharedApp, /appendSharedTrekBundle/);
+assert.doesNotMatch(sharedApp, /index-BKun7ofk\.js/);
+const loadSharedTrip = await readFile(
+  new URL('../apps/vacation-client/src/api/loadSharedTrip.ts', import.meta.url),
+  'utf8',
+);
+assert.match(loadSharedTrip, /\/api\/shared\/\$\{encodeURIComponent\(slug\)\}\//);
 
 function mockRes() {
   return {
@@ -143,5 +146,8 @@ await import('../apps/vacation-client/test/dayTimeline.unit.mjs');
 await import('../apps/vacation-client/test/budget.unit.mjs');
 await import('../apps/vacation-client/test/detail.unit.mjs');
 await import('../apps/vacation-client/test/keepsake.unit.mjs');
+
+const { runSharedServedVacationClientTests } = await import('./test_shared_served_vacation_client.mjs');
+await runSharedServedVacationClientTests();
 
 console.log('shared trip boot fetch tests passed');

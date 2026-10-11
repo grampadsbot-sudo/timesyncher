@@ -400,7 +400,7 @@ assert.match(vercel, /pdfQr/);
 assert.match(vercel, /\/api\/pdf\/qr\\\\.svg/);
 assert.match(vercel, /\/api\/pdf\/shared/);
 assert.match(vercel, /\/shared\/\(\[\^\/\]\+\)\/journey\(\?:\/\)\?/);
-assert.match(vercel, /"dest": "\/shared-app.html"/);
+assert.match(vercel, /"dest": "\/vacation-app-next.html"/);
 assert.doesNotMatch(vercel, /report=journey/);
 assert.doesNotMatch(vercel, /\/assets\/index-BKun7ofk\.js/);
 assert.doesNotMatch(vercel, /\/assets\/index-CbEHlMj6\.css/);
@@ -888,26 +888,26 @@ assert.match(create, /minThings/);
 assert.match(create, /Backfilled from existing trip things/);
 assert.doesNotMatch(create, /airport\|[a-z]{3}\|boi/);
 
+const vacationNext = await readFile(new URL('../vacation-app-next.html', import.meta.url), 'utf8');
+assert.doesNotMatch(vacationNext, /index-BKun7ofk\.js/);
+assert.match(vacationNext, /data-ts-keepsake/);
+assert.match(vacationNext, /\\\/shared\\\/\[\^\/\]\+\\\/journey\\\/\?\$/);
+const keepsakeScreen = await readFile(
+  new URL('../apps/vacation-client/src/screens/KeepsakeJourneyScreen.tsx', import.meta.url),
+  'utf8',
+);
+assert.match(keepsakeScreen, /data-ae-print/);
+assert.match(keepsakeScreen, /data-print-ready/);
+assert.match(keepsakeScreen, /data-keepsake-order/);
+const keepsakeModel = await readFile(
+  new URL('../apps/vacation-client/src/lib/keepsakeModel.mjs', import.meta.url),
+  'utf8',
+);
+assert.match(keepsakeModel, /keepsake-style-2/i);
+assert.match(keepsakeModel, /style === '1'/);
 const sharedApp = await readFile(new URL('../shared-app.html', import.meta.url), 'utf8');
-assert.match(sharedApp, /index-BKun7ofk\.js/);
-assert.match(sharedApp, /href="\/assets\/index-CbEHlMj6\.css"/);
-assert.doesNotMatch(sharedApp, /crossorigin href="https:\/\/travel\.timesyncher\.com\/assets\/index-CbEHlMj6\.css"/);
-assert.match(sharedApp, /__TS_JOURNEY_BOOK__ = false/);
-assert.match(sharedApp, /serviceWorker/);
-assert.match(sharedApp, /unregister/);
-assert.match(sharedApp, /params\.set\('printMode', 'report'\)/);
-assert.match(sharedApp, /pdfReport/);
-assert.match(sharedApp, /keepsake-style-2/);
-assert.match(sharedApp, /style === '1'/);
-assert.match(sharedApp, /\\\/shared\\\/\[\^\/\]\+\\\/journey\\\/\?\$/);
-assert.match(sharedApp, /x-vercel-protection-bypass/);
-assert.match(sharedApp, /Pause System Mitigations/);
-assert.match(sharedApp, /data-ae-print/);
-assert.match(sharedApp, /Record voice note/);
-assert.match(sharedApp, /\/api\/shared\/\$\{encodeURIComponent\(shareToken\)\}\/audio-note/);
-assert.match(sharedApp, /data-ts-pic-popup-tip/);
-assert.match(sharedApp, /leaflet-popup-tip-container/);
-assert.match(sharedApp, /box-sizing: content-box !important/);
+assert.doesNotMatch(sharedApp, /appendSharedTrekBundle/);
+assert.doesNotMatch(sharedApp, /index-BKun7ofk\.js/);
 
 assert.match(livePatched, /i==="flight"\?"✈️"/);
 assert.doesNotMatch(livePatched, /ai=Q=>gi\(Q\)\.icon\|\|Kl\(Q\)/);
