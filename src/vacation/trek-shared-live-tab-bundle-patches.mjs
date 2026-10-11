@@ -6,6 +6,7 @@ import { applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
+const CARS_TAB_SERVED_PATCH = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental car options you add will appear here for side-by-side comparison."})';
 const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const REST_TYPE_CHIPS_PATCH = '[...new Set(tsListThings(Cc).map(Re=>Yd(Re)).filter(Boolean))].map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -90,13 +91,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     if (!js.includes(HOTELS_TAB_CATALOG_NEEDLE)) {
       throw new Error('served shared Hotels tab missing vi(kn,"hotels") Oe row anchor');
     }
-    if (!js.includes(CARS_TAB_PLACEHOLDER_NEEDLE) && !js.includes('vi(bc,"cars").map(G=>Oe(G))')) {
+    if (js.includes(CARS_TAB_PLACEHOLDER_NEEDLE)) {
+      js = js.replace(CARS_TAB_PLACEHOLDER_NEEDLE, CARS_TAB_SERVED_PATCH);
+    } else if (!js.includes('vi(bc,"cars").map(G=>Oe(G))')) {
       throw new Error('served shared Cars tab missing vi(bc,"cars") Oe row anchor');
     }
     if (js.includes('tsSharedLiveTabListMount') || js.includes('data-shared-live-tab-mount')) {
       throw new Error('served shared bundle still mounts liveTabLists HTML');
     }
-    if ((js.includes('GBrain') || js.includes('Coming soon')) && !js.includes('Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.')) {
+    if (js.includes('GBrain') || js.includes('Coming soon')) {
       throw new Error('served shared bundle still contains internal or placeholder customer copy');
     }
   }
