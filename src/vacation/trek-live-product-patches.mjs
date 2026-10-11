@@ -387,9 +387,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(GN_EMPTY_NEEDLE)) js = js.replace(GN_EMPTY_NEEDLE, GN_EMPTY_PATCH);
   if (js.includes(KI_EMPTY_NEEDLE)) js = js.replace(KI_EMPTY_NEEDLE, KI_EMPTY_PATCH);
   js = patchSharedTabRowOverflow(js, { served });
-  if (js.includes(TAB_MOBILE_MEDIA_NEEDLE)) js = js.replace(TAB_MOBILE_MEDIA_NEEDLE, TAB_MOBILE_MEDIA_PATCH);
-  else if (served && !js.includes('(max-width: 759px)')) {
-    throw new Error('shared tab mobile breakpoint patch did not apply');
+  if (served && js.includes(TAB_MOBILE_MEDIA_PATCH)) {
+    js = js.replace(TAB_MOBILE_MEDIA_PATCH, TAB_MOBILE_MEDIA_NEEDLE);
+  } else if (served && !js.includes('(max-width: 640px)')) {
+    throw new Error('shared tab mobile breakpoint must stay at 640px for Gate B layout');
   }
   if (js.includes(FLIGHT_QO_GRID_NEEDLE)) js = js.replace(FLIGHT_QO_GRID_NEEDLE, FLIGHT_QO_GRID_PATCH);
   else if (served && !js.includes('Qo=({item:G})=>{const parts=eu(G)')) {
