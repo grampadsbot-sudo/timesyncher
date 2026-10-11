@@ -71,7 +71,11 @@ export async function startPreviewServer(tripPayload) {
       }
       return send(res, 404, '{}', 'application/json; charset=utf-8');
     }
-    if (pathname === '/vacation-app-next.html' || pathname === '/') {
+    if (
+      pathname === '/vacation-app-next.html' ||
+      pathname === '/' ||
+      /^\/shared\/[^/]+\/journey\/?$/.test(pathname)
+    ) {
       return send(res, 200, html, 'text/html; charset=utf-8');
     }
     const rel = pathname.replace(/^\//, '');
@@ -218,6 +222,8 @@ export async function runVacationClientShellTests() {
   await runVacationClientBudgetLayoutTests();
   const { runVacationClientDetailLayoutTests } = await import('./detail-layout.mjs');
   await runVacationClientDetailLayoutTests();
+  const { runVacationClientKeepsakeLayoutTests } = await import('./keepsake-layout.mjs');
+  await runVacationClientKeepsakeLayoutTests();
   console.log('vacation-client shell layout checks passed');
 }
 

@@ -286,6 +286,14 @@ export function buildDayTimeline(trip, day) {
   return withTravel;
 }
 
+function placeCoords(place, trip) {
+  const override = overrideFor(trip, place);
+  const lat = typeof place.lat === 'number' ? place.lat : Number(override.lat);
+  const lng = typeof place.lng === 'number' ? place.lng : Number(override.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
 export function mapPlacesForTimeline(trip, entries) {
   const seen = new Set();
   const markers = [];
@@ -293,11 +301,12 @@ export function mapPlacesForTimeline(trip, entries) {
     if (entry.kind === 'travel' || !entry.place) continue;
     const category = tabCategoryKey(entry.place, trip);
     if (category === 'flight' || category === 'car') continue;
-    if (typeof entry.place.lat !== 'number' || typeof entry.place.lng !== 'number') continue;
+    const coords = placeCoords(entry.place, trip);
+    if (!coords) continue;
     const key = String(entry.place.id);
     if (seen.has(key)) continue;
     seen.add(key);
-    markers.push(entry.place);
+    markers.push({ ...entry.place, lat: coords.lat, lng: coords.lng });
   }
   return markers;
 }

@@ -15,7 +15,9 @@
           embed = true;
         }
         if (embed) document.documentElement.setAttribute('data-ts-embed', '1');
-        else document.documentElement.setAttribute('data-ts-trip', '1');
+        else if (/^\/shared\/[^/]+\/journey\/?$/.test(location.pathname)) {
+          document.documentElement.setAttribute('data-ts-keepsake', '1');
+        } else document.documentElement.setAttribute('data-ts-trip', '1');
       })();
     </script>
     <meta charset="UTF-8" />

@@ -1047,3 +1047,168 @@ button.tsv-timeline-link {
     justify-self: end;
   }
 }
+
+html[data-ts-keepsake] body {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+html[data-ts-keepsake] #root {
+  overflow-x: hidden;
+}
+
+.tsv-keepsake-root {
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 0 0 24px;
+  background: #fff;
+}
+
+.tsv-keepsake-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--border);
+}
+
+.tsv-keepsake-toolbar a {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f5d37b;
+  color: #1a1408;
+  text-decoration: none;
+}
+
+.tsv-keepsake-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 14px 24px;
+  box-sizing: border-box;
+}
+
+.tsv-keepsake-cover h1 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+}
+
+.tsv-keepsake-brand,
+.tsv-keepsake-brand-logo {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.tsv-keepsake-summary {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #334155;
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+
+.tsv-keepsake-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.tsv-keepsake-stat {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  font-size: 12px;
+}
+
+.tsv-keepsake-stat strong {
+  display: block;
+  font-size: 20px;
+  color: #111827;
+}
+
+.tsv-keepsake-logo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 16px;
+}
+
+.tsv-keepsake-logo-list li {
+  break-inside: avoid;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.tsv-keepsake-stories {
+  display: grid;
+  gap: 12px;
+}
+
+.tsv-keepsake-story {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.tsv-keepsake-story h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.tsv-keepsake-day-map-block {
+  margin: 0 0 20px;
+}
+
+.tsv-keepsake-day-map-block h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.tsv-keepsake-day-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tsv-keepsake-day-time {
+  display: inline-block;
+  min-width: 8.5rem;
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.tsv-keepsake-order {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 99999;
+  background: #0b3d91;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font: 600 14px sans-serif;
+}
+
+@media print {
+  .no-print,
+  .tsv-keepsake-order {
+    display: none !important;
+  }
+}
