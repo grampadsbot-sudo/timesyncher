@@ -51,8 +51,8 @@ async function waitForHttp(url, attempts = 60) {
     try {
       const res = await fetch(url, { redirect: 'manual' });
       if (res.status >= 200 && res.status < 500) return;
-    } catch {
-      /* retry */
+    } catch (err) {
+      void err;
     }
     await new Promise((r) => setTimeout(r, 250));
   }
@@ -73,10 +73,11 @@ export async function runSharedServedVacationClientTests() {
   const py = readServeDistRewrites(serveDistSource);
   assert.equal(py.sharedEntry, SHARED_ENTRY);
 
+  const routeSlug = NYC_PR225_SLUG;
   const probes = [
-    { path: '/shared/las-vegas-vacation-3', dest: SHARED_ENTRY },
-    { path: '/shared/las-vegas-vacation-3/journey', dest: SHARED_ENTRY },
-    { path: '/shared/las-vegas-vacation-3/report/daily', dest: SHARED_ENTRY },
+    { path: `/shared/${routeSlug}`, dest: SHARED_ENTRY },
+    { path: `/shared/${routeSlug}/journey`, dest: SHARED_ENTRY },
+    { path: `/shared/${routeSlug}/report/daily`, dest: SHARED_ENTRY },
     { path: '/edit-access', dest: SHARED_ENTRY },
     { path: '/shared', dest: '/vacation-app.html' },
     { path: '/shared/', dest: '/vacation-app.html' },
