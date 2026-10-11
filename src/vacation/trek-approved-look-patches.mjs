@@ -1,4 +1,4 @@
-/** Gate B v6: Craig approved look (78257cc) + R6 list-row layout; day map order via patchDayByDayKeepsakeMap. */
+/** Gate B v6: approved look (78257cc) + R6 list-row layout; day map order via patchDayByDayKeepsakeMap. */
 
 const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
 
@@ -10,7 +10,7 @@ const EVENTS_TAB_NEEDLE = '{id:"events",label:"The Rest",icon:"🎟️"}';
 const EVENTS_TAB_PATCH = '{id:"events",label:"Events",icon:"🎟️"}';
 
 const DAY_HEADING_NEEDLE = 'children:"Vacation Day View"';
-const DAY_HEADING_PATCH = 'children:"Map day view"';
+const DAY_HEADING_PATCH = 'children:dn?"Map day view":"Vacation Day View"';
 const DAY_SUB_NEEDLE = 'Only things tagged for this day + Timeline appear on the map below.';
 const DAY_SUB_PATCH = 'Only things tagged for this day + Timeline appear on the map.';
 
