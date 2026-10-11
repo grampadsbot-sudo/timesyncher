@@ -12,11 +12,7 @@ const cssPath = new URL('../public/assets/index-CbEHlMj6.css', import.meta.url);
 const intakeSlug = 'intake-f687d29fec02';
 
 function loadPuppeteer() {
-  try {
-    return require('puppeteer-core');
-  } catch {
-    return require('/tmp/pptr/node_modules/puppeteer-core');
-  }
+  return require('puppeteer-core');
 }
 
 function sharedFromFixture(fixture) {
@@ -173,6 +169,9 @@ async function startServer({ html, js, css, tripPayload }) {
       if (share === intakeSlug) return sendJson(res, 200, tripPayload);
       return sendJson(res, 404, { error: 'missing', code: 'shared_trip_slug_not_found' });
     }
+    if (/^\/api\/shared\/[^/]+\/audio-note$/.test(pathname) && req.method === 'POST') {
+      return sendJson(res, 200, { ok: true });
+    }
     if (pathname.endsWith('/edit-access')) return sendJson(res, 200, { canEdit: false });
     sendJson(res, 404, { error: 'not found' });
   });
@@ -204,7 +203,13 @@ const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
   headless: true,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--use-fake-device-for-media-stream',
+    '--use-fake-ui-for-media-stream',
+  ],
 });
 
 function allowConsoleError(text) {
@@ -254,6 +259,25 @@ try {
 
   await page.goto(`${app.origin}/shared/${intakeSlug}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => (document.body?.innerText || '').includes('Fixture research trip'), { timeout: 45000 });
+  const context = browser.defaultBrowserContext();
+  await context.overridePermissions(app.origin, ['microphone']);
+  await page.waitForSelector('[data-ts-shared-audio]:not([disabled])', { timeout: 45000 });
+  await page.click('[data-ts-shared-audio]');
+  await page.waitForSelector('.ts-shared-audio-recording-bar.is-active [data-ts-voice-elapsed]', { timeout: 10000 });
+  const firstElapsed = await page.$eval('[data-ts-voice-elapsed]', (el) => el.textContent.trim());
+  assert.match(firstElapsed, /^0:\d{2}$/);
+  await page.waitForFunction(
+    () => {
+      const text = document.querySelector('[data-ts-voice-elapsed]')?.textContent?.trim() || '';
+      return /^0:0[1-9]$|^0:[1-5]\d$|^1:/.test(text);
+    },
+    { timeout: 5000 },
+  );
+  await page.click('[data-ts-voice-cancel]');
+  await page.waitForFunction(
+    () => !document.querySelector('.ts-shared-audio-recording-bar.is-active'),
+    { timeout: 5000 },
+  );
 
   const blankRoot = await page.evaluate(() => {
     const root = document.getElementById('root') || document.getElementById('app');
