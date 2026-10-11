@@ -41,11 +41,11 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   else if (served && !js.includes('WebkitOverflowScrolling:"touch"},children:Qa.map')) {
     throw new Error('shared day pill row overflow patch did not apply');
   }
-  if (js.includes(DAY_TIMELINE_GRID_NEEDLE)) js = js.replace(DAY_TIMELINE_GRID_NEEDLE, DAY_TIMELINE_GRID_PATCH);
-  else if (js.includes(DAY_TIMELINE_GRID_CENTER)) js = js.replace(DAY_TIMELINE_GRID_CENTER, DAY_TIMELINE_GRID_PATCH);
-  else if (js.includes(DAY_TIMELINE_GRID_PATCH_PRIOR)) js = js.replace(DAY_TIMELINE_GRID_PATCH_PRIOR, DAY_TIMELINE_GRID_PATCH);
-  else if (served && js.includes('gridTemplateColumns:"74px 22px 1fr"')) {
-    throw new Error('shared day timeline grid overflow patch did not apply');
+  if (js.includes(DAY_TIMELINE_GRID_NEEDLE)) js = js.replace(DAY_TIMELINE_GRID_NEEDLE, DAY_TIMELINE_GRID_CENTER);
+  else if (js.includes(DAY_TIMELINE_GRID_PATCH)) js = js.replace(DAY_TIMELINE_GRID_PATCH, DAY_TIMELINE_GRID_CENTER);
+  else if (js.includes(DAY_TIMELINE_GRID_PATCH_PRIOR)) js = js.replace(DAY_TIMELINE_GRID_PATCH_PRIOR, DAY_TIMELINE_GRID_CENTER);
+  else if (served && !js.includes('alignItems:"center",minWidth:0,maxWidth:"100%"')) {
+    throw new Error('shared day timeline grid icon centering patch did not apply');
   }
   return js;
 }

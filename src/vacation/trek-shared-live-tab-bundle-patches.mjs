@@ -86,7 +86,14 @@ const CAR_DAY_LOOP_NEEDLE = 'for(const wn of zt){if(!wn)continue;const Qi=xl(mr(
 const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDays=Yi(wn).map(ua=>ve(ua)).filter(Boolean);if(tsCarDays.length){const tsCarStart=Math.min(...tsCarDays),tsCarEnd=Math.max(...tsCarDays);if(G.day_number===tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Pickup: ${(ha(wn).rentalCompany||mr(wn))}`,item:wn,status:hs(wn)})}if(G.day_number===tsCarEnd&&tsCarEnd!==tsCarStart){const tsCarTm=Ui(wn,G.id)||Xi(wn)||"";tsCarTm&&ua.push({type:"place",time:tsCarTm,endTime:Ur(wn,G.id)||ri(tsCarTm,45),title:`Drop-off: ${(ha(wn).rentalCompany||mr(wn))}`,item:wn,status:hs(wn)})}}}if(!wn)continue;if(Mi(wn))continue;const Qi=xl(mr(wn)||wn.name||wn.description||"")||xl(wn.name||wn.description||"");if(Qi&&/flight/i.test(wn.name||"")){';
 
 const BUDGET_ROW_LABEL_NEEDLE = 'children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
-const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
+const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String((Xi&&(Xi.name||Xi.title))||"").trim();const ov=le[Qt(Xi)]||{};const titled=String(ov.title||raw).trim();return /flight option/i.test(titled)||/flight option/i.test(raw)?(titled||raw):mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
+const RS_FLIGHTS_NEEDLE = 'to=(Gt||[]).filter(bn),rs=to.length?to:(Ut||[]).filter(bn)';
+const RS_FLIGHTS_PATCH = 'to=(Gt||[]).filter(bn),rs=(()=>{const tsSeen=new Set,tsOut=[];for(const G of [].concat(to||[],(Ut||[]).filter(bn))) if(G){const k=Qt(G);if(!tsSeen.has(k)){tsSeen.add(k);tsOut.push(G)}}return tsOut})()';
+const EU_RN_NEEDLE = 'Rn=((Xr=(sr=String(bi(G)||"").match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
+const EU_RN_NEEDLE_TBD = 'Rn=((Xr=(sr=String(bi(G)||"").match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||"Price TBD"';
+const EU_RN_PATCH = 'Rn=((()=>{const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fromIe;const Re=bi(G);if(typeof Re==="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const raw=String(Re||"");const m=raw.match(/\\$\\s?\\d[\\d,]*/);return m?m[0].replace(/\\s+/g,""):""})())';
+const EU_RN_DOLLAR_FIX_NEEDLE = 'if(typeof Re==="number"&&Number.isFinite(Re))return`${Math.round(Re).toLocaleString()}`';
+const EU_RN_DOLLAR_FIX_PATCH = 'if(typeof Re==="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`';
 const BUDGET_ROW_PRICE_NEEDLE = 'children:di.hasPrice?Re(di.amount):"Add price"})]},Qt(di.item)),wn=di=>Mo.filter(Xi=>Xi.bucket===di)';
 const BUDGET_ROW_PRICE_PATCH = 'children:(di.hasPrice||di.amount>0)?Re(di.amount):"Add price"})]},Qt(di.item)),wn=di=>Mo.filter(Xi=>Xi.bucket===di)';
 
@@ -155,10 +162,20 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
-  if (js.includes(BUDGET_ROW_LABEL_PATCH)) {
-    js = js.replace(BUDGET_ROW_LABEL_PATCH, BUDGET_ROW_LABEL_NEEDLE);
-  } else if (served && !js.includes('children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"')) {
-    throw new Error('budget row labels must use mr() like staging 27b8746');
+  if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) {
+    js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
+  } else if (served && !js.includes('/flight option/i.test(titled)||/flight option/i.test(raw)')) {
+    throw new Error('budget row flight-option label patch did not apply');
+  }
+  if (js.includes(RS_FLIGHTS_NEEDLE)) js = js.replace(RS_FLIGHTS_NEEDLE, RS_FLIGHTS_PATCH);
+  else if (served && js.includes('rs=to.length?to:(Ut||[]).filter(bn)')) {
+    throw new Error('shared rs flight list union patch did not apply');
+  }
+  if (js.includes(EU_RN_NEEDLE)) js = js.replace(EU_RN_NEEDLE, EU_RN_PATCH);
+  else if (js.includes(EU_RN_NEEDLE_TBD)) js = js.replace(EU_RN_NEEDLE_TBD, EU_RN_PATCH);
+  else if (js.includes(EU_RN_DOLLAR_FIX_NEEDLE)) js = js.replace(EU_RN_DOLLAR_FIX_NEEDLE, EU_RN_DOLLAR_FIX_PATCH);
+  else if (served && !js.includes('const fromIe=ie(G);if(fromIe&&/\\$\\d/.test(fromIe))return fromIe;const Re=bi(G)')) {
+    throw new Error('flight eu() numeric price patch did not apply');
   }
   if (js.includes(BUDGET_ROW_PRICE_NEEDLE)) {
     js = js.replace(BUDGET_ROW_PRICE_NEEDLE, BUDGET_ROW_PRICE_PATCH);
