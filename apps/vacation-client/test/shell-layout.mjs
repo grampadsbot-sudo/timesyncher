@@ -44,7 +44,7 @@ function send(res, status, body, type) {
   res.end(buf);
 }
 
-async function ensureBuiltClient() {
+export async function ensureBuiltClient() {
   const { existsSync } = await import('node:fs');
   const hasDeps = existsSync(path.join(clientRoot, 'node_modules', 'vite'));
   if (!hasDeps) {
@@ -53,7 +53,7 @@ async function ensureBuiltClient() {
   execFileSync('npm', ['run', 'build'], { cwd: clientRoot, stdio: 'inherit' });
 }
 
-async function startPreviewServer(tripPayload) {
+export async function startPreviewServer(tripPayload) {
   const distDir = path.join(clientRoot, 'dist');
   const html = await readFile(path.join(distDir, 'vacation-app-next.html'), 'utf8');
   const tripJson = JSON.stringify(tripPayload);
@@ -210,6 +210,8 @@ export async function runVacationClientShellTests() {
   }
 
   assert.deepEqual(failures, []);
+  const { runVacationClientListLayoutTests } = await import('./list-layout.mjs');
+  await runVacationClientListLayoutTests();
   console.log('vacation-client shell layout checks passed');
 }
 

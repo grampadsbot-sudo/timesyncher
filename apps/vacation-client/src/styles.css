@@ -223,38 +223,250 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.tsv-list-screen {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.tsv-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tsv-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tsv-chip.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tsv-list-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tsv-sort-btn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0f172a;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tsv-sort-btn.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tsv-empty {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 12px 0;
+}
+
 .tsv-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tsv-row {
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 8px;
 }
 
 .tsv-row-main {
   display: grid;
-  grid-template-columns: auto minmax(0, auto) auto 1fr;
+  grid-template-columns: auto minmax(0, max-content) auto minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   text-align: left;
   border: 1px solid var(--border);
   background: var(--card);
   color: inherit;
   border-radius: 12px;
   padding: 10px 12px;
-  margin-bottom: 8px;
   cursor: pointer;
+  overflow: hidden;
+}
+
+.tsv-row-flight-main {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+
+.tsv-row-flight-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.tsv-row-car-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tsv-row-car-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  align-items: center;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tsv-row-car-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tsv-row-car-head .tsv-logo-chip {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: center;
+}
+
+.tsv-row-car-head .tsv-row-name {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: center;
+}
+
+.tsv-row-car-head .tsv-row-car-sub {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.tsv-row-car-sub {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tsv-row-car-desc {
+  grid-column: 1 / -1;
+}
+
+.tsv-timeline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tsv-row-name {
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tsv-row-price {
+  color: #2dd4bf;
+  font-weight: 900;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tsv-row-desc {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tsv-row-hotel-note {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--accent);
 }
 
 @media (max-width: 480px) {
   .tsv-row-main {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
   }
   .tsv-row-price {
     grid-column: 2;
+    justify-self: end;
   }
-  .tsv-row-desc {
+  .tsv-row-desc,
+  .tsv-row-hotel-note {
     grid-column: 1 / -1;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  .tsv-row-flight-main {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto;
+  }
+  .tsv-row-flight-time {
+    grid-column: 2;
+    justify-self: end;
+  }
+  .tsv-row-car-main {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 

@@ -34,4 +34,6 @@ assert.equal(tabLocationHash('restaurants'), '#tab=restaurants');
 assert.equal(isTabId('stores'), true);
 assert.equal(isTabId('nope'), false);
 
+await import('./listRows.unit.mjs');
+
 console.log('vacation-client TabNav unit checks passed');
