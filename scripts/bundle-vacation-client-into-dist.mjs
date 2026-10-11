@@ -20,20 +20,8 @@ function installVacationClientDeps() {
   });
 }
 
-function resolveBuildSha() {
-  let sha = buildSha();
-  if (/^[0-9a-f]{7,}$/.test(sha)) return sha;
-  try {
-    sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().toLowerCase();
-  } catch {
-    sha = '';
-  }
-  if (/^[0-9a-f]{7,}$/.test(sha)) return sha;
-  return '0'.repeat(40);
-}
-
 function stampVacationClientHtml(html) {
-  const sha = resolveBuildSha();
+  const sha = buildSha();
   const footer = visibleBuildFooter(sha);
   const meta = `<meta name="timesyncher-build" content="${sha}">`;
   const stampStyle =
