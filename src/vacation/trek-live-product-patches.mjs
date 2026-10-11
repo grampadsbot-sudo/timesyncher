@@ -1,4 +1,5 @@
-import { TREK_DEFAULT_MAP_TILE_URL, TREK_STATIC_MAP_TILE_HOST } from './trek-default-map-tiles.mjs';
+import { TREK_DEFAULT_MAP_TILE_URL } from './trek-default-map-tiles.mjs';
+import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { applyActivePillEdgePatch, applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
@@ -290,15 +291,9 @@ export function patchSharedTripHostnameForLocalHarness(js = '') {
   return source;
 }
 
-const XA_STATIC_MAP_TILE_NEEDLE = 'static-map-tile" src="https://tile.openstreetmap.org/';
-const XA_STATIC_MAP_TILE_PATCH = `static-map-tile" src="${TREK_STATIC_MAP_TILE_HOST}/`;
-
 export function applyLiveProductPatches(patched = '', options = {}) {
   const served = options.served === true;
-  let js = stripHotelBrandNameGuessing(String(patched || ''));
-  if (js.includes(XA_STATIC_MAP_TILE_NEEDLE)) {
-    js = js.replaceAll(XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH);
-  }
+  let js = patchDayByDayKeepsakeMap(stripHotelBrandNameGuessing(String(patched || '')), { served });
   if (js.includes(LIST_LOGO_PATCH) && js.includes(LIST_LOGO_NEEDLE)) {
     throw new Error('served bundle must keep TREK _l() logo chain (logo, favicon, oi(cc))');
   }
