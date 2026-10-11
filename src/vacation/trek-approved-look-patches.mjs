@@ -1,4 +1,22 @@
-/** Gate B v6: only list-row layout needles may change outside icon boxes. */
+/** Gate B v6: baseline header/footer/tabs + list-row layout; day map via patchDayByDayKeepsakeMap. */
+
+const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
+
+const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
+
+const ACTION_ROW_NEEDLE = 'dn&&n.jsxs("div",{style:{marginTop:8,display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}';
+
+const EVENTS_TAB_NEEDLE = '{id:"events",label:"The Rest",icon:"🎟️"}';
+const EVENTS_TAB_PATCH = '{id:"events",label:"Events",icon:"🎟️"}';
+
+const TAB_PILL_NEEDLE = 'padding:"7px 7px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600';
+const TAB_PILL_PATCH = 'padding:Re?"5px 15px":"6px 15px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.2px"';
+
+const SUBTITLE_INK_NEEDLE = 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,opacity:.5,maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})';
+const SUBTITLE_INK_PATCH = 'ge.subtitle&&n.jsx("div",{className:"relative",style:{fontSize:13,color:"rgba(255,255,255,0.5)",maxWidth:400,margin:"0 auto",lineHeight:1.5},children:ge.subtitle})';
+
+const FOOTER_NEEDLE = 'n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24},children:n.jsx("img",{src:"/icons/timesyncher-icon-black-transparent.png",alt:"TimeSyncher",width:"20",height:"20"})}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700,letterSpacing:1.8,textTransform:"uppercase"},children:"Vacation"}),n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
+const FOOTER_PATCH = 'n.jsx("img",{src:"/icons/icon-512x512.png",alt:"",width:"18",height:"18",style:{display:"block",width:18,height:18,borderRadius:4}}),n.jsx("span",{style:{fontSize:11,color:"#9ca3af",fontWeight:700},children:"TimeSyncher Travel · AI-assisted vacation itinerary planning"})';
 
 const LOGO_GRID_NEEDLE = 'gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1"';
 const LOGO_GRID_PATCH = 'gridTemplateColumns:(bn(G)||Mi(G)||Zi(G))?"16px minmax(0,1fr)":"minmax(0,1fr)",gap:6,alignItems:"center",width:"100%",minWidth:0},children:[(bn(G)||Mi(G)||Zi(G))?n.jsx("span",{style:{display:"grid",placeItems:"center",alignSelf:"center",width:16,minWidth:16,height:16,flex:"0 0 16px"},children:n.jsx(dc,{item:G,size:16})}):null,n.jsx("span",{"data-ts-list-row-name":"1"';
@@ -14,16 +32,54 @@ const HOTEL_LINE_NEEDLE = 'gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:
 const ROW_CLIP_NEEDLE = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,maxWidth:"100%"';
 const ROW_CLIP_PATCH = 'overflowX:"clip",overflowY:"visible",position:"relative",zIndex:xt===Qt(G)?1e3:1,minWidth:0,maxWidth:"100%",width:"100%"';
 
+function dropCallWithTrailingComma(js, startNeedle) {
+  const start = js.indexOf(startNeedle);
+  if (start < 0) return js;
+  let depth = 0;
+  let started = false;
+  let i = start;
+  for (; i < js.length; i += 1) {
+    const ch = js[i];
+    if (ch === '(') {
+      depth += 1;
+      started = true;
+    } else if (ch === ')') {
+      depth -= 1;
+      if (started && depth === 0) {
+        i += 1;
+        break;
+      }
+    }
+  }
+  if (js[i] === ',') i += 1;
+  return js.slice(0, start) + js.slice(i);
+}
+
+function mustReplace(js, needle, patch, label) {
+  if (!js.includes(needle)) {
+    throw new Error(`approved look patch missed ${label}`);
+  }
+  return js.replace(needle, patch);
+}
+
 export function applyActivePillEdgePatch(js) {
   return js;
 }
 
-/** Shared-trip list row layout only (no header/footer/tab/day-map chrome). */
+/** Baseline chrome (header/footer/tabs) plus shared-trip list row layout only. */
 export function applyApprovedLookPatches(source = '') {
   let js = String(source || '');
   if (!js.includes('q==="plan"')) {
     return js;
   }
+  js = mustReplace(js, HEADER_NEEDLE, HEADER_PATCH, 'shared header');
+  if (js.includes(ACTION_ROW_NEEDLE)) {
+    js = dropCallWithTrailingComma(js, ACTION_ROW_NEEDLE);
+  }
+  js = mustReplace(js, EVENTS_TAB_NEEDLE, EVENTS_TAB_PATCH, 'Events tab label');
+  js = mustReplace(js, SUBTITLE_INK_NEEDLE, SUBTITLE_INK_PATCH, 'subtitle ink');
+  js = mustReplace(js, TAB_PILL_NEEDLE, TAB_PILL_PATCH, 'tab pill size');
+  js = mustReplace(js, FOOTER_NEEDLE, FOOTER_PATCH, 'shared footer');
   if (js.includes(LOGO_GRID_NEEDLE)) js = js.replace(LOGO_GRID_NEEDLE, LOGO_GRID_PATCH);
   if (js.includes(ROW_GRID_NEEDLE)) js = js.replace(ROW_GRID_NEEDLE, ROW_GRID_PATCH);
   if (js.includes(SUMMARY_LINE_NEEDLE)) js = js.replace(SUMMARY_LINE_NEEDLE, SUMMARY_LINE_PATCH);
@@ -36,5 +92,13 @@ export function applyApprovedLookPatches(source = '') {
     );
   }
   if (js.includes(ROW_CLIP_NEEDLE)) js = js.replaceAll(ROW_CLIP_NEEDLE, ROW_CLIP_PATCH);
+  if (
+    !js.includes('data-ts-header-mark":"1"')
+    || !js.includes('Timesyncher Travel')
+    || !js.includes('label:"Events"')
+    || js.includes('label:"The Rest"')
+  ) {
+    throw new Error('approved look baseline chrome patch did not apply');
+  }
   return js;
 }

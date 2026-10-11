@@ -7,6 +7,8 @@ const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
 const CARS_TAB_SERVED_PATCH = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental car options you add will appear here for side-by-side comparison."})';
+const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
+const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const REST_TYPE_CHIPS_PATCH = '[...new Set(tsListThings(Cc).map(Re=>Yd(Re)).filter(Boolean))].map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -119,6 +121,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
+  if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
