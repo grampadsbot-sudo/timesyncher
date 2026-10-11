@@ -3,13 +3,13 @@ import { execFileSync, spawn } from 'node:child_process';
 import { readFile, access, mkdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
-import { GATE_B_APPROVED_SHARED_SLUG } from './fixtures/gate-b-approved-shared-trip.mjs';
-import { NYC_PR225_SLUG } from './fixtures/nyc-pr225-shared-trip.mjs';
+import { GATE_B_APPROVED_SHARED_SLUG } from '../fixtures/gate-b-approved-shared-trip.mjs';
+import { NYC_PR225_SLUG } from '../fixtures/nyc-pr225-shared-trip.mjs';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
+const root = fileURLToPath(new URL('../..', import.meta.url));
 const require = createRequire(path.join(root, 'package.json'));
 const distDir = path.join(root, 'dist');
 const SHARED_ENTRY = '/vacation-app-next.html';
@@ -183,9 +183,4 @@ export async function runSharedServedVacationClientTests() {
   } finally {
     server.kill('SIGTERM');
   }
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await runSharedServedVacationClientTests();
-  console.log('shared served vacation client tests passed');
 }

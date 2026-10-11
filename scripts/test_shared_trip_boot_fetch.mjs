@@ -147,7 +147,7 @@ await import('../apps/vacation-client/test/budget.unit.mjs');
 await import('../apps/vacation-client/test/detail.unit.mjs');
 await import('../apps/vacation-client/test/keepsake.unit.mjs');
 
-const { runSharedServedVacationClientTests } = await import('./test_shared_served_vacation_client.mjs');
+const { runSharedServedVacationClientTests } = await import('./lib/run-shared-served-vacation-client-tests.mjs');
 await runSharedServedVacationClientTests();
 
 console.log('shared trip boot fetch tests passed');
