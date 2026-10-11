@@ -5,9 +5,13 @@ export type SharedPlace = {
   description?: string;
   category?: { name?: string; icon?: string };
   category_name?: string;
+  category_icon?: string;
   lat?: number;
   lng?: number;
   address?: string;
+  notes?: string;
+  place_time?: string;
+  logoUrl?: string;
   source?: string | { source?: string };
 };
 
