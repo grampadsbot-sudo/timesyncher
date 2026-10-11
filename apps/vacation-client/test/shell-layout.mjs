@@ -46,11 +46,19 @@ function send(res, status, body, type) {
 
 export async function ensureBuiltClient() {
   const { existsSync } = await import('node:fs');
-  const hasDeps = existsSync(path.join(clientRoot, 'node_modules', 'vite'));
+  const hasDeps = existsSync(path.join(clientRoot, 'node_modules', '@vitejs', 'plugin-react', 'package.json'));
   if (!hasDeps) {
-    execFileSync('npm', ['ci'], { cwd: clientRoot, stdio: 'inherit' });
+    execFileSync('npm', ['ci', '--include=dev'], {
+      cwd: clientRoot,
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'development' },
+    });
   }
-  execFileSync('npm', ['run', 'build'], { cwd: clientRoot, stdio: 'inherit' });
+  execFileSync('npm', ['run', 'build'], {
+    cwd: clientRoot,
+    stdio: 'inherit',
+    env: { ...process.env, NODE_ENV: 'development' },
+  });
 }
 
 export async function startPreviewServer(tripPayload) {

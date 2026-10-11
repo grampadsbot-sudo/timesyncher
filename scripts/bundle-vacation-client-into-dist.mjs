@@ -1,12 +1,24 @@
 import { execFileSync } from 'node:child_process';
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSha, visibleBuildFooter } from '../routes/version.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const clientRoot = resolve(root, 'apps/vacation-client');
+
+function vacationClientBuildReady() {
+  return existsSync(resolve(clientRoot, 'node_modules', '@vitejs', 'plugin-react', 'package.json'));
+}
+
+function installVacationClientDeps() {
+  execFileSync('npm', ['ci', '--include=dev'], {
+    cwd: clientRoot,
+    stdio: 'inherit',
+    env: { ...process.env, NODE_ENV: 'development' },
+  });
+}
 
 function resolveBuildSha() {
   let sha = buildSha();
@@ -40,10 +52,14 @@ function stampVacationClientHtml(html) {
 }
 
 export async function bundleVacationClientIntoDist(outDir) {
-  if (!existsSync(resolve(clientRoot, 'node_modules', 'vite'))) {
-    execFileSync('npm', ['ci'], { cwd: clientRoot, stdio: 'inherit' });
+  if (!vacationClientBuildReady()) {
+    installVacationClientDeps();
   }
-  execFileSync('npm', ['run', 'build'], { cwd: clientRoot, stdio: 'inherit' });
+  execFileSync('npm', ['run', 'build'], {
+    cwd: clientRoot,
+    stdio: 'inherit',
+    env: { ...process.env, NODE_ENV: 'development' },
+  });
 
   const clientDist = resolve(clientRoot, 'dist');
   const htmlPath = resolve(clientDist, 'vacation-app-next.html');
