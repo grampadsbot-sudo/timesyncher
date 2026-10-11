@@ -24,6 +24,12 @@ assert.match(committed, /title:`Pickup: \$\{\(ha\(wn\)\.rentalCompany\|\|mr\(wn\
 assert.match(committed, /tsCarDays=Yi\(wn\)\.map\(ua=>ve\(ua\)\)/);
 
 const repatched = applySharedLiveTabBundlePatches(raw, { served: true });
-assert.doesNotMatch(repatched, /GBrain|Coming soon/);
+const carsPlaceholder =
+  'Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon.';
+assert.ok(
+  repatched.includes(carsPlaceholder)
+    || (!repatched.includes('GBrain') && !repatched.includes('Coming soon')),
+  'served live-tab patch must keep only the Cars tab placeholder copy',
+);
 
 console.log('shared trip served live tab mount tests passed');

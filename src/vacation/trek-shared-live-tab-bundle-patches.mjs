@@ -6,7 +6,6 @@ import { applyApprovedLookPatches } from './trek-approved-look-patches.mjs';
 const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))';
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
-const CARS_TAB_SERVED_PATCH = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):null';
 const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const REST_TYPE_CHIPS_PATCH = '[...new Set(tsListThings(Cc).map(Re=>Yd(Re)).filter(Boolean))].map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -34,8 +33,6 @@ const BUDGET_CATS_NEEDLE = 'nr=["Flights","Hotel","Restaurants","Stores","' + OT
 const BUDGET_CATS_PATCH = 'nr=["Flights","Hotel","Cars","Restaurants","Stores","' + OTHER_BUCKET + '"]';
 const BUDGET_ICON_NEEDLE = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
 const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Cars"?"🚗":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
-const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
-const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
 const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:(/^Travel (to|from)\\b/i.test(String(ua.title||""))||/^(JetBlue|United|Delta|American|Southwest)\\b/i.test(String(ua.title||""))?3:1),alignSelf:"start",display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box",transform:"none"},children:Xr?n.jsxs(n.Fragment,{children:[n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"none",placeItems:"center"},children:sr}),n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",onError:ev=>{ev.currentTarget.style.display="none";const p=ev.currentTarget.parentElement,e=p&&p.querySelector("[data-ts-tab-emoji]");e&&(e.style.display="grid")},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}})]}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{fontSize:ua.isConflict?14:17,lineHeight:1,display:"grid",placeItems:"center"},children:sr})})';
 const TIMELINE_ICON_COLUMN_NEEDLE = 'n.jsxs("div",{style:{display:"flex",flexDirection:"column",alignItems:"center"},children:[n.jsx("div",{"data-ts-timeline-icon":"1"';
@@ -93,9 +90,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     if (!js.includes(HOTELS_TAB_CATALOG_NEEDLE)) {
       throw new Error('served shared Hotels tab missing vi(kn,"hotels") Oe row anchor');
     }
-    if (js.includes(CARS_TAB_PLACEHOLDER_NEEDLE)) {
-      js = js.replace(CARS_TAB_PLACEHOLDER_NEEDLE, CARS_TAB_SERVED_PATCH);
-    } else if (!js.includes(CARS_TAB_SERVED_PATCH)) {
+    if (!js.includes(CARS_TAB_PLACEHOLDER_NEEDLE) && !js.includes('vi(bc,"cars").map(G=>Oe(G))')) {
       throw new Error('served shared Cars tab missing vi(bc,"cars") Oe row anchor');
     }
     if (js.includes('tsSharedLiveTabListMount') || js.includes('data-shared-live-tab-mount')) {
@@ -121,7 +116,6 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
-  if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
@@ -210,9 +204,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
-  js = patchSharedTripOeListRows(js, { phase: 'beforeApprovedLook' });
+  js = patchSharedTripOeListRows(js);
   js = applyApprovedLookPatches(js);
-  js = patchSharedTripOeListRows(js, { phase: 'afterApprovedLook' });
   if (served) {
     if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"') || !js.includes('data-shared-live-tab":"flights"')) {
       throw new Error('served shared Hotels/Cars/Flights tab panels missing data-shared-live-tab anchor');
