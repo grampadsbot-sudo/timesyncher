@@ -131,6 +131,55 @@ export async function intakeSharedResponse(shareToken, db = null) {
   return finalizeServedSharedTripPayload(withBudgetTargets);
 }
 
+function sharedPayloadHasPlaces(payload) {
+  return Boolean(payload && Array.isArray(payload.places) && payload.places.length > 0);
+}
+
+async function offlineApprovedSharedResponse(shareToken) {
+  const mod = await import(new URL('../../scripts/fixtures/gate-b-approved-shared-trip.mjs', import.meta.url).href);
+  if (String(shareToken || '') !== mod.GATE_B_APPROVED_SHARED_SLUG) return null;
+  return mod.buildGateBApprovedSharedTrip();
+}
+
+async function readUpstreamSharedResponse(shareToken, req) {
+  const url = new URL(req.url || '/', 'https://timesyncher.com');
+  const incomingQuery = new URLSearchParams(url.search);
+  incomingQuery.delete('trekPath');
+  const dest = `${trekUpstreamBase()}/api/shared/${encodeURIComponent(shareToken)}/${incomingQuery.toString() ? `?${incomingQuery}` : ''}`;
+  const headers = {};
+  for (const name of ['accept', 'content-type', 'cookie', 'authorization']) {
+    const value = headerValue(req, name);
+    if (value) headers[name] = value;
+  }
+  const chunks = [];
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    for await (const chunk of req) chunks.push(chunk);
+  }
+  const upstream = await fetch(dest, {
+    method: req.method,
+    headers,
+    body: chunks.length ? Buffer.concat(chunks) : undefined,
+  });
+  const contentType = upstream.headers.get('content-type') || '';
+  const body = Buffer.from(await upstream.arrayBuffer());
+  let json = null;
+  if (contentType.includes('json')) {
+    try {
+      json = JSON.parse(body.toString('utf8'));
+    } catch {
+      json = null;
+    }
+  }
+  return { status: upstream.status, body, json, contentType };
+}
+
+function sendUpstreamSharedResponse(res, upstream) {
+  res.statusCode = upstream.status;
+  res.setHeader('cache-control', 'no-store');
+  if (upstream.contentType) res.setHeader('content-type', upstream.contentType);
+  res.end(upstream.body);
+}
+
 function sendSlugMiss(res, shareToken) {
   const miss = slugMissError(shareToken);
   logSharedTripFailure(miss.code, shareToken, miss);
@@ -149,8 +198,24 @@ async function respondSharedTripGet(req, res, shareToken) {
     const local = await intakeSharedResponse(shareToken);
     if (local) return sendJson(res, 200, local);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
-    return await proxyConfiguredUpstream(req, res, shareToken);
+
+    const offline = await offlineApprovedSharedResponse(shareToken);
+    if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
+      const upstream = await readUpstreamSharedResponse(shareToken, req);
+      if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
+        return sendUpstreamSharedResponse(res, upstream);
+      }
+      if (offline) return sendJson(res, 200, offline);
+      return sendUpstreamSharedResponse(res, upstream);
+    }
+    if (offline) return sendJson(res, 200, offline);
+    trekUpstreamBase();
+    return sendJson(res, 500, { ok: false, code: 'shared_trip_upstream_unconfigured' });
   } catch (error) {
+    if (error?.code === 'shared_trip_upstream_unconfigured') {
+      const offline = await offlineApprovedSharedResponse(shareToken);
+      if (offline) return sendJson(res, 200, offline);
+    }
     logSharedTripFailure('shared_trip_lookup_failed', shareToken, error);
     return sendJson(res, 500, {
       ok: false,

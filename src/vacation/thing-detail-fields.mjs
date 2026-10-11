@@ -277,9 +277,21 @@ export function mergeThingDetailMetadata(metadata = {}, detail = {}) {
 
 export function thingDetailOverrideFields(thing = {}) {
   const bag = detailBagFrom(thing);
+  const record = sourceRecordFrom(thing) || {};
   const fromRecord = detailFieldsFromPlace({}, thing);
   const merged = { ...fromRecord, ...bag };
-  if (!shouldApplyAutoDetailFields(thing) && !text(bag.itineraryNote || bag.itinerary_note)) {
+  const explicitItinerary = text(
+    bag.itineraryNote
+    || bag.itinerary_note
+    || record.itineraryNote
+    || record.itinerary_note,
+  );
+  if (explicitItinerary) merged.itineraryNote = explicitItinerary;
+  else {
+    delete merged.itineraryNote;
+    delete merged.itinerary_note;
+  }
+  if (!shouldApplyAutoDetailFields(thing) && !explicitItinerary) {
     delete merged.itineraryNote;
   }
   const override = {};
@@ -296,11 +308,6 @@ export function thingDetailOverrideFields(thing = {}) {
   if (merged.yelpReviewCount) override.yelpReviewCount = merged.yelpReviewCount;
   if (merged.thirdPartyRating && !text(override.thirdPartyRating)) override.thirdPartyRating = merged.thirdPartyRating;
   if (merged.thirdPartyReviewCount && !text(override.count)) override.thirdPartyReviewCount = merged.thirdPartyReviewCount;
-  if (merged.itineraryNote) {
-    override.itineraryNote = merged.itineraryNote;
-    const explicitNote = text(bag.itineraryNote || bag.itinerary_note);
-    if (explicitNote && !text(override.summary)) override.summary = merged.itineraryNote;
-  }
   if (merged.category) override.category = merged.category;
   return override;
 }
