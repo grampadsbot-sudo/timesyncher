@@ -13,68 +13,196 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .tsv-shell {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .tsv-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
+  min-width: 0;
 }
 
 .tsv-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tsv-header-actions {
   display: flex;
-  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
 }
 
-.tsv-header-btn {
-  font-size: 12px;
-  padding: 6px 10px;
+.tsv-header-btn,
+.tsv-header-link {
+  font-size: 11px;
+  padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
+  text-decoration: none;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tsv-header-menu {
+  position: relative;
+}
+
+.tsv-header-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 160px;
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.tsv-header-popover a,
+.tsv-header-popover-note {
+  font-size: 12px;
+  color: var(--text);
+  text-decoration: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.tsv-header-popover a:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tsv-header-popover-note {
+  color: var(--muted);
 }
 
 .tsv-tabs {
   display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 8px 12px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .tsv-tab {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 32px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
   border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 6px 8px;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  vertical-align: middle;
 }
 
 .tsv-tab.is-active {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.tsv-tab-icon-chip {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  position: relative;
+  top: 0;
+  line-height: 1;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+.tsv-tab-emoji-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  width: 16px;
+  height: 16px;
+}
+
+.tsv-tab-emoji-canvas {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.tsv-tab-label {
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  vertical-align: middle;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .tsv-tab:not(.is-active) .tsv-tab-label {
+    display: none !important;
+  }
+
+  .tsv-tab.is-active {
+    flex: 1.4 1 0;
+  }
+}
+
+@media (min-width: 481px) {
+  .tsv-tab {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
 }
 
 .tsv-main {
@@ -83,6 +211,16 @@ body {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.tsv-build-footer {
+  text-align: center;
+  font: 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 3px 8px;
+  background: rgba(12, 12, 12, 0.78);
+  border-top: 1px solid var(--border);
 }
 
 .tsv-list {
@@ -189,12 +327,4 @@ body {
   padding: 24px;
   max-width: 520px;
   margin: 40px auto;
-}
-
-.tsv-preview-footer {
-  text-align: center;
-  font-size: 11px;
-  color: var(--muted);
-  padding: 8px;
-  border-top: 1px solid var(--border);
 }

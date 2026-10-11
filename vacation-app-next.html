@@ -1,11 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        var embed = false;
+        try {
+          if (new URLSearchParams(location.search).get('embed') === '1') embed = true;
+        } catch (e) {
+          embed = false;
+        }
+        try {
+          if (window.top !== window.self) embed = true;
+        } catch (e) {
+          embed = true;
+        }
+        if (embed) document.documentElement.setAttribute('data-ts-embed', '1');
+        else document.documentElement.setAttribute('data-ts-trip', '1');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>TimeSyncher Vacation (next client preview)</title>
     <meta name="robots" content="noindex" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <style id="timesyncher-build-stamp-style">
+      html[data-ts-embed] footer[data-build-stamp="1"] {
+        visibility: hidden !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      html[data-ts-trip] body {
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      html[data-ts-trip] #root {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      html[data-ts-trip] footer[data-build-stamp="1"] {
+        position: static !important;
+        flex: 0 0 auto;
+        margin: 0;
+      }
+      [data-ts-logo-chip][data-tab-category] {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        top: 0 !important;
+        align-self: center !important;
+      }
+      .ts-shared-audio-button {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        font-size: 15px;
+        line-height: 1;
+        padding: 0;
+      }
+      .ts-shared-audio-button[disabled] {
+        cursor: not-allowed;
+        opacity: 0.58;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -138,4 +138,8 @@ try {
   if (oldUpstream) process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = oldUpstream;
 }
 
+await import('../apps/vacation-client/test/tabNav.unit.mjs');
+const { runVacationClientShellTests } = await import('../apps/vacation-client/test/shell-layout.mjs');
+await runVacationClientShellTests();
+
 console.log('shared trip boot fetch tests passed');

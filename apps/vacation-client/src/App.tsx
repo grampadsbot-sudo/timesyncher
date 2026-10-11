@@ -2,14 +2,15 @@ import { useMemo, useState } from 'react';
 import { ThingDetailPanel } from './components/ThingDetailPanel';
 import { TripShell } from './components/TripShell';
 import { useSharedTrip } from './hooks/useSharedTrip';
+import { useTabFromUrl } from './hooks/useTabFromUrl';
 import { BudgetScreen } from './screens/BudgetScreen';
 import { CategoryTabScreen } from './screens/CategoryTabScreen';
 import { DayByDayScreen } from './screens/DayByDayScreen';
-import type { SharedPlace, TabId } from './types/sharedTrip';
+import type { SharedPlace } from './types/sharedTrip';
 
 export default function App() {
   const tripState = useSharedTrip();
-  const [tab, setTab] = useState<TabId>('day-by-day');
+  const [tab, setTab] = useTabFromUrl();
   const [detail, setDetail] = useState<SharedPlace | null>(null);
 
   const title = useMemo(() => {
@@ -18,7 +19,11 @@ export default function App() {
   }, [tripState]);
 
   if (tripState.status === 'loading' || tripState.status === 'idle') {
-    return <div className="tsv-loading">Loading trip…</div>;
+    return (
+      <div className="tsv-loading" role="status" aria-live="polite">
+        Loading trip…
+      </div>
+    );
   }
 
   if (tripState.status === 'error') {
@@ -34,6 +39,7 @@ export default function App() {
   }
 
   const trip = tripState.data;
+  const token = tripState.token;
 
   let body = null;
   if (tab === 'day-by-day') {
@@ -46,7 +52,13 @@ export default function App() {
 
   return (
     <>
-      <TripShell title={title} activeTab={tab} onTabChange={setTab}>
+      <TripShell
+        title={title}
+        shareToken={token}
+        permissions={trip.permissions}
+        activeTab={tab}
+        onTabChange={setTab}
+      >
         {body}
       </TripShell>
       {detail ? (
