@@ -288,4 +288,7 @@ for (const entry of afterResults) {
   assertTabInkWithinTolerance(entry.metrics, maxOffset);
 }
 
+const { runVacationClientShellTests } = await import('../apps/vacation-client/test/shell-layout.mjs');
+await runVacationClientShellTests();
+
 console.log('shared category tab icon ink center chrome tests passed');

@@ -1,34 +1,41 @@
 import type { ReactNode } from 'react';
+import type { SharedTripPayload } from '../types/sharedTrip';
+import { TAB_LABELS } from '../types/sharedTrip';
+import { BuildStampFooter } from './BuildStampFooter';
 import { TabNav } from './TabNav';
 import type { TabId } from '../types/sharedTrip';
-import { TAB_LABELS } from '../types/sharedTrip';
+import { TripHeaderActions } from './TripHeaderActions';
 
 type Props = {
   title: string;
+  shareToken: string;
+  permissions?: SharedTripPayload['permissions'];
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   children: ReactNode;
 };
 
-export function TripShell({ title, activeTab, onTabChange, children }: Props) {
+export function TripShell({
+  title,
+  shareToken,
+  permissions,
+  activeTab,
+  onTabChange,
+  children,
+}: Props) {
   return (
     <div className="tsv-shell" data-trip-view-root="1">
       <header className="tsv-header">
-        <h1 className="tsv-title">{title}</h1>
-        <div className="tsv-header-actions">
-          <button type="button" className="tsv-header-btn" disabled title="P1 skeleton">
-            Keepsakes
-          </button>
-          <button type="button" className="tsv-header-btn" disabled title="P1 skeleton">
-            Admin
-          </button>
-        </div>
+        <h1 className="tsv-title" title={title}>
+          {title}
+        </h1>
+        <TripHeaderActions shareToken={shareToken} permissions={permissions} />
       </header>
       <TabNav active={activeTab} onChange={onTabChange} />
       <main className="tsv-main" aria-label={TAB_LABELS[activeTab]}>
         {children}
       </main>
-      <footer className="tsv-preview-footer">TSV next client preview (not linked from production)</footer>
+      <BuildStampFooter />
     </div>
   );
 }
