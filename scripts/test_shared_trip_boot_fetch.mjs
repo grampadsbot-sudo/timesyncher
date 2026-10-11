@@ -113,11 +113,29 @@ try {
   const offline = await invokeSharedGet(`/api/shared/${GATE_B_APPROVED_SHARED_SLUG}/`);
   assert.equal(offline.status, 200, offline.json);
   assert.ok(Array.isArray(offline.json.places) && offline.json.places.length > 0, 'offline gate b fixture places');
-  const wrong = await invokeSharedGet('/api/shared/not-the-gate-b-slug/');
-  assert.equal(wrong.status, 500);
 } finally {
   if (oldUpstream) process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = oldUpstream;
   else delete process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL;
+}
+
+process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = 'https://travel.timesyncher.com';
+const savedFetch = globalThis.fetch;
+globalThis.fetch = async (url) => ({
+  status: 404,
+  headers: { get: () => 'application/json' },
+  arrayBuffer: async () => Buffer.from('{"error":"Invalid or expired link"}'),
+});
+try {
+  const fallback = await invokeSharedGet(`/api/shared/${GATE_B_APPROVED_SHARED_SLUG}/`);
+  assert.equal(fallback.status, 200, fallback.json);
+  assert.ok(fallback.json.places?.length > 0, 'upstream 404 falls back to gate b fixture');
+  const passthrough = await invokeSharedGet('/api/shared/not-the-gate-b-slug/');
+  assert.equal(passthrough.status, 404);
+  assert.equal(passthrough.json.error, 'Invalid or expired link');
+} finally {
+  globalThis.fetch = savedFetch;
+  delete process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL;
+  if (oldUpstream) process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = oldUpstream;
 }
 
 console.log('shared trip boot fetch tests passed');
