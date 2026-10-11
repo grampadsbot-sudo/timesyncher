@@ -214,6 +214,8 @@ export async function runVacationClientShellTests() {
   await runVacationClientListLayoutTests();
   const { runVacationClientDayLayoutTests } = await import('./day-layout.mjs');
   await runVacationClientDayLayoutTests();
+  const { runVacationClientBudgetLayoutTests } = await import('./budget-layout.mjs');
+  await runVacationClientBudgetLayoutTests();
   console.log('vacation-client shell layout checks passed');
 }
 
