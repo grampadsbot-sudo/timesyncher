@@ -87,7 +87,7 @@ const THING_LOGO_CHIP_DC_V1_NEEDLE = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),
 
 const THING_LOGO_CHIP_DC_PADDING_NEEDLE = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",padding:3,boxSizing:"border-box"},children:zt?[n.jsx("img",{src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
 
-const THING_LOGO_CHIP_DC_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);if(zt&&/^data:image\\/svg\\+xml/i.test(String(zt)))return null;return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+const THING_LOGO_CHIP_DC_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);const svg=zt&&/^data:image\\/svg\\+xml/i.test(String(zt));return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxSizing:"border-box"},children:[!svg&&zt?n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}}):null,n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
 
 const CME_CAR_TYPE_NEEDLE = 'i==="flight"?"✈️":i==="transport"?"🚕"';
 
@@ -111,13 +111,11 @@ const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","a
 
 const BOOKINGS_TAB_ICON_FLEX_PATCH = 'G.icon?n.jsx("span",{"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translate3d(0,-0.5px,0)"},children:[G.icon,n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1",style:{display:"none"},children:""})]})';
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:G.icon})';
-
-const BOOKINGS_TAB_ICON_BASELINE_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:12,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{style:{fontSize:12,lineHeight:1,display:"grid",placeItems:"center",width:16,height:16},children:G.icon})})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
-const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
+const BOOKINGS_TAB_LABEL_PATCH = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
 
 const TAB_BUTTON_LINE_HEIGHT_NEEDLE = 'whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,background:q===G.id?';
 
@@ -131,7 +129,7 @@ const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
 const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
-const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){/* AI-assisted vacation itinerary planning */if(!node||!emoji||node.tagName==="CANVAS")return;var chip=node.closest("[data-ts-logo-chip][data-tab-category]")||node.parentElement;if(!chip)return;var btn=chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip&&!n.hasAttribute("data-ts-logo-chip")})[0];if(label&&label.style.display!=="none"){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}} `;
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){/* AI-assisted vacation itinerary planning */if(!node||!emoji||node.tagName==="CANVAS")return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(!chip)return;chip.style.setProperty("display","inline-grid","important");chip.style.setProperty("place-items","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important");var btn=chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label&&label.style.display!=="none"){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}} `;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
@@ -153,14 +151,10 @@ export function patchThingLogoChipAlignment(source = '') {
     throw new Error('trek bundle missing bookings tab icon needle for centering patch');
   }
   if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_BASELINE_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_V2_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_V2_PATCH, BOOKINGS_TAB_ICON_BASELINE_PATCH);
+    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
   } else if (js.includes(BOOKINGS_TAB_ICON_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_PATCH, BOOKINGS_TAB_ICON_BASELINE_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
-    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_BASELINE_PATCH);
-  } else if (!js.includes('data-tab-category":G.id,"data-ts-logo-chip":"1"')) {
+    js = js.replace(BOOKINGS_TAB_ICON_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
+  } else if (!js.includes('data-tab-category":G.id,"data-ts-category-tab-icon":"1"')) {
     throw new Error('trek bundle missing category tab icon anchor for centering patch');
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
@@ -205,7 +199,7 @@ export function patchThingLogoChipAlignment(source = '') {
   } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
     throw new Error('trek bundle dc() logo chip patch did not apply');
   }
-  if (!js.includes('data-tab-category":G.id,"data-ts-logo-chip":"1"')) {
+  if (!js.includes('data-tab-category":G.id,"data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
   return applyActivePillEdgePatch(js);
