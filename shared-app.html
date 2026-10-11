@@ -210,6 +210,43 @@
         background: #b42318;
         border-color: rgba(255,255,255,0.22);
       }
+      .ts-shared-audio-hud {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-right: 4px;
+        padding: 2px 8px 2px 6px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        color: #fff;
+        font: 600 11px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+        letter-spacing: 0.02em;
+      }
+      .ts-shared-audio-hud.is-visible {
+        display: inline-flex;
+      }
+      .ts-shared-audio-hud [data-ts-shared-audio-elapsed] {
+        min-width: 2.6em;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .ts-shared-audio-meter {
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 14px;
+      }
+      .ts-shared-audio-meter span {
+        display: block;
+        width: 3px;
+        min-height: 2px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        transform-origin: bottom center;
+        transition: height 70ms linear;
+      }
       .ts-shared-audio-toast {
         position: fixed;
         left: 16px;
@@ -243,6 +280,13 @@
         let stream = null;
         let chunks = [];
         let startedAt = 0;
+        let audioContext = null;
+        let analyser = null;
+        let meterSource = null;
+        let meterRaf = 0;
+        let timerInterval = 0;
+        let hudEl = null;
+        let meterSamples = [];
 
         function canRecord() {
           return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
@@ -272,6 +316,147 @@
         function preferredType() {
           const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
           return options.find((type) => window.MediaRecorder?.isTypeSupported?.(type)) || '';
+        }
+
+        function formatElapsed(totalSeconds) {
+          const safe = Math.max(0, Math.floor(totalSeconds));
+          const minutes = Math.floor(safe / 60);
+          const seconds = safe % 60;
+          return `${minutes}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function ensureHud() {
+          if (hudEl?.isConnected) return hudEl;
+          const existing = document.querySelector('[data-ts-shared-audio-hud]');
+          if (existing) {
+            hudEl = existing;
+            return hudEl;
+          }
+          const button = document.querySelector('[data-ts-shared-audio]');
+          const row = button?.parentElement;
+          if (!button || !row) return null;
+          hudEl = document.createElement('div');
+          hudEl.className = 'ts-shared-audio-hud';
+          hudEl.dataset.tsSharedAudioHud = '1';
+          hudEl.innerHTML = '<span data-ts-shared-audio-elapsed>0:00</span><div class="ts-shared-audio-meter" data-ts-shared-audio-meter aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>';
+          row.insertBefore(hudEl, button);
+          return hudEl;
+        }
+
+        function updateElapsedDisplay() {
+          const elapsed = document.querySelector('[data-ts-shared-audio-elapsed]');
+          if (!elapsed || !startedAt) return;
+          elapsed.textContent = formatElapsed((Date.now() - startedAt) / 1000);
+        }
+
+        function showRecordingHud() {
+          const hud = ensureHud();
+          if (!hud) return;
+          meterSamples = [];
+          hud.dataset.tsSharedAudioMeterLevel = '0';
+          hud.classList.add('is-visible');
+          hud.removeAttribute('hidden');
+          updateElapsedDisplay();
+        }
+
+        function hideRecordingHud() {
+          const hud = document.querySelector('[data-ts-shared-audio-hud]');
+          if (!hud) return;
+          hud.classList.remove('is-visible');
+          hud.setAttribute('hidden', '');
+          hud.dataset.tsSharedAudioMeterLevel = '0';
+          meterSamples = [];
+        }
+
+        function stopMeterLoop() {
+          if (meterRaf) cancelAnimationFrame(meterRaf);
+          meterRaf = 0;
+        }
+
+        function stopElapsedTimer() {
+          if (timerInterval) clearInterval(timerInterval);
+          timerInterval = 0;
+        }
+
+        async function teardownAudioGraph() {
+          stopMeterLoop();
+          stopElapsedTimer();
+          if (meterSource) {
+            try { meterSource.disconnect(); } catch (e) { /* ignore */ }
+            meterSource = null;
+          }
+          if (analyser) {
+            try { analyser.disconnect(); } catch (e) { /* ignore */ }
+            analyser = null;
+          }
+          if (audioContext) {
+            const ctx = audioContext;
+            audioContext = null;
+            try {
+              if (ctx.state !== 'closed') await ctx.close();
+            } catch (e) { /* ignore */ }
+          }
+        }
+
+        function cleanupRecording({ stopStream = false } = {}) {
+          stopMeterLoop();
+          stopElapsedTimer();
+          hideRecordingHud();
+          if (stopStream && stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+          }
+          void teardownAudioGraph();
+        }
+
+        async function startMeter(activeStream) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx || !activeStream) return;
+          audioContext = new AudioCtx();
+          if (audioContext.state === 'suspended') await audioContext.resume();
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.65;
+          meterSource = audioContext.createMediaStreamSource(activeStream);
+          meterSource.connect(analyser);
+          const bars = () => [...(document.querySelector('[data-ts-shared-audio-meter]')?.children || [])];
+          const bins = new Uint8Array(analyser.frequencyBinCount);
+          const tick = () => {
+            if (!analyser) return;
+            analyser.getByteFrequencyData(bins);
+            const barEls = bars();
+            if (!barEls.length) {
+              meterRaf = requestAnimationFrame(tick);
+              return;
+            }
+            let peak = 0;
+            barEls.forEach((bar, index) => {
+              const start = Math.floor((index / barEls.length) * bins.length);
+              const end = Math.floor(((index + 1) / barEls.length) * bins.length);
+              let sum = 0;
+              let count = 0;
+              for (let i = start; i < end; i += 1) {
+                sum += bins[i];
+                count += 1;
+              }
+              const avg = count ? sum / count : 0;
+              peak = Math.max(peak, avg);
+              const height = Math.max(2, Math.round((avg / 255) * 14));
+              bar.style.height = `${height}px`;
+            });
+            const hud = document.querySelector('[data-ts-shared-audio-hud]');
+            const level = Math.round((peak / 255) * 100);
+            if (hud) hud.dataset.tsSharedAudioMeterLevel = String(level);
+            meterSamples.push(level);
+            if (meterSamples.length > 240) meterSamples.shift();
+            meterRaf = requestAnimationFrame(tick);
+          };
+          meterRaf = requestAnimationFrame(tick);
+        }
+
+        function startElapsedTimer() {
+          stopElapsedTimer();
+          timerInterval = window.setInterval(updateElapsedDisplay, 1000);
         }
 
         function blobToDataUrl(blob) {
@@ -311,6 +496,7 @@
               setIcon(button, 'mic');
             }
             startedAt = 0;
+            cleanupRecording();
           }
         }
 
@@ -326,24 +512,35 @@
             const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
             stream?.getTracks().forEach((track) => track.stop());
             stream = null;
+            recorder = null;
+            cleanupRecording();
             submit(blob);
           }, { once: true });
           startedAt = Date.now();
           recorder.start();
           button.classList.add('is-recording');
           setIcon(button, 'stop');
+          showRecordingHud();
+          startElapsedTimer();
+          await startMeter(stream);
           toast('Recording...');
         }
 
         async function toggle(event) {
           const button = event.currentTarget;
           if (recorder?.state === 'recording') {
+            stopMeterLoop();
+            stopElapsedTimer();
+            hideRecordingHud();
+            await teardownAudioGraph();
             recorder.stop();
             return;
           }
           try {
             await start(button);
           } catch (err) {
+            cleanupRecording({ stopStream: true });
+            recorder = null;
             toast(err?.message || 'Microphone access was blocked.', 'error');
           }
         }
@@ -368,8 +565,17 @@
             button.addEventListener('click', toggle);
           }
           row.insertBefore(button, printButton || null);
+          ensureHud();
           return true;
         }
+
+        window.addEventListener('pagehide', () => {
+          if (recorder?.state === 'recording') {
+            try { recorder.stop(); } catch (e) { /* ignore */ }
+          }
+          cleanupRecording({ stopStream: true });
+          recorder = null;
+        });
 
         const observer = new MutationObserver(() => {
           if (installButton()) observer.disconnect();

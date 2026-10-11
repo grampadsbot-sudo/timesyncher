@@ -173,6 +173,21 @@ async function startServer({ html, js, css, tripPayload }) {
       if (share === intakeSlug) return sendJson(res, 200, tripPayload);
       return sendJson(res, 404, { error: 'missing', code: 'shared_trip_slug_not_found' });
     }
+    const audioMatch = pathname.match(/^\/api\/shared\/([^/]+)\/audio-note\/?$/);
+    if (audioMatch && req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          assert.ok(typeof payload.audioDataUrl === 'string' && payload.audioDataUrl.length > 0, 'audio-note needs audioDataUrl');
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 400, { ok: false, error: String(error?.message || error) });
+        }
+      });
+      return;
+    }
     if (pathname.endsWith('/edit-access')) return sendJson(res, 200, { canEdit: false });
     sendJson(res, 404, { error: 'not found' });
   });
@@ -204,7 +219,13 @@ const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
   headless: true,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--use-fake-device-for-media-stream',
+    '--use-fake-ui-for-media-stream',
+  ],
 });
 
 function allowConsoleError(text) {
@@ -264,6 +285,42 @@ try {
   });
   assert.equal(blankRoot, false, 'shared trip SPA root must render content');
   assert.equal(blockedApi.length, 0, `app-config requests: ${blockedApi.join(', ')}`);
+
+  await page.waitForSelector('[aria-label="Record voice note"]', { timeout: 45000 });
+  await page.click('[aria-label="Record voice note"]');
+  await page.waitForFunction(() => {
+    const hud = document.querySelector('[data-ts-shared-audio-hud]');
+    return hud?.classList.contains('is-visible') && document.querySelector('[data-ts-shared-audio-elapsed]')?.textContent === '0:00';
+  }, { timeout: 15000 });
+
+  const elapsedBefore = await page.$eval('[data-ts-shared-audio-elapsed]', (el) => el.textContent);
+  assert.equal(elapsedBefore, '0:00');
+  await new Promise((resolve) => setTimeout(resolve, 1250));
+  const elapsedAfter = await page.$eval('[data-ts-shared-audio-elapsed]', (el) => el.textContent);
+  assert.equal(elapsedAfter, '0:01', 'voice note elapsed timer should advance once per second');
+
+  const meterSamples = [];
+  for (let i = 0; i < 12; i += 1) {
+    meterSamples.push(await page.evaluate(() => {
+      const hud = document.querySelector('[data-ts-shared-audio-hud]');
+      const bars = [...document.querySelectorAll('[data-ts-shared-audio-meter] span')].map((bar) => parseInt(bar.style.height, 10) || 0);
+      return {
+        level: Number(hud?.dataset.tsSharedAudioMeterLevel || 0),
+        bars,
+      };
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+  const levels = meterSamples.map((sample) => sample.level);
+  const barHeights = meterSamples.flatMap((sample) => sample.bars);
+  const levelSpread = Math.max(...levels) - Math.min(...levels);
+  const barSpread = Math.max(...barHeights) - Math.min(...barHeights);
+  assert.ok(levelSpread > 0 || barSpread > 0, `voice note meter should move while recording: levels=${levels.join(',')} bars=${barHeights.join(',')}`);
+  assert.ok(Math.max(...levels) > 0 || Math.max(...barHeights) > 2, 'voice note meter should respond to microphone input');
+
+  await page.click('[aria-label="Record voice note"]');
+  await page.waitForFunction(() => !document.querySelector('[data-ts-shared-audio-hud]')?.classList.contains('is-visible'), { timeout: 15000 });
+
   assert.equal(consoleErrors.length, 0, `console errors: ${consoleErrors.join(' | ')} (404 urls: ${notFoundUrls.join(', ')})`);
   assert.equal(pageErrors.length, 0, `page errors: ${pageErrors.join(' | ')}`);
 } finally {
