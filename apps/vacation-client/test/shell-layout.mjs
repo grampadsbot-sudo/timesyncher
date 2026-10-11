@@ -212,6 +212,8 @@ export async function runVacationClientShellTests() {
   assert.deepEqual(failures, []);
   const { runVacationClientListLayoutTests } = await import('./list-layout.mjs');
   await runVacationClientListLayoutTests();
+  const { runVacationClientDayLayoutTests } = await import('./day-layout.mjs');
+  await runVacationClientDayLayoutTests();
   console.log('vacation-client shell layout checks passed');
 }
 
