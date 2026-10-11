@@ -108,9 +108,10 @@ const DETAIL_TIMELINE_EMOJI_PATCH = 'style:{fontSize:ua.isConflict?14:17,lineHei
 const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon})';
 
 const TAB_ICON_TRANSFORM_NEEDLE = 'flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon}';
-const TAB_ICON_TRANSFORM_PATCH = 'flex:"0 0 16px",transform:"translate3d(0,-0.5px,0)"},children:G.icon}';
 
-const BOOKINGS_TAB_ICON_ATTR_PATCH = 'G.icon?n.jsx("span",{"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translate3d(0,-0.5px,0)"},children:[G.icon,n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1",style:{display:"none"},children:""})]})';
+const BOOKINGS_TAB_ICON_ATTR_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:G.icon})';
+
+const BOOKINGS_TAB_ICON_FLEX_PATCH = 'G.icon?n.jsx("span",{"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translate3d(0,-0.5px,0)"},children:[G.icon,n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1",style:{display:"none"},children:""})]})';
 
 const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
 
@@ -148,10 +149,12 @@ export function patchThingLogoChipAlignment(source = '') {
   }
   if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_ATTR_PATCH);
+  } else if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_ATTR_PATCH);
   } else if (js.includes(TAB_ICON_TRANSFORM_NEEDLE)) {
-    js = js.replace(TAB_ICON_TRANSFORM_NEEDLE, TAB_ICON_TRANSFORM_PATCH);
+    js = js.replace(TAB_ICON_TRANSFORM_NEEDLE, BOOKINGS_TAB_ICON_ATTR_PATCH);
   } else if (
-    !js.includes('"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex"')
+    !js.includes('"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid"')
   ) {
     throw new Error('trek bundle missing bookings tab icon markers for Gate B');
   }
