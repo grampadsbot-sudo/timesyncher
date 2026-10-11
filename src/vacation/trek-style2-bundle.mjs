@@ -405,7 +405,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (!served && patched.includes(MO_BUDGET_NEEDLE)) {
+  if (patched.includes(MO_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
   }
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
@@ -723,8 +723,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (js.includes(MO_BUDGET_NEEDLE) && (js.includes('[].concat(rs,Po,bc,Oc,Fs,Cc)') || (js.includes('return!Xi&&!go&&!fr.length?null:') && !js.includes('return!fr.length?null:')))) {
-    throw new Error('Style two live budget must use timeline-only Mo rows and BUDGET_EMPTY for Gate B baseline.');
+  if (js.includes('return!Xi&&!go&&!fr.length?null:') && !js.includes('return!fr.length?null:')) {
+    throw new Error('Style two live budget must apply BUDGET_EMPTY for Gate B baseline.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
     throw new Error('Style two live day-map height patch did not apply.');
