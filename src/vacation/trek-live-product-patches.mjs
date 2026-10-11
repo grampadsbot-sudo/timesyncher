@@ -147,18 +147,20 @@ export function patchThingLogoChipAlignment(source = '') {
   if (js.includes(DETAIL_TIMELINE_EMOJI_NEEDLE)) {
     js = js.replace(DETAIL_TIMELINE_EMOJI_NEEDLE, DETAIL_TIMELINE_EMOJI_PATCH);
   }
+  const bookingsTabIconTarget = BOOKINGS_TAB_ICON_GRID_PATCH;
   if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
-    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_PATCH);
+    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, bookingsTabIconTarget);
+  } else if (js.includes(BOOKINGS_TAB_ICON_V2_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_V2_PATCH, bookingsTabIconTarget);
+  } else if (js.includes(BOOKINGS_TAB_ICON_GRID_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_GRID_PATCH, bookingsTabIconTarget);
+  } else if (js.includes(BOOKINGS_TAB_ICON_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_PATCH, bookingsTabIconTarget);
+  } else if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
+    // already on inline emoji centering (Gate B allows re-center inside the 16px box only)
   } else if (js.includes('transform:"translateY(-0.5px)"},children:G.icon}')) {
     throw new Error('trek bundle missing bookings tab icon needle for centering patch');
-  }
-  if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_GRID_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_GRID_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
-  } else if (!js.includes('ref:function(el){tsPaintTabEmoji(el,G.icon)}') && !js.includes('data-tab-category":G.id,"data-ts-category-tab-icon":"1"')) {
+  } else if (!js.includes('data-tab-category":G.id,"data-ts-category-tab-icon":"1"')) {
     throw new Error('trek bundle missing category tab icon anchor for centering patch');
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {

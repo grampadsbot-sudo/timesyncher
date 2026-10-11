@@ -2,7 +2,7 @@
 
 const HEADER_NEEDLE = 'dn?n.jsxs("div",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:12,fontSize:11,fontWeight:700,letterSpacing:2.4,textTransform:"uppercase",opacity:.72},children:[n.jsx("span",{children:"TimeSyncher"}),n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:9,background:"#000"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"TimeSyncher",width:"22",height:"22"})}),n.jsx("span",{children:"Vacation"})]})';
 
-const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px"},children:n.jsx("img",{src:"/icons/timesyncher-icon-white-transparent.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
+const HEADER_PATCH = 'dn?n.jsxs("div",{"data-ts-header-mark":"1",style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,marginTop:2,marginBottom:14},children:[n.jsx("span",{style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:44,height:44,borderRadius:10,background:"#000",flex:"0 0 44px",overflow:"hidden"},children:n.jsx("img",{src:"/icons/icon-512x512.png",alt:"",width:"22",height:"22",style:{display:"block",width:22,height:22,objectFit:"cover"}})}),n.jsx("span",{style:{fontSize:11,fontWeight:800,letterSpacing:2.4,textTransform:"uppercase",color:"#fff",lineHeight:1},children:"Timesyncher Travel"})]})';
 
 const ACTION_ROW_NEEDLE = 'dn&&n.jsxs("div",{style:{marginTop:8,display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}';
 
@@ -101,7 +101,7 @@ export function applyApprovedLookPatches(source = '') {
   js = dropCallWithTrailingComma(js, ACTION_ROW_NEEDLE);
   js = mustReplace(js, EVENTS_TAB_NEEDLE, EVENTS_TAB_PATCH, 'Events tab label');
   js = mustReplace(js, DAY_HEADING_NEEDLE, DAY_HEADING_PATCH, 'map day heading');
-  js = mustReplace(js, SUBTITLE_INK_NEEDLE, SUBTITLE_INK_PATCH, 'subtitle ink');
+  // Keep upstream subtitle opacity (Gate B baseline matches opacity:.5, not rgba color).
   js = mustReplace(js, DAY_SUB_NEEDLE, DAY_SUB_PATCH, 'map day subtitle');
   js = mustReplace(js, PLAN_CARD_NEEDLE, `q==="plan"&&n.jsxs(n.Fragment,{children:[${DAY_MAP}dn&&n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:12,margin:"12px 0 12px"}`, 'day map card');
   if (js.includes(MAP_SHELL_NEEDLE)) js = js.replace(MAP_SHELL_NEEDLE, MAP_SHELL_PATCH);
