@@ -1,5 +1,6 @@
+import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { overrideFor, placeName, priceLabel, summaryText } from '../lib/placeHelpers';
+import { buildDetailViewModel } from '../lib/detailModel.mjs';
 
 type Props = {
   place: SharedPlace;
@@ -7,58 +8,149 @@ type Props = {
   onClose: () => void;
 };
 
+function DetailLogo({
+  logoUrl,
+  fallback,
+}: {
+  logoUrl: string;
+  fallback: string;
+}) {
+  return (
+    <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" aria-hidden="true">
+      {logoUrl ? (
+        <img className="tsv-detail-logo" src={logoUrl} alt="" />
+      ) : (
+        <span className="tsv-detail-logo-fallback">{fallback}</span>
+      )}
+    </span>
+  );
+}
+
 export function ThingDetailPanel({ place, trip, onClose }: Props) {
-  const o = overrideFor(trip, place);
-  const reviews = [1, 2, 3, 4].map((i) => {
-    const text = o[`review${i}`];
-    const rating = o[`review${i}Rating`];
-    const source = o[`review${i}Source`];
-    if (typeof text !== 'string' || !text.trim()) return null;
-    return { text, rating, source };
-  }).filter(Boolean) as Array<{ text: string; rating: unknown; source: unknown }>;
+  const model = buildDetailViewModel(place, trip);
+  const titleId = useId();
+  const sheetRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    sheetRef.current?.focus();
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
 
   return (
-    <aside className="tsv-detail" role="dialog" aria-label="Thing details">
-      <header className="tsv-detail-head">
-        <h2>{placeName(place)}</h2>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
-      </header>
-      <div className="tsv-detail-body">
-        {priceLabel(place, trip) ? <p><strong>Price:</strong> {priceLabel(place, trip)}</p> : null}
-        {summaryText(place, trip) ? <p>{summaryText(place, trip)}</p> : null}
-        {typeof o.address === 'string' && o.address ? <p><strong>Address:</strong> {o.address}</p> : null}
-        {typeof o.phone === 'string' && o.phone ? <p><strong>Phone:</strong> {o.phone}</p> : null}
-        {typeof o.hours === 'string' && o.hours ? <p><strong>Hours:</strong> {o.hours}</p> : null}
-        {typeof o.website === 'string' && o.website ? (
-          <p>
-            <strong>Website:</strong>{' '}
-            <a href={o.website} target="_blank" rel="noreferrer">
-              {o.website}
-            </a>
-          </p>
-        ) : null}
-        {typeof o.happyHourDetails === 'string' && o.happyHourDetails ? (
-          <p><strong>Happy hour:</strong> {o.happyHourDetails}</p>
-        ) : null}
-        {reviews.length ? (
-          <section>
-            <h3>Reviews</h3>
-            <ul className="tsv-reviews">
-              {reviews.map((r, idx) => (
-                <li key={idx} className="tsv-review-box">
-                  {r.rating ? <div className="tsv-review-stars">{String(r.rating)} ★</div> : null}
-                  <p>{r.text}</p>
-                  {r.source ? <footer>{String(r.source)}</footer> : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : (
-          <p className="tsv-muted">Detail fields populate from API thingOverrides (P1 skeleton).</p>
-        )}
-      </div>
-    </aside>
+    <div
+      className="tsv-detail-backdrop"
+      data-ts-detail-backdrop="1"
+      onClick={onClose}
+      role="presentation"
+    >
+      <aside
+        ref={sheetRef}
+        className="tsv-detail-sheet"
+        data-ts-detail-panel="1"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="tsv-detail-head">
+          {model.categoryLabel ? (
+            <p className="tsv-detail-category" data-ts-detail-category="1">
+              {model.categoryLabel}
+            </p>
+          ) : null}
+          <div className="tsv-detail-title-row">
+            <DetailLogo logoUrl={model.logoUrl} fallback={model.logoFallback} />
+            <h2 id={titleId} className="tsv-detail-name" data-ts-detail-name="1">
+              {model.name}
+            </h2>
+            <button type="button" className="tsv-detail-close" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          </div>
+        </header>
+        <div className="tsv-detail-body">
+          {model.priceLabel ? (
+            <p className="tsv-detail-price" data-ts-detail-field="price">
+              <strong>Price:</strong> {model.priceLabel}
+            </p>
+          ) : null}
+          {model.ratingLines.map((line) => (
+            <p key={line.id} className="tsv-detail-rating" data-ts-detail-field="rating">
+              {line.text}
+            </p>
+          ))}
+          {model.summary ? (
+            <p className="tsv-detail-summary" data-ts-detail-field="summary">
+              {model.summary}
+            </p>
+          ) : null}
+          {model.fieldRows.map((row) => (
+            <p key={row.key} className="tsv-detail-field" data-ts-detail-field={row.key}>
+              <strong>{row.label}:</strong>{' '}
+              {row.href ? (
+                <a href={row.href} target="_blank" rel="noreferrer">
+                  {row.value}
+                </a>
+              ) : (
+                row.value
+              )}
+            </p>
+          ))}
+          {model.happyHourDetails ? (
+            <p className="tsv-detail-happy-hour" data-ts-detail-field="happyHour">
+              <strong>Happy hour:</strong> {model.happyHourDetails}
+            </p>
+          ) : null}
+          {model.itineraryNote ? (
+            <p className="tsv-detail-note" data-ts-detail-field="itineraryNote">
+              <strong>Itinerary note:</strong> {model.itineraryNote}
+            </p>
+          ) : null}
+          {model.reviews.length ? (
+            <section className="tsv-detail-reviews" data-ts-detail-reviews="1">
+              <h3>Reviews</h3>
+              <ul className="tsv-reviews">
+                {model.reviews.map((review) => (
+                  <li key={review.index} className="tsv-review-box" data-ts-detail-review="1">
+                    {review.rating ? (
+                      <div className="tsv-review-stars">{review.rating} ★</div>
+                    ) : null}
+                    <p>{review.text}</p>
+                    {review.source ? <footer>{review.source}</footer> : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {model.summarySourceUrls.length ? (
+            <section className="tsv-detail-sources">
+              <h3>Summary sources</h3>
+              <ul>
+                {model.summarySourceUrls.map((url) => (
+                  <li key={url}>
+                    <a href={url} target="_blank" rel="noreferrer">
+                      {url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+      </aside>
+    </div>
   );
 }
