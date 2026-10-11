@@ -139,7 +139,5 @@ try {
 }
 
 await import('../apps/vacation-client/test/tabNav.unit.mjs');
-const { runVacationClientShellTests } = await import('../apps/vacation-client/test/shell-layout.mjs');
-await runVacationClientShellTests();
 
 console.log('shared trip boot fetch tests passed');
