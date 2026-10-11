@@ -87,6 +87,8 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 
 const BUDGET_ROW_LABEL_NEEDLE = 'children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
 const BUDGET_ROW_LABEL_PATCH = 'children:((Xi)=>{const raw=String(Xi.name||Xi.title||"").trim();return /flight option/i.test(raw)?raw:mr(Xi)})(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"';
+const BUDGET_ROW_PRICE_NEEDLE = 'children:di.hasPrice?Re(di.amount):"Add price"})]},Qt(di.item)),wn=di=>Mo.filter(Xi=>Xi.bucket===di)';
+const BUDGET_ROW_PRICE_PATCH = 'children:(di.hasPrice||di.amount>0)?Re(di.amount):"Add price"})]},Qt(di.item)),wn=di=>Mo.filter(Xi=>Xi.bucket===di)';
 
 const BI_NEEDLE = 'bi=G=>ha(G).price??G.price??"",Vr=G=>';
 const BI_PATCH_PRIOR = 'bi=G=>{const d=ha(G).price??G.price??"";if(d!=null&&String(d).trim())return d;const b=[ha(G).summary,ha(G).description,ha(G).longDetails,G.description,G.notes,Fl(G),Co(G),mr(G)].join(" ");const m=b.match(/\\$\\s?(\\d[\\d,]*(?:\\.\\d+)?)/)||b.match(/\\bfrom\\s+\\$(\\d[\\d,]*)/i);return m?Number(String(m[1]).replace(/,/g,""))||String(m[0]).replace(/\\s+/g,""):""},Vr=G=>';
@@ -153,10 +155,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   if (js.includes(BUDGET_EMPTY_NEEDLE)) js = js.replace(BUDGET_EMPTY_NEEDLE, BUDGET_EMPTY_PATCH);
-  if (js.includes(BUDGET_ROW_LABEL_NEEDLE)) {
-    js = js.replace(BUDGET_ROW_LABEL_NEEDLE, BUDGET_ROW_LABEL_PATCH);
-  } else if (served && !js.includes('/flight option/i.test(raw)?raw:mr')) {
-    throw new Error('budget row flight-option label patch did not apply');
+  if (js.includes(BUDGET_ROW_LABEL_PATCH)) {
+    js = js.replace(BUDGET_ROW_LABEL_PATCH, BUDGET_ROW_LABEL_NEEDLE);
+  } else if (served && !js.includes('children:mr(di.item)}),n.jsx("span",{style:{whiteSpace:"nowrap",color:di.hasPrice?"#6b7280":"#d97706"')) {
+    throw new Error('budget row labels must use mr() like staging 27b8746');
+  }
+  if (js.includes(BUDGET_ROW_PRICE_NEEDLE)) {
+    js = js.replace(BUDGET_ROW_PRICE_NEEDLE, BUDGET_ROW_PRICE_PATCH);
+  } else if (served && !js.includes('(di.hasPrice||di.amount>0)?Re(di.amount)')) {
+    throw new Error('budget row planned price patch did not apply');
   }
   if (js.includes(BI_NEEDLE)) js = js.replace(BI_NEEDLE, BI_PATCH);
   else if (js.includes(BI_PATCH_PRIOR)) js = js.replace(BI_PATCH_PRIOR, BI_PATCH);

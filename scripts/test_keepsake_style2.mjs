@@ -722,7 +722,7 @@ assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FIL
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("hotel"\)\|\|Re\.includes\("lodging"\)\|\|Re\.includes\("accommodation"\)\|\|Re\.includes\("resort"\)\?"hotel":Re\.includes\("car"\)\|\|Re\.includes\("rental"\)\?"car"/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
-assert.match(patchedAe, /\[\]\.concat\(\(function\(\)\{const tsSeen=new Set,tsOut=\[\];for\(const Xi of \[\]\.concat\(\(Gt\|\|\[\]\)\.filter\(bn\),\(Ut\|\|\[\]\)\.filter\(bn\),\(Gt\|\|\[\]\)\.filter\(G=>\/flight option\/i\.test\(String\(G\.name\|\|G\.title\|\|""\)\)\)\)\)/);
+assert.match(patchedAe, /Mo=Array\.from\(new Map\(\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)\.filter\(Boolean\)\.map\(Xi=>/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);
