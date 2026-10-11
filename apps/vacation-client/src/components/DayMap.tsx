@@ -1,10 +1,24 @@
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import type { LatLngBoundsExpression } from 'leaflet';
 import type { SharedPlace } from '../types/sharedTrip';
 import { placeName } from '../lib/placeHelpers';
 
 type Props = {
   places: SharedPlace[];
 };
+
+function FitBounds({ places }: { places: SharedPlace[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (places.length < 2) return;
+    const bounds: LatLngBoundsExpression = places.map(
+      (place) => [place.lat as number, place.lng as number] as [number, number],
+    );
+    map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 });
+  }, [map, places]);
+  return null;
+}
 
 export function DayMap({ places }: Props) {
   const withCoords = places.filter(
@@ -31,6 +45,7 @@ export function DayMap({ places }: Props) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {withCoords.length > 1 ? <FitBounds places={withCoords} /> : null}
         {withCoords.map((place) => (
           <Marker key={String(place.id)} position={[place.lat as number, place.lng as number]}>
             <Popup>{placeName(place)}</Popup>
