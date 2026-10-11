@@ -1,0 +1,1 @@
+import { searchPois } from './poi-search.mjs';

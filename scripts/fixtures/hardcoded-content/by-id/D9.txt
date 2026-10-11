@@ -1,0 +1,1 @@
+return { category_name: 'Attraction', category: 'other' };

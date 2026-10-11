@@ -161,15 +161,15 @@
         <form id="orderForm">
           <div id="step1" role="tabpanel" aria-labelledby="step1Pill">
             <div class="fields">
-              <label>First name<input name="firstName" autocomplete="given-name" placeholder="Craig" required /></label>
+              <label>First name<input name="firstName" autocomplete="given-name" placeholder="First name" required /></label>
               <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Doe" required /></label>
               <label class="full">Email<input type="email" name="email" autocomplete="email" placeholder="you@example.com" required /></label>
               <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
               <label>Vacation date<input type="date" name="vacationDate" /></label>
               <label class="full">Billing address<input name="address" autocomplete="billing street-address" placeholder="Street address" /></label>
-              <label>City<input name="city" autocomplete="billing address-level2" placeholder="Las Vegas" /></label>
-              <label>State<input name="state" autocomplete="billing address-level1" placeholder="NV" /></label>
-              <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="89101" /></label>
+              <label>City<input name="city" autocomplete="billing address-level2" placeholder="City" /></label>
+              <label>State<input name="state" autocomplete="billing address-level1" placeholder="State" /></label>
+              <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="ZIP" /></label>
               <label>Country<select name="country" autocomplete="billing country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option></select></label>
             </div>
             <div class="button-row">
@@ -179,24 +179,25 @@
 
           <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
             <div class="order-summary" aria-label="Order summary">
-              <div class="summary-row"><span id="singleName">TimeSyncher Vacation – Single</span><strong id="singlePrice">$37</strong></div>
-              <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">Upgrade to TimeSyncher Vacation – Unlimited</span><strong id="unlimitedPrice">+$27</strong></div>
-              <div class="summary-row" id="photoRow" hidden><span id="photoName">Photo Memories Keepsake</span><strong id="photoPrice">+$5</strong></div>
+              <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
+              <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">unlimited</span><strong id="unlimitedPrice"></strong></div>
+              <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
+              <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
               <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
-              <div class="summary-row total"><span>Total today</span><strong id="total">$37</strong></div>
+              <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
             </div>
 
             <div class="bump">
               <label>
                 <input type="checkbox" id="orderBump" />
-                <span><b id="bumpTitle">Upgrade to TimeSyncher Vacation – Unlimited for +$27</b><span id="bumpDescription">The order bump moves the setup from the Single product to the Unlimited subscription product.</span></span>
+                <span><b id="bumpTitle">unlimited</b><span id="bumpDescription"></span></span>
               </label>
             </div>
 
             <div class="bump">
               <label>
                 <input type="checkbox" id="photoMemories" />
-                <span><b id="photoTitle">Add Photo Memories Keepsake for +$5/year</b><span id="photoDescription">Include up to 100 favorite photos in the printable vacation keepsake. Photos only for MVP.</span></span>
+                <span><b id="photoTitle">owner_media</b><span id="photoDescription"></span></span>
               </label>
             </div>
 
@@ -213,6 +214,8 @@
 
             <div class="button-row">
               <button type="button" class="secondary" id="backBtn">Back to Step 1</button>
+              <button type="button" class="primary" id="applyCouponBtn" hidden>Apply coupon</button>
+              <button type="button" class="primary" id="completeZeroPurchaseBtn" hidden>Complete purchase</button>
               <button type="button" class="primary" id="payBtn">Pay securely</button>
             </div>
             <div class="notice">Test purchases use coupon checkout. Enter the minted code and choose Redeem coupon. Do not click a live Stripe payment.</div>
@@ -233,7 +236,8 @@
   <footer class="shell">
     <a href="/">Back to TimeSyncher.com</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a>
   </footer>
-
+  <script src="/checkout-price-client.js"></script>
+  <script src="/order-test-coupon-checkout.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     const step1 = document.getElementById('step1');
@@ -243,6 +247,8 @@
     const continueBtn = document.getElementById('continueBtn');
     const backBtn = document.getElementById('backBtn');
     const payBtn = document.getElementById('payBtn');
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const completeZeroPurchaseBtn = document.getElementById('completeZeroPurchaseBtn');
     const bump = document.getElementById('orderBump');
     const photoMemories = document.getElementById('photoMemories');
     const couponCode = document.getElementById('couponCode');
@@ -265,7 +271,6 @@
     const paymentElementMount = document.getElementById('paymentElement');
     const videoBox = document.querySelector('.video-box');
     const checkoutPanel = document.querySelector('.order-grid > .panel:last-child');
-
     let stripe;
     let elements;
     let paymentElement;
@@ -274,47 +279,54 @@
     let paymentReady = false;
     let stripeConfigPromise;
     let paymentRequestId = 0;
+    let couponQuote = null;
+    const couponCheckout = {};
 
     function money(cents) {
       return '$' + (cents / 100).toFixed(0);
     }
 
-    function productLabel(name) {
-      return String(name || '').replace(/ - /g, ' – ');
+    function pricedCents(amount, key) {
+      return tsPricedCents(amount, key);
     }
-
     let productConfig = {};
-
-    function hasCoupon() {
+    function hasCouponDraft() {
       return couponCode.value.trim().length > 0;
     }
 
     function activePhotoProduct() {
-      const photos = productConfig.products?.photoMemories || {};
-      return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
+      return productConfig.products?.media || {};
+    }
+
+    function orderCents() {
+      let cents = pricedCents(productConfig.products?.single?.amount, 'TIMESYNCHER_BASE_PRICE_CENTS');
+      if (bump.checked) cents += pricedCents(productConfig.products?.unlimited?.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+      if (photoMemories.checked) cents += pricedCents(activePhotoProduct().amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
+      return cents;
     }
 
     function syncPhotoCopy() {
       const photos = activePhotoProduct();
-      photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
-      photoPrice.textContent = '+' + money(photos.amount || 500);
+      photoName.textContent = photos.name || 'owner_media';
+      photoTitle.textContent = photos.name || 'owner_media';
+      photoDescription.textContent = photos.description || '';
+      photoPrice.textContent = photoMemories.checked ? '+' + money(pricedCents(photos.amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS')) : '';
       photoRow.hidden = !photoMemories.checked;
-      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photos.amount || 500)}/year`;
-      photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
     }
 
     function applyProductCopy(config) {
       productConfig = config || {};
       const single = config.products?.single || {};
       const unlimited = config.products?.unlimited || {};
-      singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
-      singlePrice.textContent = money(single.amount || 3700);
-      unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
-      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      singleName.textContent = single.name || 'single';
+      singlePrice.textContent = money(pricedCents(single.amount, 'TIMESYNCHER_BASE_PRICE_CENTS'));
+      unlimitedName.textContent = unlimited.name || 'unlimited';
+      unlimitedPrice.textContent = '+' + money(pricedCents(unlimited.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'));
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
-      bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
+      bumpTitle.textContent = unlimited.name || 'unlimited';
+      bumpDescription.textContent = unlimited.description || '';
       syncPhotoCopy();
+      updateTotal();
     }
 
     function formData() {
@@ -323,18 +335,7 @@
 
     function stripeCountryCode(country) {
       const normalized = String(country || '').trim().toLowerCase();
-      const map = {
-        'united states': 'US',
-        'us': 'US',
-        'usa': 'US',
-        'canada': 'CA',
-        'ca': 'CA',
-        'united kingdom': 'GB',
-        'uk': 'GB',
-        'gb': 'GB',
-        'australia': 'AU',
-        'au': 'AU',
-      };
+      const map = { 'united states': 'US', us: 'US', usa: 'US', canada: 'CA', ca: 'CA', 'united kingdom': 'GB', uk: 'GB', gb: 'GB', australia: 'AU', au: 'AU' };
       return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
     }
 
@@ -375,15 +376,28 @@
     }
 
     function updateTotal() {
-      const bumped = bump.checked;
-      const photos = photoMemories.checked;
-      const photoProduct = activePhotoProduct();
-      bumpRow.hidden = !bumped;
-      photoRow.hidden = !photos;
-      syncPhotoCopy();
-      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? (photoProduct.amount || 500) : 0);
-      total.textContent = hasCoupon() ? '$0 with coupon' : money(cents);
-      tax.textContent = hasCoupon() ? 'No Stripe charge' : 'Calculated by Stripe';
+      const waivedRow = document.getElementById('waivedRow');
+      const waivedAmount = document.getElementById('waivedAmount');
+      bumpRow.hidden = !bump.checked;
+      photoRow.hidden = !photoMemories.checked;
+      tax.textContent = 'Calculated by Stripe';
+      try {
+        if (!productConfig.products?.single?.amount) { waivedRow.hidden = true; total.textContent = ''; return; }
+        syncPhotoCopy();
+        const cents = orderCents();
+        const charge = couponQuote
+          ? { totalCents: couponQuote.amountCents, waivedCents: couponQuote.amountWaivedCents }
+          : { totalCents: cents, waivedCents: 0 };
+        waivedRow.hidden = charge.waivedCents <= 0;
+        waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
+        total.textContent = money(charge.totalCents);
+        couponCheckout.syncCouponPaymentUi?.();
+      } catch (error) {
+        waivedRow.hidden = true;
+        total.textContent = '';
+        const msg = error.message || '';
+        setStatus(/checkout config missing/i.test(msg) ? TS_PRICING_UNAVAILABLE : msg, true);
+      }
     }
 
     async function loadStripeConfig() {
@@ -392,7 +406,6 @@
           .then(async (response) => {
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.ok) throw new Error(data.error || 'Stripe checkout is not configured yet.');
-            applyProductCopy(data);
             return data;
           });
       }
@@ -404,16 +417,17 @@
       const requestId = ++paymentRequestId;
       const requestedOrderBump = bump.checked;
       const requestedPhotoMemories = photoMemories.checked;
-      if (hasCoupon()) {
+      if (hasCouponDraft()) {
         if (paymentElement) paymentElement.unmount();
-        paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Click Redeem coupon to finish.</div>';
+        paymentElementMount.innerHTML = '<div class="stripe-loading">Coupon checkout skips Stripe. Apply the coupon to review the order total, then complete the purchase.</div>';
         paymentReady = false;
-        payBtn.disabled = false;
-        payBtn.textContent = 'Redeem coupon';
-        total.textContent = '$0 with coupon';
-        tax.textContent = 'No Stripe charge';
+        couponCheckout.syncCouponPaymentUi?.();
+        updateTotal();
         return true;
       }
+      payBtn.hidden = false;
+      applyCouponBtn.hidden = true;
+      completeZeroPurchaseBtn.hidden = true;
       if (stripe && elements && paymentElement && paymentReady && currentOrderBump === requestedOrderBump && currentPhotoMemories === requestedPhotoMemories) {
         payBtn.disabled = false;
         payBtn.textContent = 'Pay securely';
@@ -495,6 +509,7 @@
 
     async function goToStepTwo() {
       if (!form.reportValidity()) return;
+      try { await loadProductCatalog(); } catch (error) { setStatus(error.message || 'Checkout prices are not configured yet.', true); return; }
       showStep(2);
       window.scrollTo({ top: document.querySelector('.order-grid').offsetTop - 12, behavior: 'smooth' });
       await preparePaymentElement();
@@ -513,36 +528,20 @@
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
     couponCode.addEventListener('input', async () => {
+      couponQuote = null;
       updateTotal();
       paymentReady = false;
       if (!step2.classList.contains('hidden')) await preparePaymentElement();
     });
+    window.tsBindOrderTestCouponCheckout({
+      form, bump, photoMemories, couponCode, payBtn, applyCouponBtn, completeZeroPurchaseBtn,
+      formData, money, setStatus, hideStatus, preparePaymentElement, hasCouponDraft, updateTotal, couponCheckout,
+      getCouponQuote: () => couponQuote,
+      setCouponQuote: (order) => { couponQuote = order; },
+      clearCouponQuote: () => { couponQuote = null; },
+    });
     payBtn.addEventListener('click', async () => {
-      if (hasCoupon()) {
-        payBtn.disabled = true;
-        payBtn.textContent = 'Redeeming coupon...';
-        hideStatus();
-        try {
-          const response = await fetch('/api/checkout-coupon', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ ...formData(), orderBump: bump.checked, photoMemories: photoMemories.checked }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.ok) throw new Error(data.error || 'Coupon could not be redeemed.');
-          setStatus('Coupon redeemed. Opening your TimeSyncher onboarding...', false);
-          const nextUrl = data.session?.onboardingUrl
-            || (data.session?.token ? `/order-success.html?session=${encodeURIComponent(data.session.token)}` : '')
-            || data.onboarding?.onboardingUrl
-            || '/order-success.html';
-          window.location.href = nextUrl;
-        } catch (error) {
-          setStatus(error.message || 'Coupon could not be redeemed.', true);
-          payBtn.disabled = false;
-          payBtn.textContent = 'Redeem coupon';
-        }
-        return;
-      }
+      if (hasCouponDraft()) return;
       if (!stripe || !elements || !paymentReady || currentOrderBump !== bump.checked || currentPhotoMemories !== photoMemories.checked) {
         const ready = await preparePaymentElement();
         if (!ready) return;
@@ -576,9 +575,8 @@
         payBtn.textContent = 'Pay securely';
       }
     });
-    updateTotal();
-    requestAnimationFrame(lockVideoToStepOneHeight);
-    window.addEventListener('resize', lockVideoToStepOneHeight);
+    tsBootCheckoutCatalog({ applyProductCopy, setStatus, continueBtn, step2Pill }); updateTotal();
+    requestAnimationFrame(lockVideoToStepOneHeight); window.addEventListener('resize', lockVideoToStepOneHeight);
   </script>
 </body>
 </html>

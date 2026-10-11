@@ -1,0 +1,1 @@
+function customerAsksPrice(text) { return /price/i.test(text); }

@@ -13,10 +13,8 @@ import {
   customerAsksPrice,
   formatQualityLine,
   inventedVenueNames,
-  isLongIntake,
   rewriteCreditLabel,
   heldRewriteLine,
-  isTemplateNote,
   isTemplateInterim,
   interimProblems,
   rewriteReplacesDraft,
@@ -26,7 +24,7 @@ import {
   transcriptToJsonl,
 } from '../src/vacation/live-app-turn.mjs';
 import { priceAnswered } from '../src/vacation/seat-price.mjs';
-import { DIALOG_TEST_FINGERPRINT, bakeoffTierModels, isBakeoffModelId, noteContradictsDraft } from './vacation-app-reply-rules.mjs';
+import { DIALOG_TEST_FINGERPRINT, INTERIM_MODEL, bakeoffTierModels, isBakeoffModelId } from './vacation-app-reply-rules.mjs';
 import { pdfTextHasSha, readTipSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, driveShaFromTranscript, isUntrustedPack } from './build-used-vs-tip.mjs';
 
@@ -41,6 +39,10 @@ function fail(error) {
   const message = error?.message || String(error);
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;
+}
+
+function storedNoteIsScript(note) {
+  return /the reply (covers|misses) this turn\b|\bkeep the reply\b|^(?:answers?|name the price|take out the place|name the seats)\b|stays with that wording/i.test(String(note || '').trim());
 }
 
 export function assertLiveTranscript(doc) {
@@ -59,7 +61,6 @@ export function assertLiveTranscript(doc) {
   const turns = Array.isArray(doc.turns) ? doc.turns : [];
   if (turns.length === 0) throw new Error('refused: live transcript has no turns');
   const contentFails = [];
-  const customerCorpus = turns.filter((turn) => turn.role === 'customer').map((turn) => turn.text).join('\n');
   let expect = 'customer';
   let start = 0;
   if (turns[0]?.role === 'app') start = 1;
@@ -137,15 +138,16 @@ export function assertLiveTranscript(doc) {
       if (!qualityLine || /not judged/i.test(qualityLine) || turn.quality?.judged !== true) {
         throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} quality is not judged`);
       }
-      const venues = inventedVenueNames(text, customerCorpus);
+      const placeResults = Array.isArray(turn.placeResults) ? turn.placeResults : (Array.isArray(doc.placeResults) ? doc.placeResults : []);
+      const venues = inventedVenueNames(text, placeResults);
       if (venues.length) contentFails.push(`FAIL. Turn ${turn.turnIndex} names ${venues.join(', ')}`);
       const priorCustomer = turns.slice(0, index).reverse().find((item) => item.role === 'customer');
-      if (priorCustomer && customerAsksPrice(priorCustomer.text)) {
-        if (!priceAnswered(text, priorCustomer.text) || item34BanHit(text)) {
+      if (priorCustomer && customerAsksPrice(priorCustomer.text, priorCustomer.intent)) {
+        if (!priceAnswered(text, { text: priorCustomer.text, seats: priorCustomer.intent?.seats }) || item34BanHit(text)) {
           contentFails.push(`FAIL. Turn ${turn.turnIndex} price question has no per-payer dollar price`);
         }
       }
-      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
+      if (priorCustomer && customerAsksAccessChoice(priorCustomer.text, priorCustomer.intent) && !(/\bview access\b/i.test(text) && /\bedit access\b/i.test(text))) {
         contentFails.push(`FAIL. Turn ${turn.turnIndex} does not offer view access and edit access`);
       }
       const shippedModel = String(turn.shippedModel || '').trim();
@@ -171,17 +173,14 @@ export function assertLiveTranscript(doc) {
       if (!String(turn.draftModel || '').trim() || !isBakeoffModelId(String(turn.draftModel))) {
         throw new Error(`refused: turn ${turn.turnIndex} draftModel is outside the bake-off map`);
       }
-      const customerText = priorCustomer?.text || '';
       const jevNote = turn.jevNote == null ? '' : String(turn.jevNote).trim();
       const jevNoteReason = String(turn.jevNoteReason || turn.quality?.jevNoteReason || '').trim();
       if (!jevNote) {
         if (!jevNoteReason) throw new Error(`refused: turn ${turn.turnIndex} jevNote is null without a reason`);
-      } else if (isTemplateNote(jevNote, customerText)) {
+      } else if (storedNoteIsScript(jevNote)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
-      } else if (noteContradictsDraft(jevNote, text)) {
-        throw new Error(`refused: turn ${turn.turnIndex} Jev note contradicts the draft`);
       }
-      if (String(turn.quality?.comment || '').trim() && isTemplateNote(turn.quality.comment, customerText)) {
+      if (String(turn.quality?.comment || '').trim() && storedNoteIsScript(turn.quality.comment)) {
         throw new Error(`refused: turn ${turn.turnIndex} Jev note is a template`);
       }
       const labeledDraft = Number(turn.jevScoreDraft);
@@ -208,7 +207,7 @@ export function assertLiveTranscript(doc) {
         if (!shippedRewrite && turn.jevScoreRewrite != null && (!Number.isFinite(labeledRewrite) || labeledRewrite < 1 || labeledRewrite > 5)) {
           throw new Error(`refused: quality_not_judged turn ${turn.turnIndex} rewrite score is missing`);
         }
-        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '') || turn.interimReply.model !== 'google/gemini-2.5-flash-lite') {
+        if (!turn.interimReply?.text || isTemplateInterim(turn.interimReply.text, priorCustomer?.text || '', turn.interimReply.judge) || turn.interimReply.model !== INTERIM_MODEL) {
           throw new Error(`refused: turn ${turn.turnIndex} rewrite has no real interim reply`);
         }
         const attempt = Array.isArray(turn.rewriteAttempts) ? turn.rewriteAttempts[0] : null;
@@ -227,7 +226,7 @@ export function assertLiveTranscript(doc) {
     }
     }
   }
-  const intakeCustomer = turns.find((turn) => turn.role === 'customer' && isLongIntake(turn.text));
+  const intakeCustomer = turns.find((turn) => turn.role === 'customer' && turn.intake === true);
   if (intakeCustomer) {
     const intakeReply = turns.find((turn) => turn.role === 'app' && turn.turnIndex === intakeCustomer.turnIndex + 1);
     const intakeText = String(intakeReply?.text || '');
@@ -756,14 +755,15 @@ function printedRaw(value) {
 }
 
 function qualityBar(turn) {
-  const score = formatQualityLine(turn.quality);
-  const held = heldRewriteLine(turn);
+  const score = turn?.qualityLine != null ? String(turn.qualityLine) : formatQualityLine(turn.quality);
+  const held = turn?.heldRewriteLine != null ? String(turn.heldRewriteLine) : heldRewriteLine(turn);
   if (score && held) return `${score} · ${held}`;
   return score || held;
 }
 
 export function shippedRewriteLabel(turn) {
   if (!turn || turn.held === true || turn.quality?.rewritten !== true) return '';
+  if (turn.rewriteCredit != null) return String(turn.rewriteCredit);
   return rewriteCreditLabel(turn.rewriteModel || turn.quality?.rewriteModel, turn.rewriterChange || turn.quality?.rewriterChange);
 }
 

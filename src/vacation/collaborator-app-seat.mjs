@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import { createCollaboratorInvite } from './collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from './email.mjs';
-import { createWebEditorInvite } from './web-access.mjs';
-import { ensureVacationEulaSession, telegramLink, upsertCustomer, vacationAppLink } from './onboarding.mjs';
+import { publicTripUrl } from './web-access.mjs';
+import { upsertCustomer, vacationAppLink } from './onboarding.mjs';
 
 function clean(value, max = 180) {
   return String(value || '').trim().slice(0, max);
@@ -16,25 +16,48 @@ export function seatFromSession(session) {
   const metadata = session?.metadata && typeof session.metadata === 'object' ? session.metadata : {};
   const seat = metadata.seat;
   if (!seat || typeof seat !== 'object') return null;
-  if (!seat.ownerCustomerId || !seat.ownerTripId) return null;
+  if (!seat.ownerCustomerId) return null;
+  if (!seat.ownerTripId && !seat.ownerOnboardingSessionId) return null;
   return seat;
+}
+
+export function isCollaboratorAppSeat(session) {
+  return Boolean(seatFromSession(session));
 }
 
 export function transcriptCustomerId(session) {
   return seatFromSession(session)?.ownerCustomerId || session?.customer_id || null;
 }
 
-export function seatJoinCustomerText(seat) {
-  const name = clean(seat?.displayName, 180) || 'Collaborator';
-  const paid = String(seat?.payer || 'owner') === 'owner'
-    ? `${name}: Craig paid for this seat with the coupon.`
-    : `${name} paid for my own seat with the coupon.`;
-  return `${paid} I accepted the EULA terms and clicked join. Keep us on the Big Island.`;
+export function collaboratorSeatJoinEvent(seat) {
+  if (!seat?.ownerCustomerId || (!seat?.ownerTripId && !seat?.ownerOnboardingSessionId)) {
+    throw Object.assign(new Error('Only a collaborator seat records a join.'), { statusCode: 403 });
+  }
+  return {
+    speaker: 'system',
+    direction: 'system',
+    channel: 'vacation-app',
+    body: '',
+    payload: {
+      source: 'collaborator_seat_join',
+      event: 'collaborator_seat_join',
+      seat: {
+        displayName: clean(seat.displayName, 180) || null,
+        payer: clean(seat.payer, 40) || null,
+        inviteId: clean(seat.inviteId, 80) || null,
+        role: clean(seat.role, 40) || 'collaborator',
+        ownerCustomerId: seat.ownerCustomerId,
+        ownerTripId: seat.ownerTripId,
+      },
+    },
+  };
 }
 
-export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, seats } = {}) {
-  if (!ownerCustomerId || !tripId) {
-    throw Object.assign(new Error('Owner session is missing a vacation.'), { statusCode: 409 });
+export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, onboardingSessionId = '', seats, env = process.env } = {}) {
+  const resolvedTripId = clean(tripId, 80) || null;
+  const sessionId = clean(onboardingSessionId, 80) || null;
+  if (!ownerCustomerId || (!resolvedTripId && !sessionId)) {
+    throw Object.assign(new Error('Owner session is missing a vacation workspace.'), { statusCode: 409 });
   }
   const opened = [];
   for (const raw of Array.isArray(seats) ? seats : []) {
@@ -44,32 +67,38 @@ export async function openCollaboratorAppSeats(db, { ownerCustomerId, tripId, se
     if (!name || !email) continue;
     const { invite, token } = await createCollaboratorInvite(db, {
       ownerCustomerId,
-      tripId,
+      tripId: resolvedTripId,
       planCode: 'telegram_collaborators_single_trip',
       requestedFor: name,
-      metadata: { payer, email, displayName: name, channel: 'vacation-app' },
+      metadata: {
+        payer,
+        email,
+        displayName: name,
+        channel: 'vacation-app',
+        onboardingSessionId: sessionId,
+        deferredWebEditor: !resolvedTripId,
+      },
+      env,
     });
-    const web = await createWebEditorInvite(db, {
-      ownerCustomerId,
-      tripId,
-      email,
-      displayName: name,
-      role: 'web_editor',
-      metadata: { payer, channel: 'email-invite' },
-    });
+    let publicUrl = '';
+    if (resolvedTripId) {
+      const trips = await db`select title, metadata from trips where id = ${resolvedTripId} limit 1`;
+      if (trips[0]) publicUrl = publicTripUrl(trips[0], env);
+    }
     const sent = await queueOrSendCollaboratorInviteEmail(db, {
       invite,
       token,
       contact: { email, displayName: name, firstName: name.split(/\s+/)[0] || name },
-      acceptUrl: web.acceptUrl,
-      publicUrl: web.grant?.public_url || '',
-    });
+      acceptUrl: '',
+      publicUrl,
+    }, env);
     opened.push({
       name,
       email,
       payer,
       inviteId: invite.id,
       inviteToken: token,
+      tripId: String(invite.trip_id || resolvedTripId || '').trim() || null,
       emailStatus: sent.status,
     });
   }
@@ -91,10 +120,42 @@ export async function recordDialogParty(db, tripId, party) {
 }
 
 export async function joinCollaboratorAppSession(db, { invite, contact, env = process.env } = {}) {
-  if (!invite?.owner_customer_id || !invite?.trip_id) {
-    throw Object.assign(new Error('Collaborator invite is not attached to a vacation.'), { statusCode: 409 });
+  if (!invite?.owner_customer_id) {
+    throw Object.assign(new Error('Collaborator invite is missing an owner.'), { statusCode: 409 });
   }
   const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+  const ownerOnboardingSessionId = clean(metadata.onboardingSessionId, 80) || null;
+  const ownerTripId = clean(invite.trip_id, 80) || null;
+  if (!ownerTripId && !ownerOnboardingSessionId) {
+    throw Object.assign(new Error('Collaborator invite is not attached to a vacation workspace.'), { statusCode: 409 });
+  }
+  const existingToken = clean(metadata.collaboratorOnboardingToken, 120);
+  if (existingToken) {
+    const prior = await db`
+      select token, metadata
+      from onboarding_sessions
+      where token = ${existingToken}
+      limit 1
+    `;
+    if (prior[0]?.token) {
+      await db`
+        update vacation_collaborator_invites
+        set status = 'accepted',
+          accepted_at = coalesce(accepted_at, now()),
+          paid_at = coalesce(paid_at, now()),
+          updated_at = now()
+        where id = ${invite.id}
+          and status in ('pending_payment', 'paid')
+      `;
+      const priorSeat = seatFromSession(prior[0]);
+      return {
+        token: prior[0].token,
+        vacationAppUrl: vacationAppLink(prior[0].token, env),
+        displayName: priorSeat?.displayName || clean(contact?.displayName, 180),
+        payer: priorSeat?.payer || clean(metadata.payer || 'owner', 40) || 'owner',
+      };
+    }
+  }
   const displayName = clean(contact?.displayName || metadata.displayName || invite.requested_for, 180);
   const [firstName, ...rest] = displayName.split(/\s+/).filter(Boolean);
   const person = {
@@ -111,7 +172,8 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
     payer: clean(metadata.payer || 'owner', 40) || 'owner',
     displayName,
     ownerCustomerId: invite.owner_customer_id,
-    ownerTripId: invite.trip_id,
+    ownerTripId: ownerTripId,
+    ownerOnboardingSessionId,
     inviteId: invite.id,
   };
   const rows = await db`
@@ -119,29 +181,83 @@ export async function joinCollaboratorAppSession(db, { invite, contact, env = pr
       customer_id, trip_id, token, status, current_step, telegram_deep_link, metadata, updated_at
     )
     values (
-      ${customerId}, ${invite.trip_id}, ${token}, 'purchase_confirmed',
-      'post_purchase', ${telegramLink(token, env)}, ${{ seat, source: 'collaborator_app_seat' }}, now()
+      ${customerId}, ${ownerTripId}, ${token}, 'purchase_confirmed',
+      'post_purchase', ${null}, ${{ seat, source: 'collaborator_app_seat' }}, now()
     )
     returning *
   `;
   const session = rows[0];
-  await ensureVacationEulaSession(session, { contact: person, env });
   await db`
     insert into vacation_collaborators (
       invite_id, owner_customer_id, trip_id, display_name, plan_code, scope, status,
       metadata, accepted_at, updated_at
     )
     values (
-      ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id}, ${displayName},
+      ${invite.id}, ${invite.owner_customer_id}, ${ownerTripId}, ${displayName},
       ${invite.plan_code}, ${invite.scope}, 'active',
-      ${{ payer: seat.payer, email: person.email, channel: 'vacation-app', onboardingToken: token }},
+      ${{ payer: seat.payer, email: person.email, channel: 'vacation-app', onboardingToken: token, onboardingSessionId: ownerOnboardingSessionId }},
       now(), now()
     )
+  `;
+  await db`
+    update vacation_collaborator_invites
+    set status = 'accepted',
+      accepted_at = coalesce(accepted_at, now()),
+      updated_at = now(),
+      metadata = metadata || ${{ collaboratorOnboardingToken: token, collaboratorCustomerId: customerId }}
+    where id = ${invite.id}
   `;
   return {
     token: session.token,
     vacationAppUrl: vacationAppLink(session.token, env),
     displayName,
     payer: seat.payer,
+  };
+}
+
+export function liveReplyCommerceGate({
+  session,
+  suppliedSeatDollars,
+  customerTurn,
+  intent,
+  mergedTrip,
+  upsellMode,
+  asksPriceFn,
+  payerLineFn,
+}) {
+  if (!isCollaboratorAppSeat(session)) {
+    const seatDollars = Number(suppliedSeatDollars);
+    const pricedSeat = Number.isFinite(seatDollars) && seatDollars > 0 ? seatDollars : null;
+    const payerRows = (Array.isArray(mergedTrip.party?.collaborators) ? mergedTrip.party.collaborators : [])
+      .map((person) => ({ name: String(person?.name || '').trim(), payer: String(person?.payer || '').trim() }))
+      .filter((row) => row.name && row.payer);
+    const extractedSeats = Array.isArray(intent?.seats) && intent.seats.some((seat) => seat?.name && seat?.payer)
+      ? intent.seats
+      : payerRows;
+    const planLine = asksPriceFn(customerTurn, intent) && pricedSeat
+      ? payerLineFn(customerTurn, pricedSeat, extractedSeats)
+      : '';
+    return {
+      upsell: upsellMode,
+      seatDollars,
+      pricedSeat,
+      payerRows,
+      planLine,
+      planTable: planLine ? { dollars_per_collaborator_seat: pricedSeat, payer_line: planLine } : null,
+      purchasedPlan: String(mergedTrip.purchased_plan || mergedTrip.ownerPlan?.checkout_plan || '').trim(),
+      planOwned: mergedTrip.planOwned === true,
+      collaboratorSeat: false,
+    };
+  }
+  return {
+    upsell: 'forbidden',
+    seatDollars: null,
+    pricedSeat: null,
+    payerRows: [],
+    planLine: '',
+    planTable: null,
+    purchasedPlan: '',
+    planOwned: false,
+    collaboratorSeat: true,
   };
 }

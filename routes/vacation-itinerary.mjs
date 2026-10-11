@@ -1,14 +1,12 @@
 import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { queueOrSendWebEditorInviteEmail } from '../src/vacation/email.mjs';
-import { cleanText, readJson, sendJson } from '../src/vacation/http.mjs';
-import { classifyTurn } from '../src/vacation/turn-tags.mjs';
+import { cleanText, readJson, sendJson, vacationAppErrorBody } from '../src/vacation/http.mjs';
 import {
   acceptWebAccessInvite,
   createOwnerWebsiteSessionByShareToken,
   createWebEditorInvite,
-  isAllowedVacationWebsiteUrl,
-  loadWebAccessGrantBySessionToken,
+  loadWebAccessGrantByInviteToken,
   publicTripUrl,
   readCookie,
   requireWebEditAccess,
@@ -16,41 +14,88 @@ import {
   webAccessCookieName,
   webAccessForSession,
 } from '../src/vacation/web-access.mjs';
+import { collaboratorWelcomeTurnExists } from '../src/vacation/collaborator-welcome.mjs';
+import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForWebAccessGrant } from '../src/vacation/collaborators.mjs';
 import bindThingMediaHandler from '../src/vacation/bind-thing-media-handler.mjs';
 import sharedTripHandler from '../src/vacation/shared-trip-handler.mjs';
 import keepsakeStyle2Handler from '../src/vacation/keepsake-style2-handler.mjs';
 import handlePdfQrSvg from '../src/vacation/pdf-qr-svg-handler.mjs';
 import trekStyle2BundleHandler from '../src/vacation/trek-style2-bundle.mjs';
-import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { configuredSeatDollars } from '../src/vacation/seat-price.mjs';
 import { storePreCollaboratorSnapshot } from '../src/vacation/pre-collaborator-snapshot.mjs';
-import { vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrl, vacationEulaStatus } from '../src/vacation/onboarding.mjs';
+import { assignTripSiteUrlWhenThingsPresent } from '../src/vacation/trip-site-url-after-insert.mjs';
+import { insertIntakeTripThingRow } from '../src/vacation/trip-things.mjs';
+import { createVacationFromChatMessage } from '../src/vacation/vacation-from-chat-intake.mjs';
+import { onboardingWelcomeFailure, welcomeFailureBody } from '../src/vacation/welcome-failure.mjs';
 import { loadSessionPersistent } from '../src/onboarding/eula-persistent-core.mjs';
 import { createPersistentStoreFromEnv } from '../src/onboarding/eula-persistent-store.mjs';
+import { customerModality, jevStamp, liveTurnRecord, intakeSpan, firstMarkedIntake, produceLiveAppReply, finishTierRewrite, activityCommitDecisions, applyAgreedAppSwim, applyCustomerNotes, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
+import { queueVacationAppTurn as runQueueVacationAppTurn } from './vacation-app-chat-queue.mjs';
+// Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchForVacationTurn, workerJobId: jobRows[0].id, placeSearchTurn, placeSearchTurn,, worker_jobs, insert into worker_jobs (request_id, trip_id, job_type, input), const queuedJobType = 'trip_intake', wantedThings: jobFields.wantedThings, intakeEvent: jobFields.intakeEvent, thingsFromIntake, wantedThings, intakeEvent, resolveIntakePlace, transcript_turns, applyLiveAppReplyFailureToPayload, produceLiveAppReply, persistVacationAppOutboundReply(, contentDataUrl, liveTranscript, jevStamp, classifyTurn, error: failure.replyFailure
+import { cannedWelcomeLiveTurn, missingWelcomeFields, renderOnboardingWelcome } from '../src/vacation/onboarding-welcome.mjs';
 import {
-  customerModality,
-  FIXED_OPENER_REASON,
-  jevStamp,
-  LIVE_OPENER_PRODUCER,
-  liveTurnRecord,
-  onboardingOpenerText,
-  tripIsReturning,
-  postIntakeUpsellTurn,
-  produceLiveAppReply,
-  finishTierRewrite,
-  applyAgreedAppSwim,
-  applyCustomerNotes,
-  ensureNamedThings,
-  intakeFacts,
-  thingsFromIntake,
-  completeRosterParty,
-} from '../src/vacation/live-app-turn.mjs';
+  bindPreTripOnboardingWelcome,
+  loadCollaboratorWelcomeTranscriptRows,
+  onboardingWelcomeTranscriptCustomerId,
+  onboardingWelcomeTurnExists,
+  releaseOnboardingWelcomeClaim,
+} from '../src/vacation/onboarding-welcome-turn.mjs';
+import { authorPeopleFromTrip, transcriptAuthorMissingError, turnAuthorLabel } from '../src/vacation/turn-author.mjs';
+import { appReplyTelemetry, logVacationAppReplyTelemetry } from '../src/vacation/reply-telemetry.mjs';
 import {
-  openCollaboratorAppSeats,
-  recordDialogParty,
-  seatFromSession,
-  seatJoinCustomerText,
-  transcriptCustomerId,
-} from '../src/vacation/collaborator-app-seat.mjs';
+  applyLiveAppReplyFailureToPayload,
+  commitShippedRewrite,
+  markWorkerJobLiveHandled,
+  persistVacationAppOutboundReply,
+  storeReplyFailure,
+  vacationAppTurnPayloadForClient,
+} from '../src/vacation/reply-ship.mjs';
+import { persistIntakeLodgingLookupOnCustomerTurn, persistIntakeLodgingThings } from '../src/vacation/intake-lodging-thing.mjs';
+import { intakeItineraryExistingThings } from '../src/vacation/intake-itinerary-existing-things.mjs';
+import {
+  intakeActivityThings,
+  intakeLodgingWanted,
+  mergeWantedThings,
+  resolveIntakePlace,
+  tripIntakeJobFields,
+} from '../src/vacation/trip-intake-classify.mjs';
+import {
+  intakeExtractedThings,
+  runVacationAppInTurnSearch,
+} from '../src/vacation/chat-place-search.mjs';
+import {
+  detailTextFromChatTurn,
+  refreshUnresolvedChatIntakePlaces,
+} from '../src/vacation/chat-intake-place-persist.mjs';
+import { openRouterDestinationComplete, resolveTripDestination } from '../src/vacation/trip-destination.mjs';
+import { mergeTripCreateServerTiming } from '../src/vacation/trip-create-server-timing.mjs';
+import { openCollaboratorAppSeats, recordDialogParty, seatFromSession, collaboratorSeatJoinEvent, transcriptCustomerId } from '../src/vacation/collaborator-app-seat.mjs';
+import { pickVacationAppTrip } from '../src/vacation/vacation-app-trip-select.mjs';
+import { loadTripScopedVacationAppTurns } from '../src/vacation/vacation-app-transcript.mjs';
+import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
+import { sharedTripWebsiteUrl } from '../src/vacation/web-access.mjs';
+import {
+  collaboratorSessionForAccept,
+  vacationAppEulaForCollaboratorSeat,
+} from '../src/vacation/collaborator-eula-accept.mjs';
+import { collaboratorEulaSessionId } from '../src/vacation/collaborators.mjs';
+import { runCollaboratorInviteAction } from '../src/vacation/collaborator-invite-action.mjs';
+import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citation.mjs';
+import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
+import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
+import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
+
+let vacationAppDatabase = null;
+
+export function useVacationAppDatabase(db) {
+  vacationAppDatabase = db || null;
+}
+
+function openVacationAppDb() {
+  if (vacationAppDatabase) return vacationAppDatabase;
+  return sql(process.env);
+}
 
 function sendHtml(res, status, html, headers = {}) {
   res.statusCode = status;
@@ -73,27 +118,34 @@ async function handleWebAccess(req, res, db, url) {
   const action = cleanText(url.searchParams.get('action'), 80);
   if (req.method === 'GET' && action === 'accept') {
     const token = cleanText(url.searchParams.get('token'), 220);
+    const pending = await loadWebAccessGrantByInviteToken(db, token, process.env);
+    if (!pending) {
+      return sendJson(res, 404, { ok: false, code: 'web_access_grant_missing', error: 'Website editor invite is invalid or expired.' });
+    }
+    const resolvedInvite = await loadCollaboratorInviteForWebAccessGrant(db, pending);
+    if (resolvedInvite?.id) {
+      res.statusCode = 302;
+      res.setHeader('location', collaboratorEulaAcceptUrl({ id: resolvedInvite.id }, process.env));
+      res.setHeader('cache-control', 'no-store');
+      return res.end();
+    }
+    if (cleanText(pending.role, 80) === 'telegram_collaborator') {
+      console.error(JSON.stringify({
+        event: 'collaborator_web_access_invite_unresolved',
+        grantId: String(pending.id || ''),
+        tripId: String(pending.trip_id || ''),
+        email: String(pending.email || ''),
+      }));
+      return sendJson(res, 409, {
+        ok: false,
+        code: 'collaborator_web_access_invite_unresolved',
+        error: 'Collaborator invite could not be resolved for this website access grant.',
+      });
+    }
     const accepted = await acceptWebAccessInvite(db, token, process.env);
     return sendHtml(res, 200, acceptedHtml(accepted), {
       'set-cookie': webAccessCookieHeader(accepted.sessionToken, process.env),
     });
-  }
-
-  if (req.method === 'GET' && action === 'telegram_launch') {
-    const token = cleanText(url.searchParams.get('token'), 220);
-    const requestedRedirect = cleanText(url.searchParams.get('redirect'), 600);
-    const grant = await loadWebAccessGrantBySessionToken(db, token, process.env);
-    if (!grant) return sendHtml(res, 404, '<!doctype html><title>Link expired</title><p>This Telegram website-edit link is invalid or expired. Ask the bot for a fresh vacation website link.</p>');
-    const fallbackUrl = cleanText(grant.public_url, 600) || 'https://travel.timesyncher.com';
-    const redirectUrl = requestedRedirect && isAllowedVacationWebsiteUrl(requestedRedirect, process.env)
-      ? requestedRedirect
-      : fallbackUrl;
-    res.statusCode = 302;
-    res.setHeader('cache-control', 'no-store');
-    res.setHeader('set-cookie', webAccessCookieHeader(token, process.env));
-    res.setHeader('location', redirectUrl);
-    res.end('');
-    return;
   }
 
   if (req.method === 'GET' && action === 'status') {
@@ -176,12 +228,13 @@ function groupBy(items, key) {
   }, {});
 }
 
-function builtVacationSiteUrl(metadata) {
+function builtVacationSiteUrl(metadata, tripId = '') {
   const meta = metadata && typeof metadata === 'object' ? metadata : {};
   const explicit = String(meta.publicUrl || meta.public_url || meta.webItineraryUrl || '').trim();
-  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || '').trim();
+  const derivedSlug = meta.intakeShare === true && tripId ? intakeShareSlug(tripId) : '';
+  const slug = String(meta.sharedToken || meta.shareToken || meta.publicSlug || meta.source_token || meta.slug || derivedSlug || '').trim();
   if (!explicit && !slug) return '';
-  const url = publicTripUrl({ metadata: meta }, process.env);
+  const url = explicit || (slug ? sharedTripWebsiteUrl(slug, process.env) : publicTripUrl({ metadata: { ...meta, publicSlug: slug, shareToken: slug } }, process.env));
   try {
     const parsed = new URL(url);
     if (!parsed.pathname || parsed.pathname === '/') return '';
@@ -193,7 +246,9 @@ function builtVacationSiteUrl(metadata) {
 
 function vacationAppTripSummary(row) {
   const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const url = builtVacationSiteUrl(metadata);
+  const url = builtVacationSiteUrl(metadata, row.id);
+  const slug = metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug
+    || (metadata.intakeShare === true && row.id ? intakeShareSlug(row.id) : null);
   return {
     id: row.id,
     title: row.title || '',
@@ -203,7 +258,7 @@ function vacationAppTripSummary(row) {
     status: row.status || 'planning',
     current: Boolean(row.current),
     publicUrl: url,
-    shareToken: metadata.sharedToken || metadata.shareToken || metadata.publicSlug || metadata.source_token || metadata.slug || null,
+    shareToken: slug,
     intakeShare: metadata.intakeShare === true,
     intakeRule: metadata.intakeRule || '',
     intakeSpan: metadata.intakeSpan || '',
@@ -218,6 +273,7 @@ async function loadVacationAppSession(db, token) {
       onboarding_sessions.customer_id,
       onboarding_sessions.trip_id,
       onboarding_sessions.status,
+      onboarding_sessions.order_id,
       customers.display_name,
       customers.first_name,
       customers.last_name,
@@ -254,403 +310,292 @@ async function loadVacationAppTrips(db, session) {
   return rows.map(vacationAppTripSummary);
 }
 
-async function loadVacationAppTurns(db, session, tripId) {
-  const customerId = transcriptCustomerId(session);
-  if (!customerId || !tripId) return [];
-  const rows = await db`
-    select speaker, body, channel, payload, direction, received_at, sent_at, created_at
-    from transcript_turns
-    where customer_id = ${customerId}
-      and trip_id = ${tripId}
-      and channel in ('vacation-app', 'vacation_app', 'telegram_vacation_bot', 'telegram_vacation_media')
-    order by coalesce(received_at, sent_at, created_at) desc nulls last
-    limit 120
-  `;
-  return rows.reverse().map((row) => ({
-    speaker: row.speaker || 'customer',
-    body: row.body || '',
-    channel: row.channel || '',
-    direction: row.direction || '',
-    payload: row.payload && typeof row.payload === 'object' ? row.payload : {},
-    at: row.received_at || row.sent_at || row.created_at || null,
-  }));
-}
-
-async function ensureOnboardingOpener(db, session, trip) {
-  if (seatFromSession(session)) return;
-  const text = onboardingOpenerText(tripIsReturning(trip));
-  const live = liveTurnRecord({
-    turnIndex: 1,
-    role: 'app',
-    modality: 'text',
-    text,
-    at: new Date().toISOString(),
-    latencyMs: null,
-    sessionE2eMs: null,
-    jev: { jevRan: false, error: FIXED_OPENER_REASON },
-    replyProducer: LIVE_OPENER_PRODUCER,
-    model: {
-      quality: {
-        judged: true,
-        score: null,
-        comment: null,
-        rewritten: false,
-      },
-      log: {
-        draftModel: null,
-        rewriteModel: null,
-        shippedModel: null,
-        jevScoreDraft: null,
-        jevScoreRaw: null,
-        jevScoreRewrite: null,
-        jevNote: null,
-        jevNoteReason: 'jev_no_free_text',
-        interimReply: { text: null, model: null, ms: null },
-        latencyMs: { draft: null, rewrite: null, total: null },
-        flagged: false,
-        held: false,
-      },
-    },
-  });
-  const payload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    selectedTripId: trip.id,
-    liveTranscript: live,
-  };
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    select
-      ${session.customer_id}, ${trip.id}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
-      now(), 0
-    where not exists (
-      select 1
-      from transcript_turns
-      where customer_id = ${session.customer_id}
-        and trip_id = ${trip.id}
-        and channel = 'vacation-app'
-        and payload->'liveTranscript' is not null
-    )
-  `;
-}
-
-async function queueVacationAppTurn(db, session, trip, body) {
-  const tripId = trip.id;
-  await ensureOnboardingOpener(db, session, trip);
-  const started = Date.now();
-  const text = cleanText(body.text || body.message, 12000);
-  const attachments = Array.isArray(body.attachments)
-    ? body.attachments.slice(0, 20).map((item) => ({
-      name: cleanText(item?.name, 240),
-      type: cleanText(item?.type, 160),
-      size: Number.parseInt(item?.size || '0', 10) || 0,
-      lastModified: Number.parseInt(item?.lastModified || '0', 10) || null,
-      inline: Boolean(item?.inline),
-      contentDataUrl: cleanText(item?.contentDataUrl, 3_000_000) || null,
-      note: cleanText(item?.note, 240) || null,
-    }))
-    : [];
-  if (!text && attachments.length === 0) {
-    throw Object.assign(new Error('Message text or an attachment is required.'), { statusCode: 400 });
-  }
-
-  const requestText = text || `Uploaded ${attachments.length} vacation file${attachments.length === 1 ? '' : 's'}.`;
-  const modality = customerModality(body);
-  const seat = seatFromSession(session);
-  if (!seat) {
-    const holder = [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
-    if (holder) {
-      await db`
-        update trips
-        set metadata = jsonb_set(
-          coalesce(metadata, '{}'::jsonb),
-          '{dialogParty,primary}',
-          ${JSON.stringify({ name: holder, role: 'Owner' })}::jsonb,
-          true
-        ),
-          updated_at = now()
-        where id = ${tripId}
-          and coalesce(metadata#>>'{dialogParty,primary,name}', '') = ''
-      `;
-    }
-  }
-  const transcriptOwnerId = transcriptCustomerId(session);
-  const speakerName = seat?.displayName || [session.first_name, session.last_name].filter(Boolean).join(' ') || session.display_name || '';
-  const prior = await db`
-    select count(*)::int as n,
-      min(coalesce(received_at, created_at)) as started_at
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-  `;
-  const priorCount = Number(prior[0]?.n || 0);
-  const sessionStartedMs = prior[0]?.started_at ? new Date(prior[0].started_at).getTime() : started;
-  const sessionE2eMs = () => Math.max(1, Date.now() - (Number.isFinite(sessionStartedMs) ? sessionStartedMs : started));
-  const customerTurnIndex = priorCount + 1;
-  const receivedAt = new Date().toISOString();
-  const customerLive = liveTurnRecord({
-    turnIndex: customerTurnIndex,
-    role: 'customer',
-    modality,
-    text: requestText,
-    at: receivedAt,
-    latencyMs: Date.now() - started,
-    sessionE2eMs: sessionE2eMs(),
-    jev: { jevRan: false, error: 'classify_pending' },
-    speakerName,
-  });
-  const payload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    attachments,
-    voiceMode: modality === 'voice',
-    browserTranscription: Boolean(body.browserTranscription) && modality === 'voice',
-    selectedTripId: tripId,
-    liveTranscript: customerLive,
-  };
-  const turnTag = classifyTurn({
-    text: requestText,
-    speaker: 'customer',
-    direction: 'inbound',
-    channel: 'vacation-app',
-    payload,
-  });
-  const requestRows = await db`
-    insert into vacation_requests (
-      customer_id, trip_id, source, request_type, request_text, normalized_intent, payload,
-      status, queued_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, 'vacation-app', 'trip_intake', ${requestText},
-      ${{ turnTag }}, ${payload}, 'queued', now()
-    )
-    returning id, received_at, queued_at
-  `;
-  const requestId = requestRows[0].id;
-  const intakeLatency = Date.now() - started;
-  const turnRows = await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      received_at, response_latency_ms,
-      turn_category, turn_tags, turn_tag_source, turn_tag_confidence, turn_tagged_at
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'customer', 'vacation-app', ${requestText}, ${payload}, 'inbound',
-      now(), ${intakeLatency},
-      ${turnTag.category}, ${turnTag.tags}, ${turnTag.source}, ${turnTag.confidence}, now()
-    )
-    returning id
-  `;
-  await db`
-    insert into vacation_request_events (request_id, event_type, actor, details)
-    values
-      (${requestId}, 'received', 'customer', ${payload}),
-      (${requestId}, 'queued', 'system', ${{ surface: 'vacation-app', turnTag }})
-  `;
-  const jobRows = await db`
-    insert into worker_jobs (request_id, trip_id, job_type, input)
-    values (${requestId}, ${tripId}, 'trip_intake', ${{
-      customerId: transcriptOwnerId,
-      tripId,
-      requestId,
-      source: 'vacation-app',
-      requestType: 'trip_intake',
-      requestText,
-      payload,
-    }})
-    returning id
-  `;
-
-  const memoryRows = await db`
-    select speaker, body
-    from transcript_turns
-    where customer_id = ${transcriptOwnerId}
-      and trip_id = ${tripId}
-      and channel = 'vacation-app'
-      and payload->'liveTranscript' is not null
-    order by coalesce(received_at, sent_at, created_at) desc
-    limit 120
-  `;
-  const priorTurns = [...memoryRows].reverse().map((row) => ({
-    role: row.speaker === 'app' ? 'app' : 'customer',
-    text: row.body || '',
-  }));
-  let produced;
-  try {
-    produced = await produceLiveAppReply({
-      customerTurn: requestText,
-      session,
-      priorTurns,
-      tripTitle: trip?.title || '',
-      env: process.env,
-    });
-  } catch (error) {
-    produced = {
-      reply: null,
-      rules: null,
-      jev: { jevRan: false, error: error?.message || 'live dispatcher failed' },
-      model: null,
-      reason: error?.message || 'live dispatcher failed',
-    };
-  }
-  customerLive.jev = jevStamp(produced.jev);
-  customerLive.rules = produced.rules
-    ? { ok: Boolean(produced.rules.ok), via: produced.rules.via || null, slug: produced.rules.slug || null }
-    : null;
-  payload.liveTranscript = customerLive;
-  await db`
-    update transcript_turns
-    set payload = ${payload}
-    where id = ${turnRows[0].id}
-  `;
-
-  const exchangeLatency = Date.now() - started;
-  const base = {
-    requestId,
-    jobId: jobRows[0].id,
-    receivedAt: requestRows[0].received_at,
-    queuedAt: requestRows[0].queued_at,
-    turnTag,
-    modality,
-    turnIndex: customerTurnIndex,
-    latencyMs: exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    jev: customerLive.jev,
-    reply: null,
-  };
-  if (produced.status === 'interim' && produced.pending) {
-    const pending = {
-      ...produced.pending,
-      customerTurnIndex,
-      requestId,
-      speakerName,
-      collaborator: Boolean(seat),
-      tripId,
-      sessionStartedMs,
-      wallStarted: started,
-    };
-    await db`
-      update onboarding_sessions
-      set metadata = coalesce(metadata, '{}'::jsonb) || ${{ pendingRewrite: pending }},
-        updated_at = now()
-      where id = ${session.id}
-    `;
-    return {
-      ...base,
-      ok: true,
-      status: 'interim',
-      interimReply: produced.interimReply,
-      reply: produced.interimReply?.text || '',
-      error: null,
-    };
-  }
-  if (!produced.reply) {
-    await db`delete from transcript_turns where id = ${turnRows[0].id}`;
-    return { ...base, ok: false, status: 'reply_unavailable', error: produced.reason || 'live dispatcher returned no reply' };
-  }
-
-  const appLive = liveTurnRecord({
-    turnIndex: customerTurnIndex + 1,
-    role: 'app',
-    modality: 'text',
-    text: produced.reply,
-    at: new Date().toISOString(),
-    latencyMs: exchangeLatency,
-    sessionE2eMs: sessionE2eMs(),
-    jev: produced.jev,
-    model: produced.model,
-    rules: produced.rules,
-  });
-  const appPayload = {
-    source: 'vacation_app',
-    surface: 'vacation-app',
-    selectedTripId: tripId,
-    liveTranscript: appLive,
-  };
-  await db`
-    insert into transcript_turns (
-      customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-      sent_at, response_latency_ms
-    )
-    values (
-      ${transcriptOwnerId}, ${tripId}, ${requestId}, 'app', 'vacation-app', ${produced.reply}, ${appPayload}, 'outbound',
-      now(), ${exchangeLatency}
-    )
-  `;
-  const itinerary = await recordCustomerThingNotes(
-    db,
-    tripId,
-    requestText,
-    {
-      collaborator: Boolean(seat),
-      speakerName,
-      appReply: produced.reply,
-    },
-    postIntakeUpsellTurn(requestText, priorTurns) ? requestText : '',
-  );
-  if (itinerary.length) await publishIntakeShare(db, tripId);
-  const vacationRows = await db`
-    select id, title, destination, start_date, end_date, status, metadata
-    from trips
-    where id = ${tripId}
+async function loadTranscriptAuthorPeople(db, customerId, tripKey) {
+  const owners = await db`
+    select id, first_name, display_name
+    from customers
+    where id = ${customerId}
     limit 1
   `;
-  return {
-    ...base,
-    ok: true,
-    status: 'replied',
-    reply: produced.reply,
-    appTurnIndex: appLive.turnIndex,
-    itinerary,
-    vacation: vacationRows[0] ? vacationAppTripSummary(vacationRows[0]) : null,
-    error: null,
+  const owner = owners[0] || null;
+  let party = {};
+  let collabRows = [];
+  if (tripKey) {
+    const tripRows = await db`select metadata from trips where id = ${tripKey} limit 1`;
+    const tripMeta = tripRows[0]?.metadata && typeof tripRows[0].metadata === 'object' ? tripRows[0].metadata : {};
+    party = tripMeta.dialogParty && typeof tripMeta.dialogParty === 'object' ? tripMeta.dialogParty : {};
+    collabRows = await db`
+      select c.display_name, c.metadata, i.metadata as invite_metadata
+      from vacation_collaborators c
+      left join vacation_collaborator_invites i on i.id = c.invite_id
+      where c.owner_customer_id = ${customerId}
+        and c.trip_id = ${tripKey}
+        and c.status = 'active'
+    `;
+  } else {
+    collabRows = await db`
+      select c.display_name, c.metadata, i.metadata as invite_metadata
+      from vacation_collaborators c
+      left join vacation_collaborator_invites i on i.id = c.invite_id
+      where c.owner_customer_id = ${customerId}
+        and c.trip_id is null
+        and c.status = 'active'
+    `;
+  }
+  const partyWithOwner = owner
+    ? {
+      ...party,
+      primary: party?.primary || {
+        id: owner.id,
+        first_name: owner.first_name,
+        display_name: owner.display_name,
+      },
+    }
+    : party;
+  return authorPeopleFromTrip(partyWithOwner, collabRows, customerId);
+}
+
+async function loadVacationAppTurns(db, session, tripId) {
+  return loadTripScopedVacationAppTurns(db, session, tripId, { loadTranscriptAuthorPeople });
+}
+
+function welcomeFirstName(value) {
+  const text = String(value || '').trim();
+  return text ? text.split(/\s+/)[0] : '';
+}
+
+function tripHasVacationSite(trip) {
+  if (String(trip?.publicUrl || '').trim()) return true;
+  return Boolean(String(trip?.shareToken || '').trim());
+}
+
+function tripWelcomeSiteUrl(trip) {
+  if (!tripHasVacationSite(trip)) return '';
+  const direct = String(trip?.publicUrl || '').trim();
+  if (direct) return direct;
+  return builtVacationSiteUrl({
+    sharedToken: trip.shareToken,
+    shareToken: trip.shareToken,
+    publicUrl: trip.publicUrl,
+  });
+}
+
+async function welcomeInputs(db, session, trip) {
+  const seat = seatFromSession(session);
+  const hasSite = tripHasVacationSite(trip);
+  const tripSiteUrl = hasSite ? tripWelcomeSiteUrl(trip) : '';
+  const tripTitle = String(trip?.title || '').trim();
+  if (seat) {
+    const owners = await db`
+      select first_name, display_name
+      from customers
+      where id = ${seat.ownerCustomerId}
+      limit 1
+    `;
+    const owner = owners[0] || {};
+    const collabFirstName = welcomeFirstName(session.first_name || seat.displayName || session.display_name);
+    const ownerFirstName = welcomeFirstName(owner.first_name || owner.display_name);
+    if (hasSite && tripSiteUrl) {
+      return {
+        audience: 'collaborator',
+        ownerFirstName,
+        collabFirstName,
+        tripTitle,
+        tripSiteUrl,
+      };
+    }
+    return {
+      audience: 'collaborator_no_site',
+      ownerFirstName,
+      collabFirstName,
+      tripTitle: tripTitle || 'this vacation',
+    };
+  }
+  const firstName = welcomeFirstName(session.first_name || session.display_name);
+  if (hasSite && tripSiteUrl) {
+    return { audience: 'owner', firstName, tripSiteUrl };
+  }
+  return { audience: 'owner_no_site', firstName };
+}
+
+export async function ensureOnboardingOpener(db, session, trip, deps) {
+  const seat = seatFromSession(session);
+  const tripId = trip?.id || seat?.ownerTripId || null;
+  const welcomeScopeTripId = trip?.id || session?.trip_id || seat?.ownerTripId || null;
+  const onboardingSessionId = session?.id;
+  if (!onboardingSessionId) {
+    if (seat) {
+      throw onboardingWelcomeFailure('collaborator onboarding session id missing for welcome', tripId);
+    }
+    return;
+  }
+  const customerId = onboardingWelcomeTranscriptCustomerId(session, seat);
+  const welcomeFor = seat ? String(session.customer_id) : 'owner';
+  const welcomeAudience = seat ? 'collaborator' : 'owner';
+  const welcomeTrip = trip || { id: null, shareToken: '', publicUrl: '', title: '' };
+  if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) {
+    await bindPreTripOnboardingWelcome(db, {
+      customerId,
+      tripId: welcomeScopeTripId,
+      welcomeAudience,
+      welcomeFor,
+      onboardingSessionId,
+    });
+    return;
+  }
+  const inputs = await welcomeInputs(db, session, welcomeTrip);
+  const missing = missingWelcomeFields(inputs);
+  const started = Date.now();
+  let text;
+  try {
+    if (missing.length) throw onboardingWelcomeFailure(`onboarding welcome missing ${missing[0]}`, tripId);
+    text = renderOnboardingWelcome(inputs, deps);
+  } catch (error) {
+    const failed = error?.code === 'onboarding_welcome_failed' ? error : onboardingWelcomeFailure(error?.message, tripId);
+    const welcomeError = { reason: String(failed.reason || failed.message || ''), tripId: String(tripId || ''), missing };
+    console.error(JSON.stringify({ event: 'onboarding_welcome_failed', ...welcomeError }));
+    failed.welcomeError = welcomeError;
+    throw failed;
+  }
+  const priorClaims = await db`
+    select id
+    from vacation_onboarding_welcomes
+    where onboarding_session_id = ${onboardingSessionId}
+      and welcome_for = ${welcomeFor}
+    limit 1
+  `;
+  const claimed = await db`
+    insert into vacation_onboarding_welcomes (onboarding_session_id, welcome_for, trip_id)
+    values (${onboardingSessionId}, ${welcomeFor}, ${tripId})
+    on conflict (onboarding_session_id, welcome_for) do nothing
+    returning id
+  `;
+  if (!claimed.length) {
+    if (await onboardingWelcomeTurnExists(db, { customerId, tripId: welcomeScopeTripId, welcomeAudience })) return;
+    if (!priorClaims.length) return;
+    console.error(JSON.stringify({
+      event: 'onboarding_welcome_claim_without_turn',
+      onboardingSessionId: String(onboardingSessionId),
+      welcomeFor: String(welcomeFor),
+      tripId: tripId ? String(tripId) : null,
+      welcomeAudience,
+    }));
+  }
+  const elapsed = Math.max(1, Date.now() - started);
+  const live = cannedWelcomeLiveTurn({
+    text,
+    at: new Date().toISOString(),
+    latencyMs: elapsed,
+    sessionE2eMs: elapsed,
+  });
+  logVacationAppReplyTelemetry(live);
+  const payload = {
+    source: 'vacation_app',
+    surface: 'vacation-app',
+    selectedTripId: tripId,
+    welcomeAudience,
+    welcomeFor,
+    liveTranscript: live,
   };
+  let inserted;
+  try {
+    inserted = await db`
+      insert into transcript_turns (
+        customer_id, trip_id, speaker, channel, body, payload, direction,
+        sent_at, response_latency_ms
+      )
+      values (
+        ${customerId}, ${tripId}, 'app', 'vacation-app', ${text}, ${payload}, 'outbound',
+        now(), 0
+      )
+      returning id
+    `;
+  } catch (error) {
+    await releaseOnboardingWelcomeClaim(db, { onboardingSessionId, welcomeFor });
+    throw error;
+  }
+  if (!inserted.length) {
+    await releaseOnboardingWelcomeClaim(db, { onboardingSessionId, welcomeFor });
+    throw onboardingWelcomeFailure('onboarding welcome transcript insert failed', tripId);
+  }
+  console.log(JSON.stringify({
+    event: 'canned_welcome',
+    customerId: String(customerId || ''),
+    tripId: tripId ? String(tripId) : null,
+    welcomeAudience,
+    welcomeFor,
+    telemetry: live.telemetry,
+  }));
+}
+
+function queueVacationAppHooks() {
+  return {
+    ensureOnboardingOpener,
+    publishIntakeShare,
+    recordCustomerThingNotes,
+    vacationAppTripSummary,
+  };
+}
+
+async function queueVacationAppTurn(db, session, trip, body, intakePrefill = null) {
+  const welcomeStarted = Date.now();
+  if (!seatFromSession(session)) await ensureOnboardingOpener(db, session, trip || null);
+  const welcomeMs = Date.now() - welcomeStarted;
+  const requestText = cleanText(body.text || body.message, 12000);
+  const intake = await resolveVacationAppQueueIntake(requestText, intakePrefill, process.env);
+  return runQueueVacationAppTurn(db, session, trip, body, queueVacationAppHooks(), {
+    requestText,
+    ...intake,
+    welcomeMs,
+  });
+}
+
+function chatSaveMetadata(thing, scheduled) {
+  const meta = {
+    source: thing.source || 'chat_extraction',
+    who: thing.who || '',
+    whenLabel: scheduled.whenLabel || thing.whenLabel || '',
+    customerWhen: scheduled.customerWhen || thing.customerWhen || '',
+    askWhichDay: scheduled.askWhichDay === true,
+    notes: thing.notes || [],
+    collaboratorNotes: thing.collaboratorNotes || [],
+  };
+  if (scheduled.candidateDates?.length) meta.candidateDates = scheduled.candidateDates;
+  return meta;
 }
 
 function thingView(row) {
   const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  const notes = Array.isArray(meta.notes) ? meta.notes : (row.description ? [row.description] : []);
+  const notes = Array.isArray(meta.notes) ? meta.notes : [];
   const collaboratorNotes = Array.isArray(meta.collaboratorNotes) ? meta.collaboratorNotes : [];
   return {
     id: row.id,
     category: row.category,
     title: row.title,
-    description: row.description || notes.join(' '),
+    description: row.description || '',
+    location: row.location && typeof row.location === 'object' ? row.location : {},
+    metadata: meta,
+    source: meta.source || '',
     who: meta.who || '',
     whenLabel: meta.whenLabel || '',
     customerWhen: meta.customerWhen || '',
+    askWhichDay: meta.askWhichDay === true,
     notes,
     collaboratorNotes,
   };
 }
 
 async function publishIntakeShare(db, tripId) {
-  const slug = intakeShareSlug(tripId);
-  if (!slug) return;
   const things = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
   if (!Number(things[0]?.n)) return;
-  await db`
-    update trips
-    set metadata = coalesce(metadata, '{}'::jsonb) || ${{ publicSlug: slug, intakeShare: true }},
-        updated_at = now()
-    where id = ${tripId}
-      and coalesce(metadata->>'sharedToken', '') = ''
-      and coalesce(metadata->>'shareToken', '') = ''
-      and coalesce(metadata->>'source_token', '') = ''
-      and coalesce(metadata->>'publicSlug', '') in ('', ${slug})
-  `;
+  await assignTripSiteUrl(db, tripId, process.env);
   await storePreCollaboratorSnapshot(db, tripId);
 }
 
 async function loadTripThings(db, tripId) {
   if (!tripId) return [];
   const rows = await db`
-    select id, category, title, description, metadata
+    select id, category, title, description, metadata, location
     from trip_things
     where trip_id = ${tripId}
     order by created_at asc
@@ -658,71 +603,161 @@ async function loadTripThings(db, tripId) {
   return rows.map(thingView);
 }
 
-async function ensureIntakeItinerary(db, tripId, text) {
-  const facts = intakeFacts(text);
-  const planned = facts.things.length ? facts.things : thingsFromIntake(text);
-  if (!planned.length) return loadTripThings(db, tripId);
+async function ensureIntakeItinerary(db, tripId, text, extracted, { roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}) {
+  const planned = intakeActivityThings(extracted);
+  const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+  const priorRows = await db`select title, destination, metadata from trips where id = ${tripId} limit 1`;
   const existing = await db`select count(*)::int as n from trip_things where trip_id = ${tripId}`;
-  if (Number(existing[0]?.n) > 0) return loadTripThings(db, tripId);
-  const span = facts.span;
-  const priorRows = await db`select metadata from trips where id = ${tripId} limit 1`;
+  if (Number(existing[0]?.n) > 0) {
+    return intakeItineraryExistingThings(db, tripId, text, extracted, wantedThings, {
+      extractedDestination, extractedTitle, destinationError, titleError, searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId,
+      savedTripTitle: priorRows[0]?.title,
+    }, loadTripThings);
+  }
+  const span = intakeSpan(text);
   const priorMeta = priorRows[0]?.metadata && typeof priorRows[0].metadata === 'object' ? priorRows[0].metadata : {};
+  const priorDestination = String(priorRows[0]?.destination || '').trim();
+  const resolvedDestination = priorDestination
+    ? { destination: priorDestination, ask: false, source: 'saved-trip' }
+    : await resolveTripDestination({
+      saved: '',
+      texts: [text],
+      complete: (corpus) => openRouterDestinationComplete(corpus, process.env),
+    });
   const priorParty = priorMeta.dialogParty && typeof priorMeta.dialogParty === 'object' ? priorMeta.dialogParty : {};
   const party = completeRosterParty({
     party: priorParty,
     customerName: priorParty.primary?.name || '',
     turns: [{ role: 'customer', text }],
+    ...(Array.isArray(roster) || rosterError ? {
+      roster: Array.isArray(roster) ? roster : [],
+      rosterError,
+      askRoster: askRoster === true,
+    } : {}),
   });
   if (!party.primary?.name && priorParty.primary?.name) party.primary = priorParty.primary;
-  if (span?.destination || span?.start) {
-    await db`
-      update trips
-      set title = case
-            when ${span.placeTitle || ''} <> '' and title in (
-              'Vacation', 'TimeSyncher Vacation Coupon Checkout', 'TimeSyncher Vacation Setup', 'TimeSyncher Vacation Admin Test'
-            ) then ${span.placeTitle || 'Vacation'}
-            else title
-          end,
-          destination = case
-            when coalesce(destination, '') = '' then ${span.destination || ''}
-            else destination
-          end,
-          start_date = coalesce(start_date, ${span.start || null}::date),
-          end_date = coalesce(end_date, ${span.end || null}::date),
-          status = case when status = 'onboarding' then 'planning' else status end,
-          metadata = coalesce(metadata, '{}'::jsonb) || ${{
-            intakeRule: facts.rule || '',
-            intakeSpan: span.spanLabel || '',
-            intakeBadge: span.badge || '',
-            dialogParty: party,
-          }},
-          updated_at = now()
-      where id = ${tripId}
-    `;
+  const resolved = await resolveIntakePlace({
+    destination: extractedDestination || resolvedDestination.destination,
+    title: extractedTitle,
+    destinationError,
+    titleError,
+    searchImpl,
+  });
+  let tripTitle = resolved.title;
+  const tripDestination = resolved.destination || resolvedDestination.destination || '';
+  if (!tripTitle && span?.badge) {
+    const titleDestination = tripDestination || extractedDestination || priorDestination;
+    if (titleDestination) {
+      tripTitle = cleanText(`${titleDestination} ${span.badge}`, 180);
+    }
   }
+  const missingTitle = tripTitle ? null : resolved.titleError;
+  const dated = span?.start ? 'yes' : '';
+  await db`
+    update trips
+    set title = case
+          when ${tripTitle} <> '' then ${tripTitle}
+          else title
+        end,
+        destination = case
+          when coalesce(destination, '') = '' and ${tripDestination} <> '' then ${tripDestination}
+          else destination
+        end,
+        start_date = coalesce(start_date, ${span?.start || null}::date),
+        end_date = coalesce(end_date, ${span?.end || null}::date),
+        status = case when status = 'onboarding' and ${dated} = 'yes' then 'planning' else status end,
+        metadata = coalesce(metadata, '{}'::jsonb) || ${{
+          ...(span?.spanLabel ? { intakeSpan: span.spanLabel, intakeBadge: span.badge || '' } : {}),
+          dialogParty: party,
+          ...(tripDestination ? { destinationSource: resolved.destination ? 'chat_extraction' : resolvedDestination.source } : { destinationError: resolved.destinationError || (resolvedDestination.ask ? 'missing' : null) }),
+          ...(tripTitle ? { titleSource: 'chat_extraction' } : { titleError: missingTitle }),
+        }},
+        updated_at = now()
+    where id = ${tripId}
+  `;
+  const datedRows = await db`
+    select start_date, end_date
+    from trips
+    where id = ${tripId}
+    limit 1
+  `;
+  const tripDatesRow = {
+    start_date: datedRows[0]?.start_date || span?.start || null,
+    end_date: datedRows[0]?.end_date || span?.end || null,
+  };
   for (const thing of planned) {
-    await db`
-      insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
-      values (
-        ${tripId}, ${thing.category}, ${thing.title}, ${thing.description},
-        'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-          source: 'long-intake',
-          who: thing.who || '',
-          whenLabel: thing.whenLabel || '',
-          customerWhen: '',
-          notes: thing.notes || [],
-          collaboratorNotes: [],
-        }}
-      )
-    `;
+    const scheduled = scheduleChatThing(thing, tripDatesRow);
+    const metadata = chatSaveMetadata(thing, scheduled);
+    await insertIntakeTripThingRow(db, {
+      tripId,
+      category: thing.category,
+      title: thing.title,
+      description: thing.description,
+      metadata: { ...metadata, source: metadata.source },
+      startsAt: scheduled.starts_at,
+      destinationHint: extractedDestination || tripDestination,
+      detailText: detailTextFromChatTurn(text, thing),
+      searchPlacesImpl,
+      fetchImpl,
+      env,
+    });
   }
+  if (lodgingWanted.length) {
+    const current = await loadTripThings(db, tripId);
+    const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+      destinationHint: extractedDestination,
+      areaHint: extractedDestination,
+      env,
+      fetchImpl,
+      searchImpl: searchPlacesImpl,
+      existingThings: current,
+    });
+    if (customerTurnId && (lodgingOutcome?.lodgingOutcome || lodgingOutcome?.lookups?.length)) {
+      await persistIntakeLodgingLookupOnCustomerTurn(
+        db,
+        customerTurnId,
+        lodgingOutcome.lookups || [],
+        lodgingOutcome.lodgingOutcome || null,
+      );
+    }
+  }
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
   return loadTripThings(db, tripId);
 }
 
-async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '' } = {}, intakeText = '') {
-  if (intakeText) await ensureIntakeItinerary(db, tripId, intakeText);
-  const current = await loadTripThings(db, tripId);
-  if (!current.length || !String(text || '').trim()) return current;
+async function recordCustomerThingNotes(db, tripId, text, { collaborator = false, speakerName = '', appReply = '', roster = null, rosterError = null, askRoster = false, extractedDestination = '', extractedTitle = '', destinationError = null, titleError = null, searchImpl, searchPlacesImpl, env = process.env, fetchImpl = globalThis.fetch, customerTurnId = null, wantedThings = [] } = {}, intakeText = '', extracted = []) {
+  if (intakeText) {
+    await ensureIntakeItinerary(db, tripId, intakeText, extracted, {
+      roster, rosterError, askRoster, extractedDestination, extractedTitle, destinationError, titleError,
+      searchImpl, searchPlacesImpl, env, fetchImpl, customerTurnId, wantedThings,
+    });
+  }
+  let current = await loadTripThings(db, tripId);
+  const lodgingLookups = [];
+  if (!intakeText) {
+    const lodgingWanted = intakeLodgingWanted(extracted, wantedThings);
+    if (lodgingWanted.length) {
+      const lodgingOutcome = await persistIntakeLodgingThings(db, tripId, null, lodgingWanted, {
+        destinationHint: extractedDestination,
+        areaHint: extractedDestination,
+        env,
+        fetchImpl,
+        searchImpl: searchPlacesImpl,
+        existingThings: current,
+      });
+      if (Array.isArray(lodgingOutcome?.lookups)) lodgingLookups.push(...lodgingOutcome.lookups);
+      if (lodgingOutcome?.lodgingOutcome) {
+        await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingOutcome.lookups || [], lodgingOutcome.lodgingOutcome);
+      }
+      current = await loadTripThings(db, tripId);
+    }
+    if (customerTurnId && lodgingLookups.length) {
+      await persistIntakeLodgingLookupOnCustomerTurn(db, customerTurnId, lodgingLookups);
+    }
+  }
+  const wanted = intakeActivityThings(extracted);
+  if (!current.length && !wanted.length) return current;
+  if (!String(text || '').trim() && !wanted.length) return current;
   const tripRows = await db`
     select start_date, end_date
     from trips
@@ -732,52 +767,98 @@ async function recordCustomerThingNotes(db, tripId, text, { collaborator = false
   const start = tripRows[0]?.start_date || null;
   const end = tripRows[0]?.end_date || null;
   const year = start ? new Date(start).getUTCFullYear() : null;
-  let next = ensureNamedThings(current, text);
-  next = applyCustomerNotes(next, text, { collaborator, speakerName });
+  const tripDatesRow = { start_date: start, end_date: end };
+  let next = mergeWantedThings(current, wanted);
+  let commits = null;
+  try {
+    commits = await activityCommitDecisions(text);
+  } catch (error) {
+    commits = { __ask: true, error: String(error?.message || error) };
+  }
+  next = applyCustomerNotes(next, text, { collaborator, speakerName, commits });
   next = applyAgreedAppSwim(next, text, appReply, { start, end, year: Number.isFinite(year) ? year : null });
+  next = next.map((thing) => {
+    const scheduled = scheduleChatThing(thing, tripDatesRow);
+    return {
+      ...thing,
+      whenLabel: scheduled.whenLabel || thing.whenLabel || '',
+      customerWhen: scheduled.customerWhen || thing.customerWhen || '',
+      askWhichDay: scheduled.askWhichDay === true,
+      candidateDates: scheduled.candidateDates,
+      starts_at: scheduled.starts_at,
+    };
+  });
+  const savedThingIds = [];
   for (const thing of next) {
     const prior = current.find((item) => item.id && item.id === thing.id);
     if (!prior) {
       if (current.some((item) => item.title === thing.title)) continue;
-      await db`
-        insert into trip_things (trip_id, category, title, description, currency, location, links, ratings, metadata)
-        values (
-          ${tripId}, ${thing.category || 'activity'}, ${thing.title}, ${thing.description || ''},
-          'usd', '{}'::jsonb, '[]'::jsonb, '{}'::jsonb, ${{
-            source: 'customer-turn',
-            who: thing.who || '',
-            whenLabel: thing.whenLabel || '',
-            customerWhen: thing.customerWhen || '',
-            notes: thing.notes || [],
-            collaboratorNotes: thing.collaboratorNotes || [],
-          }}
-        )
-      `;
+      const metadata = chatSaveMetadata(thing, {
+        whenLabel: thing.whenLabel,
+        customerWhen: thing.customerWhen,
+        askWhichDay: thing.askWhichDay === true,
+        candidateDates: thing.candidateDates,
+        starts_at: thing.starts_at,
+      });
+      const insertedId = await insertIntakeTripThingRow(db, {
+        tripId,
+        category: thing.category || 'activity',
+        title: thing.title,
+        description: thing.description || '',
+        metadata: { ...metadata, source: metadata.source },
+        startsAt: thing.starts_at || null,
+        destinationHint: extractedDestination,
+        detailText: detailTextFromChatTurn(text, thing),
+        searchPlacesImpl,
+        fetchImpl,
+        env,
+      });
+      if (insertedId) savedThingIds.push(insertedId);
       continue;
     }
     if (JSON.stringify({
-      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who,
+      notes: prior.notes, collaboratorNotes: prior.collaboratorNotes, customerWhen: prior.customerWhen, who: prior.who, askWhichDay: prior.askWhichDay === true,
     }) === JSON.stringify({
-      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who,
+      notes: thing.notes, collaboratorNotes: thing.collaboratorNotes, customerWhen: thing.customerWhen, who: thing.who, askWhichDay: thing.askWhichDay === true,
     })) continue;
-    await db`
+    const updated = await db`
       update trip_things
-      set description = ${thing.description || prior.description || ''},
+      set description = '',
+          starts_at = ${thing.starts_at || null},
           metadata = coalesce(metadata, '{}'::jsonb) || ${{
             who: thing.who || '',
             whenLabel: thing.whenLabel || prior.whenLabel || '',
             customerWhen: thing.customerWhen || '',
+            askWhichDay: thing.askWhichDay === true,
+            ...(thing.candidateDates?.length ? { candidateDates: thing.candidateDates } : {}),
             notes: thing.notes || [],
             collaboratorNotes: thing.collaboratorNotes || [],
           }},
           updated_at = now()
       where id = ${thing.id}
+      returning id
     `;
+    if (updated[0]?.id) savedThingIds.push(updated[0].id);
   }
-  return loadTripThings(db, tripId);
+  await refreshUnresolvedChatIntakePlaces(db, {
+    tripId,
+    requestId: null,
+    text,
+    things: next,
+    destinationHint: extractedDestination,
+    env,
+    fetchImpl,
+    searchImpl: searchPlacesImpl,
+  });
+  await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
+  const itinerary = await loadTripThings(db, tripId);
+  itinerary.savedThingIds = savedThingIds;
+  return itinerary;
 }
 
 async function vacationAppEula(session, env = process.env) {
+  const seat = seatFromSession(session);
+  if (seat?.inviteId) return vacationAppEulaForCollaboratorSeat(session, seat, env);
   const status = await vacationEulaStatus(session, env);
   const accepted = Boolean(status.ok || status.status === 'accepted');
   const payload = {
@@ -801,48 +882,70 @@ async function handleVacationApp(req, res, db, url) {
 
   const session = await loadVacationAppSession(db, token);
   if (!session?.customer_id) return sendJson(res, 404, { ok: false, error: 'Vacation app session not found.' });
+  const seatForEula = seatFromSession(session);
+  if (seatForEula?.inviteId) {
+    const store = createPersistentStoreFromEnv(process.env);
+    await collaboratorSessionForAccept(store, db, collaboratorEulaSessionId({ id: seatForEula.inviteId }), process.env);
+  }
 
   if (req.method === 'GET') {
-    const vacations = await loadVacationAppTrips(db, session);
     const requestedTripId = cleanText(url.searchParams.get('tripId') || url.searchParams.get('trip_id'), 80);
-    const selected = vacations.find((trip) => trip.id === requestedTripId)
-      || vacations.find((trip) => trip.id === session.trip_id)
-      || vacations[0]
-      || null;
+    const seatPrefetch = seatFromSession(session);
+    if (seatPrefetch?.ownerTripId) await publishIntakeShare(db, seatPrefetch.ownerTripId);
+    let vacations = await loadVacationAppTrips(db, session);
+    let selected = pickVacationAppTrip(vacations, session, requestedTripId);
+    if (selected?.id) await publishIntakeShare(db, selected.id);
+    vacations = await loadVacationAppTrips(db, session);
+    selected = pickVacationAppTrip(vacations, session, requestedTripId);
     const eula = await vacationAppEula(session, process.env);
-    if (selected && eula.accepted) await ensureOnboardingOpener(db, session, selected);
-    const turns = selected ? await loadVacationAppTurns(db, session, selected.id) : [];
-    if (selected) await publishIntakeShare(db, selected.id);
-    const published = selected ? await loadVacationAppTrips(db, session) : vacations;
+    if (eula.accepted) {
+      await ensureOnboardingOpener(db, session, selected || null);
+      if (seatFromSession(session)) {
+        const welcomed = await collaboratorWelcomeTurnExists(db, session, selected || null);
+        if (!welcomed) {
+          throw onboardingWelcomeFailure('collaborator onboarding welcome missing after app load', selected?.id || null);
+        }
+      }
+    }
+    const turns = await loadVacationAppTurns(db, session, selected?.id || null);
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
     const seat = seatFromSession(session);
+    const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
     return sendJson(res, 200, {
       ok: true,
       session: {
         token: session.token,
         status: session.status,
         customerName: seat?.displayName || session.display_name || [session.first_name, session.last_name].filter(Boolean).join(' '),
+        viewerId: session.customer_id || null,
         email: session.email || null,
         currentTripId: selected?.id || session.trip_id || vacations[0]?.id || null,
         seat: seat ? { payer: seat.payer, displayName: seat.displayName } : null,
       },
       eula,
-      vacations: published,
+      trip: selected,
+      tripSiteUrl,
+      publicUrl: selected?.publicUrl || '',
+      vacations,
       turns,
       itinerary,
     });
   }
 
   if (req.method === 'POST') {
+    const postStarted = Date.now();
     const body = await readJson(req);
-    if (body.action === 'open-seats') {
+    if (body.action === 'open-seats' || body.action === 'collaborator-invite') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot open seats.' });
-      const seats = await openCollaboratorAppSeats(db, {
-        ownerCustomerId: session.customer_id,
-        tripId: session.trip_id,
-        seats: body.seats,
+      const seat = Array.isArray(body.seats) ? body.seats[0] : body;
+      const result = await runCollaboratorInviteAction(db, {
+        session,
+        tripId: cleanText(body.tripId || body.trip_id, 80) || session.trip_id || '',
+        name: seat?.name || seat?.displayName,
+        email: seat?.email,
+        env: process.env,
       });
-      return sendJson(res, 200, { ok: true, seats });
+      return sendJson(res, 200, { ok: true, seats: result.seats, inviteResult: result });
     }
     if (body.action === 'finish-rewrite') {
       const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
@@ -852,82 +955,105 @@ async function handleVacationApp(req, res, db, url) {
         ? pending.resolved
         : await finishTierRewrite({ pending, env: process.env });
       if (!finished.reply) return sendJson(res, 502, { ok: false, error: finished.reason || 'The rewrite did not produce a reply.' });
-      const wallMs = Math.max(1, Date.now() - (Number(pending.wallStarted) || Date.now()));
-      const appLive = liveTurnRecord({
-        turnIndex: Number(pending.customerTurnIndex) + 1,
-        role: 'app',
-        modality: 'text',
-        text: finished.reply,
-        at: new Date().toISOString(),
-        latencyMs: wallMs,
-        sessionE2eMs: Math.max(1, Date.now() - (Number(pending.sessionStartedMs) || Date.now())),
-        jev: finished.jev,
-        model: finished.model,
-        rules: finished.rules,
-        speakerName: pending.speakerName || null,
+      const shipped = await commitShippedRewrite(db, session, pending, finished, {
+        recordCustomerThingNotes,
+        publishIntakeShare,
       });
-      await db`
-        insert into transcript_turns (
-          customer_id, trip_id, request_id, speaker, channel, body, payload, direction,
-          sent_at, response_latency_ms
-        )
-        values (
-          ${transcriptCustomerId(session)}, ${pending.tripId}, ${pending.requestId}, 'app', 'vacation-app', ${finished.reply},
-          ${{ source: 'vacation_app', surface: 'vacation-app', selectedTripId: pending.tripId, liveTranscript: appLive }},
-          'outbound', now(), ${wallMs}
-        )
-      `;
-      const itinerary = await recordCustomerThingNotes(
-        db,
-        pending.tripId,
-        pending.customerTurn,
-        { collaborator: pending.collaborator === true, speakerName: pending.speakerName || '', appReply: finished.reply },
-        pending.postIntake === true ? pending.customerTurn : '',
-      );
-      if (itinerary.length) await publishIntakeShare(db, pending.tripId);
-      await db`
-        update onboarding_sessions
-        set metadata = coalesce(metadata, '{}'::jsonb) - 'pendingRewrite',
-          updated_at = now()
-        where id = ${session.id}
-      `;
-      return sendJson(res, 200, {
-        ok: true,
-        status: 'replied',
-        reply: finished.reply,
-        interimReply: finished.log?.interimReply || pending.interimReply || null,
-        itinerary,
-        error: null,
-      });
+      return sendJson(res, 200, shipped);
     }
     if (body.action === 'record-party') {
       if (seatFromSession(session)) return sendJson(res, 403, { ok: false, error: 'A collaborator seat cannot record the roster.' });
       const party = await recordDialogParty(db, session.trip_id, body.party);
       return sendJson(res, 200, { ok: true, party });
     }
-    const vacations = await loadVacationAppTrips(db, session);
+    let vacations = await loadVacationAppTrips(db, session);
+    const eula = await vacationAppEula(session, process.env);
     const requestedTripId = cleanText(body.tripId || body.trip_id, 80);
-    const selected = vacations.find((trip) => trip.id === requestedTripId)
+    let selected = vacations.find((trip) => trip.id === requestedTripId)
       || vacations.find((trip) => trip.id === session.trip_id)
       || vacations[0];
-    if (!selected) return sendJson(res, 409, { ok: false, error: 'No vacation is available for this session yet.' });
-    const eula = await vacationAppEula(session, process.env);
-    if (!eula.accepted) return sendJson(res, 409, { ok: false, error: 'Accept the terms before sending a message.' });
+    let created = null;
+    let createVacationMs = null;
+    if (!selected) {
+      if (!eula.accepted) {
+        return sendJson(res, 409, vacationAppErrorBody({
+          error: 'Accept the terms before sending a message.',
+          code: 'eula_not_accepted',
+          customerMessage: 'Accept the terms before you send a message.',
+        }));
+      }
+      const createStarted = Date.now();
+      created = await createVacationFromChatMessage(db, session, body, loadVacationAppTrips, process.env);
+      createVacationMs = Date.now() - createStarted;
+      if (!created.ok) {
+        return sendJson(res, created.statusCode || 500, vacationAppErrorBody({
+          error: created.error,
+          code: created.code || 'vacation_app_chat_failed',
+        }));
+      }
+      if (created.action === 'created' || created.action === 'existing' || created.action === 'upgraded') {
+        vacations = created.vacations;
+        selected = created.selected;
+      }
+    }
+    const intakePrefill = created?.classification?.ok === true
+      ? {
+        classification: created.classification,
+        classifierMs: created.classifierMs,
+        tripCreateTimings: created.tripCreateTimings,
+      }
+      : null;
+    if (!eula.accepted) {
+      return sendJson(res, 409, vacationAppErrorBody({
+        error: 'Accept the terms before sending a message.',
+        code: 'eula_not_accepted',
+        customerMessage: 'Accept the terms before you send a message.',
+      }));
+    }
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
-      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records pay, EULA, and join.' });
-      const text = seatJoinCustomerText(seat);
-      const prior = await loadVacationAppTurns(db, session, selected.id);
-      if (prior.some((turn) => turn.speaker === 'customer' && String(turn.body || '').includes(text))) {
+      if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
+      const tripKey = selected?.id || seat.ownerTripId || null;
+      if (!tripKey && !seat.ownerOnboardingSessionId) {
+        return sendJson(res, 409, {
+          ok: false,
+          error: 'No vacation is available for this session yet.',
+          code: 'vacation_app_trip_missing',
+        });
+      }
+      const event = collaboratorSeatJoinEvent(seat);
+      const prior = await loadVacationAppTurns(db, session, tripKey);
+      if (prior.some((turn) => turn.speaker === 'system' && turn.payload?.event === 'collaborator_seat_join')) {
         return sendJson(res, 200, { ok: true, status: 'already_joined', reply: null });
       }
-      const queuedJoin = await queueVacationAppTurn(db, session, selected, { text, modality: 'text' });
-      return sendJson(res, queuedJoin.ok ? 201 : 502, { trip: selected, ...queuedJoin });
+      await db`
+        insert into transcript_turns (
+          customer_id, trip_id, speaker, channel, body, payload, direction, sent_at
+        )
+        values (
+          ${transcriptCustomerId(session)}, ${tripKey}, ${event.speaker}, ${event.channel}, ${event.body},
+          ${event.payload}, ${event.direction}, now()
+        )
+      `;
+      return sendJson(res, 201, { ok: true, status: 'joined', reply: null, event: event.payload.event });
     }
-    const queued = await queueVacationAppTurn(db, session, selected, body);
-    return sendJson(res, queued.ok ? 201 : 502, {
+    const queueStarted = Date.now();
+    const queued = await queueVacationAppTurn(db, session, selected, body, intakePrefill);
+    const queueTurnMs = Date.now() - queueStarted;
+    const postStatus = queued.ok ? (selected ? 201 : 200) : 502;
+    const serverTiming = mergeTripCreateServerTiming({
+      postMs: Date.now() - postStarted,
+      createVacationMs,
+      queueTurnMs,
+      tripCreateTimings: created?.tripCreateTimings,
+      stageTimings: queued.stageTimings,
+      latencyMs: queued.latencyMs,
+      sessionE2eMs: queued.sessionE2eMs,
+    });
+    return sendJson(res, postStatus, {
       trip: selected,
       ...queued,
+      serverTiming,
     });
   }
 
@@ -940,11 +1066,27 @@ function isStagingHost(req) {
     || host.includes('timesyncher-vacation-staging');
 }
 
+export async function attachIntakeItineraryFromReply(db, tripId, requestText, options, intakeText, extracted) {
+  return recordCustomerThingNotes(db, tripId, requestText, options, intakeText, extracted);
+}
+
+export async function writeIntakeItineraryFromChat(db, tripId, intakeText, extracted, options = {}) {
+  return ensureIntakeItinerary(db, tripId, intakeText, extracted, options);
+}
+
+export async function publishTripIntakeShare(db, tripId) {
+  return publishIntakeShare(db, tripId);
+}
+
+export async function queueVacationAppTurnForTests(db, session, trip, body) {
+  return queueVacationAppTurn(db, session, trip, body);
+}
+
 export default async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', 'https://timesyncher.com');
     if (url.searchParams.get('app') === '1') {
-      return await handleVacationApp(req, res, sql(process.env), url);
+      return await handleVacationApp(req, res, openVacationAppDb(), url);
     }
     if (url.searchParams.get('trekBundle') === '1') {
       return await trekStyle2BundleHandler(req, res);
@@ -961,10 +1103,10 @@ export default async function handler(req, res) {
     if (url.searchParams.get('mediaBind') === '1' || url.pathname.endsWith('/bind-thing-media')) {
       return await bindThingMediaHandler(req, res);
     }
-    const db = sql(process.env);
     if (url.searchParams.get('webAccess') === '1' || url.pathname.endsWith('/vacation-web-access')) {
-      return await handleWebAccess(req, res, db, url);
+      return await handleWebAccess(req, res, openVacationAppDb(), url);
     }
+    const db = sql(process.env);
 
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
     const token = cleanText(url.searchParams.get('session') || url.searchParams.get('token'), 160);
@@ -994,7 +1136,7 @@ export default async function handler(req, res) {
 
     const things = await db`
       select id, category, subtype, title, description, starts_at, ends_at, cost_estimate_cents,
-        currency, location, links, ratings, metadata, created_at
+        currency, location, links, ratings, metadata, source, created_at
       from trip_things
       where trip_id = ${session.trip_id}
       order by
@@ -1038,7 +1180,7 @@ export default async function handler(req, res) {
         telegram_message_id text,
         telegram_chat_id text,
         telegram_user_id text,
-        storage_provider text not null default 'telegram',
+        storage_provider text not null default 'url',
         status text not null default 'active',
         metadata jsonb not null default '{}'::jsonb,
         created_at timestamptz not null default now(),
@@ -1047,15 +1189,13 @@ export default async function handler(req, res) {
     `;
     const media = await db`
       select id, public_token, media_kind, attachment_scope, day_date, caption, mime_type,
-        file_size_bytes, width, height, duration_seconds, created_at
+        file_size_bytes, width, height, duration_seconds, storage_provider, created_at
       from vacation_media_uploads
       where trip_id = ${session.trip_id}
         and status = 'active'
       order by created_at desc
       limit 200
     `;
-    const origin = `https://${req.headers.host || 'vacation.timesyncher.com'}`;
-
     if (isStagingHost(req)) {
       res.setHeader('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
     }
@@ -1073,23 +1213,30 @@ export default async function handler(req, res) {
       sections: groupBy(things, 'category'),
       things,
       budgets,
-      media: media.map((item) => ({
-        id: item.id,
-        kind: item.media_kind,
-        attachmentScope: item.attachment_scope,
-        dayDate: item.day_date,
-        caption: item.caption,
-        mimeType: item.mime_type,
-        fileSizeBytes: item.file_size_bytes,
-        width: item.width,
-        height: item.height,
-        durationSeconds: item.duration_seconds,
-        createdAt: item.created_at,
-        url: `${origin}/api/vacation-telegram-turn?action=media-download&id=${encodeURIComponent(item.id)}&token=${encodeURIComponent(item.public_token)}`,
-      })),
+      media: media.flatMap((item) => {
+        if (item.storage_provider === 'telegram') {
+          console.error(`skipped vacation media ${item.id}: storage_provider=telegram is not fetched`);
+          return [];
+        }
+        return [{
+          id: item.id,
+          kind: item.media_kind,
+          attachmentScope: item.attachment_scope,
+          dayDate: item.day_date,
+          caption: item.caption,
+          mimeType: item.mime_type,
+          fileSizeBytes: item.file_size_bytes,
+          width: item.width,
+          height: item.height,
+          durationSeconds: item.duration_seconds,
+          createdAt: item.created_at,
+          storageProvider: item.storage_provider,
+        }];
+      }),
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return sendJson(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to load itinerary.' });
+    const welcome = welcomeFailureBody(error);
+    return sendJson(res, error.statusCode || 400, welcome || { ok: false, error: error.message || 'Unable to load itinerary.' });
   }
 }

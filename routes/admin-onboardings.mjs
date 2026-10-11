@@ -6,10 +6,11 @@ import { createCoupon, disableCoupon, listCoupons } from '../src/vacation/coupon
 import {
   ensureVacationEulaSession,
   onboardingLink,
-  telegramLink,
   upsertCustomer,
 } from '../src/vacation/onboarding.mjs';
 import { queueOrSendPurchaseEmail } from '../src/vacation/email.mjs';
+import { probePlaceSearchKeys } from '../src/vacation/poi-search.mjs';
+import { buildProviderEnv } from '../src/vacation/provider-env.mjs';
 
 function token() {
   return crypto.randomBytes(18).toString('base64url');
@@ -33,8 +34,6 @@ function publicSession(row) {
     startedAt: row.started_at,
     completedAt: row.completed_at,
     emailSentAt: row.email_sent_at,
-    telegramInstallChoice: row.telegram_install_choice,
-    telegramUrl: row.telegram_deep_link,
     customer: {
       id: row.customer_id,
       email: row.email,
@@ -124,7 +123,7 @@ function adminCreatedMetadata(body, contact) {
   };
 }
 
-async function createAdminOnboarding(db, body) {
+export async function createAdminOnboarding(db, body) {
   const contact = contactFromBody(body);
   const plan = cleanText(body.plan, 40) === 'unlimited' ? 'unlimited' : 'single';
   const sendEmail = Boolean(body.sendEmail);
@@ -136,7 +135,7 @@ async function createAdminOnboarding(db, body) {
     insert into trips (customer_id, title, start_date, preferences, status, metadata)
     values (
       ${customerId},
-      ${cleanText(body.tripTitle || body.title, 180) || 'TimeSyncher Vacation Admin Test'},
+      ${cleanText(body.tripTitle || body.title, 180)},
       ${cleanText(body.vacationDate || body.startDate, 40) || null},
       ${{ source: 'admin_no_charge', onboarding: true }},
       'onboarding',
@@ -174,7 +173,7 @@ async function createAdminOnboarding(db, body) {
     )
     values (
       ${customerId}, ${tripId}, ${orderId}, ${sessionToken}, 'purchase_confirmed',
-      'post_purchase', ${telegramLink(sessionToken, process.env)}, ${meta}, now()
+      'post_purchase', ${null}, ${meta}, now()
     )
     returning *
   `;
@@ -187,8 +186,9 @@ async function createAdminOnboarding(db, body) {
     orderId,
     session,
     token: session.token,
+    publicSlug: '',
+    publicUrl: '',
     onboardingUrl: onboardingLink(session.token, process.env),
-    telegramUrl: session.telegram_deep_link || telegramLink(session.token, process.env),
     eula,
     contact,
     order: { amountCents: 0, currency: 'usd', plan, status: 'admin_no_charge' },
@@ -202,12 +202,13 @@ async function createAdminOnboarding(db, body) {
       status: session.status,
       currentStep: session.current_step,
       onboardingUrl: onboarding.onboardingUrl,
-      telegramUrl: onboarding.telegramUrl,
       eula,
     },
     customerId,
     tripId,
     orderId,
+    publicSlug: '',
+    publicUrl: '',
     email,
   };
 }
@@ -397,7 +398,6 @@ async function resendPurchaseEmailForSession(db, id, env = process.env) {
     session: row,
     token: row.token,
     onboardingUrl: onboardingLink(row.token, env),
-    telegramUrl: row.telegram_deep_link || telegramLink(row.token, env),
     contact: {
       email: row.email,
       phone: row.phone,
@@ -436,6 +436,10 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { ok: true, email: await resendPurchaseEmailForSession(db, id, process.env) });
     }
     if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
+    if (url.searchParams.get('action') === 'probe-place-keys') {
+      const probe = await probePlaceSearchKeys(buildProviderEnv(process.env));
+      return sendJson(res, probe.statusCode, probe.body);
+    }
     if (url.searchParams.get('action') === 'coupons') {
       return sendJson(res, 200, { ok: true, coupons: await listCoupons(db, url.searchParams.get('limit') || '100') });
     }

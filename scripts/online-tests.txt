@@ -1,0 +1,18 @@
+# Excluded from the offline job. One path, then a one-line reason.
+scripts/test_openclaw_control.mjs network: listens on 127.0.0.1 and fetch()es that server; ENETUNREACH with the network namespace down
+scripts/test_keepsake_layout_routes.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_spa_console.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_coupon_intake_shared_trip_chrome.mjs browser: coupon purchase, chat intake, publish, and shared trip Chrome render
+scripts/test_build_stamp_viewport.mjs browser: needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_trip_map_initial_view_chrome.mjs browser: shared-app plan map first load needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_logo_chip_center_chrome.mjs browser: shared-app logo chip center-of-mass needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_category_tab_icon_center_chrome.mjs browser: shared-app category tab icon vertical centering needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_cars_hotels_heading_ink_chrome.mjs browser: Cars and Hotels tab pill ink centering needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_tab_row_counts_chrome.mjs browser: shared-app API place count versus DOM row count needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_cars_tab_logo_served_chrome.mjs browser: shared Cars tab brand img.tiny-logo at 390/1280 needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_live_tab_logo_chip_chrome.mjs browser: shared live-tab Hertz sizeless SVG logo chip paint and garbage fallback need puppeteer-core and Chrome, which the offline job does not install
+scripts/test_served_page_layout.mjs browser: served app-shell layout needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_pr225_area_chips_layout_gate.mjs browser: PR225 Hotels/Restaurants chip header pixel gate needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_shared_trip_no_horizontal_overflow.mjs browser: shared trip scrollWidth at 390 and 1280 needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_pr225_cars_tab_overflow.mjs browser: PR225 NYC Cars tab overflow harness needs puppeteer-core and Chrome, which the offline job does not install
+scripts/test_pr225_served_tabs_overflow.mjs browser: PR225 NYC all-tab scrollWidth harness needs puppeteer-core and Chrome, which the offline job does not install

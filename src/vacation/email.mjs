@@ -1,5 +1,6 @@
-import { collaboratorEulaAcceptUrl, collaboratorTelegramLink } from './collaborators.mjs';
-import { publicTripUrl, sharedTripWebsiteUrl, webAccessAcceptUrl, websiteTripBase } from './web-access.mjs';
+import { collaboratorEulaAcceptUrl, loadCollaboratorInviteForEmail } from './collaborators.mjs';
+import { vacationAppLink } from './onboarding.mjs';
+import { publicTripUrl, webAccessAcceptUrl } from './web-access.mjs';
 
 function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -13,17 +14,38 @@ function fromEmail(env = process.env) {
   return env.TIMESYNCHER_EMAIL_FROM || `TimeSyncher Vacation <${supportEmail(env)}>`;
 }
 
-export function purchaseLaunchUrl({ publicUrl, publicSlug, env = process.env } = {}) {
-  const explicit = cleanText(publicUrl, 500);
-  if (explicit.includes('/shared/')) return explicit;
-  const slug = cleanText(publicSlug, 180);
-  if (slug) return sharedTripWebsiteUrl(slug, env);
-  return `${websiteTripBase(env)}/shared/`;
+function missingSessionError({ tripId = '', sessionId = '' } = {}) {
+  const trip = cleanText(tripId, 80);
+  const session = cleanText(sessionId, 120);
+  const named = [trip && `trip ${trip}`, session && `session ${session}`].filter(Boolean).join(', ');
+  const error = new Error(`purchase email missing vacation app session${named ? ` for ${named}` : ''}`);
+  error.code = 'purchase_email_missing_session';
+  console.error(JSON.stringify({ event: error.code, tripId: trip, sessionId: session }));
+  return error;
 }
 
-export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.env }) {
+export function purchaseLaunchUrl({ sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env } = {}) {
+  const appToken = cleanText(sessionToken || token, 180);
+  if (!appToken) throw missingSessionError({ tripId, sessionId });
+  const url = cleanText(vacationAppLink(appToken, env), 600);
+  if (!url || !url.includes('/vacation-app.html?session=')) {
+    const error = new Error(`purchase email missing launch URL${sessionId ? ` for session ${sessionId}` : ''}`);
+    error.code = 'purchase_email_missing_launch_url';
+    console.error(JSON.stringify({ event: error.code, tripId, sessionId, url }));
+    throw error;
+  }
+  if (url.includes('/shared/')) {
+    const error = new Error(`purchase email launch included a shared trip URL for session ${sessionId || appToken}`);
+    error.code = 'purchase_email_shared_launch';
+    console.error(JSON.stringify({ event: error.code, tripId, sessionId, url }));
+    throw error;
+  }
+  return url;
+}
+
+export function purchaseEmail({ contact, sessionToken = '', token = '', tripId = '', sessionId = '', env = process.env }) {
   const name = cleanText(contact?.firstName || contact?.displayName || 'there', 80) || 'there';
-  const launchUrl = purchaseLaunchUrl({ publicUrl, publicSlug, env });
+  const launchUrl = purchaseLaunchUrl({ sessionToken, token, tripId, sessionId, env });
   const subject = 'Your TimeSyncher Vacation purchase is confirmed';
   const textBody = [
     `Hi ${name},`,
@@ -50,20 +72,64 @@ export function purchaseEmail({ contact, publicUrl, publicSlug, env = process.en
   return { subject, textBody, htmlBody, launchUrl };
 }
 
+const INVITEE_EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+
+function collaboratorInviteeName(contact, invite) {
+  for (const value of [contact?.firstName, contact?.displayName, invite?.requested_for]) {
+    const text = cleanText(value, 80);
+    if (!text || INVITEE_EMAIL_RE.test(text)) continue;
+    return text;
+  }
+  return '';
+}
+
+function collaboratorInviteGreeting(contact, invite) {
+  const name = collaboratorInviteeName(contact, invite);
+  return name ? `Hi ${name},` : 'Hello,';
+}
+
+function collaboratorInviteOwnerLabel(invite) {
+  const ownerName = cleanText(invite?.owner_display_name, 160);
+  if (ownerName) return { owner: ownerName, ownerNameMissing: false };
+  const ownerEmail = cleanText(invite?.owner_email, 160).toLowerCase();
+  if (!ownerEmail) {
+    throw Object.assign(new Error('Collaborator invite is missing owner identity.'), { statusCode: 500 });
+  }
+  return { owner: ownerEmail, ownerNameMissing: true };
+}
+
 export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = '', publicUrl = '', env = process.env }) {
-  const name = cleanText(contact?.firstName || contact?.displayName || invite?.requested_for || 'there', 80) || 'there';
-  const owner = cleanText(invite?.owner_display_name || invite?.owner_email || 'the vacation owner', 160);
-  const tripTitle = cleanText(invite?.trip_title || 'this TimeSyncher Vacation', 180);
+  const greeting = collaboratorInviteGreeting(contact, invite);
+  const { owner, ownerNameMissing } = collaboratorInviteOwnerLabel(invite);
+  if (ownerNameMissing) {
+    console.log(JSON.stringify({
+      event: 'invite_email_owner_name_missing',
+      inviteId: String(invite?.id || ''),
+      ownerEmail: owner,
+    }));
+  }
+  const tripTitle = cleanText(invite?.trip_title, 180);
+  const hasTrip = Boolean(invite?.trip_id && tripTitle);
   const link = cleanText(acceptUrl, 600);
   const site = cleanText(publicUrl, 600);
-  const subject = `${owner} invited you to edit ${tripTitle}`;
+  const subject = hasTrip ? `${owner} invited you to edit ${tripTitle}` : `${owner} invited you to a TimeSyncher Vacation`;
+  const inviteLead = hasTrip
+    ? `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`
+    : `${owner} approved this email address to join a TimeSyncher Vacation chat.`;
+  const htmlLead = hasTrip
+    ? `${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.`
+    : `${owner} approved this email address to join a <strong>TimeSyncher Vacation</strong> chat.`;
+  const htmlTitle = hasTrip ? `You can edit ${tripTitle}` : 'You can join this vacation chat';
+  const termsStep = hasTrip
+    ? 'Open the link below, review and accept the terms, then continue into the vacation chat and website.'
+    : 'Open the link below, review and accept the terms, then continue into the vacation chat.';
   const textBody = [
-    `Hi ${name},`,
+    greeting,
     '',
-    `${owner} approved this email address to edit ${tripTitle} on the TimeSyncher Vacation website.`,
+    inviteLead,
     '',
     'View access lets you see the days. Edit access lets you add notes after this email invite is approved.',
-    'You join from this email, accept the terms, and then the vacation opens.',
+    termsStep,
     '',
     link ? `Approved email invite: ${link}` : '',
     site ? `Vacation website: ${site}` : '',
@@ -75,10 +141,10 @@ export function collaboratorInviteEmail({ contact, invite, token, acceptUrl = ''
   const htmlBody = `<!doctype html>
 <html><body style="margin:0;background:#050505;color:#fffaf0;font-family:Arial,sans-serif">
   <div style="max-width:640px;margin:0 auto;padding:28px">
-    <h1 style="color:#f5d37b">You can edit ${tripTitle}</h1>
-    <p>Hi ${name},</p>
-    <p>${owner} approved this email address to edit <strong>${tripTitle}</strong> on the TimeSyncher Vacation website.</p>
-    <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. You join from this email, accept the terms, and then the vacation opens.</p>
+    <h1 style="color:#f5d37b">${htmlTitle}</h1>
+    <p>${greeting}</p>
+    <p>${htmlLead}</p>
+    <p>View access lets you see the days. Edit access lets you add notes after this email invite is approved. ${termsStep}</p>
     ${link ? `<p><a href="${link}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the approved email invite</a></p>` : ''}
     ${link ? `<p><a href="${link}" style="color:#f5d37b;word-break:break-all">${link}</a></p>` : ''}
     ${site ? `<p><a href="${site}" style="display:inline-block;background:#f5d37b;color:#080604;padding:13px 18px;border-radius:999px;font-weight:800;text-decoration:none">Open the vacation</a></p>` : ''}
@@ -126,42 +192,31 @@ export function webEditorInviteEmail({ grant, token, env = process.env }) {
   return { subject, textBody, htmlBody };
 }
 
-async function sendWithResend({ to, subject, htmlBody, textBody, env }) {
-  const apiKey = env.RESEND_API_KEY || env.TIMESYNCHER_RESEND_API_KEY || '';
-  if (!apiKey) return null;
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: fromEmail(env),
-      to,
-      subject,
-      html: htmlBody,
-      text: textBody,
-    }),
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json.message || json.error || `Resend ${response.status}`);
-  return { provider: 'resend', providerMessageId: json.id || null };
-}
+import {
+  resendAttemptFields,
+  sendWithResend,
+} from './email-harness-outbound.mjs';
+
+export {
+  extractResendResponseMetadata,
+  harnessOutboundEmailAllowed,
+  outboundEmailPassesSmokeHarness,
+  resendAttemptFields,
+  sendWithResend,
+} from './email-harness-outbound.mjs';
 
 export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env) {
   const to = cleanText(onboarding.contact?.email, 180).toLowerCase();
   if (!to) return { ok: false, status: 'skipped', reason: 'missing email' };
-  let publicSlug = cleanText(onboarding.publicSlug, 180);
-  if (!publicSlug && onboarding.tripId) {
-    const slugRows = await db`
-      select metadata->>'publicSlug' as slug
-      from trips
-      where id = ${onboarding.tripId}
-      limit 1
-    `;
-    publicSlug = cleanText(slugRows[0]?.slug, 180);
-  }
-  const message = purchaseEmail({ contact: onboarding.contact, publicSlug, publicUrl: onboarding.publicUrl, env });
+  const sessionToken = onboarding.session?.token || onboarding.token || '';
+  const sessionId = onboarding.session?.id || '';
+  const message = purchaseEmail({
+    contact: onboarding.contact,
+    sessionToken,
+    tripId: onboarding.tripId || '',
+    sessionId,
+    env,
+  });
 
   const existing = await db`
     select id, status
@@ -177,20 +232,21 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const emailMetadata = {
+    onboardingUrl: onboarding.onboardingUrl,
+    vacationAppUrl: onboarding.vacationAppUrl,
+    launchUrl: message.launchUrl,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -204,11 +260,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}
+          metadata = metadata || ${emailMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -220,11 +272,7 @@ export async function queueOrSendPurchaseEmail(db, onboarding, env = process.env
         values (
           ${onboarding.customerId}, ${onboarding.orderId}, ${onboarding.session.id}, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            onboardingUrl: onboarding.onboardingUrl,
-            vacationAppUrl: onboarding.vacationAppUrl,
-            launchUrl: message.launchUrl,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${emailMetadata}, ${sentAt}
         )
         returning id
       `;
@@ -254,44 +302,52 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
     const trips = await db`select title, metadata from trips where id = ${invite.trip_id} limit 1`;
     trip = trips[0] || null;
   }
-  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite, trip, env });
+  const inviteForEmail = invite?.id && db
+    ? await loadCollaboratorInviteForEmail(db, invite.id)
+    : invite;
+  if (!inviteForEmail) {
+    throw Object.assign(new Error('Collaborator invite not found for email.'), { statusCode: 404 });
+  }
+  const targets = collaboratorInviteTargets({ acceptUrl, publicUrl, invite: inviteForEmail, trip, env });
   acceptUrl = targets.acceptUrl;
   publicUrl = targets.publicUrl;
   const normalizedContact = {
     ...contact,
     email: to,
-    displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' ') || invite?.requested_for, 180),
+    displayName: cleanText(contact?.displayName || [contact?.firstName, contact?.lastName].filter(Boolean).join(' ') || inviteForEmail?.requested_for, 180),
   };
-  const message = collaboratorInviteEmail({ contact: normalizedContact, invite, token, acceptUrl, publicUrl, env });
+  const message = collaboratorInviteEmail({ contact: normalizedContact, invite: inviteForEmail, token, acceptUrl, publicUrl, env });
 
   const existing = await db`
-    select id, status
+    select id, status, subject
     from outbound_emails
     where metadata->>'collaboratorInviteId' = ${String(invite.id)}
-      and subject = ${message.subject}
+    order by sent_at desc nulls last, created_at desc nulls last
     limit 1
   `;
-  if (existing[0]?.status === 'sent') return { ok: true, status: 'already_sent', emailId: existing[0].id };
+  if (existing[0]?.status === 'sent') {
+    return { ok: true, status: 'already_sent', emailId: existing[0].id, subject: existing[0].subject };
+  }
 
   let provider = 'pending';
   let providerMessageId = null;
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const inviteMetadata = {
+    collaboratorInviteId: invite.id,
+    toEmail: to,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -305,11 +361,7 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           status = ${status},
           error_summary = ${errorSummary},
           sent_at = ${sentAt},
-          metadata = metadata || ${{
-            collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
-            toEmail: to,
-          }}
+          metadata = metadata || ${inviteMetadata}
         where id = ${existing[0].id}
         returning id
       `
@@ -323,8 +375,8 @@ export async function queueOrSendCollaboratorInviteEmail(db, { invite, token, co
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
           ${providerMessageId}, ${status}, ${errorSummary}, ${{
             collaboratorInviteId: invite.id,
-            collaboratorTelegramUrl: collaboratorTelegramLink(token, env),
             collaboratorRequestedFor: normalizedContact.displayName || null,
+            ...resendMetadata,
           }}, ${sentAt}
         )
         returning id
@@ -352,20 +404,23 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
   let status = 'pending';
   let errorSummary = null;
   let sentAt = null;
+  let resendMetadata = {};
 
   try {
-    const sent = await sendWithResend({ to, ...message, env });
-    if (sent) {
-      provider = sent.provider;
-      providerMessageId = sent.providerMessageId;
-      status = 'sent';
-      sentAt = new Date().toISOString();
-    }
+    const sent = await sendWithResend({ to, ...message, env, fromEmailFn: fromEmail });
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(sent, null));
   } catch (error) {
-    provider = 'resend';
-    status = 'failed';
-    errorSummary = cleanText(error.message, 1000);
+    ({ provider, providerMessageId, status, errorSummary, sentAt, resendMetadata } = resendAttemptFields(null, error));
   }
+
+  const webMetadata = {
+    webAccessGrantId: grant.id,
+    webAccessAcceptUrl: webAccessAcceptUrl(token, env),
+    toEmail: to,
+    tripId: grant.trip_id,
+    role: grant.role,
+    ...resendMetadata,
+  };
 
   const rows = existing[0]
     ? await db`
@@ -379,6 +434,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
             webAccessGrantId: grant.id,
             webAccessAcceptUrl: webAccessAcceptUrl(token, env),
             toEmail: to,
+            ...resendMetadata,
           }}
         where id = ${existing[0].id}
         returning id
@@ -391,13 +447,7 @@ export async function queueOrSendWebEditorInviteEmail(db, { grant, token, accept
         values (
           ${grant.owner_customer_id}, null, null, ${to},
           ${message.subject}, ${message.htmlBody}, ${message.textBody}, ${provider},
-          ${providerMessageId}, ${status}, ${errorSummary}, ${{
-            webAccessGrantId: grant.id,
-            webAccessAcceptUrl: webAccessAcceptUrl(token, env),
-            toEmail: to,
-            tripId: grant.trip_id,
-            role: grant.role,
-          }}, ${sentAt}
+          ${providerMessageId}, ${status}, ${errorSummary}, ${webMetadata}, ${sentAt}
         )
         returning id
       `;

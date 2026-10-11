@@ -1,0 +1,29 @@
+{
+  "cards": [
+    {
+      "id": "reply-model-tier",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "function decisionsPayload",
+      "extract": "questions",
+      "consts": ["JEV_MODEL_TIER_CRITERIA"]
+    },
+    {
+      "id": "reply-quality",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "export async function jevQualityRewrite",
+      "extract": "questions"
+    },
+    {
+      "id": "reply-rewrite-choice",
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "anchor": "export async function jevChooseRewrite",
+      "extract": "questions"
+    },
+    {
+      "id": "poi-relevance",
+      "file": "src/vacation/place-relevance-judge.mjs",
+      "anchor": "export async function jevRelevanceScore",
+      "extract": "questions"
+    }
+  ]
+}

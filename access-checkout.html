@@ -49,7 +49,7 @@
       <div class="body">
         <section class="items">
           <div id="lines"></div>
-          <div class="total"><span>Total today</span><span id="total">$0</span></div>
+          <div class="total"><span>Total today</span><span id="total"></span></div>
           <p class="meta" id="statusMeta"></p>
         </section>
         <section class="pay">
@@ -154,14 +154,14 @@
             checkoutId,
             paymentIntentId: `staging_access_plan_${checkoutId}`,
           });
-          location.href = `/order-success.html?accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`;
+          location.href = `/shared/?purchase=1&accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`;
           return;
         }
         const result = await stripe.confirmPayment({
           elements,
           confirmParams: {
             receipt_email: emailInput.value,
-            return_url: `${location.origin}/order-success.html?accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`,
+            return_url: `${location.origin}/shared/?purchase=1&accessPlanCheckout=complete&checkout=${encodeURIComponent(checkoutId)}`,
           },
         });
         if (result.error) throw new Error(result.error.message || 'Payment failed.');

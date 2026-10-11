@@ -1,7 +1,6 @@
 export const CURRENT_EULA_VERSION = '2026-06-terms-advisory-only';
 export const CURRENT_EULA_TEXT = `# TimeSyncher Terms and Privacy Acknowledgment
 
-Status: product/legal workbench language, not final legal advice. Before customer-facing use, IBE Inc. should have counsel review it.
 
 ## Purpose
 
@@ -52,4 +51,14 @@ IBE Inc. may modify, limit, suspend, or terminate TimeSyncher functionality if r
 ## 10. Versioning and acceptance
 
 The onboarding record stores the accepted terms version, accepted timestamp, accepted-by name, text hash, capability/access snapshot hash, and receipt hash. The backend receipt is the authoritative acceptance record.
+
+## 11. Checkout plans
+
+Checkout offers four plans. The amount charged is the configured checkout price for that plan. This acknowledgment does not set those prices.
+
+Plan single is a single vacation purchase.
+
+Plan {{TIMESYNCHER_COLLABORATOR_NAME}} lets the owner invite a collaborator onto a vacation. A collaborator may join any vacation the owner has, and the owner sends a separate invite for each vacation.
+
+Plan owner_media is a single media purchase. The owner or a collaborator may pay it. After payment, the entitlement is stored on the owner and covers media for each vacation that owner has.
 `;

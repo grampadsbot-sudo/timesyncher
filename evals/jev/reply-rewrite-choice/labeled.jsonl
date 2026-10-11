@@ -1,0 +1,10 @@
+{"id":"r1","state":{"customer_turn":"Keep Friday as arrival.","draft":"Friday is a cruise."},"expect":{"replacement":"r1"}}
+{"id":"drops-place","state":{"customer_turn":"Saturday is gardens.","draft":"Saturday is the botanical garden downtown."},"expect":{"replacement":"r1"}}
+{"id":"price-line","state":{"customer_turn":"What does a seat cost?","draft":"It is included."},"expect":{"replacement":"r2"}}
+{"id":"no-payment-word","state":{"customer_turn":"Add Blair.","draft":"I will checkout Blair."},"expect":{"replacement":"r1"}}
+{"id":"day-kept","state":{"customer_turn":"Note groceries on Friday.","draft":"Saved."},"expect":{"replacement":"r2"}}
+{"id":"banter","state":{"customer_turn":"The kids are four and six.","draft":"Ok."},"expect":{"replacement":"r1"}}
+{"id":"no-extra-people","state":{"customer_turn":"Just the four of us.","draft":"Your four friends will love it."},"expect":{"replacement":"r1"}}
+{"id":"access","state":{"customer_turn":"What is view access versus edit access?","draft":"They can do everything."},"expect":{"replacement":"r2"}}
+{"id":"plan-words","state":{"customer_turn":"Is there a plan for the year?","draft":"You get three vacations."},"expect":{"replacement":"r1"}}
+{"id":"keep-short-fix","state":{"customer_turn":"Wednesday is a rest day.","draft":"Wednesday is a snorkel."},"expect":{"replacement":"r2"}}

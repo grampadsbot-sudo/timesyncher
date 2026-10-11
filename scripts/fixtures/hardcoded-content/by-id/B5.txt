@@ -1,0 +1,1 @@
+return `${name}: Craig paid for this seat. Keep us on the Big Island.`;

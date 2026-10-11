@@ -164,6 +164,7 @@
     .order-form select option { color: #111; }
     .hidden { display: none !important; }
     .order-summary { margin: 16px 0; border: 1px solid rgba(245,211,123,.26); border-radius: 18px; overflow: hidden; background: rgba(255,255,255,.045); }
+    .checkout-step-one-price { margin: 14px 0 0; } .checkout-step-one-price .summary-row { border-bottom: 0; font-size: 1.05rem; }
     .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 13px 14px; color: #e9dec8; border-bottom: 1px solid rgba(245,211,123,.14); }
     .summary-row[hidden] { display: none !important; }
     .summary-row:last-child { border-bottom: 0; }
@@ -185,8 +186,6 @@
     .status { margin-top: 14px; border-radius: 14px; padding: 12px; background: rgba(98,214,207,.1); color: #dffefa; border: 1px solid rgba(98,214,207,.3); font-size: .88rem; line-height: 1.45; }
     .hero-card { background: rgba(9,9,8,.72); border: 1px solid var(--line); border-radius: 30px; padding: 18px; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
     .phone { border-radius: 26px; overflow: hidden; background: #0d0e0f; border: 8px solid #1c1b18; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
-    .phone-hero { height: 190px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.7)), url('https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1100&q=80') center/cover; padding: 18px; display: flex; align-items: end; justify-content: center; text-align: center; }
-    .phone-hero strong { display: block; width: 100%; font: 700 1.4rem/1.05 Cinzel, serif; color: white; }
     .screen { padding: 14px; display: grid; gap: 10px; }
     .screen-row { display: grid; grid-template-columns: 50px 1fr auto; gap: 10px; align-items: center; padding: 11px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
     .icon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: rgba(214,168,79,.17); border: 1px solid rgba(214,168,79,.28); font-size: 1.35rem; }
@@ -332,20 +331,23 @@
                 <button type="button" class="step-pill active" id="step1Pill" role="tab" aria-selected="true" aria-controls="step1">Step 1: Contact Info</button>
                 <button type="button" class="step-pill" id="step2Pill" role="tab" aria-selected="false" aria-controls="step2" tabindex="-1">Step 2: Payment Info</button>
               </div>
+              <div class="order-summary checkout-step-one-price" aria-label="Plan price">
+                <div class="summary-row"><span id="singleName">single</span><strong id="singlePrice"></strong></div>
+              </div>
             </div>
 
             <form class="order-form" id="orderForm">
               <div id="step1" role="tabpanel" aria-labelledby="step1Pill">
                 <div class="fields">
-                  <label>First name<input name="firstName" autocomplete="given-name" placeholder="Craig" required /></label>
+                  <label>First name<input name="firstName" autocomplete="given-name" placeholder="First name" required /></label>
                   <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Doe" required /></label>
                   <label class="full">Email<input type="email" name="email" autocomplete="email" placeholder="you@example.com" required /></label>
                   <label>Phone<input name="phone" autocomplete="tel" placeholder="(555) 123-4567" /></label>
                   <label>Vacation date<input type="date" name="vacationDate" /></label>
                   <label class="full">Billing address<input name="address" autocomplete="billing street-address" placeholder="Street address" /></label>
-                  <label>City<input name="city" autocomplete="billing address-level2" placeholder="Las Vegas" /></label>
-                  <label>State<input name="state" autocomplete="billing address-level1" placeholder="NV" /></label>
-                  <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="89101" /></label>
+                  <label>City<input name="city" autocomplete="billing address-level2" placeholder="City" /></label>
+                  <label>State<input name="state" autocomplete="billing address-level1" placeholder="State" /></label>
+                  <label>ZIP<input name="zip" autocomplete="billing postal-code" placeholder="ZIP" /></label>
                   <label>Country<select name="country" autocomplete="billing country"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option></select></label>
                 </div>
                 <div class="button-row">
@@ -355,24 +357,24 @@
 
               <div id="step2" class="hidden" role="tabpanel" aria-labelledby="step2Pill">
                 <div class="order-summary" aria-label="Order summary">
-                  <div class="summary-row"><span id="singleName">TimeSyncher Vacation - Single</span><strong id="singlePrice">$37</strong></div>
-                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName">Upgrade to TimeSyncher Vacation - Unlimited</span><strong id="unlimitedPrice">+$27</strong></div>
-                  <div class="summary-row" id="photoRow" hidden><span id="photoName">Photo Memories Keepsake</span><strong id="photoPrice">+$5</strong></div>
+                  <div class="summary-row" id="bumpRow" hidden><span id="unlimitedName"></span><strong id="unlimitedPrice"></strong></div>
+                  <div class="summary-row" id="photoRow" hidden><span id="photoName">owner_media</span><strong id="photoPrice"></strong></div>
+                  <div class="summary-row" id="waivedRow" hidden><span>Waived</span><strong id="waivedAmount"></strong></div>
                   <div class="summary-row"><span>Estimated tax</span><strong id="tax">Calculated by Stripe</strong></div>
-                  <div class="summary-row total"><span>Total today</span><strong id="total">$37</strong></div>
+                  <div class="summary-row total"><span>Total today</span><strong id="total"></strong></div>
                 </div>
 
                 <div class="bump">
                   <label>
                     <input type="checkbox" id="orderBump" />
-                    <span><b id="bumpTitle">Upgrade to TimeSyncher Vacation - Unlimited for +$27</b><span id="bumpDescription">The order bump moves the setup from the Single product to the Unlimited subscription product.</span></span>
+                    <span><b id="bumpTitle"></b><span id="bumpDescription"></span></span>
                   </label>
                 </div>
 
                 <div class="bump">
                   <label>
                     <input type="checkbox" id="photoMemories" />
-                    <span><b id="photoTitle">Add Photo Memories Keepsake for +$5/year</b><span id="photoDescription">Include up to 100 favorite photos in the printable vacation keepsake. Photos only for MVP.</span></span>
+                    <span><b id="photoTitle">owner_media</b><span id="photoDescription"></span></span>
                   </label>
                 </div>
 
@@ -429,7 +431,6 @@
         <span>A one-of-a-kind AI vacation assistant for the unforgettable vacation experience — family, priorities, budgets, options, reservations, and the actual daily flow. Easily managed by talking to the app, no clicking, no frustration.</span>
         <aside class="hero-card band-preview" aria-label="TimeSyncher Vacation app preview">
           <div class="phone">
-            <div class="phone-hero"><strong>Anniversary Escape</strong></div>
             <div class="screen">
               <div class="screen-row"><div class="icon">✈️</div><div><b>Flights compared</b><span>Best timing, bags, airport tradeoffs</span></div><em class="pill">Ready</em></div>
               <div class="screen-row"><div class="icon">🏨</div><div><b>Hotel short list</b><span>Preferred stay + backup options</span></div><em class="pill">Sync</em></div>
@@ -498,7 +499,7 @@
     <section id="screenshots" class="dark">
       <div class="shell">
         <div class="section-head">
-          <span class="kicker">An easy, intuitive AI-assisted user interface</span>
+          <span class="kicker">An easy, intuitive vacation planning interface</span>
           <h2>One-of-a-kind vacation planning, made visual.</h2>
           <p>Talk to the AI and create the initial day-to-day itineraries filled with the right things to do. Keep talking to it to change things, or easily click on the itinerary and add or move things around. See the highlights of Day 3’s example itinerary below, as well as the daily map of things to do that day.</p>
         </div>
@@ -520,7 +521,7 @@
               <div class="screen">
                 <div class="screen-row"><div class="icon">🏨</div><div><b>Upper West Side suite</b><span>Quiet, larger rooms, easy Lincoln Center logistics</span></div><em class="pill">Top</em></div>
                 <div class="screen-row"><div class="icon">🗽</div><div><b>Midtown luxury tower</b><span>Best for shows, weaker for quiet mornings</span></div><em class="pill">Alt</em></div>
-                <div class="screen-row"><div class="icon">💳</div><div><b>Vacation budget</b><span>$1,180 under target with current timeline</span></div><em class="pill">OK</em></div>
+                <div class="screen-row"><div class="icon">💳</div><div><b>Vacation budget</b><span>Under the budget target with the current timeline</span></div><em class="pill">OK</em></div>
               </div>
             </div>
           </div>
@@ -573,6 +574,7 @@
     </div>
     <div class="shell fineprint">© 2026 TimeSyncher. All rights reserved. TimeSyncher Vacation is an early-stage consumer software product; features and pricing may change before general availability.</div>
   </footer>
+  <script src="/checkout-price-client.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     const step1 = document.getElementById('step1');
@@ -620,41 +622,43 @@
       return '$' + (cents / 100).toFixed(0);
     }
 
-    function productLabel(name) {
-      return String(name || '').replace(/ - /g, ' - ');
+    function pricedCents(amount, key) {
+      return tsPricedCents(amount, key);
     }
 
     function activePhotoProduct() {
-      const photos = productConfig.products?.photoMemories || {};
-      return bump.checked ? (photos.unlimited || {}) : (photos.single || {});
+      return productConfig.products?.media || {};
     }
 
-    function activePhotoAmountCents(photos = activePhotoProduct()) {
-      return photos.amount || (bump.checked ? 900 : 500);
+    function orderCents() {
+      let cents = pricedCents(productConfig.products?.single?.amount, 'TIMESYNCHER_BASE_PRICE_CENTS');
+      if (bump.checked) cents += pricedCents(productConfig.products?.unlimited?.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+      if (photoMemories.checked) cents += pricedCents(activePhotoProduct().amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS');
+      return cents;
     }
 
     function syncPhotoCopy() {
       const photos = activePhotoProduct();
-      const photoAmount = activePhotoAmountCents(photos);
-      photoName.textContent = productLabel(photos.name || 'Photo Memories Keepsake');
-      photoPrice.textContent = '+' + money(photoAmount);
+      photoName.textContent = photos.name || 'owner_media';
+      photoTitle.textContent = photos.name || 'owner_media';
+      photoDescription.textContent = photos.description || '';
+      photoPrice.textContent = photoMemories.checked ? '+' + money(pricedCents(photos.amount, 'TIMESYNCHER_MEDIA_PRICE_CENTS')) : '';
       photoRow.hidden = !photoMemories.checked;
-      photoTitle.textContent = `Add ${productLabel(photos.name || 'Photo Memories Keepsake')} for +${money(photoAmount)}/year`;
-      photoDescription.textContent = photos.description || 'Include favorite photos in the printable vacation keepsake. Photos only for MVP.';
     }
 
     function applyProductCopy(config) {
       productConfig = config || {};
       const single = config.products?.single || {};
       const unlimited = config.products?.unlimited || {};
-      singleName.textContent = productLabel(single.name || 'TimeSyncher Vacation - Single');
-      singlePrice.textContent = money(single.amount || 3700);
-      unlimitedName.textContent = 'Upgrade to ' + productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited');
-      unlimitedPrice.textContent = '+' + money(unlimited.amount || 2700);
+      singleName.textContent = single.name || 'single';
+      singlePrice.textContent = money(pricedCents(single.amount, 'TIMESYNCHER_BASE_PRICE_CENTS'));
+      unlimitedName.textContent = unlimited.name || '';
+      unlimitedPrice.textContent = '+' + money(pricedCents(unlimited.amount, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS'));
       bumpRow.hidden = !bump.checked;
-      bumpTitle.textContent = `Upgrade to ${productLabel(unlimited.name || 'TimeSyncher Vacation - Unlimited')} for +${money(unlimited.amount || 2700)}`;
-      bumpDescription.textContent = unlimited.description || 'The order bump moves the setup from the Single product to the Unlimited subscription product.';
+      bumpTitle.textContent = unlimited.name || '';
+      bumpDescription.textContent = unlimited.description || '';
       syncPhotoCopy();
+      updateTotal();
     }
 
     function formData() {
@@ -670,18 +674,7 @@
 
     function stripeCountryCode(country) {
       const normalized = String(country || '').trim().toLowerCase();
-      const map = {
-        'united states': 'US',
-        'us': 'US',
-        'usa': 'US',
-        'canada': 'CA',
-        'ca': 'CA',
-        'united kingdom': 'GB',
-        'uk': 'GB',
-        'gb': 'GB',
-        'australia': 'AU',
-        'au': 'AU',
-      };
+      const map = { 'united states': 'US', us: 'US', usa: 'US', canada: 'CA', ca: 'CA', 'united kingdom': 'GB', uk: 'GB', gb: 'GB', australia: 'AU', au: 'AU' };
       return map[normalized] || (normalized.length === 2 ? normalized.toUpperCase() : 'US');
     }
 
@@ -722,15 +715,24 @@
     }
 
     function updateTotal() {
-      const bumped = bump.checked;
-      const photos = photoMemories.checked;
-      const photoProduct = activePhotoProduct();
-      bumpRow.hidden = !bumped;
-      photoRow.hidden = !photos;
-      syncPhotoCopy();
-      const cents = 3700 + (bumped ? 2700 : 0) + (photos ? activePhotoAmountCents(photoProduct) : 0);
-      total.textContent = money(cents);
-      tax.textContent = couponMode() ? 'Waived by coupon' : 'Calculated by Stripe';
+      const waivedRow = document.getElementById('waivedRow');
+      const waivedAmount = document.getElementById('waivedAmount');
+      bumpRow.hidden = !bump.checked;
+      photoRow.hidden = !photoMemories.checked;
+      tax.textContent = 'Calculated by Stripe';
+      try {
+        if (!productConfig.products?.single?.amount) { waivedRow.hidden = true; total.textContent = ''; return; }
+        syncPhotoCopy();
+        const cents = orderCents();
+        const charge = couponMode() ? { totalCents: 0, waivedCents: cents } : { totalCents: cents, waivedCents: 0 };
+        waivedRow.hidden = charge.waivedCents <= 0;
+        waivedAmount.textContent = charge.waivedCents ? money(charge.waivedCents) : '';
+        total.textContent = money(charge.totalCents);
+      } catch (error) {
+        waivedRow.hidden = true;
+        total.textContent = '';
+        setStatus(error.message && !/checkout config missing/i.test(error.message) ? error.message : TS_PRICING_UNAVAILABLE, true);
+      }
     }
 
     async function loadStripeConfig() {
@@ -739,7 +741,6 @@
           .then(async (response) => {
             const data = await response.json().catch(() => ({}));
             if (!response.ok || !data.ok) throw new Error(data.error || 'Stripe checkout is not configured yet.');
-            applyProductCopy(data);
             return data;
           });
       }
@@ -760,7 +761,7 @@
         couponPayBtn.disabled = false;
         couponPayBtn.textContent = 'Redeem coupon';
         paymentElementMount.innerHTML = '<div class="stripe-loading"><strong>Coupon checkout</strong></div>';
-        tax.textContent = 'Waived by coupon';
+        updateTotal();
         return true;
       }
       payBtn.hidden = false;
@@ -849,6 +850,7 @@
 
     async function goToStepTwo() {
       if (!form.reportValidity()) return;
+      try { await loadProductCatalog(); } catch (error) { setStatus(error.message || 'Checkout prices are not configured yet.', true); return; }
       showStep(2);
       window.scrollTo({ top: document.querySelector('.order-grid').offsetTop - 12, behavior: 'smooth' });
       await preparePaymentElement();
@@ -930,6 +932,7 @@
         payBtn.textContent = 'Pay securely';
       }
     });
+    const loadProductCatalog = tsBootCheckoutCatalog({ applyProductCopy, setStatus, continueBtn, step2Pill });
     updateTotal();
     requestAnimationFrame(lockVideoToStepOneHeight);
     window.addEventListener('resize', lockVideoToStepOneHeight);

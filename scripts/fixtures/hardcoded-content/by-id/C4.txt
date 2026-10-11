@@ -1,0 +1,1 @@
+function ensureNamedThings(things, text) { return things; }

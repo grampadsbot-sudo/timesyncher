@@ -48,10 +48,10 @@
       "mustSendOrQueueCustomerResponse": true,
       "notes": "Hosted worker may send a concise chat response, but the durable output must include a web itinerary page populated with source-linked candidates, caveats, and next verification steps. Do not mark a client-facing setup complete if it only restates intake text or creates queued placeholder artifacts.",
       "placeholderOnlyArtifactsAreIncomplete": true,
-      "telegramRequestsSendThroughBotWhenChatIdAvailable": true
+      "telegramRequestsSendThroughBotWhenChatIdAvailable": false
     },
     "placeholderRule": "If only placeholders were created, return retry/queued status or create a follow-up itinerary-generation job; do not report completed to the customer.",
-    "telegramDelivery": "For Telegram-originated onboarding_setup requests, send the initial itinerary draft back through the TimeSyncher Vacation bot when a telegramChatId is available."
+    "telegramDelivery": ""
   },
   "customerFacing": true,
   "defaultRuntime": "TimeStopper",
@@ -69,7 +69,7 @@
     },
     "supportRouter": {
       "policySkill": "timesyncher-vacation-support-router",
-      "canonicalEntrypoint": "/api/vacation-telegram-turn",
+      "canonicalEntrypoint": "",
       "runsAfterSessionCustomerLookup": true,
       "telegramBridgeMayAnswerAccountQuestions": false,
       "telegramBridgeMayUseDefaultTripToken": false,
@@ -145,7 +145,7 @@
   "purpose": "Restricted public-launch travel concierge brain for TimeSyncher Vacation customer requests.",
   "sourceOfTruth": {
     "hostedApp": "https://www.timesyncher.com",
-    "privateGBrain": "/home/ubishere9995/gbrain",
+    "privateGBrain": "",
     "queue": "Neon Postgres via Vercel API routes"
   },
   "capabilityObject": {
@@ -187,14 +187,9 @@
     "plans": [
       {
         "code": "telegram_collaborators_single_trip",
-        "amountUsd": 15,
+        "amountUsd": 0,
         "scope": "single_trip",
-        "maxActiveCollaborators": 1
-      },
-      {
-        "code": "telegram_collaborators_unlimited_trips",
-        "amountUsd": 27,
-        "scope": "unlimited_trips",
+        "perVacation": true,
         "maxActiveCollaborators": 1
       }
     ],
@@ -209,14 +204,14 @@
   "mediaAddOnPolicy": {
     "policySkill": "timesyncher-travel-assistant",
     "photoMemories": {
-      "singleVacationAmountUsd": 5,
-      "unlimitedVacationsAmountUsd": 9,
+      "singleVacationAmountUsd": 0,
+      "unlimitedVacationsAmountUsd": 0,
       "photoLimitPerVacation": 100,
       "scope": "favorite photos for printable vacation keepsake"
     },
     "videoMemoriesRecommendation": {
-      "singleVacationAmountUsd": 17,
-      "unlimitedVacationsAmountUsd": 27,
+      "singleVacationAmountUsd": 0,
+      "unlimitedVacationsAmountUsd": 0,
       "scope": "short keepsake video uploads for vacation memories",
       "checkoutTiming": "offer only when a customer asks to upload videos or use video memories; do not include in initial checkout by default",
       "limits": {
@@ -251,7 +246,7 @@
         ],
         "telegramBotApiDownloadLimitBytes": 20971520,
         "fullProductLimitRequires": "private upload-link flow or local Telegram Bot API server before accepting raw originals near 200 MB",
-        "hostedApi": "/api/vacation-telegram-turn event=media_upload; GET action=media-list/media-download"
+        "hostedApi": ""
       }
     }
   },
@@ -264,27 +259,27 @@
         "targetCapability": "collab_telegram",
         "actionType": "purchase",
         "planCode": "telegram_collaborators_single_trip",
-        "amountUsd": 15,
+        "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add Telegram editing access for this vacation"
+        "ctaLabel": "Add collaborator editing access for this vacation"
       },
       {
         "id": "telegram_collaborator_unlimited_trips_purchase",
         "targetCapability": "collab_telegram",
         "actionType": "purchase",
-        "planCode": "telegram_collaborators_unlimited_trips",
-        "amountUsd": 27,
-        "scope": "unlimited_trips",
+        "planCode": "telegram_collaborators_single_trip",
+        "amountUsd": 0,
+        "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add Telegram editing access for all vacations"
+        "ctaLabel": "Add collaborator editing access for this vacation"
       },
       {
         "id": "photo_upload_single_vacation_purchase",
         "targetCapability": "photo_upload",
         "actionType": "purchase",
         "planCode": "photo_upload_single_vacation",
-        "amountUsd": 5,
+        "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
         "ctaLabel": "Add photo upload access for this vacation"
@@ -293,18 +288,18 @@
         "id": "photo_upload_unlimited_vacations_purchase",
         "targetCapability": "photo_upload",
         "actionType": "purchase",
-        "planCode": "photo_upload_unlimited_vacations",
-        "amountUsd": 9,
-        "scope": "unlimited_trips",
-        "path": "/addons-checkout.html",
-        "ctaLabel": "Add photo upload access for all vacations"
+        "planCode": "owner_media",
+        "amountUsd": 0,
+        "scope": "owner",
+        "path": "/owner-media-checkout.html",
+        "ctaLabel": "Add media access on plan owner_media"
       },
       {
         "id": "video_upload_single_vacation_purchase",
         "targetCapability": "video_upload",
         "actionType": "purchase",
         "planCode": "video_upload_single_vacation",
-        "amountUsd": 17,
+        "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
         "ctaLabel": "Add video upload access for this vacation"
@@ -313,31 +308,31 @@
         "id": "video_upload_unlimited_vacations_purchase",
         "targetCapability": "video_upload",
         "actionType": "purchase",
-        "planCode": "video_upload_unlimited_vacations",
-        "amountUsd": 27,
-        "scope": "unlimited_trips",
-        "path": "/addons-checkout.html",
-        "ctaLabel": "Add video upload access for all vacations"
+        "planCode": "owner_media",
+        "amountUsd": 0,
+        "scope": "owner",
+        "path": "/owner-media-checkout.html",
+        "ctaLabel": "Add media access on plan owner_media"
       },
       {
         "id": "full_access_single_vacation_bundle",
         "targetCapability": "full_access",
         "actionType": "purchase",
         "planCode": "full_access_single_vacation",
-        "amountUsd": 49,
+        "amountUsd": 0,
         "scope": "single_trip",
         "path": "/addons-checkout.html",
-        "ctaLabel": "Add full Telegram plus photo/video access for this vacation"
+        "ctaLabel": "Add photo and video access for this vacation"
       },
       {
         "id": "full_access_unlimited_vacations_bundle",
         "targetCapability": "full_access",
         "actionType": "purchase",
-        "planCode": "full_access_unlimited_vacations",
-        "amountUsd": 73,
-        "scope": "unlimited_trips",
-        "path": "/addons-checkout.html",
-        "ctaLabel": "Add full Telegram plus photo/video access for all vacations"
+        "planCode": "owner_media",
+        "amountUsd": 0,
+        "scope": "owner",
+        "path": "/owner-media-checkout.html",
+        "ctaLabel": "Add collaborator access and media for this vacation"
       },
       {
         "id": "web_editor_email_invite_owner_action",
@@ -364,7 +359,7 @@
       "freeWhenOwnerApproved": true,
       "requiresNamedInvite": true,
       "requiresVerifiedEmail": true,
-      "telegramLinkedOwnersAndCollaboratorsMayEditFromTelegramLaunchedSiteLink": true,
+      "telegramLinkedOwnersAndCollaboratorsMayEditFromTelegramLaunchedSiteLink": false,
       "emailMagicLinksAreForNonTelegramInvitees": true,
       "possessionOfSharedUrlIsNeverEditAuthorization": true,
       "statusValues": [

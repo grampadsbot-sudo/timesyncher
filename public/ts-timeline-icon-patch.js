@@ -14,16 +14,6 @@
     return String(value || '').trim();
   }
 
-  function looksLikeFlight(place, override) {
-    const source = `${place?.name || ''} ${override?.title || ''} ${place?.address || ''}`;
-    if (/\b(las vegas|vegas)\b/i.test(source) && !/\b(flight|airport|sfo|jfk|lga|ewr|lax|depart|arrive)\b/i.test(source) && !/\b[A-Z]{3}\s+to\s+[A-Z]{3}\b/.test(source)) {
-      return false;
-    }
-    return /\bflight\b|airport|jetblue|southwest|american airlines|\bdelta\b/i.test(source)
-      || /\b(sfo|jfk|lga|ewr|lax|ord|dfw)\b/i.test(source)
-      || /\b[A-Z]{3}\s+to\s+[A-Z]{3}\b/.test(source);
-  }
-
   function categoryIcon(type) {
     if (type === 'flight') return '✈️';
     if (type === 'hotel') return '🧳';
@@ -39,20 +29,24 @@
 
   function resolve(place, override) {
     const name = text(place?.category_name || override?.category || place?.category?.name).toLowerCase();
-    const logoUrl = text(override?.logoUrl || place?.captured_logo_url || place?.logoUrl || '');
-    if (looksLikeFlight(place, override) || name === 'flight') {
-      return { type: 'flight', icon: '✈️', logoUrl, isFlight: true };
-    }
-    let type = 'other';
-    if (name.includes('restaurant')) type = 'restaurant';
+    const logoUrl = text(
+      override?.logoUrl || override?.iconUrl
+      || place?.logoUrl || place?.iconUrl
+      || place?.captured_logo_url || place?.image_url || place?.imageUrl
+      || '',
+    );
+    let type = '';
+    if (name.includes('flight')) type = 'flight';
+    else if (name.includes('restaurant')) type = 'restaurant';
     else if (name.includes('store') || name.includes('shop')) type = 'store';
-    else if (name.includes('hotel')) type = 'hotel';
+    else if (name.includes('hotel') || name.includes('lodging')) type = 'hotel';
     else if (name === 'car' || name.includes('rental')) type = 'car';
     else if (name.includes('attract') || name.includes('activit')) type = 'attraction';
     else if (name.includes('transport')) type = 'transport';
     else if (name.includes('bar') || name.includes('cocktail')) type = 'bar';
+    if (!type) type = 'other';
     const icon = categoryIcon(type);
-    return { type, icon, logoUrl, isFlight: false };
+    return { type, icon, logoUrl, isFlight: type === 'flight' };
   }
 
   function isPrintReport() {
@@ -127,6 +121,14 @@
 
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
+    const keptLogo = el.querySelector?.('img.tiny-logo');
+    if (keptLogo) {
+      const keptSrc = text(keptLogo.getAttribute('src') || '');
+      if (keptSrc && !/timesyncher-icon/i.test(keptSrc) && !/^data:image\/svg\+xml/i.test(keptSrc)) {
+        el.dataset.tsIconFixed = '1';
+        return;
+      }
+    }
     if (/^H[1-6]$/.test(el.tagName)) return;
     if (el.closest('.print-media-card, .story-card, .logo-list, [data-trip-directory], [data-post-itinerary], [data-stories-up-front]')) return;
     if (el.closest('[data-print-menu-root], [data-trip-view-root], button[aria-label], [role="button"][aria-label]')) return;
@@ -135,15 +137,24 @@
     el.dataset.tsIconType = resolved.type;
     if (resolved.logoUrl && !resolved.isFlight) {
       el.textContent = '';
+      el.style.display = 'inline-grid';
+      el.style.placeItems = 'center';
+      el.style.width = '22px';
+      el.style.height = '22px';
+      el.style.boxSizing = 'border-box';
+      el.dataset.tsLogoChip = '1';
+      el.setAttribute('aria-hidden', 'true');
       const img = document.createElement('img');
       img.src = resolved.logoUrl;
       img.alt = '';
       img.className = 'tiny-logo';
-      img.style.width = '22px';
-      img.style.height = '22px';
-      img.style.maxWidth = '22px';
-      img.style.maxHeight = '22px';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
       img.style.objectFit = 'contain';
+      img.style.objectPosition = 'center center';
+      img.style.display = 'block';
       el.appendChild(img);
       return;
     }

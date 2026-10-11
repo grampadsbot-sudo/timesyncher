@@ -29,6 +29,7 @@ const familyPlan = [
   },
 ];
 
+process.env.TIMESYNCHER_CHECKOUT_CURRENCY = 'usd';
 const [ownerMedia, editor, collaborator, viewer] = familyPlan.map((row) => normalizeAccessPlanRow(row));
 assert.equal(ownerMedia.role, 'owner_media');
 assert.equal(ownerMedia.canEditSite, true);
@@ -41,15 +42,17 @@ assert.equal(editor.canEditSite, true);
 assert.equal(editor.canTextOrVoice, false);
 assert.equal(priceAccessPlanRow(editor).amountCents, 0);
 
+process.env.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS = '2100';
+process.env.TIMESYNCHER_MEDIA_PRICE_CENTS = '1700';
 const collaboratorPrice = priceAccessPlanRow(collaborator);
 assert.equal(collaborator.role, 'telegram_collaborator');
 assert.equal(collaborator.canTextOrVoice, true);
-assert.equal(collaboratorPrice.amountCents, 2000);
+assert.equal(collaboratorPrice.amountCents, 3800);
 assert.equal(collaboratorPrice.planCode, 'telegram_collaborators_single_trip');
 
 const ownerMediaPrice = priceAccessPlanRow(ownerMedia);
-assert.equal(ownerMediaPrice.amountCents, 2200);
-assert.equal(ownerMediaPrice.planCode, 'owner_media_single_vacation');
+assert.equal(ownerMediaPrice.amountCents, 1700);
+assert.equal(ownerMediaPrice.planCode, 'owner_media');
 
 assert.equal(viewer.role, 'viewer');
 assert.equal(viewer.email, null);
@@ -58,6 +61,6 @@ assert.equal(priceAccessPlanRow(viewer).amountCents, 0);
 const groupedTotal = [ownerMedia, collaborator]
   .filter((row) => row.payerEmail === 'dad@example.com')
   .reduce((sum, row) => sum + priceAccessPlanRow(row).amountCents, 0);
-assert.equal(groupedTotal, 4200);
+assert.equal(groupedTotal, 5500);
 
 console.log('access plan checkout policy smoke passed');

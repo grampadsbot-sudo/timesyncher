@@ -3,15 +3,15 @@ import { requireIntakeAuth } from '../src/vacation/auth.mjs';
 import { sql } from '../src/vacation/db.mjs';
 import { stripeSecretKey } from '../src/vacation/stripe-env.mjs';
 import { collaboratorStripe, createCollaboratorCheckout } from '../src/vacation/collaborator-checkout.mjs';
-import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns } from '../src/vacation/media-checkout.mjs';
+import { ownerMediaMetadata, recordOwnerMediaPurchase, requireOwnerMediaAddOns, selectedMediaAddOn } from '../src/vacation/media-checkout.mjs';
 import {
   collaboratorPlan,
-  collaboratorTelegramLink,
   loadCollaboratorInviteByToken,
   markCollaboratorInvitePaid,
 } from '../src/vacation/collaborators.mjs';
 import { queueOrSendCollaboratorInviteEmail } from '../src/vacation/email.mjs';
 import checkoutCouponHandler from './checkout-coupon.mjs';
+import { CheckoutConfigError, checkoutCurrency, customerCheckoutFailure, requiredConfigCents } from '../src/vacation/checkout-pricing.mjs';
 import {
   activateAccessPlanCheckout,
   activateFreeAccessPlanRows,
@@ -23,19 +23,8 @@ import {
   saveAccessPlan,
 } from '../src/vacation/access-plan.mjs';
 
-const BASE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_BASE_PRICE_CENTS || '3700', 10);
-const ORDER_BUMP_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS || '2700', 10);
-const CURRENCY = process.env.TIMESYNCHER_CHECKOUT_CURRENCY || 'usd';
 const SINGLE_PRICE_ID = process.env.TIMESYNCHER_SINGLE_PRICE_ID || '';
 const UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_UNLIMITED_PRICE_ID || '';
-const PHOTO_MEMORIES_SINGLE_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
-const PHOTO_MEMORIES_UNLIMITED_PRICE_ID = process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_ID || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_ID || '';
-const PHOTO_MEMORIES_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS || process.env.TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS || '500', 10);
-const COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS || '900', 10);
-const COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS || '1700', 10);
-const COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS = Number.parseInt(process.env.TIMESYNCHER_COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS || '2700', 10);
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -102,34 +91,40 @@ function stagingCardCheckoutAllowed(env = process.env) {
   return base.includes('vacation-staging') || base.includes('staging');
 }
 
-function collaboratorAccessAddOns(body = {}, plan = {}) {
-  const selected = body.accessAddOns && typeof body.accessAddOns === 'object' ? body.accessAddOns : body;
-  const unlimited = plan.scope === 'unlimited_trips';
-  const photoUpload = Boolean(selected.photoUpload || selected.photo_upload || selected.photoMemories);
-  const videoUpload = Boolean(selected.videoUpload || selected.video_upload || selected.videoMemories);
-  const photoAmountCents = photoUpload ? (unlimited ? COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS : COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS) : 0;
-  const videoAmountCents = videoUpload ? (unlimited ? COLLABORATOR_VIDEO_UNLIMITED_PRICE_CENTS : COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS) : 0;
+function collaboratorAccessAddOns(body = {}) {
+  const media = selectedMediaAddOn(body, process.env);
   return {
-    photoUpload,
-    videoUpload,
-    photoAmountCents,
-    videoAmountCents,
-    amountCents: photoAmountCents + videoAmountCents,
+    photoUpload: media.photoUpload,
+    videoUpload: media.videoUpload,
+    photoAmountCents: 0,
+    videoAmountCents: 0,
+    amountCents: media.amountCents,
   };
+}
+
+async function grantCollaboratorMedia(db, { contact, ownerCustomerId, addOns, stripePaymentIntentId = null, metadata = {} }) {
+  if (!addOns?.amountCents) return null;
+  return recordOwnerMediaPurchase({
+    db,
+    contact,
+    addOns: { plan: 'owner_media', scope: 'owner', amountCents: addOns.amountCents, photoUpload: true, videoUpload: true, ownerCustomerId },
+    ownerCustomerId,
+    amountCents: addOns.amountCents,
+    currency: checkoutCurrency(),
+    stripePaymentIntentId,
+    metadata,
+  });
 }
 
 async function collaboratorInviteWithSelectedPlan(db, invite, body = {}) {
   const requestedPlanCode = clean(body.collaboratorPlan || body.planCode || body.plan || invite?.plan_code || 'single_trip', 100);
   const plan = collaboratorPlan(requestedPlanCode);
+  if (!invite.trip_id) throw Object.assign(new Error('This checkout link is not tied to one vacation.'), { statusCode: 400 });
   if (plan.code === invite.plan_code && plan.scope === invite.scope) return { invite, plan };
-  if (plan.scope === 'single_trip' && !invite.trip_id) {
-    throw Object.assign(new Error('This checkout link is not tied to a single vacation.'), { statusCode: 400 });
-  }
   const rows = await db`
     update vacation_collaborator_invites
     set plan_code = ${plan.code},
       scope = ${plan.scope},
-      trip_id = case when ${plan.scope} = 'unlimited_trips' then null else trip_id end,
       metadata = metadata || ${{
         selectedPlanCode: plan.code,
         selectedScope: plan.scope,
@@ -155,12 +150,10 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
   const amount = plan.amountCents + addOns.amountCents;
   const paymentIntent = await stripe.paymentIntents.create({
     amount,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
-    description: plan.scope === 'single_trip'
-      ? 'TimeSyncher Vacation Telegram access'
-      : 'TimeSyncher Vacation Telegram access for all vacations',
+    description: 'Collaborator access for this vacation',
     metadata: {
       product: 'timesyncher_vacation_telegram_collaborator',
       invite_id: selected.invite.id,
@@ -197,7 +190,7 @@ async function collaboratorPaymentIntent({ db, stripe, token, contact, body = {}
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     plan: plan.code,
     scope: plan.scope,
   };
@@ -229,6 +222,12 @@ async function completeStagingCollaboratorCheckout({ db, token, contact, card = 
       billingPostalCode: clean(card.postalCode, 40) || null,
     },
   });
+  await grantCollaboratorMedia(db, {
+    contact,
+    ownerCustomerId: invite.owner_customer_id,
+    addOns,
+    metadata: { paidVia: 'staging_card_checkout', collaboratorInviteId: invite.id },
+  });
   const email = await queueOrSendCollaboratorInviteEmail(db, { invite, token, contact }, env);
   return {
     ok: true,
@@ -237,7 +236,6 @@ async function completeStagingCollaboratorCheckout({ db, token, contact, card = 
     collaboratorInvite: {
       id: invite.id,
       status: invite.status,
-      telegramUrl: collaboratorTelegramLink(token, env),
       tripTitle: invite.trip_title || null,
       requestedFor: contact.displayName,
     },
@@ -263,13 +261,11 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
   }, metadata);
   const paymentIntent = await stripe.paymentIntents.create({
     amount: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     customer: stripeCustomer.id,
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
-    description: addOns.scope === 'single_trip'
-      ? 'TimeSyncher Vacation photo/video upload access'
-      : 'TimeSyncher Vacation photo/video upload access for all vacations',
+    description: 'TimeSyncher Vacation media uploads',
     metadata,
   });
   return {
@@ -277,7 +273,7 @@ async function ownerMediaPaymentIntent({ stripe, contact, body = {} }) {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     plan: addOns.plan,
     scope: addOns.scope,
     mediaAddOns: addOns,
@@ -294,7 +290,7 @@ async function completeStagingOwnerMediaCheckout({ db, contact, card = {}, body 
     contact,
     addOns,
     amountCents: addOns.amountCents,
-    currency: CURRENCY,
+    currency: checkoutCurrency(),
     status: 'paid',
     metadata: {
       paidVia: 'staging_card_checkout',
@@ -359,7 +355,7 @@ async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
   }
   const paymentIntent = await stripe.paymentIntents.create({
     amount: checkout.amount_cents,
-    currency: checkout.currency || CURRENCY,
+    currency: checkout.currency || checkoutCurrency(),
     automatic_payment_methods: { enabled: true },
     receipt_email: contact.email,
     description: `TimeSyncher Vacation access for ${checkout.trip_title || 'a vacation'}`,
@@ -380,7 +376,7 @@ async function accessPlanPaymentIntent({ db, stripe, body = {} }) {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
     amount: checkout.amount_cents,
-    currency: checkout.currency || CURRENCY,
+    currency: checkout.currency || checkoutCurrency(),
     checkout: publicAccessPlanCheckout({ ...checkout, stripe_payment_intent_id: paymentIntent.id }),
   };
 }
@@ -460,7 +456,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: checkout.amount_cents,
-            currency: checkout.currency || CURRENCY,
+            currency: checkout.currency || checkoutCurrency(),
             checkout: publicAccessPlanCheckout(checkout),
             error: error.message,
           });
@@ -497,13 +493,11 @@ export default async function handler(req, res) {
           tripId: clean(body.tripId, 80),
           planCode: clean(body.planCode || body.scope || 'single_trip', 80),
           requestedFor: clean(body.requestedFor, 180),
-          metadata: {
-            requestedByTelegramChatId: clean(body.telegramChatId, 120) || null,
-          },
         });
         return send(res, 200, checkout);
       } catch (error) {
-        return send(res, error.statusCode || 503, { ok: false, error: error.message || 'Unable to create collaborator checkout.' });
+        const safe = customerCheckoutFailure(error);
+        return send(res, safe.statusCode || 503, { ok: false, error: safe.message || 'Unable to create collaborator checkout.' });
       }
     }
 
@@ -526,7 +520,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: plan.amountCents + addOns.amountCents,
-            currency: CURRENCY,
+            currency: checkoutCurrency(),
             plan: plan.code,
             accessAddOns: addOns,
             error: error.message,
@@ -567,7 +561,7 @@ export default async function handler(req, res) {
             mode: 'staging_card',
             stripeUnavailable: true,
             amount: addOns.amountCents,
-            currency: CURRENCY,
+            currency: checkoutCurrency(),
             plan: addOns.plan,
             scope: addOns.scope,
             mediaAddOns: addOns,
@@ -614,11 +608,16 @@ export default async function handler(req, res) {
 
     const customer = requireCustomer(body);
     const orderBump = Boolean(body.orderBump);
-    const photoMemories = Boolean(body.photoMemories);
-    const photoMemoriesPriceId = orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_ID : PHOTO_MEMORIES_SINGLE_PRICE_ID;
-    const photoMemoriesAmount = photoMemories ? (orderBump ? PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS : PHOTO_MEMORIES_SINGLE_PRICE_CENTS) : 0;
-    if (photoMemories && !photoMemoriesPriceId) throw new Error('Photo Memories subscription price ID is not configured yet.');
-    const amount = BASE_PRICE_CENTS + (orderBump ? ORDER_BUMP_PRICE_CENTS : 0) + photoMemoriesAmount;
+    const photoMemories = Boolean(body.photoMemories || body.media);
+    const mediaPriceId = process.env.TIMESYNCHER_MEDIA_PRICE_ID || '';
+    const mediaAmount = photoMemories
+      ? requiredConfigCents(process.env.TIMESYNCHER_MEDIA_PRICE_CENTS, 'TIMESYNCHER_MEDIA_PRICE_CENTS')
+      : 0;
+    if (photoMemories && !mediaPriceId) throw new CheckoutConfigError('TIMESYNCHER_MEDIA_PRICE_ID');
+    const orderBumpCents = orderBump
+      ? requiredConfigCents(process.env.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS')
+      : 0;
+    const amount = requiredConfigCents(process.env.TIMESYNCHER_BASE_PRICE_CENTS, 'TIMESYNCHER_BASE_PRICE_CENTS') + orderBumpCents + mediaAmount;
     if (!Number.isFinite(amount) || amount < 50) throw new Error('Invalid checkout amount.');
 
     const stripe = new Stripe(stripeConfig.key, { apiVersion: '2025-11-17.clover' });
@@ -632,15 +631,16 @@ export default async function handler(req, res) {
       last_name: customer.lastName,
       vacation_date: customer.vacationDate,
       photo_memories: String(photoMemories),
-      photo_memories_price_id: photoMemoriesPriceId || '',
-      photo_memories_plan: orderBump ? 'unlimited' : 'single',
+      media: String(photoMemories),
+      photo_memories_price_id: mediaPriceId,
+      photo_memories_plan: photoMemories ? 'owner_media' : '',
       source: 'vacation.timesyncher.com',
     };
     const stripeCustomer = await findOrCreateStripeCustomer(stripe, customer, orderMetadata);
     const subscriptionItems = [
       { price: SINGLE_PRICE_ID },
       ...(orderBump ? [{ price: UNLIMITED_PRICE_ID }] : []),
-      ...(photoMemories ? [{ price: photoMemoriesPriceId }] : []),
+      ...(photoMemories ? [{ price: mediaPriceId }] : []),
     ];
 
     const subscription = await stripe.subscriptions.create({
@@ -677,13 +677,14 @@ export default async function handler(req, res) {
       customerId: stripeCustomer.id,
       amount: invoice?.amount_due ?? amount,
       estimatedAmount: amount,
-      currency: CURRENCY,
+      currency: checkoutCurrency(),
       orderBump,
       photoMemories,
-      photoMemoriesPlan: photoMemories ? (orderBump ? 'unlimited' : 'single') : null,
+      photoMemoriesPlan: photoMemories ? 'owner_media' : null,
       plan: orderBump ? 'unlimited' : 'single',
     });
   } catch (error) {
-    return send(res, error.statusCode || 400, { ok: false, error: error.message || 'Unable to create subscription.' });
+    const safe = customerCheckoutFailure(error);
+    return send(res, safe.statusCode || 400, { ok: false, error: safe.message || 'Unable to create subscription.' });
   }
 }

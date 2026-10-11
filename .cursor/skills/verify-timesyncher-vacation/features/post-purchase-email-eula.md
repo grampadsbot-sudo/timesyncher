@@ -5,9 +5,9 @@ After purchase or coupon redeem, the customer reads an acknowledgement, opens th
 ## Sub-features
 
 - `purchase-ack` shows purchase confirmed and tells the customer to click the link in the email. No primary Open App control.
-- `purchase-email` carries the launch link to `vacation-app.html?session=`.
-- `app-eula-first` shows Review Terms & Privacy and Agree on that app URL before the workspace.
-- `onboarding-chat` shows the empty workspace after Agree, labeled no vacations yet, chat-only, with no mode dropdown.
+- `purchase-email` carries the launch link to `/shared/…`. It is not `vacation-app.html`, order-success, or `/accept`.
+- `app-eula-first` is the pending app URL (`vacation-app.html?session=`) with Review Terms & Privacy and Agree before the workspace. That capture is not the email's `/shared/` href.
+- `onboarding-chat` is the app shell after Agree. Layout is only `features/screens/app.md`.
 
 ## How to get to it (user POV)
 
@@ -23,9 +23,9 @@ Preconditions:
 - The evidence directory contains the purchase email and `browser-notes.json` from a redeem whose EULA was still pending at first open.
 
 - **Ack the purchase.** Open the order-success URL from the redeem. Run `node .cursor/skills/verify-timesyncher-vacation/scripts/verify-post-purchase-email-eula.mjs --evidence <dir>`. The order-success step has no buttons and its text tells the customer to check email.
-- **Read the email.** The harness reads `purchase-email.html` or `purchase-email.txt`. The launch href matches `vacation-app.html?session=` and is not order-success or `/accept`.
-- **Open that href.** The `eula-first` note uses the same URL, `#eulaScreen` is present, and the workspace is absent.
-- **Agree.** The `onboarding` note is the same app URL, EULA is gone, the trip label is `no vacations yet`, and the workspace is chat-only.
+- **Read the email.** The harness reads `purchase-email.html` or `purchase-email.txt`. The launch href includes `/shared/` and is not `vacation-app.html`, order-success, or `/accept`.
+- **EULA first.** The `eula-first` note is the pending app URL `vacation-app.html?session=`, `#eulaScreen` is present, and the workspace is absent. It is a different URL from the email launch.
+- **Agree.** The `onboarding` note is the same app URL, EULA is gone, and the workspace is the app shell in `features/screens/app.md`.
 - **Fail closed.** `--self-check` must exit non-zero for a missing email, an email that links to order-success, and an email that links to `/accept`.
 
 ## Gotchas

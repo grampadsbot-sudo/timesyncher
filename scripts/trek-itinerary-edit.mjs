@@ -25,17 +25,13 @@ function slugFromText(value) {
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
-function targetToken(input) {
+function requireShareToken(input) {
   const requestText = text(input.requestText || input.request_text || '', 8000);
-  const explicit = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
-  const mentionsDavidson = /\b(caldwell|davidson)\b/i.test(requestText);
-  const mentionsOtherKnownTrip = /\b(las vegas|vegas|strip|jockey club|staycation|hawaii|waikiki|maui|kona|oahu)\b/i.test(requestText);
-  if (explicit) {
-    if (explicit === 'the-davidson-family-trip' && !mentionsDavidson && mentionsOtherKnownTrip) return '';
-    return explicit;
+  const token = text(input.token || input.shareToken || input.share_token || slugFromText(requestText), 180);
+  if (!token) {
+    throw new Error('Missing TREK share token: provide token, shareToken, share_token, or a /shared/<token>/ URL.');
   }
-  if (mentionsDavidson) return 'the-davidson-family-trip';
-  return '';
+  return token;
 }
 
 function inferCategory(title, requestText) {
@@ -89,7 +85,7 @@ function cleanTitle(value) {
   return text(value, 180)
     .replace(/^\s*(?:add|create|put|include|schedule)\s+/i, '')
     .replace(/^\s*(?:a\s+)?(?:family\s+event|event|timeline\s+item)\s+/i, '')
-    .replace(/\s+(?:to|on|for)\s+(?:the\s+)?(?:caldwell|davidson|vacation|trip|itinerary)\b.*$/i, '')
+    .replace(/\s+(?:to|on|for)\s+(?:the\s+)?(?:vacation|trip|itinerary)\b.*$/i, '')
     .replace(/\s+\b(?:to|on|for)\s+day\s+\d+\b.*$/i, '')
     .replace(/\s+\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b.*$/i, '')
     .replace(/^["'“”]+|["'“”]+$/g, '')
@@ -142,18 +138,6 @@ function requiresBroadEditRunner(requestText, structuredItems) {
 }
 
 
-const CALDWELL_FAMILY_HOME = {
-  address: '12364 Nantes Court, Caldwell, ID 83607, United States',
-  lat: 43.6182767,
-  lng: -116.6397578,
-};
-
-function defaultFamilyAddress(category, requestText, token) {
-  if (category !== 'family_event') return null;
-  if (/\b(caldwell|davidson)\b/i.test(requestText) || token === 'the-davidson-family-trip') return CALDWELL_FAMILY_HOME;
-  return null;
-}
-
 function editItems(input) {
   const requestText = text(input.requestText || input.request_text || '', 8000);
   const structured = Array.isArray(input.editItems) ? input.editItems : [];
@@ -175,12 +159,10 @@ function editItems(input) {
   })).filter((item) => item.title);
   items.push(...quotedItems, ...extractLineAdds(requestText, quotedItems.length > 0), ...extractHotelCorrection(requestText));
   const seen = new Set();
-  const token = targetToken(input);
   return items
     .map((item) => {
       const category = item.category || inferCategory(item.title, requestText);
-      const fallbackHome = defaultFamilyAddress(category, requestText, token);
-      const address = item.address || parseAddress(item.raw || '') || requestAddress || fallbackHome?.address || '';
+      const address = item.address || parseAddress(item.raw || '') || requestAddress || '';
       return {
         ...item,
         day: item.day || parseDay(item.raw || requestText),
@@ -188,8 +170,8 @@ function editItems(input) {
         category,
         summary: item.summary || 'Added from a TimeSyncher Vacation owner edit request.',
         address,
-        lat: item.lat ?? (address === fallbackHome?.address ? fallbackHome.lat : null),
-        lng: item.lng ?? (address === fallbackHome?.address ? fallbackHome.lng : null),
+        lat: item.lat ?? null,
+        lng: item.lng ?? null,
       };
     })
     .filter((item) => {
@@ -272,16 +254,21 @@ def category_meta(kind):
     if kind == 'attraction' or kind == 'activity': return ('Attraction', '#7c3aed', 'Landmark')
     return ('Attraction', '#7c3aed', 'MapPin')
 
-def captured_logo(title, kind):
-    lower = (title or '').lower()
-    if 'carbone' in lower: return '/ts-thing-logos/carbone.svg'
-    if 'shake' in lower and 'shack' in lower: return '/ts-thing-logos/shake-shack.svg'
-    if 'eggslut' in lower: return '/ts-thing-logos/eggslut.svg'
-    if 'lotus' in lower: return '/ts-thing-logos/lotus-of-siam.svg'
-    if 'conservatory' in lower: return '/ts-thing-logos/bellagio-conservatory.svg'
-    if 'bellagio' in lower: return '/ts-thing-logos/bellagio.svg'
-    if 'cosmo' in lower or 'shop' in lower: return '/ts-thing-logos/cosmopolitan-shops.svg'
-    if kind == 'flight': return '/ts-thing-logos/flight.svg'
+def captured_logo(item):
+    source = item.get('source') if isinstance(item.get('source'), dict) else {}
+    for value in (
+        source.get('logo'),
+        source.get('logoUrl'),
+        source.get('favicon'),
+        source.get('faviconUrl'),
+        item.get('logo'),
+        item.get('logoUrl'),
+        item.get('favicon'),
+        item.get('faviconUrl'),
+    ):
+        text = str(value or '').strip()
+        if text:
+            return text
     return ''
 
 def category_icon_emoji(kind):
@@ -295,11 +282,6 @@ def category_icon_emoji(kind):
 def find_trip(token, request_text):
     if token:
         row = one('SELECT trips.*, share_tokens.token AS share_token FROM share_tokens JOIN trips ON trips.id=share_tokens.trip_id WHERE share_tokens.token=? ORDER BY share_tokens.id LIMIT 1', (token,))
-        if row:
-            return row
-    lower = (request_text or '').lower()
-    if 'caldwell' in lower or 'davidson' in lower:
-        row = one("SELECT trips.*, share_tokens.token AS share_token FROM trips JOIN share_tokens ON share_tokens.trip_id=trips.id WHERE lower(share_tokens.token)='the-davidson-family-trip' OR lower(trips.title) LIKE '%davidson%' OR lower(trips.description) LIKE '%caldwell%' ORDER BY trips.id DESC LIMIT 1")
         if row:
             return row
     return None
@@ -358,7 +340,7 @@ def insert_or_update_item(trip_id, token, days, item, overrides):
     if not valid_coord(lat, lng) and address:
         lat, lng = geocode_address(address)
     has_coords = valid_coord(lat, lng)
-    logo_url = captured_logo(title, kind)
+    logo_url = captured_logo(item)
     if place:
         place_id = int(place['id'])
         run("UPDATE places SET category_id=?, description=COALESCE(NULLIF(description, ''), ?), reservation_status=?, place_time=COALESCE(NULLIF(?, ''), place_time), notes=COALESCE(NULLIF(notes, ''), ?), address=COALESCE(NULLIF(?, ''), address), lat=COALESCE(?, lat), lng=COALESCE(?, lng), image_url=COALESCE(NULLIF(image_url, ''), ?), updated_at=CURRENT_TIMESTAMP WHERE id=?", (cat_id, summary, 'considering', item.get('time') or '', summary, address, float(lat) if has_coords else None, float(lng) if has_coords else None, logo_url or None, place_id))
@@ -436,8 +418,9 @@ print(json.dumps({'ok': True, 'tripId': int(trip['id']), 'token': token, 'url': 
 
 async function main() {
   const input = JSON.parse((await readStdin()) || '{}');
+  const token = requireShareToken(input);
   const payload = {
-    token: targetToken(input),
+    token,
     requestText: text(input.requestText || input.request_text || '', 8000),
     items: editItems(input),
     dateRange: parseDateRange(input),

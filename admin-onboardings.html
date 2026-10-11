@@ -230,13 +230,11 @@
         <div class="card">
           <h2>${safe(sessionName(s))}</h2>
           <p class="muted">${safe(s.customer.email || '')} ${safe(s.customer.phone || '')}</p>
-          <p><a href="${safe(s.telegramUrl || '#')}" target="_blank" rel="noreferrer">Start TimeSyncher Vacation bot link</a></p>
-          <div><span class="pill">${safe(s.status)}</span> <span class="pill">${safe(s.currentStep)}</span> <span class="pill">${safe(s.telegramInstallChoice || 'no install choice')}</span></div>
+          <div><span class="pill">${safe(s.status)}</span> <span class="pill">${safe(s.currentStep)}</span></div>
         </div>
         <div class="metrics">
           <div class="metric"><strong>${s.counts.emails}</strong><span>Email records</span></div>
           <div class="metric"><strong>${s.counts.clicks}</strong><span>Clicks</span></div>
-          <div class="metric"><strong>${s.counts.telegramSessions}</strong><span>Telegram sessions</span></div>
           <div class="metric"><strong>${s.counts.turns}</strong><span>Turns</span></div>
           <div class="metric"><strong>${s.counts.requests}</strong><span>Requests</span></div>
           <div class="metric"><strong>${s.counts.workerJobs}</strong><span>Worker jobs</span></div>

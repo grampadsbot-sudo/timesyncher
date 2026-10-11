@@ -1,0 +1,1 @@
+const INTERIM_STOCK = /^(got it|sure|okay)\b/i;

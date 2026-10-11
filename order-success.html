@@ -36,8 +36,12 @@
     <section class="card">
       <img class="logo" src="/timesyncher-logo-gold.png" alt="TimeSyncher" />
       <h1>Purchase confirmed</h1>
-      <p id="intro">Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email to open TimeSyncher Vacation.</p>
+      <p id="intro">Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email.</p>
       <div class="meta" id="meta">Loading your purchase...</div>
+      <div class="button-row hidden" id="actions">
+        <a class="button" id="purchaseLink" href="/vacation-app.html">Review Terms &amp; Privacy</a>
+        <a class="button hidden" id="openApp" href="/vacation-app.html">Open App</a>
+      </div>
       <div class="status hidden" id="status"></div>
     </section>
   </main>
@@ -46,7 +50,63 @@
     const meta = document.getElementById('meta');
     const statusBox = document.getElementById('status');
     const intro = document.getElementById('intro');
+    const actions = document.getElementById('actions');
+    const purchaseLink = document.getElementById('purchaseLink');
+    const openApp = document.getElementById('openApp');
     const state = { token: params.get('session') || '', session: null };
+
+    const emailCopy = 'Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email.';
+
+    function vacationAppHref(token) {
+      const value = String(token || '').trim();
+      if (!value) {
+        const error = new Error('Vacation app session is missing. Open the link in your purchase email.');
+        error.code = 'vacation_app_session_missing';
+        throw error;
+      }
+      return `/vacation-app.html?session=${encodeURIComponent(value)}`;
+    }
+
+    function safeOpen(value) {
+      const text = String(value || '');
+      if (text.includes('/shared/')) {
+        const error = new Error('Refusing to open a shared trip URL from purchase.');
+        error.code = 'purchase_shared_launch_refused';
+        throw error;
+      }
+      try {
+        const parsed = new URL(text, location.origin);
+        const session = parsed.searchParams.get('session') || '';
+        if (parsed.pathname === '/vacation-app.html' && session) return vacationAppHref(session);
+      } catch {
+        // The caller gets the missing-session error below.
+      }
+      const error = new Error('Vacation app session link is missing. Open the link in your purchase email.');
+      error.code = 'vacation_app_session_missing';
+      throw error;
+    }
+
+    function showOpenApp(href, detail = 'Terms accepted. Check your email and click the link in that email.') {
+      intro.textContent = emailCopy;
+      intro.classList.remove('hidden');
+      meta.textContent = detail;
+      purchaseLink.classList.add('hidden');
+      openApp.href = safeOpen(href);
+      openApp.classList.remove('hidden');
+      actions.classList.remove('hidden');
+      statusBox.classList.add('hidden');
+    }
+
+    function showPurchaseLink(href, detail) {
+      intro.textContent = emailCopy;
+      intro.classList.remove('hidden');
+      meta.textContent = detail;
+      purchaseLink.href = safeOpen(href);
+      purchaseLink.classList.remove('hidden');
+      openApp.classList.add('hidden');
+      actions.classList.remove('hidden');
+      statusBox.classList.add('hidden');
+    }
 
     function setStatus(text, error = false) {
       statusBox.textContent = text;
@@ -74,6 +134,14 @@
     }
 
     async function loadSession() {
+      if (params.get('eula') === 'accepted') {
+        showOpenApp(vacationAppHref(state.token || params.get('session')));
+        return;
+      }
+      if (params.get('test') === '1') {
+        showPurchaseLink(vacationAppHref(state.token || params.get('session')), 'Review the terms in the app. Check your email and click the link in that email.');
+        return;
+      }
       if (params.get('collaboratorCheckout') === 'complete') {
         meta.textContent = 'Access add-on purchased.';
         intro.classList.add('hidden');
@@ -91,9 +159,7 @@
       }
       if (params.get('accessPlanCheckout') === 'complete') {
         const checkoutId = cleanParam(params.get('checkout'));
-        meta.textContent = 'Vacation access checkout complete.';
-        intro.classList.add('hidden');
-        setStatus('The access plan payment is complete. TimeSyncher is sending the right setup links and invites for the selected people.');
+        showPurchaseLink(vacationAppHref(state.token || params.get('session')), 'Vacation access checkout complete. Check your email and click the link in that email.');
         await track('access_plan_checkout_complete', checkoutId || location.href, 'page_view');
         return;
       }
@@ -123,16 +189,16 @@
       state.token = data.session.token;
       history.replaceState(null, '', `/order-success.html?session=${encodeURIComponent(state.token)}`);
       const who = data.session.customerName || data.session.email || 'your account';
-      const mailed = data.session.email ? ` Check ${data.session.email} and click the link in that email.` : '';
-      intro.textContent = 'Your TimeSyncher Vacation purchase is confirmed. Check your email and click the link in that email to open TimeSyncher Vacation.';
-      meta.textContent = `An unforgettable vacation is awaiting ${who}.${mailed}`;
-      statusBox.classList.add('hidden');
+      const detail = `An unforgettable vacation is awaiting ${who}.`;
+      const appHref = data.session.vacationAppUrl || vacationAppHref(data.session.token);
+      if (data.session.eula?.accepted) showOpenApp(appHref, detail);
+      else showPurchaseLink(appHref, detail);
       await track('purchase_email_ack', location.href, 'page_view');
     }
 
     loadSession().catch((error) => {
       meta.textContent = 'Onboarding is not ready yet.';
-      setStatus(error.message || 'Unable to load onboarding. Check your purchase email or contact support@timesyncher.com.', true);
+      setStatus(error.message || 'Unable to load onboarding. Contact support@timesyncher.com.', true);
     });
   </script>
 </body>

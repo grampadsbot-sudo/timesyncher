@@ -1,38 +1,62 @@
-import { checkoutAmounts } from './checkout-pricing.mjs';
+import { CheckoutConfigError, requiredConfigCents } from './checkout-pricing.mjs';
 
 export function planSeatDollars(env = process.env) {
-  const dollars = Math.round(Number(checkoutAmounts(env).orderBump) / 100);
-  return Number.isFinite(dollars) && dollars > 0 ? dollars : 27;
+  const cents = requiredConfigCents(env?.TIMESYNCHER_ORDER_BUMP_PRICE_CENTS, 'TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  const dollars = Math.round(cents / 100);
+  if (dollars <= 0) throw new CheckoutConfigError('TIMESYNCHER_ORDER_BUMP_PRICE_CENTS');
+  return dollars;
 }
 
-export function payerSeats(customerTurn) {
-  const text = String(customerTurn || '');
-  const seats = [];
+export function configuredSeatDollars(env) {
+  try {
+    return planSeatDollars(env);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+    console.error(`seat price is not configured: ${error.message}`);
+    return null;
+  }
+}
+
+function extractedPayerRows(seats) {
+  if (!Array.isArray(seats)) return [];
+  const rows = [];
   const seen = new Set();
-  const add = (name, payer) => {
-    const who = String(name || '').trim();
-    if (!/^[A-Z][a-z]+$/.test(who) || seen.has(who)) return;
-    seen.add(who);
-    seats.push({ name: who, payer: String(payer || '').trim() });
-  };
-  const paidByCustomer = text.match(/\bI pay for ([^.?!]+)/i);
-  if (paidByCustomer) {
-    for (const name of paidByCustomer[1].match(/[A-Z][a-z]+/g) || []) add(name, 'you');
+  for (const item of seats) {
+    const name = String(item?.name || '').trim();
+    const payer = String(item?.payer || '').trim();
+    if (!name || !payer || seen.has(name)) continue;
+    seen.add(name);
+    rows.push({ name, payer });
   }
-  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for (himself|herself|themselves)\b/gi)) {
-    add(match[1], match[1]);
-  }
-  for (const match of text.matchAll(/\b([A-Z][a-z]+) pays for ([A-Z][a-z]+)\b/g)) {
-    add(match[2], match[1]);
-  }
-  return seats;
+  return rows;
 }
 
-export function payerPriceLine(customerTurn, env = process.env) {
-  const seats = payerSeats(customerTurn);
+export function payerSeats(customerTurn, extracted = null) {
+  if (Array.isArray(extracted)) return extractedPayerRows(extracted);
+  if (Array.isArray(customerTurn?.seats)) return extractedPayerRows(customerTurn.seats);
+  if (Array.isArray(customerTurn)) return extractedPayerRows(customerTurn);
+  return [];
+}
+
+export function payerLineFromDollars(customerTurn, dollars, extracted = null) {
+  const amount = Number(dollars);
+  if (!Number.isFinite(amount) || amount <= 0) return '';
+  const seats = payerSeats(customerTurn, extracted);
   if (!seats.length) return '';
-  const dollars = planSeatDollars(env);
-  return seats.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
+  return seats.map((seat) => `${seat.name} $${amount}, paid by ${seat.payer}`).join('; ');
+}
+
+export function payerPriceLine(seatsOrTurn, env = process.env, extracted = null) {
+  const list = payerSeats(seatsOrTurn, extracted);
+  if (!list.length) return '';
+  let dollars = null;
+  try {
+    dollars = planSeatDollars(env);
+  } catch (error) {
+    if (error?.name !== 'CheckoutConfigError') throw error;
+  }
+  if (!dollars) return '';
+  return list.map((seat) => `${seat.name} $${dollars}, paid by ${seat.payer}`).join('; ');
 }
 
 export function priceClauseSatisfied(part, reply) {
@@ -57,9 +81,16 @@ export function priceClauseSatisfied(part, reply) {
   return false;
 }
 
-export function priceAnswered(reply, customerTurn, env = process.env) {
-  const line = payerPriceLine(customerTurn, env);
+function replyCoversNamedSeats(reply, seats) {
   const body = String(reply || '');
-  if (!line) return /\$\d+/.test(body);
-  return line.split('; ').every((part) => priceClauseSatisfied(part, body));
+  if (!/\$\d+/.test(body)) return false;
+  return seats.every((seat) => new RegExp(`\\b${String(seat?.name || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(body));
+}
+
+export function priceAnswered(reply, seats, env = null) {
+  const list = payerSeats(seats);
+  const body = String(reply || '');
+  const line = env ? payerPriceLine(list, env) : '';
+  if (line) return line.split('; ').every((part) => priceClauseSatisfied(part, body));
+  return replyCoversNamedSeats(body, list);
 }

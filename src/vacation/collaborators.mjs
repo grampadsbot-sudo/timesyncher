@@ -1,38 +1,32 @@
 import crypto from 'node:crypto';
-import {
-  activationStatusPersistent,
-  createOnboardingSessionPersistent,
-  loadDefaultEulaText,
-} from '../onboarding/eula-persistent-core.mjs';
-import { createPersistentStoreFromEnv } from '../onboarding/eula-persistent-store.mjs';
+import { attachPurchasedEntitlementToChatTrip } from './chat-trip-entitlement-attach.mjs';
+import { optionalConfigCents, requiredConfigCents } from './checkout-pricing.mjs';
 
 export const COLLABORATOR_PLANS = {
   telegram_collaborators_single_trip: {
     code: 'telegram_collaborators_single_trip',
     scope: 'single_trip',
-    amountCents: 1500,
-    maxActiveCollaborators: 1,
-  },
-  telegram_collaborators_unlimited_trips: {
-    code: 'telegram_collaborators_unlimited_trips',
-    scope: 'unlimited_trips',
-    amountCents: 2700,
     maxActiveCollaborators: 1,
   },
 };
 
-export function collaboratorPlan(codeOrScope = 'single_trip') {
-  if (COLLABORATOR_PLANS[codeOrScope]) return COLLABORATOR_PLANS[codeOrScope];
-  if (codeOrScope === 'single_trip') return COLLABORATOR_PLANS.telegram_collaborators_single_trip;
-  if (codeOrScope === 'unlimited_trips') return COLLABORATOR_PLANS.telegram_collaborators_unlimited_trips;
+function withConfiguredAmount(plan, env) {
+  return {
+    ...plan,
+    amountCents: requiredConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS, 'TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS'),
+  };
+}
+
+export function collaboratorPlan(codeOrScope = 'single_trip', env = process.env) {
+  if (COLLABORATOR_PLANS[codeOrScope]) return withConfiguredAmount(COLLABORATOR_PLANS[codeOrScope], env);
+  if (codeOrScope === 'single_trip') return withConfiguredAmount(COLLABORATOR_PLANS.telegram_collaborators_single_trip, env);
   throw new Error(`Unsupported Telegram collaborator plan: ${codeOrScope}`);
 }
 
 export function isCollaboratorInviteRequest(text = '') {
-  return /\b(add|invite|let|allow|give)\b.{0,100}\b(wife|husband|spouse|partner|assistant|friend|family|daughter|son|mom|mother|dad|father|collaborator|someone|user)\b.{0,140}\b(telegram|bot|modify|edit|update|change|interact|ability|access)\b/i.test(text)
-    || /\b(send|get|create|make|share|give)\b.{0,80}\b(link|checkout|setup|set\s+up)\b.{0,100}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b/i.test(text)
-    || /\b(set\s+up|setup)\b.{0,80}\b(her|him|them|wife|husband|spouse|partner|kim|collaborator|assistant|friend|family|someone)\b.{0,100}\b(link|checkout|telegram|bot|access|collaborator)\b/i.test(text)
-    || /\btelegram collaborator\b/i.test(text);
+  return /\b(add|invite|let|allow|give)\b.{0,100}\b(wife|husband|spouse|partner|assistant|friend|family|daughter|son|mom|mother|dad|father|collaborator|someone|user)\b.{0,140}\b(modify|edit|update|change|interact|ability|access)\b/i.test(text)
+    || /\b(send|get|create|make|share|give)\b.{0,80}\b(link|checkout|setup|set\s+up)\b.{0,100}\b(her|him|them|wife|husband|spouse|partner|collaborator|assistant|friend|family|someone)\b/i.test(text)
+    || /\b(set\s+up|setup)\b.{0,80}\b(her|him|them|wife|husband|spouse|partner|collaborator|assistant|friend|family|someone)\b.{0,100}\b(link|checkout|access|collaborator)\b/i.test(text);
 }
 
 export function collaboratorToken() {
@@ -44,36 +38,28 @@ export function hashToken(token, env = process.env) {
   return crypto.createHash('sha256').update(`${salt}:${token}`).digest('hex');
 }
 
-export function collaboratorCheckoutCopy({ singleUrl = '', unlimitedUrl = '' } = {}) {
-  return [
-    'Telegram editing for another person is a paid TimeSyncher Vacation add-on.',
-    '',
-    'Options:',
-    `One vacation: $15${singleUrl ? `\n${singleUrl}` : ''}`,
-    `All vacations: $27${unlimitedUrl ? `\n${unlimitedUrl}` : ''}`,
-    '',
-    'The shared vacation website stays view-only for anyone with only the public URL. Owners and paid Telegram collaborators can edit when they open from Telegram; non-Telegram website invitees use an owner-approved email magic link.',
-  ].join('\n');
-}
-
-function clean(value, max = 500) {
-  return String(value || '').trim().slice(0, max);
-}
-
-function botUsername(env = process.env) {
-  return String(env.TIMESYNCHER_TELEGRAM_BOT_USERNAME || env.TELEGRAM_BOT_USERNAME || 'TimeSyncherVacationBot')
-    .replace(/\\n/g, '')
-    .replace(/^["']|["']$/g, '')
-    .trim()
-    .replace(/^@/, '');
-}
-
-export function collaboratorTelegramLink(token, env = process.env) {
-  return `https://t.me/${botUsername(env)}?start=${encodeURIComponent(token)}`;
+export function collaboratorCheckoutCopy({ singleUrl = '', url = '', env = process.env } = {}) {
+  return {
+    ask: 'collaborator_checkout',
+    plan: 'telegram_collaborators_single_trip',
+    perVacation: true,
+    cents: optionalConfigCents(env?.TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS),
+    url: url || singleUrl || null,
+  };
 }
 
 export function collaboratorEulaSessionId(invite) {
   return `vacation-collaborator-${invite.id}`;
+}
+
+export function isCollaboratorEulaSessionId(sessionId) {
+  return String(sessionId || '').startsWith('vacation-collaborator-');
+}
+
+export function collaboratorInviteIdFromEulaSession(sessionId) {
+  const id = String(sessionId || '');
+  if (!isCollaboratorEulaSessionId(id)) return '';
+  return id.slice('vacation-collaborator-'.length);
 }
 
 export function collaboratorEulaClientKey(invite) {
@@ -93,6 +79,35 @@ export async function loadCollaboratorInviteByToken(db, token, env = process.env
     where deep_link_token_hash = ${hashToken(token, env)}
       and status in ('pending_payment', 'paid', 'accepted')
       and (expires_at is null or expires_at > now())
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+function cleanInviteLookup(value, max = 180) {
+  return String(value || '').trim().slice(0, max);
+}
+
+export async function loadCollaboratorInviteForWebAccessGrant(db, grant) {
+  if (!grant) return null;
+  const metadata = grant.metadata && typeof grant.metadata === 'object' ? grant.metadata : {};
+  const directId = cleanInviteLookup(metadata.collaboratorInviteId, 80);
+  if (directId) return loadCollaboratorInviteForEmail(db, directId);
+  const tripId = cleanInviteLookup(grant.trip_id, 80);
+  const email = cleanInviteLookup(grant.email, 180).toLowerCase();
+  if (!tripId || !email || !email.includes('@')) return null;
+  const rows = await db`
+    select
+      i.*,
+      c.email as owner_email,
+      c.display_name as owner_display_name,
+      t.title as trip_title
+    from vacation_collaborator_invites i
+    join customers c on c.id = i.owner_customer_id
+    left join trips t on t.id = i.trip_id
+    where i.trip_id = ${tripId}
+      and lower(coalesce(i.metadata->>'email', '')) = ${email}
+    order by i.created_at desc
     limit 1
   `;
   return rows[0] || null;
@@ -139,229 +154,166 @@ export async function markCollaboratorInvitePaid(db, { inviteId, token = '', met
   return loadCollaboratorInviteForEmail(db, rows[0].id);
 }
 
-export async function ensureCollaboratorEulaSession(invite, token, env = process.env) {
-  const store = createPersistentStoreFromEnv(env);
-  const sessionId = collaboratorEulaSessionId(invite);
-  const status = await activationStatusPersistent(
-    store,
-    collaboratorEulaClientKey(invite),
-    env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft',
-  );
-  if (status.ok) {
-    return {
-      ok: true,
-      sessionId,
-      status: 'accepted',
-      receiptSha256: status.receiptSha256,
-      acceptUrl: collaboratorEulaAcceptUrl(invite, env),
-    };
-  }
-
-  await createOnboardingSessionPersistent(store, {
-    sessionId,
-    clientKey: collaboratorEulaClientKey(invite),
-    clientLabel: clean(invite.requested_for, 180) || 'TimeSyncher Vacation collaborator',
-    contact: {},
-    selectedFunctionality: [
-      'telegram_collaborator_modify_access',
-      'hosted_itinerary_context',
-      'vacation_update_requests',
-    ],
-    google: {
-      returnUrl: collaboratorTelegramLink(token, env),
-    },
-    eula: {
-      version: env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft',
-      text: loadDefaultEulaText(),
-    },
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
-  }).catch((error) => {
-    if (!/already exists|already/i.test(error?.message || '')) throw error;
-  });
-
-  return {
-    ok: false,
-    sessionId,
-    status: 'pending',
-    acceptUrl: collaboratorEulaAcceptUrl(invite, env),
-  };
-}
-
-export async function acceptCollaboratorInvite(db, {
-  token,
-  telegramChatId,
-  telegramUserId,
-  displayName = '',
-  username = '',
-  payload = {},
-  env = process.env,
-}) {
-  const invite = await loadCollaboratorInviteByToken(db, token, env);
-  if (!invite) return { ok: false, status: 'not_found' };
-  if (invite.status === 'pending_payment') {
-    return {
-      ok: false,
-      status: 'payment_pending',
-      invite,
-      reply: [
-        'I found this Telegram collaborator invite, but the add-on payment is not confirmed yet.',
-        '',
-        'If you just checked out, give Stripe a moment and try this Telegram link again.',
-      ].join('\n'),
-    };
-  }
-
-  const eula = await ensureCollaboratorEulaSession(invite, token, env);
-  if (!eula.ok) {
-    return {
-      ok: false,
-      status: 'eula_required',
-      invite,
-      eula,
-      reply: [
-        'Your TimeSyncher Vacation collaborator add-on is paid.',
-        '',
-        'Before Telegram editing is enabled, please review and accept the TimeSyncher EULA:',
-        eula.acceptUrl,
-        '',
-        'After accepting, return to this Telegram link to finish setup.',
-      ].join('\n'),
-    };
-  }
-
-  const existing = await activeCollaboratorForTelegram(db, {
-    ownerCustomerId: invite.owner_customer_id,
-    tripId: invite.trip_id,
-    telegramChatId,
-    telegramUserId,
-  });
-  const collaborator = existing || (await db`
-    insert into vacation_collaborators (
-      invite_id, owner_customer_id, trip_id, telegram_chat_id, telegram_user_id,
-      display_name, plan_code, scope, status, accepted_eula_version, metadata,
-      accepted_at, updated_at
-    )
-    values (
-      ${invite.id}, ${invite.owner_customer_id}, ${invite.trip_id || null},
-      ${telegramChatId || null}, ${telegramUserId || null}, ${displayName || null},
-      ${invite.plan_code}, ${invite.scope}, 'active',
-      ${env.TIMESYNCHER_EULA_VERSION || '2026-04-initial-draft'},
-      ${{
-        source: 'telegram_collaborator_invite',
-        telegramUsername: username || null,
-        eulaSessionId: eula.sessionId,
-        eulaReceiptSha256: eula.receiptSha256 || null,
-        ...payload,
-      }},
-      now(), now()
-    )
-    returning *
-  `)[0];
-
-  await db`
-    update vacation_collaborator_invites
-    set status = 'accepted',
-      accepted_at = coalesce(accepted_at, now()),
-      updated_at = now(),
-      metadata = metadata || ${{
-        acceptedByTelegramChatId: telegramChatId || null,
-        acceptedByTelegramUserId: telegramUserId || null,
-        collaboratorId: collaborator.id,
-      }}
-    where id = ${invite.id}
-  `;
-
-  await db`
-    insert into telegram_sessions (
-      customer_id, trip_id, onboarding_session_id, telegram_chat_id, telegram_user_id,
-      current_step, last_message_at, metadata, updated_at
-    )
-    values (
-      ${invite.owner_customer_id}, ${invite.trip_id || null}, null,
-      ${telegramChatId}, ${telegramUserId || null}, 'collaborator_active', now(),
-      ${{
-        telegramRole: 'collaborator',
-        collaboratorId: collaborator.id,
-        collaboratorInviteId: invite.id,
-        telegramUsername: username || null,
-        displayName: displayName || null,
-      }},
-      now()
-    )
-    on conflict (telegram_chat_id) do update set
-      customer_id = excluded.customer_id,
-      trip_id = excluded.trip_id,
-      telegram_user_id = coalesce(excluded.telegram_user_id, telegram_sessions.telegram_user_id),
-      current_step = 'collaborator_active',
-      last_message_at = now(),
-      metadata = telegram_sessions.metadata || excluded.metadata,
-      updated_at = now()
-    returning *
-  `;
-
-  return {
-    ok: true,
-    status: 'accepted',
-    invite,
-    collaborator,
-    eula,
-    reply: [
-      'You are set up as a paid TimeSyncher Vacation Telegram collaborator.',
-      '',
-      'You can now send updates for this vacation here. Opening the vacation website link from Telegram should also enable website editing for this browser.',
-    ].join('\n'),
-  };
-}
-
 export function collaboratorDeniedCopy() {
-  return [
-    'I received this, but this Telegram account is not authorized to modify that vacation yet.',
-    '',
-    'The vacation owner can add you as a paid Telegram collaborator. Non-Telegram website invitees use an owner-approved email magic link.',
-  ].join('\n');
+  return { ask: 'collaborator_denied', authorized: false };
 }
 
-export async function activeCollaboratorForTelegram(db, { ownerCustomerId, tripId, telegramChatId, telegramUserId }) {
-  if (!ownerCustomerId || (!telegramChatId && !telegramUserId)) return null;
-  const rows = await db`
-    select *
-    from vacation_collaborators
-    where owner_customer_id = ${ownerCustomerId}
-      and status = 'active'
-      and (
-        (${telegramChatId || null}::text is not null and telegram_chat_id = ${telegramChatId || null})
-        or (${telegramUserId || null}::text is not null and telegram_user_id = ${telegramUserId || null})
-      )
-      and (scope = 'unlimited_trips' or trip_id = ${tripId || null})
-    order by accepted_at desc nulls last, created_at desc
-    limit 1
-  `;
-  return rows[0] || null;
-}
-
-export async function countActiveCollaborators(db, ownerCustomerId) {
+export async function countActiveCollaborators(db, ownerCustomerId, tripId = '') {
   if (!ownerCustomerId) return 0;
-  const rows = await db`
-    select count(*)::int as count
-    from vacation_collaborators
-    where owner_customer_id = ${ownerCustomerId}
-      and status = 'active'
-  `;
+  const rows = tripId
+    ? await db`
+      select count(*)::int as count
+      from vacation_collaborators
+      where owner_customer_id = ${ownerCustomerId}
+        and trip_id = ${tripId}
+        and status = 'active'
+    `
+    : await db`
+      select count(*)::int as count
+      from vacation_collaborators
+      where owner_customer_id = ${ownerCustomerId}
+        and status = 'active'
+    `;
   return Number(rows[0]?.count || 0);
 }
 
-export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
-  const plan = collaboratorPlan(planCode);
-  const token = collaboratorToken();
-  const rows = await db`
-    insert into vacation_collaborator_invites (
-      owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
-    )
-    values (
-      ${ownerCustomerId}, ${plan.scope === 'single_trip' ? tripId : null}, ${plan.code}, ${plan.scope},
-      ${requestedFor || null}, 'pending_payment', ${hashToken(token, env)}, ${metadata}
-    )
-    returning *
+function ownerSeatInviteStatus(metadata = {}) {
+  const payer = cleanInviteLookup(metadata.payer || 'owner', 40) || 'owner';
+  const channel = cleanInviteLookup(metadata.channel, 40);
+  return payer === 'owner' && channel === 'vacation-app' ? 'paid' : 'pending_payment';
+}
+
+async function ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardingSessionId, env = process.env } = {}) {
+  const ownerId = cleanInviteLookup(ownerCustomerId, 80);
+  const sessionId = cleanInviteLookup(onboardingSessionId, 80);
+  if (!ownerId || !sessionId) {
+    throw Object.assign(new Error('Owner onboarding session is required for a pre-trip collaborator invite.'), { statusCode: 409 });
+  }
+  const sessions = await db`
+    select id, trip_id, customer_id, order_id
+    from onboarding_sessions
+    where id = ${sessionId}
+      and customer_id = ${ownerId}
+    limit 1
   `;
+  const session = sessions[0];
+  if (!session?.id) {
+    throw Object.assign(new Error('Owner onboarding session was not found for collaborator invite.'), { statusCode: 404 });
+  }
+  if (session.trip_id) return String(session.trip_id);
+  const shellKey = sessionId.replace(/-/g, '').slice(0, 12);
+  const tripRows = await db`
+    insert into trips (customer_id, title, destination, status, metadata)
+    values (
+      ${ownerId},
+      ${`shell-${shellKey}`},
+      null,
+      'onboarding',
+      ${{ placeholderTrip: true, source: 'owner_workspace', onboardingSessionId: sessionId }}
+    )
+    returning id
+  `;
+  const tripId = String(tripRows[0]?.id || '').trim();
+  if (!tripId) {
+    throw Object.assign(new Error('Owner workspace trip could not be created for collaborator invite.'), { statusCode: 500 });
+  }
+  await db`
+    update onboarding_sessions
+    set trip_id = ${tripId},
+      updated_at = now()
+    where id = ${sessionId}
+      and customer_id = ${ownerId}
+  `;
+  const attached = await attachPurchasedEntitlementToChatTrip(db, { ...session, trip_id: tripId }, tripId);
+  if (!attached.ok) {
+    throw Object.assign(
+      new Error(attached.error || 'Owner entitlement could not be attached to workspace trip.'),
+      { statusCode: attached.statusCode || 502, code: attached.code || 'vacation_app_owner_entitlement_attach_failed' },
+    );
+  }
+  return tripId;
+}
+
+export async function createCollaboratorInvite(db, { ownerCustomerId, tripId, planCode, requestedFor = '', metadata = {}, env = process.env }) {
+  const onboardingSessionId = String(metadata?.onboardingSessionId || '').trim() || null;
+  let normalizedTripId = String(tripId || '').trim() || null;
+  if (!normalizedTripId && onboardingSessionId) {
+    normalizedTripId = await ensureOwnerWorkspaceTripForInvite(db, { ownerCustomerId, onboardingSessionId, env });
+  }
+  if (!normalizedTripId) {
+    throw Object.assign(new Error('tripId or onboardingSessionId is required for a collaborator invite.'), { statusCode: 400 });
+  }
+  const plan = collaboratorPlan(planCode || 'single_trip', env);
+  const token = collaboratorToken();
+  const inviteMetadata = {
+    ...(metadata && typeof metadata === 'object' ? metadata : {}),
+    ...(onboardingSessionId ? { onboardingSessionId } : {}),
+  };
+  const inviteStatus = ownerSeatInviteStatus(inviteMetadata);
+  const rows = inviteStatus === 'paid'
+    ? await db`
+      insert into vacation_collaborator_invites (
+        owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata, paid_at
+      )
+      values (
+        ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
+        ${requestedFor || null}, ${inviteStatus}, ${hashToken(token, env)}, ${inviteMetadata}, now()
+      )
+      returning *
+    `
+    : await db`
+      insert into vacation_collaborator_invites (
+        owner_customer_id, trip_id, plan_code, scope, requested_for, status, deep_link_token_hash, metadata
+      )
+      values (
+        ${ownerCustomerId}, ${normalizedTripId}, ${plan.code}, ${plan.scope},
+        ${requestedFor || null}, ${inviteStatus}, ${hashToken(token, env)}, ${inviteMetadata}
+      )
+      returning *
+    `;
   return { invite: rows[0], token };
 }
+
+export async function attachSessionCollaboratorInvitesToTrip(db, { ownerCustomerId, tripId, onboardingSessionId } = {}) {
+  const ownerId = String(ownerCustomerId || '').trim();
+  const normalizedTripId = String(tripId || '').trim();
+  const sessionId = String(onboardingSessionId || '').trim();
+  if (!ownerId || !normalizedTripId || !sessionId) return [];
+  const rows = await db`
+    update vacation_collaborator_invites
+    set trip_id = ${normalizedTripId},
+      updated_at = now()
+    where owner_customer_id = ${ownerId}
+      and trip_id is null
+      and metadata->>'onboardingSessionId' = ${sessionId}
+    returning *
+  `;
+  for (const invite of rows) {
+    const metadata = invite.metadata && typeof invite.metadata === 'object' ? invite.metadata : {};
+    const token = String(metadata.collaboratorOnboardingToken || '').trim();
+    await db`
+      update vacation_collaborators
+      set trip_id = ${normalizedTripId},
+        updated_at = now(),
+        metadata = metadata || ${{ onboardingSessionId: sessionId }}
+      where invite_id = ${invite.id}
+        and trip_id is null
+    `;
+    if (token) {
+      await db`
+        update onboarding_sessions
+        set trip_id = ${normalizedTripId},
+          metadata = jsonb_set(
+            jsonb_set(coalesce(metadata, '{}'::jsonb), '{seat,ownerTripId}', to_jsonb(${normalizedTripId}::text), true),
+            '{seat,ownerOnboardingSessionId}',
+            to_jsonb(${sessionId}::text),
+            true
+          ),
+          updated_at = now()
+        where token = ${token}
+      `;
+    }
+  }
+  return rows;
+}
+

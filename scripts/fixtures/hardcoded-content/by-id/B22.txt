@@ -1,0 +1,1 @@
+garden_words: 'Use the customer word gardens. Do not name a garden they did not name.'

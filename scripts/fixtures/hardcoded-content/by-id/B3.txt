@@ -1,0 +1,1 @@
+const line = 'Groceries are near the Kailua-Kona house. Do not put them in Puna or Kalapana.';

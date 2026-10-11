@@ -9,7 +9,6 @@ import {
   webAccessAcceptUrl,
   webAccessCookieHeader,
   webAccessCookieName,
-  webAccessTelegramLaunchUrl,
   webAccessTokenHash,
   websiteTripBase,
 } from '../src/vacation/web-access.mjs';
@@ -23,11 +22,7 @@ const env = {
 
 assert.equal(
   webAccessAcceptUrl('abc 123', env),
-  'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=accept&token=abc%20123',
-);
-assert.equal(
-  webAccessTelegramLaunchUrl('telegram-session-token', 'https://travel.timesyncher.com/shared/las-vegas-strip-vacation/', env),
-  'https://vacation-staging.timesyncher.com/api/vacation-web-access?action=telegram_launch&token=telegram-session-token&redirect=https%3A%2F%2Ftravel.timesyncher.com%2Fshared%2Flas-vegas-strip-vacation%2F',
+  'https://vacation-staging.timesyncher.com/api/vacation-itinerary?webAccess=1&action=accept&token=abc%20123',
 );
 assert.equal(webAccessTokenHash('token', env), webAccessTokenHash('token', env));
 assert.notEqual(webAccessTokenHash('token', env), webAccessTokenHash('other', env));
@@ -76,7 +71,7 @@ const email = webEditorInviteEmail({
 });
 assert.match(email.subject, /Craig approved you to edit Las Vegas Strip Vacation/);
 assert.match(email.textBody, /owner-approved email verification/i);
-assert.match(email.textBody, /vacation-web-access\?action=accept/);
+assert.match(email.textBody, /vacation-itinerary\?webAccess=1&action=accept/);
 
 const migration = await readFile(new URL('../db/migrations/001_vacation_mvp.sql', import.meta.url), 'utf8');
 assert.match(migration, /create table if not exists vacation_web_access_grants/);
@@ -86,8 +81,7 @@ assert.match(migration, /telegram_collaborator/);
 const api = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(api, /create_web_editor_invite/);
 assert.match(api, /create_owner_website_session/);
-assert.match(api, /telegram_launch/);
-assert.match(api, /isAllowedVacationWebsiteUrl/);
+assert.doesNotMatch(api, /telegram_launch/);
 assert.match(api, /assert_can_edit/);
 assert.match(api, /set-cookie/);
 const vercel = await readFile(new URL('../vercel.json', import.meta.url), 'utf8');
@@ -98,7 +92,9 @@ const checkout = await readFile(new URL('../addons-checkout.html', import.meta.u
 assert.match(checkout, /name="planScope"/);
 assert.match(checkout, /TimeSyncher Vacation Add-ons/i);
 assert.doesNotMatch(checkout, /collaborator-checkout\.html/);
-assert.match(checkout, /telegram_collaborators_unlimited_trips/);
+assert.match(checkout, /value="single_trip"/);
+assert.doesNotMatch(checkout, /telegram_collaborators_single_trip/);
+assert.doesNotMatch(checkout, /telegram_collaborators_unlimited_trips/);
 
 const paymentApi = await readFile(new URL('../routes/create-payment-intent.mjs', import.meta.url), 'utf8');
 assert.match(paymentApi, /collaboratorInviteWithSelectedPlan/);

@@ -1,21 +1,9 @@
-/**
- * House-radius POI search. Foursquare OS Places records and OSM first.
- * Brave runs only when that database is thin. Synthesis may cite result IDs only.
- */
+import { categoryRadiusMeters, POI_RADIUS_METERS, THIN_POI_COUNT } from './keepsake-list-minimums.mjs';
+import { buildProviderEnv } from './provider-env.mjs';
+
+export { POI_RADIUS_METERS, THIN_POI_COUNT };
 
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-const GENERIC_NAME = /^(kona|big island|hawaii|car rentals|oahu)$/i;
-const AIRLINES = ['Hawaiian', 'United', 'Alaska', 'Delta', 'American', 'Southwest', 'JetBlue'];
-
-export const POI_RADIUS_METERS = {
-  grocery: 8000,
-  restaurant: 10000,
-  store: 10000,
-  garden: 40000,
-  activity: 40000,
-};
-
-export const THIN_POI_COUNT = 3;
 const POI_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 const BRAVE_CACHE_MS = 8 * 60 * 60 * 1000;
 const cache = new Map();
@@ -101,7 +89,7 @@ export function searchFsqRecords(records = [], { origin, radiusMeters, category 
     category,
     source: 'fsq-os-places',
     url: record.website || `https://opensource.foursquare.com/os-places/${encodeURIComponent(record.id || record.fsq_id)}`,
-  })).filter((poi) => poi.id !== 'fsq:' && poi.name && !GENERIC_NAME.test(poi.name));
+  })).filter((poi) => poi.id !== 'fsq:' && poi.name);
 }
 
 export function overpassQuery({ lat, lng, radiusMeters, category }) {
@@ -129,7 +117,7 @@ export function parseOverpass(payload, category) {
       source: 'osm',
       url: element.type && element.id ? `https://www.openstreetmap.org/${element.type}/${element.id}` : '',
     };
-  }).filter((poi) => poi.name && Number.isFinite(poi.lat) && Number.isFinite(poi.lng) && !GENERIC_NAME.test(poi.name));
+  }).filter((poi) => poi.name && Number.isFinite(poi.lat) && Number.isFinite(poi.lng));
 }
 
 function bravePois(payload, category) {
@@ -142,15 +130,143 @@ function bravePois(payload, category) {
     category,
     source: 'brave',
     url: String(result.url || ''),
-  })).filter((poi) => poi.url && poi.name && !GENERIC_NAME.test(poi.name));
+  })).filter((poi) => poi.url && poi.name);
 }
 
 async function fetchBrave(fetchImpl, braveKey, origin, category) {
   const response = await fetchImpl(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(`${category} near ${origin.lat},${origin.lng}`)}`, {
     headers: { 'X-Subscription-Token': braveKey, Accept: 'application/json' },
   });
-  if (!response?.ok) return [];
+  if (!response?.ok) {
+    const status = Number(response?.status) || 0;
+    throw new Error(`Brave web search failed: HTTP ${status}`);
+  }
   return bravePois(await response.json(), category);
+}
+
+const TAVILY_SEARCH_URL = 'https://api.tavily.com/search';
+const TAVILY_TIMEOUT_MS = 15000;
+
+export class TavilySearchError extends Error {
+  constructor(message, { code, status } = {}) {
+    super(message);
+    this.name = 'TavilySearchError';
+    this.code = code;
+    if (status !== undefined) this.status = status;
+  }
+}
+
+function braveSubscriptionKey(env = process.env) {
+  return String(buildProviderEnv(env).brave || '').trim();
+}
+
+export function tavilyApiKey(env = process.env) {
+  return String(buildProviderEnv(env).tavily || '').trim();
+}
+
+function requireTavilyApiKey(apiKey) {
+  if (apiKey) return;
+  const error = new TavilySearchError(
+    'TAVILI_API_KEY is not set. Non-place search cannot run until that key is configured.',
+    { code: 'TAVILI_API_KEY_MISSING' },
+  );
+  console.error(error.message);
+  throw error;
+}
+
+function publicHttpUrl(value) {
+  try {
+    const parsed = new URL(String(value || '').trim());
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+function tavilyResult(row) {
+  const url = publicHttpUrl(row?.url);
+  if (!url) return null;
+  const score = Number(row?.score);
+  return {
+    source: 'tavily',
+    url,
+    title: String(row?.title || '').trim(),
+    content: String(row?.content || '').trim(),
+    score: Number.isFinite(score) ? score : null,
+  };
+}
+
+export async function searchTavily(query, {
+  apiKey,
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  timeoutMs = TAVILY_TIMEOUT_MS,
+  maxResults = 5,
+  searchDepth = 'basic',
+  topic = 'general',
+  signal,
+} = {}) {
+  const text = String(query || '').trim();
+  const key = String(apiKey ?? tavilyApiKey(env)).trim();
+  requireTavilyApiKey(key);
+  if (!text) {
+    throw new TavilySearchError('Tavily search requires a non-empty query.', { code: 'TAVILY_QUERY_EMPTY' });
+  }
+  const limit = Number.isInteger(maxResults) && maxResults >= 1 && maxResults <= 20 ? maxResults : 5;
+  const waitMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : TAVILY_TIMEOUT_MS;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), waitMs);
+  const onExternalAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', onExternalAbort, { once: true });
+  }
+  let response;
+  try {
+    response = await fetchImpl(TAVILY_SEARCH_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${key}`,
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: text,
+        search_depth: searchDepth || 'basic',
+        topic: topic || 'general',
+        max_results: limit,
+        include_answer: false,
+        include_raw_content: false,
+        auto_parameters: false,
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted && !signal?.aborted) {
+      throw new TavilySearchError(`Tavily search timed out after ${waitMs}ms.`, { code: 'TAVILY_TIMEOUT' });
+    }
+    if (controller.signal.aborted) {
+      throw new TavilySearchError('Tavily search was aborted.', { code: 'TAVILY_ABORTED' });
+    }
+    const message = error instanceof Error ? error.message : 'network error';
+    throw new TavilySearchError(`Tavily search request failed: ${message}`, { code: 'TAVILY_REQUEST_FAILED' });
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener?.('abort', onExternalAbort);
+  }
+  const status = Number(response?.status) || 0;
+  if (!response?.ok) {
+    throw new TavilySearchError(`Tavily search failed with HTTP ${status}.`, {
+      code: 'TAVILY_HTTP_ERROR',
+      status,
+    });
+  }
+  const payload = await response.json();
+  const rows = Array.isArray(payload?.results) ? payload.results : [];
+  return {
+    query: text,
+    results: rows.map(tavilyResult).filter(Boolean),
+  };
 }
 
 async function braveForThinDatabase(key, database, { fetchImpl, braveKey, origin, category, thinAt, now }) {
@@ -175,7 +291,7 @@ export async function searchPois({
   if (!Number.isFinite(Number(origin?.lat)) || !Number.isFinite(Number(origin?.lng))) {
     return { pois: [], cache: 'miss', brave: false };
   }
-  const radiusMeters = POI_RADIUS_METERS[category] || POI_RADIUS_METERS.activity;
+  const radiusMeters = categoryRadiusMeters(category);
   const key = cacheKey(origin, category, radiusMeters, dateBucket);
   const hit = cache.get(key);
   if (hit && hit.expiresAt > now) {
@@ -199,94 +315,28 @@ export async function searchPois({
   return { pois: [...database, ...brave], cache: 'miss', brave: brave.length > 0 };
 }
 
-export async function jevRelevanceScore(poi, { fetchImpl = fetch, apiKey = '' } = {}) {
-  if (!apiKey || !fetchImpl) return 0;
-  const response = await fetchImpl('https://openrouter.ai/api/alpha/decisions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      'content-type': 'application/json',
-      'HTTP-Referer': 'https://timesyncher.com',
-      'X-Title': 'TimeSyncher Vacation POI',
-    },
-    body: JSON.stringify({
-      model: 'typesafe/jev-1.13',
-      state: { channel: 'vacation-search', poiId: poi.id, name: poi.name, url: poi.url, category: poi.category },
-      questions: {
-        relevance: {
-          type: 'score',
-          instructions: 'Score this web result as a specific place for the trip. 1 is not a place. 5 is a specific place that matches the category.',
-          criteria: { 1: 'Not a specific place.', 5: 'A specific place that matches the category.' },
-        },
-      },
-    }),
-  });
-  if (!response?.ok) return 0;
-  const body = await response.json();
-  const answer = body?.answers?.relevance || {};
-  const choice = Number(answer.choice ?? answer.value);
-  if (Number.isInteger(choice) && choice >= 1 && choice <= 5) return choice;
-  const raw = Number(answer.score);
-  if (!Number.isFinite(raw)) return 0;
-  if (Number.isInteger(raw) && raw >= 0 && raw <= 4) return raw + 1;
-  if (raw >= 1 && raw <= 5) return raw;
-  return 0;
-}
+export { jevRelevanceScore, parseJevRelevanceScoreAnswer } from './place-relevance-judge.mjs';
 
 export async function scoreWebPoisInParallel(pois, scoreOne, { concurrency = 20 } = {}) {
-  const structured = pois.filter((poi) => poi.source !== 'brave');
-  const web = pois.filter((poi) => poi.source === 'brave');
   let cursor = 0;
   const kept = [];
   async function worker() {
-    while (cursor < web.length) {
+    while (cursor < pois.length) {
       const index = cursor;
       cursor += 1;
-      const score = await scoreOne(web[index]);
-      if (Number(score) >= 3) kept.push({ ...web[index], jevScore: Number(score) });
+      const poi = pois[index];
+      const score = Number(await scoreOne(poi));
+      kept.push({ ...poi, jevScore: Number.isFinite(score) ? score : 0 });
     }
   }
-  const workers = Math.min(concurrency, web.length);
+  const workers = Math.min(concurrency, pois.length);
   if (workers > 0) await Promise.all(Array.from({ length: workers }, () => worker()));
-  return [...structured, ...kept];
+  return kept;
 }
 
 export function synthesizeFromIds(ids = [], pois = []) {
   const byId = new Map(pois.map((poi) => [poi.id, poi]));
-  return ids.map((id) => byId.get(id)).filter((poi) => poi && !GENERIC_NAME.test(poi.name));
-}
-
-export function oneOptionPerAirline(options = []) {
-  const seen = new Set();
-  const out = [];
-  for (const option of options) {
-    const airline = String(option.airline || '').trim();
-    const key = airline.toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push(option);
-  }
-  return out;
-}
-
-export function flightPlan(customerText, options = []) {
-  const text = String(customerText || '');
-  const named = AIRLINES.find((airline) => new RegExp(`\\b${airline}\\b`, 'i').test(text));
-  const declined = /\b(no preference|any airline|whichever airline|you pick the airline)\b/i.test(text);
-  if (named) {
-    return {
-      ask: false,
-      preferredAirline: named,
-      options: options.filter((option) => new RegExp(`\\b${named}\\b`, 'i').test(option.airline || '')),
-    };
-  }
-  if (declined) return { ask: false, preferredAirline: '', options: oneOptionPerAirline(options) };
-  return {
-    ask: true,
-    preferredAirline: '',
-    options: [],
-    prompt: 'Which airline do you prefer? If you have no preference, say so and I will show one option per airline.',
-  };
+  return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
 export function lowestRentalPrices(offers = [], { limit = 10, eliminatedBrands = [] } = {}) {
@@ -295,4 +345,82 @@ export function lowestRentalPrices(offers = [], { limit = 10, eliminatedBrands =
     .filter((offer) => Number.isFinite(Number(offer.price)) && !blocked.has(String(offer.brand || '').trim().toLowerCase()))
     .sort((a, b) => Number(a.price) - Number(b.price) || String(a.brand || '').localeCompare(String(b.brand || '')))
     .slice(0, limit);
+}
+
+const PROBE_QUERY = 'coffee';
+const PROBE_LAT = 47.6097;
+const PROBE_LNG = -122.3331;
+
+function probeMissingKey(provider) {
+  return { provider, error: 'missing_key' };
+}
+
+function probeSuccessShape(provider, httpStatus, results) {
+  const rows = Array.isArray(results) ? results : [];
+  const firstTitle = String(rows[0]?.title || rows[0]?.name || '').trim() || null;
+  return { provider, httpStatus: Number(httpStatus) || 0, resultCount: rows.length, firstTitle };
+}
+
+async function probeBraveProvider(env, fetchImpl) {
+  const key = braveSubscriptionKey(env);
+  if (!key) return probeMissingKey('brave');
+  const params = new URLSearchParams({
+    q: PROBE_QUERY,
+    latitude: String(PROBE_LAT),
+    longitude: String(PROBE_LNG),
+    radius: '2500',
+    count: '3',
+  });
+  const response = await fetchImpl(`https://api.search.brave.com/res/v1/local/place_search?${params}`, {
+    method: 'GET',
+    headers: { accept: 'application/json', 'X-Subscription-Token': key },
+  });
+  const httpStatus = Number(response?.status) || 0;
+  if (!response?.ok) return probeSuccessShape('brave', httpStatus, []);
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    payload = {};
+  }
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const titles = results.map((row) => ({ title: String(row?.title || row?.name || '').trim() })).filter((row) => row.title);
+  return probeSuccessShape('brave', httpStatus, titles);
+}
+
+async function probeTavilyProvider(env, fetchImpl) {
+  const key = tavilyApiKey(env);
+  if (!key) return probeMissingKey('tavily');
+  const response = await fetchImpl(TAVILY_SEARCH_URL, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json', authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      query: PROBE_QUERY,
+      search_depth: 'basic',
+      topic: 'general',
+      max_results: 3,
+      include_answer: false,
+      include_raw_content: false,
+      auto_parameters: false,
+    }),
+  });
+  const httpStatus = Number(response?.status) || 0;
+  if (!response?.ok) return probeSuccessShape('tavily', httpStatus, []);
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    payload = {};
+  }
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  const titles = results.map((row) => ({ title: String(row?.title || '').trim() })).filter((row) => row.title);
+  return probeSuccessShape('tavily', httpStatus, titles);
+}
+
+export async function probePlaceSearchKeys(env = process.env, fetchImpl = globalThis.fetch) {
+  const brave = await probeBraveProvider(env, fetchImpl);
+  if (brave.error === 'missing_key') return { ok: false, statusCode: 503, body: brave };
+  const tavily = await probeTavilyProvider(env, fetchImpl);
+  if (tavily.error === 'missing_key') return { ok: false, statusCode: 503, body: tavily };
+  return { ok: true, statusCode: 200, body: { ok: true, providers: [brave, tavily] } };
 }

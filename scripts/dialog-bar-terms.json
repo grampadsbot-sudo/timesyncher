@@ -1,0 +1,153 @@
+{
+  "version": "1",
+  "canonicalPlan": "unlimited vacations for the whole year",
+  "allow": [
+    {
+      "id": "stripe-product-subscription",
+      "rules": [
+        "BAR-RESERVATION-PAYMENT"
+      ],
+      "pattern": "stripe(?:\\W+\\w+){0,8}\\W+(?:subscription|billing|invoice|portal|checkout|payment|charge)|(?:subscription|billing|invoice|portal|checkout|payment|charge)(?:\\W+\\w+){0,8}\\W+stripe",
+      "note": "A customer-facing string that matches this pattern is TimeSyncher product billing through Stripe (subscription, billing portal, invoice, or the product checkout/payment/charge). It is not a trip reservation, a booking the app places, or a deposit for a stay. The whole string is skipped for BAR-RESERVATION-PAYMENT. A string that only mentions Stripe, or only mentions checkout or payment, is not allowlisted."
+    }
+  ],
+  "rules": {
+    "BAR-RESERVATION-PAYMENT": {
+      "item": 2,
+      "flags": "i",
+      "terms": [
+        "\\bbook(?:ing)?(?:\\s+\\w+){0,6}\\s+for\\s+you\\b",
+        "\\b(?:make|making|made)\\s+(?:a\\s+)?reservations?\\b",
+        "\\breservations?\\b",
+        "\\bcheckout\\b",
+        "\\bdeposit\\b",
+        "\\bpayments?\\b",
+        "\\bpays?\\b",
+        "\\bcharg(?:e|es|ed|ing)\\b"
+      ]
+    },
+    "BAR-SPLIT-PAYER": {
+      "item": 34,
+      "flags": "i",
+      "terms": [
+        "split[-\\s]?payer",
+        "split[-\\s]?payments?",
+        "splitting\\s+payments?",
+        "who[-\\s]pays",
+        "cost[-\\s]split",
+        "\\bpayer\\b"
+      ]
+    },
+    "BAR-UNLIMITED-WORDING": {
+      "item": 35,
+      "flags": "i",
+      "terms": [
+        "\\bmultiple\\s+vacations?\\b",
+        "\\b(?:several|many|a\\s+few|a\\s+couple\\s+of)\\s+(?:vacations?|trips?)\\b",
+        "\\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s+vacations?\\b",
+        "\\ball\\s+vacations\\b",
+        "\\bunlimited\\b(?:\\s+\\w+){0,6}\\s+vacations?\\b"
+      ]
+    },
+    "BAR-THING-CUSTOMER": {
+      "item": "thing",
+      "flags": "",
+      "terms": [
+        "\\bThings?\\b"
+      ]
+    }
+  },
+  "collabUrl": {
+    "builderName": "(?:collaborat|viewer|editor|invite).{0,48}(?:reply|email|copy|message)|(?:reply|email).{0,48}(?:collaborat|viewer|editor|seat)|vacationSupportReply",
+    "sitePhrase": "vacation website|website link|here is the|open the vacation",
+    "note": "A collaborator-seat reply builder is a function whose name matches builderName. A hit is a template literal in that function that contains sitePhrase and a ${...} interpolation."
+  },
+  "exempt": {
+    "note": "Path exemptions apply to source scans only. Dialog pack turns are chat, so the pack checker does not use these paths.",
+    "BAR-RESERVATION-PAYMENT": {
+      "note": "TimeSyncher product purchase only. Chat, replies, and prompts that talk about booking or paying for trip things stay in scope.",
+      "paths": [
+        "index.html",
+        "order-test.html",
+        "order-success.html",
+        "access-checkout.html",
+        "owner-media-checkout.html",
+        "addons-checkout.html",
+        "routes/stripe-webhook.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-config.mjs",
+        "routes/checkout-coupon.mjs",
+        "routes/keepsake-order.mjs",
+        "routes/admin-onboardings.mjs",
+        "routes/onboarding-session.mjs",
+        "src/vacation/stripe-env.mjs",
+        "src/vacation/checkout-pricing.mjs",
+        "src/vacation/coupons.mjs",
+        "src/vacation/access-plan.mjs",
+        "src/vacation/collaborator-checkout.mjs",
+        "src/vacation/media-checkout.mjs",
+        "src/vacation/onboarding.mjs"
+      ]
+    },
+    "BAR-UNLIMITED-WORDING": {
+      "note": "Checkout modules only. Chat, replies, and prompts stay in scope.",
+      "paths": [
+        "routes/checkout-config.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-coupon.mjs"
+      ]
+    },
+    "BAR-SPLIT-PAYER": {
+      "note": "Checkout modules only. Chat, replies, and prompts stay in scope.",
+      "paths": [
+        "routes/checkout-config.mjs",
+        "routes/create-payment-intent.mjs",
+        "routes/checkout-coupon.mjs"
+      ]
+    },
+    "BAR-COLLAB-URL": {
+      "note": "Collaborator invite email builders. A chat reply to a collaborator seat stays in scope.",
+      "paths": [
+        "src/vacation/email.mjs"
+      ]
+    },
+    "BAR-THING-CUSTOMER": {
+      "note": "On these keepsake and trek files, comments, new Error strings, skipReason strings, and a bare Thing identifier are internal. A || Thing display fallback and any other prose stay, because that text can be shown. Prompts and chat stay in scope.",
+      "internalPaths": [
+        "src/vacation/bind-thing-media-handler.mjs",
+        "src/vacation/keepsake-list-minimums.mjs",
+        "src/vacation/keepsake-product-overrides.mjs",
+        "src/vacation/keepsake-style2-handler.mjs",
+        "src/vacation/keepsake-style2.mjs",
+        "src/vacation/thing-logo-capture.mjs",
+        "src/vacation/thing-media-bind.mjs",
+        "src/vacation/thing-media-store.mjs",
+        "src/vacation/trek-style2-bundle.mjs"
+      ]
+    }
+  },
+  "pack": {
+    "vacationUrl": "https?:\\/\\/[^\\s)>\"']*(?:timesyncher\\.com|\\/v\\/|\\/shared\\/)[^\\s)>\"']*",
+    "askedToSend": "\\b(?:send|share|give)\\b[\\s\\S]{0,80}\\b(?:viewer|editor|view|edit)\\b[\\s\\S]{0,40}\\b(?:url|link|site|website)\\b|\\b(?:url|link|site|website)\\b[\\s\\S]{0,60}\\b(?:viewer|editor|view|edit)\\b",
+    "noteConfirm": "\\b(?:saved (?:that |your |the )?(?:note|it)|i(?:'ll| will) note|noted (?:that|this|it)|added (?:that |your )?note|note is in|put that (?:note )?on)\\b",
+    "day": "\\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Day\\s+\\d+|\\d{4}-\\d{2}-\\d{2}|\\d{1,2}/\\d{1,2}(?:/\\d{2,4})?|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?)\\b"
+  },
+  "exactAllow": {
+    "note": "Literal equality of the source text inside the quotes, only in these two files. Not a regex. A paraphrase fails. The same text in any other file fails. Dialog pack turns are chat and do not use this list.",
+    "files": [
+      "scripts/vacation-app-reply-rules.mjs",
+      "src/vacation/live-app-turn.mjs"
+    ],
+    "strings": [
+      "Reservations, payments, split-payer, or other language the reply rules ban.",
+      "Item34 ban: never say \"splitting payments\", split payment, split-payer, splitting payment, or splitting anything up. If one seat is already covered and another person has their own seat, say that.",
+      "Rate this draft as the customer-facing vacation reply. Return a score only. Criterion 1 is weak. Criterion 5 is excellent. Use criterion 1 or 2 when it misses the ask, names a place that has no search-result id, skips a price they asked for, says no extra fees instead of the price, says the plan is already owned, or uses a banned payment word. A place cited as (id:...) from a search or database result is already sourced. A price question that does not include required_payer_line, when that line is in the state, is criterion 3 or lower. Days and places listed in the itinerary state are already named.",
+      "Replace the draft. It misses this turn, names a place with no search-result id, skips the price, or uses a banned payment word.",
+      "Name each seat, the plan dollar amount, and who pays.",
+      "Name each seat and who pays without a banned payment word.",
+      "banned payment word",
+      "${customerTurn}\\n\\nAnswer with who pays: ${planLine || 'the dollar amount for each person and who pays'}. Do not add a second collaborator welcome.",
+      "Do not offer an activity on a day that is not already that activity on the saved trip. Do not put viewers or editors on the trip. Never say \"splitting payments\" or splitting anything up."
+    ]
+  }
+}

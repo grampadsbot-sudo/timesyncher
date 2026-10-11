@@ -1,4 +1,4 @@
-/** Wind backup from NWS, then Open-Meteo. No canned pool sentence when the forecast is missing. */
+/** Wind readings from NWS, then Open-Meteo. Forecast data only. No composed swim note. */
 
 const WEATHER_CACHE_MS = 3 * 60 * 60 * 1000;
 const cache = new Map();
@@ -7,16 +7,11 @@ export function clearWindCache() {
   cache.clear();
 }
 
-export function windBackupSentence(readings = []) {
-  const ranked = readings
+export function forecastReadings(readings = []) {
+  return readings
     .filter((reading) => Number.isFinite(Number(reading.windMph)) && String(reading.name || '').trim())
-    .map((reading) => ({ name: String(reading.name).trim(), windMph: Number(reading.windMph) }))
+    .map((reading) => ({ name: String(reading.name).trim(), windMph: Math.round(Number(reading.windMph)) }))
     .sort((a, b) => a.windMph - b.windMph || a.name.localeCompare(b.name));
-  if (!ranked.length) return '';
-  const calm = ranked[0];
-  const speed = Math.round(calm.windMph);
-  if (calm.windMph <= 15) return `The wind backup is ${calm.name}, where the forecast wind is ${speed} mph.`;
-  return `The forecast is windy. The wind backup is ${calm.name} at ${speed} mph, and the house pool is the last resort.`;
 }
 
 function dayStamp(value) {
@@ -102,7 +97,7 @@ export async function lookupWindBackup(points = [], {
   timeoutMs = 2500,
 } = {}) {
   const usable = points.filter((point) => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) && point.name);
-  if (!usable.length) return '';
+  if (!usable.length) return [];
   const dates = { startDate, endDate };
   const key = [
     usable.map((point) => `${point.name}:${Number(point.lat).toFixed(3)},${Number(point.lng).toFixed(3)}`).join('|'),
@@ -129,19 +124,20 @@ export async function lookupWindBackup(points = [], {
       }
       if (windMph !== null) readings.push({ name: point.name, windMph });
     }
-    return windBackupSentence(readings);
+    return forecastReadings(readings);
   })();
-  let sentence = '';
+  let forecast = [];
   try {
-    sentence = await Promise.race([
+    forecast = await Promise.race([
       work,
       new Promise((resolve) => {
-        setTimeout(() => resolve(''), Math.max(1, timeoutMs));
+        setTimeout(() => resolve([]), Math.max(1, timeoutMs));
       }),
     ]);
   } catch {
-    sentence = '';
+    forecast = [];
   }
-  if (sentence) cache.set(key, { expiresAt: now + WEATHER_CACHE_MS, value: sentence });
-  return sentence || '';
+  if (!Array.isArray(forecast)) forecast = [];
+  if (forecast.length) cache.set(key, { expiresAt: now + WEATHER_CACHE_MS, value: forecast });
+  return forecast;
 }

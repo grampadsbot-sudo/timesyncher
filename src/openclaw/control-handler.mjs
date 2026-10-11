@@ -1,5 +1,6 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
-import { LocalJsonStore, VercelBlobStore } from '../onboarding/eula-persistent-store.mjs';
+import { LocalJsonStore } from '../onboarding/eula-persistent-store.mjs';
+import { OpenClawBlobStore } from './control-blob-store.mjs';
 import { headerValue, readJson, sendJson } from '../vacation/http.mjs';
 
 const STATE_KEY = 'state.json';
@@ -10,7 +11,7 @@ function controlStore(env = process.env) {
   if (env.OPENCLAW_CONTROL_STORE === 'local') {
     return new LocalJsonStore(env.OPENCLAW_CONTROL_STORE_DIR || 'runtime/openclaw-control');
   }
-  return new VercelBlobStore({ prefix: env.OPENCLAW_CONTROL_BLOB_PREFIX || 'timesyncher-openclaw-control' });
+  return new OpenClawBlobStore({ prefix: env.OPENCLAW_CONTROL_BLOB_PREFIX || 'timesyncher-openclaw-control' });
 }
 
 function nowIso() {

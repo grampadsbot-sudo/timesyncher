@@ -247,3 +247,4 @@ export async function getBindingMedia(shareToken, id, env = process.env) {
     originalName,
   };
 }
+

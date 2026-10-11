@@ -1,0 +1,1 @@
+export const BIG_ISLAND_FILL_DETAILS = {};

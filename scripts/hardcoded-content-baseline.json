@@ -1,0 +1,835 @@
+[
+  {
+    "file": "index.html",
+    "symbol_or_pattern": "Craig",
+    "inventory_id": "PROMPT-NAMES",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "PROMPT-NAMES"
+  },
+  {
+    "file": "order-test.html",
+    "symbol_or_pattern": "Craig",
+    "inventory_id": "PROMPT-NAMES",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "PROMPT-NAMES"
+  },
+  {
+    "file": "routes/checkout-coupon.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_BASE_PRICE_CENTS=3700",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "routes/checkout-coupon.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS=500",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "routes/checkout-coupon.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS=900",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "routes/checkout-coupon.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS=1700",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "routes/checkout-coupon.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_PHOTO_MEMORIES_PRICE_CENTS=500",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "routes/create-payment-intent.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/onboarding-session.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/stripe-webhook.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B14",
+    "inventory_id": "B14",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B9",
+    "inventory_id": "B9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-itinerary.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E7",
+    "inventory_id": "E7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "routes/vacation-request.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E7",
+    "inventory_id": "E7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/import_hosted_bundle_to_neon.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "insert trip_things",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live-transcript-dialog-pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "openai/gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/live_v7_dialog_pdf.py",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "apr(?:il)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "aug",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "aug(?:ust)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "dec",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "dec(?:ember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "feb",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "feb(?:ruary)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jan",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jan(?:uary)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jul",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jul(?:y)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jun",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "jun(?:e)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "mar",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "mar(?:ch)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "may",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "nov",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "nov(?:ember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "oct",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "oct(?:ober)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sep",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sep(?:t|tember)?",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-dispatch.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "sept",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/product-gbrain-manifest.json",
+    "symbol_or_pattern": "grok-4.5",
+    "inventory_id": "MODEL-BARE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "MODEL-BARE"
+  },
+  {
+    "file": "scripts/telegram-vacation-intake-bot.mjs",
+    "symbol_or_pattern": "grok-4.5",
+    "inventory_id": "MODEL-BARE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "MODEL-BARE"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "google/gemini-2.5-flash",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-5-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_live_transcript_dialog_pdf.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "openai/gpt-4.1-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_poi_search.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "gpt-4o-mini",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/test_vacation_telegram_intake.mjs",
+    "rule": "MODEL-ALLOWLIST",
+    "symbol_or_pattern": "typesafe/jev-1.13-test",
+    "inventory_id": "MODEL-ALLOWLIST",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "NO-PAID-PLACES-API",
+    "symbol_or_pattern": "places.googleapis.com :: return host === 'places.googleapis.com' || host === 'maps.googleapis.com'; @119",
+    "inventory_id": "NO-PAID-PLACES-API",
+    "note": "TODO: Search is removing the paid places client"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ category: 'activity', title: text(attraction.n",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/travel-source-adapter-runner.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ category: 'hotel', title: text(hotel.name || `",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/trek-agent-edit.mjs",
+    "symbol_or_pattern": "grok-4.5",
+    "inventory_id": "MODEL-BARE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "MODEL-BARE"
+  },
+  {
+    "file": "scripts/trek-itinerary-edit.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ raw: match[0], title, category: 'hotel', day: ",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
+    "inventory_id": "84858e8e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "is optional. Never say Thing.",
+    "inventory_id": "9c4c5d52",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "t helps ( ). Never say \"Thing\" to the customer.",
+    "inventory_id": "8cdab6a6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "replyRulesSystem",
+    "inventory_id": "B3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "upsellLine",
+    "inventory_id": "B16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "reply-quality 1fbacc9ddb4e 4a91bfef0c70",
+    "inventory_id": "d329f58a",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-app-reply-rules.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "reply-rewrite-choice e4434c7a1f61 c57d63024110",
+    "inventory_id": "eea83e28",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E3",
+    "inventory_id": "E3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E5",
+    "inventory_id": "E5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "scripts/vacation-public-research-worker.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ category, subtype: text(raw.subtype || '', 80)",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "This payer has no paid upgrades.",
+    "inventory_id": "ce0518f7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "rule": "BAR-SPLIT-PAYER",
+    "symbol_or_pattern": "lan rows found for this payer.",
+    "inventory_id": "889d1c56",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_PHOTO_SINGLE_PRICE_CENTS=500",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_PHOTO_UNLIMITED_PRICE_CENTS=900",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/access-plan.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_COLLABORATOR_VIDEO_SINGLE_PRICE_CENTS=1700",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/checkout-coupons.mjs",
+    "symbol_or_pattern": "TimeSyncher Vacation Coupon Checkout",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/checkout-pricing.mjs",
+    "symbol_or_pattern": "DEFAULT_BASE_PRICE_CENTS=3700",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/checkout-pricing.mjs",
+    "symbol_or_pattern": "DEFAULT_PHOTO_MEMORIES_PRICE_CENTS=500",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/collaborator-checkout.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "2025-11-17",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/intake-shared-trip.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ id, trip_id: intId(trip.id), name: thing.title",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/keepsake-list-minimums.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E5",
+    "inventory_id": "E5",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "no extra charge is not in what the cust",
+    "inventory_id": "654378ad",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "nt tier, model, Jev. No payments, bookings, or reservati",
+    "inventory_id": "e81b8085",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "payments, bookings, or reservation offers. No upsell and n",
+    "inventory_id": "76d4a03e",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "the last evening, after checkout, or one last time, and",
+    "inventory_id": "38c738c0",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "Do not use these words: Thing, Things, EULA, terms, a",
+    "inventory_id": "ec7af5c8",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "BAR-THING-CUSTOMER",
+    "symbol_or_pattern": "use these words: Thing, Things, EULA, terms, agreement",
+    "inventory_id": "14ff8594",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "DATE-LITERAL",
+    "symbol_or_pattern": "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
+    "inventory_id": "DATE-LITERAL",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "interimFromTierOne",
+    "inventory_id": "B6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B11",
+    "inventory_id": "B11",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B14",
+    "inventory_id": "B14",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B18",
+    "inventory_id": "B18",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B21",
+    "inventory_id": "B21",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B9",
+    "inventory_id": "B9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:C10",
+    "inventory_id": "C10",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/live-app-turn.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:C9",
+    "inventory_id": "C9",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/media-checkout.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_OWNER_VIDEO_SINGLE_PRICE_CENTS=1700",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/media-checkout.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_PHOTO_MEMORIES_SINGLE_PRICE_CENTS=500",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/media-checkout.mjs",
+    "symbol_or_pattern": "TIMESYNCHER_PHOTO_MEMORIES_UNLIMITED_PRICE_CENTS=900",
+    "inventory_id": "HARDCODED-PRICE",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "HARDCODED-PRICE"
+  },
+  {
+    "file": "src/vacation/onboarding.mjs",
+    "symbol_or_pattern": "TimeSyncher Vacation Setup",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/poi-search.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E1",
+    "inventory_id": "E1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/poi-search.mjs",
+    "rule": "JEV-CARD-EVAL",
+    "symbol_or_pattern": "poi-relevance 2e0405a419be 97894bf8cbe8",
+    "inventory_id": "b10ba9e3",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "\\s+will\\s+pay\\s+(?:his|her|their)\\s+o",
+    "inventory_id": "9babcbbb",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "own\\s+\\$ | \\s+(?:covers|pays)\\s+(?:his|her|their)\\s+",
+    "inventory_id": "b328fe7f",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "’]ll| will)?\\s+(?:cover|pay)\\s+ ['’]s\\s+\\$",
+    "inventory_id": "818300af",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/seat-price.mjs",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:C11",
+    "inventory_id": "C11",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "NAMED_THING_LOGOS",
+    "inventory_id": "A19",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:A19",
+    "inventory_id": "A19",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/thing-logo-capture.mjs",
+    "rule": "THING-SOURCE",
+    "symbol_or_pattern": "thing-without-source:{ name: title, category_name: category, address:",
+    "inventory_id": "THING-SOURCE",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "=Re?`${Re.name?\"place\":\"reservation\"}:${Re.id||Re.place_id|",
+    "inventory_id": "e72ebce1",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "G=>G?`${G.name?\"place\":\"reservation\"}:${G.id||G.place_id||G",
+    "inventory_id": "afdb5d59",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e\",\"hotel-sleep\",\"hotel-checkout\"].includes(di.type)).ma",
+    "inventory_id": "9c983fc6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type",
+    "inventory_id": "2b2836ac",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type",
+    "inventory_id": "a303930b",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "Las Vegas",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "las vegas",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "symbol_or_pattern": "las vegas strip",
+    "inventory_id": "CONTENT-MATCH",
+    "note": "removed by Search Eng / Reply Eng deletion PR",
+    "rule": "CONTENT-MATCH"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "HC-COORD",
+    "symbol_or_pattern": "[36.1126,-115.1767]",
+    "inventory_id": "A16",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/trek-style2-bundle.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "AREA_CHIP_NYC",
+    "inventory_id": "A15",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "src/vacation/turn-tags.mjs",
+    "rule": "HC-PLACE-LIST",
+    "symbol_or_pattern": "inventory:E7",
+    "inventory_id": "E7",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "syncher vacation coupon checkout",
+    "inventory_id": "035f2a7d",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
+    "file": "vacation-app.html",
+    "rule": "HC-DIALOG",
+    "symbol_or_pattern": "inventory:B21",
+    "inventory_id": "B21",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  }
+]

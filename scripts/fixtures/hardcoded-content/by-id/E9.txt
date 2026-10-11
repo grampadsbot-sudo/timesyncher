@@ -1,0 +1,1 @@
+const grokBin = process.env.TIMESYNCHER_GROK_BIN || 'grok';

@@ -1,0 +1,1 @@
+export const NAMED_THING_LOGOS = { Sample: '' };

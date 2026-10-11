@@ -1,0 +1,1 @@
+if (/big island/i.test(blob)) return 'Big Island, Hawaii';
