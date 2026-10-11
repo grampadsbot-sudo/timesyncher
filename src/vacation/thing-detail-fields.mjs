@@ -284,7 +284,7 @@ function summaryAllowedOnSharedListRow(value = '') {
 }
 
 /** Drop enriched list-row copy from ha() overrides; detail fields stay in metadata.thingDetail. */
-export function stripSharedListHaFields(override = {}, { explicitItinerary = '' } = {}) {
+function stripSharedListHaFields(override = {}, { explicitItinerary = '' } = {}) {
   const out = { ...override };
   if (!summaryAllowedOnSharedListRow(out.summary)) {
     delete out.summary;
