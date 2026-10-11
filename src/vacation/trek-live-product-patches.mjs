@@ -107,13 +107,11 @@ const DETAIL_TIMELINE_EMOJI_PATCH = 'style:{fontSize:ua.isConflict?14:17,lineHei
 
 const BOOKINGS_TAB_ICON_NEEDLE = 'G.icon?n.jsx("span",{style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon})';
 
-const TAB_ICON_TRANSFORM_NEEDLE = 'flex:"0 0 16px",transform:"translateY(-0.5px)"},children:G.icon}';
-
-const BOOKINGS_TAB_ICON_ATTR_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:G.icon})';
+const BOOKINGS_TAB_ICON_PATCH = 'G.icon?n.jsx("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px"},children:G.icon})';
 
 const BOOKINGS_TAB_ICON_FLEX_PATCH = 'G.icon?n.jsx("span",{"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",transform:"translate3d(0,-0.5px,0)"},children:[G.icon,n.jsx("span",{"data-tab-category":G.id,"data-ts-logo-chip":"1",style:{display:"none"},children:""})]})';
 
-const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:16,height:16},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,G.icon)},style:{width:16,height:16,display:"block"}})})})';
+const BOOKINGS_TAB_ICON_V2_PATCH = 'G.icon?n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-grid",placeItems:"center",fontSize:14,lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",position:"relative",top:0,alignSelf:"center"},children:G.icon})';
 
 const BOOKINGS_TAB_LABEL_NEEDLE = 'n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:void 0,children:G.label})';
 
@@ -131,7 +129,7 @@ const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
 const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
-const TAB_EMOJI_INK_FN = 'function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;}';
+const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji||node.tagName==="CANVAS")return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(!chip)return;chip.style.setProperty("display","inline-grid","important");chip.style.setProperty("place-items","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important");var btn=chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label&&label.style.display!=="none"){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}} `;
 
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
@@ -148,21 +146,26 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(DETAIL_TIMELINE_EMOJI_NEEDLE, DETAIL_TIMELINE_EMOJI_PATCH);
   }
   if (js.includes(BOOKINGS_TAB_ICON_NEEDLE)) {
-    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_FLEX_PATCH);
-  } else if (js.includes(BOOKINGS_TAB_ICON_ATTR_PATCH)) {
-    js = js.replace(BOOKINGS_TAB_ICON_ATTR_PATCH, BOOKINGS_TAB_ICON_FLEX_PATCH);
-  } else if (
-    !js.includes('"data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:16,height:16,display:"inline-flex"')
-  ) {
-    throw new Error('trek bundle missing bookings tab icon markers for Gate B');
+    js = js.replace(BOOKINGS_TAB_ICON_NEEDLE, BOOKINGS_TAB_ICON_PATCH);
+  } else if (js.includes('transform:"translateY(-0.5px)"},children:G.icon}')) {
+    throw new Error('trek bundle missing bookings tab icon needle for centering patch');
   }
-  if (js.includes(BOOKINGS_TAB_ICON_V2_PATCH) || js.includes('ref:function(el){tsPaintTabEmoji(el,G.icon)}')) {
-    throw new Error('trek bundle must not paint category tab icons on canvas');
+  if (js.includes(BOOKINGS_TAB_ICON_FLEX_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_FLEX_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
+  } else if (js.includes(BOOKINGS_TAB_ICON_PATCH)) {
+    js = js.replace(BOOKINGS_TAB_ICON_PATCH, BOOKINGS_TAB_ICON_V2_PATCH);
+  } else if (!js.includes('data-tab-category":G.id,"data-ts-category-tab-icon":"1"')) {
+    throw new Error('trek bundle missing category tab icon anchor for centering patch');
   }
   if (js.includes(BOOKINGS_TAB_LABEL_NEEDLE)) {
     js = js.replace(BOOKINGS_TAB_LABEL_NEEDLE, BOOKINGS_TAB_LABEL_PATCH);
   } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label')) {
     throw new Error('trek bundle missing category tab label anchor for centering patch');
+  }
+  if (js.includes(TAB_BUTTON_LINE_HEIGHT_NEEDLE)) {
+    js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
+  } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
+    throw new Error('trek bundle missing category tab button anchor for line-height patch');
   }
   if (js.includes(TAB_BUTTON_DATA_TAB_NEEDLE)) {
     js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
@@ -174,6 +177,13 @@ export function patchThingLogoChipAlignment(source = '') {
       throw new Error('trek bundle missing anchor for category tab emoji ink centering');
     }
     js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
+  } else if (js.includes(TAB_EMOJI_LABEL_STYLE_NEEDLE)) {
+    js = js.replace(TAB_EMOJI_LABEL_STYLE_NEEDLE, TAB_EMOJI_LABEL_STYLE_PATCH);
+  } else if (!js.includes('if(label.style.display!=="none")')) {
+    throw new Error('trek bundle missing tsPaintTabEmoji mobile label guard');
+  }
+  if (js.includes('ref:function(el){tsPaintTabEmoji(el,G.icon)}')) {
+    throw new Error('trek bundle must not paint category tab icons on canvas');
   }
   if (js.includes('function tsListColumnSort(')) {
     throw new Error('trek bundle must not inject tsListColumnSort (use original Wr sort pills)');
@@ -188,6 +198,9 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(THING_LOGO_CHIP_DC_UPSTREAM_NEEDLE, THING_LOGO_CHIP_DC_PATCH);
   } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
     throw new Error('trek bundle dc() logo chip patch did not apply');
+  }
+  if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
+    throw new Error('category tab icon centering patch did not apply');
   }
   return applyActivePillEdgePatch(js);
 }
