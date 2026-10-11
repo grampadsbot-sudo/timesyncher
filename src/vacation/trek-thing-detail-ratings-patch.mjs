@@ -11,10 +11,12 @@ export function patchThingDetailRatings(source = '') {
     }
   }
   const reviewStart = js.indexOf('vo(Dt)&&[1,2,3].map(G=>n.jsxs("label",{style:Hn,children:["5-star review quote "');
-  const reviewEnd = reviewStart >= 0 ? js.indexOf(']},G))]', reviewStart) : -1;
-  if (reviewStart >= 0 && reviewEnd > reviewStart) {
-    const reviewPatch = '[1,2,3].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G,n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]},G))]';
-    js = js.slice(0, reviewStart) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
+  const reviewStartAlt = js.indexOf('[1,2,3].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G');
+  const reviewStartIdx = reviewStart >= 0 ? reviewStart : reviewStartAlt;
+  const reviewEnd = reviewStartIdx >= 0 ? js.indexOf(']},G))]', reviewStartIdx) : -1;
+  if (reviewStartIdx >= 0 && reviewEnd > reviewStartIdx) {
+    const reviewPatch = '[1,2,3,4].filter(G=>String(Ps(Dt,G)||"").trim()).map(G=>n.jsxs("label",{style:Hn,children:["Review ",G," (",String(No(Dt,`review${G}Source`)||"source"),")",n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"120px minmax(0,1fr)",gap:8,alignItems:"center"},children:[n.jsx("input",{value:No(Dt,`review${G}Rating`),onChange:Re=>Xa(Dt,`review${G}Rating`,Re.target.value),placeholder:"Star rating",style:De}),n.jsx("textarea",{value:Ps(Dt,G),onChange:Re=>Xa(Dt,`review${G}`,Re.target.value),style:ur})]})]},G))]';
+    js = js.slice(0, reviewStartIdx) + reviewPatch + js.slice(reviewEnd + ']},G))]'.length);
   }
   return js.replaceAll('placeholder:"4.6"', 'placeholder:""').replaceAll('placeholder:"4.4"', 'placeholder:""');
 }

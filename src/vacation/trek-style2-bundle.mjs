@@ -15,6 +15,7 @@ import {
   REST_TYPE_CHIPS_PATCH,
   stripHotelBrandNameGuessing,
 } from './trek-live-product-patches.mjs';
+import { patchThingDetailCapture } from './trek-thing-detail-capture-patch.mjs';
 import { patchThingDetailRatings } from './trek-thing-detail-ratings-patch.mjs';
 import { patchThingDetailFields } from './trek-thing-detail-fields-patch.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
@@ -513,7 +514,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return js;
+  return patchThingDetailCapture(js);
 }
 
 function endOfCall(text, callStart) {

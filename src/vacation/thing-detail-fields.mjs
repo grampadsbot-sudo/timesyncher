@@ -77,11 +77,13 @@ function copyIfBlank(target, key, ...values) {
   }
 }
 
-function copyReview(target, index, quote, sourceLabel) {
+function copyReview(target, index, quote, sourceLabel, rating) {
   const key = `review${index}`;
   const sourceKey = `review${index}Source`;
+  const ratingKey = `review${index}Rating`;
   copyIfBlank(target, key, quote);
   copyIfBlank(target, sourceKey, sourceLabel);
+  copyIfBlank(target, ratingKey, rating);
 }
 
 function ratingCountLabel(record = {}) {
@@ -176,6 +178,9 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
     3000,
   );
   const summary = text(record.summary || place.summary || thing.summary, 500);
+  const summarySourceUrls = Array.isArray(record.summarySourceUrls)
+    ? record.summarySourceUrls.map((row) => text(row, 500)).filter(Boolean)
+    : [];
   const itineraryNote = text(
     record.itineraryNote || record.itinerary_note || itineraryNoteFrom({
       title,
@@ -187,16 +192,22 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
     }),
     280,
   );
+  const lat = record.lat ?? place.lat ?? thing.lat;
+  const lng = record.lng ?? place.lng ?? thing.lng;
   const fields = {
     category,
+    title,
     address,
     phone,
     website,
     hours,
     priceLevel,
     summary,
+    summarySourceUrls,
     longDetails,
     itineraryNote,
+    ...(lat != null ? { lat } : {}),
+    ...(lng != null ? { lng } : {}),
     googleRating,
     googleReviewCount,
     yelpRating,
@@ -206,9 +217,10 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
   };
   if (price !== null && price !== undefined && price !== '') fields.price = price;
   if (!isGooglePlacesSource(record)) {
-    copyReview(fields, 1, record.review1, record.review1Source || record.reviewSources?.[0]);
-    copyReview(fields, 2, record.review2, record.review2Source || record.reviewSources?.[1]);
-    copyReview(fields, 3, record.review3, record.review3Source || record.reviewSources?.[2]);
+    copyReview(fields, 1, record.review1, record.review1Source || record.reviewSources?.[0], record.review1Rating);
+    copyReview(fields, 2, record.review2, record.review2Source || record.reviewSources?.[1], record.review2Rating);
+    copyReview(fields, 3, record.review3, record.review3Source || record.reviewSources?.[2], record.review3Rating);
+    copyReview(fields, 4, record.review4, record.review4Source || record.reviewSources?.[3], record.review4Rating);
   }
   if (HAPPY_HOUR_CATEGORIES.has(category)) {
     if (record.happyHour != null) fields.happyHour = !!record.happyHour;
@@ -273,6 +285,7 @@ export function thingDetailOverrideFields(thing = {}) {
   const override = {};
   for (const [key, value] of Object.entries(merged)) {
     if (value === null || value === undefined || value === '') continue;
+    if (Array.isArray(value) && !value.length) continue;
     override[key] = value;
   }
   const ratings = writeRatings(thing);
@@ -292,6 +305,15 @@ export function thingDetailOverrideFields(thing = {}) {
   return override;
 }
 
+function reviewIsComplete(fields = {}, index = 1) {
+  const body = text(fields[`review${index}`], 2000);
+  const source = text(fields[`review${index}Source`], 40);
+  const rating = text(fields[`review${index}Rating`], 20);
+  if (wordCount(body) < 25) return false;
+  if (!['Google', 'Yelp', 'TripAdvisor'].includes(source)) return false;
+  return /\d/.test(rating);
+}
+
 export function missingDetailFieldsForCategory(fields = {}, category = 'other') {
   const cat = text(category, 40).toLowerCase() || 'other';
   const missing = [];
@@ -306,11 +328,22 @@ export function missingDetailFieldsForCategory(fields = {}, category = 'other') 
     need('website');
     need('longDetails', 'description');
     if (!descriptionPassesDetailJudge(fields.longDetails, fields.title)) missing.push('description_judge');
+    if (!text(fields.price) && !text(fields.priceLevel)) missing.push('price');
+    need('googleReviewCount', 'google_review_count');
+    need('summary');
+    if (wordCount(fields.summary) < 30 || !descriptionPassesDetailJudge(fields.summary, fields.title)) {
+      missing.push('summary_judge');
+    }
+    const summaryUrls = Array.isArray(fields.summarySourceUrls)
+      ? fields.summarySourceUrls.filter((row) => text(row))
+      : [];
+    if (summaryUrls.length < 2) missing.push('summary_source_urls');
+    if (fields.lat == null || fields.lng == null) missing.push('coordinates');
     if (!['flight', 'car', 'transport'].includes(cat)) {
       need('googleRating');
-      need('review1');
-      need('review2');
-      need('review3');
+      for (const index of [1, 2, 3, 4]) {
+        if (!reviewIsComplete(fields, index)) missing.push(`review${index}`);
+      }
     }
   }
   if (HAPPY_HOUR_CATEGORIES.has(cat)) {
@@ -338,10 +371,14 @@ export function applyThingDetailOverrides(shared = {}) {
       ...place,
       title: place.name || place.title,
       category: prior.category || place.category?.name || place.category_name,
-      metadata: { sourceRecord: place.sourceRecord, ...(place.metadata || {}) },
+      metadata: {
+        ...(place.metadata || {}),
+        sourceRecord: place.sourceRecord,
+        thingDetail: { ...(place.metadata?.thingDetail || {}), ...prior },
+      },
       sourceRecord: place.sourceRecord,
     };
-    thingOverrides[key] = { ...prior, ...thingDetailOverrideFields(mergedThing) };
+    thingOverrides[key] = { ...thingDetailOverrideFields(mergedThing), ...prior };
   }
   return { ...shared, places, thingOverrides };
 }
