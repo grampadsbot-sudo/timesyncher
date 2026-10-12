@@ -10,18 +10,27 @@ import {
   sortPlaces,
   typeChipsForTab,
 } from '../lib/listTabModel.mjs';
-import { overrideFor } from '../lib/placeHelpers';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
   trip: SharedTripPayload;
   tab: 'flights' | 'hotels' | 'cars' | 'restaurants' | 'stores' | 'events';
   onOpen: (place: SharedPlace) => void;
+  canEdit: boolean;
+  timelineChecked: (place: SharedPlace) => boolean;
+  onTimelineChange: (place: SharedPlace, checked: boolean) => void;
 };
 
 type SortKey = 'name' | 'price';
 
-export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
+export function CategoryTabScreen({
+  trip,
+  tab,
+  onOpen,
+  canEdit,
+  timelineChecked,
+  onTimelineChange,
+}: Props) {
   const categoryPlaces = useMemo(() => placesForCategoryTab(trip, tab), [trip, tab]);
   const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
   const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
@@ -30,14 +39,6 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');
-  const [timeline, setTimeline] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const place of categoryPlaces) {
-      const override = overrideFor(trip, place);
-      initial[String(place.id)] = Boolean(override.timeline);
-    }
-    return initial;
-  });
 
   const filtered = useMemo(
     () =>
@@ -76,6 +77,9 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
     }
   }
 
+  const showTimelineToggle =
+    tab === 'flights' || tab === 'hotels' || tab === 'cars';
+
   return (
     <section className="tsv-screen tsv-list-screen" data-shared-live-tab={tab}>
       <FilterChipRow
@@ -99,6 +103,7 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
         <ul className="tsv-list">
           {rows.map((place) => {
             const isFirstHotel = firstHotelId !== null && String(place.id) === firstHotelId;
+            const timelineOn = timelineChecked(place);
             return (
               <ListRow
                 key={String(place.id)}
@@ -107,10 +112,10 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
                 tab={tab}
                 onOpen={onOpen}
                 isFirstHotel={isFirstHotel}
-                timelineChecked={Boolean(timeline[String(place.id)])}
-                onTimelineChange={(p, checked) =>
-                  setTimeline((prev) => ({ ...prev, [String(p.id)]: checked }))
-                }
+                showTimelineToggle={showTimelineToggle}
+                timelineChecked={timelineOn}
+                timelineDisabled={!canEdit}
+                onTimelineChange={onTimelineChange}
               />
             );
           })}

@@ -1,14 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ThingDetailPanel } from './components/ThingDetailPanel';
 import { TripShell } from './components/TripShell';
 import { useSharedTrip } from './hooks/useSharedTrip';
 import { useTabFromUrl } from './hooks/useTabFromUrl';
 import { isKeepsakeJourneyLocation } from './lib/keepsakeModel.mjs';
+import { visibleTabsForTrip } from './lib/tabNavModel.mjs';
+import { overrideFor } from './lib/placeHelpers';
 import { BudgetScreen } from './screens/BudgetScreen';
 import { CategoryTabScreen } from './screens/CategoryTabScreen';
 import { DayByDayScreen } from './screens/DayByDayScreen';
 import { KeepsakeJourneyScreen } from './screens/KeepsakeJourneyScreen';
 import type { SharedPlace } from './types/sharedTrip';
+
+function FlagTabScreen({ message }: { message: string }) {
+  return (
+    <section className="tsv-screen">
+      <p className="tsv-empty">{message}</p>
+    </section>
+  );
+}
 
 export default function App() {
   const tripState = useSharedTrip();
@@ -19,6 +29,46 @@ export default function App() {
     if (tripState.status !== 'ready') return 'TimeSyncher Vacation';
     return tripState.data.trip?.title || 'Vacation';
   }, [tripState]);
+
+  const visibleTabs = useMemo(() => {
+    if (tripState.status !== 'ready') return [];
+    return visibleTabsForTrip(tripState.data, tripState.data.permissions);
+  }, [tripState]);
+
+  useEffect(() => {
+    if (tripState.status !== 'ready') return;
+    if (!visibleTabs.includes(tab)) {
+      setTab('day-by-day');
+    }
+  }, [tab, tripState, visibleTabs, setTab]);
+
+  const setTimeline = useCallback(
+    (place: SharedPlace, checked: boolean) => {
+      if (tripState.status !== 'ready' || !tripState.patchThingOverrides) return;
+      const key = `place:${place.id}`;
+      tripState.patchThingOverrides((prev) => ({
+        ...prev,
+        [key]: { ...(prev[key] || {}), timeline: checked },
+      }));
+    },
+    [tripState],
+  );
+
+  const setSectionVisibility = useCallback(
+    (section: 'flights' | 'hotels' | 'cars', visible: boolean) => {
+      if (tripState.status !== 'ready' || !tripState.patchThingOverrides) return;
+      tripState.patchThingOverrides((prev) => ({
+        ...prev,
+        __sectionVisibility: {
+          ...(typeof prev.__sectionVisibility === 'object' && prev.__sectionVisibility
+            ? prev.__sectionVisibility
+            : {}),
+          [section]: visible,
+        },
+      }));
+    },
+    [tripState],
+  );
 
   if (tripState.status !== 'ready') {
     if (tripState.status === 'error') {
@@ -55,8 +105,22 @@ export default function App() {
     body = <DayByDayScreen trip={trip} onOpen={setDetail} />;
   } else if (tab === 'budget') {
     body = <BudgetScreen trip={trip} />;
+  } else if (tab === 'packing') {
+    body = <FlagTabScreen message="Packing list opens when the trip owner enables packing on the share link." />;
+  } else if (tab === 'chat') {
+    body = <FlagTabScreen message="Collaborator chat opens when the trip owner enables collaboration on the share link." />;
   } else {
-    body = <CategoryTabScreen trip={trip} tab={tab} onOpen={setDetail} />;
+    body = (
+      <CategoryTabScreen
+        key={tab}
+        trip={trip}
+        tab={tab}
+        onOpen={setDetail}
+        canEdit={tripState.canEdit}
+        timelineChecked={(place) => Boolean(overrideFor(trip, place).timeline)}
+        onTimelineChange={setTimeline}
+      />
+    );
   }
 
   return (
@@ -64,9 +128,15 @@ export default function App() {
       <TripShell
         title={title}
         shareToken={token}
+        trip={trip}
         permissions={trip.permissions}
         activeTab={tab}
+        canEdit={tripState.canEdit}
+        editChecked={tripState.editChecked}
+        saveStatus={tripState.saveStatus}
         onTabChange={setTab}
+        onSectionVisibilityChange={setSectionVisibility}
+        onActiveTabHidden={() => setTab('day-by-day')}
       >
         {body}
       </TripShell>

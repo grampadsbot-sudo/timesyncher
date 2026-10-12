@@ -4,8 +4,10 @@ import {
   TAB_LABELS,
   TAB_ORDER,
   isTabId,
+  isConfigSectionVisible,
   readTabFromLocation,
   tabLocationHash,
+  visibleTabsForTrip,
 } from '../src/lib/tabNavModel.mjs';
 
 assert.deepEqual(TAB_ORDER, [
@@ -33,6 +35,22 @@ assert.equal(tabLocationHash('restaurants'), '#tab=restaurants');
 
 assert.equal(isTabId('stores'), true);
 assert.equal(isTabId('nope'), false);
+
+assert.equal(isConfigSectionVisible(undefined, 'flights'), true);
+assert.equal(
+  isConfigSectionVisible({ thingOverrides: { __sectionVisibility: { hotels: false } } }, 'hotels'),
+  false,
+);
+
+const baseTrip = {
+  thingOverrides: { __sectionVisibility: { cars: false } },
+  permissions: { share_budget: true, share_packing: true, share_collab: true },
+};
+const visible = visibleTabsForTrip(baseTrip, baseTrip.permissions);
+assert.ok(!visible.includes('cars'));
+assert.ok(visible.includes('packing'));
+assert.ok(visible.includes('chat'));
+assert.ok(visible.includes('budget'));
 
 await import('./listRows.unit.mjs');
 
