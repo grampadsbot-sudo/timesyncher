@@ -104,7 +104,7 @@ async function runCheckIWith({ tripTitle, dbTitle, subject, stubOutbound = '1' }
     if (prevStub === undefined) delete process.env.TIMESYNCHER_HARNESS_STUB_OUTBOUND;
     else process.env.TIMESYNCHER_HARNESS_STUB_OUTBOUND = prevStub;
   }
-  return result;
+  return { result, out };
 }
 
 // Check 5 early-returned (state.tripTitle empty): check I must still PASS by
@@ -114,7 +114,8 @@ const passWithDbFallback = await runCheckIWith({
   dbTitle: REAL_TITLE,
   subject: `Shepherd e892e59 invited you to edit ${REAL_TITLE}`,
 });
-assert.equal(passWithDbFallback.pass, true);
+assert.equal(passWithDbFallback.result.pass, true);
+assert.equal(passWithDbFallback.out.checkI.tripTitle, REAL_TITLE);
 
 // Wrong/missing title in the subject must still FAIL check I.
 const failWrongTitle = await runCheckIWith({
@@ -122,7 +123,7 @@ const failWrongTitle = await runCheckIWith({
   dbTitle: REAL_TITLE,
   subject: 'Shepherd e892e59 invited you to edit a trip',
 });
-assert.equal(failWrongTitle.pass, false);
+assert.equal(failWrongTitle.result.pass, false);
 
 // A subject missing the real title must FAIL even when state.tripTitle is set.
 const failMissingTitle = await runCheckIWith({
@@ -130,6 +131,6 @@ const failMissingTitle = await runCheckIWith({
   dbTitle: REAL_TITLE,
   subject: 'Shepherd e892e59 invited you to edit a trip',
 });
-assert.equal(failMissingTitle.pass, false);
+assert.equal(failMissingTitle.result.pass, false);
 
 console.log('shepherd check I trip-title fallback test passed');
