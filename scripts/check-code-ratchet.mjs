@@ -32,7 +32,7 @@ export const RULE_IDS = [
 
 const CODE_EXT = new Set(['.mjs', '.js', '.cjs', '.html']);
 const MODULE_EXT = new Set(['.mjs', '.js', '.cjs']);
-const ROOTS = ['src', 'routes', 'scripts', 'api'];
+const ROOTS = ['src', 'routes', 'scripts', 'api', 'apps/vacation-client/src'];
 const GUARD = new Set([
   'scripts/check-code-ratchet.mjs',
   'scripts/test_check_code_ratchet.mjs',

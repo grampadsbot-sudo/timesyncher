@@ -20,22 +20,21 @@ export default function App() {
     return tripState.data.trip?.title || 'Vacation';
   }, [tripState]);
 
-  if (tripState.status === 'loading' || tripState.status === 'idle') {
+  if (tripState.status !== 'ready') {
+    if (tripState.status === 'error') {
+      return (
+        <div className="tsv-error" role="alert">
+          <h1>Preview load failed</h1>
+          <p>{tripState.message}</p>
+          <p className="tsv-muted">
+            Example: <code>vacation-app-next.html?token=YOUR_PUBLIC_SLUG</code>
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="tsv-loading" role="status" aria-live="polite">
         Loading trip…
-      </div>
-    );
-  }
-
-  if (tripState.status === 'error') {
-    return (
-      <div className="tsv-error" role="alert">
-        <h1>Preview load failed</h1>
-        <p>{tripState.message}</p>
-        <p className="tsv-muted">
-          Example: <code>vacation-app-next.html?token=YOUR_PUBLIC_SLUG</code>
-        </p>
       </div>
     );
   }

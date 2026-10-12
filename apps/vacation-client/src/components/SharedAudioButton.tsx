@@ -5,7 +5,8 @@ type Props = {
 export function SharedAudioButton({ shareToken }: Props) {
   const canRecord =
     typeof navigator !== 'undefined' &&
-    Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+    typeof navigator.mediaDevices?.getUserMedia === 'function' &&
+    typeof window.MediaRecorder !== 'undefined';
 
   return (
     <button

@@ -7,21 +7,25 @@ type State =
   | { status: 'ready'; data: SharedTripPayload; token: string }
   | { status: 'error'; message: string; token: string };
 
+function initialTripState(): State {
+  const token = shareTokenFromLocation();
+  if (!token) {
+    return {
+      status: 'error',
+      token: '',
+      message: 'Add ?token=<share-slug> to load a trip from the API.',
+    };
+  }
+  return { status: 'loading' };
+}
+
 export function useSharedTrip(): State {
-  const [state, setState] = useState<State>({ status: 'idle' });
+  const [state, setState] = useState<State>(initialTripState);
 
   useEffect(() => {
     const token = shareTokenFromLocation();
-    if (!token) {
-      setState({
-        status: 'error',
-        token: '',
-        message: 'Add ?token=<share-slug> to load a trip from the API.',
-      });
-      return;
-    }
+    if (!token) return;
     let cancelled = false;
-    setState({ status: 'loading' });
     loadSharedTrip(token)
       .then((data) => {
         if (!cancelled) setState({ status: 'ready', data, token });
