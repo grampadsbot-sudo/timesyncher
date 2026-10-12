@@ -1745,11 +1745,27 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const shippedDraft = String(pending.draft || '').trim();
   if (shippedDraft && !enforceInTurnPlaces) {
-    return { reply: shippedDraft, rules, jev, model: finished.model, quality: finished.quality, log: finished.log, reason: finished.reason };
+    return {
+      reply: shippedDraft,
+      rules,
+      jev,
+      model: finished.model,
+      quality: finished.quality,
+      log: finished.log,
+      reason: finished.reason,
+    };
   }
   if (!String(interimReply.text || '').trim()) {
     const recovered = placeHooks.recoverRewriteDeadEnd({ finished, pending, inTurnProviderResults, failureBase: { rules, jev } });
-    return recovered || { reply: finished.reply, rules, jev, model: finished.model, quality: finished.quality, log: finished.log, reason: finished.reason };
+    return recovered ?? {
+      reply: finished.reply,
+      rules,
+      jev,
+      model: finished.model,
+      quality: finished.quality,
+      log: finished.log,
+      reason: finished.reason,
+    };
   }
   return {
     reply: null,
