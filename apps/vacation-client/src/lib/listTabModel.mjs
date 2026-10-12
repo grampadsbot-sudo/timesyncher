@@ -92,9 +92,10 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget line + control text: stripped flight catalog title (staging parity / Gate B controls). */
+/** Budget line + control text: full catalog title (Gate B budget list + staging controls). */
 export function budgetLineDisplayName(place, trip) {
-  return catalogRowDisplayName(place, trip);
+  void trip;
+  return placeName(place);
 }
 
 /** Events list + detail: priced from record, else staging-style unknown label. */
@@ -412,6 +413,19 @@ export function rowSummary(place, trip) {
   if (price != null && !/\$\s*\d|price:|\/night|per person|from \$|tickets?\s+(from\s+)?\$/i.test(summary)) {
     summary = `${summary} Price: about $${Math.round(price).toLocaleString('en-US')}.`.replace(/\s+/g, ' ').trim();
   }
+  const ticketedCategory =
+    category === 'event'
+    || category === 'music'
+    || category === 'tour'
+    || category === 'theatre'
+    || category === 'tickets';
+  if (
+    ticketedCategory
+    && price == null
+    && !/price unknown|\$\s*\d|price:/i.test(summary)
+  ) {
+    summary = `${summary} ${eventPriceDisplay(place, trip)}.`.replace(/\s+/g, ' ').trim();
+  }
   return summary;
 }
 
@@ -473,6 +487,12 @@ export function logoUrlForPlace(place, trip) {
       const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
       if (favicon && favicon !== logo && !logoUsedByOtherPlaces(favicon, place, trip)) logo = favicon;
       else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
+      else {
+        const hostLogo = distinctLogoUrlForPlace(place, override, trip);
+        if (hostLogo && hostLogo !== logo && !logoUsedByOtherPlaces(hostLogo, place, trip)) {
+          logo = hostLogo;
+        }
+      }
     }
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';

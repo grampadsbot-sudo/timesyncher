@@ -158,7 +158,13 @@ export function ListRow({
   }
 
   const numeric = numericPrice(place, trip);
-  const isEventRow = tab === 'events' || category === 'event';
+  const isEventRow =
+    tab === 'events'
+    || category === 'event'
+    || category === 'music'
+    || category === 'tour'
+    || category === 'theatre'
+    || category === 'tickets';
   const price = isEventRow
     ? eventPriceDisplay(place, trip)
     : tab === 'hotels' || category === 'hotel'
