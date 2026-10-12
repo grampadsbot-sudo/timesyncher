@@ -252,7 +252,7 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
                 const place = trip.places?.find((p) => String(p.id) === String(item.id));
                 if (!place) return null;
                 return (
-                  <KeepsakeDirectoryRow key={String(item.id)} item={item} place={place} trip={trip} />
+                  <KeepsakeDirectoryRow key={String(item.id)} place={place} trip={trip} />
                 );
               })}
             </ul>

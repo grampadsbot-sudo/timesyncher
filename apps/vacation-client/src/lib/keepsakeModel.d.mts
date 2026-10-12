@@ -63,13 +63,7 @@ export type KeepsakeSection =
       kind: 'directory';
       tab: string;
       label: string;
-      items: Array<{
-        id: string | number;
-        title: string;
-        summary?: string;
-        price?: string;
-        happyHour?: string;
-      }>;
+      items: Array<{ id: string | number }>;
     }
   | {
       kind: 'daily-maps';

@@ -1,11 +1,13 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { BudgetLogoChip } from './BudgetLogoChip';
 import { DayTimeline } from './DayTimeline';
-import { placeName } from '../lib/placeHelpers';
+import { overrideFor, placeName } from '../lib/placeHelpers';
 import {
   flightPriceDisplay,
   hotelPriceDisplay,
   carPriceDisplay,
+  numericPrice,
+  rowSummary,
   tabCategoryKey,
 } from '../lib/listTabModel.mjs';
 import {
@@ -87,48 +89,44 @@ export function KeepsakeStoryCard({ story }: { story: StoryModel }) {
   );
 }
 
-type DirectoryItem = {
-  id: string | number;
-  title: string;
-  summary?: string;
-  price?: string;
-  happyHour?: string;
-};
-
 export function KeepsakeDirectoryRow({
-  item,
   place,
   trip,
 }: {
-  item: DirectoryItem;
   place: SharedPlace;
   trip: SharedTripPayload;
 }) {
+  const override = overrideFor(trip, place);
   const category = tabCategoryKey(place, trip);
-  let price = item.price || '';
-  if (!price) {
-    if (category === 'flight') price = flightPriceDisplay(place, trip);
-    else if (category === 'hotel') price = hotelPriceDisplay(place, trip);
-    else if (category === 'car') price = carPriceDisplay(place, trip);
+  const title = placeName(place);
+  const summary = rowSummary(place, trip);
+  const happyHour = String(override.happyHourDetails || override.happy_hour_details || '').trim();
+  let price = '';
+  if (category === 'flight') price = flightPriceDisplay(place, trip);
+  else if (category === 'hotel') price = hotelPriceDisplay(place, trip);
+  else if (category === 'car') price = carPriceDisplay(place, trip);
+  else {
+    const numeric = numericPrice(place, trip);
+    if (numeric != null) price = `$${numeric}`;
   }
   return (
     <li data-list-row="1" data-summary-itinerary="1">
       <BudgetLogoChip place={place} trip={trip} />
       <span>
-        <strong>{item.title}</strong>
+        <strong>{title}</strong>
         {price ? (
           <div className="tsv-keepsake-dir-meta" data-list-price="1">
             {price}
           </div>
         ) : null}
-        {item.happyHour ? (
+        {happyHour ? (
           <div className="tsv-keepsake-dir-meta" data-happy-hour="1">
-            {item.happyHour}
+            {happyHour}
           </div>
         ) : null}
-        {item.summary ? (
+        {summary ? (
           <div className="tsv-keepsake-dir-summary" data-list-summary="1">
-            {item.summary}
+            {summary}
           </div>
         ) : null}
       </span>

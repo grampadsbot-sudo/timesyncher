@@ -1,6 +1,6 @@
 /** Keepsake / journey report sections from shared trip JSON (clean-room; no TREK bundle). */
 
-import { tabCategoryKey, placeName, placesForCategoryTab, rowSummary, numericPrice } from './listTabModel.mjs';
+import { tabCategoryKey, placeName, placesForCategoryTab } from './listTabModel.mjs';
 import {
   buildDayTimeline,
   mapPlacesForTimeline,
@@ -109,15 +109,6 @@ function storyText(place, override) {
   return text(raw);
 }
 
-function priceLabel(place, trip) {
-  const price = numericPrice(place, trip);
-  return price == null ? '' : `$${price}`;
-}
-
-function happyHourLabel(override) {
-  return text(override.happyHourDetails || override.happy_hour_details);
-}
-
 function storyMediaForPlace(trip, place) {
   const bound = boundMediaForPlace(place);
   if (bound.length) return bound;
@@ -167,18 +158,7 @@ export function directorySection(trip, tab, label) {
   return {
     label,
     tab,
-    items: places.map((place) => {
-      const override = overrideFor(trip, place);
-      return {
-        id: place.id,
-        title: placeName(place),
-        logoUrl: text(override.logoUrl || place.logoUrl),
-        category: tabCategoryKey(place, trip),
-        summary: rowSummary(place, trip),
-        price: priceLabel(place, trip),
-        happyHour: happyHourLabel(override),
-      };
-    }),
+    items: places.map((place) => ({ id: place.id })),
   };
 }
 
