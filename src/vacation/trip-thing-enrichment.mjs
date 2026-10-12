@@ -197,9 +197,12 @@ function summaryHasWhyHint(body = '') {
 
 function augmentListSummaryDetail(body = '', place = {}, source = {}, category = '') {
   let merged = text(body);
-  if (wordCount(merged) < 30) return merged;
   const cat = text(category, 80).toLowerCase();
   const price = firstPrice(source.price, source.rate, source.ticketPrice, place.price, source.totalPrice);
+  if (!summaryHasPriceHint(merged) && price != null) {
+    merged = text(`${merged} Price: about $${price.toLocaleString('en-US')}.`);
+  }
+  if (wordCount(merged) < 30) return merged;
   const when = text(
     source.when || source.startsAt || source.schedule || source.hours || source.openingHours || source.opening_hours,
     160,
@@ -211,9 +214,6 @@ function augmentListSummaryDetail(body = '', place = {}, source = {}, category =
     220,
   );
   const bits = [];
-  if (!summaryHasPriceHint(merged) && price != null) {
-    bits.push(`Price: about $${price.toLocaleString('en-US')}`);
-  }
   if (!summaryHasWhenHint(merged) && when) {
     bits.push(`When: ${when}`);
   }

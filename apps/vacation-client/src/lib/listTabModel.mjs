@@ -312,6 +312,7 @@ function pickRrLine(...values) {
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
+  const category = tabCategoryKey(place, trip);
   const meta = place.metadata?.thingDetail && typeof place.metadata.thingDetail === 'object'
     ? place.metadata.thingDetail
     : {};
@@ -332,8 +333,6 @@ export function rowSummary(place, trip) {
     .map((value) => text(value))
     .filter(Boolean);
   const richLong = longCandidates.find((body) => wordCount(body) >= 30);
-  if (richLong) return richLong;
-
   const rr = pickRrLine(
     override.itineraryNote,
     override.itinerary_note,
@@ -344,54 +343,80 @@ export function rowSummary(place, trip) {
     source.itineraryNote,
     place.description,
   );
-  if (rr && wordCount(rr) >= 30) return rr;
   const best = longCandidates.reduce(
     (acc, body) => (wordCount(body) > wordCount(acc) ? body : acc),
     '',
   );
-  if (wordCount(best) >= 30) return best;
+  let draft = richLong || (rr && wordCount(rr) >= 30 ? rr : '') || (wordCount(best) >= 30 ? best : '');
+  if (!draft) {
+    draft = buildCategoryDescription({
+      category,
+      title: placeName(place),
+      sourceRecord: source,
+      address: text(place.address),
+      rawDescription: text(
+        override.summary || source.summary || place.description || best || rr,
+      ),
+    });
+  }
+  return ensureProductListSummary(draft || best || rr || '', place, { category });
+}
 
-  const enriched = buildCategoryDescription({
-    category: tabCategoryKey(place, trip),
-    title: placeName(place),
-    sourceRecord: source,
-    address: text(place.address),
-    rawDescription: text(
-      override.summary || source.summary || place.description || best || rr,
-    ),
-  });
-  return ensureProductListSummary(enriched || best || rr || '', place, {
-    category: tabCategoryKey(place, trip),
+function faviconFromPageUrl(pageUrl = '') {
+  const page = text(pageUrl);
+  if (!page) return '';
+  try {
+    const { origin, hostname } = new URL(page);
+    if (hostname && !/(^|\.)google\./i.test(hostname)) {
+      return `${origin}/favicon.ico`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return '';
+}
+
+function logoUsedByOtherPlaces(logo, place, trip) {
+  if (!logo || !trip?.places?.length) return false;
+  const selfId = String(place.id);
+  return trip.places.some((row) => {
+    if (String(row.id) === selfId) return false;
+    const otherOverride = overrideFor(trip, row);
+    const candidates = [
+      text(otherOverride.logoUrl),
+      text(row.logoUrl),
+      text(row.captured_logo_url),
+    ].filter(Boolean);
+    return candidates.includes(logo);
   });
 }
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  const overrideLogo = text(override.logoUrl);
-  if (overrideLogo && !isPlaceholderLogoUrl(overrideLogo)) return overrideLogo;
-  const fromSource = text(sourceLogoUrl(place, override));
-  if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
-  let resolved = text(resolveThingLogoUrl(place, override));
-  if (resolved && isPlaceholderLogoUrl(resolved)) resolved = '';
-  if (resolved) return resolved;
   const source = sourceRecord(place, override);
   const page = text(
     source.url || source.website || source.sourceUrl || place.url || place.website,
   );
-  if (page) {
-    try {
-      const { origin, hostname } = new URL(page);
-      if (hostname && !/(^|\.)google\./i.test(hostname)) {
-        return `${origin}/favicon.ico`;
-      }
-    } catch {
-      /* ignore */
-    }
+  const pick = () => {
+    const overrideLogo = text(override.logoUrl);
+    if (overrideLogo && !isPlaceholderLogoUrl(overrideLogo)) return overrideLogo;
+    const fromSource = text(sourceLogoUrl(place, override));
+    if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
+    let resolved = text(resolveThingLogoUrl(place, override));
+    if (resolved && isPlaceholderLogoUrl(resolved)) resolved = '';
+    if (resolved) return resolved;
+    const favicon = faviconFromPageUrl(page);
+    if (favicon) return favicon;
+    const title = placeName(place);
+    return captureThingLogo({ name: title, title }, override) || '';
+  };
+  let logo = pick();
+  if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
+    const favicon = faviconFromPageUrl(page);
+    if (favicon && favicon !== logo) logo = favicon;
+    else logo = pick();
   }
-  const title = placeName(place);
-  const brand = captureThingLogo({ name: title, title }, override);
-  if (brand) return brand;
-  return '';
+  return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

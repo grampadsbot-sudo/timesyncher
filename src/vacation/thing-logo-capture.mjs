@@ -301,6 +301,30 @@ export function applyCapturedLogos(shared = {}) {
     }
     place.captured_logo_url = logoUrl;
   }
+  const logoUrlOwners = new Map();
+  for (const place of next.places) {
+    const key = `place:${place.id}`;
+    const override = next.thingOverrides[key] || {};
+    const url = text(override.logoUrl || place.logoUrl);
+    if (!url || isPlaceholderLogoUrl(url)) continue;
+    const bucket = logoUrlOwners.get(url) || [];
+    bucket.push({ place, overrideKey: key });
+    logoUrlOwners.set(url, bucket);
+  }
+  for (const [sharedUrl, owners] of logoUrlOwners) {
+    if (owners.length <= 1) continue;
+    for (const { place, overrideKey } of owners) {
+      const override = { ...(next.thingOverrides[overrideKey] || {}) };
+      const page = httpUrl(pageUrlForLogo(place, override));
+      const favicon = page ? `${page.origin}/favicon.ico` : '';
+      const replacement = usableLogo(favicon) && favicon !== sharedUrl ? favicon : '';
+      if (replacement) {
+        override.logoUrl = replacement;
+        place.logoUrl = replacement;
+        next.thingOverrides[overrideKey] = override;
+      }
+    }
+  }
   return next;
 }
 
