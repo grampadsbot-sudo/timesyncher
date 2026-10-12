@@ -549,6 +549,11 @@ body {
   line-height: 1.35;
 }
 
+.tsv-day-card,
+[data-ts-day-timeline='1'] {
+  overflow: visible;
+}
+
 .tsv-day-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -623,10 +628,103 @@ body {
 
 .tsv-timeline-head {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
   min-width: 0;
+}
+
+.tsv-timeline-fare {
+  margin: 4px 0 0 30px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.tsv-timeline-time--arrive {
+  opacity: 0.85;
+}
+
+.tsv-timeline-media-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tsv-timeline-media-thumb {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f172a;
+  cursor: pointer;
+  position: relative;
+}
+
+.tsv-timeline-media-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tsv-timeline-media-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.35);
+  pointer-events: none;
+}
+
+.tsv-timeline-pic-popup,
+[data-ts-pic-popup='1'] {
+  position: absolute;
+  z-index: 9000;
+  right: 0;
+  bottom: 48px;
+  width: 248px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+  padding: 10px;
+  overflow: visible;
+}
+
+.tsv-timeline-pic-popup-tip,
+[data-ts-pic-popup-tip='1'] {
+  position: absolute;
+  right: 18px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-right: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
+  transform: rotate(45deg);
+  box-sizing: content-box;
+  pointer-events: none;
+}
+
+.tsv-timeline-pic-popup-body {
+  height: 146px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tsv-timeline-pic-popup-media {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .tsv-timeline-icon {

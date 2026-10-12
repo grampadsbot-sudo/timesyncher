@@ -1,7 +1,9 @@
 /** Day-by-day timeline: schedule rows, travel gaps, car pickup/drop-off, map markers. */
 
 import {
+  flightPriceDisplay,
   flightSchedule,
+  hotelFirstRowNote,
   placeName,
   rowSummary,
   tabCategoryKey,
@@ -38,8 +40,14 @@ export function dayChipLabel(day) {
 }
 
 export function parseDurationMinutes(raw) {
-  const s = text(raw);
+  const s = text(raw).toLowerCase();
   if (!s) return null;
+  let total = 0;
+  const hours = s.match(/(\d+(?:\.\d+)?)\s*h(?:ours?|r)?\b/);
+  const minutes = s.match(/(\d+(?:\.\d+)?)\s*m(?:in(?:ute)?s?)?\b/);
+  if (hours) total += Number(hours[1]) * 60;
+  if (minutes) total += Number(minutes[1]);
+  if (hours || minutes) return Math.round(total);
   const match = s.match(/(\d+(?:\.\d+)?)/);
   return match ? Number(match[1]) : null;
 }
@@ -111,6 +119,80 @@ function carSpanDayNumbers(place, trip) {
     .map(Number);
   if (!numbers.length) return null;
   return { start: Math.min(...numbers), end: Math.max(...numbers) };
+}
+
+function assignmentDayNumbers(place, trip) {
+  const placeId = String(place.id);
+  const days = sortedDays(trip);
+  const numbers = [];
+  for (const day of days) {
+    const rows = trip.assignments?.[String(day.id)] || [];
+    if (rows.some((row) => String(row.place_id ?? row.place?.id) === placeId)) {
+      if (day.day_number != null) numbers.push(Number(day.day_number));
+    }
+  }
+  if (!numbers.length) return null;
+  numbers.sort((a, b) => a - b);
+  return { start: numbers[0], end: numbers[numbers.length - 1] };
+}
+
+function hotelStayDayNumbers(place, trip) {
+  const span = carSpanDayNumbers(place, trip) || assignmentDayNumbers(place, trip);
+  if (span) return span;
+  const override = overrideFor(trip, place);
+  const source = override.sourceRecord || place.sourceRecord || {};
+  const explicit = Number(override.stayDays ?? source.stayDays);
+  const days = sortedDays(trip);
+  if (Number.isFinite(explicit) && explicit > 0 && days.length) {
+    const start = Number(days[0].day_number ?? 1);
+    return { start, end: start + Math.round(explicit) - 1 };
+  }
+  const checkIn = text(override.checkInDate || source.checkInDate || source.check_in_date);
+  const checkOut = text(override.checkOutDate || source.checkOutDate || source.check_out_date);
+  if (checkIn && checkOut && days.length) {
+    const startDay = days.find((day) => text(day.date) === checkIn);
+    const endDay = days.find((day) => text(day.date) === checkOut);
+    if (startDay?.day_number != null && endDay?.day_number != null) {
+      const start = Number(startDay.day_number);
+      const end = Math.max(start, Number(endDay.day_number) - 1);
+      return { start, end };
+    }
+  }
+  return null;
+}
+
+function hotelCheckInTime(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = override.sourceRecord || place.sourceRecord || {};
+  return text(override.checkInTime || source.checkInTime || source.check_in_time || '16:00');
+}
+
+function hotelCheckOutTime(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = override.sourceRecord || place.sourceRecord || {};
+  return text(override.checkOutTime || source.checkOutTime || source.check_out_time || '11:00');
+}
+
+function flightDurationMinutes(depart, arrive) {
+  const start = parseClockToMinutes(depart);
+  const end = parseClockToMinutes(arrive);
+  if (start == null || end == null) return null;
+  let delta = end - start;
+  if (delta <= 0) delta += 24 * 60;
+  return delta;
+}
+
+/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
+export function mediaForPlace(trip, place) {
+  const placeId = Number(place?.id);
+  if (!Number.isFinite(placeId)) return [];
+  const fromTrip = (trip?.media || []).filter((row) => {
+    const thingId = Number(row?.thingId ?? row?.thing_id ?? row?.place_id);
+    return thingId === placeId;
+  });
+  if (fromTrip.length) return fromTrip;
+  const bound = place?.photos || place?.bound_media || place?.media;
+  return Array.isArray(bound) ? bound : [];
 }
 
 function haversineMiles(from, to) {
@@ -193,7 +275,7 @@ function pushCarRows(entries, trip, day) {
         category: 'car',
       });
     }
-    if (dayNumber === span.end && span.end !== span.start) {
+    if (dayNumber === span.end) {
       entries.push({
         kind: 'car-dropoff',
         id: `car-dropoff-${place.id}`,
@@ -208,6 +290,111 @@ function pushCarRows(entries, trip, day) {
   }
 }
 
+function pushHotelRows(entries, trip, day) {
+  const dayNumber = Number(day.day_number);
+  const firstTimelineHotelId = (trip.places || []).find((place) => {
+    const override = overrideFor(trip, place);
+    return override.timeline && tabCategoryKey(place, trip) === 'hotel';
+  })?.id;
+  for (const place of trip.places || []) {
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'hotel') continue;
+    const span = hotelStayDayNumbers(place, trip);
+    if (!span) continue;
+    const name = placeName(place);
+    const note =
+      dayNumber === span.start
+        ? hotelFirstRowNote(
+            place,
+            trip,
+            String(place.id) === String(firstTimelineHotelId),
+          ) || itineraryNoteFor(place, trip, '')
+        : '';
+
+    if (dayNumber > span.start && dayNumber <= span.end + 1) {
+      entries.push({
+        kind: 'hotel-wake',
+        id: `hotel-wake-${place.id}-${day.id}`,
+        place,
+        title: `Wake: ${name}`,
+        category: 'hotel',
+      });
+    }
+    if (dayNumber === span.start) {
+      const checkIn = hotelCheckInTime(place, trip);
+      entries.push({
+        kind: 'hotel-event',
+        id: `hotel-checkin-${place.id}`,
+        place,
+        title: `Check-in: ${name}`,
+        startMin: parseClockToMinutes(checkIn),
+        startLabel: checkIn,
+        durationMin: 30,
+        category: 'hotel',
+        itineraryNote: note,
+      });
+    }
+    if (dayNumber >= span.start && dayNumber <= span.end) {
+      entries.push({
+        kind: 'hotel-sleep',
+        id: `hotel-sleep-${place.id}-${day.id}`,
+        place,
+        title: `Bed: ${name}`,
+        category: 'hotel',
+      });
+    }
+    if (dayNumber === span.end + 1) {
+      const checkOut = hotelCheckOutTime(place, trip);
+      entries.push({
+        kind: 'hotel-checkout',
+        id: `hotel-checkout-${place.id}`,
+        place,
+        title: `Check-out: ${name}`,
+        startMin: parseClockToMinutes(checkOut),
+        startLabel: checkOut,
+        durationMin: 60,
+        category: 'hotel',
+      });
+    }
+  }
+}
+
+function pushFlightRows(entries, trip, day, dayId) {
+  for (const row of trip.assignments?.[dayId] || []) {
+    const place = resolvePlace(row, trip);
+    if (!place) continue;
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
+    const { depart, arrive } = flightSchedule(place, trip);
+    const durationMin =
+      parseDurationMinutes(override.duration) ??
+      flightDurationMinutes(depart, arrive) ??
+      null;
+    entries.push({
+      kind: 'flight',
+      id: `flight-${place.id}`,
+      place,
+      title: placeName(place),
+      startMin: parseClockToMinutes(depart),
+      startLabel: depart,
+      endLabel: arrive,
+      durationMin,
+      category: 'flight',
+      fare: flightPriceDisplay(place, trip),
+      summary: rowSummary(place, trip),
+    });
+  }
+}
+
+const TRAVEL_GAP_SKIP = new Set([
+  'travel',
+  'hotel-wake',
+  'hotel-sleep',
+  'hotel-event',
+  'hotel-checkout',
+  'flight',
+]);
+
 function insertTravelRows(entries, trip) {
   const withTravel = [];
   let previous = null;
@@ -215,8 +402,8 @@ function insertTravelRows(entries, trip) {
     if (
       previous?.place &&
       entry.place &&
-      entry.kind !== 'travel' &&
-      previous.kind !== 'travel'
+      !TRAVEL_GAP_SKIP.has(entry.kind) &&
+      !TRAVEL_GAP_SKIP.has(previous.kind)
     ) {
       const prevCategory = tabCategoryKey(previous.place, trip);
       const nextCategory = tabCategoryKey(entry.place, trip);
@@ -239,7 +426,7 @@ function insertTravelRows(entries, trip) {
       }
     }
     withTravel.push(entry);
-    if (entry.kind !== 'travel') previous = entry;
+    if (entry.kind !== 'travel' && !TRAVEL_GAP_SKIP.has(entry.kind)) previous = entry;
   }
   return withTravel;
 }
@@ -257,9 +444,9 @@ export function buildDayTimeline(trip, day) {
     const place = resolvePlace(row, trip);
     if (!place) continue;
     const override = overrideFor(trip, place);
-    if (override.timeline === false) continue;
+    if (!override.timeline) continue;
     const category = tabCategoryKey(place, trip);
-    if (category === 'car') continue;
+    if (category === 'car' || category === 'hotel' || category === 'flight') continue;
     const schedule = scheduleForDay(place, trip, dayId);
     entries.push({
       kind: 'thing',
@@ -273,8 +460,11 @@ export function buildDayTimeline(trip, day) {
       category,
       summary: rowSummary(place, trip),
       itineraryNote: itineraryNoteFor(place, trip, row.notes),
+      media: mediaForPlace(trip, place),
     });
   }
+  pushHotelRows(entries, trip, day);
+  pushFlightRows(entries, trip, day, dayId);
   pushCarRows(entries, trip, day);
   entries.sort((a, b) => {
     const aMin = a.startMin ?? 10_000 + entries.indexOf(a);
@@ -323,6 +513,10 @@ export function shiftDayIndex(trip, currentIndex, delta) {
 export function timeRangeLabel(entry) {
   if (entry.kind === 'travel') {
     return entry.travelMinutes != null ? `${entry.travelMinutes} min travel` : 'Travel';
+  }
+  if (entry.kind === 'flight' && entry.endLabel) {
+    const start = entry.startLabel || formatClockMinutes(entry.startMin);
+    return start ? `${start} – ${entry.endLabel}` : entry.endLabel;
   }
   const start = entry.startLabel || formatClockMinutes(entry.startMin);
   if (!start) return '';
