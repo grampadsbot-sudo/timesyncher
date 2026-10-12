@@ -49,6 +49,7 @@ export function parsePrice(value) {
 
 export function tabCategoryKey(place, trip) {
   const override = overrideFor(trip, place);
+  if (/^Flight option:/i.test(placeName(place))) return 'flight';
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
   ).toLowerCase();

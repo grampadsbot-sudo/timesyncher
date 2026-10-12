@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { NAMED_THING_LOGOS } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
@@ -60,15 +61,27 @@ function TimelineIcon({
     entry.category === 'flight' ||
     /^Flight option:/i.test(entry.title);
   const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
-  let logo = (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
-  if (isFlight && !logo) {
-    logo = airlineLogoFromTitle(entry.title || place?.name || '');
+  const flightTitle = entry.title || place?.name || '';
+  let logo = isFlight ? airlineLogoFromTitle(flightTitle) : '';
+  if (!logo) {
+    logo = (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
   }
+  if (isFlight && !logo) {
+    logo = airlineLogoFromTitle(flightTitle);
+  }
+  const [logoBroken, setLogoBroken] = useState(false);
+  const showLogo = Boolean(logo) && !logoBroken;
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-timeline-logo tiny-logo" src={logo} alt="" loading="lazy" />
+      {showLogo ? (
+        <img
+          className="tsv-timeline-logo tiny-logo"
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={() => setLogoBroken(true)}
+        />
       ) : (
         <span className="tsv-timeline-emoji">{resolved.icon}</span>
       )}

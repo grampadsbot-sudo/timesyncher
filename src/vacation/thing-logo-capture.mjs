@@ -259,10 +259,13 @@ export function applyCapturedLogos(shared = {}) {
       override.icon = timelineCategoryIcon(resolved.type);
     }
     next.thingOverrides[key] = override;
-    if (!place.image_url || isBoundStoryMediaUrl(place.image_url)) {
+    const mediaUrl = text(place.image_url || place.imageUrl);
+    if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
       place.logoUrl = logoUrl;
+    } else if (mediaUrl && !isBoundStoryMediaUrl(mediaUrl) && !isPlaceholderLogoUrl(mediaUrl)) {
+      place.logoUrl = mediaUrl;
     } else {
-      place.logoUrl = place.image_url;
+      place.logoUrl = logoUrl || '';
     }
     place.captured_logo_url = logoUrl;
   }

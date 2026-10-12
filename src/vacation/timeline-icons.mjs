@@ -173,7 +173,9 @@ export function thingLogoUrl(thing = {}, override = {}) {
   const media = [thing.image_url, thing.imageUrl, override.image_url, override.imageUrl]
     .map(text)
     .filter(Boolean);
-  return media.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url)) || '';
+  const fromMedia = media.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url));
+  if (fromMedia) return fromMedia;
+  return '';
 }
 
 export function timelineIcon(thing = {}, override = {}, rowType = '') {

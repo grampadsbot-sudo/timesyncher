@@ -101,6 +101,28 @@ const americanBudget = buildBudgetModel({
 const americanRow = americanBudget.buckets
   .find((b) => b.label === 'Flights')
   ?.rows.find((row) => row.place.id === 7);
-assert.equal(americanRow?.name, 'American LAS-JFK 2026-06-23 12:37-20:59');
+assert.equal(
+  americanRow?.name,
+  'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
+);
+
+const timelineFlightTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: 1, day_number: 1, title: 'Day 1' }],
+  places: [
+    {
+      id: 88,
+      name: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
+      category_name: 'other',
+    },
+  ],
+  assignments: { 1: [] },
+  thingOverrides: { 'place:88': { timeline: false, price: 164, category: 'other' } },
+};
+const timelineBudget = buildBudgetModel(timelineFlightTrip);
+assert.ok(
+  timelineBudget.rows.some((row) => /Southwest LAS-LGA/i.test(row.name)),
+  'catalog flights on day 1 timeline must appear on Budget',
+);
 
 console.log('vacation-client budget unit checks passed');

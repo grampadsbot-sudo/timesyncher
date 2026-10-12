@@ -1,8 +1,8 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
+import { buildDayTimeline, sortedDays } from './dayTimelineModel.mjs';
 import {
   LIST_TAB_IDS,
-  catalogRowDisplayName,
   placeName,
   placesForCategoryTab,
   tabCategoryKey,
@@ -157,13 +157,30 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-/** Every list-tab thing plus anything assigned to an itinerary day (R2). */
+/** Places on the day-by-day timeline (TREK Budget tab `Mo` / `Ci` rows, minus travel + car spans). */
+function placesFromItineraryTimeline(trip) {
+  const seen = new Map();
+  for (const day of sortedDays(trip)) {
+    for (const entry of buildDayTimeline(trip, day)) {
+      if (entry.kind === 'travel') continue;
+      if (entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') continue;
+      if (!entry.place) continue;
+      seen.set(String(entry.place.id), entry.place);
+    }
+  }
+  return [...seen.values()];
+}
+
+/** List-tab catalog plus every timeline-selected thing (R2 + live Budget `Mo`). */
 export function placesForBudget(trip) {
   const seen = new Map();
   for (const tab of LIST_TAB_IDS) {
     for (const place of placesForCategoryTab(trip, tab)) {
       seen.set(String(place.id), place);
     }
+  }
+  for (const place of placesFromItineraryTimeline(trip)) {
+    seen.set(String(place.id), place);
   }
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
@@ -220,7 +237,7 @@ export function buildBudgetModel(trip) {
     return {
       place,
       bucket,
-      name: catalogRowDisplayName(place, trip),
+      name: placeName(place),
       ...pricing,
     };
   });

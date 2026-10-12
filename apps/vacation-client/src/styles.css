@@ -394,6 +394,7 @@ body {
 
 .tsv-row-flight-main {
   grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
 }
 
 .tsv-row-flight-time {

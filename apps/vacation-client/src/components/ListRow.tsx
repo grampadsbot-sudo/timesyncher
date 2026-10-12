@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
@@ -30,15 +31,23 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const [logoBroken, setLogoBroken] = useState(false);
+  const showLogo = Boolean(logo) && !logoBroken;
   return (
     <span
       className="tsv-logo-chip"
       data-ts-logo-chip="1"
-      data-has-logo={logo ? '1' : '0'}
+      data-has-logo={showLogo ? '1' : '0'}
       aria-hidden="true"
     >
-      {logo ? (
-        <img className="tsv-logo tiny-logo" src={logo} alt="" />
+      {showLogo ? (
+        <img
+          className="tsv-logo tiny-logo"
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={() => setLogoBroken(true)}
+        />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
