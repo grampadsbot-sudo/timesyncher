@@ -39,13 +39,14 @@ export async function runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL
     const outboundRow = iOutboundAll[0] || null;
     const errorSummary = String(outboundRow?.error_summary || outboundRow?.metadata?.error || '');
     const resendQuotaBlocked = /daily email sending quota/i.test(errorSummary);
+    const tripTitleForCheck = await resolveCheckITripTitle(state, db);
     out.checkI = {
       http: inviteRes.status,
       inviteId: iInviteRow?.id,
       outboundCount: iOutboundAll.length,
       outboundEmail: outboundRow,
       ownerDisplay,
-      tripTitle: state.tripTitle,
+      tripTitle: tripTitleForCheck,
       acceptLinkOk: iLinkOk,
       expectedAcceptPath: iAcceptPath,
       resendQuotaBlocked,
@@ -73,8 +74,7 @@ export async function runShepherdCheckI(runCheck, { out, db, state, INVITE_EMAIL
       };
     }
     const iOwnerOk = new RegExp(ownerDisplay?.display_name?.split(/\s+/)[0] || 'Shepherd', 'i').test(outboundRow?.subject || '');
-    const tripTitle = await resolveCheckITripTitle(state, db);
-    const iTitleOk = checkITitleOk(tripTitle, outboundRow?.subject);
+    const iTitleOk = checkITitleOk(tripTitleForCheck, outboundRow?.subject);
     const pass = inviteRes.status === 200 && iOutboundAll.length === 1
       && outboundEval.pass && iLinkOk && iOwnerOk && iTitleOk;
     return { pass, http: inviteRes.status };
