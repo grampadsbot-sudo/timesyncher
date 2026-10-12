@@ -77,7 +77,7 @@ function thumbnailFromSource(source = {}) {
   return '';
 }
 
-export function brandLogoFromName(name = '') {
+function brandLogoFromName(name = '') {
   const label = text(name);
   if (!label) return '';
   for (const [pattern, url] of BRAND_LOGO_RULES) {
@@ -237,11 +237,25 @@ export function applyCapturedLogos(shared = {}) {
       ? { ...shared.thingOverrides }
       : {},
   };
+  const sharedImageUrlCounts = new Map();
+  for (const place of next.places) {
+    const media = text(place.image_url || place.imageUrl);
+    if (media) sharedImageUrlCounts.set(media, (sharedImageUrlCounts.get(media) || 0) + 1);
+  }
+  const sharedMediaLogos = new Map();
   for (const place of next.places) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    let logoUrl = captureThingLogo(place, override);
+    const sharedImg = text(place.image_url || place.imageUrl);
+    const logoProbe = { ...place };
+    if (sharedImg && (sharedImageUrlCounts.get(sharedImg) || 0) > 1) {
+      if (text(logoProbe.logoUrl) === sharedImg) delete logoProbe.logoUrl;
+      if (text(logoProbe.image_url) === sharedImg) delete logoProbe.image_url;
+      if (text(logoProbe.imageUrl) === sharedImg) delete logoProbe.imageUrl;
+      if (text(override.logoUrl) === sharedImg) delete override.logoUrl;
+    }
+    let logoUrl = captureThingLogo(logoProbe, override);
     if (!logoUrl) {
       logoUrl = brandLogoFromName(place.name || place.title) || '';
     }
@@ -263,15 +277,25 @@ export function applyCapturedLogos(shared = {}) {
     }
     next.thingOverrides[key] = override;
     const mediaUrl = text(place.image_url || place.imageUrl);
-    if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
-      place.logoUrl = logoUrl;
-    } else if (
+    let placeLogo = logoUrl;
+    if (
       mediaUrl
       && !isBoundStoryMediaUrl(mediaUrl)
       && !isPlaceholderLogoUrl(mediaUrl)
       && !brandLogoFromName(place.name || place.title)
     ) {
-      place.logoUrl = mediaUrl;
+      const seen = sharedMediaLogos.get(mediaUrl) || 0;
+      if (seen >= 1 && !placeLogo) {
+        const page = httpUrl(pageUrlForLogo(place, override));
+        if (page) placeLogo = `${page.origin}/favicon.ico`;
+      } else if (!placeLogo) {
+        placeLogo = mediaUrl;
+      }
+      sharedMediaLogos.set(mediaUrl, seen + 1);
+    }
+    if (placeLogo && !isPlaceholderLogoUrl(placeLogo)) {
+      place.logoUrl = placeLogo;
+      override.logoUrl = placeLogo;
     } else {
       place.logoUrl = logoUrl || '';
     }

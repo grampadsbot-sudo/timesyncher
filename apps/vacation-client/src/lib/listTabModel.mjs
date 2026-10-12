@@ -1,7 +1,7 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
 import {
-  brandLogoFromName,
+  captureThingLogo,
   isPlaceholderLogoUrl,
   resolveThingLogoUrl,
   sourceLogoUrl,
@@ -318,10 +318,14 @@ export function rowSummary(place, trip) {
   const longCandidates = [
     override.longDetails,
     override.details,
+    override.summary,
     meta.longDetails,
     meta.details,
+    meta.summary,
     source.longDetails,
     source.details,
+    source.summary,
+    source.description,
     place.longDetails,
     place.description,
   ]
@@ -384,7 +388,8 @@ export function logoUrlForPlace(place, trip) {
       /* ignore */
     }
   }
-  const brand = brandLogoFromName(placeName(place));
+  const title = placeName(place);
+  const brand = captureThingLogo({ name: title, title }, override);
   if (brand) return brand;
   return '';
 }

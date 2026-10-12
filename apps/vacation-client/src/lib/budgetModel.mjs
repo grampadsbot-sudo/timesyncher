@@ -196,6 +196,24 @@ export function placesForBudget(trip) {
       if (place) seen.set(String(place.id), place);
     }
   }
+  for (const res of trip?.reservations || []) {
+    const title = text(res?.title || res?.name);
+    if (!/^Flight option:/i.test(title)) continue;
+    const place =
+      (trip.places || []).find((p) => String(p.id) === String(res.place_id))
+      || (typeof res.place === 'object' ? res.place : null);
+    if (place) {
+      seen.set(String(place.id), place);
+      continue;
+    }
+    if (res.place_id != null) {
+      seen.set(String(res.place_id), {
+        id: res.place_id,
+        name: title,
+        category_name: 'Flight',
+      });
+    }
+  }
   return [...seen.values()];
 }
 

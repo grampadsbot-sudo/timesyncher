@@ -64,6 +64,11 @@ export async function bundleVacationClientIntoDist(outDir) {
       await cp(resolve(assetsDir, name), resolve(outDir, 'assets', name));
     }
   }
+
+  const iconsSrc = resolve(root, 'public', 'icons');
+  if (existsSync(iconsSrc)) {
+    await cp(iconsSrc, resolve(outDir, 'icons'), { recursive: true });
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

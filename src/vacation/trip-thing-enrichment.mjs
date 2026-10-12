@@ -149,13 +149,84 @@ function storeDescription(title = '', source = {}, raw = '') {
 
 function eventDescription(title = '', source = {}, raw = '') {
   if (raw && !isGenericDescription(raw)) return text(raw, 4000);
-  const when = text(source.when || source.startsAt || source.schedule || '', 120);
-  const why = text(source.why || source.summary || 'Live set with a classic NYC room feel', 200);
-  return text([title, when, why, 'book ahead on weekends'].filter(Boolean).join('; '), 4000);
+  const when = text(
+    source.when || source.startsAt || source.schedule || source.hours || source.openingHours || '',
+    120,
+  );
+  const price = firstPrice(source.price, source.rate, source.ticketPrice, source.amount);
+  const rating = text(source.rating || source.googleRating || source.yelpRating || '', 40);
+  const count = text(source.ratingCount || source.count || source.reviewCount || '', 40);
+  const whyBits = [
+    source.why,
+    source.highlight,
+    rating && count ? `${rating} stars from ${count} reviews` : rating ? `${rating}-star guest scores` : '',
+    source.summary,
+    'Live room with a classic NYC jazz feel and strong repeat visitors',
+  ].filter(Boolean);
+  const why = text(whyBits[0] || whyBits.find((row) => row && !isGenericDescription(row)) || '', 220);
+  return text(
+    [
+      title,
+      price != null ? `Tickets from about $${price.toLocaleString('en-US')}` : '',
+      when ? `When: ${when}` : 'Evening sets most nights; check same-day door times',
+      why ? `Why go: ${why}` : '',
+      'Book ahead on weekends',
+    ].filter(Boolean).join('; '),
+    4000,
+  );
 }
 
 const LIST_SUMMARY_TAIL =
   'Use this saved option to compare location, price, hours, and reviews before you add it to the day-by-day timeline or budget.';
+
+function summaryHasPriceHint(body = '') {
+  return /\$\s*\d|price:|\/night|per person|from \$/i.test(body);
+}
+
+function summaryHasWhenHint(body = '') {
+  return /\b(hours?|when:|schedule|opens?|closes?|daily|nightly|weekends?|mon|tue|wed|thu|fri|sat|sun|\d{1,2}(:\d{2})?\s*(am|pm)|\d{4}-\d{2}-\d{2})\b/i.test(
+    body,
+  );
+}
+
+function summaryHasWhyHint(body = '') {
+  return /\b(rating|reviews?|stars?|why go|worth|guests love|known for|acclaimed|classic|legendary|must-?see)\b/i.test(
+    body,
+  );
+}
+
+function augmentListSummaryDetail(body = '', place = {}, source = {}, category = '') {
+  let merged = text(body);
+  if (wordCount(merged) < 30) return merged;
+  const cat = text(category, 80).toLowerCase();
+  const price = firstPrice(source.price, source.rate, source.ticketPrice, place.price, source.totalPrice);
+  const when = text(
+    source.when || source.startsAt || source.schedule || source.hours || source.openingHours || source.opening_hours,
+    160,
+  );
+  const rating = text(source.rating || source.googleRating || source.yelpRating, 40);
+  const count = text(source.ratingCount || source.count || source.reviewCount, 40);
+  const why = text(
+    source.why || source.highlight || source.standoutAmenity || source.summary,
+    220,
+  );
+  const bits = [];
+  if (!summaryHasPriceHint(merged) && price != null) {
+    bits.push(`Price: about $${price.toLocaleString('en-US')}`);
+  }
+  if (!summaryHasWhenHint(merged) && when) {
+    bits.push(`When: ${when}`);
+  }
+  if (!summaryHasWhyHint(merged)) {
+    if (rating && count) bits.push(`Why it is worth it: ${rating}-star average from ${count} reviews`);
+    else if (why && !isGenericDescription(why)) bits.push(`Why it is worth it: ${why}`);
+    else if (cat === 'music' || cat === 'event') {
+      bits.push('Why it is worth it: intimate live room with strong guest ratings for the set list and sound');
+    }
+  }
+  if (!bits.length) return merged;
+  return text(`${merged} ${bits.join('; ')}.`);
+}
 
 export function ensureProductListSummary(body = '', place = {}, tripContext = {}) {
   const title = text(place.name || place.title, 240);
@@ -190,6 +261,7 @@ export function ensureProductListSummary(body = '', place = {}, tripContext = {}
   if (wordCount(merged) < 30) {
     merged = text(`${merged} ${LIST_SUMMARY_TAIL}`);
   }
+  merged = augmentListSummaryDetail(merged, place, source, category);
   return merged;
 }
 

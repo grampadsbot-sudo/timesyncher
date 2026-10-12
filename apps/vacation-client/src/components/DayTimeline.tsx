@@ -71,7 +71,7 @@ function TimelineIcon({
   }
   const [logoBroken, setLogoBroken] = useState(false);
   const showLogo = Boolean(logo);
-  const showEmoji = !showLogo || logoBroken;
+  const showEmoji = !showLogo || (logoBroken && !isFlight);
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
@@ -82,7 +82,9 @@ function TimelineIcon({
           alt=""
           loading="lazy"
           data-ts-timeline-logo="1"
-          onError={() => setLogoBroken(true)}
+          onError={() => {
+            if (!isFlight) setLogoBroken(true);
+          }}
         />
       ) : null}
       {showEmoji ? <span className="tsv-timeline-emoji">{resolved.icon}</span> : null}
