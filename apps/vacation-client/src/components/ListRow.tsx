@@ -162,19 +162,32 @@ export function ListRow({
 
   return (
     <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
-      <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
-        <LogoChip place={place} trip={trip} />
-        <span className="tsv-row-name" data-ts-list-row-name="1">
-          {name}
-        </span>
-        {price ? <span className="tsv-row-price">{price}</span> : null}
-        {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
-        {summary ? (
-          <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
-            {summary}
+      <div className="tsv-row-card">
+        <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
+          <LogoChip place={place} trip={trip} />
+          <span className="tsv-row-name" data-ts-list-row-name="1">
+            {name}
           </span>
-        ) : null}
-      </button>
+          {price ? <span className="tsv-row-price">{price}</span> : null}
+          {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
+          {summary ? (
+            <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
+              {summary}
+            </span>
+          ) : null}
+        </button>
+        <div className="tsv-row-meta">
+          <span className="tsv-row-days-pill">Days</span>
+          <label className="tsv-timeline-toggle">
+            <input
+              type="checkbox"
+              checked={timelineChecked}
+              onChange={(event) => onTimelineChange?.(place, event.target.checked)}
+            />
+            <span>Timeline</span>
+          </label>
+        </div>
+      </div>
     </li>
   );
 }

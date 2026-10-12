@@ -346,6 +346,11 @@ export function rowSummary(place, trip) {
   );
   if (wordCount(best) >= 30) return best;
 
+  const shortDescription = text(place.description || override.summary || source.summary);
+  if (shortDescription && wordCount(shortDescription) < 30) {
+    return shortDescription;
+  }
+
   const enriched = buildCategoryDescription({
     category: tabCategoryKey(place, trip),
     title: placeName(place),

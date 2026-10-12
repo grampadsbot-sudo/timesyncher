@@ -22,6 +22,8 @@ type Props = {
 
 type SortKey = 'name' | 'price';
 
+const LIST_SORT_TABS = new Set(['flights', 'hotels', 'cars']);
+
 export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
   const categoryPlaces = useMemo(() => placesForCategoryTab(trip, tab), [trip, tab]);
   const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
@@ -88,7 +90,9 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
         onSelect={setSelectedType}
         label="Type filters"
       />
-      <ListSortBar sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+      {LIST_SORT_TABS.has(tab) ? (
+        <ListSortBar sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+      ) : null}
       {rows.length === 0 ? (
         <p className="tsv-empty" data-ts-list-empty="1">
           {emptyCopy}
