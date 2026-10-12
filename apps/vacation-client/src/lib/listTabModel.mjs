@@ -53,6 +53,7 @@ export function parsePrice(value) {
 }
 
 export function tabCategoryKey(place, trip) {
+  if (/^Flight option:/i.test(placeName(place))) return 'flight';
   const override = overrideFor(trip, place);
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
@@ -83,6 +84,15 @@ export function placesForCategoryTab(trip, tab) {
 
 export function placeName(place) {
   return text(place.name || place.title || 'Untitled');
+}
+
+/** Budget + list labels match staging (strip catalog prefixes like "Flight option:"). */
+export function catalogRowDisplayName(place, trip) {
+  const raw = placeName(place);
+  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
+    return text(raw.replace(/^\s*Flight option:\s*/i, '')) || raw;
+  }
+  return raw;
 }
 
 function neighborhood(place, override, source) {
@@ -313,7 +323,12 @@ export function rowSummary(place, trip) {
       source.startsAt,
   );
   const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
-  const rich = candidates.find((body) => wordCount(body) >= 30);
+  const eventNeedsEnrich =
+    category === 'event'
+    && !/what it is:|genre:|when:|price:|perform/i.test(candidates.join(' '));
+  const rich = eventNeedsEnrich
+    ? null
+    : candidates.find((body) => wordCount(body) >= 30);
   let summary =
     rich ||
     text(
@@ -327,7 +342,7 @@ export function rowSummary(place, trip) {
     ) ||
     candidates[0] ||
     '';
-  if (wordCount(summary) < 30 || (category === 'event' && !/when:|worth|ticket|perform/i.test(summary))) {
+  if (wordCount(summary) < 30 || (category === 'event' && !/what it is:|genre:|when:|price:/i.test(summary))) {
     summary = text(
       buildCategoryDescription({
         category,

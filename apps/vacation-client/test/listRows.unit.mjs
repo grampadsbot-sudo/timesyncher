@@ -6,6 +6,7 @@ import {
   filterPlaces,
   flightPriceDisplay,
   flightSchedule,
+  catalogRowDisplayName,
   placesForCategoryTab,
   sortPlaces,
   tabCategoryKey,
@@ -32,6 +33,15 @@ const trip = applyLiveAppListRowFields({
 });
 
 assert.equal(tabCategoryKey(trip.places[2], trip), 'flight');
+const flightOption = {
+  id: 99,
+  name: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
+  category_name: 'Flight',
+};
+assert.equal(
+  catalogRowDisplayName(flightOption, { thingOverrides: { 'place:99': { category: 'flight' } } }),
+  'American LAS-JFK 2026-06-23 12:37-20:59',
+);
 assert.equal(tabCategoryKey(trip.places[3], trip), 'restaurant');
 assert.equal(tabCategoryKey(trip.places[4], trip), 'event');
 

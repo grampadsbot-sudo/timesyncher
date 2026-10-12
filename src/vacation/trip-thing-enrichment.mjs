@@ -152,20 +152,24 @@ function eventDescription(title = '', source = {}, raw = '') {
     160,
   );
   const performers = text(source.performers || source.artist || source.headliner || '', 160);
-  const why = text(
-    source.why || source.summary || source.description || raw,
-    240,
-  );
+  const genre = text(source.genre || source.musicGenre || source.categoryLabel || 'jazz and live music', 80);
+  const venueType = text(source.venueType || source.presentationType || 'concert hall and jazz venue', 80);
+  const why = text(source.why || source.summary || source.description || raw, 240);
   const price = firstPrice(source.price, source.ticketPrice, source.ticketsFrom);
   const bits = [
+    `What it is: ${venueType}; music genre: ${genre}.`,
     title,
-    when ? `When: ${when}` : 'When: confirm show time and doors before you buy tickets',
+    when
+      ? `When: ${when} (confirm doors and set times on the venue calendar).`
+      : 'When: check the posted show date and start time before you buy tickets.',
     performers
-      ? `Performers: ${performers}`
-      : 'Why it is worth it: focused live room with strong sightlines and a classic NYC crowd',
+      ? `Featured performers: ${performers}.`
+      : 'Why it is worth it: intimate live room with strong sightlines and a classic NYC crowd.',
     why && !isGenericDescription(why) ? why : '',
-    price != null ? `Tickets from about $${price.toLocaleString('en-US')}` : '',
-    'Book ahead on weekends; arrive early for will-call or bar seating',
+    price != null
+      ? `Price: tickets from about $${price.toLocaleString('en-US')} before fees.`
+      : 'Price: compare ticket tiers and fees on the venue site before booking.',
+    'Book ahead on weekends; arrive early for will-call or bar seating.',
   ].filter(Boolean);
   const body = text(bits.join(' '), 4000);
   if (wordCount(body) >= 30) return body;

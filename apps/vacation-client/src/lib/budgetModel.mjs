@@ -1,6 +1,6 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
-import { placeName, tabCategoryKey } from './listTabModel.mjs';
+import { catalogRowDisplayName, placeName, tabCategoryKey } from './listTabModel.mjs';
 import { resolvePlace } from './dayTimelineModel.mjs';
 
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
@@ -229,7 +229,7 @@ export function buildBudgetModel(trip) {
     return {
       place,
       bucket,
-      name: placeName(place),
+      name: catalogRowDisplayName(place, trip),
       ...pricing,
     };
   });
@@ -291,7 +291,7 @@ export function budgetCompletenessChecks(trip) {
     const id = String(row.place.id);
     const catalog = canonicalBudgetPlace(trip, id);
     if (!catalog) continue;
-    const expectedName = placeName(catalog);
+    const expectedName = catalogRowDisplayName(catalog, trip);
     const expectedBucket = budgetBucketForPlace(catalog, trip);
     const expectedPricing = budgetLineAmount(catalog, trip);
     push(`row_identity_${id}`, row.name === expectedName);

@@ -7,6 +7,7 @@ export function parsePrice(value: unknown): number | null;
 export function tabCategoryKey(place: SharedPlace, trip: SharedTripPayload): string;
 export function placesForCategoryTab(trip: SharedTripPayload, tab: string): SharedPlace[];
 export function placeName(place: SharedPlace): string;
+export function catalogRowDisplayName(place: SharedPlace, trip: SharedTripPayload): string;
 export function areaChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
 export function typeChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
 export function filterPlaces(
