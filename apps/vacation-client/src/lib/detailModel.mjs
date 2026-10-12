@@ -210,10 +210,16 @@ export function buildDetailViewModel(place, trip) {
   const name = placeName(place);
   const logoUrl = logoUrlForPlace(place, trip);
   const fallback = text(override.icon || place.category?.icon || place.category_icon || '📍') || '📍';
+  const source = text(
+    override.source ||
+      (typeof place.source === 'object' && place.source?.source) ||
+      place.source,
+  );
   return {
+    name,
     category,
     categoryLabel: detailCategoryLabel(category),
-    name,
+    source: source,
     logoUrl,
     logoFallback: fallback,
     summary: detailSummary(place, trip),

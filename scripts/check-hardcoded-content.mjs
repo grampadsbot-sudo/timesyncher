@@ -16,7 +16,7 @@ export const PROMPT_NAMES = ['Craig', 'Kimberly', 'Tyler', 'Lauren', 'Marcus'];
 const BASELINE_REL = 'scripts/hardcoded-content-baseline.json';
 
 const TEXT_EXT = new Set(['.mjs', '.js', '.html', '.json', '.jsonl', '.md', '.txt', '.css', '.yml', '.yaml', '.svg', '.csv', '.py']);
-const CONTENT_DIRS = ['src/vacation', 'routes'];
+const CONTENT_DIRS = ['src/vacation', 'routes', 'apps/vacation-client/src'];
 const CONTENT_FILES = [
   'scripts/vacation-app-reply-rules.mjs',
   'scripts/vacation-public-research-worker.mjs',

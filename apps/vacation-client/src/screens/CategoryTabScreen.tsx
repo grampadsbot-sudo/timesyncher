@@ -53,6 +53,11 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
     [filtered, trip, sortKey, sortDir],
   );
 
+  const firstHotelId = useMemo(() => {
+    if (tab !== 'hotels' || rows.length === 0) return null;
+    return String(rows[0].id);
+  }, [tab, rows]);
+
   const filterActive =
     (areaChips.length > 1 && selectedArea !== 'All areas') ||
     (typeChips.length > 1 && selectedType !== 'All types');
@@ -70,8 +75,6 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
       setSortDir(key === 'price' ? 'asc' : 'asc');
     }
   }
-
-  let firstHotelMarked = false;
 
   return (
     <section className="tsv-screen tsv-list-screen" data-shared-live-tab={tab}>
@@ -95,8 +98,7 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
       ) : (
         <ul className="tsv-list">
           {rows.map((place) => {
-            const isFirstHotel = tab === 'hotels' && !firstHotelMarked;
-            if (isFirstHotel) firstHotelMarked = true;
+            const isFirstHotel = firstHotelId !== null && String(place.id) === firstHotelId;
             return (
               <ListRow
                 key={String(place.id)}

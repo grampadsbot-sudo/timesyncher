@@ -16,11 +16,11 @@ export function TabEmojiIcon({ emoji, tabId, isActive }: Props) {
     const paint = () => paintTabEmoji(node, emoji);
     paint();
     const frame = requestAnimationFrame(paint);
-    const observer =
-      btn && typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => paintTabEmoji(node, emoji))
-        : null;
-    observer?.observe(btn);
+    let observer: ResizeObserver | null = null;
+    if (btn && typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => paintTabEmoji(node, emoji));
+      observer.observe(btn);
+    }
     return () => {
       cancelAnimationFrame(frame);
       observer?.disconnect();

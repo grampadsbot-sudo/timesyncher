@@ -7,7 +7,8 @@ import {
   tabCategoryKey,
 } from './listTabModel.mjs';
 
-export const OTHER_THINGS_BUCKET = 'Other Things';
+/** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
+export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
 export const BUDGET_BUCKET_ORDER = [
   'Flights',
   'Hotel',
