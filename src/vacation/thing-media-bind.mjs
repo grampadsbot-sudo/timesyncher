@@ -140,7 +140,7 @@ export function toPublicBinding(row = {}) {
     mimeType: mimeType || (video ? 'video/mp4' : storedMime || 'application/octet-stream'),
     originalName,
     fileSizeBytes: Number(row.fileSizeBytes || row.file_size_bytes || 0) || null,
-    publicUrl: row.publicUrl || row.public_url || row.url || '',
+    publicUrl: resolveDirectMediaPublicUrl(row),
     storageProvider: row.storageProvider || row.storage_provider || 'url',
     trekApplyStatus: row.trekApplyStatus || row.trek_apply_status || 'pending',
     createdAt: row.createdAt || row.created_at || null,
@@ -345,8 +345,29 @@ export function mediaKindFromMime(mime = '') {
   return String(mime || '').startsWith('video/') ? 'video' : 'photo';
 }
 
-export function neonRawMediaPath(shareToken, bindingId) {
-  return `/api/bind-thing-media?shareToken=${encodeURIComponent(text(shareToken, 180))}&id=${encodeURIComponent(text(bindingId, 80))}&raw=1`;
+const TELEGRAM_MEDIA_PROXY_RE = /\/api\/vacation-telegram-turn\b/i;
+const BIND_MEDIA_RAW_RE = /\/api\/bind-thing-media\b[^"'\s]*(?:\?|&)[^"'\s]*\braw=(?:1|true)\b/i;
+
+export function isFunctionMediaProxyUrl(url = '') {
+  const value = String(url || '').trim();
+  if (!value) return false;
+  return TELEGRAM_MEDIA_PROXY_RE.test(value) || BIND_MEDIA_RAW_RE.test(value);
+}
+
+export function resolveDirectMediaPublicUrl(row = {}) {
+  const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const fromMeta = text(metadata.blobUrl || metadata.blob_url || metadata.cdnUrl || '', 1200);
+  if (fromMeta && !isFunctionMediaProxyUrl(fromMeta)) return fromMeta;
+  const pathname = text(row.storagePathname || row.storage_pathname || '', 500);
+  if (pathname && /^https?:\/\//i.test(pathname) && !isFunctionMediaProxyUrl(pathname)) return pathname;
+  const candidate = text(row.publicUrl || row.public_url || row.url || '', 1200);
+  if (!candidate || isFunctionMediaProxyUrl(candidate)) {
+    const id = text(row.id || '', 80);
+    if (id) console.error(`skipped bound media ${id}: no direct blob/CDN URL on row`);
+    return '';
+  }
+  if (/^https?:\/\//i.test(candidate) || candidate.startsWith('/ts-thing-media/')) return candidate;
+  return candidate;
 }
 
 export function chooseMediaStorage({
@@ -354,24 +375,18 @@ export function chooseMediaStorage({
   sourceUrl = '',
   blobUrl = '',
   hasDatabase = false,
-  origin = '',
-  shareToken = '',
-  bindingId = '',
 } = {}) {
   if (blobUrl) {
     return { publicUrl: blobUrl, storageProvider: 'vercel-blob', storeBytes: false };
   }
-  if (hasDatabase && bytes && bytes.length) {
-    return {
-      publicUrl: `${origin || ''}${neonRawMediaPath(shareToken, bindingId)}`,
-      storageProvider: 'neon',
-      storeBytes: true,
-    };
-  }
-  if (sourceUrl) {
-    return { publicUrl: sourceUrl, storageProvider: 'url', storeBytes: false };
+  const cleanSource = text(sourceUrl, 1200);
+  if (cleanSource && !isFunctionMediaProxyUrl(cleanSource)) {
+    return { publicUrl: cleanSource, storageProvider: 'url', storeBytes: false };
   }
   if (bytes && bytes.length) {
+    if (hasDatabase) {
+      return { publicUrl: '', storageProvider: '', storeBytes: false, error: 'blob-required' };
+    }
     return { publicUrl: '', storageProvider: 'request', storeBytes: false, error: 'no-store' };
   }
   return { publicUrl: '', storageProvider: '', storeBytes: false, error: 'no-input' };

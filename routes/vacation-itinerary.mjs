@@ -85,6 +85,11 @@ import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citati
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
+import {
+  ensureVacationMediaSchema,
+  handleWebsiteMediaUpload,
+  serializeVacationMediaRow,
+} from '../src/vacation/vacation-media-uploads.mjs';
 
 let vacationAppDatabase = null;
 
@@ -1010,6 +1015,9 @@ async function handleVacationApp(req, res, db, url) {
         customerMessage: 'Accept the terms before you send a message.',
       }));
     }
+    if (body.action === 'upload_media') {
+      return await handleWebsiteMediaUpload(req, res, db, body, { sendJson });
+    }
     if (body.action === 'seat-join') {
       const seat = seatFromSession(session);
       if (!seat) return sendJson(res, 403, { ok: false, error: 'Only a collaborator seat records a join.' });
@@ -1156,40 +1164,10 @@ export default async function handler(req, res) {
       where trip_id = ${session.trip_id}
       order by created_at asc
     `;
-    await db`
-      create table if not exists vacation_media_uploads (
-        id uuid primary key default gen_random_uuid(),
-        customer_id uuid references customers(id) on delete set null,
-        trip_id uuid references trips(id) on delete cascade,
-        telegram_session_id uuid references telegram_sessions(id) on delete set null,
-        public_token text not null unique,
-        media_kind text not null,
-        attachment_scope text not null default 'trip',
-        thing_id uuid references trip_things(id) on delete set null,
-        day_date date,
-        caption text,
-        mime_type text,
-        original_name text,
-        file_size_bytes bigint,
-        width integer,
-        height integer,
-        duration_seconds integer,
-        telegram_file_id text,
-        telegram_file_unique_id text,
-        telegram_file_path text,
-        telegram_message_id text,
-        telegram_chat_id text,
-        telegram_user_id text,
-        storage_provider text not null default 'url',
-        status text not null default 'active',
-        metadata jsonb not null default '{}'::jsonb,
-        created_at timestamptz not null default now(),
-        updated_at timestamptz not null default now()
-      )
-    `;
+    await ensureVacationMediaSchema(db);
     const media = await db`
-      select id, public_token, media_kind, attachment_scope, day_date, caption, mime_type,
-        file_size_bytes, width, height, duration_seconds, storage_provider, created_at
+      select id, public_token, media_kind, attachment_scope, thing_id, day_date, caption, mime_type,
+        file_size_bytes, width, height, duration_seconds, storage_provider, metadata, created_at
       from vacation_media_uploads
       where trip_id = ${session.trip_id}
         and status = 'active'
@@ -1214,24 +1192,8 @@ export default async function handler(req, res) {
       things,
       budgets,
       media: media.flatMap((item) => {
-        if (item.storage_provider === 'telegram') {
-          console.error(`skipped vacation media ${item.id}: storage_provider=telegram is not fetched`);
-          return [];
-        }
-        return [{
-          id: item.id,
-          kind: item.media_kind,
-          attachmentScope: item.attachment_scope,
-          dayDate: item.day_date,
-          caption: item.caption,
-          mimeType: item.mime_type,
-          fileSizeBytes: item.file_size_bytes,
-          width: item.width,
-          height: item.height,
-          durationSeconds: item.duration_seconds,
-          createdAt: item.created_at,
-          storageProvider: item.storage_provider,
-        }];
+        const row = serializeVacationMediaRow(item);
+        return row ? [row] : [];
       }),
       generatedAt: new Date().toISOString(),
     });
