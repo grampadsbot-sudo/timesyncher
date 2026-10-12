@@ -9,11 +9,11 @@ export const NAMED_THING_LOGOS = {
   budget: 'https://www.budget.com/favicon.ico',
   national: 'https://www.nationalcar.com/favicon.ico',
   hyatt: 'https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico',
-  jetblue: 'https://www.jetblue.com/favicon.ico',
-  southwest: 'https://www.southwest.com/favicon.ico',
-  united: 'https://www.united.com/favicon.ico',
-  delta: 'https://www.delta.com/favicon.ico',
-  american: 'https://www.aa.com/favicon.ico',
+  jetblue: '/icons/airlines/jetblue.png',
+  southwest: '/icons/airlines/southwest.png',
+  united: '/icons/airlines/united.png',
+  delta: '/icons/airlines/delta.png',
+  american: '/icons/airlines/american.png',
 };
 
 const BRAND_LOGO_RULES = [
@@ -84,6 +84,56 @@ function brandLogoFromName(name = '') {
     if (pattern.test(label)) return url;
   }
   return '';
+}
+
+function venueHostFromName(name = '') {
+  const label = text(name).toLowerCase();
+  if (/\bblue note\b/.test(label)) return 'www.bluenote.net';
+  if (/\bvillage vanguard\b/.test(label)) return 'www.villagevanguard.com';
+  if (/\bsmoke\b.*\bjazz\b|\bjazz\b.*\bsmoke\b/.test(label)) return 'www.smokejazz.com';
+  if (/\bbirdland\b/.test(label)) return 'www.birdlandjazz.com';
+  if (/\bdizzy'?s\b/.test(label)) return 'www.jazz.org';
+  return '';
+}
+
+/** Prefer per-venue favicon/thumbnail when a shared logo URL would repeat across rows. */
+export function distinctLogoUrlForPlace(place = {}, override = {}, trip = null) {
+  const source = sourceRecord(place, override);
+  const thumb = thumbnailFromSource(source);
+  const page = httpUrl(pageUrlForLogo(place, override));
+  const hostHint = page?.hostname || venueHostFromName(place.name || place.title);
+  const favicon = hostHint
+    ? usableLogo(`https://${hostHint.replace(/^www\./, '')}/favicon.ico`)
+      || usableLogo(`${page?.origin || `https://${hostHint}`}/favicon.ico`)
+    : '';
+  const candidates = [
+    thumb,
+    favicon,
+    captureThingLogo(place, override),
+    brandLogoFromName(place.name || place.title),
+  ].filter(Boolean);
+  for (const logo of candidates) {
+    if (isPlaceholderLogoUrl(logo)) continue;
+    if (trip?.places?.length && logoUsedByOtherPlaces(logo, place, trip)) continue;
+    return logo;
+  }
+  return candidates.find((logo) => logo && !isPlaceholderLogoUrl(logo)) || '';
+}
+
+function logoUsedByOtherPlaces(logo, place, trip) {
+  if (!logo || !trip?.places?.length) return false;
+  const selfId = String(place.id);
+  return trip.places.some((row) => {
+    if (String(row.id) === selfId) return false;
+    const otherOverride = trip.thingOverrides?.[`place:${row.id}`] || {};
+    const candidates = [
+      text(otherOverride.logoUrl),
+      text(row.logoUrl),
+      text(row.captured_logo_url),
+      text(row.image_url),
+    ].filter(Boolean);
+    return candidates.includes(logo);
+  });
 }
 
 function pageUrlForLogo(thing = {}, override = {}) {
@@ -315,13 +365,8 @@ export function applyCapturedLogos(shared = {}) {
     if (owners.length <= 1) continue;
     for (const { place, overrideKey } of owners) {
       const override = { ...(next.thingOverrides[overrideKey] || {}) };
-      const named = brandLogoFromName(place.name || place.title);
-      const page = httpUrl(pageUrlForLogo(place, override));
-      const favicon = page ? `${page.origin}/favicon.ico` : '';
-      const replacement =
-        (named && named !== sharedUrl ? named : '')
-        || (usableLogo(favicon) && favicon !== sharedUrl ? favicon : '');
-      if (replacement) {
+      const replacement = distinctLogoUrlForPlace(place, override, next);
+      if (replacement && replacement !== sharedUrl) {
         override.logoUrl = replacement;
         place.logoUrl = replacement;
         next.thingOverrides[overrideKey] = override;

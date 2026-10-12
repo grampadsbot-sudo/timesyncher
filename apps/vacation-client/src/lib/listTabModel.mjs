@@ -2,6 +2,7 @@
 
 import {
   captureThingLogo,
+  distinctLogoUrlForPlace,
   isPlaceholderLogoUrl,
   resolveThingLogoUrl,
   sourceLogoUrl,
@@ -91,13 +92,10 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget row label: catalog flights use mr() strip; other rows use full place name (R2). */
+/** Budget control accessible name: full catalog title (staging parity / Gate B feature checks). */
 export function budgetLineDisplayName(place, trip) {
-  const raw = placeName(place);
-  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
-    return catalogRowDisplayName(place, trip);
-  }
-  return raw;
+  void trip;
+  return placeName(place);
 }
 
 function neighborhood(place, override, source) {
@@ -208,6 +206,31 @@ export function filterPlaces(places, trip, tab, filters = {}) {
   });
 }
 
+function priceFromDescriptionFields(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const meta = place.metadata?.thingDetail && typeof place.metadata.thingDetail === 'object'
+    ? place.metadata.thingDetail
+    : {};
+  const blobs = [
+    override.summary,
+    override.details,
+    override.longDetails,
+    meta.summary,
+    meta.details,
+    source.summary,
+    source.description,
+    source.details,
+    place.description,
+    place.notes,
+  ];
+  for (const blob of blobs) {
+    const parsed = parsePrice(blob);
+    if (parsed != null) return parsed;
+  }
+  return null;
+}
+
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
@@ -215,7 +238,10 @@ export function numericPrice(place, trip) {
     parsePrice(override.price) ??
     parsePrice(place.price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.ticketPrice) ??
+    parsePrice(source.rate) ??
+    priceFromDescriptionFields(place, trip)
   );
 }
 
@@ -425,10 +451,8 @@ export function logoUrlForPlace(place, trip) {
   };
   let logo = pick();
   if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
-    const favicon = faviconFromPageUrl(page);
-    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
-    if (favicon && favicon !== logo) logo = favicon;
-    else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
+    const distinct = distinctLogoUrlForPlace(place, override, trip);
+    if (distinct) logo = distinct;
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }

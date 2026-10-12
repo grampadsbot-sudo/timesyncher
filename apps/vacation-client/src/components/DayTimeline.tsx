@@ -71,19 +71,25 @@ function TimelineIcon({
   }
   const [logoBroken, setLogoBroken] = useState(false);
   const flightGlyph = resolved.icon || '✈️';
-  const showLogo = Boolean(logo) && !logoBroken;
-  const showEmoji = isFlight || !showLogo || logoBroken;
+  const flightLogo = isFlight ? logo || airlineLogoFromTitle(flightTitle) : logo;
+  const showLogo = Boolean(flightLogo) && (!logoBroken || isFlight);
+  const showEmoji = !isFlight && (!showLogo || logoBroken);
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-      {showLogo && logo ? (
+      {showLogo && flightLogo ? (
         <img
           className="tsv-timeline-logo tiny-logo"
-          src={logo}
+          src={flightLogo}
           alt=""
-          loading="lazy"
+          width={22}
+          height={22}
+          loading="eager"
+          decoding="sync"
           data-ts-timeline-logo="1"
-          onError={() => setLogoBroken(true)}
+          onError={() => {
+            if (!isFlight) setLogoBroken(true);
+          }}
         />
       ) : null}
       {showEmoji ? <span className="tsv-timeline-emoji">{flightGlyph}</span> : null}

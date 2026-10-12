@@ -8,11 +8,11 @@ const GENERIC_DESCRIPTION_RES = [
 ];
 
 const AIRLINE_LOGOS = [
-  [/\bjetblue\b/i, 'https://www.jetblue.com/favicon.ico'],
-  [/\bsouthwest\b/i, 'https://www.southwest.com/favicon.ico'],
-  [/\bunited\b/i, 'https://www.united.com/favicon.ico'],
-  [/\bdelta\b/i, 'https://www.delta.com/favicon.ico'],
-  [/\bamerican\b/i, 'https://www.aa.com/favicon.ico'],
+  [/\bjetblue\b/i, '/icons/airlines/jetblue.png'],
+  [/\bsouthwest\b/i, '/icons/airlines/southwest.png'],
+  [/\bunited\b/i, '/icons/airlines/united.png'],
+  [/\bdelta\b/i, '/icons/airlines/delta.png'],
+  [/\bamerican\b/i, '/icons/airlines/american.png'],
 ];
 
 function text(value, max = 4000) {
@@ -180,7 +180,7 @@ const LIST_SUMMARY_TAIL =
   'Use this saved option to compare location, price, hours, and reviews before you add it to the day-by-day timeline or budget.';
 
 function summaryHasPriceHint(body = '') {
-  return /\$\s*\d|price:|\/night|per person|from \$/i.test(body);
+  return /\$\s*\d|price:|\/night|per person|from \$|tickets?\s+(from\s+)?\$/i.test(body);
 }
 
 function summaryHasWhenHint(body = '') {
@@ -198,7 +198,14 @@ function summaryHasWhyHint(body = '') {
 function augmentListSummaryDetail(body = '', place = {}, source = {}, category = '') {
   let merged = text(body);
   const cat = text(category, 80).toLowerCase();
-  const price = firstPrice(source.price, source.rate, source.ticketPrice, place.price, source.totalPrice);
+  const price = firstPrice(
+    source.price,
+    source.rate,
+    source.ticketPrice,
+    place.price,
+    source.totalPrice,
+    parsePriceValue(merged),
+  );
   if (!summaryHasPriceHint(merged) && price != null) {
     merged = text(`${merged} Price: about $${price.toLocaleString('en-US')}.`);
   }

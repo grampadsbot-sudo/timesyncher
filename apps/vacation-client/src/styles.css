@@ -59,6 +59,15 @@ body {
   display: block;
 }
 
+.tsv-header-logo-chip {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+}
+
 .tsv-shared-header-sr {
   position: absolute;
   width: 1px;
