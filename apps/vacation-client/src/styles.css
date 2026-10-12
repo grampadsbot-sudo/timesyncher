@@ -993,6 +993,19 @@ button.tsv-timeline-link {
   margin-bottom: 6px;
 }
 
+.tsv-review-composite {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #5eead4;
+}
+
+.tsv-detail-review-totals {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
 .tsv-review-box footer {
   margin-top: 8px;
   font-size: 12px;

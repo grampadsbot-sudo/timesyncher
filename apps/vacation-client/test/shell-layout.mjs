@@ -53,10 +53,11 @@ export async function ensureBuiltClient() {
   execFileSync('npm', ['run', 'build'], { cwd: clientRoot, stdio: 'inherit' });
 }
 
-export async function startPreviewServer(tripPayload) {
+export async function startPreviewServer(tripPayload, options = {}) {
   const distDir = path.join(clientRoot, 'dist');
   const html = await readFile(path.join(distDir, 'vacation-app-next.html'), 'utf8');
   const tripJson = JSON.stringify(tripPayload);
+  const sharedSlug = options.slug || NYC_PR225_SLUG;
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url || '/', 'http://127.0.0.1');
@@ -66,7 +67,7 @@ export async function startPreviewServer(tripPayload) {
     }
     const sharedMatch = pathname.match(/^\/api\/shared\/([^/]+)\/?$/);
     if (sharedMatch && req.method === 'GET') {
-      if (decodeURIComponent(sharedMatch[1]) === NYC_PR225_SLUG) {
+      if (decodeURIComponent(sharedMatch[1]) === sharedSlug) {
         return send(res, 200, tripJson, 'application/json; charset=utf-8');
       }
       return send(res, 404, '{}', 'application/json; charset=utf-8');

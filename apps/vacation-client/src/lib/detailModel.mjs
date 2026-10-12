@@ -11,8 +11,14 @@ import {
   tabCategoryKey,
 } from './listTabModel.mjs';
 
+const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
+
 function text(value) {
   return String(value ?? '').trim();
+}
+
+function wordCount(value) {
+  return text(value, 20000).split(/\s+/).filter(Boolean).length;
 }
 
 function overrideFor(trip, place) {
@@ -36,9 +42,20 @@ const CATEGORY_LABELS = {
   bar: 'Bar',
   store: 'Store',
   event: 'Event',
+  activity: 'Activity',
+  attraction: 'Attraction',
+  transport: 'Transport',
 };
 
 export function detailCategoryKey(place, trip) {
+  const override = overrideFor(trip, place);
+  const raw = text(
+    override.category || place.category?.name || place.category_name || tabCategoryKey(place, trip),
+  ).toLowerCase();
+  if (raw === 'bar') return 'bar';
+  if (raw === 'transport') return 'transport';
+  if (raw.includes('attraction')) return 'attraction';
+  if (raw.includes('activity') || raw === 'event') return 'activity';
   return tabCategoryKey(place, trip);
 }
 
@@ -47,16 +64,106 @@ export function detailCategoryLabel(category) {
   return CATEGORY_LABELS[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : '');
 }
 
+function descriptionPassesDetailJudge(description, placeName = '') {
+  const body = text(description, 4000);
+  if (wordCount(body) < 30) return false;
+  const name = text(placeName, 160);
+  if (name) {
+    const tokens = name.split(/\s+/).filter((token) => token.length > 3);
+    if (tokens.some((token) => new RegExp(`\\b${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(body))) {
+      return true;
+    }
+  }
+  const genericOnly = /^(this (is a )?good option|highly rated|popular spot|worth a visit)\.?$/i.test(body);
+  return !genericOnly;
+}
+
+export function detailCoordinates(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const lat =
+    typeof place.lat === 'number'
+      ? place.lat
+      : Number(override.lat ?? source.lat ?? place.location?.lat);
+  const lng =
+    typeof place.lng === 'number'
+      ? place.lng
+      : Number(override.lng ?? source.lng ?? place.location?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
+function formatCoordinates(coords) {
+  return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+}
+
+function reviewIsComplete(override, index) {
+  const body = text(override[`review${index}`], 2000);
+  const source = text(override[`review${index}Source`], 40);
+  const rating = text(override[`review${index}Rating`], 20);
+  if (wordCount(body) < 25) return false;
+  if (!REVIEW_SOURCES.has(source)) return false;
+  return /\d/.test(rating);
+}
+
+function reviewCompositeLabel(override, index) {
+  const explicit = text(override[`review${index}CompositeLabel`], 200);
+  if (explicit) return explicit;
+  const flagged = override[`review${index}Composite`];
+  if (flagged !== true && !/^1|true|yes$/i.test(text(flagged))) return '';
+  const totals = detailReviewTotals(override);
+  const count = totals?.count;
+  const sources = totals?.sources?.length ? totals.sources.join('/') : text(override[`review${index}Source`]);
+  if (count) return `Composite of ${count} ${sources} reviews`.replace(/\s+/g, ' ').trim();
+  return sources ? `Composite of ${sources} reviews` : 'Composite of reviews';
+}
+
+export function detailReviewTotals(override) {
+  const raw = override.review_totals || override.reviewTotals;
+  if (!raw || typeof raw !== 'object') return null;
+  const count = Number(raw.count);
+  const average = Number(raw.average);
+  const histogram = Array.isArray(raw.histogram) ? raw.histogram.map((row) => Number(row)) : [];
+  const sources = Array.isArray(raw.sources)
+    ? raw.sources.map((row) => text(row)).filter(Boolean)
+    : text(raw.sources)
+        .split(/[,/|]+/)
+        .map((row) => text(row))
+        .filter(Boolean);
+  if (!Number.isFinite(count) || count < 1 || !Number.isFinite(average)) return null;
+  return { count, average, histogram, sources };
+}
+
+export function detailReviewTotalsLine(override) {
+  const totals = detailReviewTotals(override);
+  if (!totals) return '';
+  const sourceLabel = totals.sources.length ? totals.sources.join(', ') : 'public reviews';
+  return `Based on ${totals.count} reviews, avg ${totals.average.toFixed(1)} (${sourceLabel})`;
+}
+
+export function detailHeaderLabel(categoryLabel, source) {
+  const label = text(categoryLabel);
+  const src = text(source);
+  if (!label) return src;
+  if (!src || /^customer$/i.test(src)) return label;
+  const pretty = src.charAt(0).toUpperCase() + src.slice(1);
+  return `${label} · ${pretty}`;
+}
+
 export function detailSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
+  const name = placeName(place);
+  const candidate = text(
     override.summary ||
       override.longDetails ||
       override.details ||
       source.summary ||
       place.description,
   );
+  if (wordCount(candidate) < 30) return '';
+  if (!descriptionPassesDetailJudge(candidate, name)) return '';
+  return candidate;
 }
 
 export function detailItineraryNote(place, trip) {
@@ -104,9 +211,10 @@ export function detailRatingLines(override) {
   const source = text(override.source);
   if (thirdRating && !googleRating && !yelpRating) {
     const label = source && !/^customer$/i.test(source) ? source : 'Rating';
+    const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
     lines.push({
       id: 'third',
-      text: thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating,
+      text: label ? `${label}: ${value}` : value,
       label,
     });
   }
@@ -118,13 +226,14 @@ export function detailReviews(override, category) {
   if (cat === 'flight' || cat === 'car') return [];
   const reviews = [];
   for (let index = 1; index <= 4; index += 1) {
-    const body = text(override[`review${index}`]);
-    if (!body) continue;
+    if (!reviewIsComplete(override, index)) continue;
+    const compositeLabel = reviewCompositeLabel(override, index);
     reviews.push({
       index,
-      text: body,
+      text: text(override[`review${index}`]),
       rating: text(override[`review${index}Rating`]),
       source: text(override[`review${index}Source`]),
+      compositeLabel,
     });
   }
   return reviews;
@@ -192,14 +301,32 @@ function standardContactRows(place, override) {
   return rows;
 }
 
+function coordinateRow(place, trip) {
+  const coords = detailCoordinates(place, trip);
+  if (!coords) return null;
+  return { key: 'coordinates', label: 'Coordinates', value: formatCoordinates(coords) };
+}
+
 /** Rows to render in the detail popup for this place (only non-empty values). */
 export function detailFieldRows(place, trip) {
   const override = overrideFor(trip, place);
   const category = detailCategoryKey(place, trip);
   const cat = text(category).toLowerCase();
-  if (cat === 'flight') return flightDetailRows(place, trip, override);
-  if (cat === 'car') return carDetailRows(place, trip, override);
+  if (cat === 'flight') {
+    const rows = flightDetailRows(place, trip, override);
+    const coords = coordinateRow(place, trip);
+    if (coords) rows.push(coords);
+    return rows;
+  }
+  if (cat === 'car') {
+    const rows = carDetailRows(place, trip, override);
+    const coords = coordinateRow(place, trip);
+    if (coords) rows.push(coords);
+    return rows;
+  }
   const rows = standardContactRows(place, override);
+  const coords = coordinateRow(place, trip);
+  if (coords) rows.push(coords);
   if (cat === 'hotel') rows.push(...hotelExtraRows(override));
   return rows;
 }
@@ -209,25 +336,27 @@ export function buildDetailViewModel(place, trip) {
   const category = detailCategoryKey(place, trip);
   const name = placeName(place);
   const logoUrl = logoUrlForPlace(place, trip);
-  const fallback = text(override.icon || place.category?.icon || place.category_icon || '📍') || '📍';
   const source = text(
     override.source ||
       (typeof place.source === 'object' && place.source?.source) ||
       place.source,
   );
+  const categoryLabel = detailCategoryLabel(category);
   return {
     name,
     category,
-    categoryLabel: detailCategoryLabel(category),
+    categoryLabel,
+    headerLabel: detailHeaderLabel(categoryLabel, source),
     source: source,
     logoUrl,
-    logoFallback: fallback,
+    showLogo: Boolean(logoUrl),
     summary: detailSummary(place, trip),
     itineraryNote: detailItineraryNote(place, trip),
     happyHourDetails: detailHappyHour(override),
     priceLabel: detailPriceLabel(place, trip, category),
     ratingLines: detailRatingLines(override),
     reviews: detailReviews(override, category),
+    reviewTotalsLine: detailReviewTotalsLine(override),
     summarySourceUrls: detailSummarySourceUrls(override),
     fieldRows: detailFieldRows(place, trip),
   };
