@@ -31,7 +31,12 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
   const override = overrideFor(trip, place);
   const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
   return (
-    <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
+    <span
+      className="tsv-logo-chip"
+      data-ts-logo-chip="1"
+      data-has-logo={logo ? '1' : '0'}
+      aria-hidden="true"
+    >
       {logo ? (
         <img className="tsv-logo" src={logo} alt="" />
       ) : (
@@ -85,7 +90,11 @@ export function ListRow({
               {arrive}
             </span>
           ) : null}
-          {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+          {summary ? (
+            <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
+              {summary}
+            </span>
+          ) : null}
         </button>
       </li>
     );
@@ -111,7 +120,15 @@ export function ListRow({
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
             {price ? <span className="tsv-row-price">{price}</span> : null}
-            {summary ? <span className="tsv-row-desc tsv-row-car-desc">{summary}</span> : null}
+            {summary ? (
+              <span
+                className="tsv-row-desc tsv-row-car-desc"
+                data-list-summary="1"
+                data-summary-src="thing"
+              >
+                {summary}
+              </span>
+            ) : null}
           </button>
           <label className="tsv-timeline-toggle">
             <input
@@ -143,7 +160,11 @@ export function ListRow({
         </span>
         {price ? <span className="tsv-row-price">{price}</span> : null}
         {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
-        {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+        {summary ? (
+          <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
+            {summary}
+          </span>
+        ) : null}
       </button>
     </li>
   );

@@ -37,6 +37,20 @@ export function dayChipLabel(day) {
   return 'Day';
 }
 
+/** In-card heading must include “Day N” for Gate B itinerary checks. */
+export function dayItineraryHeading(day) {
+  const title = text(day?.title);
+  const number = day?.day_number;
+  if (number != null) {
+    if (title && !new RegExp(`\\bDay\\s+${number}\\b`, 'i').test(title)) {
+      return `Day ${number} · ${title}`;
+    }
+    if (title) return title;
+    return `Day ${number}`;
+  }
+  return title || 'Day';
+}
+
 export function parseDurationMinutes(raw) {
   const s = text(raw);
   if (!s) return null;

@@ -1,4 +1,5 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
+import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
@@ -12,6 +13,7 @@ type TimelineEntry = {
   summary?: string;
   itineraryNote?: string;
   conflictWith?: string;
+  category?: string;
 };
 
 type Props = {
@@ -34,17 +36,23 @@ function TimelineIcon({
       </span>
     );
   }
+
   const place = entry.place;
-  if (!place) return null;
-  const logo = logoUrlForPlace(place, trip);
-  const override = overrideFor(trip, place);
-  const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const stub = place || {
+    name: entry.title,
+    category_name: entry.category === 'flight' || /flight/i.test(entry.title) ? 'Flight' : 'Attraction',
+  };
+  const override = place ? overrideFor(trip, place) : {};
+  const resolved = timelineIcon(stub, override, entry.category === 'flight' ? 'flight' : '');
+  const logo =
+    (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
+
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {logo ? (
         <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
       ) : (
-        <span className="tsv-timeline-emoji">{fallback}</span>
+        <span className="tsv-timeline-emoji">{resolved.icon}</span>
       )}
     </span>
   );
@@ -60,7 +68,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
         const place = entry.place;
-        const category = place ? tabCategoryKey(place, trip) : '';
+        const category = place ? tabCategoryKey(place, trip) : entry.category || '';
         const showSummary =
           !isTravel &&
           entry.kind === 'thing' &&
@@ -83,39 +91,49 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 </span>
               ) : null}
             </div>
-            <div className="tsv-timeline-main">
-              {entry.conflictWith ? (
-                <div className="tsv-timeline-conflict" data-ts-conflict-label="1">
-                  <span className="tsv-timeline-conflict-bar" aria-hidden="true" />
-                  Conflict with {entry.conflictWith}
-                </div>
-              ) : null}
-              <div className="tsv-timeline-head">
-                <TimelineIcon entry={entry} trip={trip} />
-                {isTravel || !place ? (
-                  <span className="tsv-timeline-title" data-ts-timeline-title="1">
-                    {entry.title}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className="tsv-timeline-title tsv-timeline-link"
-                    data-ts-timeline-title="1"
-                    onClick={() => onOpen(place)}
-                  >
-                    {entry.title || placeName(place)}
-                  </button>
-                )}
+            <TimelineIcon entry={entry} trip={trip} />
+            {entry.conflictWith ? (
+              <div
+                className="tsv-timeline-conflict tsv-timeline-conflict--full"
+                data-ts-conflict-label="1"
+              >
+                <span className="tsv-timeline-conflict-bar" aria-hidden="true" />
+                Conflict with {entry.conflictWith}
               </div>
-              {showSummary ? (
-                <p className="tsv-timeline-summary" data-row-summary="1">
-                  {entry.summary}
-                </p>
-              ) : null}
-              {!isTravel && entry.itineraryNote ? (
-                <p className="tsv-timeline-note">{entry.itineraryNote}</p>
-              ) : null}
+            ) : null}
+            <div className="tsv-timeline-head">
+              {isTravel || !place ? (
+                <span className="tsv-timeline-title" data-ts-timeline-title="1">
+                  {entry.title}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="tsv-timeline-title tsv-timeline-link"
+                  data-ts-timeline-title="1"
+                  onClick={() => onOpen(place)}
+                >
+                  {entry.title || placeName(place)}
+                </button>
+              )}
             </div>
+            {showSummary || (!isTravel && entry.itineraryNote) ? (
+              <div className="tsv-timeline-details">
+                {showSummary ? (
+                  <p
+                    className="tsv-timeline-summary"
+                    data-row-summary="1"
+                    data-summary-stored="1"
+                    data-summary-src="thing"
+                  >
+                    {entry.summary}
+                  </p>
+                ) : null}
+                {!isTravel && entry.itineraryNote ? (
+                  <p className="tsv-timeline-note">{entry.itineraryNote}</p>
+                ) : null}
+              </div>
+            ) : null}
           </li>
         );
       })}

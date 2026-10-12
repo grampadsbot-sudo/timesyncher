@@ -7,6 +7,7 @@ import {
   emptyStateMessage,
   filterPlaces,
   placesForCategoryTab,
+  DEFAULT_SORT,
   sortPlaces,
   typeChipsForTab,
 } from '../lib/listTabModel.mjs';
@@ -26,8 +27,8 @@ export function CategoryTabScreen({ trip, tab, onOpen }: Props) {
   const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
   const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
 
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_SORT.key);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(DEFAULT_SORT.dir);
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');
   const [timeline, setTimeline] = useState<Record<string, boolean>>(() => {

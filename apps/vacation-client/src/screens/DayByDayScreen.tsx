@@ -4,6 +4,7 @@ import { DayTimeline } from '../components/DayTimeline';
 import {
   buildDayTimeline,
   dayChipLabel,
+  dayItineraryHeading,
   mapPlacesForTimeline,
   shiftDayIndex,
   sortedDays,
@@ -66,10 +67,10 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
       </header>
 
       <article className="tsv-day-card" data-ts-day-timeline="1">
-        <h3 className="tsv-day-title">
-          {dayChipLabel(activeDay)}
+        <h2 className="tsv-day-title" data-ts-day-heading="1">
+          {dayItineraryHeading(activeDay)}
           {activeDay.date ? <span className="tsv-muted"> · {activeDay.date}</span> : null}
-        </h3>
+        </h2>
         <DayTimeline trip={trip} entries={entries} onOpen={onOpen} />
         <div className="tsv-day-nav">
           <button

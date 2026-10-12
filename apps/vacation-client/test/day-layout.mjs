@@ -32,14 +32,20 @@ async function measureTimelineInk(page) {
   return page.evaluate((maxInk) => {
     const rows = [];
     for (const icon of document.querySelectorAll('[data-ts-timeline-icon="1"]')) {
-      const head = icon.closest('.tsv-timeline-head');
-      const title = head?.querySelector('[data-ts-timeline-title="1"]');
+      const row = icon.closest('[data-ts-timeline-row="1"], .tsv-timeline-row');
+      const title = row?.querySelector('[data-ts-timeline-title="1"]');
       if (!title) continue;
       const iconRect = icon.getBoundingClientRect();
       const titleRect = title.getBoundingClientRect();
       if (iconRect.height < 4 || titleRect.height < 4) continue;
       const iconMid = iconRect.top + iconRect.height / 2;
-      const titleMid = titleRect.top + titleRect.height / 2;
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const firstLine = range.getClientRects()[0];
+      range.detach();
+      const titleMid = firstLine
+        ? firstLine.top + firstLine.height / 2
+        : titleRect.top + Math.min(parseFloat(getComputedStyle(title).lineHeight) || 16, titleRect.height) / 2;
       const deltaPx = Math.abs(iconMid - titleMid);
       rows.push({
         title: (title.textContent || '').trim().slice(0, 48),

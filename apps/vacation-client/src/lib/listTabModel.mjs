@@ -1,8 +1,17 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
+
+function wordCount(value) {
+  return String(value ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
 
 function text(value) {
   return String(value ?? '').trim();
@@ -273,25 +282,25 @@ export function carSubtitle(place, trip) {
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    override.summary ||
-      override.longDetails ||
-      override.details ||
-      source.summary ||
-      place.description,
-  );
+  const candidates = [
+    override.longDetails,
+    override.details,
+    source.longDetails,
+    source.details,
+    override.summary,
+    source.summary,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean);
+  const rich = candidates.find((body) => wordCount(body) >= 30);
+  if (rich) return rich;
+  return candidates.reduce((best, body) => (wordCount(body) > wordCount(best) ? body : best), '');
 }
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
-  return text(
-    override.logoUrl ||
-      override.iconUrl ||
-      place.logoUrl ||
-      place.captured_logo_url ||
-      source.logoUrl,
-  );
+  return text(resolveThingLogoUrl(place, override));
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

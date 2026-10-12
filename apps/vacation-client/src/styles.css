@@ -596,11 +596,12 @@ body {
 
 .tsv-timeline-row {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 74px 22px minmax(0, 1fr);
+  gap: 8px;
   padding: 10px 0;
   border-top: 1px solid rgba(55, 65, 81, 0.65);
   min-width: 0;
+  align-items: start;
 }
 
 .tsv-timeline-row:first-child {
@@ -609,6 +610,8 @@ body {
 }
 
 .tsv-timeline-time-col {
+  grid-column: 1;
+  grid-row: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -617,24 +620,34 @@ body {
   font-weight: 700;
 }
 
-.tsv-timeline-main {
-  min-width: 0;
-}
-
-.tsv-timeline-head {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
-}
-
 .tsv-timeline-icon {
+  grid-column: 2;
+  grid-row: 1;
   width: 22px;
+  min-width: 22px;
   height: 22px;
   display: inline-grid;
   place-items: center;
   align-self: center;
+}
+
+.tsv-timeline-conflict--full {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.tsv-timeline-head {
+  grid-column: 3;
+  grid-row: 1;
+  display: block;
+  min-width: 0;
+  align-self: center;
+}
+
+.tsv-timeline-details {
+  grid-column: 3;
+  grid-row: 2;
+  min-width: 0;
 }
 
 .tsv-timeline-logo {
@@ -650,6 +663,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transform: translateY(-1px);
 }
 
 .tsv-timeline-title {
@@ -676,7 +690,7 @@ button.tsv-timeline-link {
 
 .tsv-timeline-summary,
 .tsv-timeline-note {
-  margin: 4px 0 0 30px;
+  margin: 4px 0 0;
   font-size: 12px;
   line-height: 1.4;
   color: #94a3b8;

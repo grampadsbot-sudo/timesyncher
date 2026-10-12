@@ -38,9 +38,18 @@ export function TripHeaderActions({ shareToken, permissions }: Props) {
   })();
   const printKeepsakeHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/keepsake.pdf`;
   const printStyleTwoHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`;
+  const orderKeepsakesHref = `/api/keepsake-order?slug=${encodeURIComponent(shareToken)}`;
 
   return (
     <div className="tsv-header-actions" data-print-menu-root="1">
+      <a
+        className="tsv-header-link"
+        href={orderKeepsakesHref}
+        aria-label="Order Keepsakes"
+        data-keepsake-order="1"
+      >
+        Order Keepsakes
+      </a>
       <a className="tsv-header-link" href={journeyHref}>
         Keepsakes
       </a>
