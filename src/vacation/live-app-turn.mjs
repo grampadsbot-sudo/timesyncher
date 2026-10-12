@@ -28,7 +28,7 @@ import { pushPlanAndStyleDraftErrors } from './reply-draft-fact-extra.mjs';
 import { payerLineFromDollars, priceAnswered } from './seat-price.mjs';
 import { produceFirstIntakeReply } from './first-intake-reply.mjs';
 import { buildLiveAppRewritePending } from './chat-place-search.mjs';
-import { inTurnPlaceLiveReplyHooks } from './in-turn-place-reply-fallback.mjs';
+import { inTurnPlaceLiveReplyHooks, placeSearchTieredReplyTimeoutMs } from './in-turn-place-reply-fallback.mjs';
 import {
   placeResultExtra,
   unsourcedAgainstInTurnResults,
@@ -1559,7 +1559,6 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
     inviteContactLiveReplySystemExtra(tripContext),
   ].filter(Boolean).join(' ');
   const placeHooks = inTurnPlaceLiveReplyHooks(tripContext, enforceInTurnPlaces, env);
-
   const shipInTurnDraft = (draft, extra = {}) => placeHooks.shipDraft(draft, inTurnProviderResults, extra);
   const modelArgs = (turnText, mode) => ({
     rules,
@@ -1746,26 +1745,11 @@ export async function produceLiveAppReply({ customerTurn, session, priorTurns, t
   }
   const shippedDraft = String(pending.draft || '').trim();
   if (shippedDraft && !enforceInTurnPlaces) {
-    return {
-      reply: shippedDraft,
-      rules,
-      jev,
-      model: finished.model,
-      quality: finished.quality,
-      log: finished.log,
-      reason: finished.reason,
-    };
+    return { reply: shippedDraft, rules, jev, model: finished.model, quality: finished.quality, log: finished.log, reason: finished.reason };
   }
   if (!String(interimReply.text || '').trim()) {
-    return {
-      reply: finished.reply,
-      rules,
-      jev,
-      model: finished.model,
-      quality: finished.quality,
-      log: finished.log,
-      reason: finished.reason,
-    };
+    const recovered = placeHooks.recoverRewriteDeadEnd({ finished, pending, inTurnProviderResults, failureBase: { rules, jev } });
+    return recovered || { reply: finished.reply, rules, jev, model: finished.model, quality: finished.quality, log: finished.log, reason: finished.reason };
   }
   return {
     reply: null,
@@ -1926,7 +1910,7 @@ export async function finishTierRewrite({ pending, env = process.env, interimPro
       postIntake: pending?.postIntake === true,
       env,
       forceModel: pending?.draftModel || '',
-      timeoutMs: 20000,
+      timeoutMs: pending?.enforceInTurnPlaces ? placeSearchTieredReplyTimeoutMs(env) : 20000,
       tripContext: pending?.tripContext || null,
       planTable: pending?.planTable || null,
       planLine: pending?.planLine || '',
