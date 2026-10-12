@@ -1,6 +1,20 @@
+import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
+
+type TimelineMedia = {
+  publicUrl?: string;
+  url?: string;
+  thumbnail_url?: string;
+  thumbnailUrl?: string;
+  mimeType?: string;
+  mime_type?: string;
+  mediaKind?: string;
+  kind?: string;
+  caption?: string;
+  originalName?: string;
+};
 
 type TimelineEntry = {
   id: string;
@@ -8,10 +22,13 @@ type TimelineEntry = {
   title: string;
   place?: SharedPlace;
   startLabel?: string;
+  endLabel?: string;
   durationMin?: number | null;
   summary?: string;
   itineraryNote?: string;
   conflictWith?: string;
+  fare?: string;
+  media?: TimelineMedia[];
 };
 
 type Props = {
@@ -19,6 +36,23 @@ type Props = {
   entries: TimelineEntry[];
   onOpen: (place: SharedPlace) => void;
 };
+
+function isVideoMedia(row: TimelineMedia) {
+  const mime = String(row.mimeType || row.mime_type || '').toLowerCase();
+  const kind = String(row.mediaKind || row.kind || '').toLowerCase();
+  const url = String(row.publicUrl || row.url || '');
+  return kind === 'video' || mime.startsWith('video/') || /\.mp4(\?|#|$)/i.test(url);
+}
+
+function mediaUrl(row: TimelineMedia) {
+  return String(row.publicUrl || row.url || row.thumbnail_url || row.thumbnailUrl || '').trim();
+}
+
+function summarySuppressedKind(kind: string) {
+  return /^(travel|flight|hotel-wake|hotel-event|hotel-sleep|hotel-checkout|car-pickup|car-dropoff)$/.test(
+    kind,
+  );
+}
 
 function TimelineIcon({
   entry,
@@ -34,11 +68,22 @@ function TimelineIcon({
       </span>
     );
   }
+  if (entry.kind === 'hotel-wake' || entry.kind === 'hotel-sleep') {
+    return (
+      <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
+        <span className="tsv-timeline-emoji">🛏️</span>
+      </span>
+    );
+  }
   const place = entry.place;
   if (!place) return null;
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
-  const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const category = tabCategoryKey(place, trip);
+  const fallback =
+    entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
+      ? '🧳'
+      : String(override.icon || place.category?.icon || place.category_icon || '📍');
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {logo ? (
@@ -50,7 +95,54 @@ function TimelineIcon({
   );
 }
 
+function TimelineMediaThumb({
+  media,
+  expanded,
+  onToggle,
+}: {
+  media: TimelineMedia[];
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const primary = media.find((row) => mediaUrl(row)) || media[0];
+  const url = primary ? mediaUrl(primary) : '';
+  if (!url) return null;
+  const video = isVideoMedia(primary);
+  return (
+    <div className="tsv-timeline-media-wrap">
+      <button
+        type="button"
+        className="tsv-timeline-media-thumb"
+        aria-expanded={expanded}
+        aria-label="Show photo"
+        onClick={onToggle}
+      >
+        {video ? (
+          <span className="tsv-timeline-media-play" aria-hidden="true">
+            ▶
+          </span>
+        ) : null}
+        <img src={url} alt="" loading="lazy" />
+      </button>
+      {expanded ? (
+        <div data-ts-pic-popup="1" className="tsv-timeline-pic-popup" role="dialog" aria-label="Photo">
+          <span className="tsv-timeline-pic-popup-tip" data-ts-pic-popup-tip="1" aria-hidden="true" />
+          <div className="tsv-timeline-pic-popup-body">
+            {video ? (
+              <video src={url} controls playsInline className="tsv-timeline-pic-popup-media" />
+            ) : (
+              <img src={url} alt="" className="tsv-timeline-pic-popup-media" />
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function DayTimeline({ trip, entries, onOpen }: Props) {
+  const [openMediaId, setOpenMediaId] = useState<string | null>(null);
+
   if (!entries.length) {
     return <p className="tsv-empty">No timeline-tagged things yet for this day.</p>;
   }
@@ -60,13 +152,12 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
         const place = entry.place;
-        const category = place ? tabCategoryKey(place, trip) : '';
         const showSummary =
           !isTravel &&
+          !summarySuppressedKind(entry.kind) &&
           entry.kind === 'thing' &&
-          category !== 'flight' &&
-          !/^Travel (to|from)\b/i.test(entry.title) &&
           entry.summary;
+        const media = entry.media?.length ? entry.media : [];
         return (
           <li
             key={entry.id}
@@ -76,6 +167,9 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
             <div className="tsv-timeline-time-col">
               {!isTravel && entry.startLabel ? (
                 <span className="tsv-timeline-time">{entry.startLabel}</span>
+              ) : null}
+              {entry.kind === 'flight' && entry.endLabel ? (
+                <span className="tsv-timeline-time tsv-timeline-time--arrive">{entry.endLabel}</span>
               ) : null}
               {entry.durationMin != null ? (
                 <span className="tsv-timeline-duration">
@@ -106,7 +200,21 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                     {entry.title || placeName(place)}
                   </button>
                 )}
+                {media.length ? (
+                  <TimelineMediaThumb
+                    media={media}
+                    expanded={openMediaId === entry.id}
+                    onToggle={() =>
+                      setOpenMediaId((current) => (current === entry.id ? null : entry.id))
+                    }
+                  />
+                ) : null}
               </div>
+              {entry.kind === 'flight' && entry.fare ? (
+                <p className="tsv-timeline-fare" data-ts-flight-price="1">
+                  {entry.fare}
+                </p>
+              ) : null}
               {showSummary ? (
                 <p className="tsv-timeline-summary" data-row-summary="1">
                   {entry.summary}

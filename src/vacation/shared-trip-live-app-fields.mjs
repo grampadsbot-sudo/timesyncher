@@ -1,4 +1,5 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -180,6 +181,22 @@ export function applyLiveAppListRowFields(shared = {}) {
         : { name: 'Flight', icon: '✈️' };
       override.category = 'flight';
       copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
+      const flightBlob = firstPresent(
+        source?.summary,
+        source?.description,
+        place.description,
+        place.notes,
+      );
+      let flightFields = flightFieldsFromBlob(flightBlob, '');
+      if (!flightFields.departureTime) {
+        flightFields = {
+          ...flightFields,
+          ...flightFieldsFromBlob(firstPresent(place.name, place.title), ''),
+        };
+      }
+      copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
+      copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
+      copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
     } else if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);

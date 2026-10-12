@@ -195,7 +195,7 @@ function extractHappyHourFromBlob(blob = '') {
   return fields;
 }
 
-function flightFieldsFromBlob(blob = '', title = '') {
+export function flightFieldsFromBlob(blob = '', title = '') {
   const fields = {};
   const airline = blob.match(/\b(JetBlue|Southwest|United|Delta|American|Alaska|Spirit|Frontier)\b/i);
   if (airline) fields.airline = airline[1];

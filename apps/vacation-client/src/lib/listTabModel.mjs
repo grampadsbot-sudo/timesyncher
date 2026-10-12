@@ -240,11 +240,7 @@ export function flightSchedule(place, trip) {
   const arrive = text(
     override.arrivalTime || override.arriveTime || source.arrivalTime || source.arriveTime,
   );
-  if (depart || arrive) return { depart, arrive };
-  const title = placeName(place);
-  const match = title.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)\s*[–-]\s*(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
-  if (match) return { depart: text(match[1]), arrive: text(match[2]) };
-  return { depart: '', arrive: '' };
+  return { depart, arrive };
 }
 
 export function hotelPriceDisplay(place, trip) {
