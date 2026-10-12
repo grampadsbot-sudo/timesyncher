@@ -147,10 +147,30 @@ function storeDescription(title = '', source = {}, raw = '') {
 }
 
 function eventDescription(title = '', source = {}, raw = '') {
-  if (raw && !isGenericDescription(raw)) return text(raw, 4000);
-  const when = text(source.when || source.startsAt || source.schedule || '', 120);
-  const why = text(source.why || source.summary || 'Live set with a classic NYC room feel', 200);
-  return text([title, when, why, 'book ahead on weekends'].filter(Boolean).join('; '), 4000);
+  const when = text(
+    source.when || source.startsAt || source.schedule || source.startTime || source.place_time,
+    160,
+  );
+  const performers = text(source.performers || source.artist || source.headliner || '', 160);
+  const why = text(
+    source.why || source.summary || source.description || raw,
+    240,
+  );
+  const price = firstPrice(source.price, source.ticketPrice, source.ticketsFrom);
+  const bits = [
+    title,
+    when ? `When: ${when}` : 'When: confirm show time and doors before you buy tickets',
+    performers
+      ? `Performers: ${performers}`
+      : 'Why it is worth it: focused live room with strong sightlines and a classic NYC crowd',
+    why && !isGenericDescription(why) ? why : '',
+    price != null ? `Tickets from about $${price.toLocaleString('en-US')}` : '',
+    'Book ahead on weekends; arrive early for will-call or bar seating',
+  ].filter(Boolean);
+  const body = text(bits.join(' '), 4000);
+  if (wordCount(body) >= 30) return body;
+  if (raw && !isGenericDescription(raw)) return text(`${raw} ${body}`.trim(), 4000);
+  return body;
 }
 
 export function buildCategoryDescription({

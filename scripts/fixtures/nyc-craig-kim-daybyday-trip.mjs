@@ -1,9 +1,11 @@
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
+import { mergeNamedCatalogEnrichment } from '../../src/vacation/merge-named-catalog-enrichment.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
+import ccabCatalog from './nyc_ccab_place_enrichment.json' with { type: 'json' };
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
@@ -241,7 +243,8 @@ function buildPayload() {
       };
     }
   }
-  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const enriched = mergeNamedCatalogEnrichment(withTimeline, ccabCatalog, categories);
+  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(enriched, bindings));
 }
 
 export function buildNycCraigKimDaybydayTrip() {

@@ -225,10 +225,20 @@ export function applyLiveAppListRowFields(shared = {}) {
       override.timeline = !!source.timeline;
     }
 
+    const scheduleHint = text(
+      override.startTime ||
+        override.place_time ||
+        place.place_time ||
+        source?.schedule ||
+        source?.startsAt,
+    );
+    const enrichedSource = scheduleHint
+      ? { ...(source || {}), when: scheduleHint, startTime: scheduleHint, place_time: scheduleHint }
+      : source || {};
     const enrichedDescription = buildCategoryDescription({
       category: override.category || category || place.category_name,
       title: place.name || place.title,
-      sourceRecord: source || {},
+      sourceRecord: enrichedSource,
       address: place.address,
       rawDescription: text(
         override.longDetails

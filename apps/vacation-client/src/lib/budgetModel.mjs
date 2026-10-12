@@ -1,11 +1,6 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
-import {
-  LIST_TAB_IDS,
-  placeName,
-  placesForCategoryTab,
-  tabCategoryKey,
-} from './listTabModel.mjs';
+import { placeName, tabCategoryKey } from './listTabModel.mjs';
 import { resolvePlace } from './dayTimelineModel.mjs';
 
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
@@ -180,20 +175,11 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-/** Every list-tab thing plus anything assigned to an itinerary day (R2). */
+/** Every catalog thing (same coverage as live TREK budget / shared-trip-api-budget). */
 export function placesForBudget(trip) {
   const seen = new Map();
-  for (const tab of LIST_TAB_IDS) {
-    for (const place of placesForCategoryTab(trip, tab)) {
-      rememberBudgetPlace(seen, place);
-    }
-  }
   for (const place of trip?.places || []) {
-    const override = overrideFor(trip, place);
-    const dayIds = override.dayIds;
-    if (Array.isArray(dayIds) && dayIds.length) {
-      rememberBudgetPlace(seen, place);
-    }
+    rememberBudgetPlace(seen, place);
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;

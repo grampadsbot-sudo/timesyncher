@@ -305,6 +305,14 @@ export function rowSummary(place, trip) {
   ]
     .map((value) => text(value))
     .filter(Boolean);
+  const scheduleHint = text(
+    override.startTime ||
+      override.place_time ||
+      place.place_time ||
+      source.schedule ||
+      source.startsAt,
+  );
+  const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
   const rich = candidates.find((body) => wordCount(body) >= 30);
   let summary =
     rich ||
@@ -312,21 +320,21 @@ export function rowSummary(place, trip) {
       buildCategoryDescription({
         category,
         title: placeName(place),
-        sourceRecord: source,
+        sourceRecord: enrichedSource,
         address: text(place.address),
         rawDescription: candidates[0] || '',
       }),
     ) ||
     candidates[0] ||
     '';
-  if (wordCount(summary) < 30) {
+  if (wordCount(summary) < 30 || (category === 'event' && !/when:|worth|ticket|perform/i.test(summary))) {
     summary = text(
       buildCategoryDescription({
         category,
         title: placeName(place),
-        sourceRecord: source,
+        sourceRecord: enrichedSource,
         address: text(place.address),
-        rawDescription: summary,
+        rawDescription: summary || candidates[0] || '',
       }),
     );
   }
