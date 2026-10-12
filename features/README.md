@@ -94,6 +94,7 @@ Live TREK button labels for the same panel (not extra options): **TimeSyncher Va
 | Flight fields | Takeoff, Connections, Layover. Ask the preferred airline before filtering | `flight-fields.md` |
 | Car fields | Rental company, Car type. Ten lowest rental prices, no brand limit | `car-fields.md` |
 | Search | House-radius Foursquare OS Places and OpenStreetMap. No Google Places. Brave only when the POI database is thin | `search-redesign.md` |
+| Vacation app search progress | Live type count rows (~1 Hz), then Building itinerary…, then website replaces progress | `search-progress-live-counts.md` |
 | Ratings | Google rating / Yelp rating / Other rating | `ratings-reviews.md` |
 | Reviews | 5-star review quote 1–3; print `★★★★★` | `ratings-reviews.md` |
 | Stories / media | Saved stories (Config); flag on Thing; print embeds `bound_media` / `/ts-thing-media`; Edit caption; Play video | `media-stories.md` |

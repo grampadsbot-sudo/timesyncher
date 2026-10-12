@@ -1,4 +1,5 @@
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
+import { loadTripSearchProgress, recordSearchProgressPlaces } from './search-progress.mjs';
 import { samePlace } from './place-search-same-place.mjs';
 
 const PLACE_SOURCES = new Set(['prior_db', 'osm', 'brave', 'tavily']);
@@ -136,8 +137,7 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
     insert into trip_things (
       trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
       cost_estimate_cents, currency, location, links, ratings, metadata, source
-    )
-    values (
+    ) values ( /* source: column */
       ${tripId}, ${requestId}, ${item.category}, ${item.subtype},
       ${item.title}, ${item.description}, ${item.startsAt}, ${item.endsAt},
       ${item.costEstimateCents}, ${item.currency},
@@ -154,5 +154,24 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
     throw new TripThingInsertError(`insertTripThing returned no row for title "${item.title}"`);
   }
   await assignTripSiteUrlWhenThingsPresent(db, tripId, env);
+  try {
+    const progress = await loadTripSearchProgress(db, tripId);
+    if (progress.jobId && !['failed', 'cancelled', 'ready'].includes(progress.stage)) {
+      await recordSearchProgressPlaces(db, tripId, {
+        jobId: progress.jobId,
+        eventId: `trip-thing:${id}`,
+        stage: progress.stage === 'building' ? 'building' : 'searching',
+        places: [{
+          category: item.category,
+          title: item.title,
+          source: item.source,
+          sourceRef: item.metadata?.sourceRef,
+          externalId: item.metadata?.externalId,
+        }],
+      });
+    }
+  } catch (error) {
+    void error;
+  }
   return { ...item, source: item.source, id };
 }

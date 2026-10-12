@@ -32,11 +32,20 @@ Composer in every state below = the text box with file-add, speak and send butto
 
 Every state is checked at 390x844 and 1280x800. "Nothing else" means: no logo pill, no Open navigation, no Settings, no extra buttons beyond the composer's send, file-add and speak and the full-screen control, no placeholder or internal copy, no second text box.
 
+## Craig, 2026-10-12 ~09:18 AM PT (direct Telegram; search progress approved)
+
+While search runs, show one compact line per discovered item type (restaurants, stores, flights, hotels, rentals/cars, and other supported types), refreshing actual unique numbers about once a second. Add a line when that type first has results; update numbers in place without rebuilding the whole panel. Then show **Building itinerary…** while the itinerary is assembled, and replace the temporary progress area with the trip website once its data and embedded view are ready. Keep the composer usable. Error or cancellation must not show a falsely completed website. Mirror: `features/search-progress-live-counts.md`.
+
+| State | Header | Top | Middle | Bottom |
+|---|---|---|---|---|
+| 1 vacation, search in progress (no site yet) | hidden (0px, not rendered) | live search count rows, then Building itinerary… in the website pane | splitter when the top pane is shown | text box with file-add, speak and send buttons |
+
 ## Open points (Product to confirm with Craig via CoS; do not guess)
 - Whether the conversation stays visible between the website and the text box when a site exists, and how the slider divides them.
 - Whether a brand mark is allowed anywhere ("nothing in the header" reads as no).
 
 ## Changelog
+- 2026-10-12 ~09:18 AM PT: live search progress counts, Building itinerary…, then website replaces progress (Craig via Telegram).
 - 2026-10-03 10:50 AM PT: send button restored (it had been removed by reading "nothing else" literally); common-sense rule added. The composer is the text box with file-add, speak and send buttons.
 - 2026-10-03 9:42 AM PT: header hidden (not just empty) under 2 vacations; full-screen control in the website area.
 - 2026-10-03 9:26 AM PT: captured from Craig (relayed by the TSV Eng lead).

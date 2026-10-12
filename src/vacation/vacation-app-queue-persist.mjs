@@ -1,3 +1,5 @@
+import { initTripSearchProgress } from './search-progress.mjs';
+
 export async function persistVacationAppCustomerTurn(db, {
   transcriptOwnerId,
   tripId,
@@ -64,6 +66,13 @@ export async function persistVacationAppCustomerTurn(db, {
     }})
     returning id
   `;
+  if (tripId && jobRows[0]?.id) {
+    try {
+      await initTripSearchProgress(db, tripId, jobRows[0].id);
+    } catch (error) {
+      void error;
+    }
+  }
   return {
     requestId,
     requestRow: requestRows[0],

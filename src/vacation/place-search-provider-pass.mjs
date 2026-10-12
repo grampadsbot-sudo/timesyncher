@@ -60,7 +60,12 @@ export async function runPlaceProviderPass({
   attachRelevance,
   readJson,
   fail,
+  onPartialPlaces = null,
 }) {
+  const emitPartial = async (partialPlaces, phase) => {
+    if (typeof onPartialPlaces !== 'function') return;
+    await onPartialPlaces(Array.isArray(partialPlaces) ? partialPlaces : [], { phase });
+  };
   const statedLodgingArea = String(relevanceContext?.statedLodgingArea || '').trim();
   const providerLog = [];
   const providerTimings = {
@@ -197,6 +202,7 @@ export async function runPlaceProviderPass({
       ...(prior.length ? {} : { reason: 'no_results' }),
       resultCount: prior.length,
     });
+    await emitPartial(prior, 'prior_db');
   } else {
     providerLog.push({
       provider: 'prior_db',
@@ -308,6 +314,7 @@ export async function runPlaceProviderPass({
 
   const dedupeMerges = [];
   const merged = mergePlaces([prior, osm, brave], { dedupeMerges });
+  await emitPartial(merged, 'providers_merged');
   const diagnosticsBase = (rejections = [], survivingPriorDbTitles = []) => {
     const providerErrors = providerErrorsFromProviderLog(providerLog);
     return buildPlaceSearchFailureDiagnostics({
@@ -405,6 +412,7 @@ export async function runPlaceProviderPass({
     );
   }
   places = namedFinalize.places;
+  await emitPartial(places, 'relevance');
   const liveMerged = merged.filter((place) => place.source !== 'prior_db');
   const liveCount = places.filter((place) => place.source !== 'prior_db').length;
   if (!liveCount) {
