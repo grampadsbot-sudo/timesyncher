@@ -55,7 +55,7 @@ export default function App() {
   if (tab === 'day-by-day') {
     body = <DayByDayScreen trip={trip} onOpen={setDetail} />;
   } else if (tab === 'budget') {
-    body = <BudgetScreen trip={trip} />;
+    body = <BudgetScreen trip={trip} onOpen={setDetail} />;
   } else {
     body = <CategoryTabScreen trip={trip} tab={tab} onOpen={setDetail} />;
   }
@@ -65,6 +65,7 @@ export default function App() {
       <TripShell
         title={title}
         shareToken={token}
+        trip={trip}
         permissions={trip.permissions}
         activeTab={tab}
         onTabChange={setTab}

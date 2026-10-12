@@ -231,7 +231,11 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    let logoUrl = captureThingLogo(place, override);
+    if (logoUrl && isPlaceholderLogoUrl(logoUrl)) logoUrl = '';
+    if (text(override.logoUrl) && isPlaceholderLogoUrl(override.logoUrl)) {
+      delete override.logoUrl;
+    }
     if (logoUrl) {
       override.logoUrl = logoUrl;
     } else if (!text(override.logoUrl)) {

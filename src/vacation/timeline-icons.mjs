@@ -1,4 +1,5 @@
 import { transportKind } from './intake-transport-kind.mjs';
+import { isPlaceholderLogoUrl } from './thing-logo-capture.mjs';
 
 const CATEGORY_ICONS = {
   flight: '✈️',
@@ -169,7 +170,7 @@ export function thingLogoUrl(thing = {}, override = {}) {
     thing.image_url,
     thing.imageUrl,
   ].map(text).filter(Boolean);
-  return candidates.find((url) => !isVideoMediaUrl(url)) || '';
+  return candidates.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url)) || '';
 }
 
 export function timelineIcon(thing = {}, override = {}, rowType = '') {

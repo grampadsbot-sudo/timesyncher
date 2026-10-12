@@ -1,6 +1,11 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import {
+  isPlaceholderLogoUrl,
+  resolveThingLogoUrl,
+  sourceLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
+import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -323,13 +328,32 @@ export function rowSummary(place, trip) {
   );
   if (rr && wordCount(rr) >= 30) return rr;
   if (rr) return rr;
-  return longCandidates.reduce((best, body) => (wordCount(body) > wordCount(best) ? body : best), '');
+  const best = longCandidates.reduce(
+    (acc, body) => (wordCount(body) > wordCount(acc) ? body : acc),
+    '',
+  );
+  if (wordCount(best) >= 30) return best;
+
+  const enriched = buildCategoryDescription({
+    category: tabCategoryKey(place, trip),
+    title: placeName(place),
+    sourceRecord: source,
+    address: text(place.address),
+    rawDescription: text(
+      override.summary || source.summary || place.description || best || rr,
+    ),
+  });
+  if (wordCount(enriched) >= 30) return enriched;
+  return enriched || best || rr;
 }
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  const resolved = text(resolveThingLogoUrl(place, override));
+  let resolved = text(resolveThingLogoUrl(place, override));
+  if (resolved && isPlaceholderLogoUrl(resolved)) resolved = '';
   if (resolved) return resolved;
+  const fromSource = text(sourceLogoUrl(place, override));
+  if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
   const source = sourceRecord(place, override);
   const page = text(
     source.url || source.website || source.sourceUrl || place.url || place.website,

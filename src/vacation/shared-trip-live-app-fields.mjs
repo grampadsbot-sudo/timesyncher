@@ -1,8 +1,13 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { buildCategoryDescription } from './trip-thing-enrichment.mjs';
 
 function text(value) {
   return String(value || '').trim();
+}
+
+function wordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
 }
 
 function sourceObject(...rows) {
@@ -187,6 +192,25 @@ export function applyLiveAppListRowFields(shared = {}) {
       source?.itineraryNote,
       source?.itinerary_note,
     );
+
+    const enrichedDescription = buildCategoryDescription({
+      category: override.category || category || place.category_name,
+      title: place.name || place.title,
+      sourceRecord: source || {},
+      address: place.address,
+      rawDescription: text(
+        override.longDetails
+        || override.summary
+        || source?.summary
+        || source?.description
+        || place.description,
+      ),
+    });
+    if (wordCount(enrichedDescription) >= 30) {
+      if (wordCount(override.longDetails) < 30) override.longDetails = enrichedDescription;
+      if (wordCount(override.summary) < 30) override.summary = enrichedDescription;
+      if (wordCount(override.details) < 30) override.details = enrichedDescription;
+    }
 
     if (category === 'flight') {
       place.category_name = place.category_name || 'Flight';

@@ -32,7 +32,7 @@ body {
 
 .tsv-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   padding: 10px 12px;
@@ -40,12 +40,42 @@ body {
   min-width: 0;
 }
 
+.tsv-header-lead {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.tsv-header-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tsv-header-brand .ts-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+
+.tsv-header-day-count {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .tsv-title {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   min-width: 0;
-  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1079,9 +1109,17 @@ button.tsv-timeline-link {
 }
 
 .tsv-budget-line-name {
+  font: inherit;
   font-weight: 700;
-  color: #2563eb;
+  color: #64748b;
   text-decoration: underline;
+  text-decoration-color: #cbd5e1;
+  text-underline-offset: 3px;
+  text-align: left;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

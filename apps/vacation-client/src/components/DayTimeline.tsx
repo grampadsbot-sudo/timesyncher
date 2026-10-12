@@ -40,7 +40,8 @@ function TimelineIcon({
   const place = entry.place;
   const stub = place || {
     name: entry.title,
-    category_name: entry.category === 'flight' || /flight/i.test(entry.title) ? 'Flight' : 'Attraction',
+    category_name:
+      entry.category === 'flight' || /flight/i.test(entry.title) ? 'Flight' : 'Attraction',
   };
   const override = place ? overrideFor(trip, place) : {};
   const resolved = timelineIcon(stub, override, entry.category === 'flight' ? 'flight' : '');
@@ -50,7 +51,7 @@ function TimelineIcon({
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+        <img className="tsv-timeline-logo tiny-logo" src={logo} alt="" loading="lazy" />
       ) : (
         <span className="tsv-timeline-emoji">{resolved.icon}</span>
       )}

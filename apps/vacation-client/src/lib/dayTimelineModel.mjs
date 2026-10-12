@@ -286,7 +286,7 @@ export function buildDayTimeline(trip, day) {
     if (category === 'car') continue;
     const schedule = scheduleForDay(place, trip, dayId);
     entries.push({
-      kind: 'thing',
+      kind: category === 'flight' ? 'flight' : 'thing',
       id: `place-${place.id}`,
       place,
       title: placeName(place),

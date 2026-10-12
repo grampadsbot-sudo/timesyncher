@@ -15,7 +15,7 @@ export function BudgetLogoChip({ place, trip, fallback = '📍' }: Props) {
   return (
     <span className="tsv-logo-chip tsv-budget-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
       {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+        <img className="tsv-logo tiny-logo" src={logo} alt="" />
       ) : (
         <span className="tsv-logo-fallback">{glyph}</span>
       )}

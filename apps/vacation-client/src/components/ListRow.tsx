@@ -38,7 +38,7 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
       aria-hidden="true"
     >
       {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+        <img className="tsv-logo tiny-logo" src={logo} alt="" />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
