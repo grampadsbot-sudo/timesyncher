@@ -81,12 +81,7 @@ function TimelineIcon({
   if (isFlight) {
     const src = flightLogo || airlineLogoFromTitle(flightTitle);
     return (
-      <div
-        className="tsv-timeline-icon"
-        data-ts-timeline-icon="1"
-        data-ts-logo-chip="1"
-        aria-hidden="true"
-      >
+      <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
         {src ? (
           <img
             className="ts-logo tiny-logo tsv-timeline-logo"
@@ -102,7 +97,7 @@ function TimelineIcon({
         ) : (
           <span className="tsv-timeline-emoji">{flightGlyph}</span>
         )}
-      </div>
+      </span>
     );
   }
 

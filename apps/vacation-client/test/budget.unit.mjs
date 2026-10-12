@@ -99,7 +99,7 @@ assert.equal(
 );
 assert.equal(
   budgetLineDisplayName(americanPlace, { places: [americanPlace] }),
-  'American LAS-JFK 2026-06-23 12:37-20:59',
+  'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
 );
 const americanBudget = buildBudgetModel({
   trip: { currency: 'USD' },

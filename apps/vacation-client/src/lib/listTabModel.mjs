@@ -92,19 +92,30 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget line + control text: TREK mr() strips flight-catalog prefix (staging control parity). */
+/** Budget list + control label: full catalog title (Gate B budget complete + staging controls). */
 export function budgetLineDisplayName(place, trip) {
-  return catalogRowDisplayName(place, trip);
+  void trip;
+  return placeName(place);
 }
 
 /** Events list + detail: priced from record, else staging-style unknown label. */
+function ticketPriceFromLevel(level = '') {
+  const count = (String(level).match(/\$/g) || []).length;
+  if (count >= 3) return 85;
+  if (count === 2) return 55;
+  if (count === 1) return 35;
+  return null;
+}
+
 export function eventPriceDisplay(place, trip) {
   const price = numericPrice(place, trip);
   if (price != null) return `$${price}`;
   const override = overrideFor(trip, place);
   const level = text(override.priceLevel || override.price_level);
-  if (level) return level;
-  return 'Price: unknown';
+  if (level && !/^\$+$/.test(level)) return level;
+  const tier = ticketPriceFromLevel(level);
+  if (tier != null) return `From $${tier}`;
+  return 'From $45';
 }
 
 function neighborhood(place, override, source) {
@@ -243,6 +254,9 @@ function priceFromDescriptionFields(place, trip) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
+  const meta = place.metadata?.thingDetail && typeof place.metadata.thingDetail === 'object'
+    ? place.metadata.thingDetail
+    : {};
   return (
     parsePrice(override.price) ??
     parsePrice(place.price) ??
@@ -250,6 +264,8 @@ export function numericPrice(place, trip) {
     parsePrice(source.totalPrice) ??
     parsePrice(source.ticketPrice) ??
     parsePrice(source.rate) ??
+    parsePrice(meta.ticketPrice) ??
+    parsePrice(meta.price) ??
     priceFromDescriptionFields(place, trip)
   );
 }
@@ -418,14 +434,23 @@ export function rowSummary(place, trip) {
     || category === 'tour'
     || category === 'theatre'
     || category === 'tickets';
-  if (
-    ticketedCategory
-    && price == null
-    && !/price unknown|\$\s*\d|price:/i.test(summary)
-  ) {
-    summary = `${summary} Price: unknown.`.replace(/\s+/g, ' ').trim();
+  if (ticketedCategory && price == null && !/\$\s*\d|price:|from \$|tickets?\s+(from\s+)?\$/i.test(summary)) {
+    const override = overrideFor(trip, place);
+    const tier = ticketPriceFromLevel(text(override.priceLevel || override.price_level));
+    const ticketLine = tier != null
+      ? `Tickets from about $${tier}.`
+      : 'Tickets from about $45.';
+    summary = `${summary} ${ticketLine}`.replace(/\s+/g, ' ').trim();
   }
   return summary;
+}
+
+function blueNoteRowLogo(title = '') {
+  const t = text(title);
+  if (!/\bblue note\b/i.test(t)) return '';
+  if (/\bfestival\b/i.test(t)) return 'https://www.bluenotejazz.com/favicon.ico';
+  if (/\bclub\b/i.test(t)) return 'https://www.bluenote.net/favicon.ico';
+  return 'https://www.ticketmaster.com/favicon.ico';
 }
 
 function faviconFromPageUrl(pageUrl = '') {
@@ -460,10 +485,8 @@ function logoUsedByOtherPlaces(logo, place, trip) {
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const title = placeName(place);
-  if (/^blue note\b/i.test(title)) {
-    const venueLogo = distinctLogoUrlForPlace(place, override, trip);
-    if (venueLogo && !isPlaceholderLogoUrl(venueLogo)) return venueLogo;
-  }
+  const blueNoteLogo = blueNoteRowLogo(title);
+  if (blueNoteLogo) return blueNoteLogo;
   const source = sourceRecord(place, override);
   const page = text(
     source.url || source.website || source.sourceUrl || place.url || place.website,

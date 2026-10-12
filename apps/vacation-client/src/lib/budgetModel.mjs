@@ -198,6 +198,22 @@ export function placesForBudget(trip) {
   for (const place of placesFromItineraryTimeline(trip)) {
     add(place);
   }
+  for (const day of sortedDays(trip)) {
+    for (const entry of buildDayTimeline(trip, day)) {
+      if (entry.kind === 'travel' || entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') continue;
+      const title = text(entry.title);
+      if (!/^Flight option:/i.test(title)) continue;
+      if (entry.place) {
+        add(entry.place);
+        continue;
+      }
+      add({
+        id: entry.id || title,
+        name: title,
+        category_name: 'Flight',
+      });
+    }
+  }
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
     const dayIds = override.dayIds;
