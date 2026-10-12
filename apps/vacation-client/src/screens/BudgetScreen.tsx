@@ -66,7 +66,9 @@ export function BudgetScreen({ trip }: Props) {
             currency={model.currency}
             ariaLabel="Trip total target"
           />
-          <span className="tsv-budget-timeline-pill">{formatUsd(model.tripPlanned, model.currency)} timeline</span>
+          <span className="tsv-budget-timeline-pill">
+            {formatUsd(model.tripTimelinePlanned, model.currency)} timeline
+          </span>
           {model.tripVariance ? (
             <span className="tsv-budget-variance-pill">{model.tripVariance}</span>
           ) : null}
@@ -90,7 +92,7 @@ export function BudgetScreen({ trip }: Props) {
                 ariaLabel={`${bucket.displayLabel} target`}
               />
               <span className="tsv-budget-timeline-pill">
-                {formatUsd(bucket.planned, model.currency)} timeline
+                {formatUsd(bucket.timelinePlanned, model.currency)} timeline
               </span>
               {bucket.variance ? (
                 <span className="tsv-budget-variance-pill">{bucket.variance}</span>

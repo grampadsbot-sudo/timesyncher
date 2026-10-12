@@ -15,7 +15,7 @@ function overrideFor(trip, place) {
   return trip?.thingOverrides?.[`place:${place.id}`] || {};
 }
 
-function resolvePlace(row, trip) {
+export function resolvePlace(row, trip) {
   const id = row?.place_id ?? row?.place?.id;
   const catalog = (trip.places || []).find((p) => String(p.id) === String(id));
   if (row?.place && typeof row.place === 'object') {

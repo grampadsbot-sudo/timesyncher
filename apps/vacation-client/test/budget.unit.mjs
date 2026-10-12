@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   bucketTargetAmount,
+  budgetBucketForPlace,
   budgetLineAmount,
   budgetCompletenessScore,
   buildBudgetModel,
@@ -83,5 +84,24 @@ assert.equal(numericPrice(budgetPlaces[1], unionTrip), 50);
 const score = budgetCompletenessScore(unionTrip);
 assert.equal(score.pass, score.total);
 assert.ok(score.total >= 4);
+
+const partialAssignmentTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
+  places: [{ id: 1, name: 'Known hotel', category_name: 'Hotel', price: 100 }],
+  assignments: { 50: [{ place_id: 1, place: { id: 1 } }] },
+};
+const partialRow = buildBudgetModel(partialAssignmentTrip).rows.find(
+  (row) => String(row.place.id) === '1',
+);
+assert.ok(partialRow, 'partial assignment place appears on budget');
+assert.equal(partialRow.name, 'Known hotel');
+assert.equal(partialRow.bucket, 'Hotel');
+assert.equal(partialRow.amount, 700);
+assert.equal(partialRow.hasPrice, true);
+assert.equal(budgetBucketForPlace(placesForBudget(partialAssignmentTrip)[0], partialAssignmentTrip), 'Hotel');
+
+const partialScore = budgetCompletenessScore(partialAssignmentTrip);
+assert.equal(partialScore.pass, partialScore.total);
 
 console.log('vacation-client budget unit checks passed');
