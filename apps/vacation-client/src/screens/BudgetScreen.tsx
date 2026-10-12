@@ -4,7 +4,7 @@ import {
   formatUsd,
   bucketIcon,
 } from '../lib/budgetModel.mjs';
-import { catalogRowDisplayName } from '../lib/listTabModel.mjs';
+import { budgetLineDisplayName } from '../lib/listTabModel.mjs';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
@@ -105,6 +105,7 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                   className="tsv-budget-line"
                   data-ts-budget-row="1"
                   data-place-id={String(row.place.id)}
+                  data-place-name={row.name}
                 >
                   <BudgetLogoChip
                     place={row.place}
@@ -118,7 +119,7 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                       aria-label={row.name}
                       onClick={() => onOpen(row.place)}
                     >
-                      {catalogRowDisplayName(row.place, trip)}
+                      {budgetLineDisplayName(row.place, trip)}
                     </button>
                     <span className="tsv-budget-line-amount">
                       {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}

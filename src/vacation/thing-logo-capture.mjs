@@ -315,9 +315,12 @@ export function applyCapturedLogos(shared = {}) {
     if (owners.length <= 1) continue;
     for (const { place, overrideKey } of owners) {
       const override = { ...(next.thingOverrides[overrideKey] || {}) };
+      const named = brandLogoFromName(place.name || place.title);
       const page = httpUrl(pageUrlForLogo(place, override));
       const favicon = page ? `${page.origin}/favicon.ico` : '';
-      const replacement = usableLogo(favicon) && favicon !== sharedUrl ? favicon : '';
+      const replacement =
+        (named && named !== sharedUrl ? named : '')
+        || (usableLogo(favicon) && favicon !== sharedUrl ? favicon : '');
       if (replacement) {
         override.logoUrl = replacement;
         place.logoUrl = replacement;

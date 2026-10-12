@@ -10,6 +10,7 @@ import {
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { ensureProductListSummary } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 function text(value) {
   return String(value ?? '').trim();
@@ -50,13 +51,15 @@ export function detailCategoryLabel(category) {
 export function detailSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
+  const category = tabCategoryKey(place, trip);
+  const raw = text(
     override.summary ||
       override.longDetails ||
       override.details ||
       source.summary ||
       place.description,
   );
+  return ensureProductListSummary(raw, { ...place, sourceRecord: source }, { category });
 }
 
 export function detailItineraryNote(place, trip) {

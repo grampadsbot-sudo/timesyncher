@@ -1,5 +1,3 @@
-import { brandIconUrl } from '../lib/brandIconUrl';
-
 /** Visible TREK header lockup (Gate B centred-logos / header logo structure checks). */
 export function SharedBrandHeader() {
   return (
@@ -11,10 +9,11 @@ export function SharedBrandHeader() {
       <span>TimeSyncher</span>
       <img
         className="ts-logo tiny-logo"
-        src={brandIconUrl}
+        src="icons/timesyncher-icon-black-transparent.png"
         alt="TimeSyncher"
         width={22}
         height={22}
+        data-ts-header-logo="1"
       />
       <span>Vacation</span>
     </div>

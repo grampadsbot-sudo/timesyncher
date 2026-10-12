@@ -1,5 +1,3 @@
-import { brandIconUrl } from '../lib/brandIconUrl';
-
 /** Matches served TREK shared-trip footer chrome (NYC reference screenshots). */
 export function SharedBrandFooter() {
   return (
@@ -12,7 +10,7 @@ export function SharedBrandFooter() {
         <span>TimeSyncher</span>
         <img
           className="ts-logo tiny-logo"
-          src={brandIconUrl}
+          src="icons/timesyncher-icon-black-transparent.png"
           alt="TimeSyncher"
           width={22}
           height={22}

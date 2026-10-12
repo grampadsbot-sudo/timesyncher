@@ -174,26 +174,32 @@ function placesFromItineraryTimeline(trip) {
 /** List-tab catalog plus every timeline-selected thing (R2 + live Budget `Mo`). */
 export function placesForBudget(trip) {
   const seen = new Map();
+  const add = (place) => {
+    if (place && place.id != null) seen.set(String(place.id), place);
+  };
+  for (const place of trip?.places || []) {
+    add(place);
+  }
   for (const tab of LIST_TAB_IDS) {
     for (const place of placesForCategoryTab(trip, tab)) {
-      seen.set(String(place.id), place);
+      add(place);
     }
   }
   for (const place of placesFromItineraryTimeline(trip)) {
-    seen.set(String(place.id), place);
+    add(place);
   }
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
     const dayIds = override.dayIds;
     if (Array.isArray(dayIds) && dayIds.length) {
-      seen.set(String(place.id), place);
+      add(place);
     }
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
     for (const row of rows) {
       const place = row.place || (trip.places || []).find((p) => String(p.id) === String(row.place_id));
-      if (place) seen.set(String(place.id), place);
+      if (place) add(place);
     }
   }
   for (const res of trip?.reservations || []) {
@@ -203,11 +209,11 @@ export function placesForBudget(trip) {
       (trip.places || []).find((p) => String(p.id) === String(res.place_id))
       || (typeof res.place === 'object' ? res.place : null);
     if (place) {
-      seen.set(String(place.id), place);
+      add(place);
       continue;
     }
     if (res.place_id != null) {
-      seen.set(String(res.place_id), {
+      add({
         id: res.place_id,
         name: title,
         category_name: 'Flight',

@@ -91,6 +91,15 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
+/** Budget row label: catalog flights use mr() strip; other rows use full place name (R2). */
+export function budgetLineDisplayName(place, trip) {
+  const raw = placeName(place);
+  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
+    return catalogRowDisplayName(place, trip);
+  }
+  return raw;
+}
+
 function neighborhood(place, override, source) {
   return text(
     override.neighborhood ||
@@ -412,9 +421,10 @@ export function logoUrlForPlace(place, trip) {
   };
   let logo = pick();
   if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
+    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
     const favicon = faviconFromPageUrl(page);
-    if (favicon && favicon !== logo) logo = favicon;
-    else logo = pick();
+    if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
+    else if (favicon && favicon !== logo) logo = favicon;
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }
