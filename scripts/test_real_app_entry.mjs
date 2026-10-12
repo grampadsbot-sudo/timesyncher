@@ -28,7 +28,7 @@ assert.match(sharedAudioRecorder, /data-ts-voice-elapsed/);
 assert.doesNotMatch(sharedAudioRecorder, /AnalyserNode/);
 assert.doesNotMatch(sharedApp, /index-0J54vUO3\.js/);
 assert.doesNotMatch(sharedApp, /index-TimeSyncherVacationLogin\.js/);
-assert.match(bundle, /Map day view/);
+assert.match(bundle, /Vacation Day View/);
 assert.match(bundle, /timeline-rail/);
 assert.match(bundle, /Open thing details/);
 assert.match(bundle, /Day-by-Day/);

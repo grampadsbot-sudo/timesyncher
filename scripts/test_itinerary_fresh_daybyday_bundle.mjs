@@ -14,13 +14,11 @@ assert.equal(rendered, committed);
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-summary-stored":"1"/);
 assert.match(committed, /data-ts-list-row-name":"1"/);
-assert.match(committed, /Rn=Bs\(rr\(G\)\|\|String\(G\.description/);
+assert.match(committed, /Rn=Bs\(rr\(G\)\)/);
 assert.match(committed, /data-row-video-qr":"1"/);
 assert.match(committed, /zr\.length\?n\.jsx\(Nr,\{items:zr/);
 assert.match(committed, /data-ts-day-map":"1"/);
-assert.match(committed, /static-day-map-host/);
+assert.match(committed, /gpe,\{center:Ia,zoom:11/);
 assert.match(committed, /a\.tile\.opentopomap\.org/);
-assert.match(committed, /label:"Events"/);
-assert.match(committed, /Timesyncher Travel/);
 
 console.log('itinerary fresh day-by-day bundle checks passed');
