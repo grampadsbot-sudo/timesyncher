@@ -23,8 +23,8 @@ export async function assignTripSiteUrlWhenThingsPresent(db, tripId, env = proce
           updatedAt: new Date().toISOString(),
         });
       }
-    } catch {
-      // Progress must not block site URL assignment.
+    } catch (error) {
+      void error;
     }
     return url;
   } catch (error) {

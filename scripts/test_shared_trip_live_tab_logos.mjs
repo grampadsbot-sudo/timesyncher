@@ -22,7 +22,7 @@ assert.match(bundle, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{width
 assert.match(bundle, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
 assert.doesNotMatch(bundle, /LIST_LOGO_PATCH|ts-thing-media\\\/\)\|\|/);
-assert.match(bundle, /AI-assisted vacation itinerary planning/);
+assert.match(bundle, /AI-assisted itinerary planning/);
 
 const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
 const car = payload.places.find((place) => String(place.name || '').includes('Priceline'));

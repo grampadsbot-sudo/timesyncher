@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import {
   applySearchProgressEvent,
+  countPlacesByDisplayLabel,
   emptySearchProgress,
+  normalizeSearchProgress,
+  placeProgressIdentity,
   searchProgressDisplayLabel,
   throttleUiCounts,
 } from '../src/vacation/search-progress.mjs';
@@ -9,6 +12,11 @@ import {
 assert.equal(searchProgressDisplayLabel('restaurant'), 'Restaurants');
 assert.equal(searchProgressDisplayLabel('hotel'), 'Hotels');
 assert.equal(searchProgressDisplayLabel('car'), 'Cars');
+
+assert.equal(placeProgressIdentity({ title: 'A', category: 'restaurant', source: 'osm', externalId: '1' }), 'osm:1');
+const counted = countPlacesByDisplayLabel([{ category: 'restaurant', title: 'A', source: 'osm', externalId: '1' }]);
+assert.equal(counted.counts.Restaurants, 1);
+assert.deepEqual(normalizeSearchProgress({ stage: 'searching', counts: { Hotels: 2 } }).counts, { Hotels: 2 });
 
 let state = emptySearchProgress('job-a');
 

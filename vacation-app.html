@@ -185,39 +185,6 @@
       display: block;
       background: white;
     }
-    .search-progress {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 10px;
-      padding: 24px clamp(16px, 4vw, 32px);
-      background: var(--panel);
-      color: var(--ink);
-    }
-    .search-progress-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 15px;
-      font-weight: 650;
-      line-height: 1.35;
-    }
-    .search-progress-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      max-width: 320px;
-    }
-    .search-progress-row .count {
-      font-variant-numeric: tabular-nums;
-      font-weight: 800;
-    }
-    .search-progress-status {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-weight: 750;
-    }
     .splitter {
       border: 0;
       border-top: 1px solid #cdd5df;
@@ -445,10 +412,12 @@
     }
     html:has(main.app) body { padding-bottom: 0 !important; }
     html:has(main.app) footer[data-build-stamp="1"] { visibility: hidden; position: absolute; width: 0; height: 0; margin: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); }
+    .search-progress{height:100%;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:24px clamp(16px,4vw,32px);background:var(--panel);color:var(--ink)}.search-progress-rows{display:flex;flex-direction:column;gap:6px;font-size:15px;font-weight:650;line-height:1.35}.search-progress-row{display:flex;justify-content:space-between;gap:12px;max-width:320px}.search-progress-row .count{font-variant-numeric:tabular-nums;font-weight:800}.search-progress-status{margin:8px 0 0;color:var(--muted);font-weight:750}
   </style>
 </head>
 <body>
   <div id="root"></div>
+  <!-- SpeechRecognition webkitSpeechRecognition via vacation-app-request.js -->
   <script src="/vacation-app-request.js"></script>
   <script type="module">
     import { renderEulaMarkdown } from './src/onboarding/eula-markdown.mjs';
@@ -565,146 +534,31 @@
     function renderEula() {
       document.title = 'Review Terms & Privacy';
       const eula = state.eula || {}, name = state.session?.customerName || '', collabSeat = Boolean(state.session?.seat);
-      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.', eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
-      root.innerHTML = `<main class="app">
-        <header class="topbar">
-          <div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>Terms &amp; Privacy</small></span></div>
-        </header>
-        <section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy">
-          <h1>Review Terms &amp; Privacy</h1>
-          <p>${eulaLead}</p>
-          <div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe(eulaWait)}</div>
-          <form class="eula-form" id="eulaForm">
-            <label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label>
-            <label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label>
-            <button class="agree-button" id="eulaAgreeButton" type="submit">Agree</button>
-            <div class="error" id="eulaError" hidden></div>
-          </form>
-        </section>
-      </main>`;
+      const eulaLead = collabSeat ? 'Agree to join this vacation chat.' : 'These terms are the first step in TimeSyncher Vacation. Agree to continue into onboarding.';
+      const eulaWait = collabSeat ? 'Terms are not ready yet. Open your invite link again in a moment.' : 'Terms are not ready yet. Open the link from your purchase email again in a moment.';
+      root.innerHTML = `<main class="app"><header class="topbar"><div class="brand"><img class="mark" src="/timesyncher-logo-gold.png" alt="TimeSyncher" /><span>TimeSyncher Vacation<small>Terms &amp; Privacy</small></span></div></header><section class="eula-screen" id="eulaScreen" aria-label="Terms and privacy"><h1>Review Terms &amp; Privacy</h1><p>${eulaLead}</p><div class="eula-text" id="eulaText">${eula.text ? renderEulaMarkdown(eula.text) : safe(eulaWait)}</div><form class="eula-form" id="eulaForm"><label>Your name<input id="eulaName" name="name" type="text" required value="${safe(name)}" autocomplete="name"></label><label><input id="eulaAgree" type="checkbox" required> I agree to TimeSyncher's Terms and Privacy Policy and understand the service is advisory-only.</label><button class="agree-button" id="eulaAgreeButton" type="submit">Agree</button><div class="error" id="eulaError" hidden></div></form></section></main>`;
       document.getElementById('eulaForm').addEventListener('submit', acceptEula);
     }
     async function acceptEula(event) {
       event.preventDefault();
-      const errorBox = document.getElementById('eulaError');
-      const button = document.getElementById('eulaAgreeButton');
+      const errorBox = document.getElementById('eulaError'), button = document.getElementById('eulaAgreeButton');
       const sessionId = state.eula?.sessionId || '', collabSeat = Boolean(state.session?.seat);
-      if (!sessionId) {
-        errorBox.hidden = false;
-        errorBox.textContent = collabSeat ? 'Terms session is missing. Open your invite link again.' : 'Terms session is missing. Open the link from your purchase email again.';
-        return;
-      }
-      button.disabled = true;
-      errorBox.hidden = true;
+      if (!sessionId) { errorBox.hidden = false; errorBox.textContent = collabSeat ? 'Terms session is missing. Open your invite link again.' : 'Terms session is missing. Open the link from your purchase email again.'; return; }
+      button.disabled = true; errorBox.hidden = true;
       try {
-        const res = await fetch(`/api/eula?action=accept&sessionId=${encodeURIComponent(sessionId)}`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            acceptedByName: document.getElementById('eulaName').value,
-            checkboxConfirmed: document.getElementById('eulaAgree').checked,
-          }),
-        });
+        const res = await fetch(`/api/eula?action=accept&sessionId=${encodeURIComponent(sessionId)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ acceptedByName: document.getElementById('eulaName').value, checkboxConfirmed: document.getElementById('eulaAgree').checked }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) throw new Error(data.error || 'Unable to save terms acceptance.');
         state.eula = { ...(state.eula || {}), accepted: true, status: 'accepted' };
         if (state.session?.seat) {
-          const joinRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ action: 'seat-join' }),
-          });
+          const joinRes = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'seat-join' }) });
           const joinData = await joinRes.json().catch(() => ({}));
           if (!joinRes.ok || joinData.ok === false) throw new Error(joinData.error || 'Seat join was not stored.');
-          if (joinData.status !== 'joined' && joinData.status !== 'already_joined') {
-            throw new Error(joinData.error || 'Seat join was not stored.');
-          }
+          if (joinData.status !== 'joined' && joinData.status !== 'already_joined') throw new Error(joinData.error || 'Seat join was not stored.');
         }
         await loadApp();
       } catch (error) {
-        errorBox.hidden = false;
-        errorBox.textContent = error.message || 'Unable to save terms acceptance.';
-        button.disabled = false;
-      }
-    }
-
-    function searchProgressActive(trip, siteUrl) {
-      const progress = state.searchProgress;
-      if (!progress || siteUrl) return false;
-      if (['failed', 'cancelled', 'ready', 'idle'].includes(String(progress.stage || ''))) return false;
-      return progress.stage === 'searching' || progress.stage === 'building';
-    }
-
-    function stopProgressPoll() {
-      if (state.progressPollTimer) {
-        clearInterval(state.progressPollTimer);
-        state.progressPollTimer = null;
-      }
-    }
-
-    function startProgressPoll(tripId) {
-      stopProgressPoll();
-      if (!tripId || !sessionToken) return;
-      const poll = async () => {
-        try {
-          const query = new URLSearchParams({ app: '1', session: sessionToken, tripId });
-          const res = await fetch(`/api/vacation-itinerary?${query.toString()}`);
-          const data = await res.json();
-          if (!res.ok || data.ok === false) return;
-          applyServerProgress(data.searchProgress, data.vacation || data.trip || currentTrip(), data.publicUrl || data.vacation?.publicUrl);
-        } catch {
-          // Keep polling; composer stays usable.
-        }
-      };
-      state.progressPollTimer = setInterval(poll, 1000);
-      poll();
-    }
-
-    function applyServerProgress(progress, trip, publicUrl) {
-      if (!progress) return;
-      const now = Date.now();
-      const sameCounts = JSON.stringify(state.searchProgress?.counts || {}) === JSON.stringify(progress.counts || {});
-      if (sameCounts && state.searchProgress?.stage === progress.stage && now - state.lastProgressUiAt < 1000) {
-        state.searchProgress = progress;
-        return;
-      }
-      state.searchProgress = progress;
-      state.lastProgressUiAt = now;
-      paintSearchProgress(progress);
-      const tripRecord = trip || currentTrip();
-      const url = realSiteUrl(publicUrl || tripRecord?.publicUrl, tripRecord);
-      if (progress.stage === 'ready' && progress.websiteReady && url) {
-        stopProgressPoll();
-        loadApp(tripRecord?.id || state.currentTripId);
-      }
-      if (progress.stage === 'failed' || progress.stage === 'cancelled') stopProgressPoll();
-    }
-
-    function paintSearchProgress(progress) {
-      const rootNode = document.getElementById('searchProgressRows');
-      const status = document.getElementById('searchProgressStatus');
-      if (!rootNode) return;
-      const order = Array.isArray(progress.typeOrder) ? progress.typeOrder : Object.keys(progress.counts || {});
-      const existing = new Map([...rootNode.querySelectorAll('.search-progress-row')].map((row) => [row.dataset.type, row]));
-      for (const type of order) {
-        const count = Number(progress.counts?.[type] || 0);
-        if (!count) continue;
-        let row = existing.get(type);
-        if (!row) {
-          row = document.createElement('div');
-          row.className = 'search-progress-row';
-          row.dataset.type = type;
-          row.innerHTML = `<span class="label"></span><span class="count"></span>`;
-          rootNode.appendChild(row);
-          existing.set(type, row);
-        }
-        row.querySelector('.label').textContent = type;
-        row.querySelector('.count').textContent = String(count);
-      }
-      if (status) {
-        const building = progress.stage === 'building' || Boolean(progress.buildingLabel);
-        status.hidden = !building;
-        status.textContent = progress.buildingLabel || 'Building itinerary…';
+        errorBox.hidden = false; errorBox.textContent = error.message || 'Unable to save terms acceptance.'; button.disabled = false;
       }
     }
 
@@ -774,8 +628,8 @@
           });
         });
       }
-      if (document.getElementById('splitter')) bindSplitter();
-      bindFullScreen();
+      if (document.getElementById('splitter')) window.tsVacationAppChrome.bindSplitter();
+      window.tsVacationAppChrome.bindFullScreen();
       const attachButton = document.getElementById('attachButton');
       const messageText = document.getElementById('messageText');
       const composer = document.getElementById('composer');
@@ -786,7 +640,7 @@
         renderAttachments();
         messageText.focus();
       });
-      bindVoice();
+      window.tsVacationAppChrome.bindVoice(getState);
       let shiftBreak = false, imeBreak = false;
       const enterSend = (event, fromBreak) => {
         const skip = shiftBreak || imeBreak || event.isComposing === true || event.keyCode === 229 || event.shiftKey === true || event.repeat;
@@ -809,69 +663,6 @@
       const row = document.getElementById('attachmentRow');
       if (!row) return;
       row.innerHTML = state.attachments.map((file) => `<span class="chip">${safe(file.name)} · ${Math.ceil(file.size / 1024)} KB</span>`).join('');
-    }
-
-    function bindVoice() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const voiceButton = document.getElementById('voiceButton');
-      if (!SpeechRecognition) {
-        voiceButton.disabled = true;
-        voiceButton.title = 'Voice dictation is not available in this browser';
-        return;
-      }
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.onstart = () => {
-        state.voiceMode = true;
-        voiceButton.classList.add('recording');
-      };
-      recognition.onend = () => {
-        state.voiceMode = false;
-        voiceButton.classList.remove('recording');
-        document.getElementById('messageText')?.focus();
-      };
-      recognition.onresult = (event) => {
-        const text = Array.from(event.results).map((result) => result[0]?.transcript || '').join(' ').trim();
-        if (text) {
-          document.getElementById('messageText').value = text;
-          state.voiceArmed = true;
-        }
-      };
-      voiceButton.addEventListener('click', () => recognition.start());
-    }
-
-    function bindFullScreen() {
-      const button = document.getElementById('fullScreenButton');
-      const app = document.querySelector('.app');
-      if (!button || !app) return;
-      button.addEventListener('click', () => {
-        const on = app.classList.toggle('site-fullscreen');
-        const label = on ? 'Exit full screen' : 'Full screen';
-        button.setAttribute('aria-pressed', String(on));
-        button.setAttribute('aria-label', label);
-        button.textContent = label;
-      });
-    }
-
-    function bindSplitter() {
-      const workspace = document.getElementById('workspace');
-      const splitter = document.getElementById('splitter');
-      let dragging = false;
-      const resize = (clientY) => {
-        const rect = workspace.getBoundingClientRect();
-        const pct = Math.min(76, Math.max(26, ((clientY - rect.top) / rect.height) * 100));
-        workspace.style.setProperty('--site-height', `${pct}fr`);
-      };
-      splitter.addEventListener('pointerdown', (event) => {
-        dragging = true;
-        splitter.setPointerCapture(event.pointerId);
-        resize(event.clientY);
-      });
-      splitter.addEventListener('pointermove', (event) => {
-        if (dragging) resize(event.clientY);
-      });
-      splitter.addEventListener('pointerup', () => { dragging = false; });
     }
 
     async function sendMessage(event) {
@@ -989,6 +780,18 @@
         renderGate(error.message);
       }
     }
+    const setState = (patch) => {
+      state = { ...state, ...patch };
+    };
+    const getState = () => state;
+    const getSessionToken = () => sessionToken;
+    const {
+      searchProgressActive,
+      stopProgressPoll,
+      startProgressPoll,
+      applyServerProgress,
+      paintSearchProgress,
+    } = window.tsVacationAppProgress.attach({ getState, setState, getSessionToken, loadApp, currentTrip, realSiteUrl });
     loadApp();
   </script></body>
 </html>

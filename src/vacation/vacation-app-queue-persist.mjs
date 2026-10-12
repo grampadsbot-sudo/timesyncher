@@ -69,8 +69,8 @@ export async function persistVacationAppCustomerTurn(db, {
   if (tripId && jobRows[0]?.id) {
     try {
       await initTripSearchProgress(db, tripId, jobRows[0].id);
-    } catch {
-      // Progress must not block turn persistence.
+    } catch (error) {
+      void error;
     }
   }
   return {
