@@ -1,4 +1,5 @@
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
+import { applyCapturedLogos } from '../../src/vacation/thing-logo-capture.mjs';
 import {
   buildNycCraigKimDaybydayTrip,
   NYC_DAYBYDAY_SLUG,
@@ -8,5 +9,5 @@ import {
 export const GATE_B_APPROVED_SHARED_SLUG = NYC_DAYBYDAY_SLUG;
 
 export function buildGateBApprovedSharedTrip() {
-  return finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+  return finalizeServedSharedTripPayload(applyCapturedLogos(buildNycCraigKimDaybydayTrip()));
 }

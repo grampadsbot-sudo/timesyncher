@@ -1,6 +1,7 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
 import {
+  brandLogoFromName,
   isPlaceholderLogoUrl,
   resolveThingLogoUrl,
   sourceLogoUrl,
@@ -346,11 +347,6 @@ export function rowSummary(place, trip) {
   );
   if (wordCount(best) >= 30) return best;
 
-  const shortDescription = text(place.description || override.summary || source.summary);
-  if (shortDescription && wordCount(shortDescription) < 30) {
-    return shortDescription;
-  }
-
   const enriched = buildCategoryDescription({
     category: tabCategoryKey(place, trip),
     title: placeName(place),
@@ -367,6 +363,8 @@ export function rowSummary(place, trip) {
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
+  const overrideLogo = text(override.logoUrl);
+  if (overrideLogo && !isPlaceholderLogoUrl(overrideLogo)) return overrideLogo;
   const fromSource = text(sourceLogoUrl(place, override));
   if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
   let resolved = text(resolveThingLogoUrl(place, override));
@@ -386,6 +384,8 @@ export function logoUrlForPlace(place, trip) {
       /* ignore */
     }
   }
+  const brand = brandLogoFromName(placeName(place));
+  if (brand) return brand;
   return '';
 }
 

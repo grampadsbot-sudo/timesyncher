@@ -32,8 +32,31 @@ body {
 
 .tsv-shared-header {
   margin: 0;
-  padding: 0;
+  padding: 8px 12px 4px;
   border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.tsv-shared-header-brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.tsv-shared-header-brand .ts-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
 }
 
 .tsv-shared-header-sr {

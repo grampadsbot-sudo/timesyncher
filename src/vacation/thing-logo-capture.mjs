@@ -77,7 +77,7 @@ function thumbnailFromSource(source = {}) {
   return '';
 }
 
-function brandLogoFromName(name = '') {
+export function brandLogoFromName(name = '') {
   const label = text(name);
   if (!label) return '';
   for (const [pattern, url] of BRAND_LOGO_RULES) {
@@ -242,6 +242,9 @@ export function applyCapturedLogos(shared = {}) {
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
     let logoUrl = captureThingLogo(place, override);
+    if (!logoUrl) {
+      logoUrl = brandLogoFromName(place.name || place.title) || '';
+    }
     if (logoUrl && isPlaceholderLogoUrl(logoUrl)) logoUrl = '';
     if (text(override.logoUrl) && isPlaceholderLogoUrl(override.logoUrl)) {
       delete override.logoUrl;
@@ -262,7 +265,12 @@ export function applyCapturedLogos(shared = {}) {
     const mediaUrl = text(place.image_url || place.imageUrl);
     if (logoUrl && !isPlaceholderLogoUrl(logoUrl)) {
       place.logoUrl = logoUrl;
-    } else if (mediaUrl && !isBoundStoryMediaUrl(mediaUrl) && !isPlaceholderLogoUrl(mediaUrl)) {
+    } else if (
+      mediaUrl
+      && !isBoundStoryMediaUrl(mediaUrl)
+      && !isPlaceholderLogoUrl(mediaUrl)
+      && !brandLogoFromName(place.name || place.title)
+    ) {
       place.logoUrl = mediaUrl;
     } else {
       place.logoUrl = logoUrl || '';

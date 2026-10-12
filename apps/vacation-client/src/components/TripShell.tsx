@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { SharedTripPayload } from '../types/sharedTrip';
 import { TAB_LABELS } from '../types/sharedTrip';
 import { SharedBrandFooter } from './SharedBrandFooter';
+import { SharedBrandHeader } from './SharedBrandHeader';
 import { TabNav } from './TabNav';
 import type { TabId } from '../types/sharedTrip';
 import { TripHeaderActions } from './TripHeaderActions';
@@ -27,6 +28,7 @@ export function TripShell({
   return (
     <div className="tsv-shell" data-trip-view-root="1">
       <header className="tsv-shared-header" data-ts-shared-header="1">
+        <SharedBrandHeader />
         <h1 className="tsv-shared-header-sr">{title}</h1>
         <div className="tsv-shared-header-sr">
           <TripHeaderActions shareToken={shareToken} permissions={permissions} />
