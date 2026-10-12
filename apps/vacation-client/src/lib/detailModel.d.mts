@@ -20,9 +20,10 @@ export function detailFieldRows(
 ): Array<{ key: string; label: string; value: string; href?: string }>;
 
 export type DetailViewModel = {
+  name: string;
   category: string;
   categoryLabel: string;
-  name: string;
+  source: string;
   logoUrl: string;
   logoFallback: string;
   summary: string;

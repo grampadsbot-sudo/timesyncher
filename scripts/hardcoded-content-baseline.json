@@ -831,19 +831,5 @@
     "symbol_or_pattern": "inventory:B21",
     "inventory_id": "B21",
     "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "apps/vacation-client/src/lib/budgetModel.mjs",
-    "rule": "BAR-THING-CUSTOMER",
-    "symbol_or_pattern": "Other Things",
-    "inventory_id": "9c4c5d52",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
-  },
-  {
-    "file": "apps/vacation-client/src/lib/detailModel.mjs",
-    "rule": "THING-SOURCE",
-    "symbol_or_pattern": "thing-without-source:{ category, categoryLabel: detailCategoryLabel(c",
-    "inventory_id": "THING-SOURCE",
-    "note": "removed by Search Eng / Reply Eng deletion PR"
   }
 ]
