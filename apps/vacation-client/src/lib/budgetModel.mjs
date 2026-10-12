@@ -1,7 +1,7 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
-import { catalogRowDisplayName, placeName, tabCategoryKey } from './listTabModel.mjs';
-import { resolvePlace } from './dayTimelineModel.mjs';
+import { LIST_TAB_IDS, placeName, placesForCategoryTab, tabCategoryKey } from './listTabModel.mjs';
+import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
 
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
 export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
@@ -175,17 +175,63 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-/** Every catalog thing (same coverage as live TREK budget / shared-trip-api-budget). */
+function placesFromItineraryTimeline(trip) {
+  const seen = new Map();
+  for (const day of sortedDays(trip)) {
+    for (const entry of buildDayTimeline(trip, day)) {
+      if (entry.kind === 'travel' || entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') {
+        continue;
+      }
+      if (entry.place) rememberBudgetPlace(seen, entry.place);
+    }
+  }
+  return [...seen.values()];
+}
+
+/** Catalog + timeline + reservations (live Budget tab parity). */
 export function placesForBudget(trip) {
   const seen = new Map();
+  for (const tab of LIST_TAB_IDS) {
+    for (const place of placesForCategoryTab(trip, tab)) {
+      rememberBudgetPlace(seen, place);
+    }
+  }
+  for (const place of placesFromItineraryTimeline(trip)) {
+    rememberBudgetPlace(seen, place);
+  }
   for (const place of trip?.places || []) {
     rememberBudgetPlace(seen, place);
+  }
+  for (const place of trip?.places || []) {
+    const override = overrideFor(trip, place);
+    const dayIds = override.dayIds;
+    if (Array.isArray(dayIds) && dayIds.length) {
+      rememberBudgetPlace(seen, place);
+    }
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
     for (const row of rows) {
       const place = resolvePlace(row, trip);
       rememberBudgetPlace(seen, place);
+    }
+  }
+  for (const res of trip?.reservations || []) {
+    const title = text(res?.title || res?.name);
+    if (!/^Flight option:/i.test(title)) continue;
+    const place =
+      (trip.places || []).find((p) => String(p.id) === String(res.place_id))
+      || (typeof res.place === 'object' ? res.place : null);
+    if (place) {
+      rememberBudgetPlace(seen, place);
+      continue;
+    }
+    if (res.place_id != null) {
+      rememberBudgetPlace(seen, {
+        id: res.place_id,
+        name: title,
+        category_name: 'Flight',
+      });
     }
   }
   return [...seen.values()];
@@ -229,7 +275,7 @@ export function buildBudgetModel(trip) {
     return {
       place,
       bucket,
-      name: catalogRowDisplayName(place, trip),
+      name: placeName(place),
       ...pricing,
     };
   });
@@ -291,7 +337,7 @@ export function budgetCompletenessChecks(trip) {
     const id = String(row.place.id);
     const catalog = canonicalBudgetPlace(trip, id);
     if (!catalog) continue;
-    const expectedName = catalogRowDisplayName(catalog, trip);
+    const expectedName = placeName(catalog);
     const expectedBucket = budgetBucketForPlace(catalog, trip);
     const expectedPricing = budgetLineAmount(catalog, trip);
     push(`row_identity_${id}`, row.name === expectedName);

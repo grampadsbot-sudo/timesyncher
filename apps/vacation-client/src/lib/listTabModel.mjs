@@ -302,6 +302,35 @@ export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   const category = tabCategoryKey(place, trip);
+  const scheduleHint = text(
+    override.startTime ||
+      override.place_time ||
+      place.place_time ||
+      source.schedule ||
+      source.startsAt,
+  );
+  const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
+  if (category === 'event') {
+    const price = numericPrice(place, trip);
+    const withPrice =
+      price != null ? { ...enrichedSource, price, ticketPrice: price } : enrichedSource;
+    const eventSummary = ensureMinSummaryWords(
+      text(
+        buildCategoryDescription({
+          category,
+          title: placeName(place),
+          sourceRecord: {
+            ...withPrice,
+            summary: text(override.summary || source.summary || place.description),
+            description: text(override.details || source.description),
+          },
+          address: text(place.address),
+          rawDescription: '',
+        }),
+      ),
+    );
+    return eventSummary;
+  }
   const candidates = [
     override.longDetails,
     override.details,
@@ -315,14 +344,6 @@ export function rowSummary(place, trip) {
   ]
     .map((value) => text(value))
     .filter(Boolean);
-  const scheduleHint = text(
-    override.startTime ||
-      override.place_time ||
-      place.place_time ||
-      source.schedule ||
-      source.startsAt,
-  );
-  const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
   const eventNeedsEnrich =
     category === 'event'
     && !/what it is:|genre:|when:|price:|perform/i.test(candidates.join(' '));

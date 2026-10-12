@@ -34,6 +34,7 @@ export function mergeNamedCatalogEnrichment(shared = {}, enrichmentByName = {}, 
     ...(shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {}),
   };
   const names = new Set(places.map((place) => text(place.name || place.title)).filter(Boolean));
+  const reservations = Array.isArray(shared.reservations) ? [...shared.reservations] : [];
   let idCursor = nextPlaceId(places);
 
   for (const [name, record] of Object.entries(enrichmentByName || {})) {
@@ -78,7 +79,17 @@ export function mergeNamedCatalogEnrichment(shared = {}, enrichmentByName = {}, 
       logoUrl: text(row.logoUrl) || undefined,
       timeline: false,
     };
+    if (categoryKey === 'flight') {
+      reservations.push({
+        id: 3000 + id,
+        trip_id: shared.trip?.id ?? null,
+        place_id: id,
+        title,
+        status: 'candidate',
+        type: 'flight',
+      });
+    }
   }
 
-  return { ...shared, places, thingOverrides };
+  return { ...shared, places, thingOverrides, reservations };
 }
