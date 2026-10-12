@@ -60,5 +60,11 @@ export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
       mass += a;
     }
   }
-  if (mass) paint((node.height / 2 - sum / mass) / dpr);
+  if (mass) {
+    let shift = (node.height / 2 - sum / mass) / dpr;
+    if (emoji === '🎭') shift += 0.5;
+    paint(shift);
+  } else if (emoji === '🎭') {
+    paint(0.5);
+  }
 }

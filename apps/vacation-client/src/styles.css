@@ -142,6 +142,23 @@ body {
   background: rgba(15, 23, 42, 0.06);
 }
 
+.tsv-header-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.tsv-header-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .tsv-header-submenu-nested {
   margin: 0 0 4px 10px;
   padding-left: 8px;
@@ -658,8 +675,23 @@ body {
   color: var(--muted);
 }
 
+.tsv-day-view-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tsv-day-view-asof {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .tsv-day-map-caption {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 11px;
   color: var(--muted);
   line-height: 1.35;
@@ -679,10 +711,44 @@ body {
   overflow: visible;
 }
 
+.tsv-day-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tsv-day-number-badge {
+  flex: 0 0 auto;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tsv-day-card-head-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .tsv-day-title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 14px;
   font-weight: 800;
+  line-height: 1.25;
+}
+
+.tsv-day-date-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .tsv-day-nav {

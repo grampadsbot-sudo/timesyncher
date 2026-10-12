@@ -114,7 +114,11 @@ export function ListRow({
                 {arrive}
               </span>
             ) : null}
-            {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+            {summary ? (
+              <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
+                {summary}
+              </span>
+            ) : null}
           </button>
           {showTimelineToggle ? (
             <TimelineToggle
@@ -149,7 +153,15 @@ export function ListRow({
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
             {price ? <span className="tsv-row-price">{price}</span> : null}
-            {summary ? <span className="tsv-row-desc tsv-row-car-desc">{summary}</span> : null}
+            {summary ? (
+            <span
+              className="tsv-row-desc tsv-row-car-desc"
+              data-list-summary="1"
+              data-summary-src="thing"
+            >
+              {summary}
+            </span>
+          ) : null}
           </button>
           {showTimelineToggle ? (
             <TimelineToggle

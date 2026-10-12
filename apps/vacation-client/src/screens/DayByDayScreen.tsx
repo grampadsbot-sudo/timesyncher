@@ -4,6 +4,7 @@ import { DayTimeline } from '../components/DayTimeline';
 import {
   buildDayTimeline,
   dayChipLabel,
+  dayItineraryHeading,
   mapPlacesForTimeline,
   shiftDayIndex,
   sortedDays,
@@ -39,7 +40,13 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
   return (
     <section className="tsv-screen tsv-day-screen">
       <header className="tsv-day-view-head">
-        <h2 className="tsv-day-view-title">Vacation Day View</h2>
+        <div className="tsv-day-view-headline">
+          <h2 className="tsv-day-view-title">Vacation Day View</h2>
+          {activeDay.date ? <div className="tsv-day-view-asof">{activeDay.date}</div> : null}
+        </div>
+        <p className="tsv-day-map-caption">
+          Only things tagged for this day + Timeline appear on the map below.
+        </p>
         <div className="tsv-day-chip-row" role="tablist" aria-label="Trip days">
           {days.map((day, index) => {
             const label = dayChipLabel(day);
@@ -60,16 +67,23 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
             );
           })}
         </div>
-        <p className="tsv-day-map-caption">
-          Only things tagged for this day + Timeline appear on the map below.
-        </p>
       </header>
 
       <article className="tsv-day-card" data-ts-day-timeline="1">
-        <h3 className="tsv-day-title">
-          {dayChipLabel(activeDay)}
-          {activeDay.date ? <span className="tsv-muted"> · {activeDay.date}</span> : null}
-        </h3>
+        <div className="tsv-day-card-head">
+          <div className="tsv-day-number-badge" aria-hidden="true">
+            {activeDay.day_number ?? ''}
+          </div>
+          <div className="tsv-day-card-head-text">
+            <div className="tsv-day-title" data-ts-day-heading="1">
+              {activeDay.title ||
+                (activeDay.day_number != null
+                  ? `Day ${activeDay.day_number}`
+                  : dayItineraryHeading(activeDay))}
+            </div>
+            {activeDay.date ? <div className="tsv-day-date-sub">{activeDay.date}</div> : null}
+          </div>
+        </div>
         <DayTimeline trip={trip} entries={entries} onOpen={onOpen} />
         <div className="tsv-day-nav">
           <button

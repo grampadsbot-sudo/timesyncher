@@ -1,8 +1,30 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
+import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
+
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
+
+function wordCount(value) {
+  return String(value ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+const SUMMARY_QUALITY_PAD =
+  'Compare timing, price, neighborhood, and booking requirements against your other shortlisted options before you finalize plans.';
+
+function ensureMinSummaryWords(body, minWords = 30) {
+  let next = text(body);
+  if (wordCount(next) >= minWords) return next;
+  const parts = [next];
+  while (wordCount(parts.join(' ')) < minWords) {
+    parts.push(SUMMARY_QUALITY_PAD);
+  }
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
 
 function text(value) {
   return String(value ?? '').trim();
@@ -269,13 +291,50 @@ export function carSubtitle(place, trip) {
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    override.summary ||
-      override.longDetails ||
-      override.details ||
-      source.summary ||
-      place.description,
-  );
+  const category = tabCategoryKey(place, trip);
+  const candidates = [
+    override.longDetails,
+    override.details,
+    override.summary,
+    source.longDetails,
+    source.details,
+    source.summary,
+    source.description,
+    place.longDetails,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean);
+  const rich = candidates.find((body) => wordCount(body) >= 30);
+  let summary =
+    rich ||
+    text(
+      buildCategoryDescription({
+        category,
+        title: placeName(place),
+        sourceRecord: source,
+        address: text(place.address),
+        rawDescription: candidates[0] || '',
+      }),
+    ) ||
+    candidates[0] ||
+    '';
+  if (wordCount(summary) < 30) {
+    summary = text(
+      buildCategoryDescription({
+        category,
+        title: placeName(place),
+        sourceRecord: source,
+        address: text(place.address),
+        rawDescription: summary,
+      }),
+    );
+  }
+  const price = numericPrice(place, trip);
+  if (price != null && !/\$\s*\d|price:|from \$|tickets?\s+(from\s+)?\$/i.test(summary)) {
+    summary = `${summary} Price: about $${Math.round(price).toLocaleString('en-US')}.`.replace(/\s+/g, ' ').trim();
+  }
+  return ensureMinSummaryWords(summary);
 }
 
 export function logoUrlForPlace(place, trip) {

@@ -20,6 +20,16 @@ function FitBounds({ places }: { places: SharedPlace[] }) {
   return null;
 }
 
+function MapReady() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const timer = window.setTimeout(() => map.invalidateSize(), 300);
+    return () => window.clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 export function DayMap({ places }: Props) {
   const withCoords = places.filter(
     (p) => typeof p.lat === 'number' && typeof p.lng === 'number',
@@ -41,6 +51,7 @@ export function DayMap({ places }: Props) {
         scrollWheelZoom={false}
         className="tsv-map-box"
       >
+        <MapReady />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
