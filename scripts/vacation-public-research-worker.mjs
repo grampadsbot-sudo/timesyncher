@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { fillTripIntake, lodgingFromChat } from '../src/vacation/place-search.mjs';
+import { recordSearchProgressPlaces } from '../src/vacation/search-progress.mjs';
 import { buildProviderEnv } from '../src/vacation/provider-env.mjs';
 import { DEFAULT_FIRST_PASS_MINIMUMS, firstPassSearchLimit } from '../src/vacation/keepsake-list-minimums.mjs';
 
@@ -369,6 +370,18 @@ export async function runPublicResearch(input = {}) {
   const job = input.job && typeof input.job === 'object' ? input.job : {};
   const jobInput = job.input && typeof job.input === 'object' ? job.input : {};
   const tripId = text(input.tripId || input.trip_id || jobInput.tripId || jobInput.trip_id || job.tripId || job.trip_id || artifacts.tripId || artifacts.trip_id, 80);
+  const progressJobId = text(input.jobId || jobInput.jobId || job.id || '', 80);
+  const progressDb = input.db || null;
+  const onSearchSnapshot = progressDb && tripId && progressJobId
+    ? async (partialPlaces, meta) => {
+      await recordSearchProgressPlaces(progressDb, tripId, {
+        jobId: progressJobId,
+        eventId: `search:${meta?.phase || 'snapshot'}:${partialPlaces.length}`,
+        stage: 'searching',
+        places: partialPlaces,
+      });
+    }
+    : null;
   const intake = await fillTripIntake({
     destination: artifacts.destination || '',
     lodging: stay.text,
@@ -379,7 +392,17 @@ export async function runPublicResearch(input = {}) {
     fetchImpl: input.fetchImpl,
     priorPlaces: input.priorPlaces,
     loadPriorPlaces: input.loadPriorPlaces,
+    onSearchSnapshot,
+    searchProgressContext: { jobId: progressJobId, tripId },
   });
+  if (progressDb && tripId && progressJobId) {
+    await recordSearchProgressPlaces(progressDb, tripId, {
+      jobId: progressJobId,
+      eventId: 'search:complete',
+      stage: 'building',
+      places: intake.things || [],
+    });
+  }
   return {
     status: 'live_place_search',
     provider: 'place-search',

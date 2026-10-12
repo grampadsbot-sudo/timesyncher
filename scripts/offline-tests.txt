@@ -38,6 +38,7 @@ scripts/test_turn_classifier_target_kind_persist.mjs
 scripts/test_turn_classifier_category_live_path.mjs
 scripts/test_vacation_app_interim_place_search.mjs
 scripts/test_vacation_app_client_errors.mjs
+scripts/test_search_progress_flow.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
 scripts/test_trek_bundle_strip.mjs

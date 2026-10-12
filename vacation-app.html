@@ -185,6 +185,39 @@
       display: block;
       background: white;
     }
+    .search-progress {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px clamp(16px, 4vw, 32px);
+      background: var(--panel);
+      color: var(--ink);
+    }
+    .search-progress-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+    .search-progress-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 320px;
+    }
+    .search-progress-row .count {
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+    .search-progress-status {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-weight: 750;
+    }
     .splitter {
       border: 0;
       border-top: 1px solid #cdd5df;
@@ -422,7 +455,7 @@
     const root = document.getElementById('root');
     const params = new URLSearchParams(location.search);
     let sessionToken = params.get('session') || params.get('token') || ((eula) => eula.startsWith('vacation-') && !eula.startsWith('vacation-collaborator-') ? eula.slice('vacation-'.length) : '')(params.get('eulaSession') || '') || localStorage.getItem('tsVacationAppSession') || '';
-    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, sending: false, eula: null, screen: 'onboarding', things: [], thingId: '' };
+    let state = { session: null, vacations: [], turns: [], currentTripId: '', attachments: [], voiceMode: false, voiceArmed: false, sending: false, eula: null, screen: 'onboarding', things: [], thingId: '', searchProgress: null, progressPollTimer: null, lastProgressUiAt: 0 };
     const safe = (value) => String(value || '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     if (!window.tsVacationAppRequest?.failAppRequest) { const m = 'vacation-app-request.js did not load (tsVacationAppRequest missing).'; console.error(m); throw new Error(m); }
     const { customerSafeErrorMessage, showComposerStatus, failAppRequest } = window.tsVacationAppRequest;
@@ -595,11 +628,93 @@
       }
     }
 
+    function searchProgressActive(trip, siteUrl) {
+      const progress = state.searchProgress;
+      if (!progress || siteUrl) return false;
+      if (['failed', 'cancelled', 'ready', 'idle'].includes(String(progress.stage || ''))) return false;
+      return progress.stage === 'searching' || progress.stage === 'building';
+    }
+
+    function stopProgressPoll() {
+      if (state.progressPollTimer) {
+        clearInterval(state.progressPollTimer);
+        state.progressPollTimer = null;
+      }
+    }
+
+    function startProgressPoll(tripId) {
+      stopProgressPoll();
+      if (!tripId || !sessionToken) return;
+      const poll = async () => {
+        try {
+          const query = new URLSearchParams({ app: '1', session: sessionToken, tripId });
+          const res = await fetch(`/api/vacation-itinerary?${query.toString()}`);
+          const data = await res.json();
+          if (!res.ok || data.ok === false) return;
+          applyServerProgress(data.searchProgress, data.vacation || data.trip || currentTrip(), data.publicUrl || data.vacation?.publicUrl);
+        } catch {
+          // Keep polling; composer stays usable.
+        }
+      };
+      state.progressPollTimer = setInterval(poll, 1000);
+      poll();
+    }
+
+    function applyServerProgress(progress, trip, publicUrl) {
+      if (!progress) return;
+      const now = Date.now();
+      const sameCounts = JSON.stringify(state.searchProgress?.counts || {}) === JSON.stringify(progress.counts || {});
+      if (sameCounts && state.searchProgress?.stage === progress.stage && now - state.lastProgressUiAt < 1000) {
+        state.searchProgress = progress;
+        return;
+      }
+      state.searchProgress = progress;
+      state.lastProgressUiAt = now;
+      paintSearchProgress(progress);
+      const tripRecord = trip || currentTrip();
+      const url = realSiteUrl(publicUrl || tripRecord?.publicUrl, tripRecord);
+      if (progress.stage === 'ready' && progress.websiteReady && url) {
+        stopProgressPoll();
+        loadApp(tripRecord?.id || state.currentTripId);
+      }
+      if (progress.stage === 'failed' || progress.stage === 'cancelled') stopProgressPoll();
+    }
+
+    function paintSearchProgress(progress) {
+      const rootNode = document.getElementById('searchProgressRows');
+      const status = document.getElementById('searchProgressStatus');
+      if (!rootNode) return;
+      const order = Array.isArray(progress.typeOrder) ? progress.typeOrder : Object.keys(progress.counts || {});
+      const existing = new Map([...rootNode.querySelectorAll('.search-progress-row')].map((row) => [row.dataset.type, row]));
+      for (const type of order) {
+        const count = Number(progress.counts?.[type] || 0);
+        if (!count) continue;
+        let row = existing.get(type);
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'search-progress-row';
+          row.dataset.type = type;
+          row.innerHTML = `<span class="label"></span><span class="count"></span>`;
+          rootNode.appendChild(row);
+          existing.set(type, row);
+        }
+        row.querySelector('.label').textContent = type;
+        row.querySelector('.count').textContent = String(count);
+      }
+      if (status) {
+        const building = progress.stage === 'building' || Boolean(progress.buildingLabel);
+        status.hidden = !building;
+        status.textContent = progress.buildingLabel || 'Building itinerary…';
+      }
+    }
+
     function renderApp() {
       const trip = currentTrip();
       const trips = realVacations();
       const siteUrl = realSiteUrl(trip?.publicUrl, trip);
+      const progressActive = searchProgressActive(trip, siteUrl);
       const hasSite = Boolean(siteUrl);
+      const hasTopPane = hasSite || progressActive;
       const chatTurns = state.turns.filter((turn) => turn.speaker !== 'system' && turn.direction !== 'system');
       const turnMarkup = chatTurns.length
         ? chatTurns.map((turn) => {
@@ -622,9 +737,11 @@
       const header = trips.length >= 2 ? `<header class="topbar" id="appHeader">${vacationSelector(trips, trip)}</header>` : '';
       root.innerHTML = `<main class="app">
         ${header}
-        <section class="workspace${hasSite ? '' : ' chat-only'}" id="workspace">
+        <section class="workspace${hasTopPane ? '' : ' chat-only'}" id="workspace">
           ${hasSite ? `<div class="site-pane"><button class="fullscreen-button" id="fullScreenButton" type="button" aria-pressed="false" aria-label="Full screen">Full screen</button><iframe title="${safe(customerPlaceName(trip.title) || 'Vacation')} website" src="${safe(embedSiteUrl(siteUrl))}"></iframe></div>
           <button class="splitter" id="splitter" type="button" aria-label="Resize website and chat panels"></button>` : ''}
+          ${!hasSite && progressActive ? `<div class="site-pane" id="searchProgressPane"><div class="search-progress" id="searchProgress" aria-live="polite"><div class="search-progress-rows" id="searchProgressRows"></div><p class="search-progress-status" id="searchProgressStatus" hidden>Building itinerary…</p></div></div>
+          <button class="splitter" id="splitter" type="button" aria-label="Resize search progress and chat panels"></button>` : ''}
           <section class="chat-pane" aria-label="Vacation chat">
             ${body}
           </section>
@@ -632,6 +749,7 @@
       </main>`;
       bindApp();
       renderAttachments();
+      if (progressActive && state.searchProgress) paintSearchProgress(state.searchProgress);
     }
 
     function bindApp() {
@@ -774,6 +892,7 @@
       state.attachments = [];
       renderAttachments();
       messages.insertAdjacentHTML('beforeend', `<article class="bubble" id="tsTyping" aria-live="polite" aria-busy="true"><small>TimeSyncher</small>…</article>`);
+      if (!hadSite && currentTrip()?.id) startProgressPoll(currentTrip().id);
       try {
         const res = await fetch(`/api/vacation-itinerary?app=1&session=${encodeURIComponent(sessionToken)}`, {
           method: 'POST',
@@ -815,16 +934,19 @@
             const tripLabelSpan = tripButton?.querySelector('span');
             if (tripLabelSpan) tripLabelSpan.textContent = tripBadge(data.vacation);
             if (!hadSite && realSiteUrl(data.vacation.publicUrl, data.vacation)) {
+              stopProgressPoll();
               await loadApp(data.vacation.id);
               return;
             }
           }
+          if (data.searchProgress) applyServerProgress(data.searchProgress, data.vacation || data.trip, data.vacation?.publicUrl);
           messages.insertAdjacentHTML('beforeend', `<article class="bubble"><small>TimeSyncher</small>${chatText(data.reply)}</article>`);
         }
       } catch (error) {
         document.getElementById('tsTyping')?.remove();
         console.error(error);
         showComposerStatus(customerSafeErrorMessage(error, error?.response));
+        stopProgressPoll();
       } finally {
         state.sending = false;
       }
@@ -856,6 +978,7 @@
         state.vacations = data.vacations || [];
         state.turns = data.turns || [];
         state.things = Array.isArray(data.itinerary) ? data.itinerary : [];
+        state.searchProgress = data.searchProgress || null;
         state.currentTripId = tripId || data.session?.currentTripId || state.vacations[0]?.id || '';
         if (state.eula?.accepted !== true) {
           renderEula();
