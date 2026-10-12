@@ -4,6 +4,7 @@ import {
   buildKeepsakeViewModel,
   isKeepsakeJourneyLocation,
   resolveKeepsakePrintFlags,
+  savedStories,
   tripSummaryText,
 } from '../src/lib/keepsakeModel.mjs';
 
@@ -40,6 +41,31 @@ const model = buildKeepsakeViewModel(sparseTrip, new URLSearchParams('style=1&pr
 assert.ok(model.sections.some((s) => s.kind === 'daily-itinerary'));
 assert.ok(!model.sections.some((s) => s.kind === 'summary'));
 assert.ok(!model.sections.some((s) => s.kind === 'daily-maps'));
+
+const probeTrip = {
+  trip: { title: 'Probe' },
+  places: [
+    {
+      id: 99,
+      name: 'Flagged bar',
+      bound_media: [
+        {
+          publicUrl: 'https://example.test/photo.jpg',
+          mimeType: 'image/jpeg',
+          originalName: 'photo.jpg',
+        },
+      ],
+    },
+  ],
+  thingOverrides: {
+    'place:99': { story: true, category: 'restaurant' },
+  },
+};
+
+const probeStories = savedStories(probeTrip);
+assert.equal(probeStories.length, 1);
+assert.equal(probeStories[0].photos.length, 1);
+assert.match(String(probeStories[0].photos[0].publicUrl || ''), /photo\.jpg/);
 
 const richTrip = {
   trip: {

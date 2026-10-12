@@ -19,7 +19,15 @@ export function resolveKeepsakePrintFlags(
 export function keepsakeStyleFromSearch(searchParams?: URLSearchParams): 1 | 2;
 export function isKeepsakeJourneyLocation(pathname?: string, searchParams?: URLSearchParams): boolean;
 export function tripSummaryText(trip: SharedTripPayload): string;
-export function savedStories(trip: SharedTripPayload): Array<{ id?: string | number; title: string; story?: string }>;
+export function savedStories(trip: SharedTripPayload): Array<{
+  id?: string | number;
+  title: string;
+  story?: string;
+  media: Array<Record<string, unknown>>;
+  photos: Array<Record<string, unknown>>;
+  videos: Array<Record<string, unknown>>;
+  logoUrl: string;
+}>;
 export function eventExperienceCount(trip: SharedTripPayload): number;
 export function directorySection(
   trip: SharedTripPayload,
@@ -39,12 +47,29 @@ export type KeepsakeSection =
   | { kind: 'summary'; summary: string }
   | { kind: 'event-summary'; count: number; label: string }
   | { kind: 'stats'; stats: Array<{ label: string; count: number }> }
-  | { kind: 'stories'; stories: Array<{ id?: string | number; title: string; story?: string }> }
+  | {
+      kind: 'stories';
+      stories: Array<{
+        id?: string | number;
+        title: string;
+        story?: string;
+        media: Array<Record<string, unknown>>;
+        photos: Array<Record<string, unknown>>;
+        videos: Array<Record<string, unknown>>;
+        logoUrl: string;
+      }>;
+    }
   | {
       kind: 'directory';
       tab: string;
       label: string;
-      items: Array<{ id: string | number; title: string }>;
+      items: Array<{
+        id: string | number;
+        title: string;
+        summary?: string;
+        price?: string;
+        happyHour?: string;
+      }>;
     }
   | {
       kind: 'daily-maps';
