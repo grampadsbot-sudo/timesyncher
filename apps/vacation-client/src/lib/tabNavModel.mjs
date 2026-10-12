@@ -1,4 +1,4 @@
-/** @typedef {'day-by-day'|'flights'|'hotels'|'cars'|'restaurants'|'stores'|'events'|'budget'} TabId */
+/** @typedef {'day-by-day'|'flights'|'hotels'|'cars'|'restaurants'|'stores'|'events'|'packing'|'chat'|'budget'} TabId */
 
 /** @type {TabId[]} */
 export const TAB_ORDER = [
@@ -21,6 +21,8 @@ export const TAB_LABELS = {
   restaurants: 'Restaurants',
   stores: 'Stores',
   events: 'The Rest',
+  packing: 'Packing',
+  chat: 'Chat',
   budget: 'Budget',
 };
 
@@ -33,8 +35,52 @@ export const TAB_ICONS = {
   restaurants: '🍽️',
   stores: '🛍️',
   events: '🎭',
+  packing: '🧳',
+  chat: '💬',
   budget: '💰',
 };
+
+/** @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip */
+export function sectionVisibilityMap(trip) {
+  const raw = trip?.thingOverrides?.__sectionVisibility;
+  return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+}
+
+/** @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip @param {'flights'|'hotels'|'cars'} key */
+export function isConfigSectionVisible(trip, key) {
+  const map = sectionVisibilityMap(trip);
+  return map[key] !== false;
+}
+
+/**
+ * @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip
+ * @param {Record<string, boolean> | undefined} permissions
+ * @returns {TabId[]}
+ */
+export function visibleTabsForTrip(trip, permissions) {
+  /** @type {TabId[]} */
+  const tabs = [];
+  for (const tab of TAB_ORDER) {
+    if (tab === 'flights' || tab === 'hotels' || tab === 'cars') {
+      if (!isConfigSectionVisible(trip, tab)) continue;
+    }
+    if (tab === 'budget') {
+      if (!permissions?.share_budget) continue;
+    }
+    tabs.push(tab);
+  }
+  if (permissions?.share_packing) {
+    const budgetIdx = tabs.indexOf('budget');
+    if (budgetIdx >= 0) tabs.splice(budgetIdx, 0, 'packing');
+    else tabs.push('packing');
+  }
+  if (permissions?.share_collab) {
+    const budgetIdx = tabs.indexOf('budget');
+    if (budgetIdx >= 0) tabs.splice(budgetIdx, 0, 'chat');
+    else tabs.push('chat');
+  }
+  return tabs;
+}
 
 /** @param {unknown} value @returns {value is TabId} */
 export function isTabId(value) {

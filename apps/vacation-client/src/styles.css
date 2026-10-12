@@ -108,6 +108,122 @@ body {
   color: var(--muted);
 }
 
+.tsv-header-popover-wide {
+  min-width: 200px;
+  max-width: min(280px, 92vw);
+}
+
+.tsv-header-popover-title {
+  margin: 0;
+  padding: 4px 8px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tsv-header-popover-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.tsv-header-popover-item:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.tsv-header-submenu-nested {
+  margin: 0 0 4px 10px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tsv-header-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tsv-header-config-row input {
+  margin: 0;
+}
+
+.tsv-header-edit-status {
+  font-size: 10px;
+  color: var(--muted);
+  max-width: 120px;
+  line-height: 1.25;
+}
+
+.ts-shared-audio-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ts-shared-audio-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.ts-shared-audio-button.is-recording {
+  background: #b42318;
+  border-color: rgba(180, 35, 24, 0.35);
+  color: #fff;
+}
+
+.ts-shared-audio-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 10000;
+  max-width: 520px;
+  margin: 0 auto;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.28);
+  padding: 11px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.ts-shared-audio-toast.ok {
+  background: rgba(6, 95, 70, 0.96);
+}
+
+.ts-shared-audio-toast.error {
+  background: rgba(153, 27, 27, 0.96);
+}
+
 .tsv-tabs {
   display: flex;
   flex-wrap: nowrap;

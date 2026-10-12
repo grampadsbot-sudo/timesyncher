@@ -57,6 +57,8 @@ export type TabId =
   | 'restaurants'
   | 'stores'
   | 'events'
+  | 'packing'
+  | 'chat'
   | 'budget';
 
 export const TAB_LABELS: Record<TabId, string> = {
@@ -67,5 +69,7 @@ export const TAB_LABELS: Record<TabId, string> = {
   restaurants: 'Restaurants',
   stores: 'Stores',
   events: 'The Rest',
+  packing: 'Packing',
+  chat: 'Chat',
   budget: 'Budget',
 };

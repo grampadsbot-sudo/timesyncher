@@ -1,16 +1,21 @@
 import type { TabId } from '../types/sharedTrip';
-import { TAB_ICONS, TAB_LABELS, TAB_ORDER } from '../lib/tabNavModel.mjs';
+import type { SharedTripPayload } from '../types/sharedTrip';
+import { TAB_ICONS, TAB_LABELS, visibleTabsForTrip } from '../lib/tabNavModel.mjs';
 import { TabEmojiIcon } from './TabEmojiIcon';
 
 type Props = {
   active: TabId;
+  trip: SharedTripPayload;
+  permissions?: SharedTripPayload['permissions'];
   onChange: (tab: TabId) => void;
 };
 
-export function TabNav({ active, onChange }: Props) {
+export function TabNav({ active, trip, permissions, onChange }: Props) {
+  const tabs = visibleTabsForTrip(trip, permissions);
+
   return (
     <nav className="tsv-tabs" aria-label="Itinerary sections">
-      {TAB_ORDER.map((tab) => {
+      {tabs.map((tab) => {
         const label = TAB_LABELS[tab];
         const isActive = tab === active;
         return (
@@ -31,4 +36,4 @@ export function TabNav({ active, onChange }: Props) {
   );
 }
 
-export { TAB_ORDER };
+export { visibleTabsForTrip as TAB_ORDER };
