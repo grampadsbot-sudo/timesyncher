@@ -2,7 +2,6 @@
 
 import {
   captureThingLogo,
-  distinctLogoUrlForPlace,
   isPlaceholderLogoUrl,
   resolveThingLogoUrl,
   sourceLogoUrl,
@@ -92,10 +91,13 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget control accessible name: full catalog title (staging parity / Gate B feature checks). */
+/** Budget control label: TREK mr() strips flight-catalog prefix (staging parity). */
 export function budgetLineDisplayName(place, trip) {
-  void trip;
-  return placeName(place);
+  const raw = placeName(place);
+  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
+    return catalogRowDisplayName(place, trip);
+  }
+  return raw;
 }
 
 function neighborhood(place, override, source) {
@@ -394,11 +396,16 @@ export function rowSummary(place, trip) {
       ),
     });
   }
+  const price = numericPrice(place, trip);
   const pricedPlace = {
     ...place,
-    price: numericPrice(place, trip) ?? place.price,
+    price: price ?? place.price,
   };
-  return ensureProductListSummary(draft || best || rr || '', pricedPlace, { category });
+  let summary = ensureProductListSummary(draft || best || rr || '', pricedPlace, { category });
+  if (price != null && !/\$\s*\d|price:|\/night|per person|from \$|tickets?\s+(from\s+)?\$/i.test(summary)) {
+    summary = `${summary} Price: about $${Math.round(price).toLocaleString('en-US')}.`.replace(/\s+/g, ' ').trim();
+  }
+  return summary;
 }
 
 function faviconFromPageUrl(pageUrl = '') {
@@ -451,8 +458,10 @@ export function logoUrlForPlace(place, trip) {
   };
   let logo = pick();
   if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
-    const distinct = distinctLogoUrlForPlace(place, override, trip);
-    if (distinct) logo = distinct;
+    const favicon = faviconFromPageUrl(page);
+    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
+    if (favicon && favicon !== logo && !logoUsedByOtherPlaces(favicon, place, trip)) logo = favicon;
+    else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }

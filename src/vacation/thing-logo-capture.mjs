@@ -88,6 +88,9 @@ function brandLogoFromName(name = '') {
 
 function venueHostFromName(name = '') {
   const label = text(name).toLowerCase();
+  if (/\bblue note\b.*\bfestival\b|\bfestival\b.*\bblue note\b/.test(label)) {
+    return 'bluenotejazz.com';
+  }
   if (/\bblue note\b/.test(label)) return 'www.bluenote.net';
   if (/\bvillage vanguard\b/.test(label)) return 'www.villagevanguard.com';
   if (/\bsmoke\b.*\bjazz\b|\bjazz\b.*\bsmoke\b/.test(label)) return 'www.smokejazz.com';

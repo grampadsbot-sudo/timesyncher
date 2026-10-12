@@ -128,7 +128,11 @@ export function ListRow({
               </span>
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
-            {price ? <span className="tsv-row-price">{price}</span> : null}
+            {price ? (
+            <span className="tsv-row-price" data-ts-list-row-price="1">
+              {price}
+            </span>
+          ) : null}
             {summary ? (
               <span
                 className="tsv-row-desc tsv-row-car-desc"
@@ -168,7 +172,11 @@ export function ListRow({
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}
           </span>
-          {price ? <span className="tsv-row-price">{price}</span> : null}
+          {price ? (
+            <span className="tsv-row-price" data-ts-list-row-price="1">
+              {price}
+            </span>
+          ) : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
           {summary ? (
             <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">

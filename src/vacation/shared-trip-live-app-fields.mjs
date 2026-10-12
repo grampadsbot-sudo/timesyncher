@@ -1,5 +1,5 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
-import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
+import { distinctLogoUrlForPlace, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import { buildCategoryDescription, ensureProductListSummary } from './trip-thing-enrichment.mjs';
 
 function text(value) {
@@ -248,6 +248,28 @@ export function applyLiveAppListRowFields(shared = {}) {
     }
 
     next.thingOverrides[key] = override;
+  }
+  const logoUrlOwners = new Map();
+  for (const place of next.places) {
+    const key = `place:${place.id}`;
+    const override = next.thingOverrides[key] || {};
+    const url = text(override.logoUrl || place.logoUrl);
+    if (!url) continue;
+    const bucket = logoUrlOwners.get(url) || [];
+    bucket.push({ place, overrideKey: key });
+    logoUrlOwners.set(url, bucket);
+  }
+  for (const [sharedUrl, owners] of logoUrlOwners) {
+    if (owners.length <= 1) continue;
+    for (const { place, overrideKey } of owners) {
+      const override = { ...(next.thingOverrides[overrideKey] || {}) };
+      const replacement = distinctLogoUrlForPlace(place, override, next);
+      if (replacement && replacement !== sharedUrl) {
+        override.logoUrl = replacement;
+        place.logoUrl = replacement;
+        next.thingOverrides[overrideKey] = override;
+      }
+    }
   }
   return next;
 }

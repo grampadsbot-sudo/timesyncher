@@ -4,7 +4,7 @@ import {
   formatUsd,
   bucketIcon,
 } from '../lib/budgetModel.mjs';
-import { placeName } from '../lib/placeHelpers';
+import { budgetLineDisplayName } from '../lib/listTabModel.mjs';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
@@ -116,10 +116,10 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                     <button
                       type="button"
                       className="tsv-budget-line-name"
-                      aria-label={placeName(row.place)}
+                      aria-label={budgetLineDisplayName(row.place, trip)}
                       onClick={() => onOpen(row.place)}
                     >
-                      {row.name}
+                      {budgetLineDisplayName(row.place, trip)}
                     </button>
                     <span className="tsv-budget-line-amount">
                       {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}

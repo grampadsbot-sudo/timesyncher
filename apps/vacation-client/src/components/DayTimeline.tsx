@@ -79,7 +79,7 @@ function TimelineIcon({
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
       {showLogo && flightLogo ? (
         <img
-          className="tsv-timeline-logo tiny-logo"
+          className="tiny-logo"
           src={flightLogo}
           alt=""
           width={22}
