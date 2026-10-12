@@ -164,8 +164,18 @@ function placesFromItineraryTimeline(trip) {
     for (const entry of buildDayTimeline(trip, day)) {
       if (entry.kind === 'travel') continue;
       if (entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') continue;
-      if (!entry.place) continue;
-      seen.set(String(entry.place.id), entry.place);
+      if (entry.place) {
+        seen.set(String(entry.place.id), entry.place);
+        continue;
+      }
+      const title = text(entry.title);
+      if (!title) continue;
+      const stubId = entry.id || title;
+      seen.set(String(stubId), {
+        id: stubId,
+        name: title,
+        category_name: entry.category === 'flight' || /^Flight option:/i.test(title) ? 'Flight' : 'Activity',
+      });
     }
   }
   return [...seen.values()];
@@ -201,6 +211,18 @@ export function placesForBudget(trip) {
       const place = row.place || (trip.places || []).find((p) => String(p.id) === String(row.place_id));
       if (place) add(place);
     }
+  }
+  for (const line of trip?.budget || []) {
+    const name = text(line?.name);
+    if (!name) continue;
+    const matched = [...seen.values()].find((place) => placeName(place) === name);
+    if (matched) continue;
+    add({
+      id: line.id ?? name,
+      name,
+      category_name: text(line.category) || 'Activity',
+      price: line.total_price ?? line.amount,
+    });
   }
   for (const res of trip?.reservations || []) {
     const title = text(res?.title || res?.name);

@@ -116,10 +116,10 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                     <button
                       type="button"
                       className="tsv-budget-line-name"
-                      aria-label={row.name}
+                      aria-label={budgetLineDisplayName(row.place, trip)}
                       onClick={() => onOpen(row.place)}
                     >
-                      {budgetLineDisplayName(row.place, trip)}
+                      {row.name}
                     </button>
                     <span className="tsv-budget-line-amount">
                       {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}

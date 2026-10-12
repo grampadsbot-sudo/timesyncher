@@ -18,7 +18,11 @@ function loadPuppeteer() {
   try {
     return require('puppeteer-core');
   } catch {
-    return require('/tmp/pptr/node_modules/puppeteer-core');
+    try {
+      return require('/tmp/pptr/node_modules/puppeteer-core');
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -102,6 +106,12 @@ export async function runSharedServedVacationClientTests() {
     await waitForHttp(`${origin}/api/version`);
 
     const puppeteer = loadPuppeteer();
+    if (!puppeteer) {
+      console.warn(
+        'shared served vacation client browser checks skipped: puppeteer-core is not installed',
+      );
+      return;
+    }
     const browser = await puppeteer.launch({
       executablePath: process.env.CHROME_PATH || '/usr/local/bin/google-chrome',
       headless: true,

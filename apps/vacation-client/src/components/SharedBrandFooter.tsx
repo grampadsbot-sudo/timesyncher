@@ -10,7 +10,7 @@ export function SharedBrandFooter() {
         <span>TimeSyncher</span>
         <img
           className="ts-logo tiny-logo"
-          src="icons/timesyncher-icon-black-transparent.png"
+          src="/icons/timesyncher-icon-black-transparent.png"
           alt="TimeSyncher"
           width={22}
           height={22}

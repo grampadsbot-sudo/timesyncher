@@ -368,7 +368,11 @@ export function rowSummary(place, trip) {
       ),
     });
   }
-  return ensureProductListSummary(draft || best || rr || '', place, { category });
+  const pricedPlace = {
+    ...place,
+    price: numericPrice(place, trip) ?? place.price,
+  };
+  return ensureProductListSummary(draft || best || rr || '', pricedPlace, { category });
 }
 
 function faviconFromPageUrl(pageUrl = '') {
@@ -421,10 +425,10 @@ export function logoUrlForPlace(place, trip) {
   };
   let logo = pick();
   if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
-    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
     const favicon = faviconFromPageUrl(page);
-    if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
-    else if (favicon && favicon !== logo) logo = favicon;
+    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
+    if (favicon && favicon !== logo) logo = favicon;
+    else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }

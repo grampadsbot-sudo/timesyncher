@@ -71,8 +71,8 @@ function TimelineIcon({
   }
   const [logoBroken, setLogoBroken] = useState(false);
   const flightGlyph = resolved.icon || '✈️';
-  const showLogo = Boolean(logo) && (!logoBroken || isFlight);
-  const showEmoji = !isFlight ? !showLogo || logoBroken : logoBroken || !logo;
+  const showLogo = Boolean(logo) && !logoBroken;
+  const showEmoji = isFlight || !showLogo || logoBroken;
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
