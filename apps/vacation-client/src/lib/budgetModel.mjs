@@ -6,6 +6,7 @@ import {
   placesForCategoryTab,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { resolvePlace } from './dayTimelineModel.mjs';
 
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
 export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
@@ -40,6 +41,28 @@ function text(value) {
 
 function overrideFor(trip, place) {
   return trip?.thingOverrides?.[`place:${place.id}`] || {};
+}
+
+function catalogPlace(trip, id) {
+  return (trip?.places || []).find((p) => String(p.id) === String(id));
+}
+
+/** Catalog row used for budget math (assignments may carry partial `place` stubs). */
+export function canonicalBudgetPlace(trip, placeOrId) {
+  const id = placeOrId && typeof placeOrId === 'object' ? placeOrId.id : placeOrId;
+  return catalogPlace(trip, id) || (placeOrId && typeof placeOrId === 'object' ? placeOrId : null);
+}
+
+function rememberBudgetPlace(seen, place) {
+  if (!place || place.id == null) return;
+  const id = String(place.id);
+  const prev = seen.get(id);
+  seen.set(id, prev ? { ...prev, ...place } : place);
+}
+
+function placeOnTimeline(place, trip) {
+  const override = overrideFor(trip, place);
+  return override.timeline === true;
 }
 
 function haFields(place, override) {
@@ -162,21 +185,21 @@ export function placesForBudget(trip) {
   const seen = new Map();
   for (const tab of LIST_TAB_IDS) {
     for (const place of placesForCategoryTab(trip, tab)) {
-      seen.set(String(place.id), place);
+      rememberBudgetPlace(seen, place);
     }
   }
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
     const dayIds = override.dayIds;
     if (Array.isArray(dayIds) && dayIds.length) {
-      seen.set(String(place.id), place);
+      rememberBudgetPlace(seen, place);
     }
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
     for (const row of rows) {
-      const place = row.place || (trip.places || []).find((p) => String(p.id) === String(row.place_id));
-      if (place) seen.set(String(place.id), place);
+      const place = resolvePlace(row, trip);
+      rememberBudgetPlace(seen, place);
     }
   }
   return [...seen.values()];
@@ -228,6 +251,9 @@ export function buildBudgetModel(trip) {
   const buckets = BUDGET_BUCKET_ORDER.map((label) => {
     const bucketRows = rows.filter((row) => row.bucket === label);
     const planned = bucketRows.reduce((acc, row) => acc + row.amount, 0);
+    const timelinePlanned = bucketRows
+      .filter((row) => placeOnTimeline(row.place, trip))
+      .reduce((acc, row) => acc + row.amount, 0);
     const target = bucketTargetAmount(trip, label);
     const omit = planned === 0 && (target === null || target === 0) && bucketRows.length === 0;
     return {
@@ -236,6 +262,7 @@ export function buildBudgetModel(trip) {
       icon: bucketIcon(label),
       rows: bucketRows.sort((a, b) => a.name.localeCompare(b.name)),
       planned,
+      timelinePlanned,
       target,
       variance: varianceLabel(planned, target),
       omit,
@@ -243,6 +270,9 @@ export function buildBudgetModel(trip) {
   }).filter((bucket) => !bucket.omit);
 
   const tripPlanned = rows.reduce((acc, row) => acc + row.amount, 0);
+  const tripTimelinePlanned = rows
+    .filter((row) => placeOnTimeline(row.place, trip))
+    .reduce((acc, row) => acc + row.amount, 0);
   const tripTarget = tripBudgetTargetTotal(trip);
 
   return {
@@ -250,6 +280,7 @@ export function buildBudgetModel(trip) {
     rows,
     buckets,
     tripPlanned,
+    tripTimelinePlanned,
     tripTarget,
     tripVariance: varianceLabel(tripPlanned, tripTarget),
     isEmpty: rows.length === 0,
@@ -270,11 +301,46 @@ export function budgetCompletenessChecks(trip) {
     push(`row_place_${id}`, model.rows.some((row) => String(row.place.id) === id));
   }
 
+  for (const row of model.rows) {
+    const id = String(row.place.id);
+    const catalog = canonicalBudgetPlace(trip, id);
+    if (!catalog) continue;
+    const expectedName = placeName(catalog);
+    const expectedBucket = budgetBucketForPlace(catalog, trip);
+    const expectedPricing = budgetLineAmount(catalog, trip);
+    push(`row_identity_${id}`, row.name === expectedName);
+    push(`row_bucket_${id}`, row.bucket === expectedBucket);
+    push(
+      `row_amount_${id}`,
+      row.amount === expectedPricing.amount && row.hasPrice === expectedPricing.hasPrice,
+    );
+  }
+
   for (const bucket of model.buckets) {
     const sum = bucket.rows.reduce((a, r) => a + r.amount, 0);
     push(`bucket_total_${bucket.label}`, bucket.planned === sum);
-    for (const row of bucket.rows) {
-      push(`row_amount_${row.place.id}`, Number.isFinite(row.amount));
+    const timelineSum = bucket.rows
+      .filter((row) => placeOnTimeline(row.place, trip))
+      .reduce((a, r) => a + r.amount, 0);
+    push(`bucket_timeline_total_${bucket.label}`, bucket.timelinePlanned === timelineSum);
+  }
+
+  push(
+    'trip_timeline_total',
+    model.tripTimelinePlanned
+      === model.rows.filter((row) => placeOnTimeline(row.place, trip)).reduce((a, r) => a + r.amount, 0),
+  );
+
+  const apiLines = Array.isArray(trip?.budget) ? trip.budget : [];
+  if (apiLines.length) {
+    const apiAmounts = new Set(
+      apiLines
+        .map((line) => Number(line.total_price ?? line.amount ?? line.total))
+        .filter((n) => Number.isFinite(n)),
+    );
+    for (const row of model.rows) {
+      if (!row.hasPrice) continue;
+      push(`row_amount_on_api_${row.place.id}`, apiAmounts.has(row.amount));
     }
   }
 
