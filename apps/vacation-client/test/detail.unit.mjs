@@ -1,64 +1,66 @@
 import assert from 'node:assert/strict';
 
+import { finalizeServedSharedTripPayload } from '../../../src/vacation/shared-trip-served-page.mjs';
 import {
   buildDetailViewModel,
+  detailCoordinates,
   detailFieldRows,
   detailHappyHour,
+  detailReviewTotalsLine,
   detailReviews,
+  detailSummary,
 } from '../src/lib/detailModel.mjs';
+import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
 
-const reviewBody =
-  'The negroni is perfectly balanced and the bartenders know their classics without leaning too sweet or bitter even when the room is packed with after-work crowds waiting for bar seats.';
+function wordCount(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
 
-const barTrip = {
-  places: [{ id: 10, name: 'Sample Cocktail Bar', category_name: 'Bar' }],
-  thingOverrides: {
-    'place:10': {
-      category: 'bar',
-      address: 'Midtown, New York, NY',
-      phone: '(212) 555-0101',
-      hours: 'Mon–Sat 4pm–2am',
-      website: 'https://example-bar.test/',
-      priceLevel: '$$',
-      googleRating: '4.6',
-      googleReviewCount: '820',
-      summary: reviewBody,
-      happyHourDetails: 'Mon–Fri 4–7pm: $8 cocktails and $1 oysters.',
-      itineraryNote: 'Cocktails at Sample Cocktail Bar — arrive early for bar seats.',
-      review1: reviewBody,
-      review1Source: 'Google',
-      review1Rating: '5',
-      review2: `${reviewBody} Second review with enough words to satisfy the twenty five word minimum for stored review text in detail popup tests.`,
-      review2Source: 'Yelp',
-      review2Rating: '4.5',
-      review3: `${reviewBody} Third review with enough words to satisfy the twenty five word minimum for stored review text in detail popup tests.`,
-      review3Source: 'Google',
-      review3Rating: '4.8',
-      review4: `${reviewBody} Fourth review with enough words to satisfy the twenty five word minimum for stored review text in detail popup tests.`,
-      review4Source: 'TripAdvisor',
-      review4Rating: '4.7',
-      summarySourceUrls: ['https://example-bar.test/', 'https://www.nytimes.com/example-bar-review'],
-    },
-  },
-};
+const enrichedTrip = finalizeServedSharedTripPayload(buildEnrichedDetailSharedTrip());
+const restaurant = enrichedTrip.places.find((place) => /Harbor Room/i.test(place.name || ''));
+assert.ok(restaurant, 'enriched restaurant');
+const restaurantOverride = enrichedTrip.thingOverrides[`place:${restaurant.id}`];
+const restaurantModel = buildDetailViewModel(restaurant, enrichedTrip);
 
-const barPlace = barTrip.places[0];
-const barModel = buildDetailViewModel(barPlace, barTrip);
-assert.equal(barModel.reviews.length, 4);
-assert.equal(barModel.fieldRows.find((row) => row.key === 'phone')?.value, '(212) 555-0101');
-assert.match(barModel.happyHourDetails, /oyster/i);
-assert.match(barModel.itineraryNote, /Sample Cocktail Bar/i);
-assert.equal(detailHappyHour(barTrip.thingOverrides['place:10']), barModel.happyHourDetails);
+assert.ok(detailCoordinates(restaurant, enrichedTrip), 'coordinates resolve from enriched place');
+assert.ok(
+  restaurantModel.fieldRows.some((row) => row.key === 'coordinates'),
+  'pure field probe includes coordinates',
+);
+assert.equal(restaurantModel.reviews.length, 4);
+assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6/i);
+assert.match(restaurantModel.headerLabel, /Restaurant · Brave/i);
+assert.ok(wordCount(restaurantModel.summary) >= 30);
+assert.match(restaurantModel.happyHourDetails, /oyster/i);
+assert.match(restaurantModel.itineraryNote, /Harbor Room/i);
+assert.equal(restaurantModel.summarySourceUrls.length, 2);
+assert.equal(detailHappyHour(restaurantOverride), restaurantModel.happyHourDetails);
+assert.equal(detailReviewTotalsLine(restaurantOverride), restaurantModel.reviewTotalsLine);
+
+const bar = enrichedTrip.places.find((place) => /Copper Lantern/i.test(place.name || ''));
+const barModel = buildDetailViewModel(bar, enrichedTrip);
+assert.ok(barModel.reviews.some((review) => /Composite of 120 Google\/Yelp reviews/i.test(review.compositeLabel || '')));
 
 const sparseTrip = {
-  places: [{ id: 1, name: 'Sparse Place', category_name: 'Restaurant' }],
+  places: [{ id: 1, name: 'Sparse Place', category_name: 'Restaurant', lat: 40.73, lng: -74.0 }],
   thingOverrides: {
-    'place:1': { category: 'restaurant', summary: 'Only summary here for the sparse restaurant detail test case.' },
+    'place:1': {
+      category: 'restaurant',
+      summary: 'Only summary here for the sparse restaurant detail test case.',
+      review1: 'Too short',
+      review1Source: 'Google',
+      review1Rating: '5',
+    },
   },
 };
 const sparseModel = buildDetailViewModel(sparseTrip.places[0], sparseTrip);
 assert.equal(sparseModel.fieldRows.find((row) => row.key === 'phone'), undefined);
 assert.equal(sparseModel.reviews.length, 0);
+assert.equal(sparseModel.summary, '');
+assert.equal(detailSummary(sparseTrip.places[0], sparseTrip), '');
 
 const flightTrip = {
   places: [{ id: 2, name: 'JetBlue BOS → JFK', category_name: 'Flight' }],

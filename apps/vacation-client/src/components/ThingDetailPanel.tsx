@@ -8,20 +8,10 @@ type Props = {
   onClose: () => void;
 };
 
-function DetailLogo({
-  logoUrl,
-  fallback,
-}: {
-  logoUrl: string;
-  fallback: string;
-}) {
+function DetailLogo({ logoUrl }: { logoUrl: string }) {
   return (
     <span className="tsv-detail-logo-chip" data-ts-detail-logo-chip="1" aria-hidden="true">
-      {logoUrl ? (
-        <img className="tsv-detail-logo" src={logoUrl} alt="" />
-      ) : (
-        <span className="tsv-detail-logo-fallback">{fallback}</span>
-      )}
+      <img className="tsv-detail-logo" src={logoUrl} alt="" />
     </span>
   );
 }
@@ -66,13 +56,13 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
         onClick={(event) => event.stopPropagation()}
       >
         <header className="tsv-detail-head">
-          {model.categoryLabel ? (
+          {model.headerLabel ? (
             <p className="tsv-detail-category" data-ts-detail-category="1">
-              {model.categoryLabel}
+              {model.headerLabel}
             </p>
           ) : null}
           <div className="tsv-detail-title-row">
-            <DetailLogo logoUrl={model.logoUrl} fallback={model.logoFallback} />
+            {model.showLogo ? <DetailLogo logoUrl={model.logoUrl} /> : null}
             <h2 id={titleId} className="tsv-detail-name" data-ts-detail-name="1">
               {model.name}
             </h2>
@@ -125,6 +115,11 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
               <ul className="tsv-reviews">
                 {model.reviews.map((review) => (
                   <li key={review.index} className="tsv-review-box" data-ts-detail-review="1">
+                    {review.compositeLabel ? (
+                      <p className="tsv-review-composite" data-ts-detail-review-composite="1">
+                        {review.compositeLabel}
+                      </p>
+                    ) : null}
                     {review.rating ? (
                       <div className="tsv-review-stars">{review.rating} ★</div>
                     ) : null}
@@ -133,6 +128,11 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                   </li>
                 ))}
               </ul>
+              {model.reviewTotalsLine ? (
+                <p className="tsv-detail-review-totals" data-ts-detail-review-totals="1">
+                  {model.reviewTotalsLine}
+                </p>
+              ) : null}
             </section>
           ) : null}
           {model.summarySourceUrls.length ? (
