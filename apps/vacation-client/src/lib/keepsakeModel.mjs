@@ -6,6 +6,12 @@ import {
   mapPlacesForTimeline,
   sortedDays,
 } from './dayTimelineModel.mjs';
+import {
+  boundMediaForPlace,
+  isPhotoMedia,
+  isVideoMedia,
+  savedStoryFlagActive,
+} from './keepsakeMedia.mjs';
 
 const BOILERPLATE_RE =
   /brought together your day-by-day plan, meals, shows, shopping, hotels, and saved notes/i;
@@ -98,31 +104,42 @@ export function tripSummaryText(trip) {
 }
 
 function storyText(place, override) {
-  return text(override.story || place.story);
+  const raw = override.story ?? place.story;
+  if (raw === true) return '';
+  return text(raw);
+}
+
+function storyMediaForPlace(trip, place) {
+  const bound = boundMediaForPlace(place);
+  if (bound.length) return bound;
+  const id = Number(place.id);
+  const top = [];
+  for (const row of trip?.media || []) {
+    if (!row || typeof row !== 'object') continue;
+    const thingId = Number(row.thingId ?? row.thing_id ?? row.place_id);
+    if (thingId === id) top.push(row);
+  }
+  return boundMediaForPlace({ ...place, bound_media: top });
 }
 
 /** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function savedStories(trip) {
-  const mediaByPlace = new Map();
-  for (const row of trip?.media || []) {
-    if (!row || typeof row !== 'object') continue;
-    const thingId = Number(row.thingId ?? row.thing_id ?? row.place_id);
-    if (!thingId) continue;
-    const list = mediaByPlace.get(thingId) || [];
-    list.push(row);
-    mediaByPlace.set(thingId, list);
-  }
   const stories = [];
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
+    if (!savedStoryFlagActive(place, override)) continue;
     const story = storyText(place, override);
-    const media = mediaByPlace.get(Number(place.id)) || [];
-    if (!story && !media.length) continue;
+    const media = storyMediaForPlace(trip, place);
+    const photos = media.filter((row) => isPhotoMedia(row));
+    const videos = media.filter((row) => isVideoMedia(row));
+    if (!story && !photos.length && !videos.length) continue;
     stories.push({
       id: place.id,
       title: placeName(place),
       story,
       media,
+      photos,
+      videos,
       logoUrl: text(override.logoUrl || place.logoUrl),
     });
   }
@@ -141,12 +158,7 @@ export function directorySection(trip, tab, label) {
   return {
     label,
     tab,
-    items: places.map((place) => ({
-      id: place.id,
-      title: placeName(place),
-      logoUrl: text(overrideFor(trip, place).logoUrl || place.logoUrl),
-      category: tabCategoryKey(place, trip),
-    })),
+    items: places.map((place) => ({ id: place.id })),
   };
 }
 
@@ -213,15 +225,6 @@ export function buildKeepsakeViewModel(trip, searchParams = new URLSearchParams(
     sections.push({ kind: 'stats', stats });
   }
 
-  const restaurants = directorySection(trip, 'restaurants', 'Restaurants');
-  if (flags.restaurants && restaurants) sections.push({ kind: 'directory', ...restaurants });
-
-  const rest = directorySection(trip, 'events', 'Shows, Tours and the Rest');
-  if (flags.rest && rest) sections.push({ kind: 'directory', ...rest });
-
-  const stores = directorySection(trip, 'stores', 'Stores');
-  if (flags.stores && stores) sections.push({ kind: 'directory', ...stores });
-
   const mapPages = [];
   for (const page of dayPages) {
     const dayNumber = Number(page.day.day_number ?? 0);
@@ -240,6 +243,15 @@ export function buildKeepsakeViewModel(trip, searchParams = new URLSearchParams(
   if (dayPages.length) {
     sections.push({ kind: 'daily-itinerary', days: dayPages });
   }
+
+  const restaurants = directorySection(trip, 'restaurants', 'Restaurants');
+  if (flags.restaurants && restaurants) sections.push({ kind: 'directory', ...restaurants });
+
+  const rest = directorySection(trip, 'events', 'Shows, Tours and the Rest');
+  if (flags.rest && rest) sections.push({ kind: 'directory', ...rest });
+
+  const stores = directorySection(trip, 'stores', 'Stores');
+  if (flags.stores && stores) sections.push({ kind: 'directory', ...stores });
 
   return {
     style,

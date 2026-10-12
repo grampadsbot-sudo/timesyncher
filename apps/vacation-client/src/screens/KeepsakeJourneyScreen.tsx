@@ -3,16 +3,42 @@ import type { SharedTripPayload } from '../types/sharedTrip';
 import { buildKeepsakeViewModel } from '../lib/keepsakeModel.mjs';
 import { DayMap } from '../components/DayMap';
 import { BuildStampFooter } from '../components/BuildStampFooter';
-import { BudgetLogoChip } from '../components/BudgetLogoChip';
-import { timeRangeLabel } from '../lib/dayTimelineModel.mjs';
+import {
+  KeepsakeDailyPage,
+  KeepsakeDirectoryRow,
+  KeepsakeLogoFooter,
+  KeepsakePrintBrand,
+  KeepsakeStoryCard,
+} from '../components/KeepsakeBlocks';
 
 type Props = {
   trip: SharedTripPayload;
   shareToken: string;
 };
 
+const KS_QUERY_KEYS = [
+  'ksLogo',
+  'ksSummary',
+  'ksEventSummary',
+  'ksStories',
+  'ksRestaurants',
+  'ksRest',
+  'ksStores',
+  'ksMapOff',
+];
+
 function useSearchParams() {
   return useMemo(() => new URLSearchParams(window.location.search), []);
+}
+
+function pdfPathWithConfig(pathname: string, params: URLSearchParams, extra: Record<string, string>) {
+  const url = new URL(pathname, 'http://local');
+  for (const [key, value] of Object.entries(extra)) url.searchParams.set(key, value);
+  for (const key of KS_QUERY_KEYS) {
+    const value = params.get(key);
+    if (value != null && value !== '') url.searchParams.set(key, value);
+  }
+  return `${url.pathname}${url.search}`;
 }
 
 export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
@@ -21,6 +47,7 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-ts-keepsake', '1');
+    document.documentElement.setAttribute('data-keepsake-style', String(model.style));
     if (params.get('printMode') === 'report') {
       document.body.setAttribute('data-ae-print', '1');
     }
@@ -45,17 +72,46 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
     }
     return () => {
       document.documentElement.removeAttribute('data-ts-keepsake');
+      document.documentElement.removeAttribute('data-keepsake-style');
       document.body.removeAttribute('data-ae-print');
       document.body.removeAttribute('data-print-ready');
     };
   }, [model.style, params, shareToken]);
 
-  const printKeepsakeHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/keepsake.pdf`;
-  const printStyleTwoHref = `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`;
+  useEffect(() => {
+    const root = document.querySelector('.tsv-keepsake-root');
+    if (!root) return;
+    const pages = root.querySelectorAll('.tsv-keepsake-page');
+    const total = pages.length;
+    pages.forEach((page, index) => {
+      let footer = page.querySelector('.tsv-keepsake-page-count');
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'tsv-keepsake-page-count muted page-count';
+        page.appendChild(footer);
+      }
+      footer.textContent = `Page ${index + 1} of ${total}`;
+    });
+  }, [model]);
+
+  const printKeepsakeHref = pdfPathWithConfig(
+    `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/keepsake.pdf`,
+    params,
+    { pdfReport: 'keepsake' },
+  );
+  const printStyleTwoHref = pdfPathWithConfig(
+    `/api/pdf/shared/${encodeURIComponent(shareToken)}/report/style-2`,
+    params,
+    { pdfReport: 'keepsake-style-2' },
+  );
+
+  const directorySections = model.sections.filter((s) => s.kind === 'directory');
+  const contentSections = model.sections.filter((s) => s.kind !== 'directory');
+  const lastDirectoryIndex = directorySections.length - 1;
 
   return (
     <div
-      className="tsv-keepsake-root"
+      className={`tsv-keepsake-root${model.style === 2 ? ' tsv-keepsake-style2' : ' tsv-keepsake-style1'}`}
       data-keepsake-journey="1"
       data-keepsake-style={String(model.style)}
     >
@@ -64,23 +120,23 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
         <a href={printStyleTwoHref}>Style two PDF</a>
       </div>
 
-      <article className="tsv-keepsake-page tsv-keepsake-cover">
-        <p className="tsv-keepsake-brand">TimeSyncher · Keepsake</p>
-        <h1>{model.tripTitle}</h1>
+      <article className="tsv-keepsake-page tsv-keepsake-cover keepsake-report">
+        <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
         {model.style === 2 ? <p className="tsv-muted">Style two</p> : null}
         {model.sections.find((s) => s.kind === 'summary') ? (
           <p className="tsv-muted">Trip summary</p>
         ) : null}
       </article>
 
-      {model.sections.map((section, index) => {
+      {contentSections.map((section, index) => {
         if (section.kind === 'summary') {
           return (
             <section
               key={`summary-${index}`}
-              className="tsv-keepsake-page"
+              className="tsv-keepsake-page keepsake-report"
               data-keepsake-section="summary"
             >
+              <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
               {section.summary.split(/\n\s*\n/).map((part) => (
                 <p key={part.slice(0, 32)} className="tsv-keepsake-summary">
                   {part}
@@ -93,9 +149,10 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
           return (
             <section
               key={`events-${index}`}
-              className="tsv-keepsake-page"
+              className="tsv-keepsake-page keepsake-report"
               data-keepsake-section="event-summary"
             >
+              <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
               <p className="tsv-keepsake-summary">{section.label}</p>
             </section>
           );
@@ -104,9 +161,10 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
           return (
             <section
               key={`stats-${index}`}
-              className="tsv-keepsake-page"
+              className="tsv-keepsake-page keepsake-report"
               data-summary-itinerary="1"
             >
+              <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
               <div className="tsv-keepsake-stat-grid">
                 {section.stats.map((row) => (
                   <div key={row.label} className="tsv-keepsake-stat" data-summary-itinerary="1">
@@ -122,54 +180,36 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
           return (
             <section
               key={`stories-${index}`}
-              className="tsv-keepsake-page"
+              className="tsv-keepsake-page keepsake-report keepsake-list-page"
               data-keepsake-section="saved-stories"
+              data-stories-two-col="1"
+              data-stories-packed="1"
             >
+              <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
               <h2>Saved stories</h2>
-              <div className="tsv-keepsake-stories">
+              <div className="tsv-keepsake-stories recap-grid">
                 {section.stories.map((story) => (
-                  <article key={String(story.id)} className="tsv-keepsake-story" data-story-card="1">
-                    <h3>{story.title}</h3>
-                    {story.story ? <p>{story.story}</p> : null}
-                  </article>
+                  <KeepsakeStoryCard key={String(story.id)} story={story} />
                 ))}
               </div>
             </section>
           );
         }
-        if (section.kind === 'directory') {
-          return (
-            <section
-              key={`dir-${section.tab}`}
-              className="tsv-keepsake-page"
-              data-directory-bucket={section.label}
-              data-summary-itinerary="1"
-            >
-              <h2>{section.label}</h2>
-              <ul className="tsv-keepsake-logo-list">
-                {section.items.map((item) => {
-                  const place = trip.places?.find((p) => String(p.id) === String(item.id));
-                  if (!place) return null;
-                  return (
-                    <li key={String(item.id)}>
-                      <BudgetLogoChip place={place} trip={trip} />
-                      <span>{item.title}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          );
-        }
         if (section.kind === 'daily-maps') {
           return (
-            <section key={`maps-${index}`} className="tsv-keepsake-page" data-keepsake-section="daily-maps">
+            <section
+              key={`maps-${index}`}
+              className="tsv-keepsake-page keepsake-report"
+              data-keepsake-section="daily-maps"
+            >
+              <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
               <h2>Daily maps</h2>
               {section.maps.map((mapPage) => (
                 <div
                   key={mapPage.dayNumber}
-                  className="tsv-keepsake-day-map-block"
+                  className="tsv-keepsake-day-map-block daily-map-page"
                   data-day-map-page="1"
+                  data-config-map="1"
                   data-day={String(mapPage.dayNumber)}
                 >
                   <h3>{mapPage.dayTitle} map</h3>
@@ -181,31 +221,55 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
         }
         if (section.kind === 'daily-itinerary') {
           return section.days.map((dayPage) => (
-            <section
+            <KeepsakeDailyPage
               key={String(dayPage.day.id)}
-              className="tsv-keepsake-page tsv-keepsake-day"
-              data-print-ready="daily"
-              data-day={String(dayPage.day.day_number ?? '')}
-            >
-              <p className="tsv-keepsake-brand">TimeSyncher · Journey</p>
-              <h2>{dayPage.day.title || `Day ${dayPage.day.day_number ?? ''}`}</h2>
-              <ol className="tsv-keepsake-day-list">
-                {dayPage.timeline.map((entry) => (
-                  <li key={entry.id}>
-                    <span className="tsv-keepsake-day-time">{timeRangeLabel(entry)}</span>
-                    <span>{entry.title}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
+              trip={trip}
+              tripTitle={model.tripTitle}
+              style={model.style}
+              dayPage={dayPage}
+            />
           ));
         }
         return null;
       })}
 
-      {model.logoSection ? (
-        <section className="tsv-keepsake-page tsv-keepsake-logo-page" data-keepsake-section="logo">
-          <p className="tsv-keepsake-brand-logo">TimeSyncher ⌛ Vacation</p>
+      {directorySections.map((section, index) => {
+        if (section.kind !== 'directory') return null;
+        const isLast = index === lastDirectoryIndex;
+        return (
+          <section
+            key={`dir-${section.tab}`}
+            className="tsv-keepsake-page keepsake-report keepsake-list-page"
+            data-directory-bucket={section.label}
+            data-summary-itinerary="1"
+            data-post-itinerary="1"
+            data-end-continuous={isLast ? '1' : undefined}
+          >
+            <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
+            <h2>{section.label}</h2>
+            <ul className="tsv-keepsake-logo-list logo-list">
+              {section.items.map((item) => {
+                const place = trip.places?.find((p) => String(p.id) === String(item.id));
+                if (!place) return null;
+                return (
+                  <KeepsakeDirectoryRow key={String(item.id)} place={place} trip={trip} />
+                );
+              })}
+            </ul>
+            {isLast && model.logoSection ? <KeepsakeLogoFooter /> : null}
+          </section>
+        );
+      })}
+
+      {model.logoSection && directorySections.length === 0 ? (
+        <section
+          className="tsv-keepsake-page tsv-keepsake-logo-page keepsake-report"
+          data-keepsake-section="logo"
+          data-last-page-logo="1"
+          data-logo-last-only="1"
+        >
+          <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
+          <KeepsakeLogoFooter />
         </section>
       ) : null}
 
