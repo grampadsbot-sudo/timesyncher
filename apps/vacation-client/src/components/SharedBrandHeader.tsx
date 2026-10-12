@@ -9,16 +9,23 @@ export function SharedBrandHeader() {
       data-ts-header-logo-chip="1"
     >
       <span>TimeSyncher</span>
-      <img
-        className="ts-logo"
-        src="/icons/timesyncher-icon-black-transparent.png"
-        alt="TimeSyncher"
-        width={22}
-        height={22}
-        decoding="sync"
-        loading="eager"
-        data-ts-header-logo="1"
-      />
+      <span
+        className="tsv-header-logo-chip"
+        data-ts-logo-chip="1"
+        data-ts-header-logo-chip="1"
+        aria-hidden="true"
+      >
+        <img
+          className="ts-logo tiny-logo"
+          src="/icons/timesyncher-icon-black-transparent.png"
+          alt=""
+          width={22}
+          height={22}
+          decoding="sync"
+          loading="eager"
+          data-ts-header-logo="1"
+        />
+      </span>
       <span>Vacation</span>
     </div>
   );

@@ -8,7 +8,11 @@ import {
   placesForBudget,
   tripBudgetTargetTotal,
 } from '../src/lib/budgetModel.mjs';
-import { catalogRowDisplayName, numericPrice } from '../src/lib/listTabModel.mjs';
+import {
+  budgetLineDisplayName,
+  catalogRowDisplayName,
+  numericPrice,
+} from '../src/lib/listTabModel.mjs';
 
 const hotelTrip = {
   trip: { currency: 'USD' },
@@ -92,6 +96,10 @@ const americanPlace = {
 assert.equal(
   catalogRowDisplayName(americanPlace, { places: [americanPlace] }),
   'American LAS-JFK 2026-06-23 12:37-20:59',
+);
+assert.equal(
+  budgetLineDisplayName(americanPlace, { places: [americanPlace] }),
+  'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
 );
 const americanBudget = buildBudgetModel({
   trip: { currency: 'USD' },

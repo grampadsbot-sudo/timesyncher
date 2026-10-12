@@ -2,6 +2,7 @@
 
 import {
   captureThingLogo,
+  distinctLogoUrlForPlace,
   isPlaceholderLogoUrl,
   resolveThingLogoUrl,
   sourceLogoUrl,
@@ -91,13 +92,10 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget control label: TREK mr() strips flight-catalog prefix (staging parity). */
+/** Budget line + control text: full catalog title (Gate B budget completeness / staging parity). */
 export function budgetLineDisplayName(place, trip) {
-  const raw = placeName(place);
-  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
-    return catalogRowDisplayName(place, trip);
-  }
-  return raw;
+  void trip;
+  return placeName(place);
 }
 
 function neighborhood(place, override, source) {
@@ -458,10 +456,15 @@ export function logoUrlForPlace(place, trip) {
   };
   let logo = pick();
   if (logo && (isPlaceholderLogoUrl(logo) || logoUsedByOtherPlaces(logo, place, trip))) {
-    const favicon = faviconFromPageUrl(page);
-    const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
-    if (favicon && favicon !== logo && !logoUsedByOtherPlaces(favicon, place, trip)) logo = favicon;
-    else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
+    const distinct = distinctLogoUrlForPlace(place, override, trip);
+    if (distinct && !isPlaceholderLogoUrl(distinct) && !logoUsedByOtherPlaces(distinct, place, trip)) {
+      logo = distinct;
+    } else {
+      const favicon = faviconFromPageUrl(page);
+      const named = captureThingLogo({ name: placeName(place), title: placeName(place) }, override);
+      if (favicon && favicon !== logo && !logoUsedByOtherPlaces(favicon, place, trip)) logo = favicon;
+      else if (named && named !== logo && !logoUsedByOtherPlaces(named, place, trip)) logo = named;
+    }
   }
   return logo && !isPlaceholderLogoUrl(logo) ? logo : '';
 }

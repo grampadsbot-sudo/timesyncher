@@ -87,6 +87,12 @@ function priceFromRecords(place = {}, override = {}, source = null) {
     source?.total_price,
     source?.amount,
     source?.rate,
+    source?.ticketPrice,
+    source?.ticket_price,
+    source?.minPrice,
+    source?.min_price,
+    meta?.ticketPrice,
+    meta?.price,
   ];
   for (const candidate of candidates) {
     const parsed = parsePrice(candidate);

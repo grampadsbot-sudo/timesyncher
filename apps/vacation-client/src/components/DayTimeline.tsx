@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { NAMED_THING_LOGOS } from '../../../../src/vacation/thing-logo-capture.mjs';
+import {
+  NAMED_THING_LOGOS,
+  resolveThingLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
@@ -63,8 +66,10 @@ function TimelineIcon({
   const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
   const flightTitle = entry.title || place?.name || '';
   let logo = isFlight ? airlineLogoFromTitle(flightTitle) : '';
-  if (!logo) {
-    logo = (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
+  if (!logo && place) {
+    logo = logoUrlForPlace(place, trip) || resolveThingLogoUrl(place, override) || resolved.logoUrl;
+  } else if (!logo) {
+    logo = resolved.logoUrl || resolveThingLogoUrl(stub, override);
   }
   if (isFlight && !logo) {
     logo = airlineLogoFromTitle(flightTitle);
@@ -72,8 +77,29 @@ function TimelineIcon({
   const [logoBroken, setLogoBroken] = useState(false);
   const flightGlyph = resolved.icon || '✈️';
   const flightLogo = isFlight ? logo || airlineLogoFromTitle(flightTitle) : logo;
-  const showLogo = Boolean(flightLogo) && (!logoBroken || isFlight);
-  const showEmoji = !isFlight && (!showLogo || logoBroken);
+
+  if (isFlight) {
+    const src = flightLogo || airlineLogoFromTitle(flightTitle);
+    return (
+      <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
+        {src ? (
+          <img
+            className="tiny-logo"
+            src={src}
+            alt=""
+            width={22}
+            height={22}
+            loading="eager"
+            decoding="sync"
+            data-ts-timeline-logo="1"
+          />
+        ) : null}
+      </span>
+    );
+  }
+
+  const showLogo = Boolean(flightLogo) && !logoBroken;
+  const showEmoji = !showLogo || logoBroken;
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
@@ -87,9 +113,7 @@ function TimelineIcon({
           loading="eager"
           decoding="sync"
           data-ts-timeline-logo="1"
-          onError={() => {
-            if (!isFlight) setLogoBroken(true);
-          }}
+          onError={() => setLogoBroken(true)}
         />
       ) : null}
       {showEmoji ? <span className="tsv-timeline-emoji">{flightGlyph}</span> : null}
