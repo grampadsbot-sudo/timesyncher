@@ -279,28 +279,72 @@ export function carSubtitle(place, trip) {
   );
 }
 
+function pickRrLine(...values) {
+  for (const value of values) {
+    const s = text(value);
+    if (!s) continue;
+    const words = s.split(/\s+/).filter(Boolean);
+    if (words.length <= 20) return s;
+    if (/^Documented .+ option/i.test(s)) return s;
+  }
+  return '';
+}
+
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  const candidates = [
+  const meta = place.metadata?.thingDetail && typeof place.metadata.thingDetail === 'object'
+    ? place.metadata.thingDetail
+    : {};
+  const longCandidates = [
     override.longDetails,
     override.details,
+    meta.longDetails,
+    meta.details,
     source.longDetails,
     source.details,
-    override.summary,
-    source.summary,
+    place.longDetails,
     place.description,
   ]
     .map((value) => text(value))
     .filter(Boolean);
-  const rich = candidates.find((body) => wordCount(body) >= 30);
-  if (rich) return rich;
-  return candidates.reduce((best, body) => (wordCount(body) > wordCount(best) ? body : best), '');
+  const richLong = longCandidates.find((body) => wordCount(body) >= 30);
+  if (richLong) return richLong;
+
+  const rr = pickRrLine(
+    override.itineraryNote,
+    override.itinerary_note,
+    override.summary,
+    meta.itineraryNote,
+    meta.summary,
+    source.summary,
+    source.itineraryNote,
+    place.description,
+  );
+  if (rr && wordCount(rr) >= 30) return rr;
+  if (rr) return rr;
+  return longCandidates.reduce((best, body) => (wordCount(body) > wordCount(best) ? body : best), '');
 }
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
-  return text(resolveThingLogoUrl(place, override));
+  const resolved = text(resolveThingLogoUrl(place, override));
+  if (resolved) return resolved;
+  const source = sourceRecord(place, override);
+  const page = text(
+    source.url || source.website || source.sourceUrl || place.url || place.website,
+  );
+  if (page) {
+    try {
+      const { origin, hostname } = new URL(page);
+      if (hostname && !/(^|\.)google\./i.test(hostname)) {
+        return `${origin}/favicon.ico`;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return '';
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

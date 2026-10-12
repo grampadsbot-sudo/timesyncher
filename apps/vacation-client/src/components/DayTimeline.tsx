@@ -64,19 +64,21 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
   }
 
   return (
-    <ol className="tsv-timeline-list">
+    <div className="tsv-timeline-list">
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
+        const isFlight = entry.kind === 'flight';
         const place = entry.place;
         const category = place ? tabCategoryKey(place, trip) : entry.category || '';
         const showSummary =
           !isTravel &&
+          !isFlight &&
           entry.kind === 'thing' &&
           category !== 'flight' &&
           !/^Travel (to|from)\b/i.test(entry.title) &&
           entry.summary;
         return (
-          <li
+          <div
             key={entry.id}
             className={`tsv-timeline-row${entry.conflictWith ? ' is-conflict' : ''}`}
             data-ts-timeline-row="1"
@@ -134,9 +136,9 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 ) : null}
               </div>
             ) : null}
-          </li>
+          </div>
         );
       })}
-    </ol>
+    </div>
   );
 }

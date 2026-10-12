@@ -173,6 +173,21 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (!text(override.details)) override.details = longDetails;
     }
 
+    copyIfBlank(
+      override,
+      'summary',
+      source?.summary,
+      source?.description,
+      placeMetadata(place).summary,
+      place.description,
+    );
+    copyIfBlank(
+      override,
+      'itineraryNote',
+      source?.itineraryNote,
+      source?.itinerary_note,
+    );
+
     if (category === 'flight') {
       place.category_name = place.category_name || 'Flight';
       place.category = place.category && typeof place.category === 'object'

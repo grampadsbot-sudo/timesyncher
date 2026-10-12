@@ -7,6 +7,16 @@ import {
   tabCategoryKey,
 } from './listTabModel.mjs';
 
+function placeAssignedToDay(place, trip, day) {
+  const dayId = String(day.id);
+  const override = overrideFor(trip, place);
+  const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
+  if (dayIds.includes(dayId)) return true;
+  return (trip.assignments?.[dayId] || []).some(
+    (row) => String(row.place_id ?? row.place?.id) === String(place.id),
+  );
+}
+
 function text(value) {
   return String(value ?? '').trim();
 }
@@ -290,6 +300,30 @@ export function buildDayTimeline(trip, day) {
     });
   }
   pushCarRows(entries, trip, day);
+  const seenPlaceIds = new Set(
+    entries.map((entry) => entry.place?.id).filter((id) => id != null).map(String),
+  );
+  for (const place of trip.places || []) {
+    if (tabCategoryKey(place, trip) !== 'flight') continue;
+    const override = overrideFor(trip, place);
+    if (override.timeline === false) continue;
+    if (!placeAssignedToDay(place, trip, day)) continue;
+    const key = String(place.id);
+    if (seenPlaceIds.has(key)) continue;
+    seenPlaceIds.add(key);
+    const schedule = scheduleForDay(place, trip, dayId);
+    entries.push({
+      kind: 'flight',
+      id: `flight-${place.id}`,
+      place,
+      title: placeName(place),
+      startMin: parseClockToMinutes(schedule.startTime),
+      startLabel: schedule.startTime,
+      durationMin: schedule.durationMin,
+      category: 'flight',
+      summary: rowSummary(place, trip),
+    });
+  }
   entries.sort((a, b) => {
     const aMin = a.startMin ?? 10_000 + entries.indexOf(a);
     const bMin = b.startMin ?? 10_000 + entries.indexOf(b);

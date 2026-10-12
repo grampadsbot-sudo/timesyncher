@@ -16,6 +16,8 @@ export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
           key={key}
           type="button"
           className={`tsv-sort-btn${sortKey === key ? ' is-active' : ''}`}
+          aria-pressed={sortKey === key}
+          data-ts-sort-key={key}
           onClick={() => onSort(key)}
         >
           {key === 'name' ? 'Name' : 'Price'}

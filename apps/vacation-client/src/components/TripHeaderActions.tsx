@@ -57,17 +57,20 @@ export function TripHeaderActions({ shareToken, permissions }: Props) {
         <button
           type="button"
           className="tsv-header-btn"
-          aria-label="Print"
+          aria-label="PDFs"
           aria-expanded={printOpen}
           onClick={() => {
             setPrintOpen((open) => !open);
             setConfigOpen(false);
           }}
         >
-          Print
+          PDFs
         </button>
         {printOpen ? (
-          <div className="tsv-header-popover" role="menu">
+          <div className="tsv-header-popover" role="menu" aria-label="Print / PDF">
+            <span className="tsv-header-popover-title" role="presentation">
+              Print / PDF
+            </span>
             <a role="menuitem" href={printKeepsakeHref}>
               Style one PDF
             </a>
