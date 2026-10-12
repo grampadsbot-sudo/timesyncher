@@ -158,24 +158,21 @@ function usableLogo(value) {
 /** Logo or favicon on the source record, else the favicon of its page URL. Otherwise none. */
 export function sourceLogoUrl(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
-  const explicit = [
+  const primary = [
+    override.logoUrl,
+    override.iconUrl,
     source.logo,
     source.logoUrl,
     source.favicon,
     source.faviconUrl,
+    thing.logoUrl,
+    thing.iconUrl,
     thing.logo,
     thing.favicon,
     thing.faviconUrl,
-    override.logoUrl,
-    override.iconUrl,
-    thing.logoUrl,
-    thing.iconUrl,
-    thing.image_url,
-    thing.imageUrl,
-    override.image_url,
-    override.imageUrl,
+    thing.captured_logo_url,
   ];
-  for (const value of explicit) {
+  for (const value of primary) {
     const logo = usableLogo(value);
     if (logo) {
       if (/hyatt\.com\/favicon\.ico/i.test(logo)) {
@@ -192,12 +189,25 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   const named = brandLogoFromName(thing.name || thing.title || override.title);
   if (named) return named;
   const page = httpUrl(pageUrlForLogo(thing, override));
-  if (!page) return '';
-  if (/\.hyatt\.com$/i.test(page.hostname)) {
-    const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
-    if (hyattIcon) return hyattIcon;
+  if (page) {
+    if (/\.hyatt\.com$/i.test(page.hostname)) {
+      const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
+      if (hyattIcon) return hyattIcon;
+    }
+    const favicon = `${page.origin}/favicon.ico`;
+    if (usableLogo(favicon)) return favicon;
   }
-  return `${page.origin}/favicon.ico`;
+  const mediaFallback = [
+    thing.image_url,
+    thing.imageUrl,
+    override.image_url,
+    override.imageUrl,
+  ];
+  for (const value of mediaFallback) {
+    const logo = usableLogo(value);
+    if (logo) return logo;
+  }
+  return '';
 }
 
 /** Names are not a logo source. The shared bundle calls this with a title and gets nothing. */

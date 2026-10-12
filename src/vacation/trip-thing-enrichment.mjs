@@ -1,4 +1,5 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
@@ -179,6 +180,12 @@ export function ensureProductListSummary(body = '', place = {}, tripContext = {}
         rawDescription: merged,
       })].filter(Boolean).join(' '),
     );
+  }
+  if (wordCount(merged) < 30) {
+    merged = text(`${merged} ${LIST_SUMMARY_TAIL}`);
+  }
+  if (!descriptionPassesDetailJudge(merged, title)) {
+    merged = text(`${title}. ${merged}`);
   }
   if (wordCount(merged) < 30) {
     merged = text(`${merged} ${LIST_SUMMARY_TAIL}`);

@@ -42,9 +42,10 @@ body {
 }
 
 .tsv-hero-toolbar {
-  position: absolute;
-  top: 10px;
-  right: 12px;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 12px 0;
   z-index: 2;
 }
 
@@ -56,11 +57,12 @@ body {
 }
 
 .tsv-hero-brand {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin: 0 auto 12px;
+  column-gap: 5px;
+  width: 100%;
+  margin: 0 0 12px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -68,7 +70,23 @@ body {
   opacity: 0.82;
 }
 
+.tsv-hero-brand-side {
+  min-width: 0;
+}
+
+.tsv-hero-brand-left {
+  text-align: right;
+  justify-self: end;
+}
+
+.tsv-hero-brand-right {
+  text-align: left;
+  justify-self: start;
+}
+
 .tsv-hero-brand .ts-logo {
+  grid-column: 2;
+  justify-self: center;
   width: 22px;
   height: 22px;
   object-fit: contain;

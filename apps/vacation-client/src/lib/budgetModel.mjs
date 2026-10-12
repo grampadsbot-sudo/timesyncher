@@ -2,6 +2,7 @@
 
 import {
   LIST_TAB_IDS,
+  catalogRowDisplayName,
   placeName,
   placesForCategoryTab,
   tabCategoryKey,
@@ -219,7 +220,7 @@ export function buildBudgetModel(trip) {
     return {
       place,
       bucket,
-      name: placeName(place),
+      name: catalogRowDisplayName(place, trip),
       ...pricing,
     };
   });

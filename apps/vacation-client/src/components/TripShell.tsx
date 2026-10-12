@@ -49,16 +49,16 @@ export function TripShell({
   const dateRange = formatTripDates(trip);
   return (
     <div className="tsv-shell" data-trip-view-root="1">
+      <div className="tsv-hero-toolbar">
+        <TripHeaderActions shareToken={shareToken} permissions={permissions} />
+      </div>
       <header className="tsv-hero-header">
-        <div className="tsv-hero-toolbar">
-          <TripHeaderActions shareToken={shareToken} permissions={permissions} />
-        </div>
         <div
           className="tsv-hero-brand"
           data-brand-lockup="timesyncher-hourglass-vacation"
           data-hourglass-between="1"
         >
-          <span>TimeSyncher</span>
+          <span className="tsv-hero-brand-side tsv-hero-brand-left">TimeSyncher</span>
           <img
             className="ts-logo"
             src="/icons/timesyncher-icon-white-transparent.png"
@@ -66,7 +66,7 @@ export function TripShell({
             width={22}
             height={22}
           />
-          <span>Vacation</span>
+          <span className="tsv-hero-brand-side tsv-hero-brand-right">Vacation</span>
         </div>
         <h1 className="tsv-hero-title" title={title}>
           {title}

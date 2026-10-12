@@ -95,4 +95,25 @@ const travel = estimateTravelMinutes(
 );
 assert.ok(travel != null && travel >= 5);
 
+const catalogTrip = {
+  days: [{ id: 1, day_number: 1, title: 'Day 1' }],
+  places: [
+    {
+      id: 99,
+      name: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
+      category_name: 'Flight',
+    },
+  ],
+  assignments: { 1: [] },
+  thingOverrides: {
+    'place:99': { timeline: false, category: 'flight' },
+  },
+};
+const catalogDay = catalogTrip.days[0];
+const catalogRows = buildDayTimeline(catalogTrip, catalogDay);
+assert.ok(
+  catalogRows.some((row) => /Southwest LAS-LGA/i.test(row.title)),
+  'catalog flight options appear on day 1 even when timeline flag is false',
+);
+
 console.log('vacation-client day timeline unit checks passed');

@@ -80,6 +80,15 @@ export function placeName(place) {
   return text(place.name || place.title || 'Untitled');
 }
 
+/** TREK mr() strips the flight-catalog prefix for budget rows and controls. */
+export function catalogRowDisplayName(place, trip) {
+  const raw = placeName(place);
+  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
+    return text(raw.replace(/^\s*Flight option:\s*/i, '')) || raw;
+  }
+  return raw;
+}
+
 function neighborhood(place, override, source) {
   return text(
     override.neighborhood ||
@@ -352,11 +361,11 @@ export function rowSummary(place, trip) {
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
+  const fromSource = text(sourceLogoUrl(place, override));
+  if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
   let resolved = text(resolveThingLogoUrl(place, override));
   if (resolved && isPlaceholderLogoUrl(resolved)) resolved = '';
   if (resolved) return resolved;
-  const fromSource = text(sourceLogoUrl(place, override));
-  if (fromSource && !isPlaceholderLogoUrl(fromSource)) return fromSource;
   const source = sourceRecord(place, override);
   const page = text(
     source.url || source.website || source.sourceUrl || place.url || place.website,

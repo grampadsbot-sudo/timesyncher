@@ -17,16 +17,21 @@ function placeAssignedToDay(place, trip, day) {
   );
 }
 
+function isFlightCatalogOption(place) {
+  return /^Flight option:/i.test(placeName(place));
+}
+
 function flightCatalogOnDay(place, trip, day) {
   if (tabCategoryKey(place, trip) !== 'flight') return false;
   const override = overrideFor(trip, place);
-  if (override.timeline === false) return false;
+  const catalogOption = isFlightCatalogOption(place);
+  if (override.timeline === false && !catalogOption) return false;
   if (placeAssignedToDay(place, trip, day)) return true;
-  if (override.timeline !== true) return false;
   const days = sortedDays(trip);
   const first = days[0];
   if (!first || String(first.id) !== String(day.id)) return false;
-  return /^Flight option:/i.test(placeName(place));
+  if (catalogOption) return true;
+  return override.timeline === true;
 }
 
 function text(value) {
@@ -318,7 +323,7 @@ export function buildDayTimeline(trip, day) {
   for (const place of trip.places || []) {
     if (tabCategoryKey(place, trip) !== 'flight') continue;
     const override = overrideFor(trip, place);
-    if (override.timeline === false) continue;
+    if (override.timeline === false && !isFlightCatalogOption(place)) continue;
     if (!flightCatalogOnDay(place, trip, day)) continue;
     const key = String(place.id);
     if (seenPlaceIds.has(key)) continue;

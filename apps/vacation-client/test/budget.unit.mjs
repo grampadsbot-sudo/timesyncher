@@ -8,7 +8,7 @@ import {
   placesForBudget,
   tripBudgetTargetTotal,
 } from '../src/lib/budgetModel.mjs';
-import { numericPrice } from '../src/lib/listTabModel.mjs';
+import { catalogRowDisplayName, numericPrice } from '../src/lib/listTabModel.mjs';
 
 const hotelTrip = {
   trip: { currency: 'USD' },
@@ -83,5 +83,24 @@ assert.equal(numericPrice(budgetPlaces[1], unionTrip), 50);
 const score = budgetCompletenessScore(unionTrip);
 assert.equal(score.pass, score.total);
 assert.ok(score.total >= 4);
+
+const americanPlace = {
+  id: 7,
+  name: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
+  category_name: 'Flight',
+};
+assert.equal(
+  catalogRowDisplayName(americanPlace, { places: [americanPlace] }),
+  'American LAS-JFK 2026-06-23 12:37-20:59',
+);
+const americanBudget = buildBudgetModel({
+  trip: { currency: 'USD' },
+  places: [americanPlace],
+  thingOverrides: { 'place:7': { price: 312, category: 'flight' } },
+});
+const americanRow = americanBudget.buckets
+  .find((b) => b.label === 'Flights')
+  ?.rows.find((row) => row.place.id === 7);
+assert.equal(americanRow?.name, 'American LAS-JFK 2026-06-23 12:37-20:59');
 
 console.log('vacation-client budget unit checks passed');
