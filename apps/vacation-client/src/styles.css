@@ -1309,6 +1309,7 @@ button.tsv-timeline-link {
 }
 
 .tsv-budget-line-name {
+  font: inherit;
   font-weight: 700;
   color: #2563eb;
   text-decoration: underline;
@@ -1316,6 +1317,11 @@ button.tsv-timeline-link {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 
 .tsv-budget-line-amount {

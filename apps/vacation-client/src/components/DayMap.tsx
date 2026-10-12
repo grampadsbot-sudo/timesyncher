@@ -47,14 +47,14 @@ export function DayMap({ places }: Props) {
       <h2 className="tsv-subhead">Day map</h2>
       <MapContainer
         center={[center.lat as number, center.lng as number]}
-        zoom={12}
+        zoom={11}
         scrollWheelZoom={false}
         className="tsv-map-box"
       >
         <MapReady />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap (CC-BY-SA)'
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
         />
         {withCoords.length > 1 ? <FitBounds places={withCoords} /> : null}
         {withCoords.map((place) => (

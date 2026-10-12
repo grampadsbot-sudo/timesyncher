@@ -10,12 +10,20 @@ type Props = {
 
 export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
   return (
-    <div className="tsv-list-sort" data-ts-list-sort-header="1" role="toolbar" aria-label="Sort list">
+    <div
+      className="tsv-list-sort"
+      data-ts-list-sort-header="1"
+      data-ts-sort-active={sortKey}
+      role="toolbar"
+      aria-label="Sort list"
+    >
       {(['name', 'price'] as SortKey[]).map((key) => (
         <button
           key={key}
           type="button"
           className={`tsv-sort-btn${sortKey === key ? ' is-active' : ''}`}
+          aria-pressed={sortKey === key}
+          data-ts-sort-key={key}
           onClick={() => onSort(key)}
         >
           {key === 'name' ? 'Name' : 'Price'}
