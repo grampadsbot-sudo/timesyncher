@@ -11,6 +11,11 @@ function wordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
 }
 
+function isEventLikeCategory(category = '') {
+  const key = text(category).toLowerCase();
+  return /^(event|music|activity|tour|theatre|artist|sightseeing|family_event|other)$/.test(key);
+}
+
 function sourceObject(...rows) {
   for (const row of rows) {
     if (row && typeof row === 'object' && !Array.isArray(row)) return row;
@@ -235,18 +240,29 @@ export function applyLiveAppListRowFields(shared = {}) {
     const enrichedSource = scheduleHint
       ? { ...(source || {}), when: scheduleHint, startTime: scheduleHint, place_time: scheduleHint }
       : source || {};
+    const listCategory = override.category || category || place.category_name;
+    const eventLike = isEventLikeCategory(listCategory);
+    const priceHint = parsePrice(
+      override.price ?? place.price ?? source?.price ?? source?.ticketPrice ?? source?.ticketsFrom,
+    );
+    const enrichedSourceForDescription =
+      eventLike && priceHint != null
+        ? { ...enrichedSource, price: priceHint, ticketPrice: priceHint }
+        : enrichedSource;
     const enrichedDescription = buildCategoryDescription({
-      category: override.category || category || place.category_name,
+      category: eventLike ? 'event' : listCategory,
       title: place.name || place.title,
-      sourceRecord: enrichedSource,
+      sourceRecord: enrichedSourceForDescription,
       address: place.address,
-      rawDescription: text(
-        override.longDetails
-          || override.summary
-          || source?.summary
-          || source?.description
-          || place.description,
-      ),
+      rawDescription: eventLike
+        ? ''
+        : text(
+            override.longDetails
+              || override.summary
+              || source?.summary
+              || source?.description
+              || place.description,
+          ),
     });
     if (wordCount(enrichedDescription) >= 30) {
       if (wordCount(override.longDetails) < 30) override.longDetails = enrichedDescription;

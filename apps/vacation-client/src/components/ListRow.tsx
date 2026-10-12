@@ -194,7 +194,11 @@ export function ListRow({
           </span>
           {price ? <span className="tsv-row-price">{price}</span> : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
-          {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+          {summary ? (
+            <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
+              {summary}
+            </span>
+          ) : null}
         </button>
         {showTimelineToggle && (tab === 'hotels' || category === 'hotel') ? (
           <TimelineToggle

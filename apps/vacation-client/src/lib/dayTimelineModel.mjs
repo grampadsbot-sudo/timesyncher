@@ -490,11 +490,30 @@ export function buildDayTimeline(trip, day) {
   return withTravel;
 }
 
+function finiteCoord(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function placeCoords(place, trip) {
   const override = overrideFor(trip, place);
-  const lat = typeof place.lat === 'number' ? place.lat : Number(override.lat);
-  const lng = typeof place.lng === 'number' ? place.lng : Number(override.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const source =
+    override.sourceRecord ||
+    place.sourceRecord ||
+    (place.source && typeof place.source === 'object' ? place.source : null) ||
+    {};
+  const lat =
+    finiteCoord(place.lat) ??
+    finiteCoord(override.lat) ??
+    finiteCoord(source.lat) ??
+    finiteCoord(source.latitude);
+  const lng =
+    finiteCoord(place.lng) ??
+    finiteCoord(override.lng) ??
+    finiteCoord(source.lng) ??
+    finiteCoord(source.longitude);
+  if (lat == null || lng == null) return null;
   return { lat, lng };
 }
 

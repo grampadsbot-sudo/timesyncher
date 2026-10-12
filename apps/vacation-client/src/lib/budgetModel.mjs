@@ -231,6 +231,7 @@ export function placesForBudget(trip) {
         id: res.place_id,
         name: title,
         category_name: 'Flight',
+        source: 'reservation',
       });
     }
   }

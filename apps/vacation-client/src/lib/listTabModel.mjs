@@ -311,7 +311,14 @@ export function rowSummary(place, trip) {
   );
   const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
   if (category === 'event') {
-    const price = numericPrice(place, trip);
+    let price = numericPrice(place, trip);
+    if (price == null) {
+      price =
+        parsePrice(source.price) ??
+        parsePrice(source.ticketPrice) ??
+        parsePrice(override.details) ??
+        parsePrice(place.description);
+    }
     const withPrice =
       price != null ? { ...enrichedSource, price, ticketPrice: price } : enrichedSource;
     const eventSummary = ensureMinSummaryWords(
