@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+import { applyLiveAppListRowFields } from '../../../src/vacation/shared-trip-live-app-fields.mjs';
 import {
   emptyStateMessage,
   filterPlaces,
@@ -10,7 +11,7 @@ import {
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
 
-const trip = {
+const trip = applyLiveAppListRowFields({
   places: [
     { id: 1, name: 'Zebra Hotel', category_name: 'Hotel' },
     { id: 2, name: 'Alpha Hotel', category_name: 'Hotel' },
@@ -28,7 +29,7 @@ const trip = {
     },
     'place:5': { neighborhood: 'Citywide / Flexible', category: 'activity' },
   },
-};
+});
 
 assert.equal(tabCategoryKey(trip.places[2], trip), 'flight');
 assert.equal(tabCategoryKey(trip.places[3], trip), 'restaurant');
