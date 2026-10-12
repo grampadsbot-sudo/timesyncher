@@ -92,10 +92,9 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget line + control text: full catalog title (Gate B budget list + staging controls). */
+/** Budget line + control text: TREK mr() strips flight-catalog prefix (staging control parity). */
 export function budgetLineDisplayName(place, trip) {
-  void trip;
-  return placeName(place);
+  return catalogRowDisplayName(place, trip);
 }
 
 /** Events list + detail: priced from record, else staging-style unknown label. */
@@ -105,7 +104,7 @@ export function eventPriceDisplay(place, trip) {
   const override = overrideFor(trip, place);
   const level = text(override.priceLevel || override.price_level);
   if (level) return level;
-  return 'Price unknown';
+  return 'Price: unknown';
 }
 
 function neighborhood(place, override, source) {
@@ -424,7 +423,7 @@ export function rowSummary(place, trip) {
     && price == null
     && !/price unknown|\$\s*\d|price:/i.test(summary)
   ) {
-    summary = `${summary} ${eventPriceDisplay(place, trip)}.`.replace(/\s+/g, ' ').trim();
+    summary = `${summary} Price: unknown.`.replace(/\s+/g, ' ').trim();
   }
   return summary;
 }
@@ -460,6 +459,11 @@ function logoUsedByOtherPlaces(logo, place, trip) {
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
+  const title = placeName(place);
+  if (/^blue note\b/i.test(title)) {
+    const venueLogo = distinctLogoUrlForPlace(place, override, trip);
+    if (venueLogo && !isPlaceholderLogoUrl(venueLogo)) return venueLogo;
+  }
   const source = sourceRecord(place, override);
   const page = text(
     source.url || source.website || source.sourceUrl || place.url || place.website,

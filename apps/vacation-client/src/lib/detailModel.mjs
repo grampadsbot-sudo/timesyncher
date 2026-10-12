@@ -83,7 +83,7 @@ export function detailPriceLabel(place, trip, category) {
   const level = text(override.priceLevel || override.price_level);
   if (level) return level;
   if (cat === 'event' || cat === 'music' || cat === 'tour' || cat === 'theatre' || cat === 'tickets') {
-    return 'Price unknown';
+    return 'Price: unknown';
   }
   return '';
 }
