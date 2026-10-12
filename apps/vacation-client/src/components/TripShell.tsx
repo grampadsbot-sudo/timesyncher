@@ -17,6 +17,25 @@ type Props = {
   children: ReactNode;
 };
 
+function formatTripDates(trip?: SharedTripPayload) {
+  const start = trip?.trip?.start_date;
+  const end = trip?.trip?.end_date;
+  if (!start && !end) return '';
+  const fmt = (value: string) => {
+    try {
+      return new Date(`${value}T00:00:00Z`).toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+    } catch {
+      return value;
+    }
+  };
+  return [start, end].filter(Boolean).map(fmt).join(' — ');
+}
+
 export function TripShell({
   title,
   shareToken,
@@ -27,33 +46,33 @@ export function TripShell({
   children,
 }: Props) {
   const dayCount = trip ? sortedDays(trip).length : 0;
+  const dateRange = formatTripDates(trip);
   return (
     <div className="tsv-shell" data-trip-view-root="1">
-      <header className="tsv-header">
-        <div className="tsv-header-lead">
-          <div
-            className="tsv-header-brand"
-            data-brand-lockup="timesyncher-hourglass-vacation"
-            data-hourglass-between="1"
-          >
-            <span>TimeSyncher</span>
-            <img
-              className="ts-logo"
-              src="/icons/timesyncher-icon-black-transparent.png"
-              alt="TimeSyncher"
-              width={22}
-              height={22}
-            />
-            <span>Vacation</span>
-          </div>
-          <h1 className="tsv-title" title={title}>
-            {title}
-          </h1>
-          {dayCount > 0 ? (
-            <p className="tsv-header-day-count">{dayCount} days</p>
-          ) : null}
+      <header className="tsv-hero-header">
+        <div className="tsv-hero-toolbar">
+          <TripHeaderActions shareToken={shareToken} permissions={permissions} />
         </div>
-        <TripHeaderActions shareToken={shareToken} permissions={permissions} />
+        <div
+          className="tsv-hero-brand"
+          data-brand-lockup="timesyncher-hourglass-vacation"
+          data-hourglass-between="1"
+        >
+          <span>TimeSyncher</span>
+          <img
+            className="ts-logo"
+            src="/icons/timesyncher-icon-white-transparent.png"
+            alt="TimeSyncher"
+            width={22}
+            height={22}
+          />
+          <span>Vacation</span>
+        </div>
+        <h1 className="tsv-hero-title" title={title}>
+          {title}
+        </h1>
+        {dateRange ? <p className="tsv-hero-dates">{dateRange}</p> : null}
+        {dayCount > 0 ? <p className="tsv-hero-day-count">{dayCount} days</p> : null}
       </header>
       <TabNav active={activeTab} onChange={onTabChange} />
       <main className="tsv-main" aria-label={TAB_LABELS[activeTab]}>

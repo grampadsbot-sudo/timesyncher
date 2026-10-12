@@ -110,16 +110,19 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                     trip={trip}
                     fallback={bucketIcon(bucket.label)}
                   />
-                  <button
-                    type="button"
-                    className="tsv-budget-line-name"
-                    onClick={() => onOpen(row.place)}
-                  >
-                    {row.name}
-                  </button>
-                  <span className="tsv-budget-line-amount">
-                    {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}
-                  </span>
+                  <div className="tsv-budget-line-main">
+                    <button
+                      type="button"
+                      className="tsv-budget-line-name"
+                      aria-label={row.name}
+                      onClick={() => onOpen(row.place)}
+                    >
+                      {row.name}
+                    </button>
+                    <span className="tsv-budget-line-amount">
+                      {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>

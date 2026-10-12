@@ -17,6 +17,18 @@ function placeAssignedToDay(place, trip, day) {
   );
 }
 
+function flightCatalogOnDay(place, trip, day) {
+  if (tabCategoryKey(place, trip) !== 'flight') return false;
+  const override = overrideFor(trip, place);
+  if (override.timeline === false) return false;
+  if (placeAssignedToDay(place, trip, day)) return true;
+  if (override.timeline !== true) return false;
+  const days = sortedDays(trip);
+  const first = days[0];
+  if (!first || String(first.id) !== String(day.id)) return false;
+  return /^Flight option:/i.test(placeName(place));
+}
+
 function text(value) {
   return String(value ?? '').trim();
 }
@@ -307,7 +319,7 @@ export function buildDayTimeline(trip, day) {
     if (tabCategoryKey(place, trip) !== 'flight') continue;
     const override = overrideFor(trip, place);
     if (override.timeline === false) continue;
-    if (!placeAssignedToDay(place, trip, day)) continue;
+    if (!flightCatalogOnDay(place, trip, day)) continue;
     const key = String(place.id);
     if (seenPlaceIds.has(key)) continue;
     seenPlaceIds.add(key);

@@ -161,16 +161,19 @@ export function isVideoMediaUrl(value = '') {
 }
 
 export function thingLogoUrl(thing = {}, override = {}) {
-  const candidates = [
+  const primary = [
     override.logoUrl,
     override.iconUrl,
     thing.logoUrl,
     thing.iconUrl,
     thing.captured_logo_url,
-    thing.image_url,
-    thing.imageUrl,
   ].map(text).filter(Boolean);
-  return candidates.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url)) || '';
+  const fromPrimary = primary.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url));
+  if (fromPrimary) return fromPrimary;
+  const media = [thing.image_url, thing.imageUrl, override.image_url, override.imageUrl]
+    .map(text)
+    .filter(Boolean);
+  return media.find((url) => !isVideoMediaUrl(url) && !isPlaceholderLogoUrl(url)) || '';
 }
 
 export function timelineIcon(thing = {}, override = {}, rowType = '') {

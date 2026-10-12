@@ -5,7 +5,10 @@ import {
   resolveThingLogoUrl,
   sourceLogoUrl,
 } from '../../../../src/vacation/thing-logo-capture.mjs';
-import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
+import {
+  buildCategoryDescription,
+  ensureProductListSummary,
+} from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -327,7 +330,6 @@ export function rowSummary(place, trip) {
     place.description,
   );
   if (rr && wordCount(rr) >= 30) return rr;
-  if (rr) return rr;
   const best = longCandidates.reduce(
     (acc, body) => (wordCount(body) > wordCount(acc) ? body : acc),
     '',
@@ -343,8 +345,9 @@ export function rowSummary(place, trip) {
       override.summary || source.summary || place.description || best || rr,
     ),
   });
-  if (wordCount(enriched) >= 30) return enriched;
-  return enriched || best || rr;
+  return ensureProductListSummary(enriched || best || rr || '', place, {
+    category: tabCategoryKey(place, trip),
+  });
 }
 
 export function logoUrlForPlace(place, trip) {

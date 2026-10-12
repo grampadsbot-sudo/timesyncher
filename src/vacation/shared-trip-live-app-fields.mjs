@@ -1,6 +1,6 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { buildCategoryDescription } from './trip-thing-enrichment.mjs';
+import { buildCategoryDescription, ensureProductListSummary } from './trip-thing-enrichment.mjs';
 
 function text(value) {
   return String(value || '').trim();
@@ -206,10 +206,15 @@ export function applyLiveAppListRowFields(shared = {}) {
         || place.description,
       ),
     });
-    if (wordCount(enrichedDescription) >= 30) {
-      if (wordCount(override.longDetails) < 30) override.longDetails = enrichedDescription;
-      if (wordCount(override.summary) < 30) override.summary = enrichedDescription;
-      if (wordCount(override.details) < 30) override.details = enrichedDescription;
+    const listSummary = ensureProductListSummary(
+      enrichedDescription || override.summary || source?.summary || place.description,
+      place,
+      { category: override.category || category },
+    );
+    if (wordCount(listSummary) >= 30) {
+      if (wordCount(override.longDetails) < 30) override.longDetails = listSummary;
+      if (wordCount(override.summary) < 30) override.summary = listSummary;
+      if (wordCount(override.details) < 30) override.details = listSummary;
     }
 
     if (category === 'flight') {

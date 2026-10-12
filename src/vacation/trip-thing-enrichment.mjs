@@ -153,6 +153,39 @@ function eventDescription(title = '', source = {}, raw = '') {
   return text([title, when, why, 'book ahead on weekends'].filter(Boolean).join('; '), 4000);
 }
 
+const LIST_SUMMARY_TAIL =
+  'Use this saved option to compare location, price, hours, and reviews before you add it to the day-by-day timeline or budget.';
+
+export function ensureProductListSummary(body = '', place = {}, tripContext = {}) {
+  const title = text(place.name || place.title, 240);
+  const source =
+    place.sourceRecord && typeof place.sourceRecord === 'object'
+      ? place.sourceRecord
+      : place.source && typeof place.source === 'object'
+        ? place.source
+        : {};
+  const category = text(
+    tripContext.category || place.category_name || place.category?.name || place.category,
+    80,
+  ).toLowerCase();
+  let merged = text(body);
+  if (wordCount(merged) < 30) {
+    merged = text(
+      [merged, buildCategoryDescription({
+        category,
+        title,
+        sourceRecord: source,
+        address: place.address,
+        rawDescription: merged,
+      })].filter(Boolean).join(' '),
+    );
+  }
+  if (wordCount(merged) < 30) {
+    merged = text(`${merged} ${LIST_SUMMARY_TAIL}`);
+  }
+  return merged;
+}
+
 export function buildCategoryDescription({
   category = '',
   title = '',

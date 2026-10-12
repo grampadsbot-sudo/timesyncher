@@ -1,4 +1,5 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
+import { NAMED_THING_LOGOS } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
@@ -22,6 +23,16 @@ type Props = {
   onOpen: (place: SharedPlace) => void;
 };
 
+function airlineLogoFromTitle(title = '') {
+  const label = String(title || '');
+  if (/\bsouthwest\b/i.test(label)) return NAMED_THING_LOGOS.southwest;
+  if (/\bjetblue\b/i.test(label)) return NAMED_THING_LOGOS.jetblue;
+  if (/\bunited\b/i.test(label)) return NAMED_THING_LOGOS.united;
+  if (/\bdelta\b/i.test(label)) return NAMED_THING_LOGOS.delta;
+  if (/\bamerican\b/i.test(label)) return NAMED_THING_LOGOS.american;
+  return '';
+}
+
 function TimelineIcon({
   entry,
   trip,
@@ -44,9 +55,15 @@ function TimelineIcon({
       entry.category === 'flight' || /flight/i.test(entry.title) ? 'Flight' : 'Attraction',
   };
   const override = place ? overrideFor(trip, place) : {};
-  const resolved = timelineIcon(stub, override, entry.category === 'flight' ? 'flight' : '');
-  const logo =
-    (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
+  const isFlight =
+    entry.kind === 'flight' ||
+    entry.category === 'flight' ||
+    /^Flight option:/i.test(entry.title);
+  const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
+  let logo = (place ? logoUrlForPlace(place, trip) : '') || resolved.logoUrl;
+  if (isFlight && !logo) {
+    logo = airlineLogoFromTitle(entry.title || place?.name || '');
+  }
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
