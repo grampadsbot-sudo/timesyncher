@@ -99,7 +99,7 @@ assert.equal(
 );
 assert.equal(
   budgetLineDisplayName(americanPlace, { places: [americanPlace] }),
-  'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
+  'American LAS-JFK 2026-06-23 12:37-20:59',
 );
 const americanBudget = buildBudgetModel({
   trip: { currency: 'USD' },
@@ -109,10 +109,7 @@ const americanBudget = buildBudgetModel({
 const americanRow = americanBudget.buckets
   .find((b) => b.label === 'Flights')
   ?.rows.find((row) => row.place.id === 7);
-assert.equal(
-  americanRow?.name,
-  'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
-);
+assert.equal(americanRow?.name, 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59');
 
 const timelineFlightTrip = {
   trip: { currency: 'USD' },

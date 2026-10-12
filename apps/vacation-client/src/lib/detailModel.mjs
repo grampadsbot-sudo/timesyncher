@@ -81,7 +81,9 @@ export function detailPriceLabel(place, trip, category) {
   const price = numericPrice(place, trip);
   if (price != null) return `$${price}`;
   const level = text(override.priceLevel || override.price_level);
-  return level;
+  if (level) return level;
+  if (cat === 'event') return 'Price unknown';
+  return '';
 }
 
 export function detailRatingLines(override) {

@@ -3,6 +3,7 @@ import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
   carSubtitle,
+  eventPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
   hotelFirstRowNote,
@@ -157,8 +158,10 @@ export function ListRow({
   }
 
   const numeric = numericPrice(place, trip);
-  const price =
-    tab === 'hotels' || category === 'hotel'
+  const isEventRow = tab === 'events' || category === 'event';
+  const price = isEventRow
+    ? eventPriceDisplay(place, trip)
+    : tab === 'hotels' || category === 'hotel'
       ? hotelPriceDisplay(place, trip)
       : numeric == null
         ? ''
@@ -173,7 +176,7 @@ export function ListRow({
             {name}
           </span>
           {price ? (
-            <span className="tsv-row-price" data-ts-list-row-price="1">
+            <span className="tsv-row-price" data-ts-list-row-price="1" data-ts-event-price={isEventRow ? '1' : undefined}>
               {price}
             </span>
           ) : null}

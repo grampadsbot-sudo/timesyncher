@@ -105,7 +105,7 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                   className="tsv-budget-line"
                   data-ts-budget-row="1"
                   data-place-id={String(row.place.id)}
-                  data-place-name={row.name}
+                  data-place-name={budgetLineDisplayName(row.place, trip)}
                 >
                   <BudgetLogoChip
                     place={row.place}
@@ -116,6 +116,7 @@ export function BudgetScreen({ trip, onOpen }: Props) {
                     <button
                       type="button"
                       className="tsv-budget-line-name"
+                      data-ts-budget-control="1"
                       aria-label={budgetLineDisplayName(row.place, trip)}
                       onClick={() => onOpen(row.place)}
                     >

@@ -92,10 +92,19 @@ export function catalogRowDisplayName(place, trip) {
   return raw;
 }
 
-/** Budget line + control text: full catalog title (Gate B budget completeness / staging parity). */
+/** Budget line + control text: stripped flight catalog title (staging parity / Gate B controls). */
 export function budgetLineDisplayName(place, trip) {
-  void trip;
-  return placeName(place);
+  return catalogRowDisplayName(place, trip);
+}
+
+/** Events list + detail: priced from record, else staging-style unknown label. */
+export function eventPriceDisplay(place, trip) {
+  const price = numericPrice(place, trip);
+  if (price != null) return `$${price}`;
+  const override = overrideFor(trip, place);
+  const level = text(override.priceLevel || override.price_level);
+  if (level) return level;
+  return 'Price unknown';
 }
 
 function neighborhood(place, override, source) {

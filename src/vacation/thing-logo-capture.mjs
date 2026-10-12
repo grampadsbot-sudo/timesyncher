@@ -109,6 +109,19 @@ function venueHostFromName(name = '') {
 
 /** Prefer per-venue favicon/thumbnail when a shared logo URL would repeat across rows. */
 export function distinctLogoUrlForPlace(place = {}, override = {}, trip = null) {
+  const title = text(place.name || place.title);
+  if (/^blue note jazz festival\b/i.test(title)) {
+    const festival = usableLogo('https://www.bluenotejazz.com/favicon.ico');
+    if (festival) return festival;
+  }
+  if (/^blue note jazz club\b/i.test(title)) {
+    const club = usableLogo('https://www.bluenote.net/favicon.ico');
+    if (club) return club;
+  }
+  if (/^blue note\b/i.test(title) && !/\bfestival\b|\bclub\b/i.test(title)) {
+    const ticket = usableLogo('https://www.ticketmaster.com/favicon.ico');
+    if (ticket) return ticket;
+  }
   const source = sourceRecord(place, override);
   const thumb = thumbnailFromSource(source);
   const page = httpUrl(pageUrlForLogo(place, override));
@@ -376,7 +389,11 @@ export function applyCapturedLogos(shared = {}) {
     if (owners.length <= 1) continue;
     for (const { place, overrideKey } of owners) {
       const override = { ...(next.thingOverrides[overrideKey] || {}) };
-      const replacement = distinctLogoUrlForPlace(place, override, next);
+      let replacement = distinctLogoUrlForPlace(place, override, next);
+      if (!replacement || replacement === sharedUrl) {
+        const host = venueHostFromName(place.name || place.title);
+        if (host) replacement = usableLogo(`https://${host.replace(/^www\./, '')}/favicon.ico`);
+      }
       if (replacement && replacement !== sharedUrl) {
         override.logoUrl = replacement;
         place.logoUrl = replacement;
