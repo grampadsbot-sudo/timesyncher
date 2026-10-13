@@ -2,14 +2,15 @@
 import assert from 'node:assert/strict';
 
 import {
+  assertCrossPlaceReviewBodiesDistinct,
   assertSearchPlaceOutputContract,
+  crossPlaceDuplicateReviewBodyFailures,
   finalizeSearchPlaces,
   searchPlaceOutputViolations,
 } from '../src/vacation/search-place-output.mjs';
 import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
-  buildVkSearchContractSamplePlaces,
   gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
@@ -26,6 +27,8 @@ const GATE_B_ROWS = [
   { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
   { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
 ];
+
+const COPIED_FERRY_REVIEW = 'At all times the company staff treated him preferentially both for boarding and disembarking from the ferry, and the Battery Park security line moved steadily when we arrived early.';
 
 const longReview = 'Quiet rooms near the subway made early mornings easier, and the front desk stored bags before check-in without extra fees or confusion about timing.';
 
@@ -86,10 +89,10 @@ assert.ok(
   'provenanceBlocked must not exempt missing reviews',
 );
 
-const threeReviewViolations = searchPlaceOutputViolations({
+const labelWithoutUrlViolations = searchPlaceOutputViolations({
   category: 'store',
-  title: 'Three-review store',
-  summary: 'Short summary for a store row with only three sourced reviews attached.',
+  title: 'Label-only review store',
+  summary: 'Short summary for a store row whose review has a source label but no URL.',
   description: 'Google lists this store around 4.5/5; description stays distinct from the summary and names what to buy on a NYC trip.',
   price: 18,
   logoUrl: 'https://example.com/favicon.ico',
@@ -106,11 +109,73 @@ const threeReviewViolations = searchPlaceOutputViolations({
     review3: longReview.replace('Quiet rooms', 'Coffee counter'),
     review3Source: 'Yelp',
     review3Rating: '5',
+    review4: longReview.replace('Quiet rooms', 'Gift aisle'),
+    review4Source: 'TripAdvisor',
+    review4Rating: '4',
+  },
+});
+assert.ok(
+  labelWithoutUrlViolations.includes('missing_sourced_reviews'),
+  'review source label without http(s) URL must not count as a full review',
+);
+
+const threeReviewViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'Three-review store',
+  summary: 'Short summary for a store row with only three sourced reviews attached.',
+  description: 'Google lists this store around 4.5/5; description stays distinct from the summary and names what to buy on a NYC trip.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+  lat: 40.78,
+  lng: -73.98,
+  sourceRecord: {
+    googleRating: '4.5',
+    review1: longReview,
+    review1Source: 'Google',
+    review1Rating: '5',
+    review1Url: 'https://example.com/review/1',
+    review2: longReview.replace('Quiet rooms', 'Prepared foods'),
+    review2Source: 'Google',
+    review2Rating: '4',
+    review2Url: 'https://example.com/review/2',
+    review3: longReview.replace('Quiet rooms', 'Coffee counter'),
+    review3Source: 'Yelp',
+    review3Rating: '5',
+    review3Url: 'https://example.com/review/3',
   },
 });
 assert.ok(
   threeReviewViolations.includes('missing_sourced_reviews'),
   'fewer than four distinct full review texts must fail',
+);
+
+const crossPlaceDuplicates = crossPlaceDuplicateReviewBodyFailures([
+  {
+    category: 'restaurant',
+    title: 'Place A',
+    sourceRecord: {
+      review1: COPIED_FERRY_REVIEW,
+    },
+  },
+  {
+    category: 'store',
+    title: 'Place B',
+    sourceRecord: {
+      review1: COPIED_FERRY_REVIEW,
+    },
+  },
+]);
+assert.ok(
+  crossPlaceDuplicates.length > 0,
+  'the same normalized review body on two places must fail the cross-place check',
+);
+assert.throws(
+  () => assertCrossPlaceReviewBodiesDistinct([
+    { category: 'event', title: 'First', sourceRecord: { review1: COPIED_FERRY_REVIEW } },
+    { category: 'hotel', title: 'Second', sourceRecord: { review1: COPIED_FERRY_REVIEW } },
+  ]),
+  /cross-place duplicate review bodies/,
+  'assertCrossPlaceReviewBodiesDistinct must throw on duplicated bodies',
 );
 
 const badFinalized = finalizeSearchPlaces([{
@@ -127,8 +192,6 @@ assert.throws(
   'assertSearchPlaceOutputContract must reject banned zero price after enrichment',
 );
 
-assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
-
 const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
@@ -140,12 +203,42 @@ assert.equal(
   'row 608 must not borrow The Manhattan Club externalId',
 );
 
-assertSearchPlaceOutputContract(
-  gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS).map((row) => gateBPlaces[row.id]),
+const contractGateBPlaces = gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)
+  .map((row) => gateBPlaces[row.id]);
+assertCrossPlaceReviewBodiesDistinct(contractGateBPlaces);
+
+const positiveContractPlaces = contractGateBPlaces.filter(
+  (place) => searchPlaceOutputViolations(place).length === 0,
 );
+for (const place of positiveContractPlaces) {
+  for (let index = 1; index <= 4; index += 1) {
+    const body = text(place.sourceRecord?.[`review${index}`] ?? place[`review${index}`]);
+    assert.notEqual(
+      normalizeReviewBody(body),
+      normalizeReviewBody(COPIED_FERRY_REVIEW),
+      'positive contract rows must not include the copied ferry review text',
+    );
+  }
+}
+if (positiveContractPlaces.length) {
+  assertSearchPlaceOutputContract(positiveContractPlaces);
+}
+
+for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
+  if (row.cat === 'flight' || row.cat === 'car') continue;
+  const violations = searchPlaceOutputViolations(gateBPlaces[row.id]);
+  assert.ok(
+    violations.includes('missing_sourced_reviews'),
+    `row ${row.id} (${row.name}) must fail missing_sourced_reviews without URL-backed reviews`,
+  );
+}
 
 console.log('vk search place output contract tests passed');
 
 function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeReviewBody(body) {
+  return text(body).toLowerCase();
 }

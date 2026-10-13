@@ -75,7 +75,18 @@ function logoOnPlace(place = {}) {
 function reviewField(place = {}, index = 1, suffix = '') {
   const record = sourceRecordOnPlace(place);
   const key = `review${index}${suffix}`;
-  return text(place[key] ?? record[key], suffix === 'Source' ? 40 : suffix === 'Rating' ? 20 : 2000);
+  const max = suffix === 'Source'
+    ? 40
+    : suffix === 'Rating'
+      ? 20
+      : suffix === 'Url'
+        ? 500
+        : 2000;
+  return text(place[key] ?? record[key], max);
+}
+
+function isHttpUrl(value = '') {
+  return /^https?:\/\//i.test(text(value, 500));
 }
 
 function normalizeReviewSource(source = '') {
@@ -88,9 +99,49 @@ function reviewIsComplete(place = {}, index = 1) {
   const body = reviewField(place, index);
   const source = normalizeReviewSource(reviewField(place, index, 'Source'));
   const rating = reviewField(place, index, 'Rating');
+  const sourceUrl = reviewField(place, index, 'Url');
   if (wordCount(body) < 25) return false;
   if (!['Google', 'Yelp', 'TripAdvisor'].includes(source)) return false;
-  return /\d/.test(rating);
+  if (!/\d/.test(rating)) return false;
+  return isHttpUrl(sourceUrl);
+}
+
+function normalizeReviewBodyForCrossPlace(body = '') {
+  return text(body, 2000).toLowerCase();
+}
+
+/** Same long review text must not appear on more than one product place row. */
+export function crossPlaceDuplicateReviewBodyFailures(places = []) {
+  const byBody = new Map();
+  for (const place of places) {
+    const category = searchProductCategory(place.category);
+    if (category === 'flight' || category === 'car') continue;
+    const placeTitle = text(place.title, 160) || '(untitled)';
+    for (let index = 1; index <= 4; index += 1) {
+      const body = reviewField(place, index);
+      if (wordCount(body) < 25) continue;
+      const key = normalizeReviewBodyForCrossPlace(body);
+      if (!byBody.has(key)) byBody.set(key, []);
+      byBody.get(key).push(placeTitle);
+    }
+  }
+  const failures = [];
+  for (const [bodyKey, titles] of byBody) {
+    const uniqueTitles = [...new Set(titles)];
+    if (uniqueTitles.length > 1) {
+      failures.push({ bodyPreview: bodyKey.slice(0, 96), places: uniqueTitles });
+    }
+  }
+  return failures;
+}
+
+export function assertCrossPlaceReviewBodiesDistinct(places = []) {
+  const failures = crossPlaceDuplicateReviewBodyFailures(places);
+  if (!failures.length) return;
+  const detail = failures
+    .map((row) => `"${row.bodyPreview}…" on ${row.places.join(', ')}`)
+    .join('; ');
+  throw new Error(`cross-place duplicate review bodies: ${detail}`);
 }
 
 function distinctFullReviewCount(place = {}) {
