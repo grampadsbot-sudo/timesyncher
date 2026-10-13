@@ -1,7 +1,7 @@
 {
   "601": {
     "source": "brave",
-    "title": "JetBlue BOS → JFK",
+    "title": "JetBlue LAS → JFK",
     "category": "flight",
     "lat": null,
     "lng": null,
@@ -58,7 +58,7 @@
   },
   "603": {
     "source": "brave",
-    "title": "Motto by Hilton Chelsea",
+    "title": "Motto by Hilton New York City Times Square",
     "category": "hotel",
     "lat": null,
     "lng": null,

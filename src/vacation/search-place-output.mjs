@@ -9,6 +9,15 @@ const SEARCH_PRODUCT_CATEGORIES = new Set([
   'store',
 ]);
 
+const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder|sample)\b/i;
+const BANNED_SUMMARY_PREFIX_RE = /^(?:candidate|option|Flight option:)/i;
+const KNOWN_FILLER_SUMMARY_RES = [
+  /hotel option worth comparing/i,
+  /flight option to compare/i,
+  /convenient grocery stop/i,
+  /worth comparing because of its JFK counter tradeoff/i,
+];
+
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -27,6 +36,7 @@ function searchProductCategory(category = '') {
 
 function parsePriceValue(value) {
   if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'string' && BANNED_VALUE_RE.test(value)) return null;
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return Math.round(value);
   }
@@ -54,6 +64,32 @@ function logoOnPlace(place = {}) {
   return text(place.logoUrl || sourceRecord.logoUrl || sourceRecord.logo || sourceRecord.faviconUrl);
 }
 
+function bannedTextViolations(label, value) {
+  const normalized = text(value);
+  if (!normalized) return [];
+  const violations = [];
+  if (BANNED_VALUE_RE.test(normalized)) violations.push(`${label}_banned_value`);
+  if (BANNED_SUMMARY_PREFIX_RE.test(normalized)) violations.push(`${label}_banned_prefix`);
+  for (const re of KNOWN_FILLER_SUMMARY_RES) {
+    if (re.test(normalized)) {
+      violations.push(`${label}_known_filler`);
+      break;
+    }
+  }
+  if (label === 'summary' && /^Neighborhood:/i.test(normalized) && normalized.length > 48) {
+    violations.push('summary_template_neighborhood');
+  }
+  return violations;
+}
+
+function titleViolations(place = {}) {
+  const title = text(place.title);
+  const violations = [];
+  if (!title) return violations;
+  if (/^Flight option:/i.test(title)) violations.push('title_flight_option_prefix');
+  return violations;
+}
+
 /** Fail when search output is missing required product fields for a place row. */
 export function searchPlaceOutputViolations(place = {}) {
   const category = searchProductCategory(place.category);
@@ -71,7 +107,11 @@ export function searchPlaceOutputViolations(place = {}) {
   if (summary && description && summary.length > 320 && description.length > 320 && summary.slice(0, 280) === description.slice(0, 280)) {
     violations.push('summary_not_short');
   }
+  violations.push(...bannedTextViolations('summary', summary));
+  violations.push(...bannedTextViolations('description', description));
+  violations.push(...titleViolations(place));
   if (price == null) violations.push('missing_price');
+  else if (price === 0) violations.push('banned_price_zero');
   if (!logoUrl) violations.push('missing_logoUrl');
   return violations;
 }
@@ -96,5 +136,7 @@ export function assertSearchPlaceOutputContract(places = []) {
 }
 
 export function finalizeSearchPlaces(places = []) {
-  return (Array.isArray(places) ? places : []).map((place) => enrichSearchPlace({ ...place }));
+  const finalized = (Array.isArray(places) ? places : []).map((place) => enrichSearchPlace({ ...place }));
+  assertSearchPlaceOutputContract(finalized);
+  return finalized;
 }

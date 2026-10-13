@@ -16,6 +16,20 @@ const ENRICHMENT = {
 /** PR336 VK search test trip (fixture family for Gate B NYC day-by-day rows). */
 export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
 
+/** Gate B display titles that intentionally differ from the ccab source key. */
+export const GATE_B_ALLOWED_TITLE_ALIASES = {
+  608: {
+    title: 'Midtown sample hotel',
+    ccabKey: 'The Manhattan Club',
+    provenanceBlocker:
+      'no ccab capture keyed "Midtown sample hotel"; list-only row 608 still binds to The Manhattan Club until a matching source record exists',
+  },
+  609: {
+    title: 'Priceline opaque Toyota Corolla',
+    ccabKey: 'Priceline opaque JFK — Standard sedan',
+  },
+};
+
 export const NYC_GATE_B_ROW_CCAB_KEYS = {
   601: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
   602: "Zabar's",
@@ -83,6 +97,58 @@ export function buildPr336VkSearchPlacesByRowId(rows = []) {
     out[row.id] = buildGateBSearchPlaceForRow(row);
   }
   return out;
+}
+
+function flightRouteFromPlace(place = {}) {
+  const haystack = [
+    place.description,
+    place.sourceRecord?.description,
+    place.externalId,
+  ].filter(Boolean).join(' ');
+  const match = haystack.match(/Route:\s*([A-Z]{3})-([A-Z]{3})/i)
+    || haystack.match(/\b([A-Z]{3})-([A-Z]{3})\b/);
+  if (!match) return null;
+  return { from: match[1].toUpperCase(), to: match[2].toUpperCase() };
+}
+
+/** Ensure each Gate B row title matches its ccab source identity (no cross-row bleed). */
+export function assertGateBRowProvenance(rows = [], placesById = {}) {
+  const failures = [];
+  for (const row of rows) {
+    const place = placesById[row.id];
+    const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[row.id];
+    const alias = GATE_B_ALLOWED_TITLE_ALIASES[row.id];
+    if (!place || !ccabKey) {
+      failures.push(`row ${row.id}: missing place or ccab key`);
+      continue;
+    }
+    if (text(place.externalId) !== text(ccabKey)) {
+      failures.push(`row ${row.id}: externalId ${place.externalId} != ccab ${ccabKey}`);
+    }
+    const expectedTitle = alias?.title || row.name;
+    if (text(place.title) !== text(expectedTitle)) {
+      failures.push(`row ${row.id}: title ${place.title} != expected ${expectedTitle}`);
+    }
+    if (alias && text(alias.ccabKey) !== text(ccabKey)) {
+      failures.push(`row ${row.id}: alias ccabKey ${alias.ccabKey} != map ${ccabKey}`);
+    }
+    if (row.cat === 'flight') {
+      const route = flightRouteFromPlace(place);
+      if (route) {
+        const title = text(place.title);
+        if (!title.includes(route.from) || !title.includes(route.to)) {
+          failures.push(`row ${row.id}: flight title ${title} missing route ${route.from}-${route.to}`);
+        }
+      }
+    } else if (!alias && !text(ccabKey).toLowerCase().includes(text(row.name).slice(0, 12).toLowerCase())
+      && !text(row.name).toLowerCase().includes(text(ccabKey).slice(0, 12).toLowerCase())) {
+      failures.push(`row ${row.id}: title ${row.name} does not match ccab key ${ccabKey}`);
+    }
+  }
+  if (failures.length) {
+    throw new Error(`gate-b row provenance failed: ${failures.join('; ')}`);
+  }
+  return GATE_B_ALLOWED_TITLE_ALIASES;
 }
 
 /** Six typed examples with priced ccab sources for the search output contract. */

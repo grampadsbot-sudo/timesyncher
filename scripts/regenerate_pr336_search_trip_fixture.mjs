@@ -4,14 +4,15 @@ import { fileURLToPath } from 'node:url';
 
 import { assertSearchPlaceOutputContract } from '../src/vacation/search-place-output.mjs';
 import {
+  assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   buildVkSearchContractSamplePlaces,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
 const GATE_B_ROWS = [
-  { day: 1, time: '10:30', name: 'JetBlue BOS → JFK', cat: 'flight', id: 601 },
+  { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
   { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602 },
-  { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603 },
+  { day: 1, time: '16:00', name: 'Motto by Hilton New York City Times Square', cat: 'hotel', id: 603 },
   { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
   { day: 1, time: '20:30', name: 'Jazz at Lincoln Center', cat: 'activity', id: 611 },
   { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604 },
@@ -23,6 +24,7 @@ const GATE_B_ROWS = [
 ];
 
 const placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
+assertGateBRowProvenance(GATE_B_ROWS, placesById);
 assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
 assertSearchPlaceOutputContract(GATE_B_ROWS.map((row) => placesById[row.id]));
 
