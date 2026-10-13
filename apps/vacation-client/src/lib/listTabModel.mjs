@@ -342,49 +342,26 @@ export function rowSummary(place, trip) {
   const source = sourceRecord(place, override);
   const category = tabCategoryKey(place, trip);
   if (category === 'car') {
-    const rentalCompany = text(
-      override.rentalCompany || source.rentalCompany || rentalCompanyFromTitle(placeName(place)),
-    );
-    const pickupLoc = text(
-      override.pickupLocation || source.pickupLocation || source.pickup || place.address,
-    );
-    const dropLoc = text(
-      override.dropoffLocation ||
-        override.returnLocation ||
-        source.dropoffLocation ||
-        source.returnLocation ||
-        source.dropoff ||
-        pickupLoc,
-    );
-    const pickupSlot = text(override.startTime || source.startTime || source.pickupTime || '10:00 am');
-    const dropSlot = text(override.endTime || source.returnTime || source.dropoffTime || '9:00 am');
     const enrichedSource = {
       ...source,
-      rentalCompany,
-      pickupLocation: pickupLoc,
-      dropoffLocation: dropLoc,
-      returnLocation: text(override.returnLocation || source.returnLocation || dropLoc),
-      pickupHours: text(
-        override.pickupHours ||
-          source.pickupHours ||
-          `Daily 6:00 am – 10:00 pm (scheduled pickup ${pickupSlot})`,
+      rentalCompany: text(override.rentalCompany || source.rentalCompany || rentalCompanyFromTitle(placeName(place))),
+      pickupLocation: text(
+        override.pickupLocation || source.pickupLocation || source.pickup || place.address,
       ),
-      dropoffHours: text(
-        override.dropoffHours ||
-          source.dropoffHours ||
-          `Daily 6:00 am – 10:00 pm (scheduled return ${dropSlot})`,
+      dropoffLocation: text(
+        override.dropoffLocation ||
+          override.returnLocation ||
+          source.dropoffLocation ||
+          source.returnLocation ||
+          source.dropoff,
       ),
+      pickupHours: text(override.startTime || source.startTime || source.pickupTime || '11:00 am'),
+      dropoffLocation: text(override.dropoffLocation || source.returnLocation || source.dropoffLocation),
+      dropoffHours: text(override.endTime || source.returnTime || source.dropoffTime || '4:00 pm'),
       carType: text(override.vehicleClass || override.carType || source.vehicleClass || source.carType),
       summary: text(override.summary || source.summary || place.description),
       price: numericPrice(place, trip) ?? parsePrice(override.price) ?? parsePrice(source.price),
     };
-    const rawCandidate = text(override.summary || source.summary || place.description);
-    const rawDescription =
-      /Rental company:/i.test(rawCandidate) &&
-      /Pickup hours:/i.test(rawCandidate) &&
-      /Drop-off hours:/i.test(rawCandidate)
-        ? rawCandidate
-        : '';
     return ensureMinSummaryWords(
       text(
         buildCategoryDescription({
@@ -392,7 +369,7 @@ export function rowSummary(place, trip) {
           title: placeName(place),
           sourceRecord: enrichedSource,
           address: text(place.address),
-          rawDescription,
+          rawDescription: text(override.summary || source.summary || place.description),
         }),
       ),
     );
@@ -510,7 +487,13 @@ export function logoUrlForPlace(place, trip) {
       source.favicon,
   );
   if (explicit) return explicit;
-  return text(resolveThingLogoUrl(place, override));
+  let resolved = text(resolveThingLogoUrl(place, override));
+  if (resolved) return resolved;
+  const rentalCompany = text(override.rentalCompany || source.rentalCompany);
+  if (rentalCompany) {
+    resolved = text(resolveThingLogoUrl({ ...place, name: rentalCompany }, override));
+  }
+  return resolved;
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

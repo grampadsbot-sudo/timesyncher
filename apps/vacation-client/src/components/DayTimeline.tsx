@@ -98,13 +98,14 @@ function TimelineIcon({
     /^Flight option:/i.test(entry.title);
   const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
   const flightTitle = entry.title || place?.name || '';
-  let logo = isFlight ? airlineLogoFromTitle(flightTitle) : '';
-  if (!logo && place) {
+  let logo = '';
+  if (place) {
     logo =
       logoUrlForPlace(place, trip) ||
       resolveThingLogoUrl(place, override) ||
       text(resolved.logoUrl);
-  } else if (!logo) {
+  }
+  if (!logo) {
     logo = text(resolved.logoUrl) || resolveThingLogoUrl(stub, override);
   }
   if (isFlight && !logo) {

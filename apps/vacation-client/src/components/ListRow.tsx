@@ -81,12 +81,10 @@ export function ListRow({
   const name = placeName(place);
   const summary = rowSummary(place, trip);
   const category = tabCategoryKey(place, trip);
-  const numeric = numericPrice(place, trip);
   const note = tab === 'hotels' ? hotelFirstRowNote(place, trip, isFirstHotel) : '';
 
   if (tab === 'flights' || category === 'flight') {
-    const price =
-      flightPriceDisplay(place, trip) || (numeric != null ? `$${numeric}` : '');
+    const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
       <li className="tsv-row tsv-row-flight" data-ts-list-row="1" data-list-row="1">
@@ -136,7 +134,7 @@ export function ListRow({
   }
 
   if (tab === 'cars' || category === 'car') {
-    const price = carPriceDisplay(place, trip) || (numeric != null ? `$${numeric}` : '');
+    const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
       <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1">
@@ -154,7 +152,7 @@ export function ListRow({
               </span>
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
-            {numeric != null ? <span className="tsv-row-price">{price}</span> : null}
+            {price ? <span className="tsv-row-price">{price}</span> : null}
             {summary ? (
             <span
               className="tsv-row-desc tsv-row-car-desc"
@@ -178,12 +176,13 @@ export function ListRow({
     );
   }
 
+  const numeric = numericPrice(place, trip);
   const price =
     tab === 'hotels' || category === 'hotel'
       ? hotelPriceDisplay(place, trip)
-      : numeric != null
-        ? `$${numeric}`
-        : '';
+      : numeric == null
+        ? ''
+        : `$${numeric}`;
 
   if (tab === 'events') {
     return (
@@ -201,7 +200,7 @@ export function ListRow({
                 {name}
               </span>
             </span>
-            {numeric != null ? <span className="tsv-row-price">{price}</span> : null}
+            {price ? <span className="tsv-row-price">{price}</span> : null}
             {summary ? (
               <span className="tsv-row-desc tsv-row-event-desc" data-list-summary="1" data-summary-src="thing">
                 {summary}
@@ -221,7 +220,7 @@ export function ListRow({
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}
           </span>
-          {numeric != null && price ? <span className="tsv-row-price">{price}</span> : null}
+          {price ? <span className="tsv-row-price">{price}</span> : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
           {summary ? (
             <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">
