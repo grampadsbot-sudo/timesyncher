@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -220,5 +222,12 @@ for (const { category, place } of enrichmentCategories) {
   assert.equal(violations.includes('blank_summary'), false, `${category} blank summary`);
   assert.equal(violations.includes('missing_logoUrl'), false, `${category} missing logo`);
 }
+
+const vkContract = spawnSync(
+  process.execPath,
+  [fileURLToPath(new URL('./test_vk_search_place_source_contract.mjs', import.meta.url))],
+  { stdio: 'inherit' },
+);
+assert.equal(vkContract.status, 0, 'vk search place source contract tests failed');
 
 console.log('trip thing logo metadata tests passed');
