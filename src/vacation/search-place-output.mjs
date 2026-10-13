@@ -14,7 +14,7 @@ const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder
 /** Minimum restaurant/store/event Things in a trip batch (VK contract v1.3.0). */
 export const TRIP_MIN_NON_EXEMPT_THINGS = 15;
 /** Max share of Things that may miss required fields when each gap is flagged in missingFields. */
-export const TRIP_MAX_MISSING_THING_FRACTION = 0.2;
+const TRIP_MAX_MISSING_THING_FRACTION = 0.2;
 
 const FLAGGABLE_MISSING_VIOLATIONS = new Set([
   'blank_description',
@@ -297,7 +297,7 @@ function classifyPlaceContractViolations(place = {}) {
 }
 
 /** Trip-level VK contract violations for a place list (v1.3.0). */
-export function searchPlaceOutputTripViolations(places = []) {
+function searchPlaceOutputTripViolations(places = []) {
   const list = Array.isArray(places) ? places : [];
   if (!list.length) return [];
   const tripFailures = [];
