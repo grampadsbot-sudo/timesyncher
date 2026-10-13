@@ -21,7 +21,19 @@ import { isGenericDescription } from '../src/vacation/trip-thing-enrichment.mjs'
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchLiveProductDetailBundle } from '../src/vacation/trek-thing-detail-patches.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
+import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import {
+  buildNycCraigKimDaybydayTripPositiveV1,
+  NYC_POSITIVE_FIXTURE_VERSION,
+} from './fixtures/nyc-craig-kim-daybyday-positive-v1.mjs';
 import { buildNycPr225SharedTrip } from './fixtures/nyc-pr225-shared-trip.mjs';
+import {
+  assessGateBNycFixtureContract,
+  gateBNycFixturePayloadSha256,
+  renderedPrice,
+  renderedSummary,
+  wordCount,
+} from './lib/gate-b-nyc-fixture-contract.mjs';
 
 const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
 const upstreamRaw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/upstream/index-BKun7ofk.js`], {
@@ -235,5 +247,34 @@ for (const [name, record] of Object.entries(nycEnrichment)) {
     assert.ok(Number(record.price) > 0, `price must be positive for ${name}`);
   }
 }
+
+const negativeFixture = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+const negativeFixtureReport = assessGateBNycFixtureContract(negativeFixture, { profile: 'negative' });
+assert.equal(negativeFixtureReport.pass, false, 'short-copy PR340 fixture must fail the positive contract');
+assert.ok(negativeFixtureReport.violations.length >= 10, `expected many violations, got ${negativeFixtureReport.violations.length}`);
+
+const positiveFixtureOnce = buildNycCraigKimDaybydayTripPositiveV1();
+const positiveFixtureTwice = finalizeServedSharedTripPayload(structuredClone(positiveFixtureOnce));
+const positiveFixtureReport = assessGateBNycFixtureContract(positiveFixtureOnce, { profile: 'positive' });
+assert.equal(positiveFixtureReport.pass, true, positiveFixtureReport.violations.join('\n'));
+
+const positiveDigestA = gateBNycFixturePayloadSha256(positiveFixtureOnce);
+const positiveDigestB = gateBNycFixturePayloadSha256(positiveFixtureTwice);
+assert.equal(positiveDigestA, positiveDigestB, 'candidate and base paths must hash the same finalized payload');
+assert.equal(positiveFixtureOnce.trip.metadata.gateBNycFixtureVersion, NYC_POSITIVE_FIXTURE_VERSION);
+
+for (const place of positiveFixtureOnce.places || []) {
+  const summary = renderedSummary(positiveFixtureOnce, place);
+  assert.ok(wordCount(summary) >= 30, `${place.name} summary must survive finalization (${wordCount(summary)} words)`);
+  const price = renderedPrice(positiveFixtureOnce, place);
+  assert.ok(price !== null, `${place.name} must expose a price after finalization`);
+}
+
+const opaqueCar = positiveFixtureOnce.places.find((row) => row.id === 609);
+assert.ok(opaqueCar, 'car list row 609 must remain in fixture');
+const opaqueCarOverride = positiveFixtureOnce.thingOverrides['place:609'] || {};
+assert.equal(opaqueCarOverride.timeline, false, 'opaque car stays list-only / unselected');
+assert.match(String(opaqueCarOverride.pickupLocation || ''), /JFK/i);
+assert.match(String(opaqueCarOverride.returnLocation || ''), /JFK/i);
 
 console.log('gate b product row field tests passed');
