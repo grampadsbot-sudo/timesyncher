@@ -90,34 +90,128 @@ assert.ok(
   'provenanceBlocked must not exempt missing reviews',
 );
 
-const labelWithoutUrlViolations = searchPlaceOutputViolations({
+function fourReviewsNoUrlSourceRecord(bodyFn) {
+  return {
+    googleRating: '4.5',
+    ratingCount: 120,
+    ratingMix: { 1: 2, 2: 4, 3: 10, 4: 38, 5: 66 },
+    review1: bodyFn(1),
+    review1Source: 'Google',
+    review1Rating: '5',
+    review2: bodyFn(2),
+    review2Source: 'Google',
+    review2Rating: '4',
+    review3: bodyFn(3),
+    review3Source: 'Yelp',
+    review3Rating: '5',
+    review4: bodyFn(4),
+    review4Source: 'TripAdvisor',
+    review4Rating: '4',
+  };
+}
+
+const mixNoUrlViolations = searchPlaceOutputViolations({
   category: 'store',
-  title: 'Label-only review store',
-  summary: 'Short summary for a store row whose review has a source label but no URL.',
-  description: 'Google lists this store around 4.5/5; description stays distinct from the summary and names what to buy on a NYC trip.',
+  title: 'Mix-backed review store',
+  summary: 'Short summary for a store row whose reviews have labels and stars but no URLs.',
+  description: 'Stored average and rating mix back four distinct review bodies without per-review URLs on a NYC trip.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+  lat: 40.78,
+  lng: -73.98,
+  sourceRecord: fourReviewsNoUrlSourceRecord((slot) => reviewBody(`mix-no-url-${slot}`)),
+});
+assert.ok(
+  !mixNoUrlViolations.includes('missing_sourced_reviews'),
+  'four URL-free reviews with average, ratingCount, and ratingMix must not fail missing_sourced_reviews',
+);
+
+const highCountNoMixViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'High-count store without mix',
+  summary: 'Short summary for a store row missing the 1-5 rating mix while ratingCount exceeds four.',
+  description: 'Description names the store without inventing aggregate counts; reviews are present but not countable.',
   price: 18,
   logoUrl: 'https://example.com/favicon.ico',
   lat: 40.78,
   lng: -73.98,
   sourceRecord: {
     googleRating: '4.5',
-    review1: longReview,
+    ratingCount: 120,
+    review1: reviewBody('high-count-1'),
     review1Source: 'Google',
     review1Rating: '5',
-    review2: longReview.replace('Quiet rooms', 'Prepared foods'),
+    review2: reviewBody('high-count-2'),
     review2Source: 'Google',
     review2Rating: '4',
-    review3: longReview.replace('Quiet rooms', 'Coffee counter'),
+    review3: reviewBody('high-count-3'),
     review3Source: 'Yelp',
     review3Rating: '5',
-    review4: longReview.replace('Quiet rooms', 'Gift aisle'),
+    review4: reviewBody('high-count-4'),
     review4Source: 'TripAdvisor',
     review4Rating: '4',
   },
 });
 assert.ok(
-  labelWithoutUrlViolations.includes('missing_sourced_reviews'),
-  'review source label without http(s) URL must not count as a full review',
+  highCountNoMixViolations.includes('missing_sourced_reviews'),
+  'URL-free reviews without ratingMix when ratingCount > 4 must fail missing_sourced_reviews',
+);
+
+const fewReviewNoMixViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'Two-review store',
+  summary: 'Short summary for a store with only two stored reviews matching ratingCount.',
+  description: 'When ratingCount is two and both reviews are stored, ratingMix may be omitted under v1.5.0.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+  lat: 40.78,
+  lng: -73.98,
+  sourceRecord: {
+    googleRating: '4.6',
+    ratingCount: 2,
+    review1: reviewBody('few-1'),
+    review1Source: 'written from the set',
+    review1Rating: '5',
+    review2: reviewBody('few-2'),
+    review2Source: 'Google',
+    review2Rating: '4',
+  },
+});
+assert.ok(
+  !fewReviewNoMixViolations.includes('missing_sourced_reviews'),
+  'ratingCount 2 with two distinct full reviews may omit ratingMix',
+);
+
+const noStarReviewViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'Starless review store',
+  summary: 'Short summary for a store whose long review text lacks a numeric star.',
+  description: 'Description stays distinct from the summary and does not invent review stars or aggregate mix data.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+  lat: 40.78,
+  lng: -73.98,
+  sourceRecord: {
+    ...fourReviewsNoUrlSourceRecord((slot) => reviewBody(`no-star-${slot}`)),
+    review1Rating: 'five stars',
+  },
+});
+assert.ok(
+  noStarReviewViolations.includes('missing_sourced_reviews'),
+  'a ~25-word review without a numeric star must fail missing_sourced_reviews',
+);
+
+const descriptionOnlyRatingViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'Description-only rating store',
+  summary: 'Short summary without copying the long description text.',
+  description: 'Rating: 4.5 from search snippets only; no stored googleRating, ratingCount, or ratingMix fields.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+});
+assert.ok(
+  descriptionOnlyRatingViolations.includes('missing_rating'),
+  'description text with Rating: must not satisfy missing_rating without stored numeric average',
 );
 
 const threeReviewViolations = searchPlaceOutputViolations({
@@ -228,7 +322,7 @@ for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   const violations = searchPlaceOutputViolations(gateBPlaces[row.id]);
   assert.ok(
     violations.includes('missing_sourced_reviews'),
-    `row ${row.id} (${row.name}) must fail missing_sourced_reviews without URL-backed reviews`,
+    `row ${row.id} (${row.name}) must fail missing_sourced_reviews without countable stored reviews`,
   );
 }
 
@@ -238,6 +332,7 @@ function reviewBody(seed) {
 
 function syntheticCompletePlace(index, { category = 'restaurant' } = {}) {
   const body = (slot) => reviewBody(`${index}-${slot}`);
+  const ratingCount = 120 + index;
   return {
     category,
     title: `Synthetic place ${index}`,
@@ -249,22 +344,26 @@ function syntheticCompletePlace(index, { category = 'restaurant' } = {}) {
     lng: -73.98,
     sourceRecord: {
       googleRating: '4.5',
+      ratingCount,
+      ratingMix: {
+        1: 2,
+        2: 4,
+        3: 10,
+        4: 38,
+        5: ratingCount - 54,
+      },
       review1: body(1),
       review1Source: 'Google',
       review1Rating: '5',
-      review1Url: `https://example.com/review/${index}-1`,
       review2: body(2),
       review2Source: 'Yelp',
       review2Rating: '4',
-      review2Url: `https://example.com/review/${index}-2`,
       review3: body(3),
       review3Source: 'TripAdvisor',
       review3Rating: '5',
-      review3Url: `https://example.com/review/${index}-3`,
       review4: body(4),
       review4Source: 'Google',
       review4Rating: '4',
-      review4Url: `https://example.com/review/${index}-4`,
     },
   };
 }
@@ -341,6 +440,27 @@ assert.throws(
   ]),
   /banned_price_zero/,
   'a banned value must fail even when listed in missingFields',
+);
+
+const flaggedMissingReviews = (index) => ({
+  ...syntheticCompletePlace(index),
+  sourceRecord: {
+    googleRating: '4.5',
+    ratingCount: 120,
+  },
+  missingFields: ['reviews'],
+});
+
+const flaggedEmptyReviewsTrip = [
+  ...syntheticTrip(16),
+  flaggedMissingReviews(17),
+  flaggedMissingReviews(18),
+  flaggedMissingReviews(19),
+  flaggedMissingReviews(20),
+];
+assert.doesNotThrow(
+  () => assertSearchPlaceOutputContract(flaggedEmptyReviewsTrip),
+  'empty reviews listed in missingFields must flag the gap and stay within the 20% cap',
 );
 
 const sharedReview = reviewBody('shared-cross-place');
