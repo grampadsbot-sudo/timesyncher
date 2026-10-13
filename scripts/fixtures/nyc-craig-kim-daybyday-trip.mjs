@@ -1,9 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
+
+const PR336_SEARCH_SNAPSHOT = JSON.parse(
+  readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
+);
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
@@ -61,7 +68,11 @@ const NYC_COORDS = {
 };
 
 export function listStoredSummaries() {
-  return { ...SUMMARIES };
+  const out = { ...SUMMARIES };
+  for (const [id, search] of Object.entries(PR336_SEARCH_SNAPSHOT)) {
+    if (search?.summary) out[id] = search.summary;
+  }
+  return out;
 }
 
 export function expectedSummariesOnDay(dayNumber) {
@@ -70,7 +81,38 @@ export function expectedSummariesOnDay(dayNumber) {
     2: [604, 605],
     3: [606, 607],
   };
-  return (idsByDay[dayNumber] || []).map((id) => SUMMARIES[id]);
+  return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || SUMMARIES[id] || '');
+}
+
+function applyPr336SearchFields(row, place, override) {
+  const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
+  if (!search) return;
+  if (search.description) {
+    place.description = search.description;
+    override.longDetails = search.description;
+  }
+  if (search.summary) override.summary = search.summary;
+  if (search.price != null) override.price = search.price;
+  if (search.logoUrl) {
+    override.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  if (search.url) {
+    place.website = search.url;
+    override.website = search.url;
+  }
+  if (search.address && text(search.address)) {
+    place.address = search.address;
+    override.address = search.address;
+  }
+  if (row.id === 609) {
+    override.rentalCompany = 'Priceline opaque';
+    override.vehicleClass = 'Toyota Corolla or similar';
+  }
+}
+
+function text(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 function buildPayload() {
@@ -237,6 +279,7 @@ function buildPayload() {
     if (row.id === 616) {
       override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
     }
+    applyPr336SearchFields(row, place, override);
     thingOverrides[`place:${row.id}`] = override;
   }
   const reservations = rows.map((row) => {
