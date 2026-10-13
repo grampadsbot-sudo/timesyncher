@@ -6,13 +6,12 @@ import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 
 // Baselined hits report. A hit that is not in the baseline fails.
 // Every baseline row must already exist on the PR base (file, rule, symbol, inventory id). A missing base file may seed; a missing ref fails closed.
-// MODEL_CLIENT is the only module allowed to call an LLM HTTP API.
-// SEARCH_MODULES are the only modules allowed to call a search or place HTTP API.
+// MODEL_CLIENT is the only module allowed to call an LLM HTTP API; SEARCH_MODULES are the only search/place HTTP callers.
 // Floating promise, one line: a same-file async call or fetch, or .then(, fails unless that line has await, return, or void. .then is handled when it has .catch or a second argument.
 // Empty catch is a catch body or .catch( callback whose body is only whitespace or comments.
 // import() and export * mark every export of that module used. A static import { name } marks only that name.
-
 export const MODEL_CLIENT = 'scripts/vacation-app-reply-rules.mjs';
+export const MODEL_CLIENT_MODULES = [MODEL_CLIENT, 'src/vacation/xai-place-ratings.mjs'];
 export const SEARCH_MODULES = ['src/vacation/poi-search.mjs', 'src/vacation/place-search-geocode.mjs'];
 export const SPLIT_BY_FEATURE = 'src/vacation/live-app-turn.mjs';
 export const BASELINE_REL = 'scripts/code-ratchet-baseline.json';
@@ -385,7 +384,7 @@ export function scanText(file, text) {
   const findings = [];
   const seen = new Set();
   if (!GUARD.has(norm(file))) {
-    hostFindings(file, value, findings, seen, LLM_HOSTS, 'MODEL-CLIENT-ONLY', new Set([MODEL_CLIENT]));
+    hostFindings(file, value, findings, seen, LLM_HOSTS, 'MODEL-CLIENT-ONLY', new Set(MODEL_CLIENT_MODULES));
     hostFindings(file, value, findings, seen, SEARCH_HOSTS, 'SEARCH-MODULE-ONLY', new Set(SEARCH_MODULES));
     emptyCatchFindings(file, value, findings, seen);
     floatingFindings(file, value, findings, seen);

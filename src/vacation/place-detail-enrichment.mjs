@@ -7,6 +7,12 @@ import {
   text,
 } from './thing-detail-fields.mjs';
 import { logoUrlFromSearchPlace } from './trip-thing-enrichment.mjs';
+import {
+  applyXaiPlaceRatingsToRecord,
+  fetchXaiPlaceRatings,
+  xaiApiKey,
+  xaiRatingsMissingFields,
+} from './xai-place-ratings.mjs';
 
 function mergeRecords(...rows) {
   const out = {};
@@ -47,6 +53,7 @@ export async function enrichPlaceDetail({
   env = process.env,
   fetchImpl = globalThis.fetch,
   searchImpl = searchTavily,
+  xaiRatingsImpl = fetchXaiPlaceRatings,
 } = {}) {
   const title = text(place.title || place.name, 240);
   const cat = text(category || place.category, 80).toLowerCase() || 'activity';
@@ -90,6 +97,27 @@ export async function enrichPlaceDetail({
     extracted.lng = place.lng;
   }
   sourceRecord = mergeRecords(sourceRecord, extracted);
+  const skipXai = cat === 'flight' || cat === 'car';
+  if (!skipXai && xaiApiKey(env)) {
+    try {
+      const xai = await xaiRatingsImpl({
+        title,
+        address: text(sourceRecord.address || place.address, 240),
+        website: text(sourceRecord.website || sourceRecord.url || place.url, 500),
+        destination,
+        env,
+        fetchImpl,
+      });
+      sourceRecord = applyXaiPlaceRatingsToRecord(sourceRecord, xai, { title });
+    } catch (error) {
+      console.error(`xai place ratings failed for "${title}": ${String(error?.message || error)}`);
+      const ratingGap = xaiRatingsMissingFields(sourceRecord);
+      if (ratingGap.length) {
+        const prior = Array.isArray(sourceRecord.missingFields) ? sourceRecord.missingFields : [];
+        sourceRecord.missingFields = [...new Set([...prior, ...ratingGap, 'reviews'])];
+      }
+    }
+  }
   const mergedPlace = { ...place, ...sourceRecord, category: cat, title };
   const detail = detailFieldsFromPlace(mergedPlace, { category: cat, title });
   detail.title = title;

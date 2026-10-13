@@ -159,6 +159,13 @@ function ratingCountOnPlace(place = {}) {
   return Math.floor(parsed);
 }
 
+function reviewThemesOnPlace(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  const raw = place.reviewThemes ?? record.reviewThemes;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => text(row, 500)).filter(Boolean);
+}
+
 function ratingMixOnPlace(place = {}) {
   const record = sourceRecordOnPlace(place);
   const mix = place.ratingMix ?? record.ratingMix;
@@ -186,13 +193,17 @@ function requiredDistinctReviewCount(place = {}) {
   return 4;
 }
 
-/** Stored reviews count only when average, count, and mix rules (v1.5.0) are satisfied. */
+/** Stored reviews count only when average, count, and mix/themes rules are satisfied. */
 function reviewAggregateAllowsStoredReviews(place = {}, distinctBodyPresentCount = 0) {
   if (!numericAverageOnPlace(place)) return false;
   const ratingCount = ratingCountOnPlace(place);
   if (ratingCount == null) return false;
   if (ratingCount <= 4) {
     return distinctBodyPresentCount === ratingCount && distinctBodyPresentCount >= 1;
+  }
+  const themes = reviewThemesOnPlace(place);
+  if (themes.length >= 4 && !ratingMixOnPlace(place)) {
+    return distinctBodyPresentCount >= 4;
   }
   return ratingMixMatchesCount(place);
 }
