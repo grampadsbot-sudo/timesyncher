@@ -10,6 +10,29 @@ const SEARCH_PRODUCT_CATEGORIES = new Set([
 ]);
 
 const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder|sample)\b/i;
+
+/** Minimum restaurant/store/event Things in a trip batch (VK contract v1.3.0). */
+export const TRIP_MIN_NON_EXEMPT_THINGS = 15;
+/** Max share of Things that may miss required fields when each gap is flagged in missingFields. */
+const TRIP_MAX_MISSING_THING_FRACTION = 0.2;
+
+const FLAGGABLE_MISSING_VIOLATIONS = new Set([
+  'blank_description',
+  'blank_summary',
+  'missing_price',
+  'missing_logoUrl',
+  'missing_rating',
+  'missing_sourced_reviews',
+]);
+
+const VIOLATION_TO_MISSING_FIELD = {
+  blank_description: 'description',
+  blank_summary: 'summary',
+  missing_price: 'price',
+  missing_logoUrl: 'logoUrl',
+  missing_rating: 'ratings',
+  missing_sourced_reviews: 'reviews',
+};
 const BANNED_SUMMARY_PREFIX_RE = /^(?:candidate|option|Flight option:)/i;
 const KNOWN_FILLER_SUMMARY_RES = [
   /hotel option worth comparing/i,
@@ -234,23 +257,104 @@ export function searchPlaceOutputViolations(place = {}) {
   return violations;
 }
 
-export function assertSearchPlaceOutputContract(places = []) {
-  const failures = [];
-  for (const place of places) {
-    const violations = searchPlaceOutputViolations(place);
-    if (!violations.length) continue;
-    failures.push({
+function missingFieldsOnPlace(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  const raw = place.missingFields ?? record.missingFields;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((field) => text(field, 80).toLowerCase()).filter(Boolean);
+}
+
+function isNonExemptTripThing(place = {}) {
+  const category = searchProductCategory(place.category);
+  return category !== 'flight' && category !== 'hotel' && category !== 'car';
+}
+
+function classifyPlaceContractViolations(place = {}) {
+  const violations = searchPlaceOutputViolations(place);
+  if (!violations.length) {
+    return { hard: [], flaggedMissing: [], hasMissing: false };
+  }
+  const flagged = new Set(missingFieldsOnPlace(place));
+  const hard = [];
+  const flaggedMissing = [];
+  for (const violation of violations) {
+    if (!FLAGGABLE_MISSING_VIOLATIONS.has(violation)) {
+      hard.push(violation);
+      continue;
+    }
+    const fieldKey = VIOLATION_TO_MISSING_FIELD[violation];
+    if (!fieldKey || !flagged.has(fieldKey)) {
+      hard.push(`unflagged_${violation}`);
+    } else {
+      flaggedMissing.push(violation);
+    }
+  }
+  return {
+    hard,
+    flaggedMissing,
+    hasMissing: flaggedMissing.length > 0,
+  };
+}
+
+/** Trip-level VK contract violations for a place list (v1.3.0). */
+function searchPlaceOutputTripViolations(places = []) {
+  const list = Array.isArray(places) ? places : [];
+  if (!list.length) return [];
+  const tripFailures = [];
+  let thingsWithFlaggedMissing = 0;
+  for (const place of list) {
+    const { hard, flaggedMissing, hasMissing } = classifyPlaceContractViolations(place);
+    if (hasMissing) thingsWithFlaggedMissing += 1;
+    if (!hard.length) continue;
+    tripFailures.push({
       title: text(place.title, 160) || '(untitled)',
       category: searchProductCategory(place.category),
-      violations,
+      violations: hard,
+      flaggedMissing,
     });
   }
-  if (failures.length) {
-    const detail = failures
-      .map((row) => `${row.category}:${row.title} → ${row.violations.join(', ')}`)
-      .join('; ');
-    throw new Error(`search place output contract failed: ${detail}`);
+
+  const nonExemptCount = list.filter(isNonExemptTripThing).length;
+  if (nonExemptCount < TRIP_MIN_NON_EXEMPT_THINGS) {
+    tripFailures.push({
+      scope: 'trip',
+      violations: [`trip_too_few_things:${nonExemptCount}_of_${TRIP_MIN_NON_EXEMPT_THINGS}`],
+    });
   }
+
+  const totalThings = list.length;
+  if (thingsWithFlaggedMissing / totalThings > TRIP_MAX_MISSING_THING_FRACTION) {
+    tripFailures.push({
+      scope: 'trip',
+      violations: [
+        `trip_too_many_missing_things:${thingsWithFlaggedMissing}_of_${totalThings}`,
+      ],
+    });
+  }
+
+  const crossPlace = crossPlaceDuplicateReviewBodyFailures(list);
+  if (crossPlace.length) {
+    tripFailures.push({
+      scope: 'trip',
+      violations: ['cross_place_duplicate_review_bodies'],
+      crossPlace,
+    });
+  }
+
+  return tripFailures;
+}
+
+export function assertSearchPlaceOutputContract(places = []) {
+  assertCrossPlaceReviewBodiesDistinct(places);
+  const failures = searchPlaceOutputTripViolations(places);
+  if (!failures.length) return;
+  const detail = failures
+    .map((row) => {
+      if (row.scope === 'trip') return `trip → ${row.violations.join(', ')}`;
+      return `${row.category}:${row.title} → ${row.violations.join(', ')}`;
+    })
+    .join('; ');
+  throw new Error(`search place output contract failed: ${detail}`);
 }
 
 /** Enrich search rows; callers that require VK contract proof assert separately (fixture generator, contract tests). */

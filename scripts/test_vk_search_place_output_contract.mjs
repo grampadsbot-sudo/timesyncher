@@ -7,6 +7,7 @@ import {
   crossPlaceDuplicateReviewBodyFailures,
   finalizeSearchPlaces,
   searchPlaceOutputViolations,
+  TRIP_MIN_NON_EXEMPT_THINGS,
 } from '../src/vacation/search-place-output.mjs';
 import {
   assertGateBRowProvenance,
@@ -220,9 +221,7 @@ for (const place of positiveContractPlaces) {
     );
   }
 }
-if (positiveContractPlaces.length) {
-  assertSearchPlaceOutputContract(positiveContractPlaces);
-}
+// Full-trip batch assert is covered by synthetic rows below; the Gate B fixture has ~8 non-exempt Things.
 
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   if (row.cat === 'flight' || row.cat === 'car') continue;
@@ -232,6 +231,140 @@ for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
     `row ${row.id} (${row.name}) must fail missing_sourced_reviews without URL-backed reviews`,
   );
 }
+
+function reviewBody(seed) {
+  return `Quiet rooms near the subway made early mornings easier for visit ${seed}, and the front desk stored bags before check-in without extra fees or confusion about timing on day ${seed}.`;
+}
+
+function syntheticCompletePlace(index, { category = 'restaurant' } = {}) {
+  const body = (slot) => reviewBody(`${index}-${slot}`);
+  return {
+    category,
+    title: `Synthetic place ${index}`,
+    summary: `Short distinct summary ${index} for why this ${category} fits the trip.`,
+    description: `Long rating-driven description ${index} that is not copied from the summary and names what to expect at this ${category} on a NYC trip.`,
+    price: 40 + index,
+    logoUrl: 'https://example.com/favicon.ico',
+    lat: 40.75 + index * 0.001,
+    lng: -73.98,
+    sourceRecord: {
+      googleRating: '4.5',
+      review1: body(1),
+      review1Source: 'Google',
+      review1Rating: '5',
+      review1Url: `https://example.com/review/${index}-1`,
+      review2: body(2),
+      review2Source: 'Yelp',
+      review2Rating: '4',
+      review2Url: `https://example.com/review/${index}-2`,
+      review3: body(3),
+      review3Source: 'TripAdvisor',
+      review3Rating: '5',
+      review3Url: `https://example.com/review/${index}-3`,
+      review4: body(4),
+      review4Source: 'Google',
+      review4Rating: '4',
+      review4Url: `https://example.com/review/${index}-4`,
+    },
+  };
+}
+
+function syntheticTrip(count) {
+  return Array.from({ length: count }, (_, index) => syntheticCompletePlace(index + 1));
+}
+
+assert.throws(
+  () => assertSearchPlaceOutputContract(syntheticTrip(TRIP_MIN_NON_EXEMPT_THINGS - 1)),
+  /trip_too_few_things/,
+  'fewer than 15 non-flight/hotel/car Things must fail the batch contract',
+);
+
+const fifteenComplete = syntheticTrip(15);
+assert.doesNotThrow(
+  () => assertSearchPlaceOutputContract(fifteenComplete),
+  'fifteen fully filled non-exempt Things must pass the batch contract',
+);
+
+const flaggedMissingPrice = (index) => ({
+  ...syntheticCompletePlace(index),
+  price: null,
+  missingFields: ['price'],
+  sourceRecord: {
+    ...syntheticCompletePlace(index).sourceRecord,
+    price: null,
+  },
+});
+
+const atTwentyPercentCap = [
+  ...syntheticTrip(16),
+  flaggedMissingPrice(17),
+  flaggedMissingPrice(18),
+  flaggedMissingPrice(19),
+  flaggedMissingPrice(20),
+];
+assert.doesNotThrow(
+  () => assertSearchPlaceOutputContract(atTwentyPercentCap),
+  'exactly 20% flagged missing Things must pass the batch contract',
+);
+
+const overTwentyPercentCap = [
+  ...atTwentyPercentCap,
+  syntheticCompletePlace(21),
+  flaggedMissingPrice(22),
+];
+assert.throws(
+  () => assertSearchPlaceOutputContract(overTwentyPercentCap),
+  /trip_too_many_missing_things/,
+  'one more flagged missing Thing over the 20% cap must fail',
+);
+
+assert.throws(
+  () => assertSearchPlaceOutputContract([
+    ...syntheticTrip(14),
+    {
+      ...syntheticCompletePlace(99),
+      price: null,
+    },
+  ]),
+  /unflagged_missing_price/,
+  'an unflagged missing field must fail even under the 20% cap',
+);
+
+assert.throws(
+  () => assertSearchPlaceOutputContract([
+    ...syntheticTrip(14),
+    {
+      ...syntheticCompletePlace(99),
+      price: 0,
+      missingFields: ['price'],
+    },
+  ]),
+  /banned_price_zero/,
+  'a banned value must fail even when listed in missingFields',
+);
+
+const sharedReview = reviewBody('shared-cross-place');
+assert.throws(
+  () => assertSearchPlaceOutputContract([
+    ...syntheticTrip(14),
+    {
+      ...syntheticCompletePlace(15),
+      sourceRecord: {
+        ...syntheticCompletePlace(15).sourceRecord,
+        review1: sharedReview,
+      },
+    },
+    {
+      ...syntheticCompletePlace(16),
+      sourceRecord: {
+        ...syntheticCompletePlace(16).sourceRecord,
+        review1: sharedReview,
+      },
+    },
+  ]),
+  /cross-place duplicate review bodies/,
+  'cross-place duplicate review bodies must fail inside assertSearchPlaceOutputContract',
+);
 
 console.log('vk search place output contract tests passed');
 
