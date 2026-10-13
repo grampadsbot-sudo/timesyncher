@@ -1,15 +1,19 @@
 import { BudgetLogoChip } from '../components/BudgetLogoChip';
 import {
   buildBudgetModel,
-  formatUsd,
   bucketIcon,
+  budgetBucketForPlace,
+  formatUsd,
 } from '../lib/budgetModel.mjs';
-import { catalogRowDisplayName } from '../lib/listTabModel.mjs';
+import { catalogRowDisplayName, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { overrideFor } from '../lib/placeHelpers';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
   trip: SharedTripPayload;
   onOpen: (place: SharedPlace) => void;
+  canEdit?: boolean;
+  onTimelineChange?: (place: SharedPlace, checked: boolean) => void;
 };
 
 function TargetReadout({
@@ -39,8 +43,34 @@ function TargetReadout({
   );
 }
 
-export function BudgetScreen({ trip, onOpen }: Props) {
+function timelineRemoveLabel(place: SharedPlace, trip: SharedTripPayload) {
+  const override = overrideFor(trip, place);
+  const bucket = budgetBucketForPlace(place, trip);
+  const icon = bucketIcon(bucket);
+  const category = tabCategoryKey(place, trip);
+  if (category === 'car') {
+    const company = text(override.rentalCompany || '');
+    if (company) return { icon, label: company };
+    const name = catalogRowDisplayName(place, trip);
+    const parts = name.split(/\s+/);
+    if (/priceline/i.test(name) && parts.length >= 2) {
+      return { icon, label: `${parts[0]} ${parts[1]}` };
+    }
+  }
+  return { icon, label: catalogRowDisplayName(place, trip) };
+}
+
+function text(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function placeOnTimeline(place: SharedPlace, trip: SharedTripPayload) {
+  return Boolean(overrideFor(trip, place).timeline);
+}
+
+export function BudgetScreen({ trip, onOpen, canEdit = false, onTimelineChange }: Props) {
   const model = buildBudgetModel(trip);
+  const timelineRows = model.rows.filter((row) => placeOnTimeline(row.place, trip));
 
   if (model.isEmpty) {
     return (
@@ -55,6 +85,27 @@ export function BudgetScreen({ trip, onOpen }: Props) {
   return (
     <section className="tsv-screen tsv-budget-screen" data-tab="budget">
       <div className="tsv-budget-panel" data-ts-budget-panel="1">
+        {timelineRows.length ? (
+          <div className="tsv-budget-timeline-controls" data-ts-budget-header-controls="1">
+            {timelineRows.map((row) => {
+              const { icon, label } = timelineRemoveLabel(row.place, trip);
+              const controlLabel = `Remove ${icon} ${label}`;
+              return (
+                <button
+                  key={`remove-${String(row.place.id)}`}
+                  type="button"
+                  className="tsv-budget-remove-control"
+                  data-ts-budget-remove-control="1"
+                  aria-label={controlLabel}
+                  disabled={!canEdit || !onTimelineChange}
+                  onClick={() => onTimelineChange?.(row.place, false)}
+                >
+                  {controlLabel}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <h2 className="tsv-budget-overall-title">Overall trip budget</h2>
 
         <div className="tsv-budget-trip-total" data-ts-budget-trip-total="1">

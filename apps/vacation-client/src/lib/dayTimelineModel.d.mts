@@ -2,6 +2,7 @@ import type { SharedDay, SharedPlace, SharedTripPayload } from '../types/sharedT
 
 export function sortedDays(trip: SharedTripPayload): SharedDay[];
 export function dayChipLabel(day: SharedDay): string;
+export function flightTimelineTitle(place: SharedPlace, trip: SharedTripPayload): string;
 export function dayItineraryHeading(day: SharedDay): string;
 export function parseDurationMinutes(raw: unknown): number | null;
 export function parseClockToMinutes(clock: string): number | null;

@@ -206,12 +206,29 @@ export function filterPlaces(places, trip, tab, filters = {}) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return (
+  const direct =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
-  );
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.ticketPrice) ??
+    parsePrice(source.ticketsFrom);
+  if (direct != null) return direct;
+  const hay = [
+    override.details,
+    override.summary,
+    source.description,
+    source.summary,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean)
+    .join(' ');
+  if (!hay) return null;
+  const ticket = hay.match(/(?:tickets?\s+from|price:|from)\s*(?:about\s*)?\$\s*([\d,]+(?:\.\d+)?)/i);
+  if (ticket) return parsePrice(ticket[1]);
+  const priced = hay.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return priced ? parsePrice(priced[1]) : null;
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
@@ -298,6 +315,15 @@ export function carSubtitle(place, trip) {
   );
 }
 
+function rentalCompanyFromTitle(name = '') {
+  const title = text(name);
+  if (!title) return '';
+  const head = title.split(/\s+\bat\b\s+/i)[0]?.trim() || title;
+  const parts = head.split(/\s+/).filter(Boolean);
+  if (/priceline/i.test(head) && parts.length >= 2) return `${parts[0]} ${parts[1]}`;
+  return head;
+}
+
 function isEventLikePlace(place, trip) {
   const category = tabCategoryKey(place, trip);
   if (category === 'event') return true;
@@ -314,6 +340,30 @@ export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   const category = tabCategoryKey(place, trip);
+  if (category === 'car') {
+    const enrichedSource = {
+      ...source,
+      rentalCompany: text(override.rentalCompany || source.rentalCompany || rentalCompanyFromTitle(placeName(place))),
+      pickupLocation: text(override.pickupLocation || source.pickupLocation || place.address),
+      pickupHours: text(override.startTime || source.startTime || source.pickupTime || '11:00 am'),
+      dropoffLocation: text(override.dropoffLocation || source.returnLocation || source.dropoffLocation),
+      dropoffHours: text(override.endTime || source.returnTime || source.dropoffTime || '4:00 pm'),
+      carType: text(override.vehicleClass || override.carType || source.vehicleClass || source.carType),
+      summary: text(override.summary || source.summary || place.description),
+      price: numericPrice(place, trip) ?? parsePrice(override.price) ?? parsePrice(source.price),
+    };
+    return ensureMinSummaryWords(
+      text(
+        buildCategoryDescription({
+          category: 'car',
+          title: placeName(place),
+          sourceRecord: enrichedSource,
+          address: text(place.address),
+          rawDescription: text(override.summary || source.summary || place.description),
+        }),
+      ),
+    );
+  }
   const eventLike = isEventLikePlace(place, trip);
   const scheduleHint = text(
     override.startTime ||

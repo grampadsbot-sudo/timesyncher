@@ -68,6 +68,19 @@ function TimelineIcon({
       </span>
     );
   }
+  if (entry.kind === 'flight') {
+    const place = entry.place;
+    const logo = place ? logoUrlForPlace(place, trip) : '';
+    return (
+      <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
+        {logo ? (
+          <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+        ) : (
+          <span className="tsv-timeline-emoji">✈️</span>
+        )}
+      </span>
+    );
+  }
   if (entry.kind === 'hotel-wake' || entry.kind === 'hotel-sleep') {
     return (
       <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">

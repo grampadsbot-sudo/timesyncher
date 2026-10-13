@@ -40,6 +40,20 @@ export function dayChipLabel(day) {
 }
 
 /** In-card heading must include “Day N” for Gate B itinerary checks. */
+export function flightTimelineTitle(place, trip) {
+  const raw = placeName(place);
+  const override = overrideFor(trip, place);
+  const blob = `${raw} ${text(override.summary || place.description || '')}`;
+  const airlineMatch = blob.match(/\b(American|JetBlue|Southwest|United|Delta|Alaska|Spirit|Frontier)\b/i);
+  const routeMatch = blob.match(/\b([A-Z]{3})-([A-Z]{3})\b/);
+  if (airlineMatch && routeMatch) {
+    const airline = airlineMatch[1];
+    const label = /^american$/i.test(airline) ? `${airline} Airlines` : airline;
+    return `${label} ${routeMatch[1]} → ${routeMatch[2]}`;
+  }
+  return text(raw.replace(/^\s*Flight option:\s*/i, '')) || raw;
+}
+
 export function dayItineraryHeading(day) {
   const title = text(day?.title);
   const number = day?.day_number;
@@ -374,6 +388,7 @@ function pushHotelRows(entries, trip, day) {
 }
 
 function pushFlightRows(entries, trip, day, dayId) {
+  const seen = new Set();
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
     if (!place) continue;
@@ -388,7 +403,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       kind: 'flight',
       id: `flight-${place.id}`,
       place,
-      title: placeName(place),
+      title: flightTimelineTitle(place, trip),
       startMin: parseClockToMinutes(depart),
       startLabel: depart,
       endLabel: arrive,
@@ -397,6 +412,38 @@ function pushFlightRows(entries, trip, day, dayId) {
       fare: flightPriceDisplay(place, trip),
       summary: rowSummary(place, trip),
     });
+    seen.add(String(place.id));
+  }
+  for (const place of trip.places || []) {
+    const id = String(place.id);
+    if (seen.has(id)) continue;
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
+    const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
+    const onDay =
+      dayIds.length === 0
+      || dayIds.includes(String(day.id))
+      || dayIds.includes(String(day.day_number));
+    if (!onDay) continue;
+    const { depart, arrive } = flightSchedule(place, trip);
+    const durationMin =
+      parseDurationMinutes(override.duration) ??
+      flightDurationMinutes(depart, arrive) ??
+      null;
+    entries.push({
+      kind: 'flight',
+      id: `flight-${place.id}`,
+      place,
+      title: flightTimelineTitle(place, trip),
+      startMin: parseClockToMinutes(depart),
+      startLabel: depart,
+      endLabel: arrive,
+      durationMin,
+      category: 'flight',
+      fare: flightPriceDisplay(place, trip),
+      summary: rowSummary(place, trip),
+    });
+    seen.add(id);
   }
 }
 

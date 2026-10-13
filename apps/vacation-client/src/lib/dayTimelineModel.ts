@@ -1,6 +1,7 @@
 export {
   buildDayTimeline,
   dayChipLabel,
+  flightTimelineTitle,
   dayItineraryHeading,
   estimateTravelMinutes,
   formatClockMinutes,

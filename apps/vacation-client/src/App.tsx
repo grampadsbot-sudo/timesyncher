@@ -104,7 +104,14 @@ export default function App() {
   if (tab === 'day-by-day') {
     body = <DayByDayScreen trip={trip} onOpen={setDetail} />;
   } else if (tab === 'budget') {
-    body = <BudgetScreen trip={trip} onOpen={setDetail} />;
+    body = (
+      <BudgetScreen
+        trip={trip}
+        onOpen={setDetail}
+        canEdit={tripState.canEdit}
+        onTimelineChange={setTimeline}
+      />
+    );
   } else if (tab === 'packing') {
     body = <FlagTabScreen message="Packing list opens when the trip owner enables packing on the share link." />;
   } else if (tab === 'chat') {

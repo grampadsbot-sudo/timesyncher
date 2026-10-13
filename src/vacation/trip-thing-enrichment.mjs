@@ -126,18 +126,42 @@ function restaurantDescription(title = '', source = {}, raw = '') {
 }
 
 function carDescription(title = '', source = {}) {
-  const company = text(source.rentalCompany || source.vendor || source.company || title.split('—')[0], 120);
+  const company = text(
+    source.rentalCompany || source.vendor || source.company || title.split('—')[0],
+    120,
+  );
   const vehicle = text(source.carType || source.vehicleClass || source.model || 'Compact automatic', 120);
-  const pickup = text(source.pickup || source.pickupLocation || source.address || 'airport counter', 120);
+  const pickupLoc = text(
+    source.pickupLocation || source.pickup || source.address || 'airport rental counter',
+    160,
+  );
+  const pickupHours = text(
+    source.pickupHours || source.pickupTime || source.startTime || source.hours || 'Confirm counter hours when you book.',
+    160,
+  );
+  const dropLoc = text(
+    source.dropoffLocation || source.returnLocation || source.dropoff || pickupLoc,
+    160,
+  );
+  const dropHours = text(
+    source.dropoffHours || source.returnTime || source.endTime || 'Match your return flight or hotel checkout window.',
+    160,
+  );
+  const reputation = text(source.summary || source.description || source.reputation || '', 400);
+  const upsell = text(source.upsells || source.upsellNotes || 'Optional insurance and prepaid fuel; compare before checkout.', 160);
   const price = firstPrice(source.price, source.rate, source.totalPrice);
   const bits = [
-    company,
-    vehicle,
-    pickup,
-    price != null ? `$${price.toLocaleString('en-US')} quote` : '',
-    'pick this up if you want trunk space; skip if you are staying near transit',
+    `Rental company: ${company || text(title, 80)}.`,
+    `Pickup hours: ${pickupHours}.`,
+    `Drop-off location: ${dropLoc}.`,
+    `Drop-off hours: ${dropHours}.`,
+    vehicle ? `Vehicle: ${vehicle}.` : '',
+    price != null ? `Price: about $${price.toLocaleString('en-US')} before taxes and fees.` : '',
+    reputation ? `Reputation: ${reputation}` : 'Reputation: compare recent renter reviews for counter wait times and vehicle condition.',
+    `Reputation: upsells — ${upsell}`,
+    'Worth comparing if you want trunk space; skip if you are staying near transit.',
   ].filter(Boolean);
-  return text(bits.join('; '), 4000);
+  return text(bits.join(' '), 4000);
 }
 
 function storeDescription(title = '', source = {}, raw = '') {
