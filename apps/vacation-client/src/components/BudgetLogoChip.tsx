@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { categoryLogoGlyph, logoUrlForPlace } from '../lib/listTabModel.mjs';
+import { categoryLogoGlyph, logoUrlForPlace, opaqueCarPricelineLogoUrl } from '../lib/listTabModel.mjs';
 import { overrideFor } from '../lib/placeHelpers';
 
 type Props = {
@@ -10,13 +10,27 @@ type Props = {
 };
 
 export function BudgetLogoChip({ place, trip, fallback = '📍' }: Props) {
-  const logo = logoUrlForPlace(place, trip);
+  const pricelineCarLogo = opaqueCarPricelineLogoUrl(place, trip);
+  const resolvedLogo = logoUrlForPlace(place, trip) || pricelineCarLogo;
   const override = overrideFor(trip, place);
   const glyph = String(
     override.icon || place.category?.icon || place.category_icon || categoryLogoGlyph(place, trip) || fallback,
   );
-  const [logoBroken, setLogoBroken] = useState(false);
-  const showLogo = Boolean(logo) && !logoBroken;
+  const [logoSrc, setLogoSrc] = useState(resolvedLogo);
+  const [logoBroken, setLogoBroken] = useState(!resolvedLogo);
+  const carBrandOnly = Boolean(pricelineCarLogo);
+
+  const markLogoBroken = () => {
+    if (carBrandOnly && pricelineCarLogo && logoSrc !== pricelineCarLogo) {
+      setLogoSrc(pricelineCarLogo);
+      setLogoBroken(false);
+      return;
+    }
+    if (carBrandOnly) return;
+    setLogoBroken(true);
+  };
+
+  const showLogo = Boolean(logoSrc) && !logoBroken;
 
   return (
     <span
@@ -29,18 +43,20 @@ export function BudgetLogoChip({ place, trip, fallback = '📍' }: Props) {
       {showLogo ? (
         <img
           className="tsv-logo"
-          src={logo}
+          src={logoSrc}
           alt=""
           loading="lazy"
-          onError={() => setLogoBroken(true)}
+          onError={markLogoBroken}
           onLoad={(event) => {
             const img = event.currentTarget;
             const box = img.getBoundingClientRect();
             if (box.width < 4 || box.height < 4 || img.naturalWidth < 1 || img.naturalHeight < 1) {
-              setLogoBroken(true);
+              markLogoBroken();
             }
           }}
         />
+      ) : carBrandOnly ? (
+        <img className="tsv-logo" src={pricelineCarLogo} alt="" loading="lazy" />
       ) : (
         <span className="tsv-logo-fallback">{glyph}</span>
       )}

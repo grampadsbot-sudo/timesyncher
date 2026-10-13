@@ -19,6 +19,7 @@ export function filterPlaces(
 export function numericPrice(place: SharedPlace, trip: SharedTripPayload): number | null;
 export function eventListPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function categoryLogoGlyph(place: SharedPlace, trip: SharedTripPayload): string;
+export function opaqueCarPricelineLogoUrl(place: SharedPlace, trip: SharedTripPayload): string;
 export function sortPlaces(
   places: SharedPlace[],
   trip: SharedTripPayload,

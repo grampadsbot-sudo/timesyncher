@@ -11,6 +11,7 @@ import {
   hotelPriceDisplay,
   logoUrlForPlace,
   numericPrice,
+  opaqueCarPricelineLogoUrl,
   placeName,
   rowSummary,
   tabCategoryKey,
@@ -32,15 +33,30 @@ type Props = {
 };
 
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
-  const logo = logoUrlForPlace(place, trip);
+  const pricelineCarLogo = opaqueCarPricelineLogoUrl(place, trip);
+  const baseLogo = logoUrlForPlace(place, trip) || pricelineCarLogo;
+  const [retrySrc, setRetrySrc] = useState('');
+  const [logoBroken, setLogoBroken] = useState(false);
+  const logoSrc = retrySrc || baseLogo;
   const override = overrideFor(trip, place);
   const fallback =
     text(override.icon) ||
     text(place.category?.icon) ||
     text(place.category_icon) ||
     categoryLogoGlyph(place, trip);
-  const [logoBroken, setLogoBroken] = useState(false);
-  const showLogo = Boolean(logo) && !logoBroken;
+  const carBrandOnly = Boolean(pricelineCarLogo);
+
+  const markLogoBroken = () => {
+    if (carBrandOnly && pricelineCarLogo && logoSrc !== pricelineCarLogo) {
+      setRetrySrc(pricelineCarLogo);
+      setLogoBroken(false);
+      return;
+    }
+    if (carBrandOnly) return;
+    setLogoBroken(true);
+  };
+
+  const showLogo = Boolean(logoSrc) && !logoBroken;
 
   return (
     <span
@@ -53,18 +69,20 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
       {showLogo ? (
         <img
           className="tsv-logo tiny-logo"
-          src={logo}
+          src={logoSrc}
           alt=""
           loading="lazy"
-          onError={() => setLogoBroken(true)}
+          onError={markLogoBroken}
           onLoad={(event) => {
             const img = event.currentTarget;
             const box = img.getBoundingClientRect();
             if (box.width < 4 || box.height < 4 || img.naturalWidth < 1 || img.naturalHeight < 1) {
-              setLogoBroken(true);
+              markLogoBroken();
             }
           }}
         />
+      ) : carBrandOnly ? (
+        <img className="tsv-logo tiny-logo" src={pricelineCarLogo} alt="" loading="lazy" />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
@@ -128,7 +146,7 @@ export function ListRow({
             aria-label="Open thing details"
             onClick={() => onOpen(place)}
           >
-            <LogoChip place={place} trip={trip} />
+            <LogoChip key={String(place.id)} place={place} trip={trip} />
             <span className="tsv-row-name" data-ts-list-row-name="1">
               {name}
             </span>
@@ -179,7 +197,7 @@ export function ListRow({
             onClick={() => onOpen(place)}
           >
             <span className="tsv-row-car-head">
-              <LogoChip place={place} trip={trip} />
+              <LogoChip key={String(place.id)} place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
                 {name}
               </span>
@@ -230,7 +248,7 @@ export function ListRow({
             onClick={() => onOpen(place)}
           >
             <span className="tsv-row-car-head">
-              <LogoChip place={place} trip={trip} />
+              <LogoChip key={String(place.id)} place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
                 {name}
               </span>
@@ -255,7 +273,7 @@ export function ListRow({
     <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
       <div className="tsv-row-car-grid">
         <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
-          <LogoChip place={place} trip={trip} />
+          <LogoChip key={String(place.id)} place={place} trip={trip} />
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}
           </span>

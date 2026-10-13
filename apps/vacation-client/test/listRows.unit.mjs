@@ -92,7 +92,7 @@ const opaqueCarTrip = {
     'place:609': { rentalCompany: 'Priceline opaque (test fixture)', category: 'car' },
   },
 };
-assert.equal(logoUrlForPlace(opaqueCarTrip.places[0], opaqueCarTrip), '');
+assert.match(logoUrlForPlace(opaqueCarTrip.places[0], opaqueCarTrip), /priceline\.com\/favicon\.ico$/);
 
 const eventTrip = {
   places: [{ id: 606, name: 'Afternoon matinee show', category_name: 'activity' }],

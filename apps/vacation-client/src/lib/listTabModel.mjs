@@ -1,6 +1,6 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { NAMED_THING_LOGOS, resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineCategoryIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
@@ -241,11 +241,20 @@ export function eventListPriceDisplay(place, trip) {
   return `$${price}`;
 }
 
-function isOpaqueCarRental(place, override, source) {
+/** Opaque Priceline car listings: show Priceline brand art, not a category glyph. */
+export function opaqueCarPricelineLogoUrl(place, trip) {
+  if (tabCategoryKey(place, trip) !== 'car') return '';
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
   const company = text(override.rentalCompany || source.rentalCompany);
-  if (/opaque/i.test(company)) return true;
   const name = text(place.name || place.title);
-  return /opaque/i.test(name);
+  const isOpaque = /opaque/i.test(company) || /opaque/i.test(name);
+  if (!isOpaque) return '';
+  if (!/priceline/i.test(company) && !/priceline/i.test(name)) return '';
+  return (
+    text(resolveThingLogoUrl({ name: 'Priceline' }, override)) ||
+    text(NAMED_THING_LOGOS.priceline)
+  );
 }
 
 export function categoryLogoGlyph(place, trip) {
@@ -498,7 +507,6 @@ export function rowSummary(place, trip) {
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  if (isOpaqueCarRental(place, override, source)) return '';
   const explicit = text(
     override.logoUrl ||
       override.iconUrl ||
@@ -515,7 +523,7 @@ export function logoUrlForPlace(place, trip) {
   if (rentalCompany) {
     resolved = text(resolveThingLogoUrl({ ...place, name: rentalCompany }, override));
   }
-  return resolved;
+  return resolved || opaqueCarPricelineLogoUrl(place, trip);
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {
