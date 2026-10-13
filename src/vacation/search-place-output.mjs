@@ -108,25 +108,112 @@ function reviewField(place = {}, index = 1, suffix = '') {
   return text(place[key] ?? record[key], max);
 }
 
-function isHttpUrl(value = '') {
-  return /^https?:\/\//i.test(text(value, 500));
-}
-
 function normalizeReviewSource(source = '') {
   const row = text(source, 40);
   if (row.toLowerCase() === 'tripadvisor') return 'TripAdvisor';
   return row;
 }
 
-function reviewIsComplete(place = {}, index = 1) {
+function isAllowedReviewSource(source = '') {
+  const row = normalizeReviewSource(source);
+  if (row === 'written from the set') return true;
+  return ['Google', 'Yelp', 'TripAdvisor'].includes(row);
+}
+
+/** VK v1.5.0: ~25 words, allowed source label, numeric star — no review URL required. */
+function reviewBodyIsPresent(place = {}, index = 1) {
   const body = reviewField(place, index);
-  const source = normalizeReviewSource(reviewField(place, index, 'Source'));
+  const source = reviewField(place, index, 'Source');
   const rating = reviewField(place, index, 'Rating');
-  const sourceUrl = reviewField(place, index, 'Url');
   if (wordCount(body) < 25) return false;
-  if (!['Google', 'Yelp', 'TripAdvisor'].includes(source)) return false;
+  if (!isAllowedReviewSource(source)) return false;
   if (!/\d/.test(rating)) return false;
-  return isHttpUrl(sourceUrl);
+  return true;
+}
+
+function parseNumericRating(value) {
+  const normalized = text(value, 40);
+  if (!normalized) return null;
+  const direct = Number(normalized);
+  if (Number.isFinite(direct)) return direct;
+  const match = normalized.match(/([\d.]+)/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function numericAverageOnPlace(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  for (const key of ['googleRating', 'yelpRating', 'thirdPartyRating']) {
+    if (parseNumericRating(place[key] ?? record[key]) != null) return true;
+  }
+  return false;
+}
+
+function ratingCountOnPlace(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  const raw = place.ratingCount ?? record.ratingCount;
+  if (raw === null || raw === undefined || raw === '') return null;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.floor(parsed);
+}
+
+function ratingMixOnPlace(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  const mix = place.ratingMix ?? record.ratingMix;
+  if (!mix || typeof mix !== 'object') return null;
+  const counts = {};
+  for (const star of ['1', '2', '3', '4', '5']) {
+    const value = Number(mix[star]);
+    if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) return null;
+    counts[star] = value;
+  }
+  return counts;
+}
+
+function ratingMixMatchesCount(place = {}) {
+  const mix = ratingMixOnPlace(place);
+  const count = ratingCountOnPlace(place);
+  if (!mix || count == null) return false;
+  const sum = Object.values(mix).reduce((total, value) => total + value, 0);
+  return sum === count;
+}
+
+function requiredDistinctReviewCount(place = {}) {
+  const ratingCount = ratingCountOnPlace(place);
+  if (ratingCount != null && ratingCount >= 1 && ratingCount <= 4) return ratingCount;
+  return 4;
+}
+
+/** Stored reviews count only when average, count, and mix rules (v1.5.0) are satisfied. */
+function reviewAggregateAllowsStoredReviews(place = {}, distinctBodyPresentCount = 0) {
+  if (!numericAverageOnPlace(place)) return false;
+  const ratingCount = ratingCountOnPlace(place);
+  if (ratingCount == null) return false;
+  if (ratingCount <= 4) {
+    return distinctBodyPresentCount === ratingCount && distinctBodyPresentCount >= 1;
+  }
+  return ratingMixMatchesCount(place);
+}
+
+function distinctBodyPresentReviewCount(place = {}) {
+  const seen = new Set();
+  let count = 0;
+  for (let index = 1; index <= 4; index += 1) {
+    if (!reviewBodyIsPresent(place, index)) continue;
+    const body = reviewField(place, index);
+    if (seen.has(body)) continue;
+    seen.add(body);
+    count += 1;
+  }
+  return count;
+}
+
+function effectiveDistinctSourcedReviewCount(place = {}) {
+  const bodyPresent = distinctBodyPresentReviewCount(place);
+  if (!reviewAggregateAllowsStoredReviews(place, bodyPresent)) return 0;
+  return bodyPresent;
 }
 
 function normalizeReviewBodyForCrossPlace(body = '') {
@@ -167,36 +254,8 @@ export function assertCrossPlaceReviewBodiesDistinct(places = []) {
   throw new Error(`cross-place duplicate review bodies: ${detail}`);
 }
 
-function distinctFullReviewCount(place = {}) {
-  const seen = new Set();
-  let count = 0;
-  for (let index = 1; index <= 4; index += 1) {
-    if (!reviewIsComplete(place, index)) continue;
-    const body = reviewField(place, index);
-    if (seen.has(body)) continue;
-    seen.add(body);
-    count += 1;
-  }
-  return count;
-}
-
 function hasAggregateRating(place = {}) {
-  const record = sourceRecordOnPlace(place);
-  if (text(record.googleRating) || text(record.yelpRating) || text(record.thirdPartyRating)) {
-    return true;
-  }
-  if (text(place.googleRating) || text(place.yelpRating) || text(place.thirdPartyRating)) {
-    return true;
-  }
-  const haystack = [
-    place.description,
-    record.description,
-    record.longDetails,
-    record.summary,
-  ].filter(Boolean).join(' ');
-  return /\bRating:\s*[\d.]+/i.test(haystack)
-    || /\b[\d.]+\s*\/\s*5\b/.test(haystack)
-    || /\b[\d.]+\s*of\s*5\s*bubbles\b/i.test(haystack);
+  return numericAverageOnPlace(place);
 }
 
 function bannedTextViolations(label, value) {
@@ -251,7 +310,9 @@ export function searchPlaceOutputViolations(place = {}) {
 
   if (category !== 'flight' && category !== 'car') {
     if (!hasAggregateRating(place)) violations.push('missing_rating');
-    if (distinctFullReviewCount(place) < 4) violations.push('missing_sourced_reviews');
+    if (effectiveDistinctSourcedReviewCount(place) < requiredDistinctReviewCount(place)) {
+      violations.push('missing_sourced_reviews');
+    }
   }
 
   return violations;
