@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
+import {
+  NAMED_THING_LOGOS,
+  resolveThingLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
+import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
@@ -29,6 +34,7 @@ type TimelineEntry = {
   conflictWith?: string;
   fare?: string;
   media?: TimelineMedia[];
+  category?: string;
 };
 
 type Props = {
@@ -48,10 +54,18 @@ function mediaUrl(row: TimelineMedia) {
   return String(row.publicUrl || row.url || row.thumbnail_url || row.thumbnailUrl || '').trim();
 }
 
-function summarySuppressedKind(kind: string) {
-  return /^(travel|flight|hotel-wake|hotel-event|hotel-sleep|hotel-checkout|car-pickup|car-dropoff)$/.test(
-    kind,
-  );
+function text(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function airlineLogoFromTitle(title = '') {
+  const label = String(title || '');
+  if (/\bsouthwest\b/i.test(label)) return NAMED_THING_LOGOS.southwest;
+  if (/\bjetblue\b/i.test(label)) return NAMED_THING_LOGOS.jetblue;
+  if (/\bunited\b/i.test(label)) return NAMED_THING_LOGOS.united;
+  if (/\bdelta\b/i.test(label)) return NAMED_THING_LOGOS.delta;
+  if (/\bamerican\b/i.test(label)) return NAMED_THING_LOGOS.american;
+  return '';
 }
 
 function TimelineIcon({
@@ -61,6 +75,8 @@ function TimelineIcon({
   entry: TimelineEntry;
   trip: SharedTripPayload;
 }) {
+  const [logoBroken, setLogoBroken] = useState(false);
+
   if (entry.kind === 'travel') {
     return (
       <span className="tsv-timeline-icon tsv-timeline-icon--travel" data-ts-timeline-icon="1">
@@ -68,19 +84,58 @@ function TimelineIcon({
       </span>
     );
   }
-  if (entry.kind === 'flight') {
-    const place = entry.place;
-    const logo = place ? logoUrlForPlace(place, trip) : '';
+
+  const place = entry.place;
+  const stub = place || {
+    name: entry.title,
+    category_name:
+      entry.category === 'flight' || /flight/i.test(entry.title) ? 'Flight' : 'Attraction',
+  };
+  const override = place ? overrideFor(trip, place) : {};
+  const isFlight =
+    entry.kind === 'flight' ||
+    entry.category === 'flight' ||
+    /^Flight option:/i.test(entry.title);
+  const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
+  const flightTitle = entry.title || place?.name || '';
+  let logo = isFlight ? airlineLogoFromTitle(flightTitle) : '';
+  if (!logo && place) {
+    logo =
+      logoUrlForPlace(place, trip) ||
+      resolveThingLogoUrl(place, override) ||
+      text(resolved.logoUrl);
+  } else if (!logo) {
+    logo = text(resolved.logoUrl) || resolveThingLogoUrl(stub, override);
+  }
+  if (isFlight && !logo) {
+    logo = airlineLogoFromTitle(flightTitle);
+  }
+  const flightGlyph = resolved.icon || '✈️';
+  const flightLogo = isFlight ? logo || airlineLogoFromTitle(flightTitle) : logo;
+
+  if (isFlight) {
+    const src = flightLogo || airlineLogoFromTitle(flightTitle);
     return (
       <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-        {logo ? (
-          <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+        {src ? (
+          <img
+            className="ts-logo tiny-logo tsv-timeline-logo"
+            src={src}
+            alt=""
+            width={22}
+            height={22}
+            loading="eager"
+            decoding="sync"
+            data-ts-timeline-logo="1"
+            data-logo-src={src}
+          />
         ) : (
-          <span className="tsv-timeline-emoji">✈️</span>
+          <span className="tsv-timeline-emoji">{flightGlyph}</span>
         )}
       </span>
     );
   }
+
   if (entry.kind === 'hotel-wake' || entry.kind === 'hotel-sleep') {
     return (
       <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
@@ -88,22 +143,26 @@ function TimelineIcon({
       </span>
     );
   }
-  const place = entry.place;
-  if (!place) return null;
-  const logo = logoUrlForPlace(place, trip);
-  const override = overrideFor(trip, place);
-  const category = tabCategoryKey(place, trip);
-  const fallback =
-    entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
-      ? '🧳'
-      : String(override.icon || place.category?.icon || place.category_icon || '📍');
+
+  const showLogo = Boolean(flightLogo) && !logoBroken;
+  const showEmoji = !showLogo || logoBroken;
+
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
-      ) : (
-        <span className="tsv-timeline-emoji">{fallback}</span>
-      )}
+      {showLogo && flightLogo ? (
+        <img
+          className="tiny-logo tsv-timeline-logo"
+          src={flightLogo}
+          alt=""
+          width={22}
+          height={22}
+          loading="eager"
+          decoding="sync"
+          data-ts-timeline-logo="1"
+          onError={() => setLogoBroken(true)}
+        />
+      ) : null}
+      {showEmoji ? <span className="tsv-timeline-emoji">{flightGlyph}</span> : null}
     </span>
   );
 }
@@ -161,18 +220,22 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
   }
 
   return (
-    <ol className="tsv-timeline-list">
+    <div className="tsv-timeline-list">
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
+        const isFlight = entry.kind === 'flight';
         const place = entry.place;
+        const category = place ? tabCategoryKey(place, trip) : entry.category || '';
         const showSummary =
           !isTravel &&
-          !summarySuppressedKind(entry.kind) &&
+          !isFlight &&
           entry.kind === 'thing' &&
+          category !== 'flight' &&
+          !/^Travel (to|from)\b/i.test(entry.title) &&
           entry.summary;
         const media = entry.media?.length ? entry.media : [];
         return (
-          <li
+          <div
             key={entry.id}
             className={`tsv-timeline-row${entry.conflictWith ? ' is-conflict' : ''}`}
             data-ts-timeline-row="1"
@@ -181,7 +244,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
               {!isTravel && entry.startLabel ? (
                 <span className="tsv-timeline-time">{entry.startLabel}</span>
               ) : null}
-              {entry.kind === 'flight' && entry.endLabel ? (
+              {isFlight && entry.endLabel ? (
                 <span className="tsv-timeline-time tsv-timeline-time--arrive">{entry.endLabel}</span>
               ) : null}
               {entry.durationMin != null ? (
@@ -190,56 +253,66 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 </span>
               ) : null}
             </div>
-            <div className="tsv-timeline-main">
-              {entry.conflictWith ? (
-                <div className="tsv-timeline-conflict" data-ts-conflict-label="1">
-                  <span className="tsv-timeline-conflict-bar" aria-hidden="true" />
-                  Conflict with {entry.conflictWith}
-                </div>
-              ) : null}
-              <div className="tsv-timeline-head">
-                <TimelineIcon entry={entry} trip={trip} />
-                {isTravel || !place ? (
-                  <span className="tsv-timeline-title" data-ts-timeline-title="1">
-                    {entry.title}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className="tsv-timeline-title tsv-timeline-link"
-                    data-ts-timeline-title="1"
-                    onClick={() => onOpen(place)}
-                  >
-                    {entry.title || placeName(place)}
-                  </button>
-                )}
-                {media.length ? (
-                  <TimelineMediaThumb
-                    media={media}
-                    expanded={openMediaId === entry.id}
-                    onToggle={() =>
-                      setOpenMediaId((current) => (current === entry.id ? null : entry.id))
-                    }
-                  />
-                ) : null}
+            <TimelineIcon entry={entry} trip={trip} />
+            {entry.conflictWith ? (
+              <div
+                className="tsv-timeline-conflict tsv-timeline-conflict--full"
+                data-ts-conflict-label="1"
+              >
+                <span className="tsv-timeline-conflict-bar" aria-hidden="true" />
+                Conflict with {entry.conflictWith}
               </div>
-              {entry.kind === 'flight' && entry.fare ? (
-                <p className="tsv-timeline-fare" data-ts-flight-price="1">
-                  {entry.fare}
-                </p>
-              ) : null}
-              {showSummary ? (
-                <p className="tsv-timeline-summary" data-row-summary="1">
-                  {entry.summary}
-                </p>
-              ) : null}
-              {!isTravel && entry.itineraryNote ? (
-                <p className="tsv-timeline-note">{entry.itineraryNote}</p>
+            ) : null}
+            <div className="tsv-timeline-head">
+              {isTravel || !place ? (
+                <span className="tsv-timeline-title" data-ts-timeline-title="1">
+                  {entry.title}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="tsv-timeline-title tsv-timeline-link"
+                  data-ts-timeline-title="1"
+                  onClick={() => onOpen(place)}
+                >
+                  {entry.title || placeName(place)}
+                </button>
+              )}
+              {media.length ? (
+                <TimelineMediaThumb
+                  media={media}
+                  expanded={openMediaId === entry.id}
+                  onToggle={() =>
+                    setOpenMediaId((current) => (current === entry.id ? null : entry.id))
+                  }
+                />
               ) : null}
             </div>
-          </li>
+            {entry.fare || showSummary || (!isTravel && entry.itineraryNote) ? (
+              <div className="tsv-timeline-details">
+                {entry.fare ? (
+                  <p className="tsv-timeline-fare" data-ts-flight-price="1">
+                    {entry.fare}
+                  </p>
+                ) : null}
+                {showSummary ? (
+                  <p
+                    className="tsv-timeline-summary"
+                    data-row-summary="1"
+                    data-summary-stored="1"
+                    data-summary-src="thing"
+                  >
+                    {entry.summary}
+                  </p>
+                ) : null}
+                {!isTravel && entry.itineraryNote ? (
+                  <p className="tsv-timeline-note">{entry.itineraryNote}</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         );
       })}
-    </ol>
+    </div>
   );
 }

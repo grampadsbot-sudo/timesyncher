@@ -45,7 +45,7 @@ export function flightTimelineTitle(place, trip) {
   const override = overrideFor(trip, place);
   const blob = `${raw} ${text(override.summary || place.description || '')}`;
   const airlineMatch = blob.match(/\b(American|JetBlue|Southwest|United|Delta|Alaska|Spirit|Frontier)\b/i);
-  const routeMatch = blob.match(/\b([A-Z]{3})-([A-Z]{3})\b/);
+  const routeMatch = blob.match(/\b([A-Z]{3})\s*(?:→|->|—|-)\s*([A-Z]{3})\b/);
   if (airlineMatch && routeMatch) {
     const airline = airlineMatch[1];
     const label = /^american$/i.test(airline) ? `${airline} Airlines` : airline;

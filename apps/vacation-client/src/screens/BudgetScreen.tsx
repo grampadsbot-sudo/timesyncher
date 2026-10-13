@@ -68,9 +68,16 @@ function placeOnTimeline(place: SharedPlace, trip: SharedTripPayload) {
   return Boolean(overrideFor(trip, place).timeline);
 }
 
+function showBudgetRemoveControl(place: SharedPlace, trip: SharedTripPayload) {
+  if (placeOnTimeline(place, trip)) return true;
+  const category = tabCategoryKey(place, trip);
+  if (category !== 'car') return false;
+  return Boolean(text(overrideFor(trip, place).rentalCompany));
+}
+
 export function BudgetScreen({ trip, onOpen, canEdit = false, onTimelineChange }: Props) {
   const model = buildBudgetModel(trip);
-  const timelineRows = model.rows.filter((row) => placeOnTimeline(row.place, trip));
+  const timelineRows = model.rows.filter((row) => showBudgetRemoveControl(row.place, trip));
 
   if (model.isEmpty) {
     return (

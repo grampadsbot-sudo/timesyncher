@@ -67,12 +67,14 @@ const TEST_ONLY_CAR = {
   summary:
     'Priceline opaque Toyota Corolla or similar at JFK Federal Circle; supplier name stays hidden until booking. Fixture pickup Jun 23 2026 10:00 at JFK rental shuttle, return Jun 30 2026 09:00 same facility; $172 total is synthetic test pricing only. Review toll, fuel, and cancellation terms before paying; do not treat counter reputation as verified.',
   price: 172,
-  rentalCompany: 'Priceline opaque (test fixture)',
+  rentalCompany: 'Priceline opaque',
   vehicleClass: 'Toyota Corolla or similar',
   pickupLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 23 2026 10:00)',
   returnLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 30 2026 09:00)',
-  startTime: '10:00',
-  endTime: '09:00',
+  pickupHours: 'Daily 6:00 am – 10:00 pm (scheduled pickup 10:00 am)',
+  dropoffHours: 'Daily 6:00 am – 10:00 pm (scheduled return 9:00 am)',
+  startTime: '10:00 am',
+  endTime: '9:00 am',
   rentalTermsNote:
     'Illustrative test-only terms: unlimited miles placeholder, refuel-to-full policy, LDW declined unless explicitly approved in chat.',
 };

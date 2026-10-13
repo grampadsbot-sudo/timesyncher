@@ -126,10 +126,16 @@ function restaurantDescription(title = '', source = {}, raw = '') {
 }
 
 function carDescription(title = '', source = {}) {
-  const company = text(
+  let company = text(
     source.rentalCompany || source.vendor || source.company || title.split('—')[0],
     120,
   );
+  if (/opaque/i.test(company) || /opaque/i.test(title)) {
+    company = company || 'Priceline opaque';
+    if (!/withheld|hidden|unknown/i.test(company)) {
+      company = `${company} (rental company withheld until booking)`;
+    }
+  }
   const vehicle = text(source.carType || source.vehicleClass || source.model || 'Compact automatic', 120);
   const pickupLoc = text(
     source.pickupLocation || source.pickup || source.address || 'airport rental counter',
