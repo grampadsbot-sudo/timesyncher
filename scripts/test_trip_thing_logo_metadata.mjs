@@ -9,10 +9,7 @@ import {
   isGenericDescription,
   logoUrlFromSearchPlace,
 } from '../src/vacation/trip-thing-enrichment.mjs';
-import {
-  assertSearchPlaceOutputContract,
-  searchPlaceOutputViolations,
-} from '../src/vacation/search-place-output.mjs';
+import { searchPlaceOutputViolations } from '../src/vacation/search-place-output.mjs';
 import { buildVkSearchContractSamplePlaces } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
@@ -206,12 +203,6 @@ const built = buildCategoryDescription({
 assert.match(built, /Southwest/i);
 
 const vkSamplePlaces = buildVkSearchContractSamplePlaces();
-const vkSamplesPassingContract = vkSamplePlaces.filter(
-  (place) => searchPlaceOutputViolations(place).length === 0,
-);
-if (vkSamplesPassingContract.length) {
-  assertSearchPlaceOutputContract(vkSamplesPassingContract);
-}
 for (const place of vkSamplePlaces) {
   assert.notEqual(textOrEmpty(place.summary), textOrEmpty(place.description), `${place.category} summary must differ from description`);
 }
