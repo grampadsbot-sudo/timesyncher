@@ -7,6 +7,7 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   buildVkSearchContractSamplePlaces,
+  gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
 const GATE_B_ROWS = [
@@ -26,7 +27,9 @@ const GATE_B_ROWS = [
 const placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, placesById);
 assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
-assertSearchPlaceOutputContract(GATE_B_ROWS.map((row) => placesById[row.id]));
+assertSearchPlaceOutputContract(
+  gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS).map((row) => placesById[row.id]),
+);
 
 const outPath = fileURLToPath(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url));
 writeFileSync(outPath, `${JSON.stringify(placesById, null, 2)}\n`, 'utf8');
