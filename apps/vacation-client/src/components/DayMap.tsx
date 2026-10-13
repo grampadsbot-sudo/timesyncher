@@ -115,8 +115,8 @@ export function DayMap({ places }: Props) {
       >
         <MapReady />
         <TileLayer
-          attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap (CC-BY-SA)'
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {withCoords.length > 1 ? <FitBounds places={withCoords} /> : null}
         {withCoords.map((place) => (
