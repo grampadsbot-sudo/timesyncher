@@ -10,6 +10,7 @@ import {
   bravePlaceDisplayTitle,
   preferBraveUrlDuplicates,
 } from './brave-place-query.mjs';
+import { finalizeSearchPlaces } from './search-place-output.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -618,6 +619,7 @@ export async function searchPlaces({
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })
     : { places: [], rejections: [] };
   const notes = noteRelevance.places;
+  places = finalizeSearchPlaces(places);
   return {
     destination: dest || center?.label || locationText || '',
     center,
