@@ -184,6 +184,34 @@ export function ListRow({
         ? ''
         : `$${numeric}`;
 
+  if (tab === 'events') {
+    return (
+      <li className="tsv-row tsv-row-event" data-ts-list-row="1" data-list-row="1">
+        <div className="tsv-row-car-grid">
+          <button
+            type="button"
+            className="tsv-row-main tsv-row-event-main"
+            aria-label="Open thing details"
+            onClick={() => onOpen(place)}
+          >
+            <span className="tsv-row-car-head">
+              <LogoChip place={place} trip={trip} />
+              <span className="tsv-row-name" data-ts-list-row-name="1">
+                {name}
+              </span>
+            </span>
+            {price ? <span className="tsv-row-price">{price}</span> : null}
+            {summary ? (
+              <span className="tsv-row-desc tsv-row-event-desc" data-list-summary="1" data-summary-src="thing">
+                {summary}
+              </span>
+            ) : null}
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
       <div className="tsv-row-car-grid">

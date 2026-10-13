@@ -1,8 +1,6 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
 import { LIST_TAB_IDS, placeName, placesForCategoryTab, tabCategoryKey } from './listTabModel.mjs';
-import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
-
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
 export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
 export const BUDGET_BUCKET_ORDER = [
@@ -175,81 +173,12 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-function placesFromItineraryTimeline(trip) {
-  const seen = new Map();
-  for (const day of sortedDays(trip)) {
-    for (const entry of buildDayTimeline(trip, day)) {
-      if (entry.kind === 'travel' || entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') {
-        continue;
-      }
-      if (entry.place) rememberBudgetPlace(seen, entry.place);
-    }
-  }
-  return [...seen.values()];
-}
-
-/** Catalog + timeline + reservations (live Budget tab parity). */
+/** Same union as live TREK Budget tab (Mo patch): every list-tab row, including off-timeline flights. */
 export function placesForBudget(trip) {
   const seen = new Map();
   for (const tab of LIST_TAB_IDS) {
     for (const place of placesForCategoryTab(trip, tab)) {
       rememberBudgetPlace(seen, place);
-    }
-  }
-  for (const place of placesFromItineraryTimeline(trip)) {
-    rememberBudgetPlace(seen, place);
-  }
-  for (const place of trip?.places || []) {
-    rememberBudgetPlace(seen, place);
-  }
-  for (const place of trip?.places || []) {
-    const override = overrideFor(trip, place);
-    const dayIds = override.dayIds;
-    if (Array.isArray(dayIds) && dayIds.length) {
-      rememberBudgetPlace(seen, place);
-    }
-  }
-  for (const rows of Object.values(trip?.assignments || {})) {
-    if (!Array.isArray(rows)) continue;
-    for (const row of rows) {
-      const place = resolvePlace(row, trip);
-      rememberBudgetPlace(seen, place);
-    }
-  }
-  for (const line of trip?.budget || []) {
-    const name = text(line?.name || line?.title);
-    if (!name) continue;
-    const match =
-      (trip.places || []).find((p) => placeName(p) === name)
-      || (trip.places || []).find((p) => placeName(p).includes(name) || name.includes(placeName(p)));
-    if (match) {
-      rememberBudgetPlace(seen, match);
-      continue;
-    }
-    rememberBudgetPlace(seen, {
-      id: line.id ?? `budget-line:${name}`,
-      name,
-      category_name: text(line.category) || 'Flight',
-      source: 'budget-line',
-    });
-  }
-  for (const res of trip?.reservations || []) {
-    const title = text(res?.title || res?.name);
-    if (!/^Flight option:/i.test(title)) continue;
-    const place =
-      (trip.places || []).find((p) => String(p.id) === String(res.place_id))
-      || (typeof res.place === 'object' ? res.place : null);
-    if (place) {
-      rememberBudgetPlace(seen, place);
-      continue;
-    }
-    if (res.place_id != null) {
-      rememberBudgetPlace(seen, {
-        id: res.place_id,
-        name: title,
-        category_name: 'Flight',
-        source: 'reservation',
-      });
     }
   }
   return [...seen.values()];

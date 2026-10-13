@@ -522,6 +522,29 @@ body {
   grid-column: 2;
 }
 
+.tsv-row-event-main {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  align-items: center;
+}
+
+.tsv-row-event-main .tsv-row-car-head {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.tsv-row-event-main .tsv-row-price {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.tsv-row-event-main .tsv-row-event-desc {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
 .tsv-row-car-sub {
   font-size: 11px;
   color: var(--muted);
