@@ -9,6 +9,11 @@ import {
   isGenericDescription,
   logoUrlFromSearchPlace,
 } from '../src/vacation/trip-thing-enrichment.mjs';
+import {
+  assertSearchPlaceOutputContract,
+  searchPlaceOutputViolations,
+} from '../src/vacation/search-place-output.mjs';
+import { buildVkSearchContractSamplePlaces } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { readFile } from 'node:fs/promises';
@@ -118,12 +123,14 @@ const enrichmentCategories = [
       lng: -73.78,
       address: 'JFK Airport, Queens, NY',
       url: 'https://www.hertz.com/',
+      description: 'Hertz Federal Circle counter with compact SUV rates for JFK pickup after arrival.',
       sourceRecord: {
         source: 'brave',
         url: 'https://www.hertz.com/',
         rentalCompany: 'Hertz',
         carType: 'Compact SUV',
         price: 172,
+        summary: 'Hertz JFK compact SUV quote with airport pickup.',
       },
     },
   },
@@ -138,7 +145,7 @@ const enrichmentCategories = [
       address: 'Broadway, New York, NY',
       url: 'https://www.zabars.com/',
       description: 'Iconic UWS specialty market; useful for breakfast supplies and picnic items.',
-      sourceRecord: { source: 'brave', url: 'https://www.zabars.com/' },
+      sourceRecord: { source: 'brave', url: 'https://www.zabars.com/', price: 0, summary: 'UWS specialty market for picnic supplies.' },
     },
   },
   {
@@ -152,7 +159,7 @@ const enrichmentCategories = [
       address: 'Greenwich Village, New York, NY',
       url: 'https://www.bluenote.net/',
       description: 'Classic Greenwich Village jazz room; book ahead for weekend sets.',
-      sourceRecord: { source: 'brave', url: 'https://www.bluenote.net/' },
+      sourceRecord: { source: 'brave', url: 'https://www.bluenote.net/', price: 85, summary: 'Village jazz room; book ahead for weekend sets.' },
     },
   },
 ];
@@ -197,5 +204,21 @@ const built = buildCategoryDescription({
   rawDescription: '',
 });
 assert.match(built, /Southwest/i);
+
+assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
+for (const place of buildVkSearchContractSamplePlaces()) {
+  assert.notEqual(textOrEmpty(place.summary), textOrEmpty(place.description), `${place.category} summary must differ from description`);
+}
+
+function textOrEmpty(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+for (const { category, place } of enrichmentCategories) {
+  const violations = searchPlaceOutputViolations(enrichSearchPlace(place));
+  assert.equal(violations.includes('blank_description'), false, `${category} blank description`);
+  assert.equal(violations.includes('blank_summary'), false, `${category} blank summary`);
+  assert.equal(violations.includes('missing_logoUrl'), false, `${category} missing logo`);
+}
 
 console.log('trip thing logo metadata tests passed');
