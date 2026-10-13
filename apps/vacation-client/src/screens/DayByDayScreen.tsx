@@ -8,7 +8,7 @@ import {
   mapPlacesForTimeline,
   shiftDayIndex,
   sortedDays,
-} from '../lib/dayTimelineModel.ts';
+} from '../lib/dayTimelineModel.mjs';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {

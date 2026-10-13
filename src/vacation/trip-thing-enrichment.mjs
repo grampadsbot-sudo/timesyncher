@@ -152,6 +152,7 @@ function carDescription(title = '', source = {}) {
   const price = firstPrice(source.price, source.rate, source.totalPrice);
   const bits = [
     `Rental company: ${company || text(title, 80)}.`,
+    `Pickup location: ${pickupLoc}.`,
     `Pickup hours: ${pickupHours}.`,
     `Drop-off location: ${dropLoc}.`,
     `Drop-off hours: ${dropHours}.`,

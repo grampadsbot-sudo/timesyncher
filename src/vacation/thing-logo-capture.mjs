@@ -14,6 +14,7 @@ export const NAMED_THING_LOGOS = {
   united: 'https://www.united.com/favicon.ico',
   delta: 'https://www.delta.com/favicon.ico',
   american: 'https://www.aa.com/favicon.ico',
+  priceline: 'https://www.priceline.com/favicon.ico',
 };
 
 const BRAND_LOGO_RULES = [
@@ -29,6 +30,7 @@ const BRAND_LOGO_RULES = [
   [/\bunited\b/i, NAMED_THING_LOGOS.united],
   [/\bdelta\b/i, NAMED_THING_LOGOS.delta],
   [/\bamerican\b/i, NAMED_THING_LOGOS.american],
+  [/\bpriceline\b/i, NAMED_THING_LOGOS.priceline],
 ];
 
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;

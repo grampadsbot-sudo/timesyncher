@@ -1,5 +1,6 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
@@ -344,7 +345,16 @@ export function rowSummary(place, trip) {
     const enrichedSource = {
       ...source,
       rentalCompany: text(override.rentalCompany || source.rentalCompany || rentalCompanyFromTitle(placeName(place))),
-      pickupLocation: text(override.pickupLocation || source.pickupLocation || place.address),
+      pickupLocation: text(
+        override.pickupLocation || source.pickupLocation || source.pickup || place.address,
+      ),
+      dropoffLocation: text(
+        override.dropoffLocation ||
+          override.returnLocation ||
+          source.dropoffLocation ||
+          source.returnLocation ||
+          source.dropoff,
+      ),
       pickupHours: text(override.startTime || source.startTime || source.pickupTime || '11:00 am'),
       dropoffLocation: text(override.dropoffLocation || source.returnLocation || source.dropoffLocation),
       dropoffHours: text(override.endTime || source.returnTime || source.dropoffTime || '4:00 pm'),
@@ -467,13 +477,17 @@ export function rowSummary(place, trip) {
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
+  const explicit = text(
     override.logoUrl ||
       override.iconUrl ||
       place.logoUrl ||
       place.captured_logo_url ||
-      source.logoUrl,
+      source.logoUrl ||
+      source.logo ||
+      source.favicon,
   );
+  if (explicit) return explicit;
+  return text(resolveThingLogoUrl(place, override));
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

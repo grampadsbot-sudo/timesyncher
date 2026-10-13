@@ -1,11 +1,9 @@
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
-import { mergeNamedCatalogEnrichment } from '../../src/vacation/merge-named-catalog-enrichment.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
-import ccabCatalog from './nyc_ccab_place_enrichment.json' with { type: 'json' };
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
@@ -15,29 +13,51 @@ const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
 const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
 
 const SUMMARIES = {
-  601: 'Nonstop morning option; good if you want to land before lunch.',
-  602: 'UWS grocery stop for picnic supplies.',
-  603: 'Check-in window; drop bags before dinner.',
-  604: 'Ferry and grounds; keep tickets on phone.',
-  605: 'Browse rare room if time allows.',
+  601: 'Nonstop afternoon arrival; lands with time to reach the hotel before dinner.',
+  602: 'UWS grocery stop for picnic supplies and breakfast basics.',
+  603: 'UWS base for the week; strong Lincoln Center access on the subway.',
+  604: 'Ferry and grounds; keep tickets on phone and arrive early for security.',
+  605: 'Browse the rare room if time allows after the harbor tour.',
   606: 'Overlap window A: matinee tickets already held.',
   607: 'Overlap window B: friend meetup at the same hour.',
   610: 'Classic Italian; reserve the earliest table you can get.',
-  611: 'Evening set; arrive early for will-call pickup.',
+  611: 'Evening set at the Village club; arrive early for will-call pickup.',
+  612: 'Chelsea Market lunch stop between Midtown and the Village.',
+  613: 'Herald Square shopping block if you want a practical retail run.',
+  614: 'Design-store browse near MoMA when the weather is rough.',
+  615: 'Fifth Avenue luxury browse; good rainy-day option near the hotel zone.',
+  616: 'Columbus Circle groceries before the late flight home.',
+  635: 'Nonstop evening departure; allow extra time for JFK security.',
+  630: 'One-stop Southwest option; lowest outbound fare in the search set.',
+  631: 'Later Southwest via Dallas; cheaper if you can accept a long travel day.',
+  632: 'Early Southwest via Houston; useful if you want a morning departure from LAS.',
+  633: 'Southwest via Denver; mid-morning LAS departure with one connection.',
+  634: 'Southwest via STL; slowest option but sometimes the only seats left.',
 };
 
 const NYC_COORDS = {
-  601: { lat: 40.6413, lng: -73.7781 },
-  602: { lat: 40.7886, lng: -73.9767 },
-  603: { lat: 40.7454, lng: -73.9933 },
+  601: { lat: 36.084, lng: -115.1537 },
+  602: { lat: 40.7847, lng: -73.9794 },
+  603: { lat: 40.7828, lng: -73.9813 },
   604: { lat: 40.6892, lng: -74.0445 },
-  605: { lat: 40.7373, lng: -73.9903 },
+  605: { lat: 40.7333, lng: -73.9909 },
   606: { lat: 40.758, lng: -73.9855 },
   607: { lat: 40.7536, lng: -73.9832 },
-  608: { lat: 40.7549, lng: -73.984 },
-  609: { lat: 40.7527, lng: -73.9772 },
-  610: { lat: 40.726, lng: -73.9997 },
-  611: { lat: 40.7725, lng: -73.9838 },
+  608: { lat: 40.758, lng: -73.9855 },
+  609: { lat: 40.6413, lng: -73.7781 },
+  610: { lat: 40.727915, lng: -74.007235 },
+  611: { lat: 40.728, lng: -73.9965 },
+  612: { lat: 40.7424, lng: -74.006 },
+  613: { lat: 40.7508, lng: -73.9896 },
+  614: { lat: 40.7616, lng: -73.9776 },
+  615: { lat: 40.7635, lng: -73.9743 },
+  616: { lat: 40.7686, lng: -73.9822 },
+  630: { lat: 36.084, lng: -115.1537 },
+  631: { lat: 36.084, lng: -115.1537 },
+  632: { lat: 36.084, lng: -115.1537 },
+  633: { lat: 36.084, lng: -115.1537 },
+  634: { lat: 36.084, lng: -115.1537 },
+  635: { lat: 40.6413, lng: -73.7781 },
 };
 
 export function listStoredSummaries() {
@@ -73,17 +93,28 @@ function buildPayload() {
   const assignments = Object.fromEntries(days.map((day) => [String(day.id), []]));
   const thingOverrides = {};
   const rows = [
-    { day: 1, time: '10:30', name: 'JetBlue BOS → JFK', cat: 'flight', id: 601 },
+    { day: 1, time: '12:37', name: 'American Airlines LAS → JFK', cat: 'flight', id: 601 },
     { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, photo: true },
-    { day: 1, time: '16:00', name: 'Motto by Hilton Chelsea', cat: 'hotel', id: 603 },
+    { day: 1, time: '16:00', name: 'Hotel Belleclaire Central Park', cat: 'hotel', id: 603 },
     { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
-    { day: 1, time: '20:30', name: 'Jazz at Lincoln Center', cat: 'activity', id: 611 },
+    { day: 1, time: '20:30', name: 'Blue Note Jazz Club', cat: 'activity', id: 611 },
     { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
     { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
     { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
     { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
+    { day: 4, time: '12:30', name: 'Chelsea Market', cat: 'store', id: 612 },
+    { day: 5, time: '11:00', name: "Macy's Herald Square", cat: 'store', id: 613 },
+    { day: 6, time: '14:00', name: 'MoMA Design Store - 53rd Street', cat: 'store', id: 614 },
+    { day: 7, time: '11:00', name: 'Bergdorf Goodman', cat: 'store', id: 615 },
+    { day: 8, time: '10:00', name: 'Whole Foods Market Columbus Circle', cat: 'store', id: 616 },
+    { day: 8, time: '18:00', name: 'American Airlines JFK → LAS', cat: 'flight', id: 635 },
     { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
     { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+    { day: 1, time: '07:25', name: 'Southwest LAS → LGA 07:25–16:35', cat: 'flight', id: 630, listOnly: true },
+    { day: 1, time: '11:30', name: 'Southwest LAS → LGA 11:30–22:25', cat: 'flight', id: 631, listOnly: true },
+    { day: 1, time: '05:05', name: 'Southwest LAS → LGA 05:05–15:45', cat: 'flight', id: 632, listOnly: true },
+    { day: 1, time: '06:30', name: 'Southwest LAS → LGA 06:30–16:55', cat: 'flight', id: 633, listOnly: true },
+    { day: 1, time: '06:50', name: 'Southwest LAS → LGA 06:50–18:55', cat: 'flight', id: 634, listOnly: true },
   ];
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
@@ -132,19 +163,79 @@ function buildPayload() {
       override.vehicleClass = 'Toyota Corolla or similar';
     }
     if (row.id === 601) {
-      override.logoUrl = 'https://www.jetblue.com/favicon.ico';
+      override.price = 257;
+      override.logoUrl = 'https://www.aa.com/favicon.ico';
+      override.airline = 'American';
+      override.departureTime = '12:37 pm';
+      override.arrivalTime = '8:59 pm';
+    }
+    if (row.id === 635) {
+      override.price = 257;
+      override.logoUrl = 'https://www.aa.com/favicon.ico';
+      override.airline = 'American';
+      override.departureTime = '6:00 pm';
+      override.arrivalTime = '8:59 pm';
     }
     if (row.id === 603) {
-      override.logoUrl = 'https://www.hilton.com/favicon.ico';
+      override.price = 518;
+      override.logoUrl = 'https://www.hotelbelleclaire.com/favicon.ico';
+      override.stayDays = 7;
+      override.checkInDate = '2026-06-23';
+      override.checkOutDate = '2026-06-30';
+      override.checkInTime = '16:00';
+      override.checkOutTime = '11:00';
     }
     if (row.id === 602) {
       override.logoUrl = 'https://www.zabars.com/favicon.ico';
     }
     if (row.id === 610) {
+      override.price = 95;
       override.logoUrl = 'https://www.carbonegreenwichvillage.com/favicon.ico';
     }
     if (row.id === 611) {
-      override.logoUrl = 'https://www.jazz.org/favicon.ico';
+      override.price = 85;
+      override.category = 'music';
+      override.logoUrl = 'https://www.bluenotejazz.com/favicon.ico';
+    }
+    if (row.id === 630) {
+      override.price = 164;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 631) {
+      override.price = 194;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 632) {
+      override.price = 239;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 633) {
+      override.price = 239;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 634) {
+      override.price = 249;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 612) {
+      override.logoUrl = 'https://www.chelseamarket.com/favicon.ico';
+    }
+    if (row.id === 613) {
+      override.logoUrl = 'https://www.macys.com/favicon.ico';
+    }
+    if (row.id === 614) {
+      override.logoUrl = 'https://store.moma.org/favicon.ico';
+    }
+    if (row.id === 615) {
+      override.logoUrl = 'https://www.bergdorfgoodman.com/favicon.ico';
+    }
+    if (row.id === 616) {
+      override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
     }
     thingOverrides[`place:${row.id}`] = override;
   }
@@ -226,6 +317,8 @@ function buildPayload() {
   }
   const timelineIds = rows.filter((row) => !row.listOnly).map((row) => row.id);
   let withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
+  const hotelDayNumbers = [1, 2, 3, 4, 5, 6, 7];
+  withTimeline = assignPlaceToTripDays(withTimeline, 603, hotelDayNumbers);
   const conflictDay = days.find((d) => d.day_number === NYC_CONFLICT_DAY);
   if (conflictDay) {
     const dayKey = String(conflictDay.id);
@@ -243,8 +336,7 @@ function buildPayload() {
       };
     }
   }
-  const enriched = mergeNamedCatalogEnrichment(withTimeline, ccabCatalog, categories);
-  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(enriched, bindings));
+  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
 }
 
 export function buildNycCraigKimDaybydayTrip() {

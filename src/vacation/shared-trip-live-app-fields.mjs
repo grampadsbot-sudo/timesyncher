@@ -55,8 +55,10 @@ function placeMetadata(place = {}) {
 function rentalCompanyFromTitle(name = '') {
   const title = text(name);
   if (!title) return '';
-  const head = title.split(/\s+\bat\b\s+/i)[0]?.trim();
-  return head || title;
+  const head = title.split(/\s+\bat\b\s+/i)[0]?.trim() || title;
+  const parts = head.split(/\s+/).filter(Boolean);
+  if (/priceline/i.test(head) && parts.length >= 2) return `${parts[0]} ${parts[1]}`;
+  return head;
 }
 
 function priceFromTextFields(place = {}, override = {}, source = null) {
@@ -209,6 +211,25 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
     } else if (category === 'car') {
       override.category = 'car';
+      copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup, place.address);
+      copyIfBlank(
+        override,
+        'dropoffLocation',
+        source?.dropoffLocation,
+        source?.returnLocation,
+        source?.dropoff,
+        override.pickupLocation,
+        place.address,
+      );
+      copyIfBlank(
+        override,
+        'returnLocation',
+        override.dropoffLocation,
+        source?.returnLocation,
+        source?.dropoff,
+        override.pickupLocation,
+        place.address,
+      );
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);
       copyIfBlank(override, 'duration', source?.duration, source?.rentalDuration);
       copyIfBlank(override, 'endTime', source?.endTime, source?.returnTime, source?.dropoffTime);
