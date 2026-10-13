@@ -71,6 +71,44 @@ function firstPrice(...values) {
   return null;
 }
 
+function priceFromSourceText(...values) {
+  for (const value of values) {
+    const row = text(value, 4000);
+    if (!row) continue;
+    const nightly = row.match(/Price:\s*\$?\s*([\d,]+(?:\.\d+)?)\s*(?:\/|\s*per\s*)?night/i);
+    if (nightly) {
+      const parsed = parsePriceValue(nightly[1]);
+      if (parsed != null) return parsed;
+    }
+    const from = row.match(/\bfrom\s+\$?\s*([\d,]+(?:\.\d+)?)/i);
+    if (from) {
+      const parsed = parsePriceValue(from[1]);
+      if (parsed != null) return parsed;
+    }
+    const total = row.match(/\$\s*([\d,]+(?:\.\d+)?)\s+total\b/i);
+    if (total) {
+      const parsed = parsePriceValue(total[1]);
+      if (parsed != null) return parsed;
+    }
+    const daily = row.match(/\$\s*([\d,]+(?:\.\d+)?)\s*\/\s*day/i);
+    if (daily) {
+      const parsed = parsePriceValue(daily[1]);
+      if (parsed != null) return parsed;
+    }
+    const perPerson = row.match(/Price:\s*\$?\s*([\d,]+(?:\.\d+)?)\s*per person/i);
+    if (perPerson) {
+      const parsed = parsePriceValue(perPerson[1]);
+      if (parsed != null) return parsed;
+    }
+    const adults = row.match(/Adults:\s*\$?\s*([\d,]+(?:\.\d+)?)/i);
+    if (adults) {
+      const parsed = parsePriceValue(adults[1]);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+}
+
 function airlineFromTitle(title = '') {
   const row = text(title, 240);
   for (const [pattern] of AIRLINE_LOGOS) {
@@ -221,40 +259,78 @@ export function logoUrlFromSearchPlace(place = {}, sourceRecord = {}) {
   return '';
 }
 
+function sourcedLongDescription(place = {}, sourceRecord = {}) {
+  return text(
+    sourceRecord.longDetails
+    || sourceRecord.details
+    || sourceRecord.description
+    || place.description,
+    4000,
+  );
+}
+
+function shortLineFromSourceText(value = '', max = 120) {
+  const row = text(value, 4000);
+  if (!row) return '';
+  const sentence = row.match(/^[^.!?;]+[.!?;]/);
+  if (sentence) return text(sentence[0], max);
+  return text(row.split(/\s+/).slice(0, 10).join(' '), max);
+}
+
+function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
+  let summary = text(sourceRecord.summary || place.summary, 500);
+  const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
+  if (itinerary && itinerary !== longDescription) return itinerary;
+  if (summary && summary === longDescription) return shortLineFromSourceText(summary);
+  if (summary.length > 140) summary = shortLineFromSourceText(summary);
+  if (summary && summary !== longDescription) return summary;
+  if (summary) return summary;
+  if (longDescription) return shortLineFromSourceText(longDescription);
+  return itinerary;
+}
+
 export function enrichSearchPlace(place = {}) {
   const next = { ...place };
   const sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
-  const address = text(next.address || sourceRecord.address, 240);
-  const rawDescription = text(next.description || sourceRecord.description || sourceRecord.summary, 4000);
-  const description = buildCategoryDescription({
-    category,
-    title: next.title,
-    sourceRecord,
-    address,
-    rawDescription,
-  });
+  const description = sourcedLongDescription(next, sourceRecord);
+  const summary = sourcedShortSummary(next, sourceRecord, description);
   const price = firstPrice(
     next.price,
     next.totalPrice,
     sourceRecord.price,
     sourceRecord.rate,
     sourceRecord.amount,
-    rawDescription,
+    sourceRecord.totalPrice,
+    sourceRecord.nightlyRate,
+    priceFromSourceText(
+      description,
+      summary,
+      sourceRecord.description,
+      sourceRecord.summary,
+      sourceRecord.longDetails,
+      sourceRecord.details,
+    ),
     description,
+    summary,
+    sourceRecord.longDetails,
+    sourceRecord.details,
   );
   const logoUrl = logoUrlFromSearchPlace(next, sourceRecord);
   const enrichedSource = {
     ...sourceRecord,
-    ...(description ? { summary: description, description } : {}),
+    ...(description ? { description, longDetails: description } : {}),
+    ...(summary ? { summary } : {}),
     ...(price != null ? { price } : {}),
     ...(logoUrl ? { logoUrl } : {}),
     ...(next.url ? { url: next.url, website: next.url } : {}),
   };
   next.description = description;
+  next.summary = summary;
   next.sourceRecord = enrichedSource;
   if (price != null) next.price = price;
   if (logoUrl) next.logoUrl = logoUrl;
+  if (category) next.category = category;
   return next;
 }
 
