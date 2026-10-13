@@ -216,6 +216,23 @@ export function placesForBudget(trip) {
       rememberBudgetPlace(seen, place);
     }
   }
+  for (const line of trip?.budget || []) {
+    const name = text(line?.name || line?.title);
+    if (!name) continue;
+    const match =
+      (trip.places || []).find((p) => placeName(p) === name)
+      || (trip.places || []).find((p) => placeName(p).includes(name) || name.includes(placeName(p)));
+    if (match) {
+      rememberBudgetPlace(seen, match);
+      continue;
+    }
+    rememberBudgetPlace(seen, {
+      id: line.id ?? `budget-line:${name}`,
+      name,
+      category_name: text(line.category) || 'Flight',
+      source: 'budget-line',
+    });
+  }
   for (const res of trip?.reservations || []) {
     const title = text(res?.title || res?.name);
     if (!/^Flight option:/i.test(title)) continue;

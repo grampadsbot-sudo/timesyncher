@@ -5,7 +5,8 @@ import type { LatLngBoundsExpression } from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import type { SharedPlace } from '../types/sharedTrip';
+import { placeCoords } from '../lib/dayTimelineModel.mjs';
+import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { placeName } from '../lib/placeHelpers';
 
 const defaultMarkerIcon = L.icon({
@@ -20,7 +21,31 @@ const defaultMarkerIcon = L.icon({
 
 type Props = {
   places: SharedPlace[];
+  trip?: SharedTripPayload;
 };
+
+function tripFallbackCenter(trip?: SharedTripPayload): [number, number] {
+  const lat = Number(trip?.trip?.lat);
+  const lng = Number(trip?.trip?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return [lat, lng];
+  return [40.758, -73.9855];
+}
+
+function markersWithCoords(places: SharedPlace[], trip?: SharedTripPayload) {
+  const out: SharedPlace[] = [];
+  for (const place of places) {
+    const lat = Number(place.lat);
+    const lng = Number(place.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      out.push(place);
+      continue;
+    }
+    if (!trip) continue;
+    const resolved = placeCoords(place, trip);
+    if (resolved) out.push({ ...place, lat: resolved.lat, lng: resolved.lng });
+  }
+  return out;
+}
 
 function publishTripMapHarness(map: L.Map) {
   const container = map.getContainer();
@@ -92,24 +117,18 @@ declare global {
   }
 }
 
-export function DayMap({ places }: Props) {
-  const withCoords = places.filter(
-    (p) => typeof p.lat === 'number' && typeof p.lng === 'number',
-  );
-  if (!withCoords.length) {
-    return (
-      <section className="tsv-day-map tsv-day-map--empty" data-ts-day-map="1">
-        <p className="tsv-muted">Map appears when places include coordinates.</p>
-      </section>
-    );
-  }
-  const center = withCoords[0];
+export function DayMap({ places, trip }: Props) {
+  const withCoords = markersWithCoords(places, trip);
+  const centerPlace = withCoords[0];
+  const center: [number, number] = centerPlace
+    ? [Number(centerPlace.lat), Number(centerPlace.lng)]
+    : tripFallbackCenter(trip);
   return (
     <section className="tsv-day-map" data-ts-day-map="1">
       <h2 className="tsv-subhead">Day map</h2>
       <MapContainer
-        center={[center.lat as number, center.lng as number]}
-        zoom={11}
+        center={center}
+        zoom={withCoords.length ? 11 : 12}
         scrollWheelZoom={false}
         className="tsv-map-box"
       >

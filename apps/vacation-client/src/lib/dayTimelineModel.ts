@@ -6,6 +6,7 @@ export {
   formatClockMinutes,
   itineraryNoteFor,
   mapPlacesForTimeline,
+  placeCoords,
   parseClockToMinutes,
   parseDurationMinutes,
   shiftDayIndex,

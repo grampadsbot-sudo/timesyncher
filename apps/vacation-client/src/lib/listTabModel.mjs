@@ -298,19 +298,33 @@ export function carSubtitle(place, trip) {
   );
 }
 
+function isEventLikePlace(place, trip) {
+  const category = tabCategoryKey(place, trip);
+  if (category === 'event') return true;
+  const raw = text(
+    overrideFor(trip, place).category ||
+      place.category?.name ||
+      place.category_name ||
+      place.category,
+  ).toLowerCase();
+  return /^(event|music|activity|tour|theatre|artist|sightseeing|family_event|other)$/.test(raw);
+}
+
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   const category = tabCategoryKey(place, trip);
+  const eventLike = isEventLikePlace(place, trip);
   const scheduleHint = text(
     override.startTime ||
       override.place_time ||
       place.place_time ||
       source.schedule ||
-      source.startsAt,
+      source.startsAt ||
+      source.when,
   );
   const enrichedSource = scheduleHint ? { ...source, when: scheduleHint, startTime: scheduleHint } : source;
-  if (category === 'event') {
+  if (eventLike) {
     let price = numericPrice(place, trip);
     if (price == null) {
       price =
@@ -321,10 +335,10 @@ export function rowSummary(place, trip) {
     }
     const withPrice =
       price != null ? { ...enrichedSource, price, ticketPrice: price } : enrichedSource;
-    const eventSummary = ensureMinSummaryWords(
+    let eventSummary = ensureMinSummaryWords(
       text(
         buildCategoryDescription({
-          category,
+          category: 'event',
           title: placeName(place),
           sourceRecord: {
             ...withPrice,
@@ -336,7 +350,19 @@ export function rowSummary(place, trip) {
         }),
       ),
     );
-    return eventSummary;
+    if (!/when:/i.test(eventSummary) && scheduleHint) {
+      eventSummary = `${eventSummary} When: ${scheduleHint}.`.replace(/\s+/g, ' ').trim();
+    }
+    if (!/price:/i.test(eventSummary)) {
+      const price = numericPrice(place, trip);
+      if (price != null) {
+        eventSummary = `${eventSummary} Price: tickets from about $${Math.round(price).toLocaleString('en-US')}.`.replace(
+          /\s+/g,
+          ' ',
+        ).trim();
+      }
+    }
+    return ensureMinSummaryWords(eventSummary);
   }
   const candidates = [
     override.longDetails,

@@ -29,6 +29,10 @@ export type TimelineEntry = {
 };
 
 export function buildDayTimeline(trip: SharedTripPayload, day: SharedDay): TimelineEntry[];
+export function placeCoords(
+  place: SharedPlace,
+  trip: SharedTripPayload,
+): { lat: number; lng: number } | null;
 export function mapPlacesForTimeline(
   trip: SharedTripPayload,
   entries: TimelineEntry[],

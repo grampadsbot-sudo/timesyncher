@@ -8,7 +8,7 @@ import {
   mapPlacesForTimeline,
   shiftDayIndex,
   sortedDays,
-} from '../lib/dayTimelineModel';
+} from '../lib/dayTimelineModel.mjs';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
@@ -105,7 +105,7 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         </div>
       </article>
 
-      <DayMap places={mapPlaces} />
+      <DayMap places={mapPlaces} trip={trip} />
     </section>
   );
 }

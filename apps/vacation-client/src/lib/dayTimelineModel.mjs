@@ -496,11 +496,18 @@ function finiteCoord(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-function placeCoords(place, trip) {
+export function placeCoords(place, trip) {
   const override = overrideFor(trip, place);
+  const meta =
+    place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+      ? place.metadata
+      : {};
+  const metaSource =
+    meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
   const source =
     override.sourceRecord ||
     place.sourceRecord ||
+    metaSource ||
     (place.source && typeof place.source === 'object' ? place.source : null) ||
     {};
   const lat =
