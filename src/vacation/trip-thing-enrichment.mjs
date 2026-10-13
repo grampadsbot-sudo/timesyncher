@@ -144,11 +144,11 @@ function carDescription(title = '', source = {}) {
     160,
   );
   const dropHours = text(
-    source.dropoffHours || source.returnTime || source.endTime || 'Match your return flight or hotel checkout window.',
+    source.dropoffHours || source.returnTime || source.endTime || 'Match your return flight or hotel departure time.',
     160,
   );
   const reputation = text(source.summary || source.description || source.reputation || '', 400);
-  const upsell = text(source.upsells || source.upsellNotes || 'Optional insurance and prepaid fuel; compare before checkout.', 160);
+  const upsell = text(source.upsells || source.upsellNotes || 'Optional insurance and prepaid fuel; compare options before booking.', 160);
   const price = firstPrice(source.price, source.rate, source.totalPrice);
   const bits = [
     `Rental company: ${company || text(title, 80)}.`,
