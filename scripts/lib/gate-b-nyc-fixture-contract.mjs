@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
 
-export const MIN_SUMMARY_WORDS = 30;
+const MIN_SUMMARY_WORDS = 30;
 
 function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -13,7 +13,7 @@ export function wordCount(value) {
 }
 
 /** Same merge the live list/day rows use: place fields plus thingOverrides (ha). */
-export function haFields(shared = {}, place = {}) {
+function haFields(shared = {}, place = {}) {
   const override = shared.thingOverrides?.[`place:${place.id}`] || {};
   return { ...place, ...override };
 }
