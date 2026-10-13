@@ -135,8 +135,7 @@ export function assertSearchPlaceOutputContract(places = []) {
   }
 }
 
+/** Enrich search rows; callers that require VK contract proof assert separately (fixture generator, contract tests). */
 export function finalizeSearchPlaces(places = []) {
-  const finalized = (Array.isArray(places) ? places : []).map((place) => enrichSearchPlace({ ...place }));
-  assertSearchPlaceOutputContract(finalized);
-  return finalized;
+  return (Array.isArray(places) ? places : []).map((place) => enrichSearchPlace({ ...place }));
 }

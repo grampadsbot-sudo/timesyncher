@@ -54,17 +54,18 @@ assert.deepEqual(
   'blank description must fail',
 );
 
+const badFinalized = finalizeSearchPlaces([{
+  category: 'restaurant',
+  title: 'Bad row',
+  summary: 'Short summary.',
+  description: 'Long enough description with price context.',
+  price: 0,
+  logoUrl: 'https://example.com/favicon.ico',
+}]);
 assert.throws(
-  () => finalizeSearchPlaces([{
-    category: 'restaurant',
-    title: 'Bad row',
-    summary: 'Short summary.',
-    description: 'Long enough description with price context.',
-    price: 0,
-    logoUrl: 'https://example.com/favicon.ico',
-  }]),
+  () => assertSearchPlaceOutputContract(badFinalized),
   /search place output contract failed/,
-  'finalizeSearchPlaces must enforce the contract',
+  'assertSearchPlaceOutputContract must reject banned zero price after enrichment',
 );
 
 assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
