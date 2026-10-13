@@ -22,6 +22,14 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function wordCount(value = '') {
+  return text(value, 4000).split(/\s+/).filter(Boolean).length;
+}
+
+function sourceRecordOnPlace(place = {}) {
+  return place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
+}
+
 /** Normalize search/list categories to the six VK product place types. */
 function searchProductCategory(category = '') {
   const cat = text(category, 80).toLowerCase();
@@ -60,8 +68,61 @@ function priceOnPlace(place = {}) {
 }
 
 function logoOnPlace(place = {}) {
-  const sourceRecord = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
+  const sourceRecord = sourceRecordOnPlace(place);
   return text(place.logoUrl || sourceRecord.logoUrl || sourceRecord.logo || sourceRecord.faviconUrl);
+}
+
+function reviewField(place = {}, index = 1, suffix = '') {
+  const record = sourceRecordOnPlace(place);
+  const key = `review${index}${suffix}`;
+  return text(place[key] ?? record[key], suffix === 'Source' ? 40 : suffix === 'Rating' ? 20 : 2000);
+}
+
+function normalizeReviewSource(source = '') {
+  const row = text(source, 40);
+  if (row.toLowerCase() === 'tripadvisor') return 'TripAdvisor';
+  return row;
+}
+
+function reviewIsComplete(place = {}, index = 1) {
+  const body = reviewField(place, index);
+  const source = normalizeReviewSource(reviewField(place, index, 'Source'));
+  const rating = reviewField(place, index, 'Rating');
+  if (wordCount(body) < 25) return false;
+  if (!['Google', 'Yelp', 'TripAdvisor'].includes(source)) return false;
+  return /\d/.test(rating);
+}
+
+function distinctFullReviewCount(place = {}) {
+  const seen = new Set();
+  let count = 0;
+  for (let index = 1; index <= 4; index += 1) {
+    if (!reviewIsComplete(place, index)) continue;
+    const body = reviewField(place, index);
+    if (seen.has(body)) continue;
+    seen.add(body);
+    count += 1;
+  }
+  return count;
+}
+
+function hasAggregateRating(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  if (text(record.googleRating) || text(record.yelpRating) || text(record.thirdPartyRating)) {
+    return true;
+  }
+  if (text(place.googleRating) || text(place.yelpRating) || text(place.thirdPartyRating)) {
+    return true;
+  }
+  const haystack = [
+    place.description,
+    record.description,
+    record.longDetails,
+    record.summary,
+  ].filter(Boolean).join(' ');
+  return /\bRating:\s*[\d.]+/i.test(haystack)
+    || /\b[\d.]+\s*\/\s*5\b/.test(haystack)
+    || /\b[\d.]+\s*of\s*5\s*bubbles\b/i.test(haystack);
 }
 
 function bannedTextViolations(label, value) {
@@ -113,6 +174,12 @@ export function searchPlaceOutputViolations(place = {}) {
   if (price == null) violations.push('missing_price');
   else if (price === 0) violations.push('banned_price_zero');
   if (!logoUrl) violations.push('missing_logoUrl');
+
+  if (category !== 'flight' && category !== 'car') {
+    if (!hasAggregateRating(place)) violations.push('missing_rating');
+    if (distinctFullReviewCount(place) < 4) violations.push('missing_sourced_reviews');
+  }
+
   return violations;
 }
 

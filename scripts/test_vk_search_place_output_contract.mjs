@@ -10,6 +10,7 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   buildVkSearchContractSamplePlaces,
+  gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
 const GATE_B_ROWS = [
@@ -25,6 +26,8 @@ const GATE_B_ROWS = [
   { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
   { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
 ];
+
+const longReview = 'Quiet rooms near the subway made early mornings easier, and the front desk stored bags before check-in without extra fees or confusion about timing.';
 
 const negativeZeroPrice = searchPlaceOutputViolations({
   category: 'store',
@@ -54,6 +57,62 @@ assert.deepEqual(
   'blank description must fail',
 );
 
+const provenanceBlockedViolations = searchPlaceOutputViolations({
+  category: 'hotel',
+  title: 'Blocked list-only hotel',
+  summary: 'List-only until ccab names a real property.',
+  description: 'Blocked row documents missing source evidence; do not treat provenanceBlocked as permission to omit required price, logo, rating, or review fields.',
+  price: null,
+  logoUrl: '',
+  sourceRecord: {
+    provenanceBlocker: 'no ccab capture for this display name',
+    provenanceBlocked: ['price', 'logoUrl', 'googleRating', 'review1', 'review2', 'review3', 'review4'],
+  },
+});
+assert.ok(
+  provenanceBlockedViolations.includes('missing_price'),
+  'provenanceBlocked must not exempt missing price',
+);
+assert.ok(
+  provenanceBlockedViolations.includes('missing_logoUrl'),
+  'provenanceBlocked must not exempt missing logo',
+);
+assert.ok(
+  provenanceBlockedViolations.includes('missing_rating'),
+  'provenanceBlocked must not exempt missing rating',
+);
+assert.ok(
+  provenanceBlockedViolations.includes('missing_sourced_reviews'),
+  'provenanceBlocked must not exempt missing reviews',
+);
+
+const threeReviewViolations = searchPlaceOutputViolations({
+  category: 'store',
+  title: 'Three-review store',
+  summary: 'Short summary for a store row with only three sourced reviews attached.',
+  description: 'Google lists this store around 4.5/5; description stays distinct from the summary and names what to buy on a NYC trip.',
+  price: 18,
+  logoUrl: 'https://example.com/favicon.ico',
+  lat: 40.78,
+  lng: -73.98,
+  sourceRecord: {
+    googleRating: '4.5',
+    review1: longReview,
+    review1Source: 'Google',
+    review1Rating: '5',
+    review2: longReview.replace('Quiet rooms', 'Prepared foods'),
+    review2Source: 'Google',
+    review2Rating: '4',
+    review3: longReview.replace('Quiet rooms', 'Coffee counter'),
+    review3Source: 'Yelp',
+    review3Rating: '5',
+  },
+});
+assert.ok(
+  threeReviewViolations.includes('missing_sourced_reviews'),
+  'fewer than four distinct full review texts must fail',
+);
+
 const badFinalized = finalizeSearchPlaces([{
   category: 'restaurant',
   title: 'Bad row',
@@ -72,6 +131,21 @@ assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
 
 const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
-assertSearchPlaceOutputContract(GATE_B_ROWS.map((row) => gateBPlaces[row.id]));
+
+const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
+assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK output contract');
+assert.equal(
+  text(gateBPlaces[608].externalId),
+  'Midtown sample hotel',
+  'row 608 must not borrow The Manhattan Club externalId',
+);
+
+assertSearchPlaceOutputContract(
+  gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS).map((row) => gateBPlaces[row.id]),
+);
 
 console.log('vk search place output contract tests passed');
+
+function text(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
