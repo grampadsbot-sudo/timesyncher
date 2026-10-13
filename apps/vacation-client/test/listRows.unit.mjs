@@ -4,9 +4,11 @@ import { applyLiveAppListRowFields } from '../../../src/vacation/shared-trip-liv
 import {
   emptyStateMessage,
   filterPlaces,
+  eventListPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
   catalogRowDisplayName,
+  logoUrlForPlace,
   placesForCategoryTab,
   sortPlaces,
   tabCategoryKey,
@@ -83,5 +85,24 @@ assert.equal(
   emptyStateMessage('stores', { categoryCount: 0, filterActive: false }),
   'No items in this category yet.',
 );
+
+const opaqueCarTrip = {
+  places: [{ id: 609, name: 'Priceline opaque Toyota Corolla', category_name: 'car' }],
+  thingOverrides: {
+    'place:609': { rentalCompany: 'Priceline opaque (test fixture)', category: 'car' },
+  },
+};
+assert.equal(logoUrlForPlace(opaqueCarTrip.places[0], opaqueCarTrip), '');
+
+const eventTrip = {
+  places: [{ id: 606, name: 'Afternoon matinee show', category_name: 'activity' }],
+  thingOverrides: { 'place:606': { price: 95, category: 'activity' } },
+};
+assert.equal(eventListPriceDisplay(eventTrip.places[0], eventTrip), '$95');
+const freeEventTrip = {
+  places: [{ id: 607, name: 'Friend meetup', category_name: 'activity' }],
+  thingOverrides: { 'place:607': { price: 0 } },
+};
+assert.equal(eventListPriceDisplay(freeEventTrip.places[0], freeEventTrip), '');
 
 console.log('vacation-client list row unit checks passed');

@@ -691,6 +691,15 @@ body {
   object-fit: contain;
 }
 
+.tsv-logo-fallback {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  line-height: 1;
+}
+
 .tsv-day-screen {
   min-width: 0;
   max-width: 100%;

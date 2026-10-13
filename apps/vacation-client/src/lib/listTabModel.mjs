@@ -1,6 +1,7 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
 import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { timelineCategoryIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
@@ -210,6 +211,7 @@ export function numericPrice(place, trip) {
   const direct =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
+    parsePrice(place.total_price) ??
     parsePrice(source.price) ??
     parsePrice(source.totalPrice) ??
     parsePrice(source.ticketPrice) ??
@@ -230,6 +232,25 @@ export function numericPrice(place, trip) {
   if (ticket) return parsePrice(ticket[1]);
   const priced = hay.match(/\$\s*([\d,]+(?:\.\d+)?)/);
   return priced ? parsePrice(priced[1]) : null;
+}
+
+/** Rest-tab list rows: show ticket/activity price only when the thing has a positive numeric price. */
+export function eventListPriceDisplay(place, trip) {
+  const price = numericPrice(place, trip);
+  if (price == null || price <= 0) return '';
+  return `$${price}`;
+}
+
+function isOpaqueCarRental(place, override, source) {
+  const company = text(override.rentalCompany || source.rentalCompany);
+  if (/opaque/i.test(company)) return true;
+  const name = text(place.name || place.title);
+  return /opaque/i.test(name);
+}
+
+export function categoryLogoGlyph(place, trip) {
+  const category = tabCategoryKey(place, trip);
+  return timelineCategoryIcon(category);
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
@@ -477,6 +498,7 @@ export function rowSummary(place, trip) {
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
+  if (isOpaqueCarRental(place, override, source)) return '';
   const explicit = text(
     override.logoUrl ||
       override.iconUrl ||

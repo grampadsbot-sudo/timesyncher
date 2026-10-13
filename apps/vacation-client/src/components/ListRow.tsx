@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
   carSubtitle,
+  categoryLogoGlyph,
+  eventListPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
   hotelFirstRowNote,
@@ -31,16 +34,46 @@ type Props = {
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
-  const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const fallback =
+    text(override.icon) ||
+    text(place.category?.icon) ||
+    text(place.category_icon) ||
+    categoryLogoGlyph(place, trip);
+  const [logoBroken, setLogoBroken] = useState(false);
+  const showLogo = Boolean(logo) && !logoBroken;
+
   return (
-    <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+    <span
+      className="tsv-logo-chip"
+      data-ts-logo-chip="1"
+      data-has-logo={showLogo ? '1' : '0'}
+      data-ts-fallback-emoji={fallback}
+      aria-hidden="true"
+    >
+      {showLogo ? (
+        <img
+          className="tsv-logo tiny-logo"
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={() => setLogoBroken(true)}
+          onLoad={(event) => {
+            const img = event.currentTarget;
+            const box = img.getBoundingClientRect();
+            if (box.width < 4 || box.height < 4 || img.naturalWidth < 1 || img.naturalHeight < 1) {
+              setLogoBroken(true);
+            }
+          }}
+        />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
     </span>
   );
+}
+
+function text(value: unknown) {
+  return String(value ?? '').trim();
 }
 
 function TimelineToggle({
@@ -178,11 +211,13 @@ export function ListRow({
 
   const numeric = numericPrice(place, trip);
   const price =
-    tab === 'hotels' || category === 'hotel'
-      ? hotelPriceDisplay(place, trip)
-      : numeric == null
-        ? ''
-        : `$${numeric}`;
+    tab === 'events'
+      ? eventListPriceDisplay(place, trip)
+      : tab === 'hotels' || category === 'hotel'
+        ? hotelPriceDisplay(place, trip)
+        : numeric == null || numeric <= 0
+          ? ''
+          : `$${numeric}`;
 
   if (tab === 'events') {
     return (
@@ -200,7 +235,11 @@ export function ListRow({
                 {name}
               </span>
             </span>
-            {price ? <span className="tsv-row-price">{price}</span> : null}
+            {price ? (
+              <span className="tsv-row-price" data-ts-event-price="1">
+                {price}
+              </span>
+            ) : null}
             {summary ? (
               <span className="tsv-row-desc tsv-row-event-desc" data-list-summary="1" data-summary-src="thing">
                 {summary}
