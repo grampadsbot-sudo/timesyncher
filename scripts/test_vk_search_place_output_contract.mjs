@@ -20,6 +20,7 @@ import {
   normalizeVkContractReviewBody,
   vkContractText,
 } from './fixtures/xai-grok-place-ratings-contract.mjs';
+import { assertVkSearchEventLogoSource } from './lib/vk_search_event_logo_source_check.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -490,5 +491,7 @@ assert.throws(
 );
 
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
+
+await assertVkSearchEventLogoSource(assert);
 
 console.log('vk search place output contract tests passed');
