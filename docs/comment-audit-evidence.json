@@ -364,7 +364,7 @@
     {
       "file": "scripts/check-hardcoded-content.mjs",
       "line": 396,
-      "preview": "api.foursquare.com is not allowed to match inside places-api.foursquare.com."
+      "preview": "api[.]foursquare[.]com is not allowed to match inside places-api[.]foursquare[.]com."
     },
     {
       "file": "scripts/check-hardcoded-content.mjs",

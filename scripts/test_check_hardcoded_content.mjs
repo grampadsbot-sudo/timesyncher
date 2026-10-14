@@ -990,6 +990,14 @@ const paidReport = runGuard(paidDir);
 assert.equal(paidReport.status, 0, paidReport.stderr);
 assertHit(paidReport.stdout, 'REPORT', 'NO-PAID-PLACES-API', paidFile, paidHit.symbol_or_pattern);
 
+const evidenceRel = 'docs/comment-audit-evidence.json';
+const evidenceText = fs.readFileSync(path.join(repo, evidenceRel), 'utf8');
+assert.equal(paidPlacesFindings(evidenceRel, evidenceText).length, 0, evidenceRel);
+const unsanitizedPreview = '"preview": "api.foursquare.com is not allowed to match inside places-api.foursquare.com."';
+const unsanitizedHits = paidPlacesFindings(evidenceRel, `{ ${unsanitizedPreview} }`);
+assert.equal(unsanitizedHits.some((finding) => finding.symbol_or_pattern.startsWith('api.foursquare.com ::')), true);
+assert.equal(unsanitizedHits.some((finding) => finding.symbol_or_pattern.startsWith('places-api.foursquare.com ::')), true);
+
 const allVacations = 'const description = "TimeSyncher Vacation Telegram access for all vacations";';
 const uploadVacations = 'const description = "TimeSyncher Vacation photo/video upload access for all vacations";';
 const payerEmail = 'throw new Error("A valid payer email is required.");';
