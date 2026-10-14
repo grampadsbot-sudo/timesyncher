@@ -245,31 +245,47 @@ export function syncSharedTripApiBudget(shared = {}) {
   const visible = useThingLines ? visibleAmountSet(rows, shared) : new Set([0]);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
-  const covered = new Set(
-    lines
-      .map((line) => Number(line.total_price))
-      .filter((n) => Number.isFinite(n)),
+  const placeNameKey = (name) => text(name).toLowerCase();
+  const rowByPlaceName = new Map(
+    rows.map((row) => [placeNameKey(row.place.name || row.place.title), row]),
   );
+  for (const line of lines) {
+    if (line.place_id != null) continue;
+    const row = rowByPlaceName.get(placeNameKey(line.name));
+    if (row) line.place_id = row.place.id;
+  }
 
-  let sortOrder = lines.length;
+  let sortOrder = lines.reduce((max, line) => Math.max(max, Number(line.sort_order) || 0), -1) + 1;
   if (!useThingLines) {
     return { ...shared, budget: lines };
   }
   for (const row of rows) {
-    if (covered.has(row.amount)) continue;
+    const placeId = row.place.id;
+    let line = lines.find((entry) => entry.place_id != null && Number(entry.place_id) === Number(placeId));
+    if (line) {
+      line.total_price = row.amount;
+      line.category = row.bucket;
+      line.name = text(row.place.name || row.place.title) || line.name || 'Trip item';
+      continue;
+    }
     lines.push({
-      id: intId(`${tripId}:budget:place:${row.place.id}`),
+      id: intId(`${tripId}:budget:place:${placeId}`),
       trip_id: tripId,
-      place_id: row.place.id,
+      place_id: placeId,
       category: row.bucket,
       name: text(row.place.name || row.place.title) || 'Trip item',
       total_price: row.amount,
       note: '',
       sort_order: sortOrder,
     });
-    covered.add(row.amount);
     sortOrder += 1;
   }
+
+  const covered = new Set(
+    lines
+      .map((line) => Number(line.total_price))
+      .filter((n) => Number.isFinite(n)),
+  );
 
   for (const amount of visible) {
     if (covered.has(amount)) continue;

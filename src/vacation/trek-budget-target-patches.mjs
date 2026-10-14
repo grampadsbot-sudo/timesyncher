@@ -12,17 +12,17 @@ const BUDGET_TARGET_PLACEHOLDER_NEEDLE = 'onChange:fr=>zr(Xi,go,fr.target.value)
 const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"",inputMode:"decimal"';
 
 const MO_BUDGET_LINE_AMT_SNIPPET =
-  'tsBudgetLineAmt=G=>{const pid=Qt(G),lines=cn||[];for(const row of lines){if(row.place_id!=null&&Number(row.place_id)===Number(pid)){const n=Number(row.total_price);return Number.isFinite(n)?n:null}}return null}';
+  'tsBudgetLineAmt=G=>{const pid=Qt(G),lines=cn||[];for(const row of lines){if(row.place_id!=null&&Number(row.place_id)===Number(pid)){const n=Number(row.total_price);if(Number.isFinite(n))return n}}const z=zt(G);return typeof z=="number"&&Number.isFinite(z)?z:null}';
 
 const MO_BUDGET_LINE_NEEDLE =
   'amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))';
 const MO_BUDGET_LINE_PATCH =
-  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0';
+  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))';
 
 const IE_BUDGET_LINE_NEEDLE =
   'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")}';
 const IE_BUDGET_LINE_PATCH =
-  'ie=G=>{const bl=tsBudgetLineAmt(G);if(bl==null)return "";if(typeof bl=="number"&&Number.isFinite(bl))return `$${Math.round(bl).toLocaleString()}`;return ""}';
+  'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return `$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")}';
 
 const FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE =
   'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$"';
@@ -58,19 +58,13 @@ export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   if (!js.includes('tsBudgetLineAmt=G=>') && js.includes('ie=G=>')) {
     js = js.replace('ie=G=>', `${MO_BUDGET_LINE_AMT_SNIPPET},ie=G=>`);
   }
-  if (js.includes('ie=G=>{var ua,Rn;const Re=bi(G)')) {
+  if (js.includes('ie=G=>{const bl=tsBudgetLineAmt(G)')) {
     js = js.replace(
-      /ie=G=>\{var ua,Rn;const Re=bi\(G\);if\(typeof Re=="number"&&Number\.isFinite\(Re\)\)return`\$\$\{Math\.round\(Re\)\.toLocaleString\(\)\}`;const zt=String\(Re\|\|""\);return\(\(Rn=\(ua=zt\.match\([^)]+\)\)==null\?void 0:ua\[0\]\)==null\?void 0:Rn\.replace\([^)]+\)\)\|\|[^}]+\}/,
+      /ie=G=>\{const bl=tsBudgetLineAmt\(G\);if\(bl==null\)return "";if\(typeof bl=="number"&&Number\.isFinite\(bl\)\)return `\$\$\{Math\.round\(bl\)\.toLocaleString\(\)\}`;return ""\}/,
       IE_BUDGET_LINE_PATCH,
     );
-  } else if (!js.includes('ie=G=>{const bl=tsBudgetLineAmt(G)')) {
+  } else if (!js.includes('ie=G=>{var ua,Rn;const Re=bi(G)')) {
     js = js.replace(IE_BUDGET_LINE_NEEDLE, IE_BUDGET_LINE_PATCH);
-  }
-  if (js.includes('return `${Math.round(bl).toLocaleString()}`')) {
-    js = js.replace(
-      'return `${Math.round(bl).toLocaleString()}`',
-      'return `$${Math.round(bl).toLocaleString()}`',
-    );
   }
   if (js.includes(MO_BUDGET_LINE_NEEDLE)) {
     js = js.replace(MO_BUDGET_LINE_NEEDLE, MO_BUDGET_LINE_PATCH);
