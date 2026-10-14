@@ -1,19 +1,8 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { buildCategoryDescription } from './trip-thing-enrichment.mjs';
-
 function text(value) {
   return String(value || '').trim();
-}
-
-function wordCount(value) {
-  return text(value).split(/\s+/).filter(Boolean).length;
-}
-
-function isEventLikeCategory(category = '') {
-  const key = text(category).toLowerCase();
-  return /^(event|music|activity|tour|theatre|artist|sightseeing|family_event|other)$/.test(key);
 }
 
 function sourceObject(...rows) {
@@ -249,49 +238,6 @@ export function applyLiveAppListRowFields(shared = {}) {
 
     if (override.timeline == null && source?.timeline != null) {
       override.timeline = !!source.timeline;
-    }
-
-    const scheduleHint = text(
-      override.startTime ||
-        override.place_time ||
-        place.place_time ||
-        source?.schedule ||
-        source?.startsAt,
-    );
-    const enrichedSource = scheduleHint
-      ? { ...(source || {}), when: scheduleHint, startTime: scheduleHint, place_time: scheduleHint }
-      : source || {};
-    const listCategory = override.category || category || place.category_name;
-    const eventLike = isEventLikeCategory(listCategory);
-    const priceHint = parsePrice(
-      override.price ?? place.price ?? source?.price ?? source?.ticketPrice ?? source?.ticketsFrom,
-    );
-    const enrichedSourceForDescription =
-      eventLike && priceHint != null
-        ? { ...enrichedSource, price: priceHint, ticketPrice: priceHint }
-        : enrichedSource;
-    const enrichedDescription = buildCategoryDescription({
-      category: eventLike ? 'event' : listCategory,
-      title: place.name || place.title,
-      sourceRecord: enrichedSourceForDescription,
-      address: place.address,
-      rawDescription: eventLike
-        ? ''
-        : text(
-            override.longDetails
-              || override.summary
-              || source?.summary
-              || source?.description
-              || place.description,
-          ),
-    });
-    if (wordCount(enrichedDescription) >= 30) {
-      if (wordCount(override.longDetails) < 30) override.longDetails = enrichedDescription;
-      // Itinerary copy stays on override.summary (often short); list rows use longDetails/description.
-      if (!text(override.summary) && wordCount(enrichedDescription) >= 30) {
-        override.summary = enrichedDescription;
-      }
-      if (wordCount(override.details) < 30) override.details = enrichedDescription;
     }
 
     next.thingOverrides[key] = override;

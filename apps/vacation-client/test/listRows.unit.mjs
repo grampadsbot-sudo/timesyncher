@@ -11,9 +11,17 @@ import {
   logoUrlForPlace,
   parsePrice,
   placesForCategoryTab,
+  rowSummary,
   sortPlaces,
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
+
+function wordCount(value) {
+  return String(value ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
 
 const trip = applyLiveAppListRowFields({
   places: [
@@ -118,5 +126,25 @@ const freeEventTrip = {
   thingOverrides: { 'place:607': { price: 0 } },
 };
 assert.equal(eventListPriceDisplay(freeEventTrip.places[0], freeEventTrip), '');
+
+const shortSummaryTrip = {
+  places: [{ id: 701, name: 'Corner cafe', category_name: 'Restaurant' }],
+  thingOverrides: {
+    'place:701': {
+      summary: 'Good espresso.',
+      longDetails: 'Good espresso.',
+    },
+  },
+};
+const shortSummary = rowSummary(shortSummaryTrip.places[0], shortSummaryTrip);
+assert.equal(shortSummary, 'Good espresso.');
+assert.ok(
+  wordCount(shortSummary) < 30,
+  'short real summary must not be padded to 30 words',
+);
+assert.ok(
+  !/Compare timing, price, neighborhood/i.test(shortSummary),
+  'summary must not include quality pad text',
+);
 
 console.log('vacation-client list row unit checks passed');

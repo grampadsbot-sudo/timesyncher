@@ -8,26 +8,6 @@ export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores
 
 export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
 
-function wordCount(value) {
-  return String(value ?? '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
-}
-
-const SUMMARY_QUALITY_PAD =
-  'Compare timing, price, neighborhood, and booking requirements against your other shortlisted options before you finalize plans.';
-
-function ensureMinSummaryWords(body, minWords = 30) {
-  let next = text(body);
-  if (wordCount(next) >= minWords) return next;
-  const parts = [next];
-  while (wordCount(parts.join(' ')) < minWords) {
-    parts.push(SUMMARY_QUALITY_PAD);
-  }
-  return parts.join(' ').replace(/\s+/g, ' ').trim();
-}
-
 function text(value) {
   return String(value ?? '').trim();
 }
@@ -457,17 +437,15 @@ export function rowSummary(place, trip) {
       summary: longDescription || text(override.summary || source.summary || place.description),
       price: numericPrice(place, trip) ?? parsePrice(override.price) ?? parsePrice(source.price),
     };
-    if (longDescription) return ensureMinSummaryWords(longDescription);
-    return ensureMinSummaryWords(
-      text(
-        buildCategoryDescription({
-          category: 'car',
-          title: placeName(place),
-          sourceRecord: enrichedSource,
-          address: text(place.address),
-          rawDescription: text(override.summary || source.summary || place.description),
-        }),
-      ),
+    if (longDescription) return longDescription;
+    return text(
+      buildCategoryDescription({
+        category: 'car',
+        title: placeName(place),
+        sourceRecord: enrichedSource,
+        address: text(place.address),
+        rawDescription: text(override.summary || source.summary || place.description),
+      }),
     );
   }
   const eventLike = isEventLikePlace(place, trip);
@@ -491,20 +469,18 @@ export function rowSummary(place, trip) {
     }
     const withPrice =
       price != null ? { ...enrichedSource, price, ticketPrice: price } : enrichedSource;
-    let eventSummary = ensureMinSummaryWords(
-      text(
-        buildCategoryDescription({
-          category: 'event',
-          title: placeName(place),
-          sourceRecord: {
-            ...withPrice,
-            summary: longDescription || text(override.summary || source.summary || place.description),
-            description: text(override.details || source.description || longDescription),
-          },
-          address: text(place.address),
-          rawDescription: '',
-        }),
-      ),
+    let eventSummary = text(
+      buildCategoryDescription({
+        category: 'event',
+        title: placeName(place),
+        sourceRecord: {
+          ...withPrice,
+          summary: longDescription || text(override.summary || source.summary || place.description),
+          description: text(override.details || source.description || longDescription),
+        },
+        address: text(place.address),
+        rawDescription: '',
+      }),
     );
     if (!/when:/i.test(eventSummary) && scheduleHint) {
       eventSummary = `${eventSummary} When: ${scheduleHint}.`.replace(/\s+/g, ' ').trim();
@@ -518,7 +494,7 @@ export function rowSummary(place, trip) {
         ).trim();
       }
     }
-    return ensureMinSummaryWords(eventSummary);
+    return eventSummary;
   }
   const candidates = [
     longDescription,
@@ -528,41 +504,23 @@ export function rowSummary(place, trip) {
   ]
     .map((value) => text(value))
     .filter(Boolean);
-  const eventNeedsEnrich =
-    category === 'event'
-    && !/what it is:|genre:|when:|price:|perform/i.test(candidates.join(' '));
-  const rich = eventNeedsEnrich
-    ? null
-    : candidates.find((body) => wordCount(body) >= 30);
   let summary =
-    rich ||
+    candidates[0] ||
     text(
       buildCategoryDescription({
         category,
         title: placeName(place),
         sourceRecord: enrichedSource,
         address: text(place.address),
-        rawDescription: candidates[0] || '',
+        rawDescription: '',
       }),
     ) ||
-    candidates[0] ||
     '';
-  if (wordCount(summary) < 30 || (category === 'event' && !/what it is:|genre:|when:|price:/i.test(summary))) {
-    summary = text(
-      buildCategoryDescription({
-        category,
-        title: placeName(place),
-        sourceRecord: enrichedSource,
-        address: text(place.address),
-        rawDescription: summary || candidates[0] || '',
-      }),
-    );
-  }
   const price = numericPrice(place, trip);
   if (price != null && !/\$\s*\d|price:|from \$|tickets?\s+(from\s+)?\$/i.test(summary)) {
     summary = `${summary} Price: about $${Math.round(price).toLocaleString('en-US')}.`.replace(/\s+/g, ' ').trim();
   }
-  return ensureMinSummaryWords(summary);
+  return summary;
 }
 
 export function logoUrlForPlace(place, trip) {
