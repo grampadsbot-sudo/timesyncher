@@ -106,15 +106,6 @@ export function layoutNycVisionBundledTabHeaderRowClaim(text = '') {
     || /bad tab order/.test(lower);
 }
 
-function layoutNycDomProvesListChromeOk(stagingDom = {}) {
-  const order = stagingDom?.tabOrder;
-  const tabOrderOk = Array.isArray(order) && order.length >= 4
-    && order.join('\0') === LAYOUT_NYC_TAB_ORDER.join('\0');
-  const headerOk = Boolean(stagingDom?.header?.present);
-  const rowsOk = stagingDom?.rowsNameLeft !== false;
-  return tabOrderOk && headerOk && rowsOk;
-}
-
 /** Flights/Hotels/Cars list-sort rubric must not apply to day-by-day, budget, stores, etc. */
 export function layoutNycNonListSortRubricClaim(reason = '') {
   const lower = String(reason || '').toLowerCase();
@@ -234,16 +225,6 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
       if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
         expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
       }
-      continue;
-    }
-    if (
-      listSortTab
-      && domProvesSortOverflow
-      && stagingHasSortButtons()
-      && layoutNycDomProvesListChromeOk(stagingDom)
-      && layoutNycVisionBundledTabHeaderRowClaim(judgeText)
-    ) {
-      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
       continue;
     }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
