@@ -14,7 +14,11 @@ import {
   buildPr336VkSearchPlacesByRowId,
   gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
-import { assertXaiGrokPlaceRatingsContract } from './fixtures/xai-grok-place-ratings-contract.mjs';
+import {
+  assertXaiGrokPlaceRatingsContract,
+  normalizeVkContractReviewBody,
+  vkContractText,
+} from './fixtures/xai-grok-place-ratings-contract.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -294,7 +298,7 @@ assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
 assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK output contract');
 assert.equal(
-  text(gateBPlaces[608].externalId),
+  vkContractText(gateBPlaces[608].externalId),
   'Midtown sample hotel',
   'row 608 must not borrow The Manhattan Club externalId',
 );
@@ -308,10 +312,10 @@ const positiveContractPlaces = contractGateBPlaces.filter(
 );
 for (const place of positiveContractPlaces) {
   for (let index = 1; index <= 4; index += 1) {
-    const body = text(place.sourceRecord?.[`review${index}`] ?? place[`review${index}`]);
+    const body = vkContractText(place.sourceRecord?.[`review${index}`] ?? place[`review${index}`]);
     assert.notEqual(
-      normalizeReviewBody(body),
-      normalizeReviewBody(COPIED_FERRY_REVIEW),
+      normalizeVkContractReviewBody(body),
+      normalizeVkContractReviewBody(COPIED_FERRY_REVIEW),
       'positive contract rows must not include the copied ferry review text',
     );
   }
@@ -490,11 +494,3 @@ assert.throws(
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
 
 console.log('vk search place output contract tests passed');
-
-function text(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
-}
-
-function normalizeReviewBody(body) {
-  return text(body).toLowerCase();
-}

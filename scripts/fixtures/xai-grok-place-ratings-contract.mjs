@@ -5,6 +5,14 @@ import {
   writeRepresentativeReviews,
 } from '../../src/vacation/xai-grok-place-ratings.mjs';
 
+export function vkContractText(value, max = 4000) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+export function normalizeVkContractReviewBody(body) {
+  return vkContractText(body).toLowerCase();
+}
+
 /** Mocked xAI payload contract checks for issue #360 (imported from offline-listed contract test). */
 export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations) {
   const mockXaiJson = {
