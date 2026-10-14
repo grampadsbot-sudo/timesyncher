@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -275,6 +275,26 @@ try {
 }
 
 const legacyMiscBucketLabel = ['Other', 'Things'].join(' ');
+
+function assertNoLegacyMiscBucketStrings(text, label) {
+  assert.equal(text.includes(legacyMiscBucketLabel), false, `${label} must not contain Other Things bucket id`);
+  assert.equal(text.includes('Other ' + 'Thi' + 'ngs'), false, `${label} must not contain split Other Things variant`);
+}
+
+const miscPlaceShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [{ id: 88, name: 'Jazz club', category_name: 'Event', category: { name: 'Event', icon: '🎟️' } }],
+  thingOverrides: {
+    'place:88': { price: 80, category: 'event' },
+  },
+});
+const miscBudgetJson = JSON.stringify(syncSharedTripApiBudget(miscPlaceShared).budget);
+assertNoLegacyMiscBucketStrings(miscBudgetJson, 'syncSharedTripApiBudget output');
+assert.equal(miscBudgetJson.includes(OTHER_THINGS_BUCKET), true, 'misc bucket lines must use Events category id');
+
+const servedBundlePath = fileURLToPath(new URL('../public/assets/index-BKun7ofk.js', import.meta.url));
+assertNoLegacyMiscBucketStrings(readFileSync(servedBundlePath, 'utf8'), 'patched served trek bundle');
+
 const legacyMiscShared = prepareSharedTripForLiveApp({
   ...base,
   places: [{ id: 77, name: 'Harbor tour', category_name: 'Tour', category: { name: 'Tour', icon: '🎟️' } }],
