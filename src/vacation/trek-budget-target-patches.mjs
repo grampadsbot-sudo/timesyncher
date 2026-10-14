@@ -23,6 +23,37 @@ const MO_BUDGET_LINE_NEEDLE =
 const MO_BUDGET_LINE_PATCH =
   'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)';
 
+const MO_BUDGET_SKIP_TYPES = '["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"]';
+const MO_BUDGET_FLATMAP_HEAD =
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!' +
+  MO_BUDGET_SKIP_TYPES +
+  '.includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),';
+const MO_BUDGET_SERVING_PATCH =
+  'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)}])).values())';
+export const MO_BUDGET_ALL_TABS_MARKER =
+  '[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),';
+export const MO_BUDGET_LINE_AMT_MARKER =
+  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)';
+const MO_BUDGET_LEGACY_NEEDLES = [
+  MO_BUDGET_FLATMAP_HEAD +
+    'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+  MO_BUDGET_FLATMAP_HEAD +
+    'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)}]})).values())',
+  MO_BUDGET_FLATMAP_HEAD + 'amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+];
+
+/** After live budget patches, replace timeline-only Mo with all-tab serving rows. */
+export function patchMoBudgetServingMo(source = '') {
+  let js = String(source || '');
+  for (const needle of MO_BUDGET_LEGACY_NEEDLES) {
+    if (js.includes(needle)) {
+      js = js.replace(needle, MO_BUDGET_SERVING_PATCH);
+      break;
+    }
+  }
+  return js;
+}
+
 const IE_BUDGET_LINE_NEEDLE =
   'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")}';
 const IE_BUDGET_LINE_PATCH =
