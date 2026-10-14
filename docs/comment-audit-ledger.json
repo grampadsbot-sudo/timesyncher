@@ -140,14 +140,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path was found in this fixture module or its evaluator consumer."
+        "rationale": "The module supplies both valid and invalid states. The consumer runs all of them through evaluateLayout and asserts explicit failure reasons, so copied probe coordinates are test inputs rather than a PASS override."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.726467Z"
       }
     },
     {
@@ -204,14 +204,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Every missing credential, fetch failure, non-OK response, and non-verdict path returns pass:false. Current head only removes the lead comment and does not weaken the behavior."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.731863Z"
       }
     },
     {
@@ -267,14 +267,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "exitCode permits GAP, but no verifier producer emits GAP. Missing specs, screenshots, judges, and controls become FAIL."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.733177Z"
       }
     },
     {
@@ -344,8 +344,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.735488Z"
       }
     },
     {
@@ -396,14 +396,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No disabled check, catch-and-pass branch, or synthetic acceptance was found."
+        "rationale": "Missing credentials, missing minted rows, and missing chat URLs throw. verify-layout records the provisioning exception as FAIL rather than skipping or passing the four-state check."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.737646Z"
       }
     },
     {
@@ -452,14 +452,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Caught fetch/browser errors append reasons. Non-200 version responses, page status at least 400, absent stamps, and mismatches all make ok false."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.739814Z"
       }
     },
     {
@@ -509,14 +509,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Direct execution prints instructions; the imported mint function owns state creation."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.742381Z"
       }
     },
     {
@@ -582,14 +582,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The four-state drive consumes live API and DOM facts and preserves failure states."
+        "rationale": "Snapshot fetch failures remain non-OK, a missing composer yields no state, and the deprecated DOM-only stateId has no acceptance caller. The helpers do not force a passing verdict."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.746070Z"
       }
     },
     {
@@ -640,14 +640,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false acceptance or fixture-only substitution was found in this drive boundary."
+        "rationale": "The module does not synthesize a successful layout row. Navigation, missing coupon reachability, hydration, and screenshot errors reach finishRow as failures, and verify-layout consumes those rows in its final exit status."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.748676Z"
       }
     },
     {
@@ -711,14 +711,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Unreachable prerequisites produce pass:false rows, finishRow requires measurement and judge success, and main exits nonzero when any row fails. The audit-head diff removes comments only."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.750219Z"
       }
     },
     {
@@ -776,14 +776,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The complete capture, precheck, verdict, and return path contains no comment-driven or catch-and-pass acceptance."
+        "rationale": "Owner, collaborator, and no-vacation capture errors become missing or failed precheck evidence. buildJudgePacket derives its result from onboardingVerdict, which requires both the precheck and an explicit external judge pass. The returned ok flag is true only when packet.pass is true."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.754689Z"
       }
     },
     {
@@ -861,8 +861,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.759873Z"
       }
     },
     {
@@ -949,8 +949,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.766311Z"
       }
     },
     {
@@ -1019,14 +1019,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Invalid input is dropped at the URL boundary and missing detail remains missing in the rendered model."
+        "rationale": "The catch in safeHttpUrl converts invalid external input to a non-link, not PASS. ThingDetailPanel renders only the returned rows, reviews, and URLs; no comment text participates in acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.770041Z"
       }
     },
     {
@@ -1086,14 +1086,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No screenshot stand-in, fixture special case, or acceptance override was found."
+        "rationale": "The helpers do not invent successful media rows. Saved-story and print rendering depend on real bound media, explicit flags, and non-junk URLs."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.773787Z"
       }
     },
     {
@@ -1162,14 +1162,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The model is a deterministic projection of shared-trip data and disclosed print configuration."
+        "rationale": "Empty summaries, stories, maps, and directories stay absent. Query flags can disable configured sections but do not synthesize content or convert missing data into acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.776209Z"
       }
     },
     {
@@ -1242,8 +1242,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.779739Z"
       }
     },
     {
@@ -1301,14 +1301,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The candidate-specific offset is render behavior layered after the same alpha measurement used for every glyph."
+        "rationale": "TabEmojiIcon repaints on layout and resize. The PR336 theater-mask adjustment changes product pixels but does not alter a gate, fixture result, or pass threshold, so it is not a false-pass special case."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.783140Z"
       }
     },
     {
@@ -1380,14 +1380,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The module maps trip configuration and permissions into navigation state and has no gate-pass path. The audit-head includes-to-some rewrite is behaviorally equivalent for membership checking."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.785505Z"
       }
     },
     {
@@ -1432,14 +1432,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "This declaration has no gate logic and its effective type input remains configured."
+        "rationale": "The source file contains only the Vite type reference. Head empties it, but tsconfig already includes vite/client explicitly, so no runtime or acceptance behavior changes."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.787571Z"
       }
     },
     {
@@ -1498,8 +1498,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.792558Z"
       }
     },
     {
@@ -1561,8 +1561,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.796450Z"
       }
     },
     {
@@ -1636,8 +1636,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.802153Z"
       }
     },
     {
@@ -1704,8 +1704,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.806274Z"
       }
     },
     {
@@ -1768,14 +1768,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Mismatch needs a nonempty ancestry list and every path must be evidence or explicitly allowlisted. Missing metadata, reply changes, non-ancestry, and inconsistent transcript SHAs throw."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.808777Z"
       }
     },
     {
@@ -1840,8 +1840,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.811472Z"
       }
     },
     {
@@ -1893,14 +1893,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The script is a bounded manual capture, not an acceptance gate. This path therefore needs no report-only follow-through."
+        "rationale": "It can emit no image when pills are absent and mixes historical JS with repository fixture and styling. No caller consumes these images as PASS evidence, so it cannot turn a product or gate failure into acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.815586Z"
       }
     },
     {
@@ -1954,14 +1954,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Both sides receive the same bytes. Missing tabs/content throw, and the CLI has no PASS return path."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.818165Z"
       }
     },
     {
@@ -2044,8 +2044,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.820881Z"
       }
     },
     {
@@ -2154,14 +2154,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The checker exemptions are narrow and acceptance remains fail-closed. This path therefore needs no report-only follow-through."
+        "rationale": "Paid-host exemptions apply only to exact checker ban-list rows. API dates require a matching header and entire literal value. BUNDLE-LEAK recursively scans raw upstream content, and padding uses an always-fail identity that a baseline cannot suppress."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.825908Z"
       }
     },
     {
@@ -2213,14 +2213,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The one-off command is fail-closed and uses the same persisted read path as the smoke check."
+        "rationale": "It does not grant staging acceptance or replace a failed read with fixture data. The exact receipt key and session hashes must validate against database records."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.829746Z"
       }
     },
     {
@@ -2282,14 +2282,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "It writes a dry-run bundle and report, and its status derives from explicit source-to-export count equality. No downstream deployment or acceptance consumer was found."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.832397Z"
       }
     },
     {
@@ -2352,8 +2352,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.836192Z"
       }
     },
     {
@@ -2400,14 +2400,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "It is read as text and never enters product data or a gate verdict."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.838555Z"
       }
     },
     {
@@ -2469,14 +2469,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No fixture-only branch converts a production store failure into acceptance."
+        "rationale": "The faithful executor recognizes the same UPDATE RETURNING, cache upsert, and cache select operations as the production store. Dedicated tests exercise throttle waits, cache hits, expiry, aliases, and failures. The simpler memory store is explicitly selected only by tests that do not claim Neon SQL parity."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.844323Z"
       }
     },
     {
@@ -2537,14 +2537,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Consumers are fixture/capture/contract checks; provenance-blocked fields are cleared before finalization."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.848585Z"
       }
     },
     {
@@ -2600,14 +2600,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The fixture strengthens negative coverage and does not special-case production acceptance."
+        "rationale": "Callers mix off-target and on-target candidates, run production relevance logic, and assert the recorded Senegal and non-Kaanapali rows are excluded."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.852942Z"
       }
     },
     {
@@ -2654,14 +2654,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The fixture does not contain acceptance flags or a fixture identity special case."
+        "rationale": "Tests pass the recorded row through Brave display-title, rental-category, place-row, persistence, and shared-trip paths. The empty categories field is an input under test rather than a prefilled expected category."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.858373Z"
       }
     },
     {
@@ -2697,7 +2697,7 @@
       "evidence": [
         "scripts/fixtures/place-search-brave-kihei-caffe.mjs:1-27",
         "scripts/test_place_search_kihei_caffe_title.mjs:10-40",
-        "src/vacation/brave-place-query.mjs:1-220",
+        "src/vacation/brave-place-query.mjs:148-194",
         "git blame b6980aa6e3c710a00c5d979064dff671855b4e29 -- scripts/fixtures/place-search-brave-kihei-caffe.mjs; git show 5120906ced52ee91fe07a16b57a8c8eac2adf8af"
       ],
       "finding": {
@@ -2708,14 +2708,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The recorded variants reach the normal Brave parsing and dedupe logic."
+        "rationale": "The consumer combines both rows and verifies title selection and same-URL provider-rank deduplication. Neither fixture carries a pass marker or fixture-specific branch key."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.863594Z"
       }
     },
     {
@@ -2772,14 +2772,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The fixture isolates external provider data while preserving the production transformations under test."
+        "rationale": "Callers inject the records through mock fetch paths and still execute search ranking, radius, and rejection code. No product branch detects these values or hard-codes PASS."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.867735Z"
       }
     },
     {
@@ -2826,14 +2826,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "The consumer runs the payload through the OSM parser and production save/reply flow. The fixture exports no verdict or acceptance override."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.870358Z"
       }
     },
     {
@@ -2882,14 +2882,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Event-logo fixture scope is derived from the shared PR336 registry. This path therefore needs no report-only follow-through."
+        "rationale": "The module neither invents rows nor treats absent recordings as success. Its IDs constrain fetch and replay flows, which retain explicit blocked evidence for unresolved targets."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.875928Z"
       }
     },
     {
@@ -2937,14 +2937,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Consumers still require matching recordings and keys. Missing captures fail their builders. PR336 candidate keeps this module unchanged."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.878391Z"
       }
     },
     {
@@ -3028,8 +3028,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.881116Z"
       }
     },
     {
@@ -3089,8 +3089,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.884245Z"
       }
     },
     {
@@ -3139,14 +3139,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "A shared deterministic classifier fixture is appropriate for the focused lodging regressions."
+        "rationale": "Its callers separately exercise tripIntakeJobFields, prompt construction, saved-title handling, and live-path persistence. The fixture has no pass field or product runtime hook."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.888401Z"
       }
     },
     {
@@ -3191,14 +3191,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No fixture-only production branch or hard-coded true verdict was found."
+        "rationale": "Expected values are compared to actual classifier results. The rows do not flow into runtime acceptance or manufacture a PASS response."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.892944Z"
       }
     },
     {
@@ -3248,14 +3248,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Mock data is scoped to a unit contract and cannot convert a live failure into PASS."
+        "rationale": "Its canned payloads remain inside an offline contract test. Assertions verify parsed ratings, reviews, source links, and model provenance, and no production or Gate B return path consumes the fixture result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.897072Z"
       }
     },
     {
@@ -3304,7 +3304,8 @@
       ],
       "evidence": [
         "scripts/layout-shell-harness.mjs:1-217",
-        "scripts/test_served_page_layout.mjs:1-287",
+        "scripts/test_served_page_layout.mjs:16-30",
+        "scripts/test_served_page_layout.mjs:125-285",
         "git log --follow -- scripts/layout-shell-harness.mjs"
       ],
       "finding": {
@@ -3315,14 +3316,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The local server is an explicit test boundary and the measured UI still comes from repository HTML and bundles."
+        "rationale": "The consumer performs DOM geometry, hit testing, controls, overflow, full-screen, and send behavior checks and exits nonzero on any missing result. Generic /api fixture responses do not decide those layout assertions."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.901172Z"
       }
     },
     {
@@ -3385,8 +3386,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.905028Z"
       }
     },
     {
@@ -3453,8 +3454,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.907760Z"
       }
     },
     {
@@ -3522,8 +3523,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.911659Z"
       }
     },
     {
@@ -3592,8 +3593,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.917028Z"
       }
     },
     {
@@ -3650,14 +3651,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Recorded event-logo enrichment preserves evidence rather than synthesizing success. This path therefore needs no report-only follow-through."
+        "rationale": "Only committed responses keyed to a target query are replayed. Missing matches remain in blocked/source diagnostics, and stale logo fields are removed before enrichment."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.919475Z"
       }
     },
     {
@@ -3723,8 +3724,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.923639Z"
       }
     },
     {
@@ -3788,14 +3789,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The helper derives ink centers from screenshots rather than DOM claims. Its primary test proves the old bundle fails and the fixed bundle passes, while shell layout asserts each tab row exists."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.927866Z"
       }
     },
     {
@@ -3837,7 +3838,7 @@
         "scripts/lib/vk_search_event_logo_source_check.mjs:18-125",
         "scripts/test_vk_search_place_output_contract.mjs:22-24",
         "scripts/test_vk_search_place_output_contract.mjs:494",
-        "scripts/fixtures/pr336-vk-search-trip-sources.mjs:1-250",
+        "scripts/fixtures/pr336-vk-search-trip-sources.mjs:23-126",
         "git log --follow -- scripts/lib/vk_search_event_logo_source_check.mjs; git show e74e35a7d2af0bff5f4157efa439e3d080d3a4ef"
       ],
       "finding": {
@@ -3848,14 +3849,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The event-logo acceptance path is direct and fail-closed."
+        "rationale": "Gate B event rows must have a nonempty, unique logo, Tavily source evidence, a matching website host, and no blocked marker. Negative cases prove mismatched and shared logos fail. The assertions consume recorded PR336 sources rather than injecting pass booleans."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.930554Z"
       }
     },
     {
@@ -3923,8 +3924,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.935503Z"
       }
     },
     {
@@ -3977,14 +3978,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "They return no verdict. Non-tier-1 calls receive no override, and missing model configuration fails at the API boundary."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.938059Z"
       }
     },
     {
@@ -4034,14 +4035,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "It directly loads the local environment and replaces itself with the one-shot worker process. Shell strict mode propagates setup and worker failures."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.940691Z"
       }
     },
     {
@@ -4126,8 +4127,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.946277Z"
       }
     },
     {
@@ -4182,14 +4183,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No capture detection or stand-in image branch exists in the renderer."
+        "rationale": "build opens every page.image path with ImageReader and uses that file dimensions and bytes in the PDF. The one-pixel image is confined to the renderer unit test. The production caller supplies its capture manifest and fails if Python returns nonzero."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.947634Z"
       }
     },
     {
@@ -4239,14 +4240,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The checks verify the real staging turn and persisted state without a catch-and-pass branch."
+        "rationale": "Neither local comments nor canned response text satisfy the check. Missing session setup, HTTP success, persisted rows, Jev grade, or expected question behavior yields failure."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.951622Z"
       }
     },
     {
@@ -4306,14 +4307,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Browser pooling bounds concurrency without swallowing failures. This path therefore needs no report-only follow-through."
+        "rationale": "Callback errors propagate after cleanup. The narrow connection retry rethrows after bounded attempts, and selector false is consumed as missing evidence rather than PASS."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.956790Z"
       }
     },
     {
@@ -4368,14 +4369,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The check cannot pass from a canned title. It resolves the persisted trip when state lacks a title and conjunctively requires status, exactly one outbound, evaluation, owner, link, and subject match."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.959307Z"
       }
     },
     {
@@ -4439,14 +4440,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "It can change only the send-control rubric item after the live DOM proves an enabled visible button and the crop proves ink in its bounding box. Other failed rubric items remain failed."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.964348Z"
       }
     },
     {
@@ -4499,14 +4500,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The helper is fail-closed and its generated source is the same implementation used by the layout evaluator."
+        "rationale": "Missing composer, Send, attach, or voice controls fail. A hidden, covered, disabled, off-viewport, zero-size, or unexpected control also fails. No default-true or catch-and-pass branch exists."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.968244Z"
       }
     },
     {
@@ -4583,14 +4584,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Staging stub requires status=stubbed/provider=harness_stub plus link, owner, title, and count checks. Live mode requires sent/resend/no error. Spec forbids the flag in launch/customer environments."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.970722Z"
       }
     },
     {
@@ -4649,14 +4650,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The persistence boundary and final pass predicate are explicit and fail closed."
+        "rationale": "The module does not list for a nearby fixture or accept missing content. It requires exact object keys, valid hashes and fields, and zero blob-list calls."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.975221Z"
       }
     },
     {
@@ -4733,14 +4734,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Logo flow combines nonempty DOM chips, API URLs, two viewports, ink, and brand COM. Missing coffee/lodging evidence does not pass."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.977994Z"
       }
     },
     {
@@ -4816,8 +4817,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.980603Z"
       }
     },
     {
@@ -4874,14 +4875,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Missing keys/credentials, invalid JSON, failed HTTP, exceptions, and null yes/no all return pass false."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.983022Z"
       }
     },
     {
@@ -4932,14 +4933,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No path-local false pass found."
+        "rationale": "Missing required controls/messages and all geometry violations push failures. Separate LAYOUT-NYC infra behavior is owned by #408 and not duplicated here."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.984118Z"
       }
     },
     {
@@ -4995,8 +4996,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.988362Z"
       }
     },
     {
@@ -5074,8 +5075,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.990830Z"
       }
     },
     {
@@ -5134,14 +5135,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The exclusion matches the rule's visible page-overflow scope and retains a separate root scroll-width check."
+        "rationale": "evaluateLayoutRules separately compares documentElement.scrollWidth to the viewport, then fails on any sampled unclipped descendant. The fixture tests cover clipped and unclipped cases; no exception names a product fixture or forces PASS."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.993732Z"
       }
     },
     {
@@ -5192,14 +5193,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "The spine separately rejects non-200 preparation and the probe rejects hydration failure."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.996499Z"
       }
     },
     {
@@ -5257,8 +5258,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:07.999351Z"
       }
     },
     {
@@ -5325,8 +5326,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.003365Z"
       }
     },
     {
@@ -5379,14 +5380,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Failed browser registration and failed preflight return false or INFRA_BLOCKED. No catch converts those errors into an accepted layout result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.005859Z"
       }
     },
     {
@@ -5460,14 +5461,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Offline replay depends on persisted IDs and raw evidence. This path therefore needs no report-only follow-through."
+        "rationale": "D attribution requires request or response linkage, and A2 requires welcome_for plus transcript agreement. Missing or ambiguous evidence yields false/unmatched, not synthesized success."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.009981Z"
       }
     },
     {
@@ -5522,14 +5523,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No hard-coded pass or catch-and-pass path appears in the top-level runner."
+        "rationale": "The runner checks the deployed SHA, obtains a real shared page and API payload, calls runSharedSiteLogoCheck, writes its detailed result, and exits 1 when logoResult.pass is false. Partial initialization is overwritten by the returned check and cannot produce success."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.014300Z"
       }
     },
     {
@@ -5581,14 +5582,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The general smoke orchestration remains evidence-driven outside the separately owned layout path."
+        "rationale": "No unconditional pass, comment-satisfied assertion, or synthetic staging response was found in this orchestration module. Specialized LAYOUT-NYC behavior is recorded on its assigned modules and owned by #408."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.015669Z"
       }
     },
     {
@@ -5648,14 +5649,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Map and budget grading uses rendered state and persisted targets. This path therefore needs no report-only follow-through."
+        "rationale": "MAP requires mounted engine state, valid coordinates, bounds, and no relevant console failure. Budget text is checked against __budgetTargets. The split budget-key issue is already owned by #403 and is not duplicated."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.018335Z"
       }
     },
     {
@@ -5706,14 +5707,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No unconditional acceptance or swallowed check failure was found."
+        "rationale": "The one retry is limited to browser connection closure. False results, exhausted retries, timeouts, and exceptions are recorded by the shared smoke runner rather than converted to success."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.020918Z"
       }
     },
     {
@@ -5769,14 +5770,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Poll completion requires places and enough rows to exercise sorting. This path therefore needs no report-only follow-through."
+        "rationale": "Empty arrays and one-row tabs remain false. The helper does not fabricate seed rows or turn timeout/missing payload into readiness."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.024934Z"
       }
     },
     {
@@ -5825,14 +5826,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "It only packages an explicit expression into an IIFE and throws when the expression is absent. It does not supply a default pass value. LAYOUT-NYC ownership remains with #408."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.027555Z"
       }
     },
     {
@@ -5882,14 +5883,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No disabled-by-default check or hard-coded pass descriptor was found."
+        "rationale": "The module only builds real check callbacks. The common runner records false returns, exceptions, timeouts, and infrastructure blocks as non-PASS outcomes."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.028861Z"
       }
     },
     {
@@ -5952,14 +5953,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The plan correctly declares LAYOUT and VISUAL fail-closed. This path therefore needs no report-only follow-through."
+        "rationale": "Its declaration and disjointness checks are sound. The fail-open behavior is in createSmokeRunner.finish, reported against that assigned module."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.031306Z"
       }
     },
     {
@@ -6032,14 +6033,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The extraction path preserves statuses and attachProviderLogAndMaybeFail returns pass:false on every detected 429. Final summaries are metrics and do not override the earlier failure."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.034196Z"
       }
     },
     {
@@ -6120,8 +6121,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.035496Z"
       }
     },
     {
@@ -6186,14 +6187,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "A DOM-ready shell can recover from a transient non-200 API response, but mapping and budget consumers still require concrete tabs, controls, places, and expected lines. Current audit head changes comments only."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.038188Z"
       }
     },
     {
@@ -6255,8 +6256,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.042022Z"
       }
     },
     {
@@ -6309,14 +6310,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false acceptance branch was found in the tail orchestration."
+        "rationale": "Fresh-session setup, callback errors, timeout outcomes, and false check results flow to the smoke recorder. The module contains no catch that returns a successful verdict after a failed check."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.044750Z"
       }
     },
     {
@@ -6381,8 +6382,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.047422Z"
       }
     },
     {
@@ -6464,8 +6465,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.051362Z"
       }
     },
     {
@@ -6521,14 +6522,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The final pass requires observable sorting behavior, not a local skip alone."
+        "rationale": "A single tab with fewer than two rows can be non-applicable, but gradeThingCardSortButtonsHarness requires at least one exercised multi-row case and successful priced-row sorting per viewport. Empty fixtures therefore cannot satisfy the aggregate contract."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.054066Z"
       }
     },
     {
@@ -6583,14 +6584,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The consumer uses the returned pass value in the map/logo smoke flow."
+        "rationale": "The function does not accept a canned card or proof image as the staging result. Missing rows, failed detail interactions, tag mismatch, insufficient row ink, or aggregate sort failure propagates to the check result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.055397Z"
       }
     },
     {
@@ -6645,14 +6646,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Current acceptance uses the checked-in spec and preserves provenance in output."
+        "rationale": "At the audited source commit features/screens/app.md exists, so the fallback does not replace the governing file. Both layout and visual consumers receive the source label; no fallback value directly returns PASS."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.059422Z"
       }
     },
     {
@@ -6713,14 +6714,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The acceptance caller ANDs on the preflight and never converts INFRA_BLOCKED to PASS."
+        "rationale": "runVisualHarnessCheck returns pass false and infraBlocked before mint or judging unless visualPreflightReady sees both ok and imageOk. The test double does not alter the live fetch path."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.063317Z"
       }
     },
     {
@@ -6778,8 +6779,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.067518Z"
       }
     },
     {
@@ -6835,14 +6836,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Fresh state provisioning prevents contamination while leaving all verdict work to downstream DOM and visual checks."
+        "rationale": "Each state uses a fresh coupon and session. The returned map contains URLs and ids but no pass field; capture and judge stages still determine acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.068749Z"
       }
     },
     {
@@ -6899,14 +6900,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No screenshot stand-in or empty-evidence PASS path was found."
+        "rationale": "The summary rejects an empty judged set and combines layout and visual-judge results. A skipped mint only supplies a pre-minted state map and does not manufacture a passing shot."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.070130Z"
       }
     },
     {
@@ -6961,14 +6962,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The transformation fails closed instead of concealing a missing rewrite."
+        "rationale": "The rewriter does not replace removed callers with success stubs. Count mismatches and residual forbidden strings throw, and the production bundle loader runs the final assertion."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.074852Z"
       }
     },
     {
@@ -7025,14 +7026,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Only regular files under the repository root or public directory resolve. The purchase-email test loudly asserts that the helper comes from public rather than treating a missing helper as success."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.079082Z"
       }
     },
     {
@@ -7082,14 +7083,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "It calls production context/request builders, requires the unscheduled fact, and scans both messages for nine solicitation forms."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.081836Z"
       }
     },
     {
@@ -7141,14 +7142,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "It rejects lodging/day leakage and requires machine and plain not-on-a-day facts."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.084614Z"
       }
     },
     {
@@ -7226,14 +7227,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "scripts/baseline-subset.mjs finding in this slice",
-        "rationale": "Change the supporting expectation as part of the scoped baseline policy follow-through, not as a second finding."
+        "rationale": "The suite has substantive behavior assertions for banned content and bundle provenance. Its five-row new-rule case is direct evidence for the new finding in baseline-subset.mjs, so reporting the same defect here would duplicate one underlying policy bug."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.086366Z"
       }
     },
     {
@@ -7287,14 +7288,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The synthetic results establish a literal expected set, then production gates remove Hertz and Secret Taco while preserving a nonempty provider-grounded reply. Source-string checks are supplementary, not the acceptance result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.088981Z"
       }
     },
     {
@@ -7349,14 +7350,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The residual test asserts behavior through public flows. This path therefore needs no report-only follow-through."
+        "rationale": "Success cannot be satisfied by its comment. Literal assertions require a Brave row, persisted source ID, non-502 path, and wrong-island rejection."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.091462Z"
       }
     },
     {
@@ -7415,8 +7416,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.096246Z"
       }
     },
     {
@@ -7474,14 +7475,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The deterministic model response isolates route and prompt behavior while positive and negative gate assertions remain executable."
+        "rationale": "The script proves first-intake flags would reject the reply, post-intake flags do not, saved title removes titleError, and produceLiveAppReply emits the inviteContactAsk rule. Unexpected fetches return non-OK."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.097539Z"
       }
     },
     {
@@ -7547,8 +7548,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.099923Z"
       }
     },
     {
@@ -7601,14 +7602,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "It is manifest-wired and fails unless invite-contact facts survive the lodging answer."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.102458Z"
       }
     },
     {
@@ -7662,14 +7663,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No comment-only or always-pass assertion was found in the test."
+        "rationale": "The joined host constants are test doubles for network routing. The assertions still require the production call path to honor timeout, cap, and stage-budget behavior, and this test result is not substituted for staging evidence."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.105124Z"
       }
     },
     {
@@ -7717,8 +7718,9 @@
       ],
       "evidence": [
         "scripts/test_keepsake_order_buy_link.mjs:48-106",
-        "api/[...route].mjs:1-220",
-        "routes/keepsake-order.mjs:1-260",
+        "api/[...route].mjs:15-35",
+        "api/[...route].mjs:41-96",
+        "routes/keepsake-order.mjs:88-155",
         "vercel.json:1-180",
         "git log --follow -- scripts/test_keepsake_order_buy_link.mjs; git show 1fbe1bc6ea76ce04c30628dbde4228d3c1f06095"
       ],
@@ -7736,8 +7738,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.110197Z"
       }
     },
     {
@@ -7791,14 +7793,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No comment-satisfied assertion or fixture-only PASS path was found."
+        "rationale": "It proves positive inclusion and negative exclusion with literal outputs. The known bad venues are adversarial inputs, and no comment or mock directly sets the acceptance result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.112875Z"
       }
     },
     {
@@ -7850,14 +7852,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Assertions require one resolved lodging, Kihei-only citations, and no stale lodging geography in the prompt."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.115585Z"
       }
     },
     {
@@ -7917,14 +7919,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "State changes and counts, not source text, decide every scenario."
+        "rationale": "The SQL double mutates claims and transcript arrays. The test checks one row and log after sequential and concurrent calls, then verifies a customer reply and a single welcome across trip creation."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.118238Z"
       }
     },
     {
@@ -7966,7 +7968,7 @@
         "scripts/test_owner_welcome_single_after_trip_create.mjs:13-80",
         "scripts/test_owner_welcome_single_after_trip_create.mjs:83-101",
         "routes/vacation-itinerary.mjs:1-260",
-        "src/vacation/onboarding-welcome.mjs:1-180",
+        "src/vacation/onboarding-welcome.mjs:14-68",
         "git blame b6980aa6e3c710a00c5d979064dff671855b4e29 -L 83,90 -- scripts/test_owner_welcome_single_after_trip_create.mjs; git show da41021188f51794659572b52b558c771d3b36d3"
       ],
       "finding": {
@@ -7977,14 +7979,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The negative and duplicate-prevention assertions directly cover the claimed behavior."
+        "rationale": "The mock database records four ensureOnboardingOpener calls. Two calls have no trip, then two use the same trip. The final assertions require one stored welcome, a claim and turn bound to that trip, and text equal to renderOnboardingWelcome. The comments label the production sequence but do not satisfy those assertions."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.122046Z"
       }
     },
     {
@@ -8046,14 +8048,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The test has both grounded positive results and a fail-closed sole-source negative path."
+        "rationale": "The mock score varies by row, captures the actual area sent to JEV, and throws on unexpected URLs. A prior-only passing row must still make searchPlaces reject with prior_db_sole_source, so fixture data cannot alone manufacture PASS."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.124907Z"
       }
     },
     {
@@ -8106,14 +8108,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Every judge call must use Kihei, taco survives, gas station is excluded, and chat wrapper status/options are checked."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.127410Z"
       }
     },
     {
@@ -8166,14 +8168,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No encoded acceptance token or hard-coded true verdict was found."
+        "rationale": "It asserts both the provider query and final place list against literal expected behavior. Split host strings affect the test double only and do not make the production result pass."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.129873Z"
       }
     },
     {
@@ -8238,14 +8240,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "It checks exact labels, rendered RGB mismatch ratio, container edges, and filter results in a browser. This is adjacent to the #408 LAYOUT-NYC ownership but does not introduce a duplicate issue."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.132462Z"
       }
     },
     {
@@ -8305,14 +8307,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "A named historical fixture is appropriate for a layout regression when the current artifacts and geometry determine the result."
+        "rationale": "No application code branches on NYC_PR225_SLUG. Failure is based on real browser scroll and checkbox geometry after tab activation. This path does not duplicate the separately owned #408 LAYOUT-NYC verdict work."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.136806Z"
       }
     },
     {
@@ -8371,8 +8373,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.139449Z"
       }
     },
     {
@@ -8432,14 +8434,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The test does not pass from its historical comment. It invokes production transformations, parses the generated saved record, forbids the three stale day claims, and requires Paia to remain explicitly not on a day."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.142119Z"
       }
     },
     {
@@ -8496,14 +8498,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No blocked draft is surfaced as a successful reply."
+        "rationale": "The successful case returns only the clean model rewrite. Repeating the blocked action claim returns HTTP-equivalent 502, null reply, and reply_unavailable, while preserving diagnostic logging."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.144856Z"
       }
     },
     {
@@ -8559,14 +8561,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The registered test scans relevant served source and generated JS surfaces. This path therefore needs no report-only follow-through."
+        "rationale": "It scans committed HTML, public JS, rendered Trek output, and dist/assets JS when present. Root dist HTML is not listed, but matching committed HTML inputs are scanned and no build HTML transform injecting these needles was found, so no evidence-backed gap exists."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.147355Z"
       }
     },
     {
@@ -8621,14 +8623,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Caught timeouts leave false evidence, absent expected IDs become ok:false, and any false row exits 1. Screenshots are evidence only."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.148562Z"
       }
     },
     {
@@ -8689,14 +8691,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Positive and negative executable cases cover both title sources and the final combined verdict."
+        "rationale": "The end-to-end test includes a positive DB fallback and two negative subjects. runShepherdCheckI also requires one outbound row, provider evaluation, accept link, owner name, exact title, and HTTP 200."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.151325Z"
       }
     },
     {
@@ -8748,14 +8750,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The explicit negative case would fail if the evaluator returned a constant pass."
+        "rationale": "The test calls sampleUnclippedHorizontalOverflow for both mock DOM trees. Ancestor clipping suppresses only the Leaflet-like tile, while the 500px element at a 390px viewport must produce a finding. The comments do not affect either result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.154037Z"
       }
     },
     {
@@ -8799,7 +8801,7 @@
       ],
       "evidence": [
         "scripts/test_shepherd_staging_smoke_page_eval.mjs:1-22",
-        "scripts/shepherd-staging-smoke-page-eval.mjs:1-80",
+        "scripts/shepherd-staging-smoke-page-eval.mjs:1-7",
         "scripts/shepherd-staging-smoke-thing-card.mjs:1-260",
         "scripts/shepherd-staging-smoke-layout-nyc.mjs:1-260",
         "git log --follow -- scripts/test_shepherd_staging_smoke_page_eval.mjs; git show fc25a9e7bb67b1a9c9651d6201dc355396b7fd58"
@@ -8812,14 +8814,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The positive execution, negative syntax case, and consumer-source checks cover the stated Playwright script boundary."
+        "rationale": "The test gets 42 from a script built by playwrightEvaluateReturnScript and proves eval rejects a bare top-level return. It then reads the THING-CARD and LAYOUT-NYC consumers, rejects page.evaluate templates containing a bare return, and requires both files to call the wrapper. The preserved comment explains the observed SyntaxError boundary rather than satisfying an assertion."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.156697Z"
       }
     },
     {
@@ -8874,14 +8876,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No mocked acceptance verdict or comment-only assertion was found."
+        "rationale": "Saved lodging remains labelled context and cannot enter citable results. Internal gate rows are removed before model exposure, and literal assertions cover both the system prompt and request body."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.159507Z"
       }
     },
     {
@@ -8939,8 +8941,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.162203Z"
       }
     },
     {
@@ -8985,8 +8987,8 @@
       "evidence": [
         "scripts/test_vk_search_place_output_contract.mjs:303-329",
         "scripts/test_vk_search_place_output_contract.mjs:331-488",
-        "src/vacation/search-place-output.mjs:424-490",
-        "scripts/fixtures/pr336-vk-search-trip-sources.mjs:207-230",
+        "src/vacation/search-place-output.mjs:374-465",
+        "scripts/fixtures/pr336-vk-search-trip-sources.mjs:192-216",
         "git log --follow -- scripts/test_vk_search_place_output_contract.mjs; git show bf930afe077f9a95e28e04424f47f3532664ea83"
       ],
       "finding": {
@@ -9003,8 +9005,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.164936Z"
       }
     },
     {
@@ -9085,8 +9087,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.169513Z"
       }
     },
     {
@@ -9129,7 +9131,8 @@
       ],
       "evidence": [
         "b6980aa6:scripts/verify-positive-fixture-render-contract.mjs:1-118",
-        "b6980aa6:scripts/positive-fixture-render-contract-lib.mjs:1-430",
+        "b6980aa6:scripts/lib/positive-fixture-render-contract-lib.mjs:87-97",
+        "b6980aa6:scripts/lib/positive-fixture-render-contract-lib.mjs:269-437",
         "command consumer: node scripts/verify-positive-fixture-render-contract.mjs",
         "git log --follow -- scripts/verify-positive-fixture-render-contract.mjs; introducing commit 12adb5a7"
       ],
@@ -9141,14 +9144,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The fixture boundary and claimed result are aligned."
+        "rationale": "The payload is pinned by bytes and hash, and both positive and negative browser profiles execute. A negative profile passes when it observes a violation, but the script labels that as negative-fixture behavior and never promotes it to Gate B or staging approval."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.172041Z"
       }
     },
     {
@@ -9210,8 +9213,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.174872Z"
       }
     },
     {
@@ -9274,14 +9277,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Stale-build proof requires exact full-SHA agreement and fails closed. This path therefore needs no report-only follow-through."
+        "rationale": "Both operands must be 40 hex characters before strict equality. Version/metadata mismatch throws, and PDF consumers require observed live SHA in both artifacts."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.176259Z"
       }
     },
     {
@@ -9335,14 +9338,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No remote stand-in, canned synthesis, or catch-and-pass path remains."
+        "rationale": "Missing or empty JS and CSS throw. The Vite build hook awaits that check, and the hardcoded-content suite rejects reintroducing a travel.timesyncher.com bundle fetch."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.178882Z"
       }
     },
     {
@@ -9402,14 +9405,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Unusable coordinates and URL identifiers are rejected; no catch returns a passing row."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.181709Z"
       }
     },
     {
@@ -9467,14 +9470,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The comment describes a live data-shape boundary; it does not bypass search, persistence, or reply checks."
+        "rationale": "intakeThingsForPersistence returns no intake things outside the place-search intake path, and otherwise merges classifier things with job wantedThings. runVacationAppInTurnSearch still requires provider and relevance success before persistence. blockInTurnPlaceReply fails replies that do not cite the resulting in-turn places."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.185519Z"
       }
     },
     {
@@ -9542,8 +9545,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.187885Z"
       }
     },
     {
@@ -9599,14 +9602,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Stubbed, failed, pending, and sent remain distinct. Smoke requires sent plus a nonblank provider_message_id, and tests cover stub rejection."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.190343Z"
       }
     },
     {
@@ -9670,14 +9673,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No hard-coded completion, fixture branch, or swallowed persistence verdict was found in this module."
+        "rationale": "The module does not force a completed intake or successful action. It records lodging presence, invite need, and asked-gap state, then exposes the same structured values to reply facts and transcript payloads."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.195557Z"
       }
     },
     {
@@ -9747,8 +9750,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.197951Z"
       }
     },
     {
@@ -9795,7 +9798,7 @@
       "evidence": [
         "source src/vacation/intake-lodging-queue-persist.mjs:8-48",
         "caller src/vacation/chat-place-search.mjs:287-299",
-        "consumer scripts/test_first_intake_lodging_before_reply.mjs:42-70",
+        "consumer scripts/test_first_intake_lodging_before_reply.mjs:42-66",
         "history git log --follow -- src/vacation/intake-lodging-queue-persist.mjs and commit d626fba"
       ],
       "finding": {
@@ -9806,14 +9809,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The path runs only after successful first-intake classification, searches for the stated lodging, deduplicates database rows, and records the lookup result. It does not manufacture a pass when search or persistence is absent."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.201747Z"
       }
     },
     {
@@ -9862,14 +9865,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Unknown non-lodging categories stay empty or source-labeled rather than becoming a PASS result."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.204020Z"
       }
     },
     {
@@ -9932,14 +9935,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Missing source tags and happy-hour values stay blank. Date assignment, budget values, and presentation overrides all derive from concrete trip or thing data rather than fixture-specific pass synthesis."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.206712Z"
       }
     },
     {
@@ -9985,14 +9988,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No hard-coded fixture or success return controls the acceptance path here."
+        "rationale": "Its broad structural heuristic can admit imperfect proper names, but it does not fabricate a Thing, force a gate pass, or bypass downstream persistence/render checks. The classifier applies it only to model-extracted rows."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.210660Z"
       }
     },
     {
@@ -10064,8 +10067,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.215893Z"
       }
     },
     {
@@ -10124,14 +10127,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No path-local finding; #402 remains separate."
+        "rationale": "It supplies structural category IDs/icons but does not create summary, price, neighborhood, or reviews. PR336 summary padding is owned by #402 elsewhere."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.218273Z"
       }
     },
     {
@@ -10194,14 +10197,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "journeyBookGate is test-only; runtime acceptance is the guarded default handler."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.220785Z"
       }
     },
     {
@@ -10265,14 +10268,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Executable import and route evidence confirms the quarantine claim."
+        "rationale": "Repository import search finds renderStyle2Html and buildStyle2Model only in scripts/test_keepsake_style2.mjs. The live keepsake handler builds staging journey URLs and never imports this module, so its fixture HTML cannot stand in for product acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.223410Z"
       }
     },
     {
@@ -10312,7 +10315,7 @@
       ],
       "evidence": [
         "b6980aa6:src/vacation/list-column-sort.mjs:1-28",
-        "b6980aa6:scripts/test_shared_tab_list_summary.mjs:1-80",
+        "b6980aa6:scripts/test_shared_tab_list_summary.mjs:1-72",
         "git log --follow -- src/vacation/list-column-sort.mjs; introducing commit 0a316f71"
       ],
       "finding": {
@@ -10323,14 +10326,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The separation is stated and confirmed by the caller graph."
+        "rationale": "No production staging gate imports it. Its presentation constant and comparisons are exercised by offline tests, while the served UI has a separate sort implementation and smoke evidence."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.227382Z"
       }
     },
     {
@@ -10393,14 +10396,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The geocode caller still owns outbound failure and place-search acceptance."
+        "rationale": "Higher-limit alias reuse is permitted only when the cached limit meets the request and the payload passes cacheability checks. Invalid payloads miss or throw through the caller rather than becoming synthetic place rows."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.229689Z"
       }
     },
     {
@@ -10453,14 +10456,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The parser fail-closes malformed scores while retaining an intentional legacy shape. This path therefore needs no report-only follow-through."
+        "rationale": "choice/value precede type:score, but existing production fixtures and eval inputs use untyped choice. Bounded integer checks reject arbitrary truthy values, and malformed scores throw. No governing contract was found that forbids compatibility input."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.234597Z"
       }
     },
     {
@@ -10521,14 +10524,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Caller omits unscored rows and propagates typed timeout errors."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.236997Z"
       }
     },
     {
@@ -10586,14 +10589,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "No fixture geography or PASS synthesis is present."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.240841Z"
       }
     },
     {
@@ -10657,14 +10660,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Empty enum value is limited to non-place_search turns."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.243300Z"
       }
     },
     {
@@ -10730,14 +10733,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "Wrong hosts, non-OK responses, and invalid JSON throw. tryGeocodeLabel returns null for fallback but records error/empty/skipped status and reason."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.244545Z"
       }
     },
     {
@@ -10801,14 +10804,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Upstream relevance omits unjudged rows."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.248296Z"
       }
     },
     {
@@ -10862,14 +10865,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "OSM category assignment is structural and unsupported tags stay empty. This path therefore needs no report-only follow-through."
+        "rationale": "The table does not inspect names or fixture IDs. Production filters requested categories and maps provider tags through the same rules, preventing name-based canned acceptance."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.251590Z"
       }
     },
     {
@@ -10929,14 +10932,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The save decision is data-driven and has direct negative coverage."
+        "rationale": "A record needs a name and a recognized POI root tag. Highway, junction, crossing, slipway, and generic bridge, entrance, or access records fail unless they also carry a business POI tag. Tests include literal failing road/access examples and a passing market before the normal mapper and radius filter run."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.254253Z"
       }
     },
     {
@@ -10993,14 +10996,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Provider summaries reject errors and do not call an absent log empty. This path therefore needs no report-only follow-through."
+        "rationale": "All-empty requires recognized rows, rejects any error/hit, and permits skipped only in a known provider set. Production reaches it after prior and Brave stages provide answered evidence."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.256933Z"
       }
     },
     {
@@ -11051,14 +11054,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Current behavior matches the source and caller contract."
+        "rationale": "Named-place lookups use the context destination center while explicit anchor geocodes take priority for anchored searches. A lodging-marked context center remains selected before the generic stored destination fallback. The caller uses the returned center for provider filtering and does not convert a missing center into pass evidence."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.259288Z"
       }
     },
     {
@@ -11116,14 +11119,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "The helper returns a specific error when ok is true but turnKind is not recognized. Unknown values do not default to a passing category."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.262785Z"
       }
     },
     {
@@ -11191,8 +11194,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.266578Z"
       }
     },
     {
@@ -11265,14 +11268,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The producer, prompt, fallback, and final ship paths preserve the same scoped grounding boundary."
+        "rationale": "Saved itinerary and prior-db titles are moved to notCitableAsResult, internal allow lists are hidden from the model, and final reply shipping rechecks unsourced mentions. The grounded fallback can name only citablePlaceTitles and fails when none exist."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.270376Z"
       }
     },
     {
@@ -11323,7 +11326,7 @@
       "evidence": [
         "source src/vacation/search-event-logo.mjs:43-205",
         "caller src/vacation/place-search.mjs:624-646",
-        "consumer scripts/vk_search_event_logo_source_check.mjs:18-125",
+        "consumer scripts/lib/vk_search_event_logo_source_check.mjs:18-125",
         "history git log --follow -- src/vacation/search-event-logo.mjs and commit 50d7a64"
       ],
       "finding": {
@@ -11334,14 +11337,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "A logo is accepted only when its hostname matches the attributed website. Missing evidence is marked, and shared output can explicitly fail duplicate unrelated logos."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.272667Z"
       }
     },
     {
@@ -11447,8 +11450,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.273673Z"
       }
     },
     {
@@ -11520,8 +11523,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.276028Z"
       }
     },
     {
@@ -11603,14 +11606,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No separate false-pass branch appears beyond the TSV #403-owned split string."
+        "rationale": "The handler promotes metadata targets before list finalization. syncSharedTripApiBudget rebuilds lines from shared rows and the promoted target map, while budgetGateAllowedAmounts uses the same served payload the live tab receives. The split bucket label is owned by TSV #403 and is not duplicated here."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.278486Z"
       }
     },
     {
@@ -11673,8 +11676,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.280912Z"
       }
     },
     {
@@ -11732,8 +11735,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.286336Z"
       }
     },
     {
@@ -11781,14 +11784,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The boundary delegates to production payload preparation without fixture padding. This path therefore needs no report-only follow-through."
+        "rationale": "No path, slug, NYC identity, or acceptance flag changes the result. PR336 React receives the same prepared shape as API and tests, so this wrapper does not synthesize missing fields."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.287496Z"
       }
     },
     {
@@ -11850,7 +11853,7 @@
       ],
       "evidence": [
         "src/vacation/thing-detail-fields.mjs:1-391",
-        "src/vacation/gate-b-thing-detail-completeness.mjs:1-170",
+        "src/vacation/gate-b-thing-detail-completeness.mjs:1-45",
         "src/vacation/shared-trip-live-tab-lists.mjs:1-120",
         "git blame b6980aa6e -L 51,51 -L 143,143 -- src/vacation/thing-detail-fields.mjs"
       ],
@@ -11862,14 +11865,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The module preserves missingness for bare customer data and exposes exact missing fields to the gate."
+        "rationale": "shouldApplyAutoDetailFields requires explicit detail, a recognized provider, or substantive sourceRecord fields. missingDetailFieldsForCategory checks category-specific fields, four sourced reviews where applicable, coordinates, summary sources, and description/summary length; comments are not data and do not satisfy it."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.291332Z"
       }
     },
     {
@@ -11945,7 +11948,7 @@
         "PR336 diff e9b1b44 adds Priceline to NAMED_THING_LOGOS and BRAND_LOGO_RULES",
         "PR336 caller apps/vacation-client/src/lib/listTabModel.mjs:288-299,568-587",
         "PR336 renderer apps/vacation-client/src/components/ListRow.tsx:36-89",
-        "PR336 acceptance apps/vacation-client/test/listRows.unit.mjs:103-109",
+        "PR336 acceptance e9b1b447:apps/vacation-client/test/listRows.unit.mjs:103-109",
         "history git log --follow -- src/vacation/thing-logo-capture.mjs and commits 5db91bf,13401b4,d4592f3,db49850"
       ],
       "finding": {
@@ -11962,8 +11965,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.295150Z"
       }
     },
     {
@@ -12041,14 +12044,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The fixture images are scoped to binding and cache mechanics and are excluded from customer print/share output."
+        "rationale": "proofPngBuffer runs only for the bind CLI --proof option and unit/storage checks. Print/share filters remove proof rows, and the staging bind-media smoke uses a separate one-pixel payload to test storage/cache semantics rather than screenshot quality. No visual gate treats either image as product-media evidence."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-7",
-        "reviewedAt": "2026-10-14T21:36:41.455324Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.301690Z"
       }
     },
     {
@@ -12096,14 +12099,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Known #403 key splitting is elsewhere; this module uses the persisted key directly."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.304603Z"
       }
     },
     {
@@ -12154,14 +12157,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Known #408 judge ownership is outside this patch."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.307176Z"
       }
     },
     {
@@ -12206,14 +12209,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Consumer retains live Leaflet/OSM checks."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.309308Z"
       }
     },
     {
@@ -12287,14 +12290,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No follow-through required."
+        "rationale": "Handler checks the built asset and rejects hardcoded geography, fixture coordinates, canned copy, placeholders, missed patches, and missing media. #408 judge path is separate."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.310502Z"
       }
     },
     {
@@ -12357,14 +12360,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The preserved comment documents a data-shape merge rather than an acceptance bypass."
+        "rationale": "mergeWantedThings deduplicates cleaned classifier and fallback records. classifyTripIntake still requires successful decision and extraction responses, validates required dates when configured, and returns explicit failure data otherwise. Queue and chat callers consume the merged records as search work, not as accepted places."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-5",
-        "reviewedAt": "2026-10-14T21:34:10Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.313127Z"
       }
     },
     {
@@ -12422,14 +12425,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "The hook is an unconditional read-only observation boundary used by browser checks."
+        "rationale": "It returns false only when no map container exists, otherwise reads the live center, zoom, and bounds on initial bind and map events. No fixture, screenshot, or acceptance result is synthesized."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-3",
-        "reviewedAt": "2026-10-14T21:36:00Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.315648Z"
       }
     },
     {
@@ -12488,14 +12491,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No hard-coded NYC center, synthetic success, or hidden unresolved state was found."
+        "rationale": "The function prefers actual place points, uses stored destination coordinates only as a declared fallback, and returns ok false with map_center_unresolved when neither exists. The browser bundle receives the same function body."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-4",
-        "reviewedAt": "2026-10-14T21:32:25Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.319408Z"
       }
     },
     {
@@ -12545,14 +12548,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No false-pass path found."
+        "rationale": "logoUrl is written only when capture succeeds. logoCaptureReason remains diagnostic. PR336 changes capture rules but leaves this adapter unchanged."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-8",
-        "reviewedAt": "2026-10-14T21:42:50.984Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.321703Z"
       }
     },
     {
@@ -12604,7 +12607,7 @@
         "source src/vacation/turn-tags.mjs:3-91",
         "caller routes/vacation-request.mjs:122-143 persists customer turn tags",
         "caller routes/worker-jobs.mjs:108-129 persists assistant turn tags",
-        "caller src/vacation/vacation-app-turn-tag.mjs:15-57 reuses classifier results for intake and place search",
+        "caller src/vacation/vacation-app-turn-tag.mjs:14-52 reuses classifier results for intake and place search",
         "consumer scripts/test_g3c_model_intent.mjs:33-77",
         "history git log --follow -- src/vacation/turn-tags.mjs and commit b3771f1"
       ],
@@ -12616,14 +12619,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "No report-only follow-through is needed."
+        "rationale": "Deterministic logic adds only speaker, direction, voice, and supplied payload tags. Customer-word content tags come from the model, and a model failure returns ask:true with an error rather than a confident inferred tag set."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-2",
-        "reviewedAt": "2026-10-14T21:34:20.580507Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.329270Z"
       }
     },
     {
@@ -12685,14 +12688,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Provenance exemptions require explicit blocker evidence. This path therefore needs no report-only follow-through."
+        "rationale": "Blocked fields are ignored unless blocker text is nonempty. Alias claims require matching title, ccab key, and evidence URL. Hotel coordinates stay required unless blocked, and row 608 remains intentionally failing."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.332981Z"
       }
     },
     {
@@ -12765,8 +12768,8 @@
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-6",
-        "reviewedAt": "2026-10-14T21:33:48.138427Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.335496Z"
       }
     },
     {
@@ -12824,14 +12827,14 @@
       "disposition": {
         "action": "no-change",
         "owner": "none",
-        "rationale": "Wind fallback returns observed readings and cannot invent acceptance copy. This path therefore needs no report-only follow-through."
+        "rationale": "Provider errors and timeout degrade to an empty optional forecast. The module composes no swim note or fixture answer and caches only nonempty observed readings."
       },
       "review": {
         "fullModuleRead": true,
         "callersRead": true,
         "historyRead": true,
-        "reviewer": "poteto-agent slice-1",
-        "reviewedAt": "2026-10-14T21:36:09.128420Z"
+        "reviewer": "GPT-5.6 Sol follow-up re-review",
+        "reviewedAt": "2026-10-14T22:47:08.338772Z"
       }
     }
   ]
