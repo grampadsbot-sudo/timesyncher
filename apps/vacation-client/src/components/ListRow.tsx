@@ -7,6 +7,7 @@ import {
   eventListPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
+  formatUsd,
   hotelFirstRowNote,
   hotelPriceDisplay,
   logoUrlForPlace,
@@ -228,6 +229,7 @@ export function ListRow({
   }
 
   const numeric = numericPrice(place, trip);
+  const currency = trip.trip?.currency || 'USD';
   const price =
     tab === 'events'
       ? eventListPriceDisplay(place, trip)
@@ -235,7 +237,7 @@ export function ListRow({
         ? hotelPriceDisplay(place, trip)
         : numeric == null || numeric <= 0
           ? ''
-          : `$${numeric}`;
+          : formatUsd(numeric, currency);
 
   if (tab === 'events') {
     return (

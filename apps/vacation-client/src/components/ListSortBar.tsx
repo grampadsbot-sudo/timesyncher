@@ -8,7 +8,11 @@ type Props = {
   onSort: (key: SortKey) => void;
 };
 
+const SORT_KEYS: SortKey[] = ['name', 'price'];
+
 export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
+  const activeIndex = SORT_KEYS.indexOf(sortKey);
+
   return (
     <div
       className="tsv-list-sort"
@@ -16,8 +20,15 @@ export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
       data-ts-sort-active={sortKey}
       role="toolbar"
       aria-label="Sort list"
+      onKeyDown={(event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        const delta = event.key === 'ArrowRight' ? 1 : -1;
+        const next = (activeIndex + delta + SORT_KEYS.length) % SORT_KEYS.length;
+        onSort(SORT_KEYS[next]);
+      }}
     >
-      {(['name', 'price'] as SortKey[]).map((key) => (
+      {SORT_KEYS.map((key) => (
         <button
           key={key}
           type="button"

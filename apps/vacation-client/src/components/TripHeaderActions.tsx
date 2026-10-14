@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SharedDay, SharedTripPayload } from '../types/sharedTrip';
 import { SharedAudioButton } from './SharedAudioButton';
 
@@ -39,8 +39,31 @@ export function TripHeaderActions({
   const [printOpen, setPrintOpen] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
   const [keepsakesOpen, setKeepsakesOpen] = useState(false);
+  const printMenuRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => sortedDays(trip), [trip]);
+
+  useEffect(() => {
+    if (!printOpen) return;
+    const closePrint = () => {
+      setPrintOpen(false);
+      setDailyOpen(false);
+      setKeepsakesOpen(false);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      const root = printMenuRef.current;
+      if (root && !root.contains(event.target as Node)) closePrint();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closePrint();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [printOpen]);
 
   const journeyHref = (() => {
     const path = window.location.pathname || '';
@@ -81,7 +104,7 @@ export function TripHeaderActions({
   }
 
   return (
-    <div className="tsv-header-actions" data-print-menu-root="1">
+    <div className="tsv-header-actions" data-print-menu-root="1" ref={printMenuRef}>
       <a
         className="tsv-header-link"
         href={orderKeepsakesHref}

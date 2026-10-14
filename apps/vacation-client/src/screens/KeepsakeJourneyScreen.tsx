@@ -122,7 +122,6 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
 
       <article className="tsv-keepsake-page tsv-keepsake-cover keepsake-report">
         <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
-        {model.style === 2 ? <p className="tsv-muted">Style two</p> : null}
         {model.sections.find((s) => s.kind === 'summary') ? (
           <p className="tsv-muted">Trip summary</p>
         ) : null}
@@ -137,8 +136,8 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
               data-keepsake-section="summary"
             >
               <KeepsakePrintBrand tripTitle={model.tripTitle} style={model.style} />
-              {section.summary.split(/\n\s*\n/).map((part) => (
-                <p key={part.slice(0, 32)} className="tsv-keepsake-summary">
+              {section.summary.split(/\n\s*\n/).map((part, partIndex) => (
+                <p key={`summary-part-${partIndex}`} className="tsv-keepsake-summary">
                   {part}
                 </p>
               ))}
@@ -213,7 +212,7 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
                   data-day={String(mapPage.dayNumber)}
                 >
                   <h3>{mapPage.dayTitle} map</h3>
-                  <DayMap places={mapPage.places} trip={trip} />
+                  <DayMap places={mapPage.places} trip={trip} hideHeading />
                 </div>
               ))}
             </section>

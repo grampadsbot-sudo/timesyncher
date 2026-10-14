@@ -110,7 +110,13 @@ export function tabLocationHash(tab) {
 /** @param {TabId} tab @param {Location} location */
 export function writeTabToLocation(tab, location) {
   const nextHash = tabLocationHash(tab);
-  const url = `${location.pathname}${location.search}${nextHash}`;
+  const params = new URLSearchParams(
+    location.search.startsWith('?') ? location.search.slice(1) : location.search,
+  );
+  if (params.has('tab')) params.delete('tab');
+  const search = params.toString();
+  const nextSearch = search ? `?${search}` : '';
+  const url = `${location.pathname}${nextSearch}${nextHash}`;
   if (`${location.pathname}${location.search}${location.hash}` !== url) {
     history.replaceState(null, '', url);
   }

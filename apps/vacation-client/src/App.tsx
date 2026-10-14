@@ -74,11 +74,13 @@ export default function App() {
     if (tripState.status === 'error') {
       return (
         <div className="tsv-error" role="alert">
-          <h1>Preview load failed</h1>
+          <h1>Could not load this trip</h1>
           <p>{tripState.message}</p>
-          <p className="tsv-muted">
-            Example: <code>vacation-app-next.html?token=YOUR_PUBLIC_SLUG</code>
-          </p>
+          {import.meta.env.DEV ? (
+            <p className="tsv-muted">
+              Dev: open <code>vacation-app-next.html?token=YOUR_PUBLIC_SLUG</code>
+            </p>
+          ) : null}
         </div>
       );
     }

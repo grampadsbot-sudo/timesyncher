@@ -24,7 +24,7 @@ function initialTripState(): State {
     return {
       status: 'error',
       token: '',
-      message: 'Add ?token=<share-slug> to load a trip from the API.',
+      message: 'This link is missing trip information. Open the share link you received from your trip owner.',
     };
   }
   return { status: 'loading' };

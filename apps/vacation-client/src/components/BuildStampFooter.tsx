@@ -10,10 +10,16 @@ export function BuildStampFooter() {
       .then((body: { sha?: string; build?: string } | null) => {
         if (cancelled) return;
         const raw = body?.sha || body?.build || '';
-        setStamp(raw ? String(raw).slice(0, 7) : 'preview');
+        if (!raw) {
+          console.error('Build stamp missing from /api/version response');
+          setStamp('unstamped');
+          return;
+        }
+        setStamp(String(raw).slice(0, 7));
       })
-      .catch(() => {
-        if (!cancelled) setStamp('preview');
+      .catch((err) => {
+        console.error('Build stamp fetch failed', err);
+        if (!cancelled) setStamp('unstamped');
       });
     return () => {
       cancelled = true;
@@ -21,7 +27,7 @@ export function BuildStampFooter() {
   }, []);
 
   return (
-    <footer className="tsv-build-footer" data-build-stamp="1">
+    <footer className="tsv-build-footer no-print" data-build-stamp="1">
       {stamp}
     </footer>
   );

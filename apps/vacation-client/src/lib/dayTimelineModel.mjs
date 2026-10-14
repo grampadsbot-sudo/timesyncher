@@ -81,8 +81,11 @@ export function parseDurationMinutes(raw) {
 }
 
 export function parseClockToMinutes(clock) {
-  const s = text(clock).toLowerCase();
+  let s = text(clock).toLowerCase();
   if (!s) return null;
+  const rangeMatch = s.match(/^(.+?)\s*[-–—]\s*.+$/);
+  if (rangeMatch) s = text(rangeMatch[1]);
+  s = s.replace(/\./g, '');
   const match = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
   if (!match) return null;
   let hours = Number(match[1]);
@@ -258,9 +261,8 @@ export function itineraryNoteFor(place, trip, assignmentNotes) {
 }
 
 function endMinutes(entry) {
-  if (entry.startMin == null) return null;
-  const duration = entry.durationMin ?? 60;
-  return entry.startMin + duration;
+  if (entry.startMin == null || entry.durationMin == null) return null;
+  return entry.startMin + entry.durationMin;
 }
 
 function markConflicts(entries) {
@@ -269,6 +271,11 @@ function markConflicts(entries) {
     for (let j = i + 1; j < timed.length; j += 1) {
       const a = timed[i];
       const b = timed[j];
+      if (a.startMin === b.startMin) {
+        a.conflictWith = b.title;
+        b.conflictWith = a.title;
+        continue;
+      }
       const aEnd = endMinutes(a);
       const bEnd = endMinutes(b);
       if (aEnd == null || bEnd == null) continue;
@@ -501,7 +508,7 @@ function insertTravelRows(entries, trip) {
 export function buildDayTimeline(trip, day) {
   const dayId = String(day.id);
   const entries = [];
-  for (const row of trip.assignments?.[dayId] || []) {
+  for (const [rowIndex, row] of (trip.assignments?.[dayId] || []).entries()) {
     const place = resolvePlace(row, trip);
     if (!place) continue;
     const override = overrideFor(trip, place);
@@ -511,7 +518,7 @@ export function buildDayTimeline(trip, day) {
     const schedule = scheduleForDay(place, trip, dayId);
     entries.push({
       kind: 'thing',
-      id: `place-${place.id}`,
+      id: `place-${place.id}-${rowIndex}`,
       place,
       title: placeName(place),
       startMin: parseClockToMinutes(schedule.startTime),
@@ -607,9 +614,12 @@ export function timeRangeLabel(entry) {
   }
   const start = entry.startLabel || formatClockMinutes(entry.startMin);
   if (!start) return '';
-  if (entry.durationMin != null) {
-    const end = formatClockMinutes((entry.startMin ?? 0) + entry.durationMin);
+  if (entry.durationMin != null && entry.startMin != null) {
+    const end = formatClockMinutes(entry.startMin + entry.durationMin);
     return `${start} – ${end} · ${entry.durationMin} min`;
+  }
+  if (entry.durationMin != null) {
+    return `${start} · ${entry.durationMin} min`;
   }
   return start;
 }

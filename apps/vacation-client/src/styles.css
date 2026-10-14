@@ -627,6 +627,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  grid-column: 2;
 }
 
 .tsv-row-price {
@@ -634,6 +635,7 @@ body {
   font-weight: 900;
   white-space: nowrap;
   flex-shrink: 0;
+  grid-column: 3;
 }
 
 .tsv-row-desc {
@@ -644,6 +646,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  grid-column: -1;
 }
 
 .tsv-row-hotel-note {
@@ -1379,14 +1382,15 @@ button.tsv-timeline-link {
 }
 
 .tsv-budget-target-input {
-  width: 36px;
-  padding: 2px 4px;
+  display: inline-block;
+  min-width: 5ch;
+  padding: 2px 6px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
   text-align: center;
-  background: #fff;
+  background: #f8fafc;
   color: #0f172a;
 }
 
@@ -1435,8 +1439,7 @@ button.tsv-timeline-link {
 .tsv-budget-line-name {
   font: inherit;
   font-weight: 700;
-  color: #2563eb;
-  text-decoration: underline;
+  color: #0f172a;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1474,16 +1477,16 @@ button.tsv-timeline-link {
 html[data-ts-keepsake] body {
   height: auto;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 html[data-ts-keepsake] #root {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .tsv-keepsake-root {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   padding: 0 0 24px;
   background: #fff;
 }

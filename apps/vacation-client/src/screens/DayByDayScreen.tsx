@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { DayMap } from '../components/DayMap';
 import { DayTimeline } from '../components/DayTimeline';
 import {
@@ -16,6 +16,18 @@ type Props = {
   onOpen: (place: SharedPlace) => void;
 };
 
+function formatDayDate(iso: string) {
+  const trimmed = String(iso || '').trim();
+  if (!trimmed) return '';
+  const parsed = Date.parse(trimmed.includes('T') ? trimmed : `${trimmed}T12:00:00`);
+  if (!Number.isFinite(parsed)) return trimmed;
+  return new Date(parsed).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export function DayByDayScreen({ trip, onOpen }: Props) {
   const days = useMemo(() => sortedDays(trip), [trip]);
   const [dayIndex, setDayIndex] = useState(0);
@@ -28,6 +40,15 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
   }, [trip, activeDay]);
 
   const mapPlaces = useMemo(() => mapPlacesForTimeline(trip, entries), [trip, entries]);
+
+  const panelId = activeDay ? `tsv-day-panel-${activeDay.id}` : undefined;
+
+  const focusDay = useCallback((index: number) => {
+    setDayIndex(index);
+    if (panelId) {
+      requestAnimationFrame(() => document.getElementById(panelId)?.focus());
+    }
+  }, [panelId]);
 
   if (!days.length) {
     return (
@@ -47,29 +68,53 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         <p className="tsv-day-map-caption">
           Only things tagged for this day + Timeline appear on the map below.
         </p>
-        <div className="tsv-day-chip-row" role="tablist" aria-label="Trip days">
+        <div
+          className="tsv-day-chip-row"
+          role="tablist"
+          aria-label="Trip days"
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            const delta = event.key === 'ArrowRight' ? 1 : -1;
+            focusDay(shiftDayIndex(trip, safeIndex, delta));
+          }}
+        >
           {days.map((day, index) => {
             const label = dayChipLabel(day);
             const isActive = index === safeIndex;
+            const tabId = `tsv-day-tab-${day.id}`;
+            const dayPanelId = `tsv-day-panel-${day.id}`;
+            const formattedDate = day.date ? formatDayDate(day.date) : '';
             return (
               <button
                 key={String(day.id)}
+                id={tabId}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                aria-label={label}
+                aria-controls={dayPanelId}
+                aria-label={formattedDate ? `${label}, ${formattedDate}` : label}
                 className={`tsv-day-chip${isActive ? ' is-active' : ''}`}
                 onClick={() => setDayIndex(index)}
               >
                 {label}
-                {day.date ? <span className="tsv-day-chip-date">{day.date}</span> : null}
+                {formattedDate ? (
+                  <span className="tsv-day-chip-date">{formattedDate}</span>
+                ) : null}
               </button>
             );
           })}
         </div>
       </header>
 
-      <article className="tsv-day-card" data-ts-day-timeline="1">
+      <article
+        id={panelId}
+        className="tsv-day-card"
+        data-ts-day-timeline="1"
+        role="tabpanel"
+        aria-labelledby={`tsv-day-tab-${activeDay.id}`}
+        tabIndex={-1}
+      >
         <div className="tsv-day-card-head">
           <div className="tsv-day-number-badge" aria-hidden="true">
             {activeDay.day_number ?? ''}

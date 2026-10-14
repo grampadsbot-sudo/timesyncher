@@ -1,6 +1,14 @@
 /** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
 
-import { LIST_TAB_IDS, placeName, placesForCategoryTab, tabCategoryKey } from './listTabModel.mjs';
+import {
+  LIST_TAB_IDS,
+  formatUsd,
+  placeName,
+  placesForCategoryTab,
+  tabCategoryKey,
+} from './listTabModel.mjs';
+
+export { formatUsd };
 import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
 /** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
 export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
@@ -68,6 +76,7 @@ function priceText(place, trip) {
   const row = haFields(place, override);
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return '';
+  if (typeof raw === 'string' && !text(raw)) return '';
   if (typeof raw === 'number' && Number.isFinite(raw)) return `$${raw}`;
   return text(raw);
 }
@@ -267,21 +276,14 @@ export function bucketIcon(bucket) {
   return '🎭';
 }
 
-export function formatUsd(amount, currency = 'USD') {
-  const code = text(currency).toUpperCase();
-  const n = Number(amount);
-  if (!Number.isFinite(n)) return '—';
-  const body = n.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  if (code === 'USD' || code === '') return `$${body}`;
-  return `${code} ${body}`;
-}
-
-export function varianceLabel(planned, target) {
+export function varianceLabel(planned, target, currency = 'USD') {
   if (target === null) return null;
   const delta = planned - target;
   if (delta === 0) return null;
   const abs = Math.abs(delta);
-  return delta < 0 ? `Under by ${formatUsd(abs)}` : `Over by ${formatUsd(abs)}`;
+  return delta < 0
+    ? `Under by ${formatUsd(abs, currency)}`
+    : `Over by ${formatUsd(abs, currency)}`;
 }
 
 export function buildBudgetModel(trip) {
@@ -313,7 +315,7 @@ export function buildBudgetModel(trip) {
       planned,
       timelinePlanned,
       target,
-      variance: varianceLabel(planned, target),
+      variance: varianceLabel(planned, target, currency),
       omit,
     };
   }).filter((bucket) => !bucket.omit);
@@ -331,7 +333,7 @@ export function buildBudgetModel(trip) {
     tripPlanned,
     tripTimelinePlanned,
     tripTarget,
-    tripVariance: varianceLabel(tripPlanned, tripTarget),
+    tripVariance: varianceLabel(tripPlanned, tripTarget, currency),
     isEmpty: rows.length === 0,
   };
 }

@@ -6,18 +6,38 @@ export function shareTokenFromLocation(): string {
   const fromQuery = params.get('token') || params.get('slug') || '';
   if (fromQuery.trim()) return fromQuery.trim();
   const match = window.location.pathname.match(/\/shared\/([^/]+)/);
-  return match ? decodeURIComponent(match[1]) : '';
+  if (!match) return '';
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return '';
+  }
 }
+
+const TRIP_LOAD_TIMEOUT_MS = 30_000;
 
 export async function loadSharedTrip(token: string): Promise<SharedTripPayload> {
   const slug = token.replace(/^\/+|\/+$/g, '');
   if (!slug) {
-    throw new Error('Missing share token. Open vacation-app-next.html?token=<publicSlug>');
+    throw new Error('This share link is missing a trip token.');
   }
-  const response = await fetch(`/api/shared/${encodeURIComponent(slug)}/`, {
-    credentials: 'include',
-    headers: { accept: 'application/json' },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), TRIP_LOAD_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`/api/shared/${encodeURIComponent(slug)}/`, {
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Trip load timed out. Check your connection and try again.');
+    }
+    throw err;
+  } finally {
+    window.clearTimeout(timeout);
+  }
   if (!response.ok) {
     let message = `Trip load failed (${response.status})`;
     try {
@@ -28,7 +48,12 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
     }
     throw new Error(message);
   }
-  const data = (await response.json()) as SharedTripPayload;
+  let data: SharedTripPayload;
+  try {
+    data = (await response.json()) as SharedTripPayload;
+  } catch {
+    throw new Error('Trip data could not be read. Try again in a moment.');
+  }
   if (!data || !Array.isArray(data.places)) {
     throw new Error('Invalid trip payload from API');
   }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
@@ -22,6 +22,7 @@ const defaultMarkerIcon = L.icon({
 type Props = {
   places: SharedPlace[];
   trip?: SharedTripPayload;
+  hideHeading?: boolean;
 };
 
 function tripFallbackCenter(trip?: SharedTripPayload): [number, number] {
@@ -71,7 +72,7 @@ function publishTripMapHarness(map: L.Map) {
   };
 }
 
-function FitBounds({ places }: { places: SharedPlace[] }) {
+function FitBounds({ boundsKey, places }: { boundsKey: string; places: SharedPlace[] }) {
   const map = useMap();
   useEffect(() => {
     if (places.length < 2) return;
@@ -80,7 +81,7 @@ function FitBounds({ places }: { places: SharedPlace[] }) {
     );
     map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 });
     publishTripMapHarness(map);
-  }, [map, places]);
+  }, [map, boundsKey, places]);
   return null;
 }
 
@@ -117,15 +118,28 @@ declare global {
   }
 }
 
-export function DayMap({ places, trip }: Props) {
-  const withCoords = markersWithCoords(places, trip);
+export function DayMap({ places, trip, hideHeading = false }: Props) {
+  const withCoords = useMemo(() => markersWithCoords(places, trip), [places, trip]);
+  const boundsKey = useMemo(
+    () => withCoords.map((p) => `${p.id}:${p.lat},${p.lng}`).join('|'),
+    [withCoords],
+  );
+
+  if (!withCoords.length) {
+    return (
+      <section className="tsv-day-map tsv-day-map--empty" data-ts-day-map="1">
+        <p className="tsv-muted">Map appears when places include coordinates.</p>
+      </section>
+    );
+  }
+
   const centerPlace = withCoords[0];
   const center: [number, number] = centerPlace
     ? [Number(centerPlace.lat), Number(centerPlace.lng)]
     : tripFallbackCenter(trip);
   return (
     <section className="tsv-day-map" data-ts-day-map="1">
-      <h2 className="tsv-subhead">Day map</h2>
+      {hideHeading ? null : <h2 className="tsv-subhead">Day map</h2>}
       <MapContainer
         center={center}
         zoom={withCoords.length ? 11 : 12}
@@ -137,7 +151,7 @@ export function DayMap({ places, trip }: Props) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {withCoords.length > 1 ? <FitBounds places={withCoords} /> : null}
+        {withCoords.length > 1 ? <FitBounds boundsKey={boundsKey} places={withCoords} /> : null}
         {withCoords.map((place) => (
           <Marker
             key={String(place.id)}
