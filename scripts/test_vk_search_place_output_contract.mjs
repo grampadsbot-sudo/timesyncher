@@ -296,17 +296,8 @@ assert.throws(
 const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
-const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
-assert.deepEqual(
-  row608Violations,
-  [],
-  `row 608 Midtown list hotel must pass VK contract: ${row608Violations.join(', ')}`,
-);
-assert.equal(
-  vkContractText(gateBPlaces[608].externalId),
-  'Midtown sample hotel',
-  'row 608 must not borrow The Manhattan Club externalId',
-);
+assert.deepEqual(searchPlaceOutputViolations(gateBPlaces[608]), [], 'row 608 must pass VK contract');
+assert.equal(vkContractText(gateBPlaces[608].externalId), 'Midtown sample hotel', 'row 608 externalId');
 
 const contractGateBPlaces = gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)
   .map((row) => gateBPlaces[row.id]);
