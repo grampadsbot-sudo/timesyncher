@@ -1,4 +1,5 @@
 import { enrichSearchPlace } from './trip-thing-enrichment.mjs';
+import { reviewThemesDistinctCount, xaiThemesReviewPath } from './xai-grok-place-ratings-helpers.mjs';
 
 const SEARCH_PRODUCT_CATEGORIES = new Set([
   'hotel',
@@ -152,9 +153,13 @@ function numericAverageOnPlace(place = {}) {
 
 function ratingCountOnPlace(place = {}) {
   const record = sourceRecordOnPlace(place);
-  const raw = place.ratingCount ?? record.ratingCount;
+  const raw = place.ratingCount
+    ?? record.ratingCount
+    ?? record.googleReviewCount
+    ?? record.yelpReviewCount
+    ?? record.thirdPartyReviewCount;
   if (raw === null || raw === undefined || raw === '') return null;
-  const parsed = Number(raw);
+  const parsed = Number(String(raw).replace(/,/g, ''));
   if (!Number.isFinite(parsed) || parsed < 0) return null;
   return Math.floor(parsed);
 }
@@ -186,11 +191,29 @@ function requiredDistinctReviewCount(place = {}) {
   return 4;
 }
 
-/** Stored reviews count only when average, count, and mix rules (v1.5.0) are satisfied. */
+function writtenFromSetReviewsComplete(place = {}) {
+  for (let index = 1; index <= 4; index += 1) {
+    if (!reviewBodyIsPresent(place, index)) return false;
+    if (reviewField(place, index, 'Source') !== 'written from the set') return false;
+  }
+  return true;
+}
+
+function xaiAverageCountThemesPath(place = {}) {
+  const record = sourceRecordOnPlace(place);
+  if (!xaiThemesReviewPath(record)) return false;
+  if (reviewThemesDistinctCount(record) < 4) return false;
+  return writtenFromSetReviewsComplete(place);
+}
+
+/** Stored reviews when average+count+themes (xAI) or legacy mix rules are satisfied. */
 function reviewAggregateAllowsStoredReviews(place = {}, distinctBodyPresentCount = 0) {
   if (!numericAverageOnPlace(place)) return false;
   const ratingCount = ratingCountOnPlace(place);
   if (ratingCount == null) return false;
+  if (xaiAverageCountThemesPath(place)) {
+    return distinctBodyPresentCount >= requiredDistinctReviewCount(place);
+  }
   if (ratingCount <= 4) {
     return distinctBodyPresentCount === ratingCount && distinctBodyPresentCount >= 1;
   }

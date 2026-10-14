@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import './test_xai_grok_place_ratings.mjs';
 
 import {
   assertCrossPlaceReviewBodiesDistinct,

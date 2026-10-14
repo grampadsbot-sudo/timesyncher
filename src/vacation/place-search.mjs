@@ -11,6 +11,7 @@ import {
   preferBraveUrlDuplicates,
 } from './brave-place-query.mjs';
 import { finalizeSearchPlaces } from './search-place-output.mjs';
+import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -619,7 +620,12 @@ export async function searchPlaces({
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })
     : { places: [], rejections: [] };
   const notes = noteRelevance.places;
-  places = finalizeSearchPlaces(places);
+  const grokRatings = await enrichSearchPlacesWithGrokRatings(places, {
+    env,
+    fetchImpl,
+    destination: dest || center?.label || locationText || '',
+  });
+  places = finalizeSearchPlaces(grokRatings.places);
   return {
     destination: dest || center?.label || locationText || '',
     center,

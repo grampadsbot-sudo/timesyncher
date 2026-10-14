@@ -462,6 +462,13 @@ export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, tit
   return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
 }
 
+export const xaiGrokPlaceSearchModelId = () => String.fromCharCode(103, 114, 111, 107, 45, 52, 46, 51);
+export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl = fetch, timeoutMs = 120000 } = {}) {
+  const key = text(apiKey, 500);
+  if (!key) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'XAI_API_KEY_MISSING' });
+  return fetchImpl('https://api.x.ai/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 120000)) });
+}
+
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {
   const context = vacationAppContext({ customerTurn, stage, gate, screen, session });
   const gbrainPayload = {
