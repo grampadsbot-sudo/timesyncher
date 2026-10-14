@@ -22,6 +22,7 @@ import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-lo
 import { patchLiveProductDetailBundle } from '../src/vacation/trek-thing-detail-patches.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import './test_nyc_craig_kim_vk_snapshot_rows_601_611.mjs';
 import {
   buildNycCraigKimDaybydayTripPositiveV1,
   NYC_POSITIVE_FIXTURE_VERSION,
