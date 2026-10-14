@@ -229,7 +229,7 @@ JUDGE_SCHEMA = {"type": "object", "properties": {"score": {"type": "integer", "m
                 "required": ["score", "missing", "generic"]}
 # Craig 2026-10-14: the managing dr does the qualitative check.
 # Keep the category rubric and score/generic thresholds; no Claude usage gate.
-from managing_dr_judge import ManagingDrJudge, ROOT as JUDGE_CACHE
+from managing_dr_judge import ManagingDrJudge, ManagingDrJudgmentPending, ROOT as JUDGE_CACHE
 JUDGE_CAP = 60
 
 def desc_words(t): return len(re.findall(r"\S+", str(t or "")))
@@ -532,6 +532,8 @@ def check_dir(allow, reference, cand_dir, workdir, files=None, staging_dir=None,
         for f, r in out.items():
             rr = structure_check(f, (regions or {}).get(f), manifest, staging, judge)
             r.setdefault("reasons", []).extend(rr); r["ok"] = not r["reasons"]; r["band"] = "PASS" if r["ok"] else "FAIL"
+    if judge is not None and getattr(judge, "skipped", 0):
+        raise ManagingDrJudgmentPending("%d checks await the managing dr; requests: %s/pending (no coder round)" % (judge.skipped, judge.root))
     return out
 
 if __name__ == "__main__":
@@ -545,7 +547,11 @@ if __name__ == "__main__":
     allow = json.load(open(a.allow))[a.issue]
     out = a.out or os.path.join("/tmp", "v6-" + os.path.basename(a.candidates.rstrip("/"))); os.makedirs(out, exist_ok=True)
     judge = DescJudge(offline=a.judge_offline) if allow.get("mode") == "structure" or any(DETAIL_RE.match(x) for x in os.listdir(a.baselines)) else None
-    res = check_dir(allow, a.baselines, a.candidates, out, staging_dir=a.staging, judge=judge)
+    try:
+        res = check_dir(allow, a.baselines, a.candidates, out, staging_dir=a.staging, judge=judge)
+    except ManagingDrJudgmentPending as e:
+        print(json.dumps({"overall":"NO_VERDICT", "no_verdict":True, "reason":str(e), "judge":{"owner":"managing-dr", "not_judged":judge.skipped, "pending":str(judge.root / "pending")}}))
+        sys.exit(2)
     flags = scan_diff(a.repo, a.diff_range) if a.diff_range and a.repo else []
     bad = [f for f, r in res.items() if not r["ok"]]
     jstats = {"judge_calls": judge.calls, "cache_hits": judge.hits, "not_judged": judge.skipped, "usage_gate": judge.gate} if judge else None

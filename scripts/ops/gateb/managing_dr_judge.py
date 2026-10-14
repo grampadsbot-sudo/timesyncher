@@ -28,6 +28,10 @@ def atomic_json(path, value):
             os.unlink(tmp)
 
 
+class ManagingDrJudgmentPending(RuntimeError):
+    """No qualitative verdict yet; a harness pause, never a coder failure."""
+
+
 class ManagingDrJudge:
     def __init__(self, cache_path=ROOT, cap=60, offline=False, usage=True):
         # cache_path names a receipt directory, never the old Haiku cache.

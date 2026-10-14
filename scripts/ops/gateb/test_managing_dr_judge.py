@@ -67,5 +67,15 @@ class Tests(unittest.TestCase):
         self.assertIsNone(j.judge(*self.args))
         self.assertFalse((self.j.root / "pending").exists())
 
+    def test_gate_missing_judgment_is_harness_no_verdict(self):
+        import restore_check as rc
+        from managing_dr_judge import ManagingDrJudgmentPending
+        def check(*args):
+            self.j.judge(*self.args)
+            return ["description quality not judged this run"]
+        with patch.object(rc, "check_screen", return_value={"ok":True,"reasons":[]}), patch.object(rc, "structure_check", side_effect=check):
+            with self.assertRaises(ManagingDrJudgmentPending):
+                rc.check_dir({"mode":"structure"}, str(self.capture), str(self.capture), str(self.root), files=["hotels-390.png"], judge=self.j)
+
 if __name__ == "__main__":
     unittest.main()

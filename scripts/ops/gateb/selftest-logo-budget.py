@@ -313,9 +313,10 @@ brand = car_rubrics("Hertz Economy")
 case("T15b branded car keeps the rental-company requirement", brand == [None], str(brand)[:160])
 
 # 20261014-0530: the judge cache key includes an overridden rubric, so a default-rubric verdict is never served to the opaque-car rubric
-jc = rc.DescJudge(cache_path="/tmp/selftest-rubric-key-0530.json", offline=True, usage=False)
+jc = rc.DescJudge(cache_path=os.path.join(OUT,"rubric-dr-receipts"), offline=True, usage=False)
 txt_k = "Economy car with hours on the desk sign, flat daily price and pickup at the airport counter, all stated in plain words here"
-jc.cache[jc.key("car", txt_k, None)] = {"score": 5, "missing": [], "generic": False}
+rq = jc.request("car", "n", None, txt_k)
+atomic_json(os.path.join(str(jc.root), "verdicts", rq["key"]+".json"), dict(rq, reviewer="gpt", reviewed_at=datetime.datetime.now(datetime.timezone.utc).isoformat(), reason="Synthetic rubric unit-test fixture", verdict={"score":5,"missing":[],"generic":False}))
 case("T15c default-rubric cache hit still served", jc.judge("car", "n", None, txt_k) is not None)
 case("T15d overridden rubric is not served the default-rubric verdict", jc.judge("car", "n", None, txt_k, rubric="X") is None)
 
