@@ -14,6 +14,11 @@ const PR336_SEARCH_SNAPSHOT = JSON.parse(
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
+/** Gate B VK search snapshot is authoritative for copy on these row ids (see TSV #376). */
+export const VK_SEARCH_SNAPSHOT_COPY_ROW_IDS = Object.freeze(
+  Array.from({ length: 11 }, (_, index) => 601 + index),
+);
+const VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET = new Set(VK_SEARCH_SNAPSHOT_COPY_ROW_IDS);
 /** Live TREK reads one-line copy via ha(place).summary → rr(place). */
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
@@ -84,9 +89,23 @@ export function expectedSummariesOnDay(dayNumber) {
   return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || SUMMARIES[id] || '');
 }
 
+function applyVkSearchSnapshotCopyFields(search, place, override) {
+  const title = text(search.title);
+  if (title) place.name = title;
+  if (search.description) {
+    place.description = search.description;
+    override.longDetails = search.description;
+  }
+  if (search.summary) override.summary = search.summary;
+}
+
 function applyPr336SearchFields(row, place, override) {
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (!search) return;
+  if (VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
+    applyVkSearchSnapshotCopyFields(search, place, override);
+    return;
+  }
   const record = search.sourceRecord && typeof search.sourceRecord === 'object'
     ? search.sourceRecord
     : {};
@@ -324,12 +343,13 @@ function buildPayload() {
   }
   const reservations = rows.map((row) => {
     const day = days.find((d) => d.day_number === row.day);
+    const place = places.find((p) => p.id === row.id);
     return {
       id: 800 + row.id,
       trip_id: 99,
       day_id: day.id,
       place_id: row.id,
-      title: row.name,
+      title: place?.name || row.name,
       status: 'candidate',
       type: row.cat === 'flight' ? 'flight' : row.cat === 'hotel' ? 'hotel' : 'activity',
       start_time: row.time,
