@@ -1,0 +1,93 @@
+/** Helpers for scripts/test_keepsake_style2.mjs. Assertions stay in the test file. */
+
+export function mockRes() {
+  const res = { statusCode: 0, headers: {}, body: '' };
+  res.setHeader = (key, value) => {
+    res.headers[String(key).toLowerCase()] = value;
+  };
+  res.end = (body) => {
+    res.body = body || '';
+  };
+  return res;
+}
+
+export function style2AeFixture(STYLE2_USES_ZU) {
+  const aeFixture = [
+  STYLE2_USES_ZU,
+  'const zt=Sr(Ta.filter(nr=>!bn(nr)&&!Mi(nr)&&ha(nr).story)),ua=G.map(([nr,Oo])=>`<div class="summary-stat"><strong>${Oo.length}</strong>${an(nr)}</div>`).join(""),Rn=(nr,Oo,_i=!1)=>`<section class="report-section"><h2>${an(nr)}${_i?" (continued)":""}</h2><ul class="logo-list">${Oo.map(w).join("")}</ul></section>`,Pn=[];let Zn=[],sr=0;const Xr=35,zr=42,Mo=()=>{Pn.push(Zn.join("")),Zn=[],sr=0};G.forEach(([nr,Oo])=>{let _i=[...Oo],Eo=!1;for(;_i.length;){const di=Pn.length===0?Xr:zr,Xi=3;sr+Xi+1>di&&Zn.length&&Mo();const go=Math.max(1,di-sr-Xi),fr=_i.slice(0,go);Zn.push(Rn(nr,fr,Eo)),sr+=Xi+fr.length,_i=_i.slice(fr.length),Eo=!0,_i.length&&Mo()}}),(Zn.length||!Pn.length)&&Mo();const[Is,...Hl]=Pn,pc=Pr.summary?`<p class="muted">Trip summary</p><div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(nr=>`<p>${an(nr)}</p>`).join("")}</div>`:"",gr=Pr.eventSummary?`<p class="keepsake-summary">You experienced ${Re.size} ${Re.size===1?"event":"events"} this vacation.</p>`:"",js=Pr.stories&&zt.length?`<section class="page keepsake-report keepsake-list-page">${Wi}<h2>Saved stories</h2><div class="recap-grid">${zt.map(fs).join("")}</div></section>`:"",zl=Qa.map(nr=>`<div class="keepsake-day">${op(nr,{includeMap:so(nr),brandHtml:Wi})}</div>`).join(""),wn=`<section class="page keepsake-report">${Wi}<h1>${an(la.title||"Vacation")}</h1>${pc}${gr}<div class="summary-grid">${ua}</div>${Is}</section>`,Qi=Hl.map(nr=>`<section class="page keepsake-report keepsake-list-page">${Wi}${nr}</section>`).join("");return`${wn}${Qi}${js}${zl}`}',
+  'Hc=G=>`/api/pdf/qr.svg?data=${encodeURIComponent(So(G))}`',
+  'zr=fo(zt).length?`<div class="style2-thing-media">${fo(zt).map(Ba).join("")}</div>`:""',
+  'w=G=>{const Re=_l(G);return`<li>${Re?`<img class="tiny-logo" src="${an(Re)}" />`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px">${an(Pc(G))}</span>`}<span>${an(Bs(mr(G)))}</span></li>`}',
+  'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`',
+  '<div class="timeline-title">${an(Bs(Zn.title))}</div>',
+  'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[',
+  'onMouseLeave:Hl,style:{position:"relative",width:zt?42:58,minWidth:zt?42:58}',
+  'js&&n.jsxs("div",{style:{position:"absolute",zIndex:9e3,left:zt?-8:0,bottom:zt?48:66,width:248,background:"white",border:"1px solid #d1d5db",borderRadius:14,boxShadow:"0 18px 45px rgba(15,23,42,0.22)",padding:10},children:[',
+  '${Rn}${Pn?`<div class="reviews">${Pn}</div>`:""}</article>`},ws=',
+  ',[/guided walking|audio history/i,[1.5,2.5]]]',
+  'Mn=G=>{const Re=String(G||"").toLowerCase();return Re.includes("flight")?"flight":Re.includes("car")||Re.includes("rental")?"car":Re.includes("hotel")?"hotel":',
+  '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re))),ci=ot.filter(G=>Oc.some(Re=>or(Re).includes(G))),Qn=Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re))),ki=Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G)))',
+  'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)',
+  '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}',
+  'It=G=>Mn(ha(G).category??Fn(G))',
+  'Qn.map(G=>Oe(G)),Qn.length===0',
+  'Gn.map(G=>Oe(G)),Gn.length===0',
+  'ki.map(G=>Oe(G))',
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+  'height:dn?900:300,marginBottom:12',
+  'ha=G=>le[Qt(G)]||{},Sn=',
+  'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
+  'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})',
+  'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"',
+  'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)',
+  'Co=G=>ha(G).longDetails??Fl(G)',
+  'ua=zi(G)?ha(G).happyHourDetails:""',
+  'Zn=zi(zt)?ha(zt).happyHourDetails:""',
+  'h=c.get("printMode")||(i.includes("printMode=daily")?"daily":null)',
+  'g=c.get("pdfReport")||((Bl=i.match(/[?&]pdfReport=([^&]+)/))==null?void 0:Bl[1])||null',
+  'n.jsx(tc,{path:"/shared/:token",element:n.jsx(wse,{})})',
+  'function _se({title:e,html:t,styles:i}){return I.useEffect(()=>{const c=()=>{const h=Array.from(document.querySelectorAll(".page")),p=h.length,g=!!document.querySelector(".print-brand");h.forEach((r,x)=>{if(!r.querySelector(".pdf-page-counter")){const z=document.createElement("div");z.className="pdf-page-counter",z.textContent=`Page ${x+1} of ${p}`,r.appendChild(z)}if(x===p-1&&g&&!r.querySelector(".pdf-final-logo")){const z=document.createElement("img");z.className="pdf-final-logo",z.src="/icons/timesyncher-icon-black-transparent.png",z.alt="TimeSyncher",r.appendChild(z)}})};document.open(),document.write(`<!doctype html><html><head><title>${e.replace(/[&<>\\"]/g,"")}</title>${i}</head><body>${t}<script>(${c.toString()})();<\\/script></body></html>`),document.close()},[e,t,i]),n.jsx("div",{style:{padding:20,fontFamily:"system-ui, sans-serif"},children:"Preparing PDF…"})}',
+  'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}',
+  '<div class="daily-grid">${js}<main class="daily-details">',
+  'js=`<aside class="daily-left">',
+  'return`<article class="thing daily-thing"><div class="thing-head">',
+  'Ae=()=>{const G=de(!0).filter(([,nr])=>nr.length)',
+  'Rn=Ln.filter(Zn=>ua.includes(Number(Zn.place_id??Zn.placeId)));return Fo([...Rn,...Hs(G),...Hs(ha(G))].map((Zn,sr)=>rp(Zn,sr,Re,zt)).filter(Boolean))}',
+  'nd=G=>Fo(li(G))',
+  'So=G=>{const Re=String(G||"").trim();if(!Re)return"";try{const zt="https://travel.timesyncher.com",ua=new URL(Re,zt);return["192.168.1.15:3010","100.66.47.62:3010","localhost:3010","127.0.0.1:3010"].includes(ua.host)?`${zt}${ua.pathname}${ua.search}${ua.hash}`:ua.toString()}catch{return Re}}',
+  '`<figure class="print-media-card"><img src="${an(So(G.thumbnailUrl||G.url))}" alt="${an(Re)}" /><figcaption>${an(Re)}</figcaption></figure>`',
+  'fs=G=>{const Re=_l(G),zt=[En(G),bi(G),Zr(G)].filter(Boolean).map(an).join(" · "),ua=[rr(G),Co(G),zi(G)?ha(G).happyHourDetails:"",ha(G).story].filter(Boolean).map(Rn=>`<p>${an(Rn)}</p>`).join("");return`<article class="thing"><div class="thing-head">${Re?`<img class="thing-logo" src="${an(Re)}" />`:`<span class="thing-emoji">${an(Pc(G))}</span>`}<div><h3>${an(Bs(mr(G)))}</h3>${zt?`<div class="thing-meta">${zt}</div>`:""}</div></div>${ua||`<p>${an(Fl(G))}</p>`}</article>`}',
+  'Kl=G=>String((G==null?void 0:G.url)||(G==null?void 0:G.mediaUrl)||(G==null?void 0:G.fileUrl)||(G==null?void 0:G.src)||(G==null?void 0:G.href)||(G==null?void 0:G.videoUrl)||(G==null?void 0:G.photoUrl)||"").trim()',
+  'Hs=G=>[..._d(G==null?void 0:G.media),..._d(G==null?void 0:G.photos)',
+  '.print-media-card{margin:0;width:92px;text-align:center;break-inside:avoid}.print-media-card>img{width:92px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #e5e7eb;background:#f8fafc}',
+  '.keepsake-list-page{break-before:page;page-break-before:always}',
+  '.logo-list{columns:2;column-gap:18px;margin:0 0 16px;padding:0;list-style:none}',
+  '.style2-page h1{font-size:20px;margin-bottom:10px}.style2-day-opening{text-align:center;margin:0 auto 16px;max-width:650px}',
+  '.page{padding:9mm}',
+  'Pn=Rn.slice(0,2),Zn=[];for(let zr=2;zr<Rn.length;zr+=3)Zn.push(Rn.slice(zr,zr+3));const sr=`<section class="page daily-page style2-page" data-print-ready="style2">${cr}<h1>${an(la.title||"Trip")}</h1>${Su(G,Re,Rn.map(zr=>zr.item))}<main class="style2-details">${Pn.map(zr=>wd(zr,G)).join("")}</main></section>`,Xr=Zn.map((zr,Mo)=>`<section class="page daily-page style2-page" data-print-ready="style2">${cr}<h1>${an(la.title||"Trip")}</h1><div class="style2-continued">Day ${an(G.day_number)} continued${G.date?` · ${an(new Date(G.date+"T00:00:00Z").toLocaleDateString(z,{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}))}`:""}</div><main class="style2-details">${zr.map(Is=>wd(Is,G)).join("")}</main></section>`).join("");return sr+Xr}',
+  'zl=[];for(let _i=0;_i<Zn.length;_i+=3)zl.push(Zn.slice(_i,_i+3));zl.length||zl.push([]);const wn=Re.includeMap!==!1,Qi=zl.length+(wn?1:0),nr=zl.map((_i,Eo)=>`<section class="page daily-page" data-print-ready="daily">${zt}<h1>${an(la.title||"Trip")}</h1><div class="muted page-count">Daily printout page ${Eo+1} of ${Qi}</div><div class="daily-grid">${js}<main class="daily-details">${_i.map($r).join("")}</main></div></section>`).join(""),Oo=`<section class="page daily-page daily-map-page" data-print-ready="daily">${zt}<h1>${an(la.title||"Trip")}</h1><div class="muted page-count">Daily printout page ${Qi} of ${Qi}</div><h2>${an(G.title||`Day ${G.day_number}`)} map</h2><p class="map-caption">Actual itinerary map for Day ${an(G.day_number)}, bounded to the mapped Day-by-Day stops.</p>${pc}<div class="map-box">${Hl}</div></section>`;return nr+(wn?Oo:"")}',
+  'zt=Re.brandHtml??cr',
+  'Pn=ua.length?`<div class="style2-day-media">${ua.map(Ba).join("")}</div>`:""',
+  '.style2-page{height:257mm;min-height:257mm;overflow:hidden}',
+  'Hl=xa(Is,720,850)',
+  '.daily-page{height:257mm;min-height:257mm;overflow:hidden}.daily-grid{grid-template-columns:36% minmax(0,1fr);gap:12px}.daily-left{position:static}.map-box{height:205px}.daily-details{grid-template-columns:1fr;gap:8px}',
+  '.style2-thing{position:relative;margin:0 0 10px;padding:12px 124px 12px 12px}.style2-thing h3{font-size:15px}.style2-thing-meta{position:absolute;top:12px;right:12px;width:100px;text-align:right;font-size:9.5px;line-height:1.35;font-weight:900;color:#475569}',
+  '.style2-thing{padding-right:118px}',
+  'return`<article class="thing style2-thing"><div class="style2-thing-meta">${an(Mo)}</div><div class="thing-head">',
+  'document.title=`TimeSyncher Vacation — ${P.trip.title.replace(/^TimeSyncher Vacation\\s*[—-]\\s*/i,"")}`',
+  'zt=G==="keepsake"?`${la.title||"TimeSyncher Vacation"} Summary`:G==="keepsake-style-2"?`${la.title||"TimeSyncher Vacation"} Keepsake Style 2`:`TimeSyncher Vacation ${G}`',
+  'cr=\'<div class="print-brand"><span>TimeSyncher</span><img class="ts-logo" src="/icons/timesyncher-icon-black-transparent.png" alt="TimeSyncher" /><span>Vacation</span></div>\',Wi=Pr.logo?cr:""',
+  'zu=()=>{const G=Pr.summary?`<div class="keepsake-summary">${E().split(/\\n\\s*\\n/).map(zt=>`<p>${an(zt)}</p>`).join("")}</div>`:"";return`<section class="page keepsake-report style2-cover">${Wi}<h1>${an(la.title||"Vacation")} Keepsake</h1><p class="muted">Style two</p>${G}</section>`+Qa.map(zt=>Mc(zt)).join("")}',
+  '.pdf-page-counter{position:absolute;right:9mm;bottom:5mm;font-size:8px;color:#64748b;font-weight:600}',
+  '.print-brand{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}',
+  '.pdf-final-logo{position:absolute;left:50%;bottom:5mm;transform:translateX(-50%);width:24px;height:24px;object-fit:contain}',
+  '@page{size:Letter;margin:0}',
+  '.daily-page{break-after:page;page-break-after:always;min-height:100vh}',
+  'os=(G,Re)=>String((G==null?void 0:G.thumbnailUrl)||(G==null?void 0:G.thumbnail_url)||(G==null?void 0:G.thumbUrl)||(G==null?void 0:G.posterUrl)||(G==null?void 0:G.poster_url)||(G==null?void 0:G.previewUrl)||(G==null?void 0:G.preview_url)||(G==null?void 0:G.imageUrl)||(G==null?void 0:G.image_url)||Re||"").trim()',
+  'return{id:Pn,kind:ms(G),url:Rn,thumbnailUrl:os(G,Rn),caption:Zn',
+  'void 0',
+  '.thing{break-inside:avoid;page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:0 0 10px}',
+  '.style2-details{display:grid;grid-template-columns:1fr;gap:10px}',
+].join('\n');
+  return aeFixture;
+}
