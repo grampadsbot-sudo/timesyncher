@@ -124,7 +124,6 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                       <div className="tsv-review-stars">{review.rating} ★</div>
                     ) : null}
                     <p>{review.text}</p>
-                    {review.source && !model.reviewFootnote ? <footer>{review.source}</footer> : null}
                   </li>
                 ))}
               </ul>

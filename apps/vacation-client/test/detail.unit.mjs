@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import { finalizeServedSharedTripPayload } from '../../../src/vacation/shared-trip-served-page.mjs';
 import {
+  REPRESENTATIVE_REVIEWS_FOOTNOTE,
   buildDetailViewModel,
   detailCoordinates,
   detailFieldRows,
@@ -32,6 +33,11 @@ assert.ok(
   'pure field probe includes coordinates',
 );
 assert.equal(restaurantModel.reviews.length, 4);
+assert.ok(
+  restaurantModel.reviews.every((review) => review.source),
+  'review sources remain on the detail model for legacy enriched rows',
+);
+assert.equal(restaurantModel.reviewFootnote, '');
 assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6 \(other ratings\)/i);
 assert.match(restaurantModel.headerLabel, /Restaurant · Brave/i);
 assert.ok(wordCount(restaurantModel.summary) >= 30);
@@ -80,6 +86,25 @@ assert.equal(
 const bar = enrichedTrip.places.find((place) => /Copper Lantern/i.test(place.name || ''));
 const barModel = buildDetailViewModel(bar, enrichedTrip);
 assert.ok(barModel.reviews.some((review) => /Composite of 120 Google\/Yelp reviews/i.test(review.compositeLabel || '')));
+
+const xaiReviewBody =
+  'Representative review themes mention fresh ingredients, attentive staff, and a lively room even when the waitlist runs long on weekend nights downtown.';
+const xaiTrip = {
+  places: [{ id: 3, name: 'xAI Place', category_name: 'Restaurant', lat: 40.73, lng: -74.0 }],
+  thingOverrides: {
+    'place:3': {
+      category: 'restaurant',
+      xaiRatingsFetched: true,
+      review1: xaiReviewBody,
+      review1Source: 'TripAdvisor',
+      review1Rating: '4.6',
+    },
+  },
+};
+const xaiModel = buildDetailViewModel(xaiTrip.places[0], xaiTrip);
+assert.equal(xaiModel.reviews.length, 1);
+assert.equal(xaiModel.reviews[0].source, 'TripAdvisor');
+assert.equal(xaiModel.reviewFootnote, REPRESENTATIVE_REVIEWS_FOOTNOTE);
 
 const sparseTrip = {
   places: [{ id: 1, name: 'Sparse Place', category_name: 'Restaurant', lat: 40.73, lng: -74.0 }],
