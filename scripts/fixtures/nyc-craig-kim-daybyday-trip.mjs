@@ -87,6 +87,9 @@ export function expectedSummariesOnDay(dayNumber) {
 function applyPr336SearchFields(row, place, override) {
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (!search) return;
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
   if (search.description) {
     place.description = search.description;
     override.longDetails = search.description;
@@ -104,6 +107,31 @@ function applyPr336SearchFields(row, place, override) {
   if (search.address && text(search.address)) {
     place.address = search.address;
     override.address = search.address;
+  }
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'ratingCount',
+    'ratingMix',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Source', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
   }
   if (row.id === 609) {
     override.rentalCompany = 'Priceline opaque';

@@ -9,9 +9,15 @@ const BASE_ENRICHMENT = JSON.parse(
 const OVERLAY_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-ccab-overlay.json', import.meta.url), 'utf8'),
 );
+const REVIEW_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
+);
 const ENRICHMENT = { ...BASE_ENRICHMENT };
 for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
+}
+for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
+  ENRICHMENT[key] = { ...(ENRICHMENT[key] || {}), ...patch };
 }
 
 /** Gate B timeline rows → documented NYC ccab search record keys. */
