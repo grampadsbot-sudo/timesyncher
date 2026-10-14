@@ -1,6 +1,6 @@
 /** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
 
-import { NAMED_THING_LOGOS, resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineCategoryIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { buildCategoryDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
@@ -251,10 +251,7 @@ export function opaqueCarPricelineLogoUrl(place, trip) {
   const isOpaque = /opaque/i.test(company) || /opaque/i.test(name);
   if (!isOpaque) return '';
   if (!/priceline/i.test(company) && !/priceline/i.test(name)) return '';
-  return (
-    text(resolveThingLogoUrl({ name: 'Priceline' }, override)) ||
-    text(NAMED_THING_LOGOS.priceline)
-  );
+  return text(resolveThingLogoUrl(place, override));
 }
 
 export function categoryLogoGlyph(place, trip) {
