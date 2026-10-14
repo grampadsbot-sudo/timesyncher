@@ -1,0 +1,639 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 611,
+  "ccabKey": "Jazz at Lincoln Center",
+  "title": "Jazz at Lincoln Center",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 4.6, \"reviewCount\": 1335, \"sourceUrl\": \"https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US\" }, \"yelp\": { \"notPublished\": false, \"average\": 4.1, \"reviewCount\": 467, \"sourceUrl\": \"https://www.yelp.com/biz/dizzys-club-new-york\" }, \"otherSites\": [ { \"average\": 4.5, \"reviewCount\": 879, \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html\" } ], \"reviewThemes\": { \"praise\": [ \"stunning panoramic views of Central Park and Manhattan skyline\", \"world-class, intimate live jazz performances\", \"classy, upscale and warm ambiance\", \"excellent musicians and great service\" ], \"complaints\": [ \"food quality and value mixed/pricey\", \"cover charges and food/drink minimums\", \"occasional single-set shows or seating logistics\" ] }, \"websiteFlavour\": \"Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.\" }",
+  "payload": {
+    "created_at": 1791955407,
+    "completed_at": 1791955418,
+    "id": "9b1ce20f-6d84-9282-8a28-16cba902a376",
+    "max_output_tokens": null,
+    "model": "grok-4.3",
+    "object": "response",
+    "output": [
+      {
+        "id": "rs_9b1ce20f-6d84-9282-8a28-16cba902a376",
+        "summary": [
+          {
+            "text": "I will search for published average star ratings and review counts for Jazz at Lincoln Center.",
+            "type": "summary_text"
+          }
+        ],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Jazz at Lincoln Center Dizzy's Club Google reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/dizzys-club-new-york?start=320"
+            },
+            {
+              "type": "url",
+              "url": "https://wanderlog.com/da/place/details/1651563/dizzys-club"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://heb.centernyc.com/dizzys-club-new-york-guide/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d447348-r671995640-Jazz_at_Lincoln_Center-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d447348-Reviews-Jazz_at_Lincoln_Center-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2?start=20"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Jazz at Lincoln Center Dizzy's Club Yelp reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/dizzys-club-new-york?start=320"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2?start=20"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Dizzy's Club\" OR \"Jazz at Lincoln Center\" TripAdvisor rating reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.ph/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r673795841-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r736953907-Dizzy_s_Club-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Dizzy's Club\" site:tripadvisor.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/FAQ-g60763-d616668-Dizzy_s_Club.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/RestaurantsNear-g60763-d616668-Dizzy_s_Club-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://jazz.org/dizzys/"
+        }
+      },
+      {
+        "id": "ws_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-5",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Dizzy's Club Facebook reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/dizzys-club-coca-cola-/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.facebook.com/DizzysClub/"
+            },
+            {
+              "type": "url",
+              "url": "https://wanderlog.com/place/details/1651563/dizzys-club"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/dizzys-club-new-york?start=320"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-29515681-dizzy-s-club-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://wanderlog.com/da/place/details/1651563/dizzys-club"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.es/biz/dizzys-club-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/dizzys-club-new-york"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9b1ce20f-6d84-9282-8a28-16cba902a376_call-15753ec0-de99-409e-a235-89359e200e3e-5",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 4.6,\n    \"reviewCount\": 1335,\n    \"sourceUrl\": \"https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US\"\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 4.1,\n    \"reviewCount\": 467,\n    \"sourceUrl\": \"https://www.yelp.com/biz/dizzys-club-new-york\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.5,\n      \"reviewCount\": 879,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"stunning panoramic views of Central Park and Manhattan skyline\",\n      \"world-class, intimate live jazz performances\",\n      \"classy, upscale and warm ambiance\",\n      \"excellent musicians and great service\"\n    ],\n    \"complaints\": [\n      \"food quality and value mixed/pricey\",\n      \"cover charges and food/drink minimums\",\n      \"occasional single-set shows or seating logistics\"\n    ]\n  },\n  \"websiteFlavour\": \"Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/dizzys-club-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/dizzys-club-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/RestaurantsNear-g60763-d616668-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/RestaurantsNear-g60763-d616668-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.es/biz/dizzys-club-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.es/biz/dizzys-club-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2?start=20",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2?start=20"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r1007029053-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/jazz-at-lincoln-center-new-york-2"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r673795841-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r673795841-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d447348-Reviews-Jazz_at_Lincoln_Center-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d447348-Reviews-Jazz_at_Lincoln_Center-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.facebook.com/DizzysClub/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.facebook.com/DizzysClub/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d447348-r671995640-Jazz_at_Lincoln_Center-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d447348-r671995640-Jazz_at_Lincoln_Center-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.ph/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.ph/ShowUserReviews-g60763-d616668-r1043468175-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://heb.centernyc.com/dizzys-club-new-york-guide/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://heb.centernyc.com/dizzys-club-new-york-guide/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://jazz.org/dizzys/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://jazz.org/dizzys/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/dizzys-club-new-york?start=320",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/dizzys-club-new-york?start=320"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/FAQ-g60763-d616668-Dizzy_s_Club.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/FAQ-g60763-d616668-Dizzy_s_Club.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.restaurantji.com/ny/new-york/dizzys-club-coca-cola-/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.restaurantji.com/ny/new-york/dizzys-club-coca-cola-/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://wanderlog.com/place/details/1651563/dizzys-club",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://wanderlog.com/place/details/1651563/dizzys-club"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://local.yahoo.com/info-29515681-dizzy-s-club-new-york/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://local.yahoo.com/info-29515681-dizzy-s-club-new-york/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r736953907-Dizzy_s_Club-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d616668-r736953907-Dizzy_s_Club-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://wanderlog.com/da/place/details/1651563/dizzys-club",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://wanderlog.com/da/place/details/1651563/dizzys-club"
+              }
+            ]
+          }
+        ],
+        "id": "msg_9b1ce20f-6d84-9282-8a28-16cba902a376",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 41629,
+      "input_tokens_details": {
+        "cached_tokens": 18688
+      },
+      "output_tokens": 1638,
+      "output_tokens_details": {
+        "reasoning_tokens": 1160
+      },
+      "total_tokens": 43267,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 6,
+      "cost_in_usd_ticks": 665088500,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 6,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 23381,
+        "output_tokens": 798
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}

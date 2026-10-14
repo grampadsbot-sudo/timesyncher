@@ -1,0 +1,792 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 610,
+  "ccabKey": "Carbone",
+  "title": "Carbone",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 4.3, \"reviewCount\": 2498, \"sourceUrl\": null }, \"yelp\": { \"notPublished\": false, \"average\": 4.0, \"reviewCount\": 2073, \"sourceUrl\": \"https://www.yelp.com/biz/carbone-new-york\" }, \"otherSites\": [ { \"average\": 4.0, \"reviewCount\": 531, \"sourceUrl\": \"https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html\" } ], \"reviewThemes\": { \"praise\": [ \"impeccable and charismatic service\", \"spicy rigatoni vodka\", \"tableside Caesar salad\", \"complimentary appetizers like garlic bread, salami, and mozzarella\", \"retro-glam atmosphere and lively vibe\", \"classic elevated Italian-American dishes\" ], \"complaints\": [ \"overpriced for the experience\", \"difficult to secure reservations\", \"hype may not live up to expectations for some\", \"occasional service inconsistencies\" ] }, \"websiteFlavour\": \"The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.\" }",
+  "payload": {
+    "created_at": 1791955383,
+    "completed_at": 1791955407,
+    "id": "d0f01296-1eef-961c-a20f-5a3a2014b238",
+    "max_output_tokens": null,
+    "model": "grok-4.3",
+    "object": "response",
+    "output": [
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Carbone 181 Thompson Street New York NY Google reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.cybo.com/US-biz/carbone-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/carbone-146760419535634"
+            },
+            {
+              "type": "url",
+              "url": "https://www.finedininglovers.com/place/903/book-table"
+            },
+            {
+              "type": "url",
+              "url": "https://www.manhattan-nyc.com/businesses/carbone-new-york--g-1hjgjv7vl/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.chamberofcommerce.com/business-directory/new-york/new-york/miscellaneous/7602821-carbone-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.mapquest.com/us/new-york/carbone-new-york-283164624"
+            },
+            {
+              "type": "url",
+              "url": "https://menuweb.menu/restaurants/new-york-1/carbone-1/reviews"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-147518412-carbone-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1012898438-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://t.restaurantguru.ru/Carbone-New-York/reviews"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Carbone Greenwich Village Yelp reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.theinfatuation.com/new-york/reviews/carbone"
+            },
+            {
+              "type": "url",
+              "url": "https://theglossarymagazine.com/food-drink/carbone-restaurant-review/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.timeout.com/newyork/restaurants/carbone-1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/carbone-new-york?start=75"
+            },
+            {
+              "type": "url",
+              "url": "https://pos.do/en/new-york/restaurant/carbone-new-york-1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Carbone New York TripAdvisor reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1045168610-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1031187250-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.uk/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r959552280-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://pos.do/en/new-york/restaurant/carbone-new-york-1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Carbone NYC OpenTable reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://wanderlog.com/place/details/119900/carbone-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.snatchd.app/carbone"
+            },
+            {
+              "type": "url",
+              "url": "https://www.timeout.com/newyork/restaurants/carbone-1"
+            },
+            {
+              "type": "url",
+              "url": "https://pos.do/en/new-york/restaurant/carbone-new-york-1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/carbone-/"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Carbone New York site:yelp.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/menu/carbone-new-york/item/spicy-rigatoni-vodka"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/menu/carbone-new-york/item/veal-parmesan"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Carbone+New+York&find_loc=Bartlett%2C+TN"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/carbone-new-york/reviews/lobster"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/menu/carbone-new-york/item/assorted-baked-clams"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/menu/carbone-new-york/item/house-chopped"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/carbone-new-york?start=75"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/menu/carbone-new-york/item/ribeye-diana"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Carbone&find_loc=New+York%2C+NY"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Restaurants&find_near=carbone-new-york"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-5",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Carbone\" \"181 Thompson\" Google rating OR reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/carbone-146760419535634"
+            },
+            {
+              "type": "url",
+              "url": "https://www.chamberofcommerce.com/business-directory/new-york/new-york/miscellaneous/7602821-carbone-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1045168610-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1012898438-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/carbone-new-york?start=75"
+            },
+            {
+              "type": "url",
+              "url": "https://menuweb.menu/restaurants/new-york-1/carbone-1/reviews"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r959552280-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1031187250-Carbone-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.mapquest.com/us/new-york/carbone-283164624"
+            },
+            {
+              "type": "url",
+              "url": "https://pos.do/en/new-york/restaurant/carbone-new-york-1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-6",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.yelp.com/biz/carbone-new-york"
+        }
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-7",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+        }
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-5",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-7",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-6",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-8",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://carbonenewyork.com/"
+        }
+      },
+      {
+        "id": "tco_d0f01296-1eef-961c-a20f-5a3a2014b238_call-720a9605-85dc-48e4-bbab-49276cb698f0-8",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 4.3,\n    \"reviewCount\": 2498,\n    \"sourceUrl\": null\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 4.0,\n    \"reviewCount\": 2073,\n    \"sourceUrl\": \"https://www.yelp.com/biz/carbone-new-york\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.0,\n      \"reviewCount\": 531,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"impeccable and charismatic service\",\n      \"spicy rigatoni vodka\",\n      \"tableside Caesar salad\",\n      \"complimentary appetizers like garlic bread, salami, and mozzarella\",\n      \"retro-glam atmosphere and lively vibe\",\n      \"classic elevated Italian-American dishes\"\n    ],\n    \"complaints\": [\n      \"overpriced for the experience\",\n      \"difficult to secure reservations\",\n      \"hype may not live up to expectations for some\",\n      \"occasional service inconsistencies\"\n    ]\n  },\n  \"websiteFlavour\": \"The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1031187250-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1031187250-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1045168610-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1045168610-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.finedininglovers.com/place/903/book-table",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.finedininglovers.com/place/903/book-table"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://local.yahoo.com/info-147518412-carbone-new-york/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://local.yahoo.com/info-147518412-carbone-new-york/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/menu/carbone-new-york/item/ribeye-diana",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/menu/carbone-new-york/item/ribeye-diana"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://pos.do/en/new-york/restaurant/carbone-new-york-1",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://pos.do/en/new-york/restaurant/carbone-new-york-1"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://carbonenewyork.com/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://carbonenewyork.com/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.theinfatuation.com/new-york/reviews/carbone",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.theinfatuation.com/new-york/reviews/carbone"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.chamberofcommerce.com/business-directory/new-york/new-york/miscellaneous/7602821-carbone-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.chamberofcommerce.com/business-directory/new-york/new-york/miscellaneous/7602821-carbone-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.mapquest.com/us/new-york/carbone-new-york-283164624",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.mapquest.com/us/new-york/carbone-new-york-283164624"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://theglossarymagazine.com/food-drink/carbone-restaurant-review/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://theglossarymagazine.com/food-drink/carbone-restaurant-review/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://reviews.birdeye.com/carbone-146760419535634",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://reviews.birdeye.com/carbone-146760419535634"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/carbone-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/carbone-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.timeout.com/newyork/restaurants/carbone-1",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.timeout.com/newyork/restaurants/carbone-1"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/menu/carbone-new-york/item/assorted-baked-clams",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/menu/carbone-new-york/item/assorted-baked-clams"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.snatchd.app/carbone",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.snatchd.app/carbone"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/menu/carbone-new-york/item/veal-parmesan",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/menu/carbone-new-york/item/veal-parmesan"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.uk/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.uk/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.cybo.com/US-biz/carbone-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.cybo.com/US-biz/carbone-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/carbone-new-york/reviews/lobster",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/carbone-new-york/reviews/lobster"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/carbone-new-york?start=75",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/carbone-new-york?start=75"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.manhattan-nyc.com/businesses/carbone-new-york--g-1hjgjv7vl/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.manhattan-nyc.com/businesses/carbone-new-york--g-1hjgjv7vl/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.restaurantji.com/ny/new-york/carbone-/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.restaurantji.com/ny/new-york/carbone-/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1012898438-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r1012898438-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Restaurants&find_near=carbone-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Restaurants&find_near=carbone-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://t.restaurantguru.ru/Carbone-New-York/reviews",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://t.restaurantguru.ru/Carbone-New-York/reviews"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://wanderlog.com/place/details/119900/carbone-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://wanderlog.com/place/details/119900/carbone-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Carbone&find_loc=New+York%2C+NY",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Carbone&find_loc=New+York%2C+NY"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/menu/carbone-new-york/item/spicy-rigatoni-vodka",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/menu/carbone-new-york/item/spicy-rigatoni-vodka"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.mapquest.com/us/new-york/carbone-283164624",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.mapquest.com/us/new-york/carbone-283164624"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r959552280-Carbone-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d3958626-r959552280-Carbone-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/menu/carbone-new-york/item/house-chopped",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/menu/carbone-new-york/item/house-chopped"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Carbone+New+York&find_loc=Bartlett%2C+TN",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Carbone+New+York&find_loc=Bartlett%2C+TN"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://menuweb.menu/restaurants/new-york-1/carbone-1/reviews",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://menuweb.menu/restaurants/new-york-1/carbone-1/reviews"
+              }
+            ]
+          }
+        ],
+        "id": "msg_d0f01296-1eef-961c-a20f-5a3a2014b238",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 88821,
+      "input_tokens_details": {
+        "cached_tokens": 37248
+      },
+      "output_tokens": 1628,
+      "output_tokens_details": {
+        "reasoning_tokens": 1053
+      },
+      "total_tokens": 90449,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 9,
+      "cost_in_usd_ticks": 1209858500,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 9,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 36213,
+        "output_tokens": 656
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}

@@ -1,0 +1,611 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 603,
+  "ccabKey": "Motto by Hilton New York City Times Square",
+  "title": "Motto by Hilton New York City Times Square",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 3.9, \"reviewCount\": 1070, \"sourceUrl\": \"https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB\" }, \"yelp\": { \"notPublished\": false, \"average\": 3.3, \"reviewCount\": 66, \"sourceUrl\": \"https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2\" }, \"otherSites\": [ { \"average\": 4.1, \"reviewCount\": 293, \"sourceUrl\": \"https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html\" }, { \"average\": 8.3, \"reviewCount\": 3376, \"sourceUrl\": \"https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html\" }, { \"average\": 8.7, \"reviewCount\": 722, \"sourceUrl\": \"https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html\" } ], \"reviewThemes\": { \"praise\": [ \"great central location in Times Square\", \"clean rooms\", \"friendly and helpful staff\", \"good value for money\", \"comfy beds\" ], \"complaints\": [ \"small/compact rooms\", \"tiny bathrooms and showers\" ] }, \"websiteFlavour\": \"Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.\" }",
+  "payload": {
+    "created_at": 1791955311,
+    "completed_at": 1791955334,
+    "id": "d0f1c46b-0354-92e0-a5b5-43d7288bf459",
+    "max_output_tokens": null,
+    "model": "grok-4.3",
+    "object": "response",
+    "output": [
+      {
+        "id": "rs_d0f1c46b-0354-92e0-a5b5-43d7288bf459",
+        "summary": [
+          {
+            "text": "I will search for published average star ratings and review counts for Motto by Hilton New York City Times Square.",
+            "type": "summary_text"
+          }
+        ],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Motto by Hilton New York City Times Square Google reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB"
+            },
+            {
+              "type": "url",
+              "url": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.google.com.jm/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ts=CAESABogCgIaABIaEhQKBwjnDxAJGBkSBwjnDxAJGBoYATICEAAqCQoFOgNVU0QaAA&ei=0yh3Zea8JeHplsYP4MOn6AU&sa=X&ei=k0p3Zfv6M4iplsYPnPuisAU&ved=2ahUKEwi7kNrt94eDAxWIlMUCHZy9CFYQ_NEIegUIBBDXAQ&ucbcb=1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.zenhotels.com/hotel/united_states_of_america/new_york/mid10450536/motto_by_hilton_new_york_city_times_square/"
+            },
+            {
+              "type": "url",
+              "url": "https://fr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-or20-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/WidgetEmbed-cdspropertydetail?display=true&partnerId=6CA95E2409844D6183003CEFCDDC2BDE&lang=en&locationId=882039&lang=en"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Motto by Hilton New York City Times Square Yelp reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2"
+            },
+            {
+              "type": "url",
+              "url": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Motto by Hilton New York City Times Square TripAdvisor rating reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+            },
+            {
+              "type": "url",
+              "url": "https://tripadvisor.com/ShowUserReviews-g60763-d26335829-r1039142572-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Motto by Hilton New York City Times Square\" site:booking.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-chelsea.html?page=2"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.zh-tw.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/"
+        }
+      },
+      {
+        "id": "ws_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-5",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Motto by Hilton New York City Times Square Facebook reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.google.com/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ved=0CAAQ5JsGahcKEwiIuPyD8tOWAxUAAAAAHQAAAAAQBA&ts=CAEaIAoCGgASGhIUCgcI6g8QCRgKEgcI6g8QCRgLGAEyAhAAKgkKBToDVVNEGgA"
+            },
+            {
+              "type": "url",
+              "url": "https://www.zenhotels.com/hotel/united_states_of_america/new_york/mid10450536/motto_by_hilton_new_york_city_times_square/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.en-gb.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://tr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/WidgetEmbed-cdspropertydetail?display=true&partnerId=6CA95E2409844D6183003CEFCDDC2BDE&lang=en&locationId=882039&lang=en"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.uk/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-5",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d0f1c46b-0354-92e0-a5b5-43d7288bf459_call-e3b41102-e031-42df-b0fe-ca24b4cf8617-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 3.9,\n    \"reviewCount\": 1070,\n    \"sourceUrl\": \"https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB\"\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 3.3,\n    \"reviewCount\": 66,\n    \"sourceUrl\": \"https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.1,\n      \"reviewCount\": 293,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html\"\n    },\n    {\n      \"average\": 8.3,\n      \"reviewCount\": 3376,\n      \"sourceUrl\": \"https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html\"\n    },\n    {\n      \"average\": 8.7,\n      \"reviewCount\": 722,\n      \"sourceUrl\": \"https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"great central location in Times Square\",\n      \"clean rooms\",\n      \"friendly and helpful staff\",\n      \"good value for money\",\n      \"comfy beds\"\n    ],\n    \"complaints\": [\n      \"small/compact rooms\",\n      \"tiny bathrooms and showers\"\n    ]\n  },\n  \"websiteFlavour\": \"Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html?page=1"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-chelsea.html?page=2",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-chelsea.html?page=2"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.en-gb.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.en-gb.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/WidgetEmbed-cdspropertydetail?display=true&partnerId=6CA95E2409844D6183003CEFCDDC2BDE&lang=en&locationId=882039&lang=en",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/WidgetEmbed-cdspropertydetail?display=true&partnerId=6CA95E2409844D6183003CEFCDDC2BDE&lang=en&locationId=882039&lang=en"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://fr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://fr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.google.com/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ved=0CAAQ5JsGahcKEwiIuPyD8tOWAxUAAAAAHQAAAAAQBA&ts=CAEaIAoCGgASGhIUCgcI6g8QCRgKEgcI6g8QCRgLGAEyAhAAKgkKBToDVVNEGgA",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.google.com/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ved=0CAAQ5JsGahcKEwiIuPyD8tOWAxUAAAAAHQAAAAAQBA&ts=CAEaIAoCGgASGhIUCgcI6g8QCRgKEgcI6g8QCRgLGAEyAhAAKgkKBToDVVNEGgA"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-or20-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-or20-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/reviews/us/hotel/motto-by-hilton-new-york-city-times-square.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.zh-tw.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.zh-tw.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://tr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://tr.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.zenhotels.com/hotel/united_states_of_america/new_york/mid10450536/motto_by_hilton_new_york_city_times_square/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.zenhotels.com/hotel/united_states_of_america/new_york/mid10450536/motto_by_hilton_new_york_city_times_square/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.uk/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.uk/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.google.com.jm/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ts=CAESABogCgIaABIaEhQKBwjnDxAJGBkSBwjnDxAJGBoYATICEAAqCQoFOgNVU0QaAA&ei=0yh3Zea8JeHplsYP4MOn6AU&sa=X&ei=k0p3Zfv6M4iplsYPnPuisAU&ved=2ahUKEwi7kNrt94eDAxWIlMUCHZy9CFYQ_NEIegUIBBDXAQ&ucbcb=1",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.google.com.jm/travel/hotels/entity/ChoIpdftvZHByv6JARoNL2cvMTFzanAxOGswaBAB?ts=CAESABogCgIaABIaEhQKBwjnDxAJGBkSBwjnDxAJGBoYATICEAAqCQoFOgNVU0QaAA&ei=0yh3Zea8JeHplsYP4MOn6AU&sa=X&ei=k0p3Zfv6M4iplsYPnPuisAU&ved=2ahUKEwi7kNrt94eDAxWIlMUCHZy9CFYQ_NEIegUIBBDXAQ&ucbcb=1"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://tripadvisor.com/ShowUserReviews-g60763-d26335829-r1039142572-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://tripadvisor.com/ShowUserReviews-g60763-d26335829-r1039142572-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+              }
+            ]
+          }
+        ],
+        "id": "msg_d0f1c46b-0354-92e0-a5b5-43d7288bf459",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 40743,
+      "input_tokens_details": {
+        "cached_tokens": 17536
+      },
+      "output_tokens": 1378,
+      "output_tokens_details": {
+        "reasoning_tokens": 785
+      },
+      "total_tokens": 42121,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 6,
+      "cost_in_usd_ticks": 659609500,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 6,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 22876,
+        "output_tokens": 737
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}
