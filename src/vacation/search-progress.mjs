@@ -160,7 +160,7 @@ export async function loadTripSearchProgress(db, tripId) {
   return normalizeSearchProgress(meta.searchProgress);
 }
 
-export async function persistTripSearchProgress(db, tripId, progress) {
+async function persistTripSearchProgress(db, tripId, progress) {
   if (!db || !tripId) return null;
   const payload = normalizeSearchProgress(progress);
   await db`
