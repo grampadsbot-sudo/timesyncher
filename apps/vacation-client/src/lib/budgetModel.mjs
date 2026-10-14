@@ -13,7 +13,6 @@ import { resolvePlace } from './dayTimelineModel.mjs';
 import {
   BUDGET_BUCKET_ORDER,
   OTHER_THINGS_BUCKET,
-  bucketDisplayLabel as sharedBucketDisplayLabel,
   bucketTargetAmountFromMap,
 } from '../../../../src/vacation/budget-bucket-keys.mjs';
 
@@ -194,7 +193,7 @@ export function placesForBudget(trip) {
 }
 
 export function bucketDisplayLabel(bucket) {
-  return sharedBucketDisplayLabel(bucket);
+  return bucket === OTHER_THINGS_BUCKET ? 'The Rest' : bucket;
 }
 
 export function bucketIcon(bucket) {

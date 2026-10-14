@@ -1,6 +1,5 @@
-export const STANDARD_BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores'];
+const STANDARD_BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores'];
 
-/** Internal persisted/API bucket id for non-tab categories (UI label: The Rest). */
 export const OTHER_THINGS_BUCKET = 'Events';
 
 export const BUDGET_BUCKET_ORDER = [...STANDARD_BUDGET_BUCKETS, OTHER_THINGS_BUCKET];
@@ -13,7 +12,7 @@ function targetBucketId(bucket) {
   return OTHER_THINGS_BUCKET;
 }
 
-export function budgetTargetKey(bucket) {
+function budgetTargetKey(bucket) {
   return `overall:${bucket}`;
 }
 
@@ -55,6 +54,3 @@ export function bucketTargetAmountFromMap(targets, bucket) {
   return null;
 }
 
-export function bucketDisplayLabel(bucket) {
-  return bucket === OTHER_THINGS_BUCKET ? 'The Rest' : bucket;
-}
