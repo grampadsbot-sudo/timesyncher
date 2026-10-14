@@ -290,6 +290,8 @@ const LIVE_TAB_NEEDLE = '$n=gt.filter(G=>Fs.some(Re=>vn(Re).includes(G))),Gn=Fs.
 const LIVE_TAB_PATCH = 'tsPad=(rows)=>rows,tsListThings=(rows)=>rows.filter(Re=>!Re.__tsLiveFill&&(!ze.length||ze.includes(En(Re)))),$n=[...new Set(tsListThings(Fs).flatMap(Re=>vn(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Gn=tsPad(Fs.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Je.length||Je.every(Re=>vn(G).includes(Re)))),ci=[...new Set(tsListThings(Oc).flatMap(Re=>or(Re).map(zt=>String(zt||"").trim()).filter(Boolean)))],Qn=tsPad(Oc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!Te.length||Te.every(Re=>or(G).includes(Re)))),ki=tsPad(Cc.filter(G=>!ze.length||ze.includes(En(G))).filter(G=>!vt.length||vt.includes(Yd(G))))';
 const CARS_TAB_PLACEHOLDER_NEEDLE = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):n.jsx("div",{style:{background:"var(--bg-card, white)",borderRadius:14,border:"1px solid var(--border-faint, #e5e7eb)",padding:16,color:"#6b7280",fontSize:13,fontWeight:700},children:"🚗 Rental cars will use the same GBrain-assisted compare-and-summarize workflow as flights. Coming soon."})';
 const CARS_TAB_SERVED_PATCH = 'bc.length>0?vi(bc,"cars").map(G=>Oe(G)):null';
+const BC_CARS_TIMELINE_NEEDLE = 'bc=(Gt||[]).filter(G=>It(G)==="car")';
+const BC_CARS_TIMELINE_PATCH = 'bc=(Gt||[]).filter(G=>It(G)==="car"&&!!ha(G).timeline)';
 const HOTELS_TAB_CATALOG_NEEDLE = 'vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))';
 export const REST_TYPE_CHIPS_NEEDLE = 'Os.map(G=>n.jsx("button",{onClick:()=>Kn(G)';
 export const REST_TYPE_CHIPS_PATCH = '[...new Set(tsListThings(Cc).map(Re=>Yd(Re)).filter(Boolean))].map(G=>n.jsx("button",{onClick:()=>Kn(G)';
@@ -364,6 +366,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
+  if (js.includes(BC_CARS_TIMELINE_NEEDLE)) js = js.replace(BC_CARS_TIMELINE_NEEDLE, BC_CARS_TIMELINE_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
   if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);

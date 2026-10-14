@@ -1,20 +1,39 @@
 (function () {
   const removed = new Set();
 
+  function carsTabActive() {
+    return [...document.querySelectorAll('button,[role="tab"]')].some((node) => {
+      if (node.getAttribute('aria-label') !== 'Cars') return false;
+      const selected = node.getAttribute('aria-selected');
+      if (selected === 'true') return true;
+      if (selected === 'false') return false;
+      const style = window.getComputedStyle(node);
+      return style && parseInt(style.fontWeight, 10) >= 700;
+    });
+  }
+
   function carRows() {
-    return [...document.querySelectorAll('button, article, li')].filter((node) => {
+    if (!carsTabActive()) return [];
+    const panel = document.querySelector('[data-shared-live-tab="cars"]');
+    const scope = panel || document;
+    return [...scope.querySelectorAll('[data-list-row="1"], button, article, li')].filter((node) => {
+      if (node.closest('[data-ts-car-brands]')) return false;
+      const category = (
+        node.getAttribute('data-thing-category') ||
+        node.closest('[data-thing-category]')?.getAttribute('data-thing-category') ||
+        ''
+      ).toLowerCase();
+      if (category && category !== 'car') return false;
       const label = (node.innerText || '').replace(/\s+/g, ' ').trim();
       if (!label || label.length > 80) return false;
       if (/^car type$/i.test(label) || /^cars$/i.test(label) || /^remove /i.test(label)) return false;
-      const category = (node.closest('[data-category]')?.getAttribute('data-category') || '').toLowerCase();
-      return category === 'car' || /\$\d+/.test(label);
+      return category === 'car';
     });
   }
 
   function mount() {
     if (!document.body) return;
-    const onCars = /cars/i.test(document.body.innerText || '') && carRows().length > 0;
-    if (!onCars) {
+    if (!carsTabActive() || carRows().length === 0) {
       document.querySelector('[data-ts-car-brands]')?.remove();
       return;
     }
@@ -22,11 +41,14 @@
     if (!bar) {
       bar = document.createElement('div');
       bar.dataset.tsCarBrands = '1';
-      bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:30;';
+      bar.style.cssText =
+        'display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#fff;color:#111;position:relative;z-index:30;';
       const title = document.createElement('div');
       title.textContent = 'Remove a brand';
       bar.appendChild(title);
-      document.body.prepend(bar);
+      const carsPanel = document.querySelector('[data-shared-live-tab="cars"]');
+      if (carsPanel) carsPanel.prepend(bar);
+      else document.body.prepend(bar);
     }
     const seen = new Set();
     for (const row of carRows()) {
@@ -52,8 +74,16 @@
   }
 
   window.__tsMountCarBrands = mount;
-  document.addEventListener('click', (event) => {
-    const text = (event.target?.innerText || event.target?.textContent || '').replace(/\s+/g, ' ').trim();
-    if (/^cars\b/i.test(text) && text.length < 40) mount();
-  });
+  document.addEventListener(
+    'click',
+    (event) => {
+      const tab = event.target?.closest?.('button,[role="tab"]');
+      if (!tab) return;
+      const label = tab.getAttribute('aria-label') || (tab.innerText || tab.textContent || '').replace(/\s+/g, ' ').trim();
+      if (/^(day-by-day|flights|hotels|cars|restaurants|stores|the rest|budget)\b/i.test(label)) {
+        queueMicrotask(mount);
+      }
+    },
+    true,
+  );
 })();
