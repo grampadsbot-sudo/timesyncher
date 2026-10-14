@@ -41,20 +41,6 @@ export function destinationCoordsFromTrip(trip = {}) {
   return pointFromLatLng(trip.destination_lat ?? trip.destinationLat, trip.destination_lng ?? trip.destinationLng);
 }
 
-/**
- * @param {{ places?: object[], trip?: object }} input
- * @returns {{
- *   ok: true,
- *   mode: 'bounds' | 'point' | 'destination',
- *   center: { lat: number, lng: number },
- *   zoom: number,
- *   maxZoom: number,
- *   points: { lat: number, lng: number }[],
- * } | {
- *   ok: false,
- *   code: string,
- * }}
- */
 export function computeTripMapInitialView({ places = [], trip = {} } = {}) {
   const points = [];
   const seen = new Set();

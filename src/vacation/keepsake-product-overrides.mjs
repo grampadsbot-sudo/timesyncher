@@ -76,7 +76,6 @@ function copyBlank(next, key, ...values) {
   }
 }
 
-/** Keep summary, happy hour, and neighborhood only when the Thing or its source record already has them. */
 function applySourcedFields(place = {}, override = {}) {
   const source = sourceObject(override.source, place.source, override.sourceRecord, place.sourceRecord);
   const next = { ...override };

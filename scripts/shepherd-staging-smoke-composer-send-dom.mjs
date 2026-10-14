@@ -1,4 +1,4 @@
-/** Read composer send-button accessibility metadata for visual judge context (harness-only). */
+
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -81,7 +81,6 @@ export function sendBboxHasInkInComposerPng(pngBuffer, sendDom, { minDarkPixels 
   return { hasInk: darkPixels >= minDarkPixels, sampled, darkPixels };
 }
 
-/** Reconcile judge rubric 2 on live DOM structure; APP FAIL when DOM and crop disagree. */
 export function reconcileVisualJudgeComposerSend(verdict, sendDom, opts = {}) {
   if (!verdict || verdict.pass === true) return verdict;
   const structural = sendDomStructurallyConfirmsVisibleSend(sendDom);

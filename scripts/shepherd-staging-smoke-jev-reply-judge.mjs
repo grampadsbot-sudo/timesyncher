@@ -23,17 +23,6 @@ export function parseJevNoulAnswer(answer) {
   return { yes: null, score: null, rationale: '' };
 }
 
-/**
- * @param {object} opts
- * @param {string} opts.questionKey
- * @param {string} opts.instructions
- * @param {{ true: string, false: string }} opts.criteria
- * @param {string} opts.replyText
- * @param {string} [opts.customerTurn]
- * @param {object} [opts.env]
- * @param {typeof fetch} [opts.fetchImpl]
- * @param {number} [opts.timeoutMs]
- */
 async function jevSmokeReplyYesNo({
   questionKey,
   instructions,

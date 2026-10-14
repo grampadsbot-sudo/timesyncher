@@ -1,6 +1,5 @@
 import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
 
-/** Known rental/hotel brand favicons when trip rows lack source URLs. */
 export const NAMED_THING_LOGOS = {
   hertz: 'https://www.hertz.com/favicon.ico',
   alamo: 'https://www.alamo.com/favicon.ico',
@@ -101,7 +100,6 @@ function pageUrlForLogo(thing = {}, override = {}) {
   );
 }
 
-/** Why captureThingLogo returned empty (for shared API diagnostics). */
 export function logoCaptureMissReason(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   const explicit = [
@@ -157,7 +155,6 @@ function usableLogo(value) {
   return '';
 }
 
-/** Logo or favicon on the source record, else the favicon of its page URL. Otherwise none. */
 export function sourceLogoUrl(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   const explicit = [
@@ -202,7 +199,6 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   return `${page.origin}/favicon.ico`;
 }
 
-/** Names are not a logo source. The shared bundle calls this with a title and gets nothing. */
 export function logoLookupRuntimeSource() {
   return '(name)=>""';
 }
@@ -211,7 +207,6 @@ export function captureThingLogo(thing = {}, override = {}) {
   return sourceLogoUrl(thing, override);
 }
 
-/** Same logo fields as live tab rows and the shared trek bundle (_l / ha). */
 export function resolveThingLogoUrl(thing = {}, override = {}) {
   const direct = thingLogoUrl(thing, override);
   if (direct) {

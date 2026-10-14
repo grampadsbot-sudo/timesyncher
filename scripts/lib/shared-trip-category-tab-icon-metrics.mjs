@@ -41,7 +41,6 @@ function inkCenterYFromPngBuffer(buf, bgOverride = null) {
   return { inkCenterY: sumY / mass, height: h, mass };
 }
 
-/** @param {import('puppeteer-core').Page} page @param {string} selector */
 async function measureElementInkCenterY(page, selector) {
   const handle = await page.$(selector);
   if (!handle) return null;
@@ -79,7 +78,6 @@ async function measureElementInkCenterY(page, selector) {
   };
 }
 
-/** @param {import('puppeteer-core').Page} page */
 export async function collectCategoryTabInkMetrics(page) {
   const tabs = await page.evaluate(() => {
     const categoryLabels = new Set([

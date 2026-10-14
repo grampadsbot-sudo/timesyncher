@@ -8,15 +8,11 @@ import {
 
 const REAL_TITLE = 'Maui March 10-17 2027 with my wife';
 
-// --- resolveCheckITripTitle -------------------------------------------------
-
-// Prefers the title already captured on state (check 5 succeeded).
 assert.equal(
   await resolveCheckITripTitle({ tripTitle: REAL_TITLE, tripId: 'trip-1' }, null),
   REAL_TITLE,
 );
 
-// Falls back to the trips table when state.tripTitle is empty (check 5 early-returned).
 const dbWithTitle = async (strings, ...values) => {
   const text = strings.join(' ').replace(/\s+/g, ' ').trim();
   assert.match(text, /select title from trips where id=/);
@@ -28,28 +24,19 @@ assert.equal(
   REAL_TITLE,
 );
 
-// Returns '' when there is no tripId to fall back on.
 assert.equal(await resolveCheckITripTitle({ tripTitle: '' }, dbWithTitle), '');
 
-// Returns '' when the trips table has no matching row.
 const dbNoRow = async () => [];
 assert.equal(
   await resolveCheckITripTitle({ tripTitle: '', tripId: 'trip-1' }, dbNoRow),
   '',
 );
 
-// --- checkITitleOk ----------------------------------------------------------
-
 assert.equal(checkITitleOk(REAL_TITLE, `Shepherd e892e59 invited you to edit ${REAL_TITLE}`), true);
 assert.equal(checkITitleOk(REAL_TITLE, 'Shepherd invited you to edit a trip'), false);
 assert.equal(checkITitleOk(REAL_TITLE, ''), false);
 assert.equal(checkITitleOk('', `subject with ${REAL_TITLE}`), false);
 
-// --- runShepherdCheckI end-to-end (mocked db + fetch) -----------------------
-
-// Build a mock db that answers the queries runShepherdCheckI issues. The trips
-// table always holds the real title (independent of state.tripTitle, which is
-// what check 5 may have failed to populate).
 function makeDb({ dbTitle, subject }) {
   return async (strings, ...values) => {
     const text = strings.join(' ').replace(/\s+/g, ' ').trim();
@@ -107,8 +94,6 @@ async function runCheckIWith({ tripTitle, dbTitle, subject, stubOutbound = '1' }
   return { result, out };
 }
 
-// Check 5 early-returned (state.tripTitle empty): check I must still PASS by
-// reading the title from the trips table and matching it in the subject.
 const passWithDbFallback = await runCheckIWith({
   tripTitle: '',
   dbTitle: REAL_TITLE,
@@ -117,7 +102,6 @@ const passWithDbFallback = await runCheckIWith({
 assert.equal(passWithDbFallback.result.pass, true);
 assert.equal(passWithDbFallback.out.checkI.tripTitle, REAL_TITLE);
 
-// Wrong/missing title in the subject must still FAIL check I.
 const failWrongTitle = await runCheckIWith({
   tripTitle: '',
   dbTitle: REAL_TITLE,
@@ -125,7 +109,6 @@ const failWrongTitle = await runCheckIWith({
 });
 assert.equal(failWrongTitle.result.pass, false);
 
-// A subject missing the real title must FAIL even when state.tripTitle is set.
 const failMissingTitle = await runCheckIWith({
   tripTitle: REAL_TITLE,
   dbTitle: REAL_TITLE,

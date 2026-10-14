@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/** Shared page helpers for verify-layout drives (no Vercel). */
 
 export async function detectApp(page) {
   return page.evaluate(() => {
@@ -48,7 +47,6 @@ export function stateIdFromSnapshot(snapshot, detected) {
   return 'app-0-vacations';
 }
 
-/** @deprecated Use stateIdFromSnapshot; trip dropdown options exist only when 2+ vacations. */
 export function stateId(detected) {
   if (!detected.composer) return '';
   if (detected.options >= 2 || detected.headerVisible) return 'app-2-plus';

@@ -1,16 +1,5 @@
 #!/usr/bin/env node
-/**
- * ASK-d2 repro at 68d3ff0. Seeded from staging trip eadb6e7c-9e1f-4672-b8a7-2114073776f3,
- * customer turn 0208eee7-4bc9-4afb-abc1-1babc93a840d, request a9588b7b-0ed0-4c3d-a4e3-9f1e3c8ba5dc.
- * Stored turn_category travel_research, tags customer_request + restaurants_food, source
- * internal_speaker, confidence 0.9. Live response turnTag.ask was false. Jev routeType
- * notes_where, needsDayForNote 0.28. Trip metadata at reply time (unchanged by this turn):
- * lastAskedGap lodging, lodgingAsk true, needsCustomerInput [lodging], invite_contact_needed true.
- * Things already saved: Mama's Fish House (Saturday) and Paia Fish Market Restaurant (no day).
- * placeSearchReplyFacts is the object stored on that customer turn.
- *
- * Expected to fail at 68d3ff0. Not listed in scripts/offline-tests.txt.
- */
+
 import assert from 'node:assert/strict';
 import { annotateLiveTurnGapAnswer, mergeSavedTripGapFields } from '../src/vacation/gap-ask-reply-context.mjs';
 import { completeRosterParty, draftingFacts } from '../src/vacation/live-app-turn.mjs';

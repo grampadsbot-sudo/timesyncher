@@ -1,4 +1,4 @@
-/** Map / budget grading for staging smoke (browser + offline). */
+
 
 import { budgetGateAllowedAmounts } from '../src/vacation/shared-trip-api-budget.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
@@ -10,9 +10,6 @@ const MAUI_MAP_BOUNDS = {
   lngMax: -155.95,
 };
 
-/**
- * Runs in the browser (Puppeteer page.evaluate). Keep Product DOM hooks centralized here.
- */
 export function evaluateTripMapInPage() {
   const unresolved = !!document.querySelector('[data-map-center-unresolved]');
   const container = document.querySelector('.leaflet-container, .mapboxgl-map');
@@ -138,7 +135,6 @@ export function gradeMapBar(mapState, consoleErrors = []) {
   };
 }
 
-/** Product shared /shared/<slug>/ Plan tab: Leaflet + Product #165 map hooks. */
 export function evaluateLeafletProductMapInPage() {
   const hooksTried = [];
   const unresolved = !!document.querySelector('[data-map-center-unresolved]');
@@ -308,7 +304,6 @@ export function gradeLeafletProductMap(mapState, consoleErrors = []) {
     hooksTried: mapState?.hooksTried || [],
   };
 }
-
 
 function addAllowedAmount(allowed, n) {
   if (!Number.isFinite(n)) return;

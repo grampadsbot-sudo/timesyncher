@@ -827,7 +827,7 @@ export function renderLiveTranscriptPdf(doc, options = {}) {
   }
   const pdf = Buffer.from(result.stdout);
   if (options.recordRefusals) {
-    try { assertJevRewriteLabels(checked, extractPdfText(pdf)); } catch { /* recorded on the banner when assertLiveTranscript already failed */ }
+    try { assertJevRewriteLabels(checked, extractPdfText(pdf)); } catch {}
   } else {
     assertJevRewriteLabels(checked, extractPdfText(pdf));
   }

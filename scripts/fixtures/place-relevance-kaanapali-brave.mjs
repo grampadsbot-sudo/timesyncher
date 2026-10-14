@@ -1,8 +1,4 @@
-/**
- * Staging transcript 9833b82f (best tacos near our hotel, 2026-10-02) stored these
- * Brave titles with empty addresses. They are Ziguinchor / Casamance hits, not Maui tacos.
- * Check 6 (6c2a042e) stored Brave resultCount 1 and did not persist that row's title.
- */
+
 export const STAGING_HOTEL_BRAVE_REJECTIONS = [
   { title: 'Fast-food Lateranga', address: '', reason: 'relevance_below_minimum_2.63' },
   { title: 'Hotel Kadiandoumagne', address: '', reason: 'relevance_below_minimum_1.74' },

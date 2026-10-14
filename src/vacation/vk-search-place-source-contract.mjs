@@ -40,7 +40,6 @@ function identityProvenanceOk(place = {}) {
     && Boolean(text(prov.evidenceUrl));
 }
 
-/** VK source + product contract for fixture/search rows with ccab provenance. */
 export function vkSearchPlaceSourceViolations(place = {}, options = {}) {
   const category = searchProductCategory(place.category);
   const blocked = provenanceBlockedSet(place);

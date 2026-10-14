@@ -1,4 +1,4 @@
-/** Day-by-day timeline: schedule rows, travel gaps, car pickup/drop-off, map markers. */
+
 
 import {
   flightPriceDisplay,
@@ -213,7 +213,6 @@ function flightDurationMinutes(depart, arrive) {
   return delta;
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function mediaForPlace(trip, place) {
   const placeId = Number(place?.id);
   if (!Number.isFinite(placeId)) return [];
@@ -499,12 +498,6 @@ function insertTravelRows(entries, trip) {
   return withTravel;
 }
 
-/** @typedef {'thing'|'travel'|'car-pickup'|'car-dropoff'} TimelineEntryKind */
-
-/**
- * @param {import('../types/sharedTrip.ts').SharedTripPayload} trip
- * @param {import('../types/sharedTrip.ts').SharedDay} day
- */
 export function buildDayTimeline(trip, day) {
   const dayId = String(day.id);
   const entries = [];

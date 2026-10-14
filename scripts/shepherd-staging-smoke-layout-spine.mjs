@@ -1,4 +1,4 @@
-/** Register LAYOUT spine check (keeps main.mjs under line cap). */
+
 import { runLayoutHarnessCheck } from './shepherd-staging-smoke-layout.mjs';
 import { intakeShareSlug } from '../src/vacation/intake-shared-trip.mjs';
 import { withBrowserPageSlot } from './shepherd-staging-smoke-browser-pool.mjs';

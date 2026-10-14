@@ -1,4 +1,4 @@
-/** LAYOUT APP guard: share URL shown to customer before /api/shared/ returns 200. */
+
 
 function shareSlugPathNeedle(shareSlug = '') {
   const slug = String(shareSlug || '').replace(/\/+$/, '');

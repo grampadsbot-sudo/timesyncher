@@ -34,7 +34,6 @@ export function eulaStoreObjectKey(sessionId, kind, env = process.env) {
   return `${prefix}/${rel}`.replace(/\/+/g, '/');
 }
 
-/** Read receipt JSON from eula_store_objects (no Blob SDK, no store.listJson). */
 export async function readEulaReceiptDocument(db, sessionId, env = process.env) {
   const key = eulaStoreObjectKey(sessionId, 'receipt', env);
   const rows = await db`select document from eula_store_objects where key = ${key} limit 1`;

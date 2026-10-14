@@ -20,13 +20,12 @@ export function requiredTravelBase(env = process.env) {
   return travelBase(env);
 }
 
-/** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */
 export function websiteTripBase(env = process.env) {
   const site = siteBase(env);
   try {
     if (/vacation-staging\.timesyncher\.com$/i.test(new URL(site).hostname)) return site;
   } catch {
-    /* fall through */
+
   }
   return travelBase(env);
 }

@@ -23,8 +23,6 @@ function ruleId(entry) {
   return entry.rule || entry.inventory_id || '';
 }
 
-// A row already on the base stays. A row whose rule id is absent from a non-empty base may be added once.
-// An empty base file cannot grow. A missing base file may seed.
 export function growthFails(baseline, base) {
   if (!base || base.status === 'skip' || base.status === 'missing') return [];
   if (base.status !== 'ok') return [base.error || 'baseline ceiling unavailable'];
@@ -43,7 +41,6 @@ function sortRows(rows) {
   return [...rows].sort((a, b) => cmp(a.file || '', b.file || '') || cmp(a.rule || '', b.rule || '') || cmp(symbolOf(a), symbolOf(b)) || cmp(a.inventory_id || '', b.inventory_id || ''));
 }
 
-// --prune rewrites the baseline to rows that still match a finding and never adds rows.
 export function pruneBaseline(cwd, rel, load, scan, matches) {
   const baselinePath = path.join(cwd, rel);
   if (!fs.existsSync(baselinePath)) return;

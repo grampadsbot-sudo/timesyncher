@@ -12,11 +12,10 @@ const SEARCH_PRODUCT_CATEGORIES = new Set([
 
 const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder|sample)\b/i;
 
-/** Minimum restaurant/store/event Things in a trip batch (VK contract v1.3.0). */
 export const TRIP_MIN_NON_EXEMPT_THINGS = 15;
-/** Theme-based xAI reviews use real theme text only (no word-count padding). */
+
 const XAI_REPRESENTATIVE_REVIEW_MIN_WORDS = 12;
-/** Max share of Things that may miss required fields when each gap is flagged in missingFields. */
+
 const TRIP_MAX_MISSING_THING_FRACTION = 0.2;
 
 const FLAGGABLE_MISSING_VIOLATIONS = new Set([
@@ -56,7 +55,6 @@ function sourceRecordOnPlace(place = {}) {
   return place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : {};
 }
 
-/** Normalize search/list categories to the six VK product place types. */
 export function searchProductCategory(category = '') {
   const cat = text(category, 80).toLowerCase();
   if (cat === 'lodging' || cat === 'accommodation') return 'hotel';
@@ -122,7 +120,6 @@ function isAllowedReviewSource(source = '') {
   return ['Google', 'Yelp', 'TripAdvisor'].includes(row);
 }
 
-/** VK v1.5.0: ~25 words, allowed source label, numeric star — no review URL required. */
 function reviewBodyIsPresent(place = {}, index = 1) {
   const record = sourceRecordOnPlace(place);
   if (xaiThemesReviewPath(record) && reviewThemesDistinctCount(record) >= 4) {
@@ -218,7 +215,6 @@ function xaiAverageCountThemesPath(place = {}) {
   return xaiRepresentativeReviewsComplete(place);
 }
 
-/** Stored reviews when average+count+themes (xAI) or legacy mix rules are satisfied. */
 function reviewAggregateAllowsStoredReviews(place = {}, distinctBodyPresentCount = 0) {
   if (!numericAverageOnPlace(place)) return false;
   const ratingCount = ratingCountOnPlace(place);
@@ -255,7 +251,6 @@ function normalizeReviewBodyForCrossPlace(body = '') {
   return text(body, 2000).toLowerCase();
 }
 
-/** Same long review text must not appear on more than one product place row. */
 export function crossPlaceDuplicateReviewBodyFailures(places = []) {
   const byBody = new Map();
   for (const place of places) {
@@ -319,7 +314,6 @@ function titleViolations(place = {}) {
   return violations;
 }
 
-/** Fail when search output is missing required product fields for a place row. */
 export function searchPlaceOutputViolations(place = {}) {
   const category = searchProductCategory(place.category);
   if (!SEARCH_PRODUCT_CATEGORIES.has(category)) return [];
@@ -360,7 +354,6 @@ function missingFieldsOnPlace(place = {}) {
   return raw.map((field) => text(field, 80).toLowerCase()).filter(Boolean);
 }
 
-/** Violations that still fail after missingFields acknowledges flaggable gaps (20% missing-field cap). */
 export function searchPlaceOutputAcknowledgedViolations(place = {}) {
   const violations = searchPlaceOutputViolations(place);
   const flagged = new Set(missingFieldsOnPlace(place));
@@ -403,7 +396,6 @@ function classifyPlaceContractViolations(place = {}) {
   };
 }
 
-/** Trip-level VK contract violations for a place list (v1.3.0). */
 function searchPlaceOutputTripViolations(places = []) {
   const list = Array.isArray(places) ? places : [];
   if (!list.length) return [];
@@ -464,7 +456,6 @@ export function assertSearchPlaceOutputContract(places = []) {
   throw new Error(`search place output contract failed: ${detail}`);
 }
 
-/** Enrich search rows; callers that require VK contract proof assert separately (fixture generator, contract tests). */
 export function finalizeSearchPlaces(places = []) {
   return (Array.isArray(places) ? places : []).map((place) => enrichSearchPlace({ ...place }));
 }

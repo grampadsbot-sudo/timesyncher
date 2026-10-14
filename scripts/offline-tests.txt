@@ -40,6 +40,7 @@ scripts/test_vacation_app_interim_place_search.mjs
 scripts/test_vacation_app_client_errors.mjs
 scripts/test_check_code_ratchet.mjs
 scripts/test_check_dialog_pack.mjs
+scripts/test_check_no_comments.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
 scripts/test_trip_map_initial_view.mjs
@@ -237,6 +238,7 @@ scripts/test_checkout_customer_price_message.mjs
 scripts/test_checkout_products_live_gate.mjs
 scripts/test_trip_intake_search.mjs
 scripts/test_trip_literal_ban_g2a.mjs
+scripts/test_tsv397_integrity_audit.mjs
 scripts/test_keepsake_order_buy_link.mjs
 scripts/test_sct_a78799b_search_fill.mjs
 scripts/test_shepherd_staging_smoke_layout_visual_exports.mjs

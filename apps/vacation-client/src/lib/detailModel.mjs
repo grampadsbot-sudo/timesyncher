@@ -1,4 +1,4 @@
-/** Thing detail popup field model (reads trip thingOverrides / place only). */
+
 
 import {
   carPriceDisplay,
@@ -370,7 +370,6 @@ function coordinateRow(place, trip) {
   return { key: 'coordinates', label: 'Coordinates', value: formatCoordinates(coords) };
 }
 
-/** Rows to render in the detail popup for this place (only non-empty values). */
 export function detailFieldRows(place, trip) {
   const override = overrideFor(trip, place);
   const category = detailCategoryKey(place, trip);

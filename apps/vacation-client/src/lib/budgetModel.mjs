@@ -1,4 +1,4 @@
-/** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
+
 
 import {
   LIST_TAB_IDS,
@@ -10,16 +10,13 @@ import {
 
 export { formatUsd };
 import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
-/** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
-export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-export const BUDGET_BUCKET_ORDER = [
-  'Flights',
-  'Hotel',
-  'Cars',
-  'Restaurants',
-  'Stores',
+import {
+  BUDGET_BUCKET_ORDER,
   OTHER_THINGS_BUCKET,
-];
+  bucketTargetAmountFromMap,
+} from '../../../../src/vacation/budget-bucket-keys.mjs';
+
+export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant',
@@ -49,7 +46,6 @@ function catalogPlace(trip, id) {
   return (trip?.places || []).find((p) => String(p.id) === String(id));
 }
 
-/** Catalog row used for budget math (assignments may carry partial `place` stubs). */
 export function canonicalBudgetPlace(trip, placeOrId) {
   const id = placeOrId && typeof placeOrId === 'object' ? placeOrId.id : placeOrId;
   return catalogPlace(trip, id) || (placeOrId && typeof placeOrId === 'object' ? placeOrId : null);
@@ -156,19 +152,8 @@ function readBudgetTargetsMap(trip = {}) {
   return merged;
 }
 
-function budgetTargetKey(bucket) {
-  return `overall:${bucket}`;
-}
-
 export function bucketTargetAmount(trip, bucket) {
-  const targets = readBudgetTargetsMap(trip);
-  const key = budgetTargetKey(bucket);
-  if (!Object.prototype.hasOwnProperty.call(targets, key)) return null;
-  const raw = targets[key];
-  if (raw === '' || raw === null || raw === undefined) return 0;
-  const cleaned = String(raw).replace(/[^0-9.]/g, '');
-  if (!cleaned) return 0;
-  return Math.round(Number(cleaned) || 0);
+  return bucketTargetAmountFromMap(readBudgetTargetsMap(trip), bucket);
 }
 
 export function tripBudgetTargetTotal(trip) {
@@ -338,7 +323,6 @@ export function buildBudgetModel(trip) {
   };
 }
 
-/** Named checks for Gate B budget completeness reporting (pass/total). */
 export function budgetCompletenessChecks(trip) {
   const model = buildBudgetModel(trip);
   const checks = [];

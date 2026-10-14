@@ -143,7 +143,7 @@ assert.ok(included.includes('dialog-runners/tier_models.json'));
 assert.ok(included.every((file) => file.endsWith('.json')));
 assert.equal(included.some((file) => /\.(mjs|js|cjs|py)$/.test(file)), false);
 
-const route = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const route = await readFile(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 assert.match(route, /applyLiveAppReplyFailureToPayload/);
 assert.match(route, /error: failure\.replyFailure/);
 assert.doesNotMatch(route, /delete from transcript_turns where id = \$\{turnRows\[0\]\.id\}/);

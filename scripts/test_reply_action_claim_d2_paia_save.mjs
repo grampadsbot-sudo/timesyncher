@@ -1,19 +1,5 @@
 #!/usr/bin/env node
-/**
- * Live D-d2 prompt at f0123cb for trip d3e19eb8-56c4-45a3-8cf0-008b99b9366e,
- * customer turn 95db8a4a-8a91-4d3b-8f3d-f8a4766db2c8, "save Paia Fish Market".
- * Vercel log on dpl_3iNwjxDhuQ4WC75HVRqebf5vQxwH:
- * {"reason":"reply_action_claim_unscheduled_place_day","tripId":"d3e19eb8-56c4-45a3-8cf0-008b99b9366e"}
- * Paia was saved with no day. The draft named a weekday. Rebuilt from the smoke
- * turns (hi, Maui March 10-17 2027 with my wife, add Mama's Fish House for Saturday,
- * save Paia Fish Market) and the f0123cb reply facts path.
- *
- * The in-turn save lists only Paia, so applyInTurnCitablePlaces drops Mama's
- * Saturday from the itinerary. That weekday stays in recent_turns from d1.
- * Before the fix the system still said to use a day already on the saved trip
- * record and to keep an activity on the day already named. After the fix those
- * lines are absent whenever a saved place is not on a day.
- */
+
 import assert from 'node:assert/strict';
 import { chatPlaceSearchSavedReplyFacts } from '../src/vacation/chat-place-search-when.mjs';
 import { annotateLiveTurnGapAnswer, mergeSavedTripGapFields } from '../src/vacation/gap-ask-reply-context.mjs';

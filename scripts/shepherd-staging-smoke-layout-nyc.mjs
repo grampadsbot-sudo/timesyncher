@@ -1,4 +1,4 @@
-/** LAYOUT-NYC: staging shared tabs vs NYC reference screenshots (harness-only). */
+
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,7 +78,6 @@ function layoutNycColumnSortLabelsEmpty(columnSortLabels = {}) {
   return !columnSortLabels?.name && !columnSortLabels?.price;
 }
 
-/** DOM shows sort pills (not column labels) and no horizontal overflow — vision sort/overflow claims are stale. */
 export function layoutNycDomProvesSortButtonsNoOverflow(stagingDom = {}) {
   const pills = stagingDom?.sortPills || [];
   if (!pills.length) return false;
@@ -99,7 +98,6 @@ export function layoutNycVisionSortOverflowClaim(reason = '') {
     || /staging.*overflow|horizontal overflow|overflow.*390|scrollwidth|exceed.*viewport/.test(lower);
 }
 
-/** Vision often bundles missing sort pills into generic tab-order / header-row FAIL lines. */
 export function layoutNycVisionBundledTabHeaderRowClaim(text = '') {
   const lower = String(text || '').toLowerCase();
   return /header\/row|header.*row.*layout|tab order|layout mismatch/.test(lower)
@@ -115,7 +113,6 @@ function layoutNycDomProvesListChromeOk(stagingDom = {}) {
   return tabOrderOk && headerOk && rowsOk;
 }
 
-/** Flights/Hotels/Cars list-sort rubric must not apply to day-by-day, budget, stores, etc. */
 export function layoutNycNonListSortRubricClaim(reason = '') {
   const lower = String(reason || '').toLowerCase();
   return layoutNycVisionSortOverflowClaim(reason)
@@ -231,23 +228,21 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
       continue;
     }
     if (domProvesSortOverflow && layoutNycVisionSortOverflowClaim(judgeText)) {
-      if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
+      const nycSortPillDiff = /nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons();
+      const bundledHeaderRow = layoutNycVisionBundledTabHeaderRowClaim(judgeText);
+      if (nycSortPillDiff && !bundledHeaderRow) {
         expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
+      } else if (bundledHeaderRow && reason) {
+        kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
       }
       continue;
     }
-    if (
-      listSortTab
-      && domProvesSortOverflow
-      && stagingHasSortButtons()
-      && layoutNycDomProvesListChromeOk(stagingDom)
-      && layoutNycVisionBundledTabHeaderRowClaim(judgeText)
-    ) {
-      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
-      continue;
-    }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
-      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+      if (layoutNycVisionBundledTabHeaderRowClaim(judgeText)) {
+        if (reason) kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
+      } else {
+        expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+      }
     } else if (nycDefects.some((d) => d.code === 'horizontal_overflow') && /nyc.*overflow|left.*clip|reference.*horizontal/.test(lower)) {
       expectedDiffs.push({ kind: 'nyc_horizontal_overflow', reason });
     } else if (/column label|label.*sort|header.*sort/.test(lower) && (stagingDom?.columnSortLabels?.name || stagingDom?.columnSortLabels?.price)) {

@@ -1,11 +1,6 @@
 import { evaluateCheckIOutbound } from './shepherd-staging-smoke-env.mjs';
 import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 
-/**
- * Resolve the trip title for check I. Prefer the title already captured on
- * state (set by check 5), but fall back to reading it from the trips table by
- * tripId when check 5 early-returned before setting it.
- */
 export async function resolveCheckITripTitle(state, db) {
   if (state?.tripTitle) return state.tripTitle;
   if (!state?.tripId || !db) return '';
@@ -13,7 +8,6 @@ export async function resolveCheckITripTitle(state, db) {
   return row?.title || '';
 }
 
-/** Check I title assertion: subject must contain the real trip title. */
 export function checkITitleOk(tripTitle, subject) {
   return Boolean(tripTitle) && String(subject || '').includes(tripTitle);
 }

@@ -155,10 +155,28 @@ const gateBJudge = reconcileLayoutNycJudgeVerdict(
   },
   { tab: 'flights', viewport: '390', stagingDom: gateBStagingDom },
 );
-assert.equal(gateBJudge.pass, true, 'DOM-trusted sort pills suppress bundled header/row vision fails');
+assert.equal(
+  gateBJudge.pass,
+  false,
+  'bundled header/row vision fail stays fail-closed when sort controls pass in DOM',
+);
 assert.ok(
-  gateBJudge.expectedDifferences.some((d) => d.kind === 'nyc_sort_buttons_layout'),
-  'records expected NYC sort pill layout delta',
+  gateBJudge.failures.some((f) => /header\/row|tab order|layout mismatch/i.test(String(f.detail || f.rubricItem || ''))),
+  'keeps bundled header/row layout failure despite permitted sort evidence',
+);
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'sort controls',
+        reason: "The staging version does not have 'Name' and 'Price' sort buttons above the list as expected.",
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: gateBStagingDom },
+  ).pass,
+  true,
+  'isolated stale sort-control vision miss alone stays permitted',
 );
 
 assert.equal(
@@ -174,6 +192,63 @@ assert.equal(
   ).pass,
   false,
   'real header DOM miss stays fail-closed',
+);
+
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [
+        { reason: 'NYC left shows sort pills in different position' },
+        {
+          rubricItem: 'FAIL bad tab order, header/row layout mismatch',
+          reason: 'List rows place title on the right instead of the left',
+        },
+      ],
+    },
+    { tab: 'hotels', viewport: '390', stagingDom: { ...stagingOk, rowsNameLeft: false } },
+  ).pass,
+  false,
+  'permitted sort diff plus genuine row-layout defect stays fail',
+);
+
+const flights390Dom = {
+  ...stagingOk,
+  tabOrder: LAYOUT_NYC_TAB_ORDER,
+  sortPills: ['Name', 'Price'],
+  columnSortLabels: {},
+  rowCount: 2,
+  rowsNameLeft: true,
+  header: { present: true },
+  horizontalOverflow: false,
+};
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'header/row layout mismatch',
+        reason: 'NYC left shows sort pills in different position; staging header and row layout mismatch remains.',
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: flights390Dom },
+  ).pass,
+  false,
+  'mixed SINGLE finding: permitted NYC sort pill diff plus header/row stays fail-closed',
+);
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'header/row layout mismatch',
+        reason: 'Sort buttons do not overflow, but staging header/row layout mismatch remains.',
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: flights390Dom },
+  ).pass,
+  false,
+  'mixed SINGLE finding: sort wording plus header/row stays fail-closed when DOM is OK',
 );
 
 console.log('shepherd layout-nyc tests passed');

@@ -1,7 +1,6 @@
 import { customerInputState } from './intake-shared-trip.mjs';
 import { intakeLodgingWanted } from './trip-intake-classify.mjs';
 
-/** Structured lodging gap from saved trip rows and intake wantedThings (category/kind only). */
 export function firstIntakeLodgingCustomerInput(savedThings = [], wantedThings = []) {
   const records = [
     ...(Array.isArray(savedThings) ? savedThings : []),

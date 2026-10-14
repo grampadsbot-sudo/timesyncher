@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B #266: check 6 empty reply at 20s tiered timeout; check 6b Hertz saved-car mention.
- */
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

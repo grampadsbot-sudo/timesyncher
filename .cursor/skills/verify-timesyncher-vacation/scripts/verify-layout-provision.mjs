@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * Documents four-state layout/visual provisioning for post-deploy verify-layout.
- * Mint path: mintVisualStateCustomers (4 fresh coupons layout-${SHA7}, @resend.dev emails).
- */
+
 import { mintVisualStateCustomers } from '../../../../scripts/shepherd-staging-smoke-visual-states.mjs';
 
 export { mintVisualStateCustomers };

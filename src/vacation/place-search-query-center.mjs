@@ -5,7 +5,6 @@ function isLodgingSearchCenter(center = null) {
   return geocoded === 'lodging';
 }
 
-/** Precedence: named anchor geocode, then lodging center, then trip/stored destination center. */
 export function resolvePlaceSearchQueryCenter({ namedPlaceLookup, anchorGeocode, context }) {
   if (namedPlaceLookup) {
     return anchorRadiusCenter(null, context?.center);

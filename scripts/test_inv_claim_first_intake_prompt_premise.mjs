@@ -1,18 +1,5 @@
 #!/usr/bin/env node
-/**
- * INV-CLAIM (a) at 3dbfda7, staging 68c0020.
- * First intake reply after "Maui March 10-17 2027 with my wife".
- * Travelers: roster collaborator "my wife", no contact. Zero things. No lodging.
- *
- * Rebuilds the system and user messages produceLiveAppReply sends on that
- * first-intake path (intakeReplyTurn: systemExtra is the intake instruction
- * plus intake facts; the user message is those same facts). replyRulesSystem,
- * replyRequestBody, the bundled reply-rules page, and content/onboarding-welcome.json
- * are not on this path. This test fails if any of them leak into the messages.
- *
- * The only open ask in the messages is lodging. Nothing may mention inviting,
- * sharing, adding a collaborator, or a next-step ask.
- */
+
 import assert from 'node:assert/strict';
 import { produceLiveAppReply } from '../src/vacation/live-app-turn.mjs';
 import { testPlanEnv, testSingleOwnerPlan } from './fixtures/reply-plan-test-fixtures.mjs';

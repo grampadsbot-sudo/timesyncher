@@ -33,8 +33,6 @@ function defaultSleep(ms) {
 const NOMINATIM_THROTTLE_INTERVAL_MS = 1000;
 const NOMINATIM_THROTTLE_MAX_WAIT_MS = 45_000;
 
-/** In-memory Nominatim store for unit tests only (not used in production). */
-/** Shared Neon-style sql executor: throttle UPDATE ... RETURNING + geocode cache upsert/select. */
 export function createFaithfulNeonNominatimDb() {
   const cache = new Map();
   let nextSlotMs = 0;

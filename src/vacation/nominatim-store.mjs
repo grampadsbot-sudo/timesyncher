@@ -188,7 +188,6 @@ export function nominatimMinimumSearchLimitForCacheKey(cacheKey) {
   return null;
 }
 
-/** Search alias keys with cached limit >= the request's minimum (try higher limits first). */
 export function nominatimSearchAliasLookupKeys(cacheKey) {
   const normalized = nominatimNormalizedQueryFromCacheKey(cacheKey);
   const minLimit = nominatimMinimumSearchLimitForCacheKey(cacheKey);

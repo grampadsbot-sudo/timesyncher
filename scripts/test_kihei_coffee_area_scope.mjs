@@ -1,10 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B check R residual: Kihei-scoped coffee must not cite Cafe Kula or Westin Kaanapali,
- * and must not leak Kaanapali lodging/stay copy into the reply prompt.
- * Fails on base when out-of-area rows reach citablePlaces or customerOwnLodgingContext;
- * passes after area-scope filter and lodging omission.
- */
+
 import assert from 'node:assert/strict';
 import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs';
 import { attachPlaceSearchTurnScope } from '../src/vacation/place-search-reply-facts.mjs';

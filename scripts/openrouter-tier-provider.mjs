@@ -24,7 +24,6 @@ export function openRouterProviderSpread(modelTier) {
   return provider ? { provider } : {};
 }
 
-/** Tier-1 calls that need a short or structured answer (not long draft replies). */
 export function openRouterTier1CompactReasoningSpread(modelTier) {
   if (Number(modelTier) !== 1) return {};
   return { reasoning: { enabled: false, effort: 'low' } };

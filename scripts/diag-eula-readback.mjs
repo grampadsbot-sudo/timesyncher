@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Standalone EULA receipt readback diagnostic (staging DB + same smoke accept path). */
+
 import { sql } from '/workspace/src/vacation/db.mjs';
 import { receiptKey } from '/workspace/src/onboarding/eula-persistent-core.mjs';
 import { ensureShepherdStagingSmokeEnv } from './shepherd-staging-smoke-env.mjs';

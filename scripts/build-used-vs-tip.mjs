@@ -1,9 +1,4 @@
-/**
- * The graded build is the sha that was live at the drive.
- * Deploy that tip first, then drive once, so the drive build equals the tip.
- * A later tip can still be graded when every commit after the drive leaves reply code unchanged.
- * Render never copies the live sha onto the transcript.
- */
+
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { normalizeSha } from './void-stale-build.mjs';

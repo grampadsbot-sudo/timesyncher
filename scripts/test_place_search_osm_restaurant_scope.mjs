@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/**
- * Staging check 6b rejections (Maui island center): overlooks/museums must not enter OSM merge for taco restaurant search.
- */
+
 import assert from 'node:assert/strict';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';

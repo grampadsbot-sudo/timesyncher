@@ -1,8 +1,4 @@
-/**
- * Synthetic pages and the 10/3 staging probe boxes.
- * Probe source: chat at 390 had header width 479 and textarea bottom 881
- * on a 844px viewport. Shared at 390 painted Open navigation and Settings.
- */
+
 
 export function box(x, y, w, h, extra = {}) {
   return {
@@ -155,7 +151,6 @@ export function p0OffscreenHtml() {
 </html>`;
 }
 
-/** Boxes copied from the 10/3 chat-390 probe. Textarea bottom is 839+42. */
 export function probeChat390() {
   const viewport = { width: 390, height: 844 };
   const composer = box(60, 839, 303, 42);
@@ -177,7 +172,6 @@ export function probeChat390() {
   });
 }
 
-/** Boxes copied from the 10/3 shared-390 probe. */
 export function probeShared390() {
   const viewport = { width: 390, height: 844 };
   return base(viewport, {
@@ -192,7 +186,6 @@ export function probeShared390() {
   });
 }
 
-/** An empty header bar still has height. That is a fail for 0 or 1 vacations. */
 export function emptyHeaderBar() {
   const viewport = { width: 390, height: 844 };
   const composer = box(58, 787, 230, 42);

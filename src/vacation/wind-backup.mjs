@@ -1,4 +1,4 @@
-/** Wind readings from NWS, then Open-Meteo. Forecast data only. No composed swim note. */
+
 
 const WEATHER_CACHE_MS = 3 * 60 * 60 * 1000;
 const cache = new Map();

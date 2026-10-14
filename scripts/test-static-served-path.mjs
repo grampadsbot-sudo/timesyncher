@@ -7,7 +7,6 @@ export function requestPathToRel(pathname) {
   return decoded.replace(/^\/+/, '');
 }
 
-/** Vercel serves repo-root files and merges `public/` onto the site root. */
 export async function resolveServedStaticPath(root, rel) {
   const normalized = String(rel || '').replace(/^\/+/, '');
   if (!normalized || normalized.includes('..')) return null;

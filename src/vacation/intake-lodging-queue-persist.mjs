@@ -12,7 +12,6 @@ export async function maybePersistFirstIntakeLodging({
   return persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, { extractedDestination, customerTurnId, env });
 }
 
-/** First-intake queue: persist stated lodging before reply ship (reply gate may block). */
 export async function persistQueuedIntakeLodgingFromWanted(db, tripId, wantedThings, {
   extractedDestination = '',
   customerTurnId = null,

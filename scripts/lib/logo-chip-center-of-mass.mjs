@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-/** @param {import('puppeteer-core').Page} page */
 export async function collectBrandLogoChips(page) {
   return page.evaluate(() => {
     const out = [];
@@ -26,7 +25,6 @@ export async function collectBrandLogoChips(page) {
   });
 }
 
-/** @param {import('puppeteer-core').Page} page @param {string} selector */
 export async function measureCenterOfMassOffset(page, selector) {
   return page.evaluate(async (sel) => {
     const chip = document.querySelector(sel);

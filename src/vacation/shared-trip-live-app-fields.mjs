@@ -116,7 +116,6 @@ function explicitLogo(place = {}, override = {}, source = null) {
   );
 }
 
-/** Map catalog row fields the TREK Oe list reads via ha() / rr() / bi() / J() / uc(). */
 export function applyLiveAppListRowFields(shared = {}) {
   const next = {
     ...shared,
@@ -245,7 +244,6 @@ export function applyLiveAppListRowFields(shared = {}) {
   return next;
 }
 
-/** Drive TREK Ds()/Is() + Ji()/jr() day rows from explicit timeline picks (ha().timeline, dayIds). */
 export function applyLiveAppTimelineSelections(shared = {}, selectedPlaceIds = []) {
   const selected = new Set((selectedPlaceIds || []).map((id) => String(id)));
   const next = {

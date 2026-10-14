@@ -11,7 +11,6 @@ import { SERVED_QA_NEEDLES } from '../scripts/strip-served-trek-bundle.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-/** N3 geo / travel-gap / TBD marketing; N4 demo names / price copy; N5 car filter brand. */
 const SERVED_CANNED_NEEDLES = [
   ...SERVED_QA_NEEDLES,
   'Si=[[/park central/i',

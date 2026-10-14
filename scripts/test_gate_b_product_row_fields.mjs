@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
 import { rowNeedsDetailBackfill } from '../src/vacation/chat-intake-place-persist.mjs';
@@ -319,5 +320,12 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
   }
 }
 assert.equal(vkSnapshotBindingTrip.places.find((p) => p.id === 601)?.lat, 36.084, '601 keeps fixture coordinates');
+
+{
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  const guardTests = fileURLToPath(new URL('../tests/test_tsv_guard.py', import.meta.url));
+  const guardRun = spawnSync('python3', [guardTests], { cwd: root, stdio: 'inherit' });
+  assert.equal(guardRun.status, 0, 'tsv guard data-fault resolution tests must pass');
+}
 
 console.log('gate b product row field tests passed');

@@ -1,4 +1,4 @@
-/** Puppeteer metrics for itinerary-fresh visual gate (logo + list tabs). */
+
 
 const LOGO_MAX_ABS_DELTA = 2;
 const LOGO_MAX_REF_DRIFT = 1.5;

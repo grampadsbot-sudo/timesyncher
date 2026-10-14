@@ -410,7 +410,7 @@ assert.match(vercel, /\/report\/\(\[\^\/\?\]\+\)/);
 const itinerarySrc = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
 assert.match(itinerarySrc, /trekBundle/);
 const assetWriter = await readFile(new URL('../scripts/write-shared-assets.mjs', import.meta.url), 'utf8');
-assert.match(assetWriter, /patchStyleTwoToConfigRenderer/);
+assert.doesNotMatch(assetWriter, /patchStyleTwoToConfigRenderer/);
 assert.match(assetWriter, /index-BKun7ofk\.js/);
 assert.match(assetWriter, /index-CbEHlMj6\.css/);
 const viteConfig = await readFile(new URL('../vite.config.mjs', import.meta.url), 'utf8');

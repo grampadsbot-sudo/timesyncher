@@ -1,4 +1,4 @@
-/** Classifier place_search anchor expectations (mocked in unit tests; live eval optional). */
+
 export const TRIP_INTAKE_PLACE_ANCHOR_CASES = [
   {
     name: 'lodging_reference_near_our_hotel',

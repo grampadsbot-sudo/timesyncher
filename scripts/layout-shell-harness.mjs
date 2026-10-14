@@ -1,7 +1,4 @@
-/**
- * Local fixture server for scripts/test_served_page_layout.mjs.
- * Serves vacation-app.html, shared-app.html, and the trip JSON those pages fetch.
- */
+
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';

@@ -68,7 +68,6 @@ function rowCoordinates(row) {
   };
 }
 
-/** Drop in-turn rows outside the turn's anchor radius policy (Kihei-scoped search, etc.). */
 export function filterInTurnPlaceRowsForAreaScope(rows = [], scope = null) {
   const list = Array.isArray(rows) ? rows : [];
   if (!list.length || !scope || typeof scope !== 'object') return list;

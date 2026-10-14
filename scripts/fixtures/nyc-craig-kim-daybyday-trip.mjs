@@ -14,12 +14,12 @@ const PR336_SEARCH_SNAPSHOT = JSON.parse(
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
-/** Gate B VK search snapshot is authoritative for copy on these row ids (see TSV #376). */
+
 export const VK_SEARCH_SNAPSHOT_COPY_ROW_IDS = Object.freeze(
   Array.from({ length: 11 }, (_, index) => 601 + index),
 );
 const VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET = new Set(VK_SEARCH_SNAPSHOT_COPY_ROW_IDS);
-/** Live TREK reads one-line copy via ha(place).summary → rr(place). */
+
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
 const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';

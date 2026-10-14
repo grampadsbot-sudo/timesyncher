@@ -43,7 +43,7 @@ function envFromSecretFiles(adapter = {}) {
       const value = fs.readFileSync(filePath, 'utf8').trim();
       if (value) env[key] = value;
     } catch {
-      // Missing secret files keep the adapter gated by producing an ordinary CLI failure.
+
     }
   }
   return env;

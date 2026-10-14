@@ -1,19 +1,5 @@
 #!/usr/bin/env node
-/**
- * INV-CLAIM(b) repro at 68d3ff0. Seeded from staging trip b0ab0d92-f9ff-42ae-93ea-4020b191f3b4,
- * owner shepherd-inv-68d3ff0-1791016759517@resend.dev, customer "Inv Claim".
- * First intake turn 41f26e9a-2e4c-4927-b8a1-934674d10259 stored roster
- * [{ name: "my wife", role: "collaborator" }] and customerInputState lodgingAsk.
- * Gap-answer turn 89467a7c-5038-4b9f-973d-08eee13e0b62, request 1a233371-fc0d-448d-bb44-9f8fb7f47432,
- * text "We're staying at the Hyatt Regency Maui in Kaanapali.", intake true, firstIntake false,
- * roster [], wantedThings [{ kind: "hotel", name: "Hyatt Regency Maui", source: "chat_extraction" }].
- * App reply 26597f70-7cf5-4ffd-8396-aa14f319a64d was inserted at 08:40:07.169Z.
- * Hyatt thing a99b7de7-238e-4782-9642-9e948d57b8fb was inserted at 08:40:07.844Z, after that reply.
- * Prompt-time things are therefore empty. Prompt-time lastAskedGap is lodging: the row now says
- * plans, and that value is what this turn's persist wrote. invite_contact_needed stayed true.
- *
- * Expected to fail at 68d3ff0. Not listed in scripts/offline-tests.txt.
- */
+
 import assert from 'node:assert/strict';
 import { annotateLiveTurnGapAnswer, mergeSavedTripGapFields } from '../src/vacation/gap-ask-reply-context.mjs';
 import { completeRosterParty, draftingFacts } from '../src/vacation/live-app-turn.mjs';

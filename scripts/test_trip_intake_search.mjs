@@ -7,17 +7,19 @@ import { installNoopNominatimStore } from './fixtures/nominatim-store-test-doubl
 
 installNoopNominatimStore();
 
-const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
+const queuePersistSource = fs.readFileSync(new URL('../src/vacation/vacation-app-queue-persist.mjs', import.meta.url), 'utf8');
+const chatIntakeSource = fs.readFileSync(new URL('../src/vacation/vacation-from-chat-intake.mjs', import.meta.url), 'utf8');
 const workerSource = fs.readFileSync(new URL('./vacation-public-research-worker.mjs', import.meta.url), 'utf8');
 const dispatchSource = fs.readFileSync(new URL('./product-gbrain-dispatch.mjs', import.meta.url), 'utf8');
 const runnerSource = fs.readFileSync(new URL('./travel-source-adapter-runner.mjs', import.meta.url), 'utf8');
 const poiSource = fs.readFileSync(new URL('../src/vacation/poi-search.mjs', import.meta.url), 'utf8');
 
-assert.match(routeSource, /classifyTripIntake/);
-assert.match(routeSource, /const queuedJobType = 'trip_intake'/);
-assert.match(routeSource, /insert into worker_jobs \(request_id, trip_id, job_type, input\)/);
-assert.match(routeSource, /wantedThings: jobFields\.wantedThings/);
-assert.match(routeSource, /intakeEvent: jobFields\.intakeEvent/);
+assert.match(chatIntakeSource, /classifyTripIntake/);
+assert.match(queueSource, /const queuedJobType = tripIntakeJobKind\(\)/);
+assert.match(queuePersistSource, /insert into worker_jobs \(request_id, trip_id, job_type, input\)/);
+assert.match(queuePersistSource, /wantedThings: jobFields\.wantedThings/);
+assert.match(queuePersistSource, /intakeEvent: jobFields\.intakeEvent/);
 assert.match(workerSource, /jobInput\.wantedThings/);
 assert.match(dispatchSource, /jobInput\.wantedThings/);
 assert.doesNotMatch(dispatchSource, /lodgingLane: lane/);

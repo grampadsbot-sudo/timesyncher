@@ -2,8 +2,6 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Served files are already committed. The canned strip and
-// patchStyleTwoToConfigRenderer ran once; this step does not read a raw bundle.
 const JS_NAME = 'index-BKun7ofk.js';
 const CSS_NAME = 'index-CbEHlMj6.css';
 

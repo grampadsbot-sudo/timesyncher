@@ -20,11 +20,8 @@ for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(ENRICHMENT[key] || {}), ...patch };
 }
 
-/** Gate B timeline rows → documented NYC ccab search record keys. */
-/** PR336 VK search test trip (fixture family for Gate B NYC day-by-day rows). */
 export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
 
-/** Display titles that differ from ccab keys only with explicit identityProvenance on the ccab record. */
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
     title: 'Priceline opaque Standard sedan',
@@ -46,7 +43,6 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   611: 'Jazz at Lincoln Center',
 };
 
-/** Gate B rows that must fail the VK search output contract (list-only / blocked source). */
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
 
 function text(value, max = 4000) {
@@ -117,7 +113,6 @@ export function buildPr336VkSearchPlacesByRowId(rows = []) {
   return out;
 }
 
-/** Gate B builder plus #388 event-logo binding from committed Tavily recordings (#391). */
 export async function buildPr336VkSearchPlacesByRowIdWithEventLogos(rows = [], options = {}) {
   const { applyPr336GateBEventLogosFromRecorded } = await import('../lib/pr336-gate-b-event-logo-recorded-lib.mjs');
   const placesById = buildPr336VkSearchPlacesByRowId(rows);
@@ -146,7 +141,6 @@ function identityProvenanceOk(place = {}) {
     && Boolean(text(prov.evidenceUrl));
 }
 
-/** Ensure each Gate B row title matches its ccab source identity (no cross-row bleed). */
 export function assertGateBRowProvenance(rows = [], placesById = {}) {
   const failures = [];
   for (const row of rows) {
@@ -189,7 +183,6 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
   return GATE_B_DISPLAY_TITLE_ALIASES;
 }
 
-/** Six typed examples with priced ccab sources for the search output contract. */
 export function buildVkSearchContractSamplePlaces() {
   const samples = [
     { category: 'flight', ccabKey: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31', title: 'JetBlue LAS → JFK' },

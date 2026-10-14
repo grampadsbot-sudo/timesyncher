@@ -92,9 +92,9 @@ assert.ok(
   draftFactErrors('Harbor Cafe is a 12-minute walk from the house.', {}).some((line) => /walk time is not/.test(line)),
 );
 
-const itinerary = await readFile(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const queueRoute = await readFile(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 const replyShip = await readFile(new URL('../src/vacation/reply-ship.mjs', import.meta.url), 'utf8');
-assert.match(itinerary, /persistVacationAppOutboundReply\(/);
+assert.match(queueRoute, /persistVacationAppOutboundReply\(/);
 assert.match(replyShip, /outboundAppReplyForRequest\(db, requestId\)/);
 assert.match(replyShip, /logVacationAppReplyTelemetry\(appLive\)/);
 assert.match(replyShip, /duplicateSuppressed: true/);

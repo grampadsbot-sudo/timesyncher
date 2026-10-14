@@ -1,8 +1,5 @@
 import { cleanText } from './http.mjs';
 
-const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-
-/** Customer-facing labels for live search progress counts in the vacation app shell. */
 export function searchProgressDisplayLabel(category = '') {
   const cat = cleanText(category, 40).toLowerCase();
   if (cat === 'restaurant') return 'Restaurants';
@@ -78,9 +75,6 @@ export function normalizeSearchProgress(raw) {
   };
 }
 
-/**
- * Apply one producer snapshot. Dedupes by eventId and place identity; ignores stale jobId.
- */
 export function applySearchProgressEvent(current, {
   jobId,
   eventId,

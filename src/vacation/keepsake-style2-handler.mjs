@@ -17,7 +17,6 @@ export function getProductTrekPublic() {
   return cachedProductTrekPublic;
 }
 
-/** Sole SoT. CoS dated twin is the same rules. */
 export const PRODUCT_SOT = 'bot-admin/messages/time-syncher/style-2-journey-book-standard';
 export const PRODUCT_SOT_TWIN = 'bot-admin/messages/time-syncher/style-2-journey-book-product-standard-20260910';
 
@@ -172,7 +171,6 @@ export function forwardedKeepsakeSearch(url) {
   return qs ? `?${qs}` : '';
 }
 
-/** @deprecated Cursor HTML book is not the product path. Kept so old imports fail closed. */
 export function isJourneyBookReport(name = '') {
   return isProductStyleTwo(name);
 }

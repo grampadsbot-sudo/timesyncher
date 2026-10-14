@@ -218,4 +218,6 @@ for (const { category, place } of enrichmentCategories) {
   assert.equal(violations.includes('missing_logoUrl'), false, `${category} missing logo`);
 }
 
+await import('./test_tsv397_integrity_audit.mjs');
+
 console.log('trip thing logo metadata tests passed');

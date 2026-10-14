@@ -16,6 +16,7 @@ import {
 
 const turnSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
 const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const queueSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
 const classifySource = fs.readFileSync(new URL('../src/vacation/trip-intake-classify.mjs', import.meta.url), 'utf8');
 const resolvePlaceSource = fs.readFileSync(new URL('../src/vacation/trip-intake-resolve-place.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(turnSource, /function isLongIntake|function intakeFacts|add\('Gardens'|add\('Kailua-Kona house'/);
@@ -23,9 +24,9 @@ assert.doesNotMatch(`${turnSource}\n${routeSource}\n${classifySource}`, /\b(?:is
 assert.doesNotMatch(turnSource, /later in the week|laterFridayLabel|function whoIn|'Marcus', 'Aunt'/);
 assert.match(classifySource, /"roster"/);
 assert.match(classifySource, /turnKind/);
-assert.match(routeSource, /thingsFromIntake/);
-assert.match(routeSource, /wantedThings/);
-assert.match(routeSource, /intakeEvent/);
+assert.match(classifySource, /thingsFromIntake/);
+assert.match(queueSource, /wantedThings: jobFields\.wantedThings/);
+assert.match(queueSource, /intakeEvent: jobFields\.intakeEvent/);
 
 assert.deepEqual(thingsFromIntake('gardens swim groceries dinner town walk house'), []);
 assert.deepEqual(mergeWantedThings([{ title: 'Existing', category: 'activity' }], 'swim').map((thing) => thing.title), ['Existing']);

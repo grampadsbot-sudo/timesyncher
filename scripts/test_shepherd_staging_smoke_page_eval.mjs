@@ -8,7 +8,7 @@ const script = playwrightEvaluateReturnScript('const x = 41;', 'x + 1');
 assert.equal(new Function(`return ${script}`)(), 42);
 
 assert.throws(() => {
-  // Playwright evaluates string scripts at top level (like eval), not as Function bodies.
+
   eval('const x = 1; return x;');
 }, SyntaxError);
 

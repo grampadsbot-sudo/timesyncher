@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: 8 shared tabs @ 390/1280 — prod travel bundle (left) vs patched bundle (right). */
+
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';

@@ -98,7 +98,6 @@ function stripEventLogoFields(place = {}) {
   return next;
 }
 
-/** Apply #388 event-logo search to Gate B fixture rows using committed Tavily recordings. */
 export async function applyPr336GateBEventLogosFromRecorded(placesById = {}, {
   destination = 'New York',
   searchImpl = buildRecordedEventLogoSearchImpl(),
