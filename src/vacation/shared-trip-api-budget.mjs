@@ -1,3 +1,8 @@
+import {
+  BUDGET_BUCKET_ORDER,
+  OTHER_THINGS_BUCKET,
+  bucketTargetAmountFromMap,
+} from './budget-bucket-keys.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
@@ -16,9 +21,6 @@ const PER_PERSON_CATEGORIES = new Set([
   'other',
   'flight',
 ]);
-
-const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-const BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores', OTHER_THINGS_BUCKET];
 
 function text(value) {
   return String(value || '').trim();
@@ -106,10 +108,6 @@ function budgetRowsFromShared(shared = {}) {
   return rows;
 }
 
-function budgetTargetKey(bucket) {
-  return `overall:${bucket}`;
-}
-
 function budgetTargetsRecord(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
 }
@@ -153,7 +151,7 @@ export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
 export function tripBudgetTargetTotal(shared = {}) {
   let sum = 0;
   let any = false;
-  for (const bucket of BUDGET_BUCKETS) {
+  for (const bucket of BUDGET_BUCKET_ORDER) {
     const amount = bucketTargetAmount(shared, bucket);
     if (amount === null) continue;
     any = true;
@@ -163,16 +161,7 @@ export function tripBudgetTargetTotal(shared = {}) {
 }
 
 function bucketTargetAmount(shared = {}, bucket = '') {
-  const targets = readBudgetTargetsMap(shared);
-  const key = budgetTargetKey(bucket);
-  if (!targets || !Object.prototype.hasOwnProperty.call(targets, key)) {
-    return null;
-  }
-  const raw = targets[key];
-  if (raw === '' || raw === null || raw === undefined) return 0;
-  const cleaned = String(raw).replace(/[^0-9.]/g, '');
-  if (!cleaned) return 0;
-  return Math.round(Number(cleaned) || 0);
+  return bucketTargetAmountFromMap(readBudgetTargetsMap(shared), bucket);
 }
 
 function rowsInBucket(rows = [], bucket = '') {
@@ -191,7 +180,7 @@ function visibleAmountSet(rows = [], shared = {}) {
       amounts.add(row.nightly);
     }
   }
-  for (const bucket of BUDGET_BUCKETS) {
+  for (const bucket of BUDGET_BUCKET_ORDER) {
     const target = bucketTargetAmount(shared, bucket);
     const bucketRows = rowsInBucket(rows, bucket);
     const planned = bucketRows.length ? bucketPlannedTotal(rows, bucket) : 0;

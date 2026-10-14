@@ -1,7 +1,5 @@
 import { cleanText } from './http.mjs';
 
-const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-
 export function searchProgressDisplayLabel(category = '') {
   const cat = cleanText(category, 40).toLowerCase();
   if (cat === 'restaurant') return 'Restaurants';

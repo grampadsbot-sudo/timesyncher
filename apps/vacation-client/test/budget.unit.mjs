@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 
 import {
+  OTHER_THINGS_BUCKET,
+  bucketDisplayLabel,
   bucketTargetAmount,
   budgetBucketForPlace,
   budgetLineAmount,
@@ -103,5 +105,39 @@ assert.equal(budgetBucketForPlace(placesForBudget(partialAssignmentTrip)[0], par
 
 const partialScore = budgetCompletenessScore(partialAssignmentTrip);
 assert.equal(partialScore.pass, partialScore.total);
+
+const forbiddenCustomerBucketLabel = ['Other', 'Things'].join(' ');
+assert.notEqual(OTHER_THINGS_BUCKET, forbiddenCustomerBucketLabel);
+assert.equal(bucketDisplayLabel(OTHER_THINGS_BUCKET), 'The Rest');
+assert.equal(bucketDisplayLabel('Flights'), 'Flights');
+
+const legacyMiscTargetKey = `overall:${forbiddenCustomerBucketLabel}`;
+const legacyTargetsTrip = {
+  trip: { currency: 'USD' },
+  places: [{ id: 40, name: 'Broadway show', category_name: 'Event' }],
+  thingOverrides: {
+    __budgetTargets: { [legacyMiscTargetKey]: '500' },
+    'place:40': { price: 120, category: 'event' },
+  },
+};
+assert.equal(bucketTargetAmount(legacyTargetsTrip, OTHER_THINGS_BUCKET), 500);
+assert.equal(tripBudgetTargetTotal(legacyTargetsTrip), 500);
+const legacyModel = buildBudgetModel(legacyTargetsTrip);
+const legacyBucket = legacyModel.buckets.find((b) => b.label === OTHER_THINGS_BUCKET);
+assert.ok(legacyBucket, 'legacy misc target resolves to Events bucket');
+assert.equal(legacyBucket.displayLabel, 'The Rest');
+assert.equal(legacyBucket.target, 500);
+const rendered = JSON.stringify(legacyModel);
+assert.equal(rendered.includes(forbiddenCustomerBucketLabel), false);
+assert.equal(
+  bucketTargetAmount(legacyTargetsTrip, forbiddenCustomerBucketLabel),
+  500,
+  'lookup by legacy bucket name in key must resolve',
+);
+const legacyScore = budgetCompletenessScore(legacyTargetsTrip);
+assert.equal(
+  legacyScore.checks.some((c) => c.name === `saved_target_${forbiddenCustomerBucketLabel}` && c.pass),
+  true,
+);
 
 console.log('vacation-client budget unit checks passed');

@@ -8,8 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
+import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
 import {
   applyTripMetadataBudgetTargets,
+  budgetGateAllowedAmounts,
   syncSharedTripApiBudget,
   trekBudgetAmount,
   tripBudgetTargetTotal,
@@ -271,5 +273,19 @@ try {
 } finally {
   rmSync(gatebTmpDir, { recursive: true, force: true });
 }
+
+const legacyMiscBucketLabel = ['Other', 'Things'].join(' ');
+const legacyMiscShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [{ id: 77, name: 'Harbor tour', category_name: 'Tour', category: { name: 'Tour', icon: '🎟️' } }],
+  thingOverrides: {
+    __budgetTargets: { [`overall:${legacyMiscBucketLabel}`]: '275' },
+    'place:77': { price: 60, category: 'tour' },
+  },
+});
+assert.notEqual(OTHER_THINGS_BUCKET, legacyMiscBucketLabel);
+assert.equal(tripBudgetTargetTotal(legacyMiscShared), 275, 'legacy misc overall target must resolve after bucket-key migration');
+const legacyGateAllowed = budgetGateAllowedAmounts(legacyMiscShared);
+assert.equal(legacyGateAllowed.has(275), true, 'legacy misc target must appear in budget gate allowed amounts');
 
 console.log('shared trip API budget lines sync passed');
