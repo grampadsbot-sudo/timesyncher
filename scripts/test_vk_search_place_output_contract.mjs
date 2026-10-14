@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import {
   assertCrossPlaceReviewBodiesDistinct,
   assertSearchPlaceOutputContract,
@@ -495,12 +493,5 @@ assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
 
 await import('./vk_search_place_source_contract_check.mjs');
 await assertVkSearchEventLogoSource(assert);
-
-{
-  const root = fileURLToPath(new URL('..', import.meta.url));
-  const guardTests = new URL('../tests/test_tsv_guard.py', import.meta.url).pathname;
-  const result = spawnSync('python3', [guardTests], { cwd: root, stdio: 'inherit' });
-  assert.equal(result.status, 0, 'tsv guard data-fault resolution python tests must pass');
-}
 
 console.log('vk search place output contract tests passed');

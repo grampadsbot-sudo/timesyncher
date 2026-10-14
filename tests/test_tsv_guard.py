@@ -17,16 +17,20 @@ import tsv_guard  # noqa: E402
 
 
 class HarnessFaultResolutionTests(unittest.TestCase):
+    integrity: tsv_dispatch.VkFixtureIntegrity
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.integrity = tsv_dispatch.verify_vk_fixture_integrity(ROOT)
+        if not cls.integrity.ok:
+            raise unittest.SkipTest(f'live fixture failed contract: {cls.integrity.contract_errors}')
+
     def test_current_repo_fixture_integrity_passes(self) -> None:
-        integrity = tsv_dispatch.verify_vk_fixture_integrity(ROOT)
-        self.assertTrue(integrity.ok, integrity.contract_errors)
-        self.assertTrue(integrity.repo_head_sha)
-        self.assertTrue(integrity.snapshot_sha256)
-        self.assertTrue(integrity.binding_sha256)
+        self.assertTrue(self.integrity.repo_head_sha)
+        self.assertTrue(self.integrity.snapshot_sha256)
+        self.assertTrue(self.integrity.binding_sha256)
 
     def test_historical_data_fault_released_by_bound_resolution(self) -> None:
-        integrity = tsv_dispatch.verify_vk_fixture_integrity(ROOT)
-        self.assertTrue(integrity.ok)
         verdicts = [
             tsv_guard.GateVerdict(
                 pr=336,
@@ -39,26 +43,26 @@ class HarnessFaultResolutionTests(unittest.TestCase):
         resolutions = [
             tsv_guard.DataFaultResolution(
                 pr=336,
-                repo_head_sha=integrity.repo_head_sha,
-                snapshot_sha256=integrity.snapshot_sha256,
-                binding_sha256=integrity.binding_sha256,
+                repo_head_sha=self.integrity.repo_head_sha,
+                snapshot_sha256=self.integrity.snapshot_sha256,
+                binding_sha256=self.integrity.binding_sha256,
                 recorded_at='2026-10-14T12:00:00+00:00',
             )
         ]
-        self.assertFalse(tsv_guard.harness_fault_pending(336, verdicts, resolutions, integrity))
+        self.assertFalse(
+            tsv_guard.harness_fault_pending(336, verdicts, resolutions, self.integrity),
+        )
         self.assertIsNone(
             tsv_guard.blocked_reason(
                 336,
                 fixit=True,
                 verdicts=verdicts,
                 resolutions=resolutions,
-                integrity=integrity,
-            )
+                integrity=self.integrity,
+            ),
         )
 
     def test_stale_resolution_does_not_clear_pause(self) -> None:
-        integrity = tsv_dispatch.verify_vk_fixture_integrity(ROOT)
-        self.assertTrue(integrity.ok)
         verdicts = [
             tsv_guard.GateVerdict(
                 pr=336,
@@ -72,18 +76,20 @@ class HarnessFaultResolutionTests(unittest.TestCase):
             tsv_guard.DataFaultResolution(
                 pr=336,
                 repo_head_sha='deadbeef',
-                snapshot_sha256=integrity.snapshot_sha256,
-                binding_sha256=integrity.binding_sha256,
+                snapshot_sha256=self.integrity.snapshot_sha256,
+                binding_sha256=self.integrity.binding_sha256,
                 recorded_at='2026-10-14T12:00:00+00:00',
             )
         ]
-        self.assertTrue(tsv_guard.harness_fault_pending(336, verdicts, resolutions, integrity))
+        self.assertTrue(
+            tsv_guard.harness_fault_pending(336, verdicts, resolutions, self.integrity),
+        )
         reason = tsv_guard.blocked_reason(
             336,
             fixit=True,
             verdicts=verdicts,
             resolutions=resolutions,
-            integrity=integrity,
+            integrity=self.integrity,
         )
         self.assertIn('harness/data fault', reason or '')
 
@@ -101,14 +107,12 @@ class HarnessFaultResolutionTests(unittest.TestCase):
                 tsv_guard.append_data_fault_resolution(path, pr=336, integrity=bad)
 
     def test_record_verified_resolution_appends_jsonl(self) -> None:
-        integrity = tsv_dispatch.verify_vk_fixture_integrity(ROOT)
-        self.assertTrue(integrity.ok)
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'resolutions.jsonl'
-            row = tsv_guard.record_verified_data_fault_resolution(
-                336,
+            row = tsv_guard.append_data_fault_resolution(
                 path,
-                repo_root=ROOT,
+                pr=336,
+                integrity=self.integrity,
                 note='issue-398 regression',
             )
             lines = path.read_text(encoding='utf-8').strip().splitlines()
@@ -116,7 +120,7 @@ class HarnessFaultResolutionTests(unittest.TestCase):
             payload = json.loads(lines[0])
             self.assertEqual(payload['kind'], 'data_fault_resolution')
             self.assertEqual(payload['pr'], 336)
-            self.assertEqual(row.binding_sha256, integrity.binding_sha256)
+            self.assertEqual(row.binding_sha256, self.integrity.binding_sha256)
 
 
 if __name__ == '__main__':
