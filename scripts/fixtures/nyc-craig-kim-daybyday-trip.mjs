@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import {
@@ -8,16 +5,24 @@ import {
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
 
-const PR336_SEARCH_SNAPSHOT = JSON.parse(
-  readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
-);
-
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
 /** Live TREK reads one-line copy via ha(place).summary → rr(place). */
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
 const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
+
+const SUMMARIES = {
+  601: 'Nonstop morning option; good if you want to land before lunch.',
+  602: 'UWS grocery stop for picnic supplies.',
+  603: 'Check-in window; drop bags before dinner.',
+  604: 'Ferry and grounds; keep tickets on phone.',
+  605: 'Browse rare room if time allows.',
+  606: 'Overlap window A: matinee tickets already held.',
+  607: 'Overlap window B: friend meetup at the same hour.',
+  610: 'Classic Italian; reserve the earliest table you can get.',
+  611: 'Evening set; arrive early for will-call pickup.',
+};
 
 const NYC_COORDS = {
   601: { lat: 40.6413, lng: -73.7781 },
@@ -34,11 +39,7 @@ const NYC_COORDS = {
 };
 
 export function listStoredSummaries() {
-  const out = {};
-  for (const [id, search] of Object.entries(PR336_SEARCH_SNAPSHOT)) {
-    if (search?.summary) out[id] = search.summary;
-  }
-  return out;
+  return { ...SUMMARIES };
 }
 
 export function expectedSummariesOnDay(dayNumber) {
@@ -47,38 +48,7 @@ export function expectedSummariesOnDay(dayNumber) {
     2: [604, 605],
     3: [606, 607],
   };
-  return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || '');
-}
-
-function applyPr336SearchFields(row, place, override) {
-  const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
-  if (!search) return;
-  if (search.description) {
-    place.description = search.description;
-    override.longDetails = search.description;
-  }
-  if (search.summary) override.summary = search.summary;
-  if (search.price != null) override.price = search.price;
-  if (search.logoUrl) {
-    override.logoUrl = search.logoUrl;
-    place.logoUrl = search.logoUrl;
-  }
-  if (search.url) {
-    place.website = search.url;
-    override.website = search.url;
-  }
-  if (search.address && text(search.address)) {
-    place.address = search.address;
-    override.address = search.address;
-  }
-  if (row.id === 609) {
-    override.rentalCompany = 'Priceline opaque';
-    override.vehicleClass = 'Toyota Corolla or similar';
-  }
-}
-
-function text(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
+  return (idsByDay[dayNumber] || []).map((id) => SUMMARIES[id]);
 }
 
 function buildPayload() {
@@ -148,8 +118,32 @@ function buildPayload() {
     const override = {
       timeline: !row.listOnly,
       category: row.cat,
+      summary: SUMMARIES[row.id] || '',
     };
-    applyPr336SearchFields(row, place, override);
+    if (row.id === 608) {
+      override.price = 389;
+      override.logoUrl = 'https://example-hotel.test/favicon.ico';
+    }
+    if (row.id === 609) {
+      override.price = 172;
+      override.rentalCompany = 'Priceline opaque';
+      override.vehicleClass = 'Toyota Corolla or similar';
+    }
+    if (row.id === 601) {
+      override.logoUrl = 'https://www.jetblue.com/favicon.ico';
+    }
+    if (row.id === 603) {
+      override.logoUrl = 'https://www.hilton.com/favicon.ico';
+    }
+    if (row.id === 602) {
+      override.logoUrl = 'https://www.zabars.com/favicon.ico';
+    }
+    if (row.id === 610) {
+      override.logoUrl = 'https://www.carbonegreenwichvillage.com/favicon.ico';
+    }
+    if (row.id === 611) {
+      override.logoUrl = 'https://www.jazz.org/favicon.ico';
+    }
     thingOverrides[`place:${row.id}`] = override;
   }
   const reservations = rows.map((row) => {
