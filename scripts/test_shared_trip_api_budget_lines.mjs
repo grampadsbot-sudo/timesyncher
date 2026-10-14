@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
@@ -216,5 +221,62 @@ assert.equal(
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
+
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+const gatebBudgetScript = join(repoRoot, 'scripts/gateb_head_budget_lines.mjs');
+
+function runGatebHeadBudgetScript(fixturePath) {
+  const out = execFileSync(process.execPath, [gatebBudgetScript, fixturePath], { encoding: 'utf8' });
+  return JSON.parse(out);
+}
+
+const gatebPricedFixture = {
+  trip: { id: tripId, title: 'Gate B head budget probe', start_date: '2026-06-10', end_date: '2026-06-17', currency: 'usd' },
+  days: [],
+  places: [
+    { id: 5, name: 'Sample priced restaurant', category_name: 'Restaurant', category: { name: 'Restaurant', icon: '🍽️' } },
+  ],
+  assignments: {},
+  thingOverrides: {
+    'place:5': { price: 20, category: 'restaurant' },
+  },
+  permissions: { share_map: true, share_bookings: true, share_packing: false, share_budget: true, share_collab: false },
+  budget: [],
+};
+
+const gatebPlaceAmt = trekBudgetAmount(
+  gatebPricedFixture.places[0],
+  gatebPricedFixture.thingOverrides['place:5'],
+  'restaurant',
+);
+assert.equal(gatebPlaceAmt.amount, 40, 'fixture place 5 must plan as $40 (per-person doubling)');
+
+const gatebTmpDir = mkdtempSync(join(tmpdir(), 'gateb-head-budget-'));
+const gatebPricedPath = join(gatebTmpDir, 'priced-place-5.json');
+writeFileSync(gatebPricedPath, JSON.stringify(gatebPricedFixture));
+const gatebPricedBudget = runGatebHeadBudgetScript(gatebPricedPath);
+assert.equal(Array.isArray(gatebPricedBudget), true);
+assert.equal(gatebPricedBudget.length > 0, true, 'gateb_head_budget_lines must print non-empty budget rows');
+const gatebPricedTotals = new Set(gatebPricedBudget.map((line) => Number(line.total_price)));
+assert.equal(gatebPricedTotals.has(40), true, 'budget rows must include place 5 total_price 40');
+
+const gatebMultiFixture = {
+  ...gatebPricedFixture,
+  places: [
+    gatebPricedFixture.places[0],
+    { id: 6, name: 'Hertz OGG', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
+  ],
+  thingOverrides: {
+    'place:5': { price: 20, category: 'restaurant' },
+    'place:6': { price: 45, category: 'car' },
+  },
+};
+const gatebMultiPath = join(gatebTmpDir, 'multi-priced.json');
+writeFileSync(gatebMultiPath, JSON.stringify(gatebMultiFixture));
+const gatebMultiBudget = runGatebHeadBudgetScript(gatebMultiPath);
+const gatebMultiTotals = new Set(gatebMultiBudget.map((line) => Number(line.total_price)));
+assert.equal(gatebMultiTotals.has(40), true);
+assert.equal(gatebMultiTotals.has(45), true);
+assert.equal(gatebMultiTotals.has(85), true, 'trip planned total must be on API budget');
 
 console.log('shared trip API budget lines sync passed');
