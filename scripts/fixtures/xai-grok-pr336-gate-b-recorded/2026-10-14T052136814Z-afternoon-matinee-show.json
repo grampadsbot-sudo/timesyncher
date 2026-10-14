@@ -1,0 +1,651 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 606,
+  "ccabKey": "Afternoon matinee show",
+  "title": "Afternoon matinee show",
+  "structuredText": "{ \"google\": {\"notPublished\": false, \"average\": 4.5, \"reviewCount\": 3607, \"sourceUrl\": \"https://maps.app.goo.gl/R6DFvRBe9grt99kc7\"}, \"yelp\": {\"notPublished\": false, \"average\": 4.0, \"reviewCount\": 336, \"sourceUrl\": \"https://www.yelp.com/biz/tkts-times-square-new-york\"}, \"otherSites\": [{\"average\": 4.6, \"reviewCount\": 17, \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html\"}], \"reviewThemes\": {\"praise\": [\"great for discounted same-day Broadway tickets\", \"helpful and courteous staff\", \"reliable affordable access to shows\"], \"complaints\": [\"long waiting lines especially at peak times\", \"popular shows like Lion King or Wicked often unavailable\"]}, \"websiteFlavour\": \"TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.\" }",
+  "payload": {
+    "created_at": 1791955361,
+    "completed_at": 1791955376,
+    "id": "d66c8c62-a8de-970d-b856-d74a72999fed",
+    "max_output_tokens": null,
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
+    "object": "response",
+    "output": [
+      {
+        "id": "ws_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "TKTS Times Square reviews ratings Google Yelp TripAdvisor",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/tkts-times-square-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.manhattan-nyc.com/businesses/tkts-times-square--g-1hd_cyzy0/"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7"
+            },
+            {
+              "type": "url",
+              "url": "https://www.theticketblog.com/post/tkts-booth-guide"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/RestaurantsNear-g60763-d25265232-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://es.yelp.com/biz/tkts-times-square-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.nl/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://fr.tripadvisor.ca/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.id/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.il/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.hk/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.it/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "TKTS Times Square Broadway average star rating review count",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/tkts-times-square-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://evenaisle.com/guides/the-tkts-booth-demystified/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.manhattan-nyc.com/businesses/tkts-times-square--g-1hd_cyzy0/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7"
+            },
+            {
+              "type": "url",
+              "url": "https://www.theticketblog.com/post/tkts-booth-guide"
+            },
+            {
+              "type": "url",
+              "url": "https://github.com/thomaspryor/Broadwayscore"
+            },
+            {
+              "type": "url",
+              "url": "https://www.mapquest.com/us/new-york/tkts-times-square-304424984"
+            },
+            {
+              "type": "url",
+              "url": "https://freetoursbyfoot.com/tkts-discount-broadway-tickets/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r998864760-Tkts_Times_Square-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"TKTS Times Square\" site:tripadvisor.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15464033-Tkts_booth_is_it_open_jan_1_or_2-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15445852-Tkts-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k14138989-TKTS_best_time_location_to_buy_Broadway_tickets-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://cn.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/HotelsNear-g60763-d25265232-Tkts_Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d110145-r266435902-Times_Square-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k2993493-o30-TKTS_scam_on_tourists-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k247010-TKTS_Booth_what_time_does_it_open-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+        }
+      },
+      {
+        "id": "ws_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.yelp.com/biz/tkts-times-square-new-york"
+        }
+      },
+      {
+        "id": "tco_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_d66c8c62-a8de-970d-b856-d74a72999fed_call-c8384b99-8a06-4f6c-814f-672a9d984941-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\"notPublished\": false, \"average\": 4.5, \"reviewCount\": 3607, \"sourceUrl\": \"https://maps.app.goo.gl/R6DFvRBe9grt99kc7\"},\n  \"yelp\": {\"notPublished\": false, \"average\": 4.0, \"reviewCount\": 336, \"sourceUrl\": \"https://www.yelp.com/biz/tkts-times-square-new-york\"},\n  \"otherSites\": [{\"average\": 4.6, \"reviewCount\": 17, \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html\"}],\n  \"reviewThemes\": {\"praise\": [\"great for discounted same-day Broadway tickets\", \"helpful and courteous staff\", \"reliable affordable access to shows\"], \"complaints\": [\"long waiting lines especially at peak times\", \"popular shows like Lion King or Wicked often unavailable\"]},\n  \"websiteFlavour\": \"TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.theticketblog.com/post/tkts-booth-guide",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.theticketblog.com/post/tkts-booth-guide"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://evenaisle.com/guides/the-tkts-booth-demystified/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://evenaisle.com/guides/the-tkts-booth-demystified/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://cn.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://cn.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k247010-TKTS_Booth_what_time_does_it_open-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k247010-TKTS_Booth_what_time_does_it_open-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://github.com/thomaspryor/Broadwayscore",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://github.com/thomaspryor/Broadwayscore"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://es.yelp.com/biz/tkts-times-square-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://es.yelp.com/biz/tkts-times-square-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.mapquest.com/us/new-york/tkts-times-square-304424984",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.mapquest.com/us/new-york/tkts-times-square-304424984"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://fr.tripadvisor.ca/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://fr.tripadvisor.ca/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d110145-r266435902-Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d110145-r266435902-Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.ca/RestaurantsNear-g60763-d25265232-TKTS_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.ca/RestaurantsNear-g60763-d25265232-TKTS_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.it/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.it/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.id/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.id/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.hk/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.hk/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.br/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15464033-Tkts_booth_is_it_open_jan_1_or_2-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15464033-Tkts_booth_is_it_open_jan_1_or_2-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/HotelsNear-g60763-d25265232-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/HotelsNear-g60763-d25265232-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k2993493-o30-TKTS_scam_on_tourists-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k2993493-o30-TKTS_scam_on_tourists-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-TKTS_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-TKTS_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.nl/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.nl/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r1045520779-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k14138989-TKTS_best_time_location_to_buy_Broadway_tickets-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k14138989-TKTS_best_time_location_to_buy_Broadway_tickets-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.manhattan-nyc.com/businesses/tkts-times-square--g-1hd_cyzy0/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.manhattan-nyc.com/businesses/tkts-times-square--g-1hd_cyzy0/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.il/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.il/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15445852-Tkts-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowTopic-g60763-i5-k15445852-Tkts-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://freetoursbyfoot.com/tkts-discount-broadway-tickets/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://freetoursbyfoot.com/tkts-discount-broadway-tickets/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/tkts-times-square-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/tkts-times-square-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d25265232-Reviews-Tkts_Times_Square-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r998864760-Tkts_Times_Square-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d25265232-r998864760-Tkts_Times_Square-New_York_City_New_York.html"
+              }
+            ]
+          }
+        ],
+        "id": "msg_d66c8c62-a8de-970d-b856-d74a72999fed",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 46402,
+      "input_tokens_details": {
+        "cached_tokens": 23936
+      },
+      "output_tokens": 1726,
+      "output_tokens_details": {
+        "reasoning_tokens": 1329
+      },
+      "total_tokens": 48128,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 5,
+      "cost_in_usd_ticks": 621847000,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 5,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 22890,
+        "output_tokens": 554
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}

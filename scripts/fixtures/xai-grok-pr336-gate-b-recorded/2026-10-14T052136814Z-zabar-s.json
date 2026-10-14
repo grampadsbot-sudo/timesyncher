@@ -1,0 +1,660 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 602,
+  "ccabKey": "Zabar's",
+  "title": "Zabar's",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 4.5, \"reviewCount\": 6665, \"sourceUrl\": \"https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7\" }, \"yelp\": { \"notPublished\": false, \"average\": 3.9, \"reviewCount\": 1448, \"sourceUrl\": \"https://www.yelp.com/biz/zabars-new-york\" }, \"otherSites\": [ { \"average\": 4.2, \"reviewCount\": 532, \"sourceUrl\": \"https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html\" }, { \"average\": 4.4, \"reviewCount\": 562, \"sourceUrl\": \"https://www.restaurantji.com/ny/new-york/zabars-2/\" } ], \"reviewThemes\": { \"praise\": [ \"Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection\", \"Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee\", \"Authentic old-school NYC vibe, excellent for gifts and specialty foods\" ], \"complaints\": [ \"Occasional rude or slow service, long lines at counters and checkout\", \"Some items can be expensive; crowds make it hectic\" ] }, \"websiteFlavour\": \"Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.\" }",
+  "payload": {
+    "created_at": 1791955297,
+    "completed_at": 1791955310,
+    "id": "9a3c6e99-7336-93cd-9cec-d107b50ccbc0",
+    "max_output_tokens": null,
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
+    "object": "response",
+    "output": [
+      {
+        "id": "rs_9a3c6e99-7336-93cd-9cec-d107b50ccbc0",
+        "summary": [
+          {
+            "text": "I will search for published average star ratings and review counts for Zabar's at 2245 Broadway, New York, NY 10024.",
+            "type": "summary_text"
+          }
+        ],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Zabar's 2245 Broadway New York NY reviews Google rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/zabars-149337811117601"
+            },
+            {
+              "type": "url",
+              "url": "https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7"
+            },
+            {
+              "type": "url",
+              "url": "https://usa-artmuseum.worldorgs.com/catalog/new-york/tourist-attraction/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://wanderlog.com/nb/place/details/87513/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r971911774-Zabar_s-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r990689160-Zabar_s-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.mapquest.com/us/new-york/zabars-370247592"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.roadtrippers.com/us/new-york-ny/food-drink/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://joe.coffee/locations/ny/new-york/zabar-s-caf-new-york/"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Zabar's 2245 Broadway New York NY Yelp rating reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/zabars-catering-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/zabars-149337811117601"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.es/biz/zabars-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.roadtrippers.com/us/new-york-ny/food-drink/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://es.yelp.com/biz/zabars-new-york"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Zabar's New York TripAdvisor rating reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.uk/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r990689160-Zabar_s-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d948624-r789913280-Zabar_s-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Zabar's official website reviews or ratings",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.trustpilot.com/review/www.zabars.com"
+            },
+            {
+              "type": "url",
+              "url": "https://www.nytimes.com/topic/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://www.glassdoor.com/Reviews/Zabar-s-Reviews-E11967.htm"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://www.zabars.com/"
+        }
+      },
+      {
+        "id": "ws_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-5",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Zabar's Yelp exact rating and review count",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://maps.roadtrippers.com/us/new-york-ny/food-drink/zabars"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.es/biz/zabars-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/zabars-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Zabar%27s&find_loc=Brooklyn%2C+NY+11219"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Zabar%2527s&find_loc=New+York%2C+NY"
+            },
+            {
+              "type": "url",
+              "url": "https://www.trustpilot.com/review/www.zabars.com"
+            },
+            {
+              "type": "url",
+              "url": "https://menuweb.menu/restaurants/broad-channel/zabars/reviews"
+            },
+            {
+              "type": "url",
+              "url": "https://www.checkle.com/biz/zabars-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_9a3c6e99-7336-93cd-9cec-d107b50ccbc0_call-2152bcb2-b4cc-4417-93fd-2558e344f62a-5",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 4.5,\n    \"reviewCount\": 6665,\n    \"sourceUrl\": \"https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7\"\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 3.9,\n    \"reviewCount\": 1448,\n    \"sourceUrl\": \"https://www.yelp.com/biz/zabars-new-york\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.2,\n      \"reviewCount\": 532,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html\"\n    },\n    {\n      \"average\": 4.4,\n      \"reviewCount\": 562,\n      \"sourceUrl\": \"https://www.restaurantji.com/ny/new-york/zabars-2/\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection\",\n      \"Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee\",\n      \"Authentic old-school NYC vibe, excellent for gifts and specialty foods\"\n    ],\n    \"complaints\": [\n      \"Occasional rude or slow service, long lines at counters and checkout\",\n      \"Some items can be expensive; crowds make it hectic\"\n    ]\n  },\n  \"websiteFlavour\": \"Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.restaurantji.com/ny/new-york/zabars-2/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.trustpilot.com/review/www.zabars.com",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.trustpilot.com/review/www.zabars.com"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.mapquest.com/us/new-york/zabars-370247592",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.mapquest.com/us/new-york/zabars-370247592"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://menuweb.menu/restaurants/broad-channel/zabars/reviews",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://menuweb.menu/restaurants/broad-channel/zabars/reviews"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://joe.coffee/locations/ny/new-york/zabar-s-caf-new-york/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://joe.coffee/locations/ny/new-york/zabar-s-caf-new-york/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/zabars-catering-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/zabars-catering-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://usa-artmuseum.worldorgs.com/catalog/new-york/tourist-attraction/zabars",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://usa-artmuseum.worldorgs.com/catalog/new-york/tourist-attraction/zabars"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://reviews.birdeye.com/zabars-149337811117601",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://reviews.birdeye.com/zabars-149337811117601"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r971911774-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r971911774-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.zabars.com/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.zabars.com/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/zabars-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/zabars-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Zabar%2527s&find_loc=New+York%2C+NY",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Zabar%2527s&find_loc=New+York%2C+NY"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r990689160-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d565663-r990689160-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.es/biz/zabars-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.es/biz/zabars-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d948624-r789913280-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d948624-r789913280-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.uk/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.uk/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.nytimes.com/topic/zabars",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.nytimes.com/topic/zabars"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.glassdoor.com/Reviews/Zabar-s-Reviews-E11967.htm",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.glassdoor.com/Reviews/Zabar-s-Reviews-E11967.htm"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.checkle.com/biz/zabars-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.checkle.com/biz/zabars-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://wanderlog.com/nb/place/details/87513/zabars",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://wanderlog.com/nb/place/details/87513/zabars"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://es.yelp.com/biz/zabars-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://es.yelp.com/biz/zabars-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.ca/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.ca/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Zabar%27s&find_loc=Brooklyn%2C+NY+11219",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Zabar%27s&find_loc=Brooklyn%2C+NY+11219"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://maps.roadtrippers.com/us/new-york-ny/food-drink/zabars",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://maps.roadtrippers.com/us/new-york-ny/food-drink/zabars"
+              }
+            ]
+          }
+        ],
+        "id": "msg_9a3c6e99-7336-93cd-9cec-d107b50ccbc0",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 45462,
+      "input_tokens_details": {
+        "cached_tokens": 19072
+      },
+      "output_tokens": 1386,
+      "output_tokens_details": {
+        "reasoning_tokens": 822
+      },
+      "total_tokens": 46848,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 6,
+      "cost_in_usd_ticks": 702669000,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 6,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 26846,
+        "output_tokens": 719
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}

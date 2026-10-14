@@ -1,0 +1,786 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 604,
+  "ccabKey": "Statue of Liberty walking tour",
+  "title": "Statue of Liberty walking tour",
+  "structuredText": "{ \"google\": { \"notPublished\": true, \"average\": null, \"reviewCount\": null, \"sourceUrl\": null }, \"yelp\": { \"notPublished\": true, \"average\": null, \"reviewCount\": null, \"sourceUrl\": null }, \"otherSites\": [ { \"average\": 4.9, \"reviewCount\": 9034, \"sourceUrl\": \"https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html\" }, { \"average\": 4.8, \"reviewCount\": 14896, \"sourceUrl\": \"https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS\" }, { \"average\": 4.6, \"reviewCount\": 2968, \"sourceUrl\": \"https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/\" } ], \"reviewThemes\": { \"praise\": [ \"knowledgeable and engaging guides who share rich Statue and Ellis history\", \"guides keep groups organized and take photos\", \"enthusiastic guides who make history come to life with accents and stories\", \"well-organized tours with reserved ferry access\" ], \"complaints\": [ \"long security queues and wait times especially in peak season\", \"need clearer details on inclusions like Ellis Island guidance and pedestal access\", \"significant walking involved; prepare for heat and hydration\" ] }, \"websiteFlavour\": \"Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.\" }",
+  "payload": {
+    "created_at": 1791955334,
+    "completed_at": 1791955346,
+    "id": "134d76e5-b3c8-9894-92e2-94b641d77941",
+    "max_output_tokens": null,
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
+    "object": "response",
+    "output": [
+      {
+        "id": "rs_134d76e5-b3c8-9894-92e2-94b641d77941",
+        "summary": [
+          {
+            "text": "I will search for published average star ratings and review counts for the Statue of Liberty walking tour at Castle Clinton, Battery Park, New York.",
+            "type": "summary_text"
+          }
+        ],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Statue of Liberty walking tour Castle Clinton Battery Park Google reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co.uk/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+            },
+            {
+              "type": "url",
+              "url": "https://en.tripadvisor.com.hk/Attraction_Review-g60763-d103887-Reviews-Statue_of_Liberty-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13286651-Statue_of_Liberty_Tour_with_Ellis_Island_and_Immigration_Museum-New_York_City_New_Y.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.ar/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Statue of Liberty walking tour Castle Clinton Yelp reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Statue of Liberty\" walking tour OR ferry Battery Park TripAdvisor rating reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-or10-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_Yo.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-or140-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_N.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13286651-Statue_of_Liberty_Tour_with_Ellis_Island_and_Immigration_Museum-New_York_City_New_Y.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d12643576-or30-Statue_of_Liberty_and_New_York_City_Skyline_Sightseeing_Cruise-New_York_City_N.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.co/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Statue City Cruises reviews rating site:tripadvisor.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1000564750-Statue_City_Cruises-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1055203819-Statue_City_Cruises-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1032812435-Statue_City_Cruises-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13155435-City_Cruises_Statue_of_Liberty_and_Ellis_Island_Ticket-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-4",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "open_page",
+          "url": "https://statuecitycruises.com/tickets/new-york-general-admission"
+        }
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-5",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Statue of Liberty walking tour Castle Clinton site:yelp.com",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?cflt=landmarks&find_near=statue-of-liberty-new-york-3"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=50"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Walking+Tours&find_loc=1633+Broadway%2C+New+York%2C+NY+10019"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/liberty-island-new-york"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=40"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/usa-guided-tours-washington?start=80"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=240"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Statue+Of+Liberty&find_loc=W+79th+St%2C+New+York%2C+NY"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=480"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/nyc-cycleboats-hoboken"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-6",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Castle Clinton\" OR \"Statue of Liberty walking tour\" Battery Park Google rating OR reviews",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d105811-Reviews-Castle_Clinton_National_Monument-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+            },
+            {
+              "type": "url",
+              "url": "https://goo.gl/maps/pPrpDLekseyy3UrXA"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13286651-Statue_of_Liberty_Tour_with_Ellis_Island_and_Immigration_Museum-New_York_City_New_Y.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.getyourguide.com/new-york-city-l59/statue-of-liberty-ellis-island-ticket-options-with-ferry-t393246/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-5",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-6",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_134d76e5-b3c8-9894-92e2-94b641d77941_call-52e8957e-02d3-41c4-9185-4a6a3d95ed77-4",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": true,\n    \"average\": null,\n    \"reviewCount\": null,\n    \"sourceUrl\": null\n  },\n  \"yelp\": {\n    \"notPublished\": true,\n    \"average\": null,\n    \"reviewCount\": null,\n    \"sourceUrl\": null\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.9,\n      \"reviewCount\": 9034,\n      \"sourceUrl\": \"https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html\"\n    },\n    {\n      \"average\": 4.8,\n      \"reviewCount\": 14896,\n      \"sourceUrl\": \"https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS\"\n    },\n    {\n      \"average\": 4.6,\n      \"reviewCount\": 2968,\n      \"sourceUrl\": \"https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"knowledgeable and engaging guides who share rich Statue and Ellis history\",\n      \"guides keep groups organized and take photos\",\n      \"enthusiastic guides who make history come to life with accents and stories\",\n      \"well-organized tours with reserved ferry access\"\n    ],\n    \"complaints\": [\n      \"long security queues and wait times especially in peak season\",\n      \"need clearer details on inclusions like Ellis Island guidance and pedestal access\",\n      \"significant walking involved; prepare for heat and hydration\"\n    ]\n  },\n  \"websiteFlavour\": \"Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d34243222-NYC_Statue_City_Cruises_Official_Statue_of_Liberty_Ticket-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/liberty-island-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/liberty-island-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1055203819-Statue_City_Cruises-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1055203819-Statue_City_Cruises-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/usa-guided-tours-washington?start=80",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/usa-guided-tours-washington?start=80"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Statue+Of+Liberty&find_loc=W+79th+St%2C+New+York%2C+NY",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Statue+Of+Liberty&find_loc=W+79th+St%2C+New+York%2C+NY"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=50",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=50"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=40",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=40"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13155435-City_Cruises_Statue_of_Liberty_and_Ellis_Island_Ticket-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13155435-City_Cruises_Statue_of_Liberty_and_Ellis_Island_Ticket-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13286651-Statue_of_Liberty_Tour_with_Ellis_Island_and_Immigration_Museum-New_York_City_New_Y.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d13286651-Statue_of_Liberty_Tour_with_Ellis_Island_and_Immigration_Museum-New_York_City_New_Y.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=240",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=240"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-or140-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_N.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-or140-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_N.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/nyc-cycleboats-hoboken",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/nyc-cycleboats-hoboken"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?cflt=landmarks&find_near=statue-of-liberty-new-york-3",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?cflt=landmarks&find_near=statue-of-liberty-new-york-3"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d105811-Reviews-Castle_Clinton_National_Monument-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d105811-Reviews-Castle_Clinton_National_Monument-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.ar/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.ar/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.getyourguide.com/new-york-city-l59/statue-of-liberty-ellis-island-ticket-options-with-ferry-t393246/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.getyourguide.com/new-york-city-l59/statue-of-liberty-ellis-island-ticket-options-with-ferry-t393246/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-or10-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_Yo.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-or10-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_Yo.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.co.uk/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.co.uk/AttractionProductReview-g60763-d13476509-Statue_of_Liberty_Express_Museum_Statue_Grounds_Battery_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11461383-Statue_of_Liberty_and_Ellis_Island_Guided_Tour_with_Ferry-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://en.tripadvisor.com.hk/Attraction_Review-g60763-d103887-Reviews-Statue_of_Liberty-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://en.tripadvisor.com.hk/Attraction_Review-g60763-d103887-Reviews-Statue_of_Liberty-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://goo.gl/maps/pPrpDLekseyy3UrXA",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://goo.gl/maps/pPrpDLekseyy3UrXA"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://statuecitycruises.com/tickets/new-york-general-admission"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d12643576-or30-Statue_of_Liberty_and_New_York_City_Skyline_Sightseeing_Cruise-New_York_City_N.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d12643576-or30-Statue_of_Liberty_and_New_York_City_Skyline_Sightseeing_Cruise-New_York_City_N.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1000564750-Statue_City_Cruises-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1000564750-Statue_City_Cruises-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1032812435-Statue_City_Cruises-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r1032812435-Statue_City_Cruises-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Walking+Tours&find_loc=1633+Broadway%2C+New+York%2C+NY+10019",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Walking+Tours&find_loc=1633+Broadway%2C+New+York%2C+NY+10019"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451131-NYC_City_Tour_Statue_of_Liberty_9_11_Memorial_Wall_Street-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=480",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/statue-of-liberty-new-york-3?start=480"
+              }
+            ]
+          }
+        ],
+        "id": "msg_134d76e5-b3c8-9894-92e2-94b641d77941",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 52617,
+      "input_tokens_details": {
+        "cached_tokens": 21376
+      },
+      "output_tokens": 1382,
+      "output_tokens_details": {
+        "reasoning_tokens": 738
+      },
+      "total_tokens": 53999,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 7,
+      "cost_in_usd_ticks": 817814500,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 7,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 31746,
+        "output_tokens": 702
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}

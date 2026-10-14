@@ -122,15 +122,27 @@ function applyPr336SearchFields(row, place, override) {
     'yelpReviewCount',
     'thirdPartyReviewCount',
     'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
     'ratingCount',
-    'ratingMix',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
   ]) {
     if (record[key] != null && record[key] !== '') override[key] = record[key];
   }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
   for (let index = 1; index <= 4; index += 1) {
-    for (const suffix of ['', 'Source', 'Rating']) {
+    for (const suffix of ['', 'Rating']) {
       const field = `review${index}${suffix}`;
       if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
     }
   }
   if (row.id === 609) {

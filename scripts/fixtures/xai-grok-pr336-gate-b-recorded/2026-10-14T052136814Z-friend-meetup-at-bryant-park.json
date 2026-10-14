@@ -1,0 +1,514 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 607,
+  "ccabKey": "Friend meetup at Bryant Park",
+  "title": "Friend meetup at Bryant Park",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 4.7, \"reviewCount\": 108706, \"sourceUrl\": \"https://goo.gl/maps/kt36oPqKcKeKPLY3A\" }, \"yelp\": { \"notPublished\": false, \"average\": 4.6, \"reviewCount\": 1429, \"sourceUrl\": \"https://www.yelp.com/biz/bryant-park-new-york-2\" }, \"otherSites\": [ { \"average\": 4.6, \"reviewCount\": 24055, \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html\" } ], \"reviewThemes\": { \"praise\": [ \"beautiful green oasis and peaceful escape in Midtown\", \"clean bathrooms (rare in the area)\", \"free events like concerts, movies, yoga, piano sessions\", \"lawn seating, movable chairs, reading room\", \"festive winter village and ice skating\", \"great for people-watching, relaxing, lunch\" ], \"complaints\": [ \"can be crowded especially in peak seasons or holidays\", \"winter ice rink and vendors sometimes described as overpriced or crowded\" ] }, \"websiteFlavour\": \"Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.\" }",
+  "payload": {
+    "created_at": 1791955376,
+    "completed_at": 1791955383,
+    "id": "7751c9e6-34fb-941f-88e2-2de529fd512d",
+    "max_output_tokens": null,
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
+    "object": "response",
+    "output": [
+      {
+        "id": "ws_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Bryant Park New York NY Google reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://goo.gl/maps/kt36oPqKcKeKPLY3A"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-222102806-bryant-park-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/bryant-park-grill-/"
+            },
+            {
+              "type": "url",
+              "url": "https://travel.usnews.com/New_York_NY/Things_To_Do/Bryant_Park_18197/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=960"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=680"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.fr/biz/bryant-park-new-york-2"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=540"
+            },
+            {
+              "type": "url",
+              "url": "https://pos.do/pt/new-york/restaurante/bryant-park-cafe-new-york"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Bryant Park NYC Yelp reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/bryant-park-157366024756047"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=960"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/search?find_desc=Bryant+Park&find_loc=Upper+East+Side%2C+Manhattan%2C+NY"
+            },
+            {
+              "type": "url",
+              "url": "https://www.restaurantji.com/ny/new-york/bryant-park-grill-/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Bryant Park New York TripAdvisor reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1040805424-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1013455626-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1042514587-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d136347-r955720992-Bryant_Park-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Bryant Park NYC official website reviews or ratings",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://bryantpark.org/"
+            },
+            {
+              "type": "url",
+              "url": "https://reviews.birdeye.com/bryant-park-157366024756047"
+            },
+            {
+              "type": "url",
+              "url": "https://g.page/bryant-park-new-york?share"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-222102806-bryant-park-new-york/"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_7751c9e6-34fb-941f-88e2-2de529fd512d_call-f528fb28-9c86-4aa6-bd26-64dfcfaebd14-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 4.7,\n    \"reviewCount\": 108706,\n    \"sourceUrl\": \"https://goo.gl/maps/kt36oPqKcKeKPLY3A\"\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 4.6,\n    \"reviewCount\": 1429,\n    \"sourceUrl\": \"https://www.yelp.com/biz/bryant-park-new-york-2\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.6,\n      \"reviewCount\": 24055,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"beautiful green oasis and peaceful escape in Midtown\",\n      \"clean bathrooms (rare in the area)\",\n      \"free events like concerts, movies, yoga, piano sessions\",\n      \"lawn seating, movable chairs, reading room\",\n      \"festive winter village and ice skating\",\n      \"great for people-watching, relaxing, lunch\"\n    ],\n    \"complaints\": [\n      \"can be crowded especially in peak seasons or holidays\",\n      \"winter ice rink and vendors sometimes described as overpriced or crowded\"\n    ]\n  },\n  \"websiteFlavour\": \"Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1013455626-Bryant_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1013455626-Bryant_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://local.yahoo.com/info-222102806-bryant-park-new-york/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://local.yahoo.com/info-222102806-bryant-park-new-york/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=540",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/bryant-park-new-york-2?start=540"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d136347-r955720992-Bryant_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d136347-r955720992-Bryant_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=680",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/bryant-park-new-york-2?start=680"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://travel.usnews.com/New_York_NY/Things_To_Do/Bryant_Park_18197/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://travel.usnews.com/New_York_NY/Things_To_Do/Bryant_Park_18197/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.restaurantji.com/ny/new-york/bryant-park-grill-/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.restaurantji.com/ny/new-york/bryant-park-grill-/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1040805424-Bryant_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1040805424-Bryant_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://g.page/bryant-park-new-york?share",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://g.page/bryant-park-new-york?share"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1042514587-Bryant_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r1042514587-Bryant_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/bryant-park-new-york-2?start=960",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/bryant-park-new-york-2?start=960"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/search?find_desc=Bryant+Park&find_loc=Upper+East+Side%2C+Manhattan%2C+NY",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/search?find_desc=Bryant+Park&find_loc=Upper+East+Side%2C+Manhattan%2C+NY"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://reviews.birdeye.com/bryant-park-157366024756047",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://reviews.birdeye.com/bryant-park-157366024756047"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://pos.do/pt/new-york/restaurante/bryant-park-cafe-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://pos.do/pt/new-york/restaurante/bryant-park-cafe-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.ca/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.fr/biz/bryant-park-new-york-2",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.fr/biz/bryant-park-new-york-2"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://bryantpark.org/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://bryantpark.org/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://goo.gl/maps/kt36oPqKcKeKPLY3A",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://goo.gl/maps/kt36oPqKcKeKPLY3A"
+              }
+            ]
+          }
+        ],
+        "id": "msg_7751c9e6-34fb-941f-88e2-2de529fd512d",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 19120,
+      "input_tokens_details": {
+        "cached_tokens": 2048
+      },
+      "output_tokens": 998,
+      "output_tokens_details": {
+        "reasoning_tokens": 546
+      },
+      "total_tokens": 20118,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 4,
+      "cost_in_usd_ticks": 442446000,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 4,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 17608,
+        "output_tokens": 809
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}
