@@ -8,6 +8,10 @@
   let chunks = [];
   let startedAt = 0;
   let timerId = 0;
+  let audioContext = null;
+  let analyser = null;
+  let meterSource = null;
+  let meterRaf = 0;
   let finishMode = 'cancel';
   let pendingBlob = null;
   let speechTranscript = '';
@@ -40,7 +44,7 @@
       recordingBar.className = 'ts-shared-audio-recording-bar';
       recordingBar.setAttribute('role', 'status');
       recordingBar.setAttribute('aria-live', 'polite');
-      recordingBar.innerHTML = '<span data-ts-voice-elapsed>0:00</span><div class="ts-shared-audio-recording-actions"><button type="button" data-ts-voice-send>Send</button><button type="button" data-ts-voice-stop>Stop</button><button type="button" data-ts-voice-cancel>Cancel</button></div>';
+      recordingBar.innerHTML = '<span data-ts-voice-elapsed>0:00</span><div class="ts-shared-audio-meter" data-ts-voice-meter aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div class="ts-shared-audio-recording-actions"><button type="button" data-ts-voice-send>Send</button><button type="button" data-ts-voice-stop>Stop</button><button type="button" data-ts-voice-cancel>Cancel</button></div>';
       recordingBar.querySelector('[data-ts-voice-send]').addEventListener('click', () => {
         if (recorder?.state === 'recording') {
           finishMode = 'send';
@@ -105,6 +109,85 @@
     timerId = 0;
   }
 
+  function stopMeterLoop() {
+    if (meterRaf) cancelAnimationFrame(meterRaf);
+    meterRaf = 0;
+  }
+
+  function resetMeterDisplay() {
+    if (!recordingBar) return;
+    recordingBar.dataset.tsVoiceMeterLevel = '0';
+    recordingBar.querySelectorAll('[data-ts-voice-meter] span').forEach((bar) => {
+      bar.style.height = '2px';
+    });
+  }
+
+  async function teardownAudioGraph() {
+    stopMeterLoop();
+    if (meterSource) {
+      try {
+        meterSource.disconnect();
+      } catch (err) {
+        /* ignore duplicate disconnect */
+      }
+      meterSource = null;
+    }
+    if (analyser) {
+      try {
+        analyser.disconnect();
+      } catch (err) {
+        /* ignore duplicate disconnect */
+      }
+      analyser = null;
+    }
+    if (audioContext) {
+      const ctx = audioContext;
+      audioContext = null;
+      try {
+        if (ctx.state !== 'closed') await ctx.close();
+      } catch (err) {
+        /* ignore close races */
+      }
+    }
+    resetMeterDisplay();
+  }
+
+  async function startMeter(activeStream) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx || !activeStream) return;
+    await teardownAudioGraph();
+    audioContext = new AudioCtx();
+    if (audioContext.state === 'suspended') await audioContext.resume();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.65;
+    meterSource = audioContext.createMediaStreamSource(activeStream);
+    meterSource.connect(analyser);
+    const bins = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      if (!analyser || !recordingBar) return;
+      analyser.getByteFrequencyData(bins);
+      const barEls = [...recordingBar.querySelectorAll('[data-ts-voice-meter] span')];
+      let peak = 0;
+      barEls.forEach((bar, index) => {
+        const start = Math.floor((index / barEls.length) * bins.length);
+        const end = Math.floor(((index + 1) / barEls.length) * bins.length);
+        let sum = 0;
+        let count = 0;
+        for (let i = start; i < end; i += 1) {
+          sum += bins[i];
+          count += 1;
+        }
+        const avg = count ? sum / count : 0;
+        peak = Math.max(peak, avg);
+        bar.style.height = `${Math.max(2, Math.round((avg / 255) * 14))}px`;
+      });
+      recordingBar.dataset.tsVoiceMeterLevel = String(Math.round((peak / 255) * 100));
+      meterRaf = requestAnimationFrame(tick);
+    };
+    meterRaf = requestAnimationFrame(tick);
+  }
+
   function stopSpeechCapture() {
     if (!recognition) return speechTranscript;
     try {
@@ -161,6 +244,7 @@
   function cleanupRecording({ resetMic = false } = {}) {
     stopTimer();
     stopSpeechCapture();
+    void teardownAudioGraph();
     stopStreamTracks();
     recorder = null;
     chunks = [];
@@ -242,6 +326,8 @@
     chunks = [];
     finishMode = 'cancel';
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordingBar.dataset.tsVoiceMeterLevel = '0';
+    await startMeter(stream);
     const type = preferredType();
     recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
     recorder.addEventListener('dataavailable', (event) => {
@@ -251,8 +337,9 @@
       const blob = new Blob(chunks, { type: recorder?.mimeType || 'audio/webm' });
       const mode = finishMode;
       const transcript = stopSpeechCapture();
-      stopStreamTracks();
       stopTimer();
+      void teardownAudioGraph();
+      stopStreamTracks();
       hideRecordingBar();
       finishMode = 'cancel';
       recorder = null;
