@@ -92,13 +92,7 @@ export function trekBudgetAmount(place = {}, override = {}, category = '') {
   return { amount: Math.round(amount), hasPrice, nightly: Math.round(nightly) };
 }
 
-/** Live Budget tab and API budget[] stay aligned on thing-derived planned amounts. */
-export function budgetSyncUsesThingDerivedLines() {
-  return true;
-}
-
 function budgetRowsFromShared(shared = {}) {
-  if (!budgetSyncUsesThingDerivedLines(shared)) return [];
   const places = Array.isArray(shared.places) ? shared.places : [];
   const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {};
   const rows = [];
@@ -240,52 +234,31 @@ export function budgetGateAllowedAmounts(shared = {}) {
 export function syncSharedTripApiBudget(shared = {}) {
   if (!shared?.permissions?.share_budget) return shared;
   const tripId = shared.trip?.id;
-  const useThingLines = budgetSyncUsesThingDerivedLines(shared);
   const rows = budgetRowsFromShared(shared);
-  const visible = useThingLines ? visibleAmountSet(rows, shared) : new Set([0]);
+  const visible = visibleAmountSet(rows, shared);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
-  const placeNameKey = (name) => text(name).toLowerCase();
-  const rowByPlaceName = new Map(
-    rows.map((row) => [placeNameKey(row.place.name || row.place.title), row]),
+  const covered = new Set(
+    lines
+      .map((line) => Number(line.total_price))
+      .filter((n) => Number.isFinite(n)),
   );
-  for (const line of lines) {
-    if (line.place_id != null) continue;
-    const row = rowByPlaceName.get(placeNameKey(line.name));
-    if (row) line.place_id = row.place.id;
-  }
 
-  let sortOrder = lines.reduce((max, line) => Math.max(max, Number(line.sort_order) || 0), -1) + 1;
-  if (!useThingLines) {
-    return { ...shared, budget: lines };
-  }
+  let sortOrder = lines.length;
   for (const row of rows) {
-    const placeId = row.place.id;
-    let line = lines.find((entry) => entry.place_id != null && Number(entry.place_id) === Number(placeId));
-    if (line) {
-      line.total_price = row.amount;
-      line.category = row.bucket;
-      line.name = text(row.place.name || row.place.title) || line.name || 'Trip item';
-      continue;
-    }
+    if (covered.has(row.amount)) continue;
     lines.push({
-      id: intId(`${tripId}:budget:place:${placeId}`),
+      id: intId(`${tripId}:budget:place:${row.place.id}`),
       trip_id: tripId,
-      place_id: placeId,
       category: row.bucket,
       name: text(row.place.name || row.place.title) || 'Trip item',
       total_price: row.amount,
       note: '',
       sort_order: sortOrder,
     });
+    covered.add(row.amount);
     sortOrder += 1;
   }
-
-  const covered = new Set(
-    lines
-      .map((line) => Number(line.total_price))
-      .filter((n) => Number.isFinite(n)),
-  );
 
   for (const amount of visible) {
     if (covered.has(amount)) continue;

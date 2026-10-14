@@ -1,14 +1,6 @@
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
-import {
-  BC_CARS_TIMELINE_NEEDLE,
-  BC_CARS_TIMELINE_PATCH,
-  PO_HOTELS_LISTONLY_NEEDLE,
-  PO_HOTELS_LISTONLY_PATCH,
-  RS_FLIGHTS_CATALOG_NEEDLE,
-  RS_FLIGHTS_CATALOG_PATCH,
-  patchBudgetSavedTargetsOnly,
-} from './trek-budget-target-patches.mjs';
+import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
@@ -324,6 +316,8 @@ const BUDGET_CATS_NEEDLE = 'nr=["Flights","Hotel","Restaurants","Stores","' + OT
 const BUDGET_CATS_PATCH = 'nr=["Flights","Hotel","Cars","Restaurants","Stores","' + OTHER_BUCKET + '"]';
 const BUDGET_ICON_NEEDLE = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
 const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Cars"?"🚗":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
+const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
+const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
 const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:ua.isConflict?18:22,height:ua.isConflict?18:22},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,display:"block"}})})})';
 const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
@@ -370,9 +364,6 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
   let js = String(patched || '');
   if (js.includes(LIVE_TAB_NEEDLE)) js = js.replace(LIVE_TAB_NEEDLE, LIVE_TAB_PATCH);
-  if (js.includes(BC_CARS_TIMELINE_NEEDLE)) js = js.replace(BC_CARS_TIMELINE_NEEDLE, BC_CARS_TIMELINE_PATCH);
-  if (js.includes(PO_HOTELS_LISTONLY_NEEDLE)) js = js.replace(PO_HOTELS_LISTONLY_NEEDLE, PO_HOTELS_LISTONLY_PATCH);
-  if (js.includes(RS_FLIGHTS_CATALOG_NEEDLE)) js = js.replace(RS_FLIGHTS_CATALOG_NEEDLE, RS_FLIGHTS_CATALOG_PATCH);
   if (js.includes(QN_RENDER_NEEDLE)) js = js.replace(QN_RENDER_NEEDLE, QN_RENDER_PATCH);
   if (js.includes(GN_RENDER_NEEDLE)) js = js.replace(GN_RENDER_NEEDLE, GN_RENDER_PATCH);
   if (js.includes(KI_RENDER_NEEDLE)) js = js.replace(KI_RENDER_NEEDLE, KI_RENDER_PATCH);
@@ -492,9 +483,13 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  if (served && (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')
-    || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo'))) {
-    throw new Error('served shared Hotels/Cars tab or Oe() list row markers missing');
+  if (served) {
+    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
+      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
+    }
+    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
+      throw new Error('served shared Oe() rows missing Gate B list row markers');
+    }
   }
   return js;
 }
