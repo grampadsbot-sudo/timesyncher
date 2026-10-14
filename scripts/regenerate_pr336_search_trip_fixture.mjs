@@ -18,7 +18,7 @@ const GATE_B_ROWS = [
   { day: 3, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
   { day: 3, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
   { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-  { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+  { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
 ];
 
 const placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);

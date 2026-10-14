@@ -132,5 +132,26 @@
     "thirdPartyRating": "6.8",
     "thirdPartyReviewCount": "3898",
     "thirdPartySource": "Booking.com"
+  },
+  "Priceline opaque JFK — Standard sedan": {
+    "category": "car",
+    "price": 306,
+    "totalPrice": 306,
+    "rentalCompany": "Priceline opaque",
+    "vehicleClass": "Standard sedan",
+    "carType": "Standard sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "pickupHours": "Counter hours are not shown before booking; Priceline hides the supplier until checkout.",
+    "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
+    "missingFields": ["ratings", "reviews"],
+    "reviewThemes": [
+      "No company-specific JFK counter reputation before booking",
+      "Supplier brand hidden until checkout",
+      "Choose only if savings outweigh counter uncertainty"
+    ],
+    "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty."
   }
 }

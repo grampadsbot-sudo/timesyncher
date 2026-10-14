@@ -129,8 +129,22 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
     'websiteFlavour',
     'xaiRatingsFetched',
     'missingFields',
+    'rentalCompany',
+    'vehicleClass',
+    'carType',
+    'pickupLocation',
+    'returnLocation',
+    'pickupHours',
+    'dropoffHours',
+    'startTime',
+    'endTime',
+    'totalPrice',
+    'reputationNote',
   ]) {
     if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  for (const key of ['pickupHours', 'dropoffHours', 'pickupLocation', 'returnLocation']) {
+    if (record[key]) place[key] = record[key];
   }
   if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
   if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
@@ -222,10 +236,6 @@ function applyPr336SearchFields(row, place, override) {
       if (field in record) override[field] = record[field] || null;
     }
   }
-  if (row.id === 609) {
-    override.rentalCompany = 'Priceline opaque';
-    override.vehicleClass = 'Toyota Corolla or similar';
-  }
 }
 
 function text(value) {
@@ -268,7 +278,7 @@ function buildPayload() {
     { day: 8, time: '10:00', name: 'Whole Foods Market Columbus Circle', cat: 'store', id: 616 },
     { day: 8, time: '18:00', name: 'American Airlines JFK → LAS', cat: 'flight', id: 635 },
     { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-    { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+    { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
     { day: 1, time: '07:25', name: 'Southwest LAS → LGA 07:25–16:35', cat: 'flight', id: 630, listOnly: true },
     { day: 1, time: '11:30', name: 'Southwest LAS → LGA 11:30–22:25', cat: 'flight', id: 631, listOnly: true },
     { day: 1, time: '05:05', name: 'Southwest LAS → LGA 05:05–15:45', cat: 'flight', id: 632, listOnly: true },
@@ -313,10 +323,6 @@ function buildPayload() {
       summary: SUMMARIES[row.id] || '',
     };
     applyPr336SearchFields(row, place, override);
-    if (row.id === 609) {
-      override.rentalCompany = 'Priceline opaque';
-      override.vehicleClass = 'Toyota Corolla or similar';
-    }
     if (row.id === 603) {
       override.stayDays = 7;
       override.checkInDate = '2026-06-23';

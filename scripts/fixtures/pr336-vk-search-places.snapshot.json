@@ -523,7 +523,7 @@
   },
   "609": {
     "source": "brave",
-    "title": "Priceline opaque Toyota Corolla",
+    "title": "Priceline opaque Standard sedan",
     "category": "car",
     "lat": null,
     "lng": null,
@@ -531,20 +531,40 @@
     "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
     "externalId": "Priceline opaque JFK — Standard sedan",
     "sourceRecord": {
-      "category": "flight",
+      "category": "car",
       "description": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
       "summary": "Cheapest JFK option, but the supplier is hidden.",
-      "price": 44,
+      "price": 306,
+      "totalPrice": 306,
+      "rentalCompany": "Priceline opaque",
+      "vehicleClass": "Standard sedan",
+      "carType": "Standard sedan",
+      "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+      "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+      "pickupHours": "Counter hours are not shown before booking; Priceline hides the supplier until checkout.",
+      "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
+      "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+      "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
+      "missingFields": [
+        "ratings",
+        "reviews"
+      ],
+      "reviewThemes": [
+        "No company-specific JFK counter reputation before booking",
+        "Supplier brand hidden until checkout",
+        "Choose only if savings outweigh counter uncertainty"
+      ],
+      "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty.",
       "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
       "logoUrl": "https://www.priceline.com/favicon.ico",
       "lat": null,
       "lng": null,
       "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
       "identityProvenance": {
-        "approvedDisplayTitle": "Priceline opaque Toyota Corolla",
+        "approvedDisplayTitle": "Priceline opaque Standard sedan",
         "ccabKey": "Priceline opaque JFK — Standard sedan",
         "evidenceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
-        "reason": "Opaque JFK card hides the supplier; display title reflects the vehicle class shown on the Priceline card."
+        "reason": "Opaque JFK card hides the supplier; display title matches the Priceline Standard sedan class on the sourced card."
       },
       "source": "brave",
       "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
@@ -552,7 +572,7 @@
     },
     "description": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
     "summary": "Cheapest JFK option, but the supplier is hidden.",
-    "price": 44,
+    "price": 306,
     "logoUrl": "https://www.priceline.com/favicon.ico"
   },
   "610": {
