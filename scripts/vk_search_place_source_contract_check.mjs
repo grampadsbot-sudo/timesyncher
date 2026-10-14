@@ -16,6 +16,7 @@ import {
   gateBRowsForSearchPlaceOutputContract,
   GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
+import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -143,6 +144,18 @@ for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
 assert.ok(
   GATE_B_INCOMPLETE_CONTRACT_ROW_IDS.has(608),
   'row 608 remains the incomplete Gate B source-contract row',
+);
+
+const dayByDayTrip = buildNycCraigKimDaybydayTrip();
+const listHotel = dayByDayTrip.places.find((place) => place.id === 608);
+const listHotelOverride = dayByDayTrip.thingOverrides['place:608'] || {};
+assert.equal(listHotel?.lat, null, 'row 608 day-by-day place must not inherit invented coordinates');
+assert.equal(listHotel?.lng, null, 'row 608 day-by-day place must not inherit invented coordinates');
+assert.equal(listHotelOverride.price ?? null, null, 'row 608 must not carry invented nightly price on the Gate B trip');
+assert.match(
+  String(listHotelOverride.provenanceBlocker || listHotelOverride.summary || ''),
+  /list-only Midtown hotel|List-only row/i,
+  'row 608 must surface blocked provenance instead of borrowed hotel identity',
 );
 
 console.log('vk_search_place_source_contract_check: passed');
