@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -270,6 +270,35 @@ try {
   assert.equal(gatebTotals.has(85), true, 'trip planned total must come from syncSharedTripApiBudget');
 } finally {
   rmSync(gatebTmpDir, { recursive: true, force: true });
+}
+
+const fixtureNycSharedPath = join(repoRoot, 'fixture-nyc/nyc-shared.json');
+const fixtureNycHeadPath = join(
+  repoRoot,
+  'fixture-nyc/heads/79df9a0a597e45025efb59f8e080d1e7b5be3faa.json',
+);
+if (existsSync(fixtureNycSharedPath) && existsSync(fixtureNycHeadPath)) {
+  const tripSource = JSON.parse(readFileSync(fixtureNycSharedPath, 'utf8'));
+  for (const placeId of [630, 631, 632, 633, 634]) {
+    const place = (tripSource.places || []).find((row) => Number(row.id) === placeId);
+    assert.equal(place != null, true, `fixture-nyc trip source must include Southwest place ${placeId}`);
+    const override = tripSource.thingOverrides?.[`place:${placeId}`] || {};
+    const price = override.price ?? place.price;
+    assert.equal(price != null && price !== '', true, `Southwest place ${placeId} must carry ccab price on trip source`);
+  }
+  const headFixture = JSON.parse(readFileSync(fixtureNycHeadPath, 'utf8'));
+  const headBudgetFromScript = runGatebHeadBudgetScript(fixtureNycSharedPath);
+  assert.deepEqual(headFixture.budget, headBudgetFromScript);
+  const jetBlueRow = headFixture.budget.find((line) => line.name === 'JetBlue LAS → JFK');
+  assert.equal(jetBlueRow != null, true, 'PR336 head fixture budget must include JetBlue LAS → JFK');
+  assert.equal(Number(jetBlueRow.total_price), 504, 'JetBlue row must plan as $504 (252×2 from VK snapshot)');
+  const southwestRows = headFixture.budget.filter((line) => /Southwest LAS → LGA/.test(String(line.name || '')));
+  assert.equal(southwestRows.length >= 4, true, 'head fixture budget must include Southwest LAS→LGA rows');
+  for (const row of southwestRows) {
+    assert.equal(row.category, 'Flights');
+    assert.equal(Number(row.total_price) > 0, true);
+    assert.equal(Object.keys(row).sort().join(','), 'category,id,name,note,sort_order,total_price,trip_id');
+  }
 }
 
 console.log('shared trip API budget lines sync passed');

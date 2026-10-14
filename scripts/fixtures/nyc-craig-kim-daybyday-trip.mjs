@@ -11,6 +11,18 @@ import {
 const PR336_SEARCH_SNAPSHOT = JSON.parse(
   readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
 );
+const CCAB_PLACE_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
+);
+
+/** List-only Southwest LAS-LGA options (Gate B rows 17–21) → documented ccab flight keys. */
+const SOUTHWEST_LIST_ONLY_CCAB_KEYS = {
+  630: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
+  631: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25',
+  632: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
+  633: 'Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55',
+  634: 'Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55',
+};
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
@@ -155,6 +167,24 @@ function applyVkSearchSnapshotCopyFields(search, place, override) {
   }
   if (search.summary) override.summary = search.summary;
   applyVkSearchSnapshotContractFields(search, place, override);
+}
+
+function applyCcabListOnlyFlightPrice(row, place, override) {
+  const ccabKey = SOUTHWEST_LIST_ONLY_CCAB_KEYS[row.id];
+  if (!ccabKey) return;
+  const enrich = CCAB_PLACE_ENRICHMENT[ccabKey];
+  if (!enrich || enrich.price == null || enrich.price === '') return;
+  override.price = enrich.price;
+  place.price = enrich.price;
+  if (enrich.logoUrl) {
+    override.logoUrl = enrich.logoUrl;
+    place.logoUrl = enrich.logoUrl;
+  }
+  if (enrich.website) {
+    override.website = enrich.website;
+    place.website = enrich.website;
+  }
+  override.airline = 'Southwest';
 }
 
 function applyPr336SearchFields(row, place, override) {
@@ -313,6 +343,7 @@ function buildPayload() {
       summary: SUMMARIES[row.id] || '',
     };
     applyPr336SearchFields(row, place, override);
+    applyCcabListOnlyFlightPrice(row, place, override);
     if (row.id === 609) {
       override.rentalCompany = 'Priceline opaque';
       override.vehicleClass = 'Toyota Corolla or similar';
@@ -326,31 +357,6 @@ function buildPayload() {
     }
     if (row.id === 611) {
       override.category = 'music';
-    }
-    if (row.id === 630) {
-      override.price = 164;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
-      override.airline = 'Southwest';
-    }
-    if (row.id === 631) {
-      override.price = 194;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
-      override.airline = 'Southwest';
-    }
-    if (row.id === 632) {
-      override.price = 239;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
-      override.airline = 'Southwest';
-    }
-    if (row.id === 633) {
-      override.price = 239;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
-      override.airline = 'Southwest';
-    }
-    if (row.id === 634) {
-      override.price = 249;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
-      override.airline = 'Southwest';
     }
     if (row.id === 612) {
       override.logoUrl = 'https://www.chelseamarket.com/favicon.ico';
