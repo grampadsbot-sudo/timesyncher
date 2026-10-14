@@ -37,6 +37,27 @@ export const RS_FLIGHTS_CATALOG_PATCH =
 export const BC_CARS_TIMELINE_NEEDLE = 'bc=(Gt||[]).filter(G=>It(G)==="car")';
 export const BC_CARS_TIMELINE_PATCH = 'bc=(Gt||[]).filter(G=>It(G)==="car"&&!!ha(G).timeline)';
 
+const MO_BUDGET_TIMELINE_ONLY_NEEDLE =
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
+const MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE =
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0}]})).values())';
+const MO_BUDGET_ALL_TABS_SERVING_PATCH =
+  'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0}])).values())';
+export const MO_BUDGET_ALL_TABS_MARKER =
+  '[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),';
+export const MO_BUDGET_LINE_AMT_MARKER =
+  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0';
+
+function patchMoBudgetAllTabItems(source = '') {
+  let js = String(source || '');
+  if (js.includes(MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE)) {
+    js = js.replace(MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE, MO_BUDGET_ALL_TABS_SERVING_PATCH);
+  } else if (js.includes(MO_BUDGET_TIMELINE_ONLY_NEEDLE)) {
+    js = js.replace(MO_BUDGET_TIMELINE_ONLY_NEEDLE, MO_BUDGET_ALL_TABS_SERVING_PATCH);
+  }
+  return js;
+}
+
 /** Budget tab: only show/sync targets saved on thingOverrides.__budgetTargets (no expense-derived defaults). */
 export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   const served = options.served === true;
@@ -80,5 +101,5 @@ export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   if (js.includes(FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE)) {
     js = js.replace(FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE, FLIGHT_EU_PRICE_FROM_BUDGET_PATCH);
   }
-  return js;
+  return patchMoBudgetAllTabItems(js);
 }
