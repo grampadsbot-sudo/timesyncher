@@ -133,23 +133,35 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
       return { ...item, source: item.source, id: String(row.id), deduped: true };
     }
   }
-  const rows = await db`
-    insert into trip_things (
-      trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
-      cost_estimate_cents, currency, location, links, ratings, metadata, source
-    )
-    values (
-      ${tripId}, ${requestId}, ${item.category}, ${item.subtype},
-      ${item.title}, ${item.description}, ${item.startsAt}, ${item.endsAt},
-      ${item.costEstimateCents}, ${item.currency},
-      ${JSON.stringify(item.location)}::jsonb,
-      ${JSON.stringify(item.links)}::jsonb,
-      ${JSON.stringify(item.ratings)}::jsonb,
-      ${JSON.stringify(item.metadata)}::jsonb,
-      ${item.source}
-    )
-    returning id
-  `;
+  function writeTripThing(db, row) {
+    return db`
+      insert into trip_things (
+        trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
+        cost_estimate_cents, currency, location, links, ratings, metadata, source
+      ) values (
+        ${row.trip_id}, ${row.source_request_id}, ${row.category}, ${row.subtype},
+        ${row.title}, ${row.description}, ${row.starts_at}, ${row.ends_at},
+        ${row.cost_estimate_cents}, ${row.currency}, ${row.location}::jsonb,
+        ${row.links}::jsonb, ${row.ratings}::jsonb, ${row.metadata}::jsonb, ${row.source}
+      ) returning id`;
+  }
+  const rows = await writeTripThing(db, {
+    trip_id: tripId,
+    source_request_id: requestId,
+    category: item.category,
+    subtype: item.subtype,
+    title: item.title,
+    description: item.description,
+    starts_at: item.startsAt,
+    ends_at: item.endsAt,
+    cost_estimate_cents: item.costEstimateCents,
+    currency: item.currency,
+    location: JSON.stringify(item.location),
+    links: JSON.stringify(item.links),
+    ratings: JSON.stringify(item.ratings),
+    metadata: JSON.stringify(item.metadata),
+    source: item.source,
+  });
   const id = rows?.[0]?.id ? String(rows[0].id) : null;
   if (!id) {
     throw new TripThingInsertError(`insertTripThing returned no row for title "${item.title}"`);
