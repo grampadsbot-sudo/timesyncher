@@ -51,15 +51,15 @@ const SYNTHETIC_BY_PLACE_ID = {
       'Blue Note Jazz Club evening set in the Village with will-call pickup and a 8:30 pm show time after dinner. Fixture ticket planning price is $85 per person including a modest service fee placeholder for Gate B budget math. Arrive early for security and seating; late sets can sell standing-room only.',
     price: 85,
   },
+  608: {
+    summary:
+      'Midtown sample hotel remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
+    price: 389,
+  },
   635: {
     summary:
       'American Airlines nonstop JFK to LAS on the final evening departure after Columbus Circle errands. Fixture uses $257 one-way per traveler for return-flight budget arithmetic only, not a verified live fare. Build in extra time for JFK security and AirTrain from Manhattan; evening weekday queues can run long.',
     price: 257,
-  },
-  608: {
-    summary:
-      'Midtown sample hotel listed as an unselected alternative to the Belleclaire UWS base; useful for comparing price and subway access. Fixture nightly rate is $389 as synthetic test data for the Hotels tab, not a booked reservation. Keep this row unselected so the timeline still anchors on the Upper West Side stay.',
-    price: 389,
   },
 };
 

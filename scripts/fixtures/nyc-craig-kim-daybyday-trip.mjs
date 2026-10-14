@@ -55,7 +55,6 @@ const NYC_COORDS = {
   605: { lat: 40.7333, lng: -73.9909 },
   606: { lat: 40.758, lng: -73.9855 },
   607: { lat: 40.7536, lng: -73.9832 },
-  608: { lat: 40.758, lng: -73.9855 },
   609: { lat: 40.6413, lng: -73.7781 },
   610: { lat: 40.727915, lng: -74.007235 },
   611: { lat: 40.728, lng: -73.9965 },
@@ -87,6 +86,56 @@ export function expectedSummariesOnDay(dayNumber) {
     3: [606, 607],
   };
   return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || SUMMARIES[id] || '');
+}
+
+function provenanceBlockedFieldSet(record = {}) {
+  const blocked = Array.isArray(record.provenanceBlocked) ? record.provenanceBlocked : [];
+  if (!text(record.provenanceBlocker)) return new Set();
+  return new Set(blocked.map((field) => text(field, 80)).filter(Boolean));
+}
+
+function applyProvenanceBlockedClears(record, place, override) {
+  const blocked = provenanceBlockedFieldSet(record);
+  if (!blocked.size) return;
+  override.provenanceBlocker = text(record.provenanceBlocker);
+  override.provenanceBlocked = [...blocked];
+  if (blocked.has('price')) delete override.price;
+  if (blocked.has('logoUrl')) {
+    delete override.logoUrl;
+    delete place.logoUrl;
+  }
+  if (blocked.has('website')) {
+    place.website = '';
+    delete override.website;
+  }
+  if (blocked.has('lat') || blocked.has('lng')) {
+    place.lat = null;
+    place.lng = null;
+    override.lat = null;
+    override.lng = null;
+  }
+  for (const ratingKey of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'xaiRatingsFetched',
+  ]) {
+    if (blocked.has(ratingKey)) delete override[ratingKey];
+  }
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating', 'Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (blocked.has(field)) delete override[field];
+    }
+  }
 }
 
 function applyVkSearchSnapshotContractFields(search, place, override) {
@@ -158,6 +207,7 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
       if (field in record) override[field] = record[field] || null;
     }
   }
+  applyProvenanceBlockedClears(record, place, override);
 }
 
 function applyVkSearchSnapshotCopyFields(search, place, override) {
@@ -288,7 +338,7 @@ function buildPayload() {
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];
-    const coords = NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 };
+    const coords = row.id === 608 ? { lat: null, lng: null } : (NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 });
     const place = {
       id: row.id,
       trip_id: 99,
