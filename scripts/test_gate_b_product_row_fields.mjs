@@ -21,7 +21,10 @@ import { isGenericDescription } from '../src/vacation/trip-thing-enrichment.mjs'
 import { resolveThingLogoUrl, NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 import { patchLiveProductDetailBundle } from '../src/vacation/trek-thing-detail-patches.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
-import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import {
+  buildNycCraigKimDaybydayTrip,
+  VK_SEARCH_SNAPSHOT_COPY_ROW_IDS,
+} from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 import {
   buildNycCraigKimDaybydayTripPositiveV1,
   NYC_POSITIVE_FIXTURE_VERSION,
@@ -276,5 +279,45 @@ const opaqueCarOverride = positiveFixtureOnce.thingOverrides['place:609'] || {};
 assert.equal(opaqueCarOverride.timeline, false, 'opaque car stays list-only / unselected');
 assert.match(String(opaqueCarOverride.pickupLocation || ''), /JFK/i);
 assert.match(String(opaqueCarOverride.returnLocation || ''), /JFK/i);
+
+const pr336SearchSnapshot = JSON.parse(
+  readFileSync(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
+);
+const vkSnapshotBindingTrip = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+function vkBindingText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+function vkBindingDescription(shared, place) {
+  const override = shared.thingOverrides?.[`place:${place.id}`] || {};
+  return vkBindingText(override.longDetails || place.description);
+}
+function vkBindingSummary(shared, place) {
+  const override = shared.thingOverrides?.[`place:${place.id}`] || {};
+  return vkBindingText(override.summary || place.summary);
+}
+for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
+  const snapshot = pr336SearchSnapshot[String(rowId)];
+  assert.ok(snapshot, `missing pr336 snapshot row ${rowId}`);
+  const place = vkSnapshotBindingTrip.places.find((p) => p.id === rowId);
+  assert.ok(place, `built trip missing place ${rowId}`);
+  assert.equal(vkBindingText(place.name), vkBindingText(snapshot.title), `${rowId} identity (place.name)`);
+  assert.equal(vkBindingSummary(vkSnapshotBindingTrip, place), vkBindingText(snapshot.summary), `${rowId} summary`);
+  assert.equal(
+    vkBindingDescription(vkSnapshotBindingTrip, place),
+    vkBindingText(snapshot.description),
+    `${rowId} description`,
+  );
+}
+for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
+  const snapshot = pr336SearchSnapshot[String(rowId)];
+  const override = vkSnapshotBindingTrip.thingOverrides[`place:${rowId}`] || {};
+  if (snapshot.price != null) {
+    assert.equal(override.price, snapshot.price, `${rowId} price must match pr336 snapshot`);
+  }
+  if (snapshot.logoUrl) {
+    assert.equal(override.logoUrl, snapshot.logoUrl, `${rowId} logoUrl must match pr336 snapshot`);
+  }
+}
+assert.equal(vkSnapshotBindingTrip.places.find((p) => p.id === 601)?.lat, 36.084, '601 keeps fixture coordinates');
 
 console.log('gate b product row field tests passed');

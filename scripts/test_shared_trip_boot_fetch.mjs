@@ -123,15 +123,25 @@ try {
 
 process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL = 'https://travel.timesyncher.com';
 const savedFetch = globalThis.fetch;
+const upstreamPlacesPayload = JSON.stringify({
+  places: [{ id: 999, name: 'Upstream-only place', category_name: 'activity' }],
+  days: [],
+  budget: [],
+});
 globalThis.fetch = async (url) => ({
-  status: 404,
+  status: String(url).includes(GATE_B_APPROVED_SHARED_SLUG) ? 200 : 404,
   headers: { get: () => 'application/json' },
-  arrayBuffer: async () => Buffer.from('{"error":"Invalid or expired link"}'),
+  arrayBuffer: async () => Buffer.from(
+    String(url).includes(GATE_B_APPROVED_SHARED_SLUG)
+      ? upstreamPlacesPayload
+      : '{"error":"Invalid or expired link"}',
+  ),
 });
 try {
-  const fallback = await invokeSharedGet(`/api/shared/${GATE_B_APPROVED_SHARED_SLUG}/`);
-  assert.equal(fallback.status, 200, fallback.json);
-  assert.ok(fallback.json.places?.length > 0, 'upstream 404 falls back to gate b fixture');
+  const fixture = await invokeSharedGet(`/api/shared/${GATE_B_APPROVED_SHARED_SLUG}/`);
+  assert.equal(fixture.status, 200, fixture.json);
+  assert.ok(fixture.json.places?.length > 0, 'gate b slug serves committed fixture');
+  assert.equal(fixture.json.places[0]?.name?.includes('Upstream-only'), false, 'must not proxy upstream for gate b slug');
   const passthrough = await invokeSharedGet('/api/shared/not-the-gate-b-slug/');
   assert.equal(passthrough.status, 404);
   assert.equal(passthrough.json.error, 'Invalid or expired link');

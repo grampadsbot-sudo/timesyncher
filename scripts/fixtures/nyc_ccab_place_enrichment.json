@@ -397,14 +397,15 @@
   },
   "Zabar's": {
     "category": "store",
-    "description": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times.",
-    "summary": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times.",
-    "price": null,
+    "description": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $33 per person in-store grocery estimate (half of Zabar's $65 Bundle of Love kit on zabars.com for a two-person picnic split).",
+    "summary": "Iconic UWS specialty market and prepared-foods stop;",
+    "price": 33,
     "website": "https://www.zabars.com/",
     "logoUrl": "https://www.zabars.com/favicon.ico",
     "lat": 40.7847,
     "lng": -73.9794,
-    "address": "2245 Broadway, New York, NY 10024"
+    "address": "2245 Broadway, New York, NY 10024",
+    "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics."
   },
   "Tiffany & Co. The Landmark": {
     "category": "store",
@@ -485,14 +486,15 @@
   },
   "Strand Book Store": {
     "category": "store",
-    "description": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Best if the itinerary reaches Union Square/Village rather than as a special uptown trip.",
-    "summary": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Best if the itinerary reaches Union Square/Village rather than as a special uptown trip.",
-    "price": null,
+    "description": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Best if the itinerary reaches Union Square/Village rather than as a special uptown trip. Price: $25 per person visit estimate ($19.95 Graphic Skyline tote on strandbooks.com plus a bargain book).",
+    "summary": "Classic NYC bookstore with rare-room browsing and gift totes;",
+    "price": 25,
     "website": "https://www.strandbooks.com/",
     "logoUrl": "https://www.strandbooks.com/favicon.ico",
     "lat": 40.7333,
     "lng": -73.9909,
-    "address": "828 Broadway, New York, NY 10003"
+    "address": "828 Broadway, New York, NY 10003",
+    "itineraryNote": "Browse the rare room if time allows after the harbor tour."
   },
   "Chelsea Market": {
     "category": "store",

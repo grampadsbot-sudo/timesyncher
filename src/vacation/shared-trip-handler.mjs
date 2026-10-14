@@ -200,15 +200,14 @@ async function respondSharedTripGet(req, res, shareToken) {
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
 
     const offline = await offlineApprovedSharedResponse(shareToken);
+    if (offline) return sendJson(res, 200, offline);
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
       const upstream = await readUpstreamSharedResponse(shareToken, req);
       if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
         return sendUpstreamSharedResponse(res, upstream);
       }
-      if (offline) return sendJson(res, 200, offline);
       return sendUpstreamSharedResponse(res, upstream);
     }
-    if (offline) return sendJson(res, 200, offline);
     trekUpstreamBase();
     return sendJson(res, 500, { ok: false, code: 'shared_trip_upstream_unconfigured' });
   } catch (error) {

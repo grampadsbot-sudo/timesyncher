@@ -1,0 +1,707 @@
+{
+  "601": {
+    "source": "brave",
+    "title": "JetBlue LAS → JFK",
+    "category": "flight",
+    "lat": null,
+    "lng": null,
+    "address": "Flight options / Bookings tab",
+    "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+    "externalId": "Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31",
+    "sourceRecord": {
+      "category": "flight",
+      "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
+      "summary": "Airline: JetBlue;",
+      "price": 252,
+      "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+      "logoUrl": "https://www.jetblue.com/favicon.ico",
+      "lat": null,
+      "lng": null,
+      "address": "Flight options / Bookings tab",
+      "source": "brave",
+      "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+      "longDetails": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked."
+    },
+    "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
+    "summary": "Airline: JetBlue;",
+    "price": 252,
+    "logoUrl": "https://www.jetblue.com/favicon.ico"
+  },
+  "602": {
+    "source": "brave",
+    "title": "Zabar's",
+    "category": "store",
+    "lat": 40.7847,
+    "lng": -73.9794,
+    "address": "2245 Broadway, New York, NY 10024",
+    "url": "https://www.zabars.com/",
+    "externalId": "Zabar's",
+    "sourceRecord": {
+      "category": "store",
+      "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
+      "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
+      "price": 18,
+      "website": "https://www.zabars.com/",
+      "logoUrl": "https://www.zabars.com/favicon.ico",
+      "lat": 40.7847,
+      "lng": -73.9794,
+      "address": "2245 Broadway, New York, NY 10024",
+      "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics.",
+      "googleRating": "4.5",
+      "googleReviewCount": "6665",
+      "yelpRating": "3.9",
+      "yelpReviewCount": "1448",
+      "thirdPartyRating": "4.2",
+      "thirdPartyReviewCount": "532",
+      "otherRatingSites": [
+        {
+          "rating": "4.2",
+          "reviewCount": "532"
+        },
+        {
+          "rating": "4.4",
+          "reviewCount": "562"
+        }
+      ],
+      "ratingCount": 6665,
+      "reviewThemes": {
+        "praise": [
+          "Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection",
+          "Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee",
+          "Authentic old-school NYC vibe, excellent for gifts and specialty foods"
+        ],
+        "complaints": [
+          "Occasional rude or slow service, long lines at counters and checkout",
+          "Some items can be expensive; crowds make it hectic"
+        ]
+      },
+      "websiteFlavour": "Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+      "xaiRatingsFetched": true,
+      "review1": "Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+      "review2": "Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+      "review3": "Authentic old-school NYC vibe, excellent for gifts and specialty foods. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+      "review4": "Occasional rude or slow service, long lines at counters and checkout. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://www.zabars.com/",
+      "longDetails": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate."
+    },
+    "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
+    "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
+    "price": 18,
+    "logoUrl": "https://www.zabars.com/favicon.ico"
+  },
+  "603": {
+    "source": "brave",
+    "title": "Motto by Hilton New York City Times Square",
+    "category": "hotel",
+    "lat": 40.759399,
+    "lng": -73.983457,
+    "address": "150 A West 48th Street, New York, NY 10036",
+    "url": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+    "externalId": "Motto by Hilton New York City Times Square",
+    "sourceRecord": {
+      "category": "hotel",
+      "description": "Booking.com lists Motto by Hilton New York City Times Square around 3.9/5 (~917 reviews). Neighborhood: Times Square; Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
+      "summary": "Times Square base with eco-certified rooms and strong transit access.",
+      "price": 188,
+      "website": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+      "logoUrl": "https://www.hilton.com/favicon.ico",
+      "lat": 40.759399,
+      "lng": -73.983457,
+      "address": "150 A West 48th Street, New York, NY 10036",
+      "thirdPartyRating": "4.1",
+      "thirdPartyReviewCount": "293",
+      "thirdPartySource": "Booking.com",
+      "googleRating": "3.9",
+      "googleReviewCount": "1070",
+      "yelpRating": "3.3",
+      "yelpReviewCount": "66",
+      "otherRatingSites": [
+        {
+          "rating": "4.1",
+          "reviewCount": "293"
+        },
+        {
+          "rating": "4.2",
+          "reviewCount": "3376"
+        },
+        {
+          "rating": "4.4",
+          "reviewCount": "722"
+        }
+      ],
+      "ratingCount": 1070,
+      "reviewThemes": {
+        "praise": [
+          "great central location in Times Square",
+          "clean rooms",
+          "friendly and helpful staff",
+          "good value for money",
+          "comfy beds"
+        ],
+        "complaints": [
+          "small/compact rooms",
+          "tiny bathrooms and showers"
+        ]
+      },
+      "websiteFlavour": "Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+      "xaiRatingsFetched": true,
+      "review1": "great central location in Times Square. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+      "review2": "clean rooms. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+      "review3": "friendly and helpful staff. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+      "review4": "good value for money. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+      "review1Rating": "4",
+      "review2Rating": "3",
+      "review3Rating": "4",
+      "review4Rating": "4",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+      "longDetails": "Booking.com lists Motto by Hilton New York City Times Square around 3.9/5 (~917 reviews). Neighborhood: Times Square; Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked."
+    },
+    "description": "Booking.com lists Motto by Hilton New York City Times Square around 3.9/5 (~917 reviews). Neighborhood: Times Square; Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
+    "summary": "Times Square base with eco-certified rooms and strong transit access.",
+    "price": 188,
+    "logoUrl": "https://www.hilton.com/favicon.ico"
+  },
+  "604": {
+    "source": "brave",
+    "title": "Statue of Liberty walking tour",
+    "category": "activity",
+    "lat": 40.6892,
+    "lng": -74.0445,
+    "address": "Castle Clinton, Battery Park, New York, NY 10004",
+    "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+    "externalId": "Statue of Liberty walking tour",
+    "sourceRecord": {
+      "category": "event",
+      "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+      "itineraryNote": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+      "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+      "price": 26,
+      "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+      "logoUrl": "https://statuecitycruises.com/favicon.ico",
+      "lat": 40.6892,
+      "lng": -74.0445,
+      "address": "Castle Clinton, Battery Park, New York, NY 10004",
+      "thirdPartyRating": "4.9",
+      "thirdPartyReviewCount": "9034",
+      "otherRatingSites": [
+        {
+          "rating": "4.9",
+          "reviewCount": "9034"
+        },
+        {
+          "rating": "4.8",
+          "reviewCount": "14896"
+        },
+        {
+          "rating": "4.6",
+          "reviewCount": "2968"
+        }
+      ],
+      "ratingCount": 9034,
+      "reviewThemes": {
+        "praise": [
+          "knowledgeable and engaging guides who share rich Statue and Ellis history",
+          "guides keep groups organized and take photos",
+          "enthusiastic guides who make history come to life with accents and stories",
+          "well-organized tours with reserved ferry access"
+        ],
+        "complaints": [
+          "long security queues and wait times especially in peak season",
+          "need clearer details on inclusions like Ellis Island guidance and pedestal access",
+          "significant walking involved; prepare for heat and hydration"
+        ]
+      },
+      "websiteFlavour": "Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+      "xaiRatingsFetched": true,
+      "review1": "knowledgeable and engaging guides who share rich Statue and Ellis history. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+      "review2": "guides keep groups organized and take photos. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+      "review3": "enthusiastic guides who make history come to life with accents and stories. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+      "review4": "well-organized tours with reserved ferry access. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+      "longDetails": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding."
+    },
+    "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+    "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+    "price": 26,
+    "logoUrl": "https://statuecitycruises.com/favicon.ico"
+  },
+  "605": {
+    "source": "brave",
+    "title": "Strand Book Store",
+    "category": "store",
+    "lat": 40.7333,
+    "lng": -73.9909,
+    "address": "828 Broadway, New York, NY 10003",
+    "url": "https://www.strandbooks.com/",
+    "externalId": "Strand Book Store",
+    "sourceRecord": {
+      "category": "store",
+      "description": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate.",
+      "summary": "Browse the rare room if time allows after the harbor tour.",
+      "price": 22,
+      "website": "https://www.strandbooks.com/",
+      "logoUrl": "https://www.strandbooks.com/favicon.ico",
+      "lat": 40.7333,
+      "lng": -73.9909,
+      "address": "828 Broadway, New York, NY 10003",
+      "itineraryNote": "Browse the rare room if time allows after the harbor tour.",
+      "googleRating": "4.8",
+      "googleReviewCount": "16273",
+      "yelpRating": "4.4",
+      "yelpReviewCount": "1800",
+      "thirdPartyRating": "4.7",
+      "thirdPartyReviewCount": "842",
+      "otherRatingSites": [
+        {
+          "rating": "4.7",
+          "reviewCount": "842"
+        },
+        {
+          "rating": "4.8",
+          "reviewCount": "8005"
+        },
+        {
+          "rating": "4.8",
+          "reviewCount": "4373"
+        }
+      ],
+      "ratingCount": 16273,
+      "reviewThemes": {
+        "praise": [
+          "iconic NYC landmark and must-visit for book lovers",
+          "enormous/huge selection of new, used, and rare books (18+ miles of books)",
+          "historic family-owned bookstore since 1927 with discounted finds and merch/gifts",
+          "vibrant, bustling atmosphere with helpful staff in some reviews"
+        ],
+        "complaints": [
+          "some merchandise like stickers can be pricey"
+        ]
+      },
+      "websiteFlavour": "Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+      "xaiRatingsFetched": true,
+      "review1": "iconic NYC landmark and must-visit for book lovers. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+      "review2": "enormous/huge selection of new, used, and rare books (18+ miles of books). Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+      "review3": "historic family-owned bookstore since 1927 with discounted finds and merch/gifts. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+      "review4": "vibrant, bustling atmosphere with helpful staff in some reviews. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://www.strandbooks.com/",
+      "longDetails": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate."
+    },
+    "description": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate.",
+    "summary": "Browse the rare room if time allows after the harbor tour.",
+    "price": 22,
+    "logoUrl": "https://www.strandbooks.com/favicon.ico"
+  },
+  "606": {
+    "source": "brave",
+    "title": "Afternoon matinee show",
+    "category": "activity",
+    "lat": 40.758,
+    "lng": -73.9855,
+    "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
+    "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+    "externalId": "Afternoon matinee show",
+    "sourceRecord": {
+      "category": "event",
+      "summary": "Overlap window A: matinee tickets already held.",
+      "itineraryNote": "Overlap window A: matinee tickets already held.",
+      "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+      "price": 78,
+      "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+      "logoUrl": "https://www.tdf.org/favicon.ico",
+      "lat": 40.758,
+      "lng": -73.9855,
+      "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
+      "thirdPartyRating": "4.6",
+      "thirdPartyReviewCount": "17",
+      "thirdPartySource": "Tripadvisor",
+      "googleRating": "4.5",
+      "googleReviewCount": "3607",
+      "yelpRating": "4",
+      "yelpReviewCount": "336",
+      "otherRatingSites": [
+        {
+          "rating": "4.6",
+          "reviewCount": "17"
+        }
+      ],
+      "ratingCount": 3607,
+      "reviewThemes": {
+        "praise": [
+          "great for discounted same-day Broadway tickets",
+          "helpful and courteous staff",
+          "reliable affordable access to shows"
+        ],
+        "complaints": [
+          "long waiting lines especially at peak times",
+          "popular shows like Lion King or Wicked often unavailable"
+        ]
+      },
+      "websiteFlavour": "TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+      "xaiRatingsFetched": true,
+      "review1": "great for discounted same-day Broadway tickets. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+      "review2": "helpful and courteous staff. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+      "review3": "reliable affordable access to shows. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+      "review4": "long waiting lines especially at peak times. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+      "longDetails": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth."
+    },
+    "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+    "summary": "Overlap window A: matinee tickets already held.",
+    "price": 78,
+    "logoUrl": "https://www.tdf.org/favicon.ico"
+  },
+  "607": {
+    "source": "brave",
+    "title": "Friend meetup at Bryant Park",
+    "category": "activity",
+    "lat": 40.7536,
+    "lng": -73.9832,
+    "address": "Bryant Park, New York, NY 10018",
+    "url": "https://bryantpark.org/",
+    "externalId": "Friend meetup at Bryant Park",
+    "sourceRecord": {
+      "category": "event",
+      "summary": "Overlap window B: friend meetup at the same hour.",
+      "itineraryNote": "Overlap window B: friend meetup at the same hour.",
+      "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
+      "price": 20,
+      "website": "https://bryantpark.org/",
+      "logoUrl": "https://bryantpark.org/favicon.ico",
+      "lat": 40.7536,
+      "lng": -73.9832,
+      "address": "Bryant Park, New York, NY 10018",
+      "googleRating": "4.7",
+      "googleReviewCount": "108706",
+      "yelpRating": "4.6",
+      "yelpReviewCount": "1429",
+      "thirdPartyRating": "4.6",
+      "thirdPartyReviewCount": "24055",
+      "otherRatingSites": [
+        {
+          "rating": "4.6",
+          "reviewCount": "24055"
+        }
+      ],
+      "ratingCount": 108706,
+      "reviewThemes": {
+        "praise": [
+          "beautiful green oasis and peaceful escape in Midtown",
+          "clean bathrooms (rare in the area)",
+          "free events like concerts, movies, yoga, piano sessions",
+          "lawn seating, movable chairs, reading room",
+          "festive winter village and ice skating",
+          "great for people-watching, relaxing, lunch"
+        ],
+        "complaints": [
+          "can be crowded especially in peak seasons or holidays",
+          "winter ice rink and vendors sometimes described as overpriced or crowded"
+        ]
+      },
+      "websiteFlavour": "Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+      "xaiRatingsFetched": true,
+      "review1": "beautiful green oasis and peaceful escape in Midtown. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+      "review2": "clean bathrooms (rare in the area). Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+      "review3": "free events like concerts, movies, yoga, piano sessions. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+      "review4": "lawn seating, movable chairs, reading room. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://bryantpark.org/",
+      "longDetails": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup."
+    },
+    "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
+    "summary": "Overlap window B: friend meetup at the same hour.",
+    "price": 20,
+    "logoUrl": "https://bryantpark.org/favicon.ico"
+  },
+  "608": {
+    "source": "brave",
+    "title": "Midtown sample hotel",
+    "category": "hotel",
+    "lat": null,
+    "lng": null,
+    "address": "",
+    "url": "",
+    "externalId": "Midtown sample hotel",
+    "sourceRecord": {
+      "category": "hotel",
+      "summary": "List-only row until ccab names a real Midtown property.",
+      "itineraryNote": "List-only row until ccab names a real Midtown property.",
+      "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row.",
+      "provenanceBlocker": "no ccab capture matches this list-only Midtown hotel row; identity, logo, rating, price, and website stay blocked",
+      "provenanceBlocked": [
+        "price",
+        "logoUrl",
+        "googleRating",
+        "yelpRating",
+        "thirdPartyRating",
+        "review1",
+        "review2",
+        "review3",
+        "review4",
+        "website",
+        "lat",
+        "lng"
+      ],
+      "source": "brave",
+      "url": "",
+      "longDetails": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row."
+    },
+    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row.",
+    "summary": "List-only row until ccab names a real Midtown property."
+  },
+  "609": {
+    "source": "brave",
+    "title": "Priceline opaque Toyota Corolla",
+    "category": "car",
+    "lat": null,
+    "lng": null,
+    "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+    "externalId": "Priceline opaque JFK — Standard sedan",
+    "sourceRecord": {
+      "category": "flight",
+      "description": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+      "summary": "Cheapest JFK option, but the supplier is hidden.",
+      "price": 44,
+      "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "logoUrl": "https://www.priceline.com/favicon.ico",
+      "lat": null,
+      "lng": null,
+      "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+      "identityProvenance": {
+        "approvedDisplayTitle": "Priceline opaque Toyota Corolla",
+        "ccabKey": "Priceline opaque JFK — Standard sedan",
+        "evidenceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+        "reason": "Opaque JFK card hides the supplier; display title reflects the vehicle class shown on the Priceline card."
+      },
+      "source": "brave",
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "longDetails": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies."
+    },
+    "description": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "summary": "Cheapest JFK option, but the supplier is hidden.",
+    "price": 44,
+    "logoUrl": "https://www.priceline.com/favicon.ico"
+  },
+  "610": {
+    "source": "brave",
+    "title": "Carbone",
+    "category": "restaurant",
+    "lat": 40.726,
+    "lng": -73.9997,
+    "address": "181 Thompson Street, New York, NY 10012",
+    "url": "https://carbonenewyork.com/",
+    "externalId": "Carbone",
+    "sourceRecord": {
+      "category": "restaurant",
+      "summary": "Classic Italian; reserve the earliest table you can get.",
+      "itineraryNote": "Classic Italian; reserve the earliest table you can get.",
+      "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+      "price": 48,
+      "website": "https://carbonenewyork.com/",
+      "logoUrl": "https://carbonenewyork.com/favicon.ico",
+      "lat": 40.726,
+      "lng": -73.9997,
+      "address": "181 Thompson Street, New York, NY 10012",
+      "googleRating": "4.3",
+      "googleReviewCount": "2498",
+      "yelpRating": "4",
+      "yelpReviewCount": "2073",
+      "thirdPartyRating": "4",
+      "thirdPartyReviewCount": "531",
+      "otherRatingSites": [
+        {
+          "rating": "4",
+          "reviewCount": "531"
+        }
+      ],
+      "ratingCount": 2498,
+      "reviewThemes": {
+        "praise": [
+          "impeccable and charismatic service",
+          "spicy rigatoni vodka",
+          "tableside Caesar salad",
+          "complimentary appetizers like garlic bread, salami, and mozzarella",
+          "retro-glam atmosphere and lively vibe",
+          "classic elevated Italian-American dishes"
+        ],
+        "complaints": [
+          "overpriced for the experience",
+          "difficult to secure reservations",
+          "hype may not live up to expectations for some",
+          "occasional service inconsistencies"
+        ]
+      },
+      "websiteFlavour": "The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+      "xaiRatingsFetched": true,
+      "review1": "impeccable and charismatic service. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+      "review2": "spicy rigatoni vodka. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+      "review3": "tableside Caesar salad. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+      "review4": "complimentary appetizers like garlic bread, salami, and mozzarella. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "4",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://carbonenewyork.com/",
+      "longDetails": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks."
+    },
+    "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+    "summary": "Classic Italian; reserve the earliest table you can get.",
+    "price": 48,
+    "logoUrl": "https://carbonenewyork.com/favicon.ico"
+  },
+  "611": {
+    "source": "brave",
+    "title": "Jazz at Lincoln Center",
+    "category": "activity",
+    "lat": 40.7725,
+    "lng": -73.9838,
+    "address": "Broadway at 60th Street, New York, NY 10019",
+    "url": "https://jazz.org/dizzys/",
+    "externalId": "Jazz at Lincoln Center",
+    "sourceRecord": {
+      "category": "event",
+      "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+      "itineraryNote": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+      "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+      "price": 35,
+      "website": "https://jazz.org/dizzys/",
+      "logoUrl": "https://jazz.org/favicon.ico",
+      "lat": 40.7725,
+      "lng": -73.9838,
+      "address": "Broadway at 60th Street, New York, NY 10019",
+      "googleRating": "4.6",
+      "googleReviewCount": "1335",
+      "yelpRating": "4.1",
+      "yelpReviewCount": "467",
+      "thirdPartyRating": "4.5",
+      "thirdPartyReviewCount": "879",
+      "otherRatingSites": [
+        {
+          "rating": "4.5",
+          "reviewCount": "879"
+        }
+      ],
+      "ratingCount": 1335,
+      "reviewThemes": {
+        "praise": [
+          "stunning panoramic views of Central Park and Manhattan skyline",
+          "world-class, intimate live jazz performances",
+          "classy, upscale and warm ambiance",
+          "excellent musicians and great service"
+        ],
+        "complaints": [
+          "food quality and value mixed/pricey",
+          "cover charges and food/drink minimums",
+          "occasional single-set shows or seating logistics"
+        ]
+      },
+      "websiteFlavour": "Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+      "xaiRatingsFetched": true,
+      "review1": "stunning panoramic views of Central Park and Manhattan skyline. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+      "review2": "world-class, intimate live jazz performances. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+      "review3": "classy, upscale and warm ambiance. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+      "review4": "excellent musicians and great service. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+      "review1Rating": "5",
+      "review2Rating": "4",
+      "review3Rating": "5",
+      "review4Rating": "5",
+      "review1Source": null,
+      "review1Url": null,
+      "review2Source": null,
+      "review2Url": null,
+      "review3Source": null,
+      "review3Url": null,
+      "review4Source": null,
+      "review4Url": null,
+      "source": "brave",
+      "url": "https://jazz.org/dizzys/",
+      "longDetails": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms."
+    },
+    "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+    "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+    "price": 35,
+    "logoUrl": "https://jazz.org/favicon.ico"
+  }
+}

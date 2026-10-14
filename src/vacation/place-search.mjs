@@ -10,6 +10,8 @@ import {
   bravePlaceDisplayTitle,
   preferBraveUrlDuplicates,
 } from './brave-place-query.mjs';
+import { finalizeSearchPlaces } from './search-place-output.mjs';
+import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -493,6 +495,8 @@ export async function searchPlaces({
   fetchImpl = globalThis.fetch,
   priorPlaces,
   loadPriorPlaces,
+  onSearchSnapshot = null,
+  searchProgressContext = null,
 } = {}) {
   env = buildProviderEnv(env);
   const started = Date.now();
@@ -539,6 +543,13 @@ export async function searchPlaces({
     if (!targetKind) fail('Place search refused: classifier place targetKind missing.', 'missing_place_target_kind');
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
+  const emitSnapshot = async (partialPlaces, phase) => {
+    if (typeof onSearchSnapshot !== 'function') return;
+    await onSearchSnapshot(Array.isArray(partialPlaces) ? partialPlaces : [], {
+      phase,
+      ...(searchProgressContext && typeof searchProgressContext === 'object' ? searchProgressContext : {}),
+    });
+  };
   if (placeQueries.length) {
     const pass = await runPlaceProviderPass({
       fetchImpl,
@@ -566,6 +577,7 @@ export async function searchPlaces({
       attachRelevance,
       readJson: placeSearchReadJson,
       fail,
+      onPartialPlaces: emitSnapshot,
     });
     center = pass.center;
     locationText = pass.locationText || dest;
@@ -608,6 +620,12 @@ export async function searchPlaces({
     ? await attachRelevance(await queryTavily(fetchImpl, env, infoQueries), fetchImpl, env, { target: placeTarget, area: placeArea })
     : { places: [], rejections: [] };
   const notes = noteRelevance.places;
+  const grokRatings = await enrichSearchPlacesWithGrokRatings(places, {
+    env,
+    fetchImpl,
+    destination: dest || center?.label || locationText || '',
+  });
+  places = finalizeSearchPlaces(grokRatings.places);
   return {
     destination: dest || center?.label || locationText || '',
     center,
