@@ -166,7 +166,7 @@ function siteBlockPublished(block = {}) {
   return average != null && count != null;
 }
 
-async function fetchXaiPlaceRatings(place = {}, {
+export async function fetchXaiPlaceRatings(place = {}, {
   env = process.env,
   fetchImpl = globalThis.fetch,
   destination = '',
@@ -226,6 +226,24 @@ export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}, { titl
 
   if (!hasPublishedAggregate) {
     clearReviewFields(next);
+    for (const key of [
+      'googleRating',
+      'googleReviewCount',
+      'googleRatingSourceUrl',
+      'yelpRating',
+      'yelpReviewCount',
+      'yelpRatingSourceUrl',
+      'thirdPartyRating',
+      'thirdPartyReviewCount',
+      'thirdPartySource',
+      'otherRatingSites',
+      'ratingCount',
+      'ratingMix',
+      'reviewThemes',
+      'websiteFlavour',
+    ]) {
+      delete next[key];
+    }
     next.xaiRatingsFetched = false;
     addMissingFields(next, ['ratings', 'reviews']);
     return next;

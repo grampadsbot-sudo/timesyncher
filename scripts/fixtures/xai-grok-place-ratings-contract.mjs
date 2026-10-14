@@ -76,6 +76,7 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
   assert.ok(flaggedXai.missingFields.includes('ratings'));
   assert.ok(flaggedXai.missingFields.includes('reviews'));
   assert.equal(flaggedXai.review1, undefined);
+  assert.equal(flaggedXai.googleRating, undefined);
   assert.equal(flaggedXai.xaiRatingsFetched, false);
 
   const sparseThemes = enrichPlaceRecordWithXaiRatings(

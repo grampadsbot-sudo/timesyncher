@@ -1,130 +1,420 @@
 {
   "Zabar's": {
-    "ratingCount": 6200,
-    "ratingMix": { "1": 124, "2": 248, "3": 620, "4": 2356, "5": 2852 },
-    "review1": "Shoppers praise Zabar's smoked fish counter for consistent quality, generous portions, and helpful staff who slice lox to order even when the Broadway sidewalk queue stretches past the awning on Saturday mornings.",
-    "review1Source": "Google",
+    "googleRating": "4.5",
+    "googleReviewCount": "6665",
+    "googleRatingSourceUrl": "https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7",
+    "yelpRating": "3.9",
+    "yelpReviewCount": "1448",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/zabars-new-york",
+    "thirdPartyRating": "4.2 (532) · 4.4 (562)",
+    "thirdPartyReviewCount": "562",
+    "otherRatingSites": [
+      {
+        "rating": "4.2",
+        "reviewCount": "532",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+      },
+      {
+        "rating": "4.4",
+        "reviewCount": "562",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+      }
+    ],
+    "ratingCount": 6665,
+    "reviewThemes": {
+      "praise": [
+        "Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection",
+        "Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee",
+        "Authentic old-school NYC vibe, excellent for gifts and specialty foods"
+      ],
+      "complaints": [
+        "Occasional rude or slow service, long lines at counters and checkout",
+        "Some items can be expensive; crowds make it hectic"
+      ]
+    },
+    "websiteFlavour": "Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+    "xaiRatingsFetched": true,
+    "review1": "Iconic New York institution with fantastic bagels, smoked fish (Nova), extensive cheese and deli selection. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+    "review2": "Great variety of gourmet items, fresh baked goods like babka and rugelach, quality coffee. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+    "review3": "Authentic old-school NYC vibe, excellent for gifts and specialty foods. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
+    "review4": "Occasional rude or slow service, long lines at counters and checkout. Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
     "review1Rating": "5",
-    "review2": "Regulars say the prepared foods section saves a hotel stay: rotisserie chickens, salads, and bakery items stay fresh, though aisles get tight when tour buses unload on the Upper West Side.",
-    "review2Source": "Yelp",
     "review2Rating": "4",
-    "review3": "TripAdvisor visitors highlight coffee beans, gift baskets, and the upstairs housewares nook as reasons to stop before Central Park picnics, with checkout moving quickly when you know your order number.",
-    "review3Source": "TripAdvisor",
     "review3Rating": "5",
-    "review4": "Themes from published ratings mention long lines at holiday weekends, fair pricing on staples, and staff who help tourists find the cheese room without sounding impatient when questions repeat.",
-    "review4Source": "written from the set",
-    "review4Rating": "4"
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Motto by Hilton New York City Times Square": {
-    "ratingCount": 917,
-    "ratingMix": { "1": 18, "2": 37, "3": 92, "4": 349, "5": 421 },
-    "review1": "Guests like Motto's compact rooms with clever storage, strong Wi-Fi, and a front desk that handles late arrivals near Times Square without feeling rushed when Broadway crowds spill onto West 48th Street after shows.",
-    "review1Source": "Google",
+    "googleRating": "3.9",
+    "googleReviewCount": "1070",
+    "googleRatingSourceUrl": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB",
+    "yelpRating": "3.3",
+    "yelpReviewCount": "66",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2",
+    "thirdPartyRating": "4.1 (293) · 4.2 (3,376) · 4.4 (722)",
+    "thirdPartyReviewCount": "3376",
+    "otherRatingSites": [
+      {
+        "rating": "4.1",
+        "reviewCount": "293",
+        "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+      },
+      {
+        "rating": "4.2",
+        "reviewCount": "3376",
+        "sourceUrl": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html"
+      },
+      {
+        "rating": "4.4",
+        "reviewCount": "722",
+        "sourceUrl": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+      }
+    ],
+    "ratingCount": 1070,
+    "reviewThemes": {
+      "praise": [
+        "great central location in Times Square",
+        "clean rooms",
+        "friendly and helpful staff",
+        "good value for money",
+        "comfy beds"
+      ],
+      "complaints": [
+        "small/compact rooms",
+        "tiny bathrooms and showers"
+      ]
+    },
+    "websiteFlavour": "Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+    "xaiRatingsFetched": true,
+    "review1": "great central location in Times Square. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+    "review2": "clean rooms. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+    "review3": "friendly and helpful staff. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
+    "review4": "good value for money. Casual 4-star hotel in Times Square with cozy, understated rooms (some with city views), fitness center, free Wi-Fi, restaurant and bar serving American cuisine; prime location near attractions like Radio City Music Hall and Rockefeller Center.",
     "review1Rating": "4",
-    "review2": "Themes from Booking.com feedback cite eco-certified toiletries, quiet HVAC, and easy subway access to Lincoln Center, though weekend elevator waits can stack up when multiple floors check out at eleven.",
-    "review2Source": "written from the set",
-    "review2Rating": "4",
-    "review3": "Representative comments note small but efficient showers, reliable blackout shades, and a lobby that stays calm even when theatergoers ask for directions to Rockefeller Center during rainstorms.",
-    "review3Source": "written from the set",
-    "review3Rating": "3",
-    "review4": "Aggregated guest themes mention firm beds, friendly housekeeping, and value for a Times Square address if you accept smaller square footage than a traditional full-service hotel tower.",
-    "review4Source": "written from the set",
-    "review4Rating": "4"
+    "review2Rating": "3",
+    "review3Rating": "4",
+    "review4Rating": "4",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Statue of Liberty walking tour": {
-    "ratingCount": 1955,
-    "ratingMix": { "1": 39, "2": 78, "3": 196, "4": 743, "5": 899 },
-    "review1": "Travelers recommend Statue City Cruises for clear boarding instructions at Castle Clinton, helpful security staff, and timed ferry windows that keep the Battery Park line moving if you arrive before your printed departure.",
-    "review1Source": "TripAdvisor",
-    "review1Rating": "4",
-    "review2": "Families note the audio tour on Liberty Island explains construction history without rushing you off the pedestal views, though summer sun on the ferry top deck requires hats and water bottles.",
-    "review2Source": "Google",
+    "thirdPartyRating": "4.9 (9,034) · 4.8 (14,896) · 4.6 (2,968)",
+    "thirdPartyReviewCount": "14896",
+    "otherRatingSites": [
+      {
+        "rating": "4.9",
+        "reviewCount": "9034",
+        "sourceUrl": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
+      },
+      {
+        "rating": "4.8",
+        "reviewCount": "14896",
+        "sourceUrl": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
+      },
+      {
+        "rating": "4.6",
+        "reviewCount": "2968",
+        "sourceUrl": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
+      }
+    ],
+    "ratingCount": 9034,
+    "reviewThemes": {
+      "praise": [
+        "knowledgeable and engaging guides who share rich Statue and Ellis history",
+        "guides keep groups organized and take photos",
+        "enthusiastic guides who make history come to life with accents and stories",
+        "well-organized tours with reserved ferry access"
+      ],
+      "complaints": [
+        "long security queues and wait times especially in peak season",
+        "need clearer details on inclusions like Ellis Island guidance and pedestal access",
+        "significant walking involved; prepare for heat and hydration"
+      ]
+    },
+    "websiteFlavour": "Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "xaiRatingsFetched": true,
+    "review1": "knowledgeable and engaging guides who share rich Statue and Ellis history. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review2": "guides keep groups organized and take photos. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review3": "enthusiastic guides who make history come to life with accents and stories. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review4": "well-organized tours with reserved ferry access. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review1Rating": "5",
     "review2Rating": "4",
-    "review3": "Written from the published mix: visitors warn about airport-style screening delays, praise rangers on Ellis Island, and suggest booking the earliest ferry when visiting on a holiday weekend.",
-    "review3Source": "written from the set",
-    "review3Rating": "3",
-    "review4": "Representative ferry reviews mention smooth boarding at Battery Park, clear announcements about crown access restrictions, and gift shops that do not overwhelm the museum exhibits on Liberty Island.",
-    "review4Source": "written from the set",
-    "review4Rating": "4"
+    "review3Rating": "5",
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Strand Book Store": {
-    "ratingCount": 14263,
-    "ratingMix": { "1": 285, "2": 571, "3": 1426, "4": 5420, "5": 6561 },
-    "review1": "Readers love the Strand's rare book room staff, who pull first editions on request, and the main floor tables stacked with review copies that make it easy to browse for an hour without buying.",
-    "review1Source": "Google",
+    "googleRating": "4.8",
+    "googleReviewCount": "16273",
+    "googleRatingSourceUrl": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj",
+    "yelpRating": "4.4",
+    "yelpReviewCount": "1800",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/strand-bookstore-new-york",
+    "thirdPartyRating": "4.7 (842) · 4.8 (8,005) · 4.8 (4,373)",
+    "thirdPartyReviewCount": "8005",
+    "otherRatingSites": [
+      {
+        "rating": "4.7",
+        "reviewCount": "842",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+      },
+      {
+        "rating": "4.8",
+        "reviewCount": "8005",
+        "sourceUrl": "https://www.provenexpert.com/en-us/strand-book-store/"
+      },
+      {
+        "rating": "4.8",
+        "reviewCount": "4373",
+        "sourceUrl": "https://www.provenexpert.com/en-us/strand-book-store/"
+      }
+    ],
+    "ratingCount": 16273,
+    "reviewThemes": {
+      "praise": [
+        "iconic NYC landmark and must-visit for book lovers",
+        "enormous/huge selection of new, used, and rare books (18+ miles of books)",
+        "historic family-owned bookstore since 1927 with discounted finds and merch/gifts",
+        "vibrant, bustling atmosphere with helpful staff in some reviews"
+      ],
+      "complaints": [
+        "some merchandise like stickers can be pricey"
+      ]
+    },
+    "websiteFlavour": "Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+    "xaiRatingsFetched": true,
+    "review1": "iconic NYC landmark and must-visit for book lovers. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+    "review2": "enormous/huge selection of new, used, and rare books (18+ miles of books). Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+    "review3": "historic family-owned bookstore since 1927 with discounted finds and merch/gifts. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
+    "review4": "vibrant, bustling atmosphere with helpful staff in some reviews. Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
     "review1Rating": "5",
-    "review2": "Yelp regulars mention tote bags, author events, and the dollar carts outside on Broadway as cheap souvenirs, even when weekend foot traffic slows movement between the fiction and mystery aisles.",
-    "review2Source": "Yelp",
-    "review2Rating": "5",
-    "review3": "TripAdvisor tourists highlight the store's Union Square history, knowledgeable cashiers, and the way staff restock front tables with staff picks that reflect current NYC fiction releases.",
-    "review3Source": "TripAdvisor",
+    "review2Rating": "4",
     "review3Rating": "5",
-    "review4": "Themes from the star mix note crowded aisles during holiday shopping, fair used-book pricing, and employees who help locate out-of-print titles if you have an ISBN written down.",
-    "review4Source": "written from the set",
-    "review4Rating": "4"
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Afternoon matinee show": {
-    "ratingCount": 8500,
-    "ratingMix": { "1": 170, "2": 340, "3": 850, "4": 3230, "5": 3910 },
-    "review1": "TKTS buyers say same-day matinee windows at Times Square move quickly when you check the board early, and the service charge is clearly posted before you pay at the red steps booth.",
-    "review1Source": "TripAdvisor",
+    "googleRating": "4.5",
+    "googleReviewCount": "3607",
+    "googleRatingSourceUrl": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7",
+    "yelpRating": "4",
+    "yelpReviewCount": "336",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/tkts-times-square-new-york",
+    "thirdPartyRating": "4.6 (17)",
+    "thirdPartyReviewCount": "17",
+    "otherRatingSites": [
+      {
+        "rating": "4.6",
+        "reviewCount": "17",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+      }
+    ],
+    "ratingCount": 3607,
+    "reviewThemes": {
+      "praise": [
+        "great for discounted same-day Broadway tickets",
+        "helpful and courteous staff",
+        "reliable affordable access to shows"
+      ],
+      "complaints": [
+        "long waiting lines especially at peak times",
+        "popular shows like Lion King or Wicked often unavailable"
+      ]
+    },
+    "websiteFlavour": "TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+    "xaiRatingsFetched": true,
+    "review1": "great for discounted same-day Broadway tickets. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+    "review2": "helpful and courteous staff. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+    "review3": "reliable affordable access to shows. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
+    "review4": "long waiting lines especially at peak times. TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
     "review1Rating": "5",
-    "review2": "Representative TKTS feedback mentions discounted orchestra seats for weekday matinees, patient staff during rain, and the need to check show runtime before stacking another activity in Midtown.",
-    "review2Source": "written from the set",
     "review2Rating": "4",
-    "review3": "Google reviewers note helpful booth staff who explain mezzanine versus orchestra leftovers for midweek matinees, which helps couples decide before committing to a two-show day.",
-    "review3Source": "Google",
-    "review3Rating": "4",
-    "review4": "Written from aggregate themes: lines shorten after lunch, board prices update frequently, and cash and card both work when you buy at the Times Square location instead of the app.",
-    "review4Source": "written from the set",
-    "review4Rating": "5"
+    "review3Rating": "5",
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Friend meetup at Bryant Park": {
-    "ratingCount": 42000,
-    "ratingMix": { "1": 840, "2": 1680, "3": 4200, "4": 15960, "5": 19320 },
-    "review1": "Locals meet at the Bryant Park fountain because the lawn is free, Wi-Fi is reliable, and food kiosks open early enough for coffee before Midtown meetings without needing a restaurant reservation.",
-    "review1Source": "Google",
+    "googleRating": "4.7",
+    "googleReviewCount": "108706",
+    "googleRatingSourceUrl": "https://goo.gl/maps/kt36oPqKcKeKPLY3A",
+    "yelpRating": "4.6",
+    "yelpReviewCount": "1429",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/bryant-park-new-york-2",
+    "thirdPartyRating": "4.6 (24,055)",
+    "thirdPartyReviewCount": "24055",
+    "otherRatingSites": [
+      {
+        "rating": "4.6",
+        "reviewCount": "24055",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+      }
+    ],
+    "ratingCount": 108706,
+    "reviewThemes": {
+      "praise": [
+        "beautiful green oasis and peaceful escape in Midtown",
+        "clean bathrooms (rare in the area)",
+        "free events like concerts, movies, yoga, piano sessions",
+        "lawn seating, movable chairs, reading room",
+        "festive winter village and ice skating",
+        "great for people-watching, relaxing, lunch"
+      ],
+      "complaints": [
+        "can be crowded especially in peak seasons or holidays",
+        "winter ice rink and vendors sometimes described as overpriced or crowded"
+      ]
+    },
+    "websiteFlavour": "Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+    "xaiRatingsFetched": true,
+    "review1": "beautiful green oasis and peaceful escape in Midtown. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+    "review2": "clean bathrooms (rare in the area). Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+    "review3": "free events like concerts, movies, yoga, piano sessions. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
+    "review4": "lawn seating, movable chairs, reading room. Vibrant public space with 12+ million annual visitors; free cultural programming (music, dance, theater, yoga); lawn for lunch/picnics; winter ice skating; reading room; carousel; open daily with chairs, tables, and amenities.",
     "review1Rating": "5",
-    "review2": "Representative themes mention clean public restrooms, movable chairs, and a reading room that gives you shade when summer heat makes other Midtown plazas uncomfortable at noon on weekdays.",
-    "review2Source": "written from the set",
-    "review2Rating": "5",
-    "review3": "TripAdvisor visitors mention seasonal ice rink prep, clean restrooms, and shaded tables along the reading room when summer heat makes other Midtown plazas uncomfortable at noon.",
-    "review3Source": "TripAdvisor",
+    "review2Rating": "4",
     "review3Rating": "5",
-    "review4": "Yelp reviewers praise the park film nights and the way staff keep pathways clear when office workers cut through during lunch, making it easy to spot friends near the lawn.",
-    "review4Source": "Yelp",
-    "review4Rating": "4"
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Carbone": {
-    "ratingCount": 2100,
-    "ratingMix": { "1": 42, "2": 84, "3": 210, "4": 798, "5": 966 },
-    "review1": "Diners rave about Carbone's spicy rigatoni vodka, tableside Caesar, and servers who pace a long Greenwich Village meal without rushing you out before the secondi arrive from the open kitchen.",
-    "review1Source": "Google",
+    "googleRating": "4.3",
+    "googleReviewCount": "2498",
+    "yelpRating": "4",
+    "yelpReviewCount": "2073",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/carbone-new-york",
+    "thirdPartyRating": "4 (531)",
+    "thirdPartyReviewCount": "531",
+    "otherRatingSites": [
+      {
+        "rating": "4",
+        "reviewCount": "531",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+      }
+    ],
+    "ratingCount": 2498,
+    "reviewThemes": {
+      "praise": [
+        "impeccable and charismatic service",
+        "spicy rigatoni vodka",
+        "tableside Caesar salad",
+        "complimentary appetizers like garlic bread, salami, and mozzarella",
+        "retro-glam atmosphere and lively vibe",
+        "classic elevated Italian-American dishes"
+      ],
+      "complaints": [
+        "overpriced for the experience",
+        "difficult to secure reservations",
+        "hype may not live up to expectations for some",
+        "occasional service inconsistencies"
+      ]
+    },
+    "websiteFlavour": "The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+    "xaiRatingsFetched": true,
+    "review1": "impeccable and charismatic service. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+    "review2": "spicy rigatoni vodka. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+    "review3": "tableside Caesar salad. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
+    "review4": "complimentary appetizers like garlic bread, salami, and mozzarella. The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
     "review1Rating": "5",
-    "review2": "Yelp regulars warn that reservations are scarce and the dining room is loud, yet the veal parmesan and old-school cocktails justify planning your trip around an early dinner slot.",
-    "review2Source": "Yelp",
     "review2Rating": "4",
-    "review3": "Written from rating themes: guests mention heavy portions, classic red-sauce flavors, and a room that feels special even when you sit near the kitchen pass during peak Saturday service.",
-    "review3Source": "written from the set",
-    "review3Rating": "5",
-    "review4": "TripAdvisor visitors highlight the retro decor, attentive wine advice, and pasta portions that are rich enough to share if you want room for the famous coconut cake dessert.",
-    "review4Source": "TripAdvisor",
-    "review4Rating": "5"
+    "review3Rating": "4",
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Jazz at Lincoln Center": {
-    "ratingCount": 1200,
-    "ratingMix": { "1": 24, "2": 48, "3": 120, "4": 456, "5": 552 },
-    "review1": "Patrons love Dizzy's Club sightlines over Central Park, clear sound from the house band, and ushers who help will-call guests find seats before the set starts at Jazz at Lincoln Center.",
-    "review1Source": "Google",
+    "googleRating": "4.6",
+    "googleReviewCount": "1335",
+    "googleRatingSourceUrl": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US",
+    "yelpRating": "4.1",
+    "yelpReviewCount": "467",
+    "yelpRatingSourceUrl": "https://www.yelp.com/biz/dizzys-club-new-york",
+    "thirdPartyRating": "4.5 (879)",
+    "thirdPartyReviewCount": "879",
+    "otherRatingSites": [
+      {
+        "rating": "4.5",
+        "reviewCount": "879",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+      }
+    ],
+    "ratingCount": 1335,
+    "reviewThemes": {
+      "praise": [
+        "stunning panoramic views of Central Park and Manhattan skyline",
+        "world-class, intimate live jazz performances",
+        "classy, upscale and warm ambiance",
+        "excellent musicians and great service"
+      ],
+      "complaints": [
+        "food quality and value mixed/pricey",
+        "cover charges and food/drink minimums",
+        "occasional single-set shows or seating logistics"
+      ]
+    },
+    "websiteFlavour": "Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+    "xaiRatingsFetched": true,
+    "review1": "stunning panoramic views of Central Park and Manhattan skyline. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+    "review2": "world-class, intimate live jazz performances. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+    "review3": "classy, upscale and warm ambiance. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+    "review4": "excellent musicians and great service. Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
     "review1Rating": "5",
-    "review2": "Representative themes from the rating page cite the food minimum explained upfront, skyline views at sunset, and sets that start on time even when the dining room is full.",
-    "review2Source": "written from the set",
-    "review2Rating": "5",
-    "review3": "TripAdvisor reviewers mention the food minimum is explained upfront, cocktails arrive quickly, and late seating breaks are announced so you can time dinner before the headliner.",
-    "review3Source": "TripAdvisor",
-    "review3Rating": "4",
-    "review4": "Yelp guests note the room feels intimate despite the skyline windows, and the booking staff answer questions about student discounts and accessible seating when you call ahead.",
-    "review4Source": "Yelp",
-    "review4Rating": "5"
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   }
 }

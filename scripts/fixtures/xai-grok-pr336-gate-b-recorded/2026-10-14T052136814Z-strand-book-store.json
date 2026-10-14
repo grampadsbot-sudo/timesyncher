@@ -1,0 +1,507 @@
+{
+  "fetchedAt": "2026-10-14T05:21:36.814Z",
+  "rowId": 605,
+  "ccabKey": "Strand Book Store",
+  "title": "Strand Book Store",
+  "structuredText": "{ \"google\": { \"notPublished\": false, \"average\": 4.8, \"reviewCount\": 16273, \"sourceUrl\": \"https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj\" }, \"yelp\": { \"notPublished\": false, \"average\": 4.4, \"reviewCount\": 1800, \"sourceUrl\": \"https://www.yelp.com/biz/strand-bookstore-new-york\" }, \"otherSites\": [ { \"average\": 4.7, \"reviewCount\": 842, \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html\" }, { \"average\": 4.8, \"reviewCount\": 8005, \"sourceUrl\": \"https://www.provenexpert.com/en-us/strand-book-store/\" }, { \"average\": 4.78, \"reviewCount\": 4373, \"sourceUrl\": \"https://www.provenexpert.com/en-us/strand-book-store/\" } ], \"reviewThemes\": { \"praise\": [ \"iconic NYC landmark and must-visit for book lovers\", \"enormous/huge selection of new, used, and rare books (18+ miles of books)\", \"historic family-owned bookstore since 1927 with discounted finds and merch/gifts\", \"vibrant, bustling atmosphere with helpful staff in some reviews\" ], \"complaints\": [ \"some merchandise like stickers can be pricey\" ] }, \"websiteFlavour\": \"Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.\" }",
+  "payload": {
+    "created_at": 1791955347,
+    "completed_at": 1791955361,
+    "id": "5dcedcdd-914a-99b1-a613-bb690588f9c0",
+    "max_output_tokens": null,
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
+    "object": "response",
+    "output": [
+      {
+        "id": "rs_5dcedcdd-914a-99b1-a613-bb690588f9c0",
+        "summary": [
+          {
+            "text": "I will search for published average star ratings and review counts for Strand Book Store at 828 Broadway, New York, NY 10003.",
+            "type": "summary_text"
+          }
+        ],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "ws_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-0",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Strand Book Store 828 Broadway New York Google reviews rating count",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj?entry=ttu&g_ep=EgoyMDI2MDEyMC4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D"
+            },
+            {
+              "type": "url",
+              "url": "https://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=828+Broadway+3rd+Floor%2C+Rare+Book+Room+New+York+NY+10003"
+            },
+            {
+              "type": "url",
+              "url": "https://www.provenexpert.com/en-us/strand-book-store/"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-11033393-the-strand-bookstore-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/strand-bookstore-new-york?start=100"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://travel.usnews.com/New_York_NY/Things_To_Do/Strand_Book_Store_67137/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.ca/ShowUserReviews-g60763-d208901-r972698374-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://fr.tripadvisor.be/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-1",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Strand Book Store 828 Broadway Yelp reviews rating count",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/strand-bookstore-new-york?start=100"
+            },
+            {
+              "type": "url",
+              "url": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj?entry=ttu&g_ep=EgoyMDI2MDEyMC4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-11033393-the-strand-bookstore-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://goo.gl/maps/Yj8xs"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com.br/biz/strand-bookstore-new-york"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-2",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "Strand Books New York TripAdvisor reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r1038243285-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r960178579-The_Strand_Bookstore-New_York_City_New_York.html"
+            },
+            {
+              "type": "url",
+              "url": "https://www.tripadvisor.pt/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ws_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-3",
+        "type": "web_search_call",
+        "status": "completed",
+        "action": {
+          "type": "search",
+          "query": "\"Strand Book Store\" OR \"Strand Books\" New York Facebook reviews rating",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.provenexpert.com/en-us/strand-book-store/"
+            },
+            {
+              "type": "url",
+              "url": "https://local.yahoo.com/info-11033393-the-strand-bookstore-new-york/"
+            },
+            {
+              "type": "url",
+              "url": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj?entry=ttu&g_ep=EgoyMDI2MDEyMC4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D"
+            },
+            {
+              "type": "url",
+              "url": "https://www.yelp.com/biz/strand-bookstore-new-york?start=100"
+            },
+            {
+              "type": "url",
+              "url": "https://www.trustpilot.com/review/strandbooks.com"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tco_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-0",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-2",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-1",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "id": "tco_5dcedcdd-914a-99b1-a613-bb690588f9c0_call-31458e2e-e7b6-4860-a79e-b9426ed6e27a-3",
+        "summary": [],
+        "type": "reasoning",
+        "status": "completed"
+      },
+      {
+        "content": [
+          {
+            "type": "output_text",
+            "text": "{\n  \"google\": {\n    \"notPublished\": false,\n    \"average\": 4.8,\n    \"reviewCount\": 16273,\n    \"sourceUrl\": \"https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj\"\n  },\n  \"yelp\": {\n    \"notPublished\": false,\n    \"average\": 4.4,\n    \"reviewCount\": 1800,\n    \"sourceUrl\": \"https://www.yelp.com/biz/strand-bookstore-new-york\"\n  },\n  \"otherSites\": [\n    {\n      \"average\": 4.7,\n      \"reviewCount\": 842,\n      \"sourceUrl\": \"https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html\"\n    },\n    {\n      \"average\": 4.8,\n      \"reviewCount\": 8005,\n      \"sourceUrl\": \"https://www.provenexpert.com/en-us/strand-book-store/\"\n    },\n    {\n      \"average\": 4.78,\n      \"reviewCount\": 4373,\n      \"sourceUrl\": \"https://www.provenexpert.com/en-us/strand-book-store/\"\n    }\n  ],\n  \"reviewThemes\": {\n    \"praise\": [\n      \"iconic NYC landmark and must-visit for book lovers\",\n      \"enormous/huge selection of new, used, and rare books (18+ miles of books)\",\n      \"historic family-owned bookstore since 1927 with discounted finds and merch/gifts\",\n      \"vibrant, bustling atmosphere with helpful staff in some reviews\"\n    ],\n    \"complaints\": [\n      \"some merchandise like stickers can be pricey\"\n    ]\n  },\n  \"websiteFlavour\": \"Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.\"\n}",
+            "logprobs": [],
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r960178579-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r960178579-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://local.yahoo.com/info-11033393-the-strand-bookstore-new-york/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://local.yahoo.com/info-11033393-the-strand-bookstore-new-york/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://travel.usnews.com/New_York_NY/Things_To_Do/Strand_Book_Store_67137/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://travel.usnews.com/New_York_NY/Things_To_Do/Strand_Book_Store_67137/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://goo.gl/maps/Yj8xs",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://goo.gl/maps/Yj8xs"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj?entry=ttu&g_ep=EgoyMDI2MDEyMC4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj?entry=ttu&g_ep=EgoyMDI2MDEyMC4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.pt/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.pt/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://fr.tripadvisor.be/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://fr.tripadvisor.be/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.provenexpert.com/en-us/strand-book-store/",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.provenexpert.com/en-us/strand-book-store/"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.ca/ShowUserReviews-g60763-d208901-r972698374-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.ca/ShowUserReviews-g60763-d208901-r972698374-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.trustpilot.com/review/strandbooks.com",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.trustpilot.com/review/strandbooks.com"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com.br/biz/strand-bookstore-new-york",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com.br/biz/strand-bookstore-new-york"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=828+Broadway+3rd+Floor%2C+Rare+Book+Room+New+York+NY+10003",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=828+Broadway+3rd+Floor%2C+Rare+Book+Room+New+York+NY+10003"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com.mx/Attraction_Review-g60763-d208901-Reviews-or10-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r1038243285-The_Strand_Bookstore-New_York_City_New_York.html",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208901-r1038243285-The_Strand_Bookstore-New_York_City_New_York.html"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.yelp.com/biz/strand-bookstore-new-york?start=100",
+                "start_index": 0,
+                "end_index": 0,
+                "title": "https://www.yelp.com/biz/strand-bookstore-new-york?start=100"
+              }
+            ]
+          }
+        ],
+        "id": "msg_5dcedcdd-914a-99b1-a613-bb690588f9c0",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed"
+      }
+    ],
+    "parallel_tool_calls": true,
+    "previous_response_id": null,
+    "reasoning": {
+      "effort": "low",
+      "summary": "detailed"
+    },
+    "temperature": 0.7,
+    "text": {
+      "format": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "google": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "yelp": {
+              "type": "object",
+              "properties": {
+                "average": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "reviewCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sourceUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "notPublished": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "notPublished"
+              ],
+              "additionalProperties": false
+            },
+            "otherSites": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "average": {
+                    "type": "number"
+                  },
+                  "reviewCount": {
+                    "type": "integer"
+                  },
+                  "sourceUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "average",
+                  "reviewCount",
+                  "sourceUrl"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reviewThemes": {
+              "type": "object",
+              "properties": {
+                "praise": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "complaints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "praise",
+                "complaints"
+              ],
+              "additionalProperties": false
+            },
+            "websiteFlavour": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "google",
+            "yelp",
+            "otherSites",
+            "reviewThemes",
+            "websiteFlavour"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "web_search",
+        "search_context_size": "medium"
+      }
+    ],
+    "top_p": 0.95,
+    "usage": {
+      "input_tokens": 18884,
+      "input_tokens_details": {
+        "cached_tokens": 2048
+      },
+      "output_tokens": 1813,
+      "output_tokens_details": {
+        "reasoning_tokens": 1200
+      },
+      "total_tokens": 20697,
+      "num_sources_used": 0,
+      "num_server_side_tools_used": 4,
+      "cost_in_usd_ticks": 459871000,
+      "server_side_tool_usage_details": {
+        "web_search_calls": 4,
+        "x_search_calls": 0,
+        "x_posts_fetched": 0,
+        "x_users_fetched": 0,
+        "code_interpreter_calls": 0,
+        "file_search_calls": 0,
+        "mcp_calls": 0,
+        "document_search_calls": 0,
+        "image_generation_calls": 0
+      },
+      "context_details": {
+        "input_tokens": 17377,
+        "output_tokens": 1540
+      }
+    },
+    "user": null,
+    "incomplete_details": null,
+    "status": "completed",
+    "store": true,
+    "metadata": {
+      "system_fingerprint": "fp_eb3c003fc66c14ed"
+    },
+    "background": false,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "top_logprobs": 0,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "prompt_cache_key": null,
+    "max_tool_calls": null,
+    "safety_identifier": null,
+    "error": null,
+    "instructions": null
+  }
+}
