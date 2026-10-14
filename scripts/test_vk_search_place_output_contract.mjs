@@ -491,4 +491,6 @@ assert.throws(
 
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
 
+await import('./test_vk_search_event_logo_source.mjs');
+
 console.log('vk search place output contract tests passed');

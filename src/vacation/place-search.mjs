@@ -12,6 +12,7 @@ import {
 } from './brave-place-query.mjs';
 import { finalizeSearchPlaces } from './search-place-output.mjs';
 import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
+import { enrichSearchPlacesWithEventLogos } from './search-event-logo.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -625,7 +626,12 @@ export async function searchPlaces({
     fetchImpl,
     destination: dest || center?.label || locationText || '',
   });
-  places = finalizeSearchPlaces(grokRatings.places);
+  const eventLogos = await enrichSearchPlacesWithEventLogos(grokRatings.places, {
+    env,
+    fetchImpl,
+    destination: dest || center?.label || locationText || '',
+  });
+  places = finalizeSearchPlaces(eventLogos.places);
   return {
     destination: dest || center?.label || locationText || '',
     center,
