@@ -92,10 +92,8 @@ export function trekBudgetAmount(place = {}, override = {}, category = '') {
   return { amount: Math.round(amount), hasPrice, nightly: Math.round(nightly) };
 }
 
-/** Intake demo trips keep VK planning prices on Things but not on Budget until targets or budget lines exist. */
-export function budgetSyncUsesThingDerivedLines(shared = {}) {
-  if (Object.keys(readBudgetTargetsMap(shared)).length > 0) return true;
-  if (shared?.timesyncherIntake === true) return false;
+/** Live Budget tab and API budget[] stay aligned on thing-derived planned amounts. */
+export function budgetSyncUsesThingDerivedLines() {
   return true;
 }
 

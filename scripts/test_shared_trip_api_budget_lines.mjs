@@ -221,8 +221,12 @@ const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id:
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
 
 const gateBIntake = prepareSharedTripForLiveApp(buildGateBApprovedSharedTrip());
-assert.equal(budgetSyncUsesThingDerivedLines(gateBIntake), false);
-assert.equal(gateBIntake.budget.length, 0);
-assert.deepEqual([...budgetGateAllowedAmounts(gateBIntake)].sort((a, b) => a - b), [0]);
+assert.equal(budgetSyncUsesThingDerivedLines(gateBIntake), true);
+assert.equal(gateBIntake.budget.length > 0, true, 'intake Gate B trip must sync thing-derived API budget lines');
+assert.equal(
+  gateBIntake.budget.some((line) => Number(line.total_price) > 0),
+  true,
+  'synced budget must expose thing-derived dollar amounts for the live Budget tab',
+);
 
 console.log('shared trip API budget lines sync passed');
