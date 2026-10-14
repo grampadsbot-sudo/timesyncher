@@ -11,6 +11,7 @@ import {
   detailReviewTotalsLine,
   detailReviews,
   detailSummary,
+  safeHttpUrl,
 } from '../src/lib/detailModel.mjs';
 import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
 
@@ -20,6 +21,10 @@ function wordCount(value) {
     .split(/\s+/)
     .filter(Boolean).length;
 }
+
+assert.equal(safeHttpUrl('https://example.com/path'), 'https://example.com/path');
+assert.equal(safeHttpUrl('javascript:alert(1)'), null);
+assert.equal(safeHttpUrl('example.com'), null);
 
 const enrichedTrip = finalizeServedSharedTripPayload(buildEnrichedDetailSharedTrip());
 const restaurant = enrichedTrip.places.find((place) => /Harbor Room/i.test(place.name || ''));

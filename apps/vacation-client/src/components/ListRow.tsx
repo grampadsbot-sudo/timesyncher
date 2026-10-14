@@ -4,6 +4,7 @@ import {
   carSubtitle,
   flightPriceDisplay,
   flightSchedule,
+  formatUsd,
   hotelFirstRowNote,
   hotelPriceDisplay,
   logoUrlForPlace,
@@ -155,12 +156,13 @@ export function ListRow({
   }
 
   const numeric = numericPrice(place, trip);
+  const currency = trip.trip?.currency || 'USD';
   const price =
     tab === 'hotels' || category === 'hotel'
       ? hotelPriceDisplay(place, trip)
       : numeric == null
         ? ''
-        : `$${numeric}`;
+        : formatUsd(numeric, currency);
 
   return (
     <li className="tsv-row" data-ts-list-row="1">
