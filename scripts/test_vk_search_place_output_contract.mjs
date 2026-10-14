@@ -325,9 +325,10 @@ for (const place of positiveContractPlaces) {
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   if (row.cat === 'flight' || row.cat === 'car') continue;
   const violations = searchPlaceOutputViolations(gateBPlaces[row.id]);
-  assert.ok(
-    violations.includes('missing_sourced_reviews'),
-    `row ${row.id} (${row.name}) must fail missing_sourced_reviews without countable stored reviews`,
+  assert.deepEqual(
+    violations,
+    [],
+    `row ${row.id} (${row.name}) must pass VK v1.5.0 reviews contract: ${violations.join(', ')}`,
   );
 }
 
