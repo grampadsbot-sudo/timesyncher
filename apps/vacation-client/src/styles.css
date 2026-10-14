@@ -932,6 +932,12 @@ body {
   grid-template-columns: 22px minmax(0, 1fr) auto;
 }
 
+.tsv-timeline-head--with-icon .tsv-timeline-icon {
+  grid-column: auto;
+  grid-row: auto;
+  align-self: center;
+}
+
 .tsv-timeline-details {
   grid-column: 3;
   grid-row: 2;
