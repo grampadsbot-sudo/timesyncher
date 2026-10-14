@@ -27,7 +27,7 @@ export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
 /** Display titles that differ from ccab keys only with explicit identityProvenance on the ccab record. */
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
-    title: 'Priceline opaque Toyota Corolla',
+    title: 'Priceline opaque Standard sedan',
     ccabKey: 'Priceline opaque JFK — Standard sedan',
   },
 };
@@ -92,10 +92,10 @@ export function buildGateBSearchPlaceForRow({ id, name, cat }) {
     ccabRecord = {
       ...ccabRecord,
       identityProvenance: {
-        approvedDisplayTitle: 'Priceline opaque Toyota Corolla',
+        approvedDisplayTitle: 'Priceline opaque Standard sedan',
         ccabKey: 'Priceline opaque JFK — Standard sedan',
         evidenceUrl: 'https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp',
-        reason: 'Opaque JFK card hides the supplier; display title reflects the vehicle class shown on the Priceline card.',
+        reason: 'Opaque JFK card hides the supplier; display title matches the Priceline Standard sedan class on the sourced card.',
       },
     };
   }
