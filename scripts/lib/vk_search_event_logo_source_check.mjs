@@ -6,7 +6,7 @@ import {
   placeNeedsEventLogoSearch,
   sharedUnrelatedEventLogoFailures,
 } from '../../src/vacation/search-event-logo.mjs';
-import { buildPr336VkSearchPlacesByRowId } from '../fixtures/pr336-vk-search-trip-sources.mjs';
+import { buildPr336VkSearchPlacesByRowIdWithEventLogos } from '../fixtures/pr336-vk-search-trip-sources.mjs';
 
 const GATE_B_EVENT_ROWS = [
   { id: 604, name: 'Statue of Liberty walking tour', cat: 'activity' },
@@ -106,7 +106,7 @@ export async function assertVkSearchEventLogoSource(assert) {
   ]);
   assert.ok(sharedLogoFailures.length > 0, 'unrelated rows must not share one logo');
 
-  const gateBEventPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_EVENT_ROWS);
+  const gateBEventPlaces = await buildPr336VkSearchPlacesByRowIdWithEventLogos(GATE_B_EVENT_ROWS);
   const eventLogos = new Set();
   for (const row of GATE_B_EVENT_ROWS) {
     const place = gateBEventPlaces[row.id];
@@ -114,7 +114,13 @@ export async function assertVkSearchEventLogoSource(assert) {
     assert.ok(logo, `gate-b event row ${row.id} must carry logoUrl from search source`);
     assert.ok(!eventLogos.has(logo), `gate-b event row ${row.id} must not reuse another row logo`);
     eventLogos.add(logo);
-    const website = place.url || place.sourceRecord?.website || place.sourceRecord?.url;
+    const evidence = place.sourceRecord?.logoSearchEvidence;
+    assert.ok(evidence && evidence.provider === 'tavily', `row ${row.id} must include logoSearchEvidence from #388 event logo search`);
+    const website = evidence?.website
+      || place.url
+      || place.sourceRecord?.website
+      || place.sourceRecord?.url;
     assert.equal(eventLogoMatchesWebsite({ logoUrl: logo, website }), true, `row ${row.id} logo must match website host`);
+    assert.equal(place.sourceRecord?.logoSearchBlocked, undefined, `row ${row.id} must not be logoSearchBlocked when fixture bound`);
   }
 }

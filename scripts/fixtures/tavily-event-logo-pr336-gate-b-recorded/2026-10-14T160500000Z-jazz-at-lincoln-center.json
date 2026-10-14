@@ -1,0 +1,17 @@
+{
+  "fetchedAt": "2026-10-14T16:05:00.000Z",
+  "rowId": 611,
+  "ccabKey": "Jazz at Lincoln Center",
+  "title": "Jazz at Lincoln Center",
+  "query": "Jazz at Lincoln Center New York official website",
+  "tavilyResponse": {
+    "query": "Jazz at Lincoln Center New York official website",
+    "results": [
+      {
+        "title": "Dizzy's Club",
+        "url": "https://jazz.org/dizzys/",
+        "content": "Jazz at Lincoln Center runs Dizzy's Club at https://jazz.org/dizzys/ with nightly sets."
+      }
+    ]
+  }
+}

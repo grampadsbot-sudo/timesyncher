@@ -1,0 +1,17 @@
+{
+  "fetchedAt": "2026-10-14T16:05:00.000Z",
+  "rowId": 607,
+  "ccabKey": "Friend meetup at Bryant Park",
+  "title": "Friend meetup at Bryant Park",
+  "query": "Friend meetup at Bryant Park New York official website",
+  "tavilyResponse": {
+    "query": "Friend meetup at Bryant Park New York official website",
+    "results": [
+      {
+        "title": "Bryant Park",
+        "url": "https://bryantpark.org/",
+        "content": "Midtown lawn and events at https://bryantpark.org/ with no ticket required for the public park."
+      }
+    ]
+  }
+}
