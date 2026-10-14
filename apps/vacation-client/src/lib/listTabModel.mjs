@@ -111,7 +111,6 @@ export function placeName(place) {
   return text(place.name || place.title || 'Untitled');
 }
 
-/** Budget + list labels match staging (strip catalog prefixes like "Flight option:"). */
 export function catalogRowDisplayName(place, trip) {
   const raw = placeName(place);
   if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
@@ -258,14 +257,12 @@ export function numericPrice(place, trip) {
   return priced ? parsePrice(priced[1]) : null;
 }
 
-/** Rest-tab list rows: show ticket/activity price only when the thing has a positive numeric price. */
 export function eventListPriceDisplay(place, trip) {
   const price = numericPrice(place, trip);
   if (price == null || price <= 0) return '';
   return `$${price}`;
 }
 
-/** Opaque Priceline car listings: show Priceline brand art, not a category glyph. */
 export function opaqueCarPricelineLogoUrl(place, trip) {
   if (tabCategoryKey(place, trip) !== 'car') return '';
   const override = overrideFor(trip, place);
@@ -404,7 +401,6 @@ function listLongDescription(place, trip) {
   );
 }
 
-/** Short stored summary for day-by-day itinerary rows (never the list long description). */
 export function itinerarySummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);

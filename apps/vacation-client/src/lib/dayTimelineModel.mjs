@@ -39,7 +39,6 @@ export function dayChipLabel(day) {
   return 'Day';
 }
 
-/** In-card heading must include “Day N” for Gate B itinerary checks. */
 export function flightTimelineTitle(place, trip) {
   const raw = placeName(place);
   const override = overrideFor(trip, place);

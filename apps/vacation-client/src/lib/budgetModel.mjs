@@ -181,7 +181,6 @@ function placesFromItineraryTimeline(trip) {
   return [...seen.values()];
 }
 
-/** Tab lists + itinerary timeline + catalog (live Budget tab parity with staging). */
 export function placesForBudget(trip) {
   const seen = new Map();
   for (const tab of LIST_TAB_IDS) {

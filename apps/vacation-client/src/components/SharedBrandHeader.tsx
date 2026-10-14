@@ -1,4 +1,3 @@
-/** Visible TREK header lockup (Gate B centred-logos / header logo structure checks). */
 export function SharedBrandHeader() {
   return (
     <div

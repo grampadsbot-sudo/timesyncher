@@ -1,5 +1,3 @@
-/** Helpers for scripts/test_keepsake_style2.mjs. Assertions stay in the test file. */
-
 export function mockRes() {
   const res = { statusCode: 0, headers: {}, body: '' };
   res.setHeader = (key, value) => {
