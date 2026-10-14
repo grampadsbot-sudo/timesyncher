@@ -190,16 +190,13 @@
     "lat": 40.6892,
     "lng": -74.0445,
     "address": "Castle Clinton, Battery Park, New York, NY 10004",
-    "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
     "externalId": "Statue of Liberty walking tour",
     "sourceRecord": {
       "category": "event",
-      "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+      "summary": "Official ferry tickets from Battery Park at https://statuecitycruises.com/tickets/new-york-general-admission include Liberty and Ellis islands.",
       "itineraryNote": "Ferry and grounds; keep tickets on phone and arrive early for security.",
       "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
       "price": 26,
-      "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
-      "logoUrl": "https://statuecitycruises.com/favicon.ico",
       "lat": 40.6892,
       "lng": -74.0445,
       "address": "Castle Clinton, Battery Park, New York, NY 10004",
@@ -252,12 +249,24 @@
       "review4Source": null,
       "review4Url": null,
       "source": "brave",
+      "longDetails": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+      "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+      "summarySourceUrls": [
+        "https://statuecitycruises.com/tickets/new-york-general-admission"
+      ],
       "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
-      "longDetails": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding."
+      "logoUrl": "https://statuecitycruises.com/favicon.ico",
+      "logoSearchEvidence": {
+        "query": "Statue of Liberty walking tour New York official website",
+        "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+        "logoUrl": "https://statuecitycruises.com/favicon.ico",
+        "provider": "tavily"
+      }
     },
     "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
     "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
     "price": 26,
+    "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
     "logoUrl": "https://statuecitycruises.com/favicon.ico"
   },
   "605": {
@@ -346,16 +355,13 @@
     "lat": 40.758,
     "lng": -73.9855,
     "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
-    "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
     "externalId": "Afternoon matinee show",
     "sourceRecord": {
       "category": "event",
-      "summary": "Overlap window A: matinee tickets already held.",
+      "summary": "",
       "itineraryNote": "Overlap window A: matinee tickets already held.",
       "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
       "price": 78,
-      "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-      "logoUrl": "https://www.tdf.org/favicon.ico",
       "lat": 40.758,
       "lng": -73.9855,
       "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
@@ -403,12 +409,24 @@
       "review4Source": null,
       "review4Url": null,
       "source": "brave",
+      "longDetails": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+      "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+      "summarySourceUrls": [
+        "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+      ],
       "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-      "longDetails": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth."
+      "logoUrl": "https://www.tdf.org/favicon.ico",
+      "logoSearchEvidence": {
+        "query": "Afternoon matinee show New York official website",
+        "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+        "logoUrl": "https://www.tdf.org/favicon.ico",
+        "provider": "tavily"
+      }
     },
     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
     "summary": "Overlap window A: matinee tickets already held.",
     "price": 78,
+    "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
     "logoUrl": "https://www.tdf.org/favicon.ico"
   },
   "607": {
@@ -418,16 +436,13 @@
     "lat": 40.7536,
     "lng": -73.9832,
     "address": "Bryant Park, New York, NY 10018",
-    "url": "https://bryantpark.org/",
     "externalId": "Friend meetup at Bryant Park",
     "sourceRecord": {
       "category": "event",
-      "summary": "Overlap window B: friend meetup at the same hour.",
+      "summary": "Midtown lawn and events at https://bryantpark.org/ with no ticket required for the public park.",
       "itineraryNote": "Overlap window B: friend meetup at the same hour.",
       "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
       "price": 20,
-      "website": "https://bryantpark.org/",
-      "logoUrl": "https://bryantpark.org/favicon.ico",
       "lat": 40.7536,
       "lng": -73.9832,
       "address": "Bryant Park, New York, NY 10018",
@@ -477,12 +492,24 @@
       "review4Source": null,
       "review4Url": null,
       "source": "brave",
+      "longDetails": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
+      "website": "https://bryantpark.org/",
+      "summarySourceUrls": [
+        "https://bryantpark.org/"
+      ],
       "url": "https://bryantpark.org/",
-      "longDetails": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup."
+      "logoUrl": "https://bryantpark.org/favicon.ico",
+      "logoSearchEvidence": {
+        "query": "Friend meetup at Bryant Park New York official website",
+        "website": "https://bryantpark.org/",
+        "logoUrl": "https://bryantpark.org/favicon.ico",
+        "provider": "tavily"
+      }
     },
     "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
     "summary": "Overlap window B: friend meetup at the same hour.",
     "price": 20,
+    "url": "https://bryantpark.org/",
     "logoUrl": "https://bryantpark.org/favicon.ico"
   },
   "608": {
@@ -658,16 +685,13 @@
     "lat": 40.7725,
     "lng": -73.9838,
     "address": "Broadway at 60th Street, New York, NY 10019",
-    "url": "https://jazz.org/dizzys/",
     "externalId": "Jazz at Lincoln Center",
     "sourceRecord": {
       "category": "event",
-      "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+      "summary": "Jazz at Lincoln Center runs Dizzy's Club at https://jazz.org/dizzys/ with nightly sets.",
       "itineraryNote": "Evening set at Lincoln Center; book covers early for will-call pickup.",
       "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
       "price": 35,
-      "website": "https://jazz.org/dizzys/",
-      "logoUrl": "https://jazz.org/favicon.ico",
       "lat": 40.7725,
       "lng": -73.9838,
       "address": "Broadway at 60th Street, New York, NY 10019",
@@ -716,12 +740,24 @@
       "review4Source": null,
       "review4Url": null,
       "source": "brave",
+      "longDetails": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+      "website": "https://jazz.org/dizzys/",
+      "summarySourceUrls": [
+        "https://jazz.org/dizzys/"
+      ],
       "url": "https://jazz.org/dizzys/",
-      "longDetails": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms."
+      "logoUrl": "https://jazz.org/favicon.ico",
+      "logoSearchEvidence": {
+        "query": "Jazz at Lincoln Center New York official website",
+        "website": "https://jazz.org/dizzys/",
+        "logoUrl": "https://jazz.org/favicon.ico",
+        "provider": "tavily"
+      }
     },
     "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
     "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
     "price": 35,
+    "url": "https://jazz.org/dizzys/",
     "logoUrl": "https://jazz.org/favicon.ico"
   }
 }

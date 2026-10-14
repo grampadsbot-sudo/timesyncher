@@ -12,7 +12,7 @@ import {
 } from '../src/vacation/search-place-output.mjs';
 import {
   assertGateBRowProvenance,
-  buildPr336VkSearchPlacesByRowId,
+  buildPr336VkSearchPlacesByRowIdWithEventLogos,
   gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import {
@@ -294,7 +294,7 @@ assert.throws(
   'assertSearchPlaceOutputContract must reject banned zero price after enrichment',
 );
 
-const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
+const gateBPlaces = await buildPr336VkSearchPlacesByRowIdWithEventLogos(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
