@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: NYC served page — no horizontal overflow on every tab @ 390; mobile icon-only inactive tabs. */
+
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

@@ -1,4 +1,4 @@
-/** Harness-only composer send control checks (in-browser + fixture tests). */
+
 
 export function composerSendHelperSource() {
   return `

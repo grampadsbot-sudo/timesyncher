@@ -7,7 +7,6 @@ const MAUI_MAP_BOUNDS = {
   lngMax: -155.95,
 };
 
-/** Strip emoji / pictographs for shared-site tab matching (labels often prefix emoji). */
 export function normalizeSharedTabLabel(text) {
   return String(text || '')
     .replace(/\p{Extended_Pictographic}/gu, '')
@@ -22,7 +21,6 @@ export function sharedTabLabelIncludes(text, keyword) {
   return want.length > 0 && norm.includes(want);
 }
 
-/** ISO calendar date from starts_at (never String(Date)). */
 export function isoDateFromStartsAt(value) {
   if (value == null || value === '') return '';
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -43,7 +41,6 @@ function normalizeTitle(text) {
   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-/** Does this customer turn text reasonably request this thing title? */
 export function turnTextRequestsThing(turnText, thingTitle) {
   const body = normalizeTitle(turnText);
   const title = normalizeTitle(thingTitle);
@@ -73,9 +70,6 @@ function thingIdsFromTurnResponse(json = {}) {
   return ids;
 }
 
-/**
- * Attribute each trip_things row to a D customer turn by id (request_id / response thingId only).
- */
 export function attributeDThingRows({
   things = [],
   customerTurns = [],
@@ -137,10 +131,6 @@ export function collaboratorWelcomeTemplatePrefix() {
   return text.split('Invitee')[0];
 }
 
-/**
- * Match collaborator welcome via vacation_onboarding_welcomes.welcome_for + transcript payload.
- */
-/** Transcript app turns tied to vacation_onboarding_welcomes.welcome_for (not time-order heuristics). */
 export function welcomeTranscriptTurnsForClaims({ welcomeRows = [], transcriptTurns = [] }) {
   const welcomeForSet = new Set(welcomeRows.map((r) => String(r.welcome_for)));
   return (transcriptTurns || []).filter((t) => {
@@ -192,8 +182,6 @@ export function a2WelcomePass(match, { redirectOk, publicUrlOk }) {
     && match.templateMatchCount >= 1;
 }
 
-/** Offline replay: re-grade D bar from saved smoke out.json checkD + raw thing dates. */
-/** Resolve Paia D2 customer turn id when DB ilike miss still left reply evidence (ASK-d2 wiring). */
 export function resolvePaiaD2CustomerTurnId(checkD = {}, customerTurns = []) {
   const d2 = checkD?.d2 || {};
   if (d2.customerTurnId) return d2.customerTurnId;
@@ -249,7 +237,6 @@ export function replayDGradesFromSaved(checkD) {
   };
 }
 
-/** Offline replay: A2 welcome match from saved checkA2 (welcomeDb + optional transcript rows). */
 export function replayA2FromSaved(checkA2, inviteeDisplayName = 'Spouse964') {
   const welcomeDb = checkA2?.welcomeDb || [];
   const welcomeFor = welcomeDb[0]?.welcome_for || checkA2?.collabCustomerId || null;
@@ -267,7 +254,6 @@ export function replayA2FromSaved(checkA2, inviteeDisplayName = 'Spouse964') {
   });
   return { welcomeFor, match, wouldPassWithTranscript: match.welcomeTurnCount === 1 };
 }
-
 
 export {
   evaluateTripMapInPage,

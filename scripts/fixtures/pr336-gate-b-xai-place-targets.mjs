@@ -1,4 +1,4 @@
-/** Gate B rows 602-607, 610-611: ccab keys that need xAI grok-4.3 web_search recordings (#366). */
+
 export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   {
     rowId: 602,

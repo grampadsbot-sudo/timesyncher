@@ -24,7 +24,6 @@ async function checkoutCustomer(BASE, couponCode, tag) {
   return { session: couponJson.session?.token, email, status: couponRes.status };
 }
 
-/** Fresh customers per VISUAL state; never touches TS-2TZD3CGMA_J7. */
 export async function mintVisualStateCustomers({ db, BASE, SHA7, setStage }) {
   const coupons = await mintCheckoutCoupons(db, { count: 4, max: 4, label: `layout-${SHA7}` });
   const states = {};

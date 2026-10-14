@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: NYC fixture Cars tab — no horizontal overflow; Timeline checkbox visible at 390/1280. */
+
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

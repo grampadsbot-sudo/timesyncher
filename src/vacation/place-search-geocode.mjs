@@ -26,7 +26,6 @@ export function isNominatimOpenStreetMapUrl(url) {
   }
 }
 
-/** Sole production entry point for HTTP to nominatim.openstreetmap.org. */
 export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, body, label, now } = {}) {
   if (!isNominatimOpenStreetMapUrl(url)) {
     throw new PlaceSearchError(
@@ -77,7 +76,6 @@ export async function nominatimHttpReadJson(fetchImpl, url, { headers, method, b
   }
 }
 
-/** Test helper: canonical Nominatim search URL without duplicating host literals in scripts. */
 export function nominatimSelfTestSearchUrl(query = 'test') {
   return `https://${NOMINATIM_HOST}/search?format=jsonv2&q=${encodeURIComponent(query)}`;
 }

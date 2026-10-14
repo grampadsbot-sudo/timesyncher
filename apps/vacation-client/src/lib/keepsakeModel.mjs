@@ -1,4 +1,4 @@
-/** Keepsake / journey report sections from shared trip JSON (clean-room; no TREK bundle). */
+
 
 import { tabCategoryKey, placeName, placesForCategoryTab } from './listTabModel.mjs';
 import {
@@ -46,7 +46,6 @@ function mapsOffDays(params) {
   );
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function resolveKeepsakePrintFlags(trip, searchParams = new URLSearchParams()) {
   const stored = storedPrintSettings(trip);
   const mapsStored = stored.maps && typeof stored.maps === 'object' ? stored.maps : {};
@@ -93,7 +92,6 @@ export function isKeepsakeJourneyLocation(pathname = '', searchParams = new URLS
   return false;
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function tripSummaryText(trip) {
   const overrides = trip?.thingOverrides || {};
   const stored = text(overrides.__keepsakeSummary);
@@ -122,7 +120,6 @@ function storyMediaForPlace(trip, place) {
   return boundMediaForPlace({ ...place, bound_media: top });
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function savedStories(trip) {
   const stories = [];
   for (const place of trip?.places || []) {
@@ -146,12 +143,10 @@ export function savedStories(trip) {
   return stories;
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function eventExperienceCount(trip) {
   return placesForCategoryTab(trip, 'events').length;
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function directorySection(trip, tab, label) {
   const places = placesForCategoryTab(trip, tab);
   if (!places.length) return null;
@@ -162,7 +157,6 @@ export function directorySection(trip, tab, label) {
   };
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function itineraryStatBuckets(trip) {
   const buckets = [
     ['Flights', placesForCategoryTab(trip, 'flights')],
@@ -176,7 +170,6 @@ export function itineraryStatBuckets(trip) {
     .filter((row) => row.count > 0);
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload} trip */
 export function buildKeepsakeDayPages(trip) {
   const days = sortedDays(trip);
   return days.map((day) => {
@@ -190,10 +183,6 @@ export function buildKeepsakeDayPages(trip) {
   });
 }
 
-/**
- * @param {import('../types/sharedTrip.ts').SharedTripPayload} trip
- * @param {URLSearchParams} [searchParams]
- */
 export function buildKeepsakeViewModel(trip, searchParams = new URLSearchParams()) {
   const flags = resolveKeepsakePrintFlags(trip, searchParams);
   const style = keepsakeStyleFromSearch(searchParams);

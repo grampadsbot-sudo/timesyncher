@@ -73,7 +73,7 @@ export async function runVisualHarnessCheck({
   setStage,
   env = process.env,
   fetchImpl = fetch,
-  /** When set (spine), skip mint and use this single-state map for faster smoke. */
+
   spineState = null,
 }) {
   const stageTimestamps = {};

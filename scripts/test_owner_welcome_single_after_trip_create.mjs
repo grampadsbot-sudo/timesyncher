@@ -80,13 +80,12 @@ const trip = {
 const state = { claim: null, welcomeTurns: [] };
 const db = createDb(state);
 
-// terms GET equivalent: EULA accepted, no trip yet
 await ensureOnboardingOpener(db, session, null, {});
-// hi / first chat turn
+
 await ensureOnboardingOpener(db, session, null, {});
-// trip create
+
 await ensureOnboardingOpener(db, session, trip, {});
-// second GET after trip exists
+
 await ensureOnboardingOpener(db, session, trip, {});
 
 assert.equal(state.welcomeTurns.length, 1, 'expected exactly one owner welcome turn');

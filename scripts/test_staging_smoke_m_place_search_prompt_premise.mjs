@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * Shepherd staging smoke check M: farmers market near Kihei after Hyatt + Westin lodging turns.
- * Rebuilds the place-search reply prompt/facts: labelled lodging context stays separate from Results.
- */
+
 import assert from 'node:assert/strict';
 import { draftingFacts, completeRosterParty } from '../src/vacation/live-app-turn.mjs';
 import { enrichDraftingTripContext, draftingLodgingFields, loadTripMetadataStatedLodgingArea } from '../src/vacation/reply-trip-context-facts.mjs';

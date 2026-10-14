@@ -21,10 +21,6 @@ function pidAlive(pid) {
   }
 }
 
-/**
- * Fail closed when another shepherd-staging-smoke instance holds the lock.
- * @returns {{ release: () => void }}
- */
 export function acquireShepherdStagingSmokeLock(lockPath = DEFAULT_LOCK_PATH) {
   const existing = readLockPid(lockPath);
   if (existing && existing !== process.pid && pidAlive(existing)) {

@@ -1,10 +1,8 @@
 import { firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 
-/** Matches `vercel.json` `api/[...route].mjs` maxDuration (seconds). */
 export const VACATION_ITINERARY_ROUTE_MAX_MS = 60_000;
 
-/** Brave/OSM/Nominatim, reply, and gates before/after relevance inside one POST. */
 const PLACE_SEARCH_NON_RELEVANCE_RESERVE_MS = 35_000;
 
 const DEFAULT_PER_CALL_TIMEOUT_MS = 20_000;
@@ -68,7 +66,6 @@ function relevanceJudgeSourceRank(row) {
   return index === -1 ? RELEVANCE_JUDGE_SOURCE_ORDER.length : index;
 }
 
-/** Brave hits must reach Jev before OSM island noise consumes the per-category cap (check 6 / 6b). */
 export function orderRowsForRelevanceJudge(rows = []) {
   return [...(Array.isArray(rows) ? rows : [])].sort((left, right) => {
     const sourceDelta = relevanceJudgeSourceRank(left) - relevanceJudgeSourceRank(right);

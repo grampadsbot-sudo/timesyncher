@@ -1,7 +1,6 @@
 import { citablePlaceTitles, tripOwnedPlaceAllowRows } from './provider-result-context.mjs';
 import { blockInTurnPlaceReply, inTurnPlaceReplyViolation } from './chat-place-search.mjs';
 
-/** Leave headroom after classifier + place search inside the 60s itinerary route. */
 export const PLACE_SEARCH_TIERED_REPLY_TIMEOUT_MS = 28_000;
 
 function parsePositiveIntEnv(env, key, defaultValue) {
@@ -47,10 +46,6 @@ function groundedShipCandidate(reply, inTurnPlaceResults, tripPlaceAllowRows) {
   return violation ? null : text;
 }
 
-/**
- * Ship an in-turn place-search reply, or a deterministic grounded fallback when the model
- * draft is empty, times out, or cites saved trip context (e.g. rental cars).
- */
 export function finalizeInTurnPlaceShipReply(reply, enforceInTurnPlaces, inTurnPlaceResults, carry = {}) {
   if (!enforceInTurnPlaces) {
     const text = String(reply || '').trim();
@@ -110,7 +105,6 @@ function recoverInTurnPlaceAfterBannedReply({
   };
 }
 
-/** @returns {string|object} reply text, or blocked carry-through object */
 function shipInTurnPlaceSearchDraft(draft, enforceInTurnPlaces, inTurnPlaceResults, carry) {
   const ship = finalizeInTurnPlaceShipReply(draft, enforceInTurnPlaces, inTurnPlaceResults, carry);
   if (!ship.ok) return ship.blocked;

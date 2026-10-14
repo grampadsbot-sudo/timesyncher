@@ -20,7 +20,6 @@ export function requiredTravelBase(env = process.env) {
   return travelBase(env);
 }
 
-/** Staging website already honors Style two Config (`Ae()`). Do not invent hosts. */
 export function websiteTripBase(env = process.env) {
   const site = siteBase(env);
   try {

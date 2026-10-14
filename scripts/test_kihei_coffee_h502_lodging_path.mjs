@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B check R live path: intake lodging turn (H) resolves Westin via Brave without
- * customerStatedLodging metadata or trip statedLodgingArea metadata; Kihei coffee turn
- * must not leak Kaanapali/Lahaina lodging into the reply prompt.
- */
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

@@ -1,4 +1,4 @@
-/** OSM marketplace element used by the check-K market persist/reply regression. */
+
 export const MARKET_OSM_PAYLOAD = {
   elements: [{
     type: 'node',

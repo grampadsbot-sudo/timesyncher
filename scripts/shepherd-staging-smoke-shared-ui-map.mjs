@@ -76,7 +76,6 @@ function attachSharedHydrationDiagnostics(page) {
   };
 }
 
-/** In-page readiness for shared intake tab shell (same selectors as listSharedDomTabs / LOGO check). */
 function sharedIntakeTabShellReadyInBrowser() {
   const bodyText = document.body?.innerText || '';
   if (!/Day-by-Day/i.test(bodyText)) return false;

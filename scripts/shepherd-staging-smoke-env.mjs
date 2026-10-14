@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * Staging project should set TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 so harness mint
- * checkouts do not consume Resend quota; bundle spine still sends to agentmail + shepherd-*@resend.dev.
- */
+
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { outboundEmailPassesSmokeHarness } from '../src/vacation/email.mjs';
@@ -46,7 +43,6 @@ function repoRootDir() {
   return fileURLToPath(new URL('..', import.meta.url));
 }
 
-/** Vercel decrypt occasionally returns a JSON-encoded string (extra quotes). */
 export function unwrapVercelEnvString(value) {
   let trimmed = String(value ?? '').trim();
   if (!trimmed) return trimmed;
@@ -165,7 +161,6 @@ export async function ensureShepherdStagingSmokeEnv({ env = process.env, fetchIm
   }
 }
 
-/** Check I: stub outbound when TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 (zero Resend HTTP). */
 export function checkIOutboundPassesSmokeHarness(row, env = process.env) {
   if (env.TIMESYNCHER_HARNESS_STUB_OUTBOUND === '1') {
     return String(row?.status || '') === 'stubbed' && String(row?.provider || '') === 'harness_stub';
@@ -178,7 +173,6 @@ function outboundRowErrorSummaryEmpty(row) {
   return summary == null || String(summary).trim() === '';
 }
 
-/** Live Resend row: status=sent, provider=resend, no error_summary. */
 export function checkIResendSentRowPasses(row) {
   if (!row || typeof row !== 'object') return false;
   if (String(row.status || '') !== 'sent') return false;
@@ -186,9 +180,6 @@ export function checkIResendSentRowPasses(row) {
   return outboundRowErrorSummaryEmpty(row);
 }
 
-/**
- * Check I outbound verdict (stub harness vs confirmed live Resend send).
- */
 export function evaluateCheckIOutbound({ row, env = process.env } = {}) {
   const stub = env.TIMESYNCHER_HARNESS_STUB_OUTBOUND === '1';
   if (stub) {

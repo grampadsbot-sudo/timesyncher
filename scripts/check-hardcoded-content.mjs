@@ -391,9 +391,6 @@ function googlePlacesFindings(file, text, findings, seen) {
   }
 }
 
-// Paid place clients. The free Foursquare open-places dataset
-// (opensource.foursquare.com / os-places) is not one of these.
-// api.foursquare.com is not allowed to match inside places-api.foursquare.com.
 const PAID_PLACES_PATTERNS = [
   [/(?<![\w.-])api\.foursquare\.com/gi, 'api.foursquare.com'],
   [/places-api\.foursquare\.com/gi, 'places-api.foursquare.com'],
@@ -408,8 +405,6 @@ const PAID_PLACES_PATTERNS = [
   [/\bPlacesClient\b/g, 'PlacesClient'],
 ];
 
-// Exact ban-list lines in the checkers. These name hosts the rule forbids.
-// They are not API calls. Any other file, including tests, still fails.
 export const PAID_PLACES_BAN_LIST_LINES = [
   {
     file: 'scripts/check-code-ratchet.mjs',
@@ -1230,10 +1225,6 @@ function quotedEndingAt(text, end) {
   return null;
 }
 
-// An ISO date is exempt only as the entire value of an HTTP header whose name
-// ends in -Api-Version (case-insensitive). Object-literal form is
-// 'X-Catalog-Api-Version': '2025-06-17'. Headers form is a name/value pair:
-// ['X-Catalog-Api-Version', '2025-06-17'] or .set('X-Catalog-Api-Version', '2025-06-17').
 function apiVersionHeaderDate(text, index, date) {
   const quote = text[index - 1];
   if ((quote !== "'" && quote !== '"') || text[index + date.length] !== quote) return false;
@@ -1358,8 +1349,7 @@ function offlineBuildProduces(cwd, repoRelativePath) {
     return false;
   }
   if (!/\bvite\b/.test(build)) return false;
-  // Vite writes hashed files under dist/. It does not create a missing public
-  // asset, under the path the HTML references, from a local source module.
+
   return false;
 }
 
@@ -1543,10 +1533,6 @@ function bundlePaths(cwd) {
   return BUNDLE_FILES.filter((file) => fs.existsSync(path.join(cwd, file)));
 }
 
-// Direct children of public/assets only. The one raw pulled input,
-// public/assets/upstream/index-BKun7ofk.js, still contains the canned strings
-// and is not a direct child, so this scan skips it. The stripped file the build
-// writes, public/assets/index-BKun7ofk.js, is a direct child and is scanned when present.
 function assetBundlePaths(cwd) {
   const dir = path.join(cwd, 'public/assets');
   if (!fs.existsSync(dir)) return [];
@@ -1562,8 +1548,7 @@ function guardExempt(file) {
 function repoTextFiles(cwd) {
   const files = [];
   walk(cwd, cwd, files, false);
-  // public/assets/ stays out of the repo-text walk. That existing skip is what
-  // leaves the one raw pulled file, public/assets/upstream/index-BKun7ofk.js, unscanned.
+
   return files.filter((file) => !guardExempt(file) && !file.split(path.sep).join('/').startsWith('evidence/') && !file.split(path.sep).join('/').startsWith('public/assets/') && !file.split(path.sep).join('/').startsWith('artifacts/'));
 }
 
@@ -2140,9 +2125,6 @@ export function crossOriginBundleScan(cwd = process.cwd()) {
   return findings;
 }
 
-// BUNDLE-LEAK reads committed and on-disk bundles under public/assets, bundles, and dist.
-// It does not run vite build. The raw committed file under public/assets/upstream is in that
-// tree and is scanned with the other bundles. dist/ is included when a build already wrote it.
 const BUNDLE_LEAK_EXT = new Set(['.js', '.mjs', '.cjs', '.css', '.html', '.json', '.map']);
 const BUNDLE_LEAK_DIRS = ['public/assets', 'public/bundles', 'bundles', 'dist'];
 const TBD_SYMBOL = { 'price tbd': 'Price TBD', 'depart tbd': 'Depart TBD', 'arrive tbd': 'Arrive TBD' };
@@ -2297,10 +2279,6 @@ function bundleLeakScan(cwd) {
   return findings;
 }
 
-// EVASION also flags padding inside committed JS bundles. A run is 20 or more
-// consecutive spaces or tabs. Newlines do not count and end a run. The symbol
-// is spaces:N@offset, tabs:N@offset, or whitespace:N@offset. Template literals
-// are not exempt. The rule id is always-fail, so a baseline row cannot hide it.
 const WHITESPACE_PAD = /[ \t]{20,}/g;
 const PAD_DIRS = ['public/assets', 'bundles', 'dist'];
 const PAD_EXT = new Set(['.js', '.mjs', '.cjs']);

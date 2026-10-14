@@ -4,7 +4,6 @@ function text(value) {
   return String(value || '').trim();
 }
 
-/** Attach logoUrl (or logoCaptureReason) from provider source fields at trip_things persist time. */
 function logoMetadataForPlace(place = {}) {
   const sourceRecord = place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null;
   const captureInput = {

@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * INV-CLAIM lodging turn (Hyatt gap answer) on the vacation-itinerary POST queue path.
- * Proves it does not enter the Jev POI relevance stage that drives check 6b relevance_judge_failed → 502.
- */
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

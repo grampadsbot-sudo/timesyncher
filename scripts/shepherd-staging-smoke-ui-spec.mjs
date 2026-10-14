@@ -1,7 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Craig 09:26 PT + tsv-ui-spec a3896550: composer includes visible send. */
 const CANONICAL_APP_UI_SPEC_FALLBACK = `The app is a Grok-like text interface:
 - The ONLY controls are a text box (the composer) with a file-add button, a speak button, and a visible send button.
 - When the customer has fewer than 2 vacations, the header is FULLY HIDDEN: not rendered, or display:none, taking zero height.

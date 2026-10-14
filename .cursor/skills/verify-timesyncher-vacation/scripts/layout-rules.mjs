@@ -1,7 +1,4 @@
-/**
- * Geometry pass/fail for one measured screen. Numbers only.
- * Screen copy is not a pass criterion. The vision judge reads the screen spec.
- */
+
 
 export function toleranceMap(table) {
   const out = {};

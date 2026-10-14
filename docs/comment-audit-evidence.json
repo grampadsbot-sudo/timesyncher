@@ -1,0 +1,2030 @@
+{
+  "fileCount": 743,
+  "comments": [
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-fixtures.mjs",
+      "line": 1,
+      "preview": "*\n * Synthetic pages and the 10/3 staging probe boxes.\n * Probe source: chat at 390 had header width 479 and textarea bottom 881\n * on a 844px viewport. Shared at 390 painted Open navigation and Settings."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-fixtures.mjs",
+      "line": 158,
+      "preview": "* Boxes copied from the 10/3 chat-390 probe. Textarea bottom is 839+42."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-fixtures.mjs",
+      "line": 180,
+      "preview": "* Boxes copied from the 10/3 shared-390 probe."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-fixtures.mjs",
+      "line": 195,
+      "preview": "* An empty header bar still has height. That is a fail for 0 or 1 vacations."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-judge.mjs",
+      "line": 6,
+      "preview": "*\n * One vision call per screenshot. Same OpenRouter chat path as\n * scripts/vacation-app-reply-rules.mjs (OPENROUTER_CHAT_COMPLETIONS_URL).\n * The key is OPENROUTER_API_KEY. A missing key, timeout, or bad verdict is a failure."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/layout-rules.mjs",
+      "line": 1,
+      "preview": "*\n * Geometry pass/fail for one measured screen. Numbers only.\n * Screen copy is not a pass criterion. The vision judge reads the screen spec."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs",
+      "line": 1,
+      "preview": "*\n * Deterministic gates for the onboarding welcome verify.\n * A passing shape is not a pass. PASS requires an external judge grade."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-chat-provision.mjs",
+      "line": 2,
+      "preview": "* Provision four chat fixture states for verify-layout (DATABASE_URL only; no Vercel)."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-doctor.mjs",
+      "line": 2,
+      "preview": "* Staging doctor pass for verify-layout (no Vercel)."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-provision.mjs",
+      "line": 2,
+      "preview": "*\n * Documents four-state layout/visual provisioning for post-deploy verify-layout.\n * Mint path: mintVisualStateCustomers (4 fresh coupons layout-${SHA7}, @resend.dev emails)."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-shared-helpers.mjs",
+      "line": 2,
+      "preview": "* Shared page helpers for verify-layout drives (no Vercel)."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-shared-helpers.mjs",
+      "line": 51,
+      "preview": "* @deprecated Use stateIdFromSnapshot; trip dropdown options exist only when 2+ vacations."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout-trip-signup-drive.mjs",
+      "line": 2,
+      "preview": "* Shared-trip and signup drives for verify-layout."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-layout.mjs",
+      "line": 2,
+      "preview": "*\n * Drive the staging vacation app the way a customer does.\n * Geometry is measured. Intent is judged from the screen spec. Fail closed."
+    },
+    {
+      "file": ".cursor/skills/verify-timesyncher-vacation/scripts/verify-welcome-after-intake.mjs",
+      "line": 2,
+      "preview": "*\n * Onboarding welcome verify against staging.\n * Signs up a fresh customer, agrees, captures the welcome, then sends three\n * fresh-trip fixtures. Shape alone is not a pass.\n * DATABASE_URL and TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS "
+    },
+    {
+      "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+      "line": 1,
+      "preview": "* Budget derivation for the preview client (tested from test/budget.unit.mjs)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+      "line": 14,
+      "preview": "* Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+      "line": 53,
+      "preview": "* Catalog row used for budget math (assignments may carry partial `place` stubs)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+      "line": 187,
+      "preview": "* Every list-tab thing plus anything assigned to an itinerary day (R2)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+      "line": 287,
+      "preview": "* Named checks for Gate B budget completeness reporting (pass/total)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+      "line": 1,
+      "preview": "* Day-by-day timeline: schedule rows, travel gaps, car pickup/drop-off, map markers."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+      "line": 188,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+      "line": 441,
+      "preview": "* @typedef {'thing'|'travel'|'car-pickup'|'car-dropoff'} TimelineEntryKind"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+      "line": 443,
+      "preview": "*\n * @param {import('../types/sharedTrip.ts').SharedTripPayload} trip\n * @param {import('../types/sharedTrip.ts').SharedDay} day"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/detailModel.mjs",
+      "line": 1,
+      "preview": "* Thing detail popup field model (reads trip thingOverrides / place only)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/detailModel.mjs",
+      "line": 373,
+      "preview": "* Rows to render in the detail popup for this place (only non-empty values)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeMedia.mjs",
+      "line": 1,
+      "preview": "* Saved-story / print media helpers (browser-safe; mirrors thing-media-bind rules)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeMedia.mjs",
+      "line": 64,
+      "preview": "* @param {Record<string, unknown>} place"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeMedia.mjs",
+      "line": 74,
+      "preview": "* Saved Story flag on the Thing (TREK `ha(nr).story`)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 1,
+      "preview": "* Keepsake / journey report sections from shared trip JSON (clean-room; no TREK bundle)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 49,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 96,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 125,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 149,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 154,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 165,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 179,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+      "line": 193,
+      "preview": "*\n * @param {import('../types/sharedTrip.ts').SharedTripPayload} trip\n * @param {URLSearchParams} [searchParams]"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/listTabModel.mjs",
+      "line": 1,
+      "preview": "* Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/paintTabEmoji.ts",
+      "line": 1,
+      "preview": "* Vertically center emoji ink in a 16px tab icon canvas (R1)."
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 1,
+      "preview": "* @typedef {'day-by-day'|'flights'|'hotels'|'cars'|'restaurants'|'stores'|'events'|'packing'|'chat'|'budget'} TabId"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 3,
+      "preview": "* @type {TabId[]}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 15,
+      "preview": "* @type {Record<TabId, string>}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 29,
+      "preview": "* @type {Record<TabId, string>}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 43,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 49,
+      "preview": "* @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip @param {'flights'|'hotels'|'cars'} key"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 55,
+      "preview": "*\n * @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip\n * @param {Record<string, boolean> | undefined} permissions\n * @returns {TabId[]}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 61,
+      "preview": "* @type {TabId[]}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 85,
+      "preview": "* @param {unknown} value @returns {value is TabId}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 90,
+      "preview": "* @param {string} hash @param {string} search @returns {TabId}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 105,
+      "preview": "* @param {TabId} tab @returns {string}"
+    },
+    {
+      "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+      "line": 110,
+      "preview": "* @param {TabId} tab @param {Location} location"
+    },
+    {
+      "file": "apps/vacation-client/src/vite-env.d.ts",
+      "line": 1,
+      "preview": "/ <reference types=\"vite/client\" />"
+    },
+    {
+      "file": "apps/vacation-client/test/fixtures/enriched-detail-shared-trip.mjs",
+      "line": 216,
+      "preview": "* Layout/detail acceptance rows: every presentation type at 390 and 1280."
+    },
+    {
+      "file": "apps/vacation-client/test/run-all.mjs",
+      "line": 13,
+      "preview": "* Layout modules are imported by shell-layout.mjs; only run that entry for layout."
+    },
+    {
+      "file": "routes/vacation-itinerary.mjs",
+      "line": 35,
+      "preview": "Live queue turn (see vacation-app-chat-queue.mjs): runVacationAppInTurnSearch, authorId: session.customer_id, classifyVacationAppCustomerTurn, classifyTripIntake, intakeExtractedThings(placeSearchTurn, classification), applyChatPlaceSearchF"
+    },
+    {
+      "file": "scripts/baseline-subset.mjs",
+      "line": 26,
+      "preview": "A row already on the base stays. A row whose rule id is absent from a non-empty base may be added once."
+    },
+    {
+      "file": "scripts/baseline-subset.mjs",
+      "line": 27,
+      "preview": "An empty base file cannot grow. A missing base file may seed."
+    },
+    {
+      "file": "scripts/baseline-subset.mjs",
+      "line": 46,
+      "preview": "--prune rewrites the baseline to rows that still match a finding and never adds rows."
+    },
+    {
+      "file": "scripts/build-used-vs-tip.mjs",
+      "line": 1,
+      "preview": "*\n * The graded build is the sha that was live at the drive.\n * Deploy that tip first, then drive once, so the drive build equals the tip.\n * A later tip can still be graded when every commit after the drive leaves reply code unchanged.\n * "
+    },
+    {
+      "file": "scripts/capture_itinerary_fresh_daybyday_gate.mjs",
+      "line": 2,
+      "preview": "* Day-by-day keepsake gate: prod travel bundle vs patched, Day 1/2 @390/1280."
+    },
+    {
+      "file": "scripts/capture_pr225_flights_sort_before.mjs",
+      "line": 2,
+      "preview": "* One-off: flights sort header crops from pre-label bundle (pill sort)."
+    },
+    {
+      "file": "scripts/capture_pr225_tabs_nyc_compare.mjs",
+      "line": 2,
+      "preview": "* PR #225: 8 shared tabs @ 390/1280 — prod travel bundle (left) vs patched bundle (right)."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 7,
+      "preview": "Baselined hits report. A hit that is not in the baseline fails."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 8,
+      "preview": "Every baseline row must already exist on the PR base (file, rule, symbol, inventory id). A missing base file may seed; a missing ref fails closed."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 9,
+      "preview": "MODEL_CLIENT is the only module allowed to call an LLM HTTP API."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 10,
+      "preview": "SEARCH_MODULES are the only modules allowed to call a search or place HTTP API."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 11,
+      "preview": "Floating promise, one line: a same-file async call or fetch, or .then(, fails unless that line has await, return, or void. .then is handled when it has .catch or a second argument."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 12,
+      "preview": "Empty catch is a catch body or .catch( callback whose body is only whitespace or comments."
+    },
+    {
+      "file": "scripts/check-code-ratchet.mjs",
+      "line": 13,
+      "preview": "import() and export * mark every export of that module used. A static import { name } marks only that name."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 394,
+      "preview": "Paid place clients. The free Foursquare open-places dataset"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 395,
+      "preview": "(opensource.foursquare.com / os-places) is not one of these."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 396,
+      "preview": "api.foursquare.com is not allowed to match inside places-api.foursquare.com."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 411,
+      "preview": "Exact ban-list lines in the checkers. These name hosts the rule forbids."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 412,
+      "preview": "They are not API calls. Any other file, including tests, still fails."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1233,
+      "preview": "An ISO date is exempt only as the entire value of an HTTP header whose name"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1234,
+      "preview": "ends in -Api-Version (case-insensitive). Object-literal form is"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1235,
+      "preview": "'X-Catalog-Api-Version': '2025-06-17'. Headers form is a name/value pair:"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1236,
+      "preview": "['X-Catalog-Api-Version', '2025-06-17'] or .set('X-Catalog-Api-Version', '2025-06-17')."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1361,
+      "preview": "Vite writes hashed files under dist/. It does not create a missing public"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1362,
+      "preview": "asset, under the path the HTML references, from a local source module."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1546,
+      "preview": "Direct children of public/assets only. The one raw pulled input,"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1547,
+      "preview": "public/assets/upstream/index-BKun7ofk.js, still contains the canned strings"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1548,
+      "preview": "and is not a direct child, so this scan skips it. The stripped file the build"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1549,
+      "preview": "writes, public/assets/index-BKun7ofk.js, is a direct child and is scanned when present."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1565,
+      "preview": "public/assets/ stays out of the repo-text walk. That existing skip is what"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 1566,
+      "preview": "leaves the one raw pulled file, public/assets/upstream/index-BKun7ofk.js, unscanned."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2143,
+      "preview": "BUNDLE-LEAK reads committed and on-disk bundles under public/assets, bundles, and dist."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2144,
+      "preview": "It does not run vite build. The raw committed file under public/assets/upstream is in that"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2145,
+      "preview": "tree and is scanned with the other bundles. dist/ is included when a build already wrote it."
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2300,
+      "preview": "EVASION also flags padding inside committed JS bundles. A run is 20 or more"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2301,
+      "preview": "consecutive spaces or tabs. Newlines do not count and end a run. The symbol"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2302,
+      "preview": "is spaces:N@offset, tabs:N@offset, or whitespace:N@offset. Template literals"
+    },
+    {
+      "file": "scripts/check-hardcoded-content.mjs",
+      "line": 2303,
+      "preview": "are not exempt. The rule id is always-fail, so a baseline row cannot hide it."
+    },
+    {
+      "file": "scripts/diag-eula-readback.mjs",
+      "line": 2,
+      "preview": "* Standalone EULA receipt readback diagnostic (staging DB + same smoke accept path)."
+    },
+    {
+      "file": "scripts/export_trek_sqlite_to_hosted.py",
+      "line": 1,
+      "preview": "!/usr/bin/env python3"
+    },
+    {
+      "file": "scripts/fixtures/gate-b-approved-shared-trip.mjs",
+      "line": 7,
+      "preview": "* Slug for the offline Gate B approved shared trip (see gate-b-approved-shared-trip.mjs)."
+    },
+    {
+      "file": "scripts/fixtures/hardcoded-content/date-month-regex.mjs",
+      "line": 9,
+      "preview": "april in a comment"
+    },
+    {
+      "file": "scripts/fixtures/nominatim-store-test-double.mjs",
+      "line": 36,
+      "preview": "* In-memory Nominatim store for unit tests only (not used in production)."
+    },
+    {
+      "file": "scripts/fixtures/nominatim-store-test-double.mjs",
+      "line": 37,
+      "preview": "* Shared Neon-style sql executor: throttle UPDATE ... RETURNING + geocode cache upsert/select."
+    },
+    {
+      "file": "scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs",
+      "line": 17,
+      "preview": "* Gate B VK search snapshot is authoritative for copy on these row ids (see TSV #376)."
+    },
+    {
+      "file": "scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs",
+      "line": 22,
+      "preview": "* Live TREK reads one-line copy via ha(place).summary → rr(place)."
+    },
+    {
+      "file": "scripts/fixtures/place-relevance-kaanapali-brave.mjs",
+      "line": 1,
+      "preview": "*\n * Staging transcript 9833b82f (best tacos near our hotel, 2026-10-02) stored these\n * Brave titles with empty addresses. They are Ziguinchor / Casamance hits, not Maui tacos.\n * Check 6 (6c2a042e) stored Brave resultCount 1 and did not p"
+    },
+    {
+      "file": "scripts/fixtures/place-search-brave-hertz-kahului.mjs",
+      "line": 1,
+      "preview": "* Trimmed from live Brave local place_search (Hertz Kahului, Kahului), 2026-10-03."
+    },
+    {
+      "file": "scripts/fixtures/place-search-brave-kihei-caffe.mjs",
+      "line": 1,
+      "preview": "* Trimmed from live Brave local place_search (coffee near Kihei, Maui), 2026-10-03."
+    },
+    {
+      "file": "scripts/fixtures/place-search-brave-kihei-caffe.mjs",
+      "line": 15,
+      "preview": "* Same Brave URL, later provider rank — long `title` only (no `name` field)."
+    },
+    {
+      "file": "scripts/fixtures/place-search-maui-d2-geocode.mjs",
+      "line": 1,
+      "preview": "* Nominatim-shaped geocode for trip destination \"Maui\" (shepherd 4eff9d1 check D-d2)."
+    },
+    {
+      "file": "scripts/fixtures/place-search-osm-market.mjs",
+      "line": 1,
+      "preview": "* OSM marketplace element used by the check-K market persist/reply regression."
+    },
+    {
+      "file": "scripts/fixtures/pr336-gate-b-event-logo-targets.mjs",
+      "line": 3,
+      "preview": "* Gate B event rows that receive #388 Tavily official-website logo search in fixture build."
+    },
+    {
+      "file": "scripts/fixtures/pr336-gate-b-xai-place-targets.mjs",
+      "line": 1,
+      "preview": "* Gate B rows 602-607, 610-611: ccab keys that need xAI grok-4.3 web_search recordings (#366)."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 23,
+      "preview": "* Gate B timeline rows → documented NYC ccab search record keys."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 24,
+      "preview": "* PR336 VK search test trip (fixture family for Gate B NYC day-by-day rows)."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 27,
+      "preview": "* Display titles that differ from ccab keys only with explicit identityProvenance on the ccab record."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 49,
+      "preview": "* Gate B rows that must fail the VK search output contract (list-only / blocked source)."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 120,
+      "preview": "* Gate B builder plus #388 event-logo binding from committed Tavily recordings (#391)."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 149,
+      "preview": "* Ensure each Gate B row title matches its ccab source identity (no cross-row bleed)."
+    },
+    {
+      "file": "scripts/fixtures/pr336-vk-search-trip-sources.mjs",
+      "line": 192,
+      "preview": "* Six typed examples with priced ccab sources for the search output contract."
+    },
+    {
+      "file": "scripts/fixtures/seed_nyc_trip_ccab.py",
+      "line": 1,
+      "preview": "!/usr/bin/env python3"
+    },
+    {
+      "file": "scripts/fixtures/trip-intake-hyatt-staging.mjs",
+      "line": 1,
+      "preview": "* Staging turn ff34530b — classifier should emit one hotel Thing."
+    },
+    {
+      "file": "scripts/fixtures/trip-intake-place-anchor-cases.mjs",
+      "line": 1,
+      "preview": "* Classifier place_search anchor expectations (mocked in unit tests; live eval optional)."
+    },
+    {
+      "file": "scripts/fixtures/xai-grok-place-ratings-contract.mjs",
+      "line": 16,
+      "preview": "* Mocked xAI payload contract checks for issue #360 (imported from offline-listed contract test)."
+    },
+    {
+      "file": "scripts/layout-shell-harness.mjs",
+      "line": 1,
+      "preview": "*\n * Local fixture server for scripts/test_served_page_layout.mjs.\n * Serves vacation-app.html, shared-app.html, and the trip JSON those pages fetch."
+    },
+    {
+      "file": "scripts/lib/gate-b-nyc-fixture-contract.mjs",
+      "line": 15,
+      "preview": "* Same merge the live list/day rows use: place fields plus thingOverrides (ha)."
+    },
+    {
+      "file": "scripts/lib/gate-b-nyc-fixture-contract.mjs",
+      "line": 21,
+      "preview": "* Summary string after prepareSharedTripForLiveApp / finalizeServedSharedTripPayload."
+    },
+    {
+      "file": "scripts/lib/gate-b-nyc-fixture-contract.mjs",
+      "line": 63,
+      "preview": "* Digest Gate B harness uses to pin candidate/base to one payload blob."
+    },
+    {
+      "file": "scripts/lib/gate-b-nyc-fixture-contract.mjs",
+      "line": 87,
+      "preview": "*\n * Offline contract for the NYC Gate B capture fixture.\n * Validates fields that must survive finalizeServedSharedTripPayload."
+    },
+    {
+      "file": "scripts/lib/itinerary-fresh-gate-metrics.mjs",
+      "line": 1,
+      "preview": "* Puppeteer metrics for itinerary-fresh visual gate (logo + list tabs)."
+    },
+    {
+      "file": "scripts/lib/logo-chip-center-of-mass.mjs",
+      "line": 4,
+      "preview": "* @param {import('puppeteer-core').Page} page"
+    },
+    {
+      "file": "scripts/lib/logo-chip-center-of-mass.mjs",
+      "line": 29,
+      "preview": "* @param {import('puppeteer-core').Page} page @param {string} selector"
+    },
+    {
+      "file": "scripts/lib/logo-pixel-ink-grade.mjs",
+      "line": 1,
+      "preview": "* Pixel ink helpers for shepherd LOGO smoke (no DOM box / naturalWidth gates)."
+    },
+    {
+      "file": "scripts/lib/logo-pixel-ink-grade.mjs",
+      "line": 20,
+      "preview": "* Vertical ink alignment for Cars tab icon vs visible label text (page Y delta)."
+    },
+    {
+      "file": "scripts/lib/pr336-gate-b-event-logo-recorded-lib.mjs",
+      "line": 101,
+      "preview": "* Apply #388 event-logo search to Gate B fixture rows using committed Tavily recordings."
+    },
+    {
+      "file": "scripts/lib/pr336-gate-b-xai-recorded-lib.mjs",
+      "line": 15,
+      "preview": "* Strip bare model id from saved xAI payload (hardcoded-content MODEL-BARE)."
+    },
+    {
+      "file": "scripts/lib/shared-trip-category-tab-icon-metrics.mjs",
+      "line": 44,
+      "preview": "* @param {import('puppeteer-core').Page} page @param {string} selector"
+    },
+    {
+      "file": "scripts/lib/shared-trip-category-tab-icon-metrics.mjs",
+      "line": 82,
+      "preview": "* @param {import('puppeteer-core').Page} page"
+    },
+    {
+      "file": "scripts/lib/vk_search_event_logo_source_check.mjs",
+      "line": 18,
+      "preview": "* Dedicated event-logo source checks for #388 (invoked from VK contract test)."
+    },
+    {
+      "file": "scripts/live_v7_dialog_pdf.py",
+      "line": 1,
+      "preview": "!/usr/bin/env python3"
+    },
+    {
+      "file": "scripts/openrouter-tier-provider.mjs",
+      "line": 27,
+      "preview": "* Tier-1 calls that need a short or structured answer (not long draft replies)."
+    },
+    {
+      "file": "scripts/run-once.sh",
+      "line": 1,
+      "preview": "!/usr/bin/env bash"
+    },
+    {
+      "file": "scripts/screenshot-journey-pdf.mjs",
+      "line": 2,
+      "preview": "*\n * Re-runnable Screenshot Journey PDF.\n * Overwrites <out>/screenshot-journey.pdf. Does not redeem a coupon.\n * The EULA shot clicks Agree. Duplicate image hashes fail the build.\n * The real-app gate runs first. A surface with no screensh"
+    },
+    {
+      "file": "scripts/screenshot_journey_pdf.py",
+      "line": 1,
+      "preview": "!/usr/bin/env python3"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-ask.mjs",
+      "line": 20,
+      "preview": "* @returns {Array<{ name: string, timeoutMs: number, run: Function }>}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-browser-pool.mjs",
+      "line": 1,
+      "preview": "* Cap concurrent Puppeteer pages on the shared smoke browser."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-browser-pool.mjs",
+      "line": 25,
+      "preview": "*\n * @param {import('puppeteer-core').Browser} browser\n * @param {(page: import('puppeteer-core').Page) => Promise<T>} fn\n * @param {{ maxConcurrent?: number }} [opts]\n * @returns {Promise<T>}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-check-i.mjs",
+      "line": 4,
+      "preview": "*\n * Resolve the trip title for check I. Prefer the title already captured on\n * state (set by check 5), but fall back to reading it from the trips table by\n * tripId when check 5 early-returned before setting it."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-check-i.mjs",
+      "line": 16,
+      "preview": "* Check I title assertion: subject must contain the real trip title."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-composer-send-dom.mjs",
+      "line": 1,
+      "preview": "* Read composer send-button accessibility metadata for visual judge context (harness-only)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-composer-send-dom.mjs",
+      "line": 84,
+      "preview": "* Reconcile judge rubric 2 on live DOM structure; APP FAIL when DOM and crop disagree."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-composer-send.mjs",
+      "line": 1,
+      "preview": "* Harness-only composer send control checks (in-browser + fixture tests)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-env.mjs",
+      "line": 2,
+      "preview": "*\n * Staging project should set TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 so harness mint\n * checkouts do not consume Resend quota; bundle spine still sends to agentmail + shepherd-*@resend.dev."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-env.mjs",
+      "line": 49,
+      "preview": "* Vercel decrypt occasionally returns a JSON-encoded string (extra quotes)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-env.mjs",
+      "line": 168,
+      "preview": "* Check I: stub outbound when TIMESYNCHER_HARNESS_STUB_OUTBOUND=1 (zero Resend HTTP)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-env.mjs",
+      "line": 181,
+      "preview": "* Live Resend row: status=sent, provider=resend, no error_summary."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-env.mjs",
+      "line": 189,
+      "preview": "*\n * Check I outbound verdict (stub harness vs confirmed live Resend send)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-eula-readback.mjs",
+      "line": 37,
+      "preview": "* Read receipt JSON from eula_store_objects (no Blob SDK, no store.listJson)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 1,
+      "preview": "* Coffee + logo chip graders for staging smoke."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 42,
+      "preview": "* Budget tab must not show dollar amounts absent from planned lines and saved __budgetTargets."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 68,
+      "preview": "* Shared API places for a tab must carry logoUrl in thingOverrides (or place)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 113,
+      "preview": "* Pixel box of drawn image content inside a CSS object-fit box (viewport coords)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 200,
+      "preview": "* Grade one brand logo chip row (center-of-mass of img inside chip)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 284,
+      "preview": "* Map computed layout hints to likely source files (harness attribution, not runtime)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-grader-lib.mjs",
+      "line": 345,
+      "preview": "* Persisted per-fact lodging ask flags on a customer/app turn payload or turn JSON."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-helpers.mjs",
+      "line": 12,
+      "preview": "* @typedef {{ BASE: string, RUN_TS: number, DECOY_TITLE: string, HYATT_CANON: string, REAL_HYATT: { lat: number, lng: number, street: string }, SHA7: string, commerceHits: (text: string) => string[] }} ShepherdHelperConfig"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-helpers.mjs",
+      "line": 20,
+      "preview": "* @type {(text: string) => string[]}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-helpers.mjs",
+      "line": 100,
+      "preview": "* Server-reported timings from vacation-itinerary JSON (ms)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-helpers.mjs",
+      "line": 166,
+      "preview": "* Provider stage timings from itinerary JSON / persisted placeSearch (or literal absent)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-jev-reply-judge.mjs",
+      "line": 26,
+      "preview": "*\n * @param {object} opts\n * @param {string} opts.questionKey\n * @param {string} opts.instructions\n * @param {{ true: string, false: string }} opts.criteria\n * @param {string} opts.replyText\n * @param {string} [opts.customerTurn]\n * @param "
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-eval.mjs",
+      "line": 1,
+      "preview": "* In-browser layout assertions for chat + shared staging pages (harness-only)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-eval.mjs",
+      "line": 10,
+      "preview": "* Which rules run on chat vs shared (documented in checkLAYOUT.applicability)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc-header.mjs",
+      "line": 1,
+      "preview": "* LAYOUT-NYC shared-trip header probe (harness-only, testable + in-browser snippet)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc-header.mjs",
+      "line": 19,
+      "preview": "* Injected inside summarizeLayoutNyc(); uses page scrollY=0 so header is not missed after tab scroll."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc.mjs",
+      "line": 1,
+      "preview": "* LAYOUT-NYC: staging shared tabs vs NYC reference screenshots (harness-only)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc.mjs",
+      "line": 81,
+      "preview": "* DOM shows sort pills (not column labels) and no horizontal overflow — vision sort/overflow claims are stale."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc.mjs",
+      "line": 102,
+      "preview": "* Vision often bundles missing sort pills into generic tab-order / header-row FAIL lines."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-nyc.mjs",
+      "line": 118,
+      "preview": "* Flights/Hotels/Cars list-sort rubric must not apply to day-by-day, budget, stores, etc."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-overflow.mjs",
+      "line": 1,
+      "preview": "* Harness-only horizontal overflow probe (in-browser + offline fixtures)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-share-guard.mjs",
+      "line": 1,
+      "preview": "* LAYOUT APP guard: share URL shown to customer before /api/shared/ returns 200."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-spine.mjs",
+      "line": 1,
+      "preview": "* Register LAYOUT spine check (keeps main.mjs under line cap)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-visual-run.mjs",
+      "line": 2,
+      "preview": "* Proof runner: LAYOUT + VISUAL against live staging (fail-closed)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-layout-visual-spine.mjs",
+      "line": 1,
+      "preview": "* Register VISUAL spine check (LAYOUT shared probes register after share publish in main.mjs)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 10,
+      "preview": "* Strip emoji / pictographs for shared-site tab matching (labels often prefix emoji)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 25,
+      "preview": "* ISO calendar date from starts_at (never String(Date))."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 46,
+      "preview": "* Does this customer turn text reasonably request this thing title?"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 76,
+      "preview": "*\n * Attribute each trip_things row to a D customer turn by id (request_id / response thingId only)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 140,
+      "preview": "*\n * Match collaborator welcome via vacation_onboarding_welcomes.welcome_for + transcript payload."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 143,
+      "preview": "* Transcript app turns tied to vacation_onboarding_welcomes.welcome_for (not time-order heuristics)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 195,
+      "preview": "* Offline replay: re-grade D bar from saved smoke out.json checkD + raw thing dates."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 196,
+      "preview": "* Resolve Paia D2 customer turn id when DB ilike miss still left reply evidence (ASK-d2 wiring)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-lib.mjs",
+      "line": 252,
+      "preview": "* Offline replay: A2 welcome match from saved checkA2 (welcomeDb + optional transcript rows)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-logo-bar.mjs",
+      "line": 2,
+      "preview": "* Run LOGO bar only against live staging (shared Hotels + Cars logo chips)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-main.mjs",
+      "line": 43,
+      "preview": "*\n * @param {object} ctx\n * @param {Function} ctx.runCheck\n * @param {Record<string, unknown>} ctx.out\n * @param {import('/workspace/src/vacation/db.mjs').sql} ctx.db\n * @param {Record<string, unknown>} ctx.state mutable run state (session,"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-lib.mjs",
+      "line": 1,
+      "preview": "* Map / budget grading for staging smoke (browser + offline)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-lib.mjs",
+      "line": 13,
+      "preview": "*\n * Runs in the browser (Puppeteer page.evaluate). Keep Product DOM hooks centralized here."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-lib.mjs",
+      "line": 141,
+      "preview": "* Product shared /shared/<slug>/ Plan tab: Leaflet + Product #165 map hooks."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-logo-run.mjs",
+      "line": 47,
+      "preview": "* MAP/BUD/LOGO each use a dedicated browser (one retry on connection closed)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-prep-lib.mjs",
+      "line": 3,
+      "preview": "* Gate B THING-CARD SORT-BUTTONS needs >=2 rows on at least one tab."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-map-prep-lib.mjs",
+      "line": 22,
+      "preview": "* Shared API poll may stop once MAP/BUD have places and sort seed has a 2+ row tab."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-page-eval.mjs",
+      "line": 1,
+      "preview": "* Playwright runs string page.evaluate bodies at top level; bare `return` is a SyntaxError."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-parallel.mjs",
+      "line": 41,
+      "preview": "* Independent checks C, H2, K (parallel pool after bootstrap)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 1,
+      "preview": "* Staging smoke execution plan (harness-only)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 5,
+      "preview": "* Full registration order for cap / lint."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 12,
+      "preview": "* Fail-closed GO gate (harness contract)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 17,
+      "preview": "* Main customer spine — one session/trip/couponMain; must stay sequential."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 23,
+      "preview": "*\n * Independent checks (each own customer + dedicated coupon or none).\n * Safe to run concurrently with each other and with main spine after bootstrap."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-plan.mjs",
+      "line": 40,
+      "preview": "* Post-spine checks that depend on main + parallel results."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-provider-log.mjs",
+      "line": 1,
+      "preview": "* Collect providerLog rows from itinerary payloads and fail loudly on HTTP 429."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-provider-log.mjs",
+      "line": 20,
+      "preview": "* @returns {object[]} raw provider / providerLog rows from a turn payload or placeSearch blob"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-provider-log.mjs",
+      "line": 89,
+      "preview": "*\n * Append provider call timestamps for a check; return a runCheck result when any row is HTTP 429.\n * @returns {null | { pass: false, harnessError: true, harnessMessage: string, http?: number }}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-provider-log.mjs",
+      "line": 112,
+      "preview": "* Nominatim provider rows that resolved from cache (no outbound HTTP timestamp)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-provider-log.mjs",
+      "line": 125,
+      "preview": "* Rows that represent a live Nominatim HTTP call (have calledAtMs, not skipped)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-run-check.mjs",
+      "line": 24,
+      "preview": "*\n * @param {{ out: Record<string, unknown>, sha7: string, artifactDir?: string, runStartedAt?: number, wholeRunCapMs?: number }} ctx"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-run-check.mjs",
+      "line": 137,
+      "preview": "*\n   * @param {string} name\n   * @param {(tools: { setStage: (s: string) => void, registerBrowser: (b: unknown) => void, stages: { label: string, atMs: number }[] }) => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnes"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-run-check.mjs",
+      "line": 243,
+      "preview": "*\n   * @param {Array<{ name: string, timeoutMs: number, run: () => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnessMessage?: string }> }>} entries\n   * @param {number} [concurrency]"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-shared-ui-map.mjs",
+      "line": 79,
+      "preview": "* In-page readiness for shared intake tab shell (same selectors as listSharedDomTabs / LOGO check)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-single-instance.mjs",
+      "line": 24,
+      "preview": "*\n * Fail closed when another shepherd-staging-smoke instance holds the lock.\n * @returns {{ release: () => void }}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-tail.mjs",
+      "line": 44,
+      "preview": "* @returns {Array<{ name: string, timeoutMs: number, run: Function }>}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-dom.mjs",
+      "line": 1,
+      "preview": "* Serialized for page.evaluate — keep self-contained."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 1,
+      "preview": "* Shared-page thing-card DOM grading (harness-only; approved PDF thing print contract)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 9,
+      "preview": "* Tabs that render list-level tag filter chips (All tags + ci / $n)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 54,
+      "preview": "* Tags on Things in this tab from shared API payload (thingOverrides + place)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 79,
+      "preview": "*\n * Fail-closed tag-filter parity: filter chip set must equal union of thing tags.\n * @returns {{ pass: boolean, failures: object[], filterTags: string[], thingTags: string[], apiThingTags: string[] }}"
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 158,
+      "preview": "* Default off; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to forbid standalone Name/Price sort pills."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 169,
+      "preview": "* Standalone pill sort controls (not list column header labels)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-eval.mjs",
+      "line": 191,
+      "preview": "*\n * Pure grade from in-page scan rows (see evaluateThingCardTabDom source in thing-card harness)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card-sort.mjs",
+      "line": 1,
+      "preview": "* SORT-BUTTONS tab + harness grading (Shepherd thing-card)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-thing-card.mjs",
+      "line": 138,
+      "preview": "* Harvest selected tag chips from open thing detail (restaurants / stores)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-ui-spec.mjs",
+      "line": 4,
+      "preview": "* Craig 09:26 PT + tsv-ui-spec a3896550: composer includes visible send."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-visual-preflight.mjs",
+      "line": 2,
+      "preview": "*\n * OpenRouter vision preflight for shepherd VISUAL judge (harness-only HTTP).\n * Uses OPENROUTER_CHAT_COMPLETIONS_URL from the model client module; no openrouter host literals here (ratchet)."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-visual-preflight.mjs",
+      "line": 145,
+      "preview": "* VISUAL spine: missing or non-vision preflight is INFRA_BLOCKED, never PASS."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-visual-seed.mjs",
+      "line": 3,
+      "preview": "* Post turns so shared tabs (hotels, cars, restaurants, budget, map) have real rows."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-visual-states.mjs",
+      "line": 27,
+      "preview": "* Fresh customers per VISUAL state; never touches TS-2TZD3CGMA_J7."
+    },
+    {
+      "file": "scripts/shepherd-staging-smoke-visual.mjs",
+      "line": 76,
+      "preview": "* When set (spine), skip mint and use this single-state map for faster smoke."
+    },
+    {
+      "file": "scripts/strip-served-trek-bundle.mjs",
+      "line": 128,
+      "preview": "* Drop every getAppConfig caller after the auth-client method is removed (no Promise.resolve stubs)."
+    },
+    {
+      "file": "scripts/test-static-served-path.mjs",
+      "line": 10,
+      "preview": "* Vercel serves repo-root files and merges `public/` onto the site root."
+    },
+    {
+      "file": "scripts/test_ask_d2_live_0fed637_premise.mjs",
+      "line": 2,
+      "preview": "*\n * ASK-d2 repro at 0fed637. Staging trip a9832c18-32fa-4a99-926b-98dd306e8b44,\n * customer turn 80059df2-a044-4e43-8205-5ba80bdb3726, request e0198eef-8445-4a09-80b6-4e77ddac38b5.\n * Customer text \"save Paia Fish Market\". Stored turnTag t"
+    },
+    {
+      "file": "scripts/test_ask_d2_stored_prompt_premise.mjs",
+      "line": 2,
+      "preview": "*\n * ASK-d2 repro at 68d3ff0. Seeded from staging trip eadb6e7c-9e1f-4672-b8a7-2114073776f3,\n * customer turn 0208eee7-4bc9-4afb-abc1-1babc93a840d, request a9588b7b-0ed0-4c3d-a4e3-9f1e3c8ba5dc.\n * Stored turn_category travel_research, tags "
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 310,
+      "preview": "The travel download is gone and the served bundle is stripped. A live"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 311,
+      "preview": "NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 312,
+      "preview": "Customer-facing unlimited-vacation wording still fails and stays out of the baseline."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 313,
+      "preview": "The paid Foursquare client is gone. Those hosts stay out of the baseline."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 314,
+      "preview": "The free OpenStreetMap places URL is not one of those hosts."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 720,
+      "preview": "Dual-state shared-bundle check."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 721,
+      "preview": "While public/assets/index-BKun7ofk.js is not committed, explainSharedBundle.url"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 722,
+      "preview": "must be the travel.timesyncher.com asset. Once that served file is committed"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 723,
+      "preview": "and public/assets/upstream/index-BKun7ofk.js is absent, url must be ''."
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 724,
+      "preview": "A travel.timesyncher.com fetch or URL then fails the test when it shows up"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 725,
+      "preview": "in explainSharedBundle or in the build/runtime files this guard already"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 726,
+      "preview": "reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed"
+    },
+    {
+      "file": "scripts/test_check_hardcoded_content.mjs",
+      "line": 727,
+      "preview": "HTML the served-bundle scan reads."
+    },
+    {
+      "file": "scripts/test_gate_b_266_place_search_reply.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B #266: check 6 empty reply at 20s tiered timeout; check 6b Hertz saved-car mention."
+    },
+    {
+      "file": "scripts/test_gate_b_6_6b_d_fbb8a79.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B residuals @ fbb8a79: check 6 brave taco persist, check 6b non-502 lodging path, check D Paia save radius."
+    },
+    {
+      "file": "scripts/test_inv_claim_first_intake_prompt_premise.mjs",
+      "line": 2,
+      "preview": "*\n * INV-CLAIM (a) at 3dbfda7, staging 68c0020.\n * First intake reply after \"Maui March 10-17 2027 with my wife\".\n * Travelers: roster collaborator \"my wife\", no contact. Zero things. No lodging.\n *\n * Rebuilds the system and user messages "
+    },
+    {
+      "file": "scripts/test_inv_claim_hyatt_gap_reply_route.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B check H / INV-CLAIM lodging turn: trip_intake gap answer must not run first-intake\n * collaborator quality gates (missingCollaborators) or surface bogus titleError when the trip\n * already has a saved title. After lodging, the s"
+    },
+    {
+      "file": "scripts/test_inv_claim_lodging_relevance_route.mjs",
+      "line": 2,
+      "preview": "*\n * INV-CLAIM lodging turn (Hyatt gap answer) on the vacation-itinerary POST queue path.\n * Proves it does not enter the Jev POI relevance stage that drives check 6b relevance_judge_failed → 502."
+    },
+    {
+      "file": "scripts/test_inv_claim_stored_prompt_premise.mjs",
+      "line": 2,
+      "preview": "*\n * INV-CLAIM(b) repro at 68d3ff0. Seeded from staging trip b0ab0d92-f9ff-42ae-93ea-4020b191f3b4,\n * owner shepherd-inv-68d3ff0-1791016759517@resend.dev, customer \"Inv Claim\".\n * First intake turn 41f26e9a-2e4c-4927-b8a1-934674d10259 store"
+    },
+    {
+      "file": "scripts/test_jev_relevance_judge_timeout_route.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B check 6b relevance: loud timeout errors, stage budget, and capped judges."
+    },
+    {
+      "file": "scripts/test_keepsake_order_buy_link.mjs",
+      "line": 59,
+      "preview": "Vercel writes vercel.json headers onto the response, then the function's"
+    },
+    {
+      "file": "scripts/test_keepsake_order_buy_link.mjs",
+      "line": 60,
+      "preview": "setHeader replaces the same key. A keepsake-order header wins; other routes do not set one."
+    },
+    {
+      "file": "scripts/test_kihei_coffee_area_scope.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B check R residual: Kihei-scoped coffee must not cite Cafe Kula or Westin Kaanapali,\n * and must not leak Kaanapali lodging/stay copy into the reply prompt.\n * Fails on base when out-of-area rows reach citablePlaces or customerOwn"
+    },
+    {
+      "file": "scripts/test_kihei_coffee_h502_lodging_path.mjs",
+      "line": 2,
+      "preview": "*\n * Gate B check R live path: intake lodging turn (H) resolves Westin via Brave without\n * customerStatedLodging metadata or trip statedLodgingArea metadata; Kihei coffee turn\n * must not leak Kaanapali/Lahaina lodging into the reply promp"
+    },
+    {
+      "file": "scripts/test_owner_welcome_on_landing.mjs",
+      "line": 130,
+      "preview": "(a) GET after EULA, then POST \"hi\" path: exactly one welcome row."
+    },
+    {
+      "file": "scripts/test_owner_welcome_on_landing.mjs",
+      "line": 147,
+      "preview": "(b) Two concurrent ensureOnboardingOpener calls for the same session: one row, one log."
+    },
+    {
+      "file": "scripts/test_owner_welcome_on_landing.mjs",
+      "line": 174,
+      "preview": "(c) Conflict path does not throw; reply to \"hi\" still goes out."
+    },
+    {
+      "file": "scripts/test_owner_welcome_single_after_trip_create.mjs",
+      "line": 83,
+      "preview": "terms GET equivalent: EULA accepted, no trip yet"
+    },
+    {
+      "file": "scripts/test_owner_welcome_single_after_trip_create.mjs",
+      "line": 85,
+      "preview": "hi / first chat turn"
+    },
+    {
+      "file": "scripts/test_owner_welcome_single_after_trip_create.mjs",
+      "line": 87,
+      "preview": "trip create"
+    },
+    {
+      "file": "scripts/test_owner_welcome_single_after_trip_create.mjs",
+      "line": 89,
+      "preview": "second GET after trip exists"
+    },
+    {
+      "file": "scripts/test_place_relevance_check6_lodging_thing.mjs",
+      "line": 2,
+      "preview": "*\n * Staging check 6 (turn 6c2a042e): named Kaanapali anchor with a lodging Thing on the trip.\n * Geocoded locationText includes zip; the judge must still see the classifier anchor."
+    },
+    {
+      "file": "scripts/test_place_search_kihei_taco_osm_relevance.mjs",
+      "line": 2,
+      "preview": "*\n * Kihei lodging anchor + tacos: relevance judge must use Kihei (not property name) so OSM taco rows pass."
+    },
+    {
+      "file": "scripts/test_place_search_osm_restaurant_scope.mjs",
+      "line": 2,
+      "preview": "*\n * Staging check 6b rejections (Maui island center): overlooks/museums must not enter OSM merge for taco restaurant search."
+    },
+    {
+      "file": "scripts/test_pr225_area_chips_layout_gate.mjs",
+      "line": 2,
+      "preview": "* PR #225 gate (a)+(b): chip tabs pixel match prod + exact chip text @390/1280."
+    },
+    {
+      "file": "scripts/test_pr225_cars_tab_overflow.mjs",
+      "line": 2,
+      "preview": "* PR #225: NYC fixture Cars tab — no horizontal overflow; Timeline checkbox visible at 390/1280."
+    },
+    {
+      "file": "scripts/test_pr225_served_tabs_overflow.mjs",
+      "line": 2,
+      "preview": "* PR #225: NYC served page — no horizontal overflow on every tab @ 390; mobile icon-only inactive tabs."
+    },
+    {
+      "file": "scripts/test_reply_action_claim_d2_paia_save.mjs",
+      "line": 2,
+      "preview": "*\n * Live D-d2 prompt at f0123cb for trip d3e19eb8-56c4-45a3-8cf0-008b99b9366e,\n * customer turn 95db8a4a-8a91-4d3b-8f3d-f8a4766db2c8, \"save Paia Fish Market\".\n * Vercel log on dpl_3iNwjxDhuQ4WC75HVRqebf5vQxwH:\n * {\"reason\":\"reply_action_cl"
+    },
+    {
+      "file": "scripts/test_reply_action_claim_d2_paia_save_route.mjs",
+      "line": 2,
+      "preview": "*\n * Route path for D-d2. vacation-itinerary.mjs maps queued.ok false to HTTP 502\n * (`const postStatus = queued.ok ? (selected ? 201 : 200) : 502`).\n * vacation-app.html sendMessage treats that as the composer retry state:\n * `if (!res.ok "
+    },
+    {
+      "file": "scripts/test_served_canned_needles.mjs",
+      "line": 14,
+      "preview": "* N3 geo / travel-gap / TBD marketing; N4 demo names / price copy; N5 car filter brand."
+    },
+    {
+      "file": "scripts/test_served_page_layout.mjs",
+      "line": 2,
+      "preview": "*\n * Served-page layout checks for features/screens/app.md.\n * Headless Chrome against local HTML and fixture JSON. No network.\n *\n * The offline unit-test job does not install Chrome or puppeteer-core\n * (PUPPETEER_SKIP_DOWNLOAD=1), so thi"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 11,
+      "preview": "--- resolveCheckITripTitle -------------------------------------------------"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 13,
+      "preview": "Prefers the title already captured on state (check 5 succeeded)."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 19,
+      "preview": "Falls back to the trips table when state.tripTitle is empty (check 5 early-returned)."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 31,
+      "preview": "Returns '' when there is no tripId to fall back on."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 34,
+      "preview": "Returns '' when the trips table has no matching row."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 41,
+      "preview": "--- checkITitleOk ----------------------------------------------------------"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 48,
+      "preview": "--- runShepherdCheckI end-to-end (mocked db + fetch) -----------------------"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 50,
+      "preview": "Build a mock db that answers the queries runShepherdCheckI issues. The trips"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 51,
+      "preview": "table always holds the real title (independent of state.tripTitle, which is"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 52,
+      "preview": "what check 5 may have failed to populate)."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 110,
+      "preview": "Check 5 early-returned (state.tripTitle empty): check I must still PASS by"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 111,
+      "preview": "reading the title from the trips table and matching it in the subject."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 120,
+      "preview": "Wrong/missing title in the subject must still FAIL check I."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs",
+      "line": 128,
+      "preview": "A subject missing the real title must FAIL even when state.tripTitle is set."
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_layout_overflow.mjs",
+      "line": 39,
+      "preview": "(a) Leaflet-like tiles clipped inside overflow:hidden map pane -> pass"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_layout_overflow.mjs",
+      "line": 63,
+      "preview": "(b) Unclipped 500px-wide div at 390 viewport -> fail"
+    },
+    {
+      "file": "scripts/test_shepherd_staging_smoke_page_eval.mjs",
+      "line": 11,
+      "preview": "Playwright evaluates string scripts at top level (like eval), not as Function bodies."
+    },
+    {
+      "file": "scripts/test_staging_smoke_m_place_search_prompt_premise.mjs",
+      "line": 2,
+      "preview": "*\n * Shepherd staging smoke check M: farmers market near Kihei after Hyatt + Westin lodging turns.\n * Rebuilds the place-search reply prompt/facts: labelled lodging context stays separate from Results."
+    },
+    {
+      "file": "scripts/test_trip_create_nominatim_critical_path.mjs",
+      "line": 15,
+      "preview": "Maui chat trip create (no lodging lookup on intake): 0 synchronous Nominatim on the HTTP critical path."
+    },
+    {
+      "file": "scripts/test_trip_create_nominatim_critical_path.mjs",
+      "line": 16,
+      "preview": "Destination geocode is deferred via scheduleTripDestinationGeocode after the response ships."
+    },
+    {
+      "file": "scripts/test_vk_search_place_output_contract.mjs",
+      "line": 320,
+      "preview": "Full-trip batch assert is covered by synthetic rows below; the Gate B fixture has ~8 non-exempt Things."
+    },
+    {
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "line": 19,
+      "preview": "Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 retire rationale lives in tier_models.json source (former T1 was google/gemini-2.5-flash-lite)."
+    },
+    {
+      "file": "scripts/vacation-app-reply-rules.mjs",
+      "line": 70,
+      "preview": "Decisions score is the 0-based weighted index of this list, so index 0 is tier 1."
+    },
+    {
+      "file": "scripts/verify-positive-fixture-render-contract.mjs",
+      "line": 2,
+      "preview": "*\n * Independent rendered positive-fixture contract for apps/vacation-client (TSV #343).\n * Fixture passability evidence only — not a Gate B verdict or staging approval.\n *\n * Usage:\n *   node scripts/verify-positive-fixture-render-contract"
+    },
+    {
+      "file": "scripts/verify_pr225_nyc_sbs_layout.mjs",
+      "line": 2,
+      "preview": "* PR #225: verify side-by-side artifacts exist and patched/right matches prod/left layout size."
+    },
+    {
+      "file": "scripts/void-stale-build.mjs",
+      "line": 2,
+      "preview": "*\n * A live run counts only when vacation-staging's deployed commit equals the\n * tested tip. A mismatch aborts with VOID_STALE_BUILD and is not graded."
+    },
+    {
+      "file": "scripts/write-shared-assets.mjs",
+      "line": 5,
+      "preview": "Served files are already committed. The canned strip and"
+    },
+    {
+      "file": "scripts/write-shared-assets.mjs",
+      "line": 6,
+      "preview": "patchStyleTwoToConfigRenderer ran once; this step does not read a raw bundle."
+    },
+    {
+      "file": "src/vacation/brave-place-query.mjs",
+      "line": 154,
+      "preview": "* Brave local rows expose the venue label on `title` (no separate `name` in live payloads)."
+    },
+    {
+      "file": "src/vacation/brave-place-query.mjs",
+      "line": 169,
+      "preview": "* Same Brave listing URL can appear as multiple rows; keep the earliest provider rank."
+    },
+    {
+      "file": "src/vacation/chat-place-search.mjs",
+      "line": 54,
+      "preview": "* Trip intake ship path: classifier things, else job wantedThings (firstIntake queue)."
+    },
+    {
+      "file": "src/vacation/customer-intent.mjs",
+      "line": 1,
+      "preview": "* Model extraction. Missing key or bad JSON throws. No keyword fallback."
+    },
+    {
+      "file": "src/vacation/email-harness-outbound.mjs",
+      "line": 5,
+      "preview": "* When TIMESYNCHER_HARNESS_STUB_OUTBOUND=1, only bundle-spine recipients hit Resend."
+    },
+    {
+      "file": "src/vacation/email-harness-outbound.mjs",
+      "line": 15,
+      "preview": "* Shepherd smoke + purchase paths: only real Resend sends pass (never stubbed/pending/failed)."
+    },
+    {
+      "file": "src/vacation/first-intake-customer-input.mjs",
+      "line": 4,
+      "preview": "* Structured lodging gap from saved trip rows and intake wantedThings (category/kind only)."
+    },
+    {
+      "file": "src/vacation/in-turn-place-reply-fallback.mjs",
+      "line": 4,
+      "preview": "* Leave headroom after classifier + place search inside the 60s itinerary route."
+    },
+    {
+      "file": "src/vacation/in-turn-place-reply-fallback.mjs",
+      "line": 50,
+      "preview": "*\n * Ship an in-turn place-search reply, or a deterministic grounded fallback when the model\n * draft is empty, times out, or cites saved trip context (e.g. rental cars)."
+    },
+    {
+      "file": "src/vacation/in-turn-place-reply-fallback.mjs",
+      "line": 113,
+      "preview": "* @returns {string|object} reply text, or blocked carry-through object"
+    },
+    {
+      "file": "src/vacation/intake-lodging-queue-persist.mjs",
+      "line": 15,
+      "preview": "* First-intake queue: persist stated lodging before reply ship (reply gate may block)."
+    },
+    {
+      "file": "src/vacation/intake-shared-trip-category.mjs",
+      "line": 39,
+      "preview": "* Map intake thing rows to shared-trip category labels (attraction/tour before flight heuristics)."
+    },
+    {
+      "file": "src/vacation/intake-shared-trip.mjs",
+      "line": 373,
+      "preview": "* Tags and happy hour come from the Thing's source record. Missing fields stay blank."
+    },
+    {
+      "file": "src/vacation/intake-thing-name.mjs",
+      "line": 5,
+      "preview": "* Structural proper-name gate for intake Things (no category deny-list)."
+    },
+    {
+      "file": "src/vacation/keepsake-list-minimums.mjs",
+      "line": 1,
+      "preview": "* Search config. One copy of the first-pass counts, the house-radius table, and the thin-result count."
+    },
+    {
+      "file": "src/vacation/keepsake-list-minimums.mjs",
+      "line": 9,
+      "preview": "*\n * Meters from the house or lodging.\n * Feature map (`features/search-redesign.md`): groceries 8 km, restaurants 10 km,\n * stores 10 km, gardens and activities 40 km."
+    },
+    {
+      "file": "src/vacation/keepsake-list-minimums.mjs",
+      "line": 23,
+      "preview": "*\n * Place kinds the feature map does not list (hotel, and anything else) use the\n * activity entry. The POI worker already fell back to that entry, and\n * firstPassSearchLimit also falls back instead of throwing."
+    },
+    {
+      "file": "src/vacation/keepsake-list-minimums.mjs",
+      "line": 56,
+      "preview": "* Jev relevance is 1–5. Trip intake drops a result when its score is below this."
+    },
+    {
+      "file": "src/vacation/keepsake-product-overrides.mjs",
+      "line": 79,
+      "preview": "* Keep summary, happy hour, and neighborhood only when the Thing or its source record already has them."
+    },
+    {
+      "file": "src/vacation/keepsake-style2-handler.mjs",
+      "line": 20,
+      "preview": "* Sole SoT. CoS dated twin is the same rules."
+    },
+    {
+      "file": "src/vacation/keepsake-style2-handler.mjs",
+      "line": 175,
+      "preview": "* @deprecated Cursor HTML book is not the product path. Kept so old imports fail closed."
+    },
+    {
+      "file": "src/vacation/keepsake-style2.mjs",
+      "line": 1,
+      "preview": "*\n * QUARANTINED — not a live Style one / Style two export, print, or PDF template.\n * Product print is TREK `Ae()` (Style one, `op()` left) and `Ae(true)` (Style two, `Mc()` centered)\n * via `trek-style2-bundle.mjs`. A new parallel HTML bo"
+    },
+    {
+      "file": "src/vacation/list-column-sort.mjs",
+      "line": 1,
+      "preview": "* Sort helpers for offline tests (UI uses original TREK Wr pill buttons)."
+    },
+    {
+      "file": "src/vacation/nominatim-store.mjs",
+      "line": 191,
+      "preview": "* Search alias keys with cached limit >= the request's minimum (try higher limits first)."
+    },
+    {
+      "file": "src/vacation/place-relevance-score-parse.mjs",
+      "line": 9,
+      "preview": "* OpenRouter decisions type score: `answers.relevance.score` is the weighted mean of criterion indices 0–4 (see legend keys). Map to rubric 1–5 as indexMean + 1."
+    },
+    {
+      "file": "src/vacation/place-relevance-stage-budget.mjs",
+      "line": 4,
+      "preview": "* Matches `vercel.json` `api/[...route].mjs` maxDuration (seconds)."
+    },
+    {
+      "file": "src/vacation/place-relevance-stage-budget.mjs",
+      "line": 7,
+      "preview": "* Brave/OSM/Nominatim, reply, and gates before/after relevance inside one POST."
+    },
+    {
+      "file": "src/vacation/place-relevance-stage-budget.mjs",
+      "line": 71,
+      "preview": "* Brave hits must reach Jev before OSM island noise consumes the per-category cap (check 6 / 6b)."
+    },
+    {
+      "file": "src/vacation/place-search-anchor.mjs",
+      "line": 36,
+      "preview": "* Area text for place search: lodging Thing, stated lodging area, trip destination, resolved metadata area; else named anchor."
+    },
+    {
+      "file": "src/vacation/place-search-anchor.mjs",
+      "line": 68,
+      "preview": "* Geographic area for the relevance judge (not a lodging property name)."
+    },
+    {
+      "file": "src/vacation/place-search-category-keys.mjs",
+      "line": 1,
+      "preview": "* OSM Overpass category keys in `place-search.mjs` OSM_CATEGORIES."
+    },
+    {
+      "file": "src/vacation/place-search-category-keys.mjs",
+      "line": 13,
+      "preview": "* JSON-schema enum for trip intake extraction (`''` only for non-place_search turns)."
+    },
+    {
+      "file": "src/vacation/place-search-category-keys.mjs",
+      "line": 31,
+      "preview": "* Live queue / in-turn search: normalized category required on ok place_search classifications."
+    },
+    {
+      "file": "src/vacation/place-search-geocode.mjs",
+      "line": 29,
+      "preview": "* Sole production entry point for HTTP to nominatim.openstreetmap.org."
+    },
+    {
+      "file": "src/vacation/place-search-geocode.mjs",
+      "line": 80,
+      "preview": "* Test helper: canonical Nominatim search URL without duplicating host literals in scripts."
+    },
+    {
+      "file": "src/vacation/place-search-named-select.mjs",
+      "line": 26,
+      "preview": "* Geocode label for named_place anchor-radius (town in target, lodging area, not whole-island destination)."
+    },
+    {
+      "file": "src/vacation/place-search-named-select.mjs",
+      "line": 52,
+      "preview": "* Label geocoded to break named_place score ties (relevance area, then non-lodging anchor)."
+    },
+    {
+      "file": "src/vacation/place-search-named-select.mjs",
+      "line": 124,
+      "preview": "* Named-place saves persist one venue: the highest Jev relevance survivor, never every passing row."
+    },
+    {
+      "file": "src/vacation/place-search-osm-tag-map.mjs",
+      "line": 1,
+      "preview": "* Structural OSM tag → app place category (no name/word intent)."
+    },
+    {
+      "file": "src/vacation/place-search-osm-tag-map.mjs",
+      "line": 74,
+      "preview": "*\n * @type {ReadonlyArray<{ appCategory: string, filter: string, match: (tags: object) => boolean, displayName: (tags: object) => string }>}"
+    },
+    {
+      "file": "src/vacation/place-search-osm.mjs",
+      "line": 57,
+      "preview": "* Structural gate: only named OSM POIs, not highways, junctions, or generic access features."
+    },
+    {
+      "file": "src/vacation/place-search-provider-log-helpers.mjs",
+      "line": 63,
+      "preview": "* All place-result providers finished without errors and none returned live rows."
+    },
+    {
+      "file": "src/vacation/place-search-query-center.mjs",
+      "line": 8,
+      "preview": "* Precedence: named anchor geocode, then lodging center, then trip/stored destination center."
+    },
+    {
+      "file": "src/vacation/place-search-target-kind.mjs",
+      "line": 20,
+      "preview": "* Live queue / in-turn search: turnKind required on ok classifications."
+    },
+    {
+      "file": "src/vacation/provider-env.mjs",
+      "line": 9,
+      "preview": "* Maps deploy env var names to the shape place search and probes expect."
+    },
+    {
+      "file": "src/vacation/provider-result-context.mjs",
+      "line": 71,
+      "preview": "* Drop in-turn rows outside the turn's anchor radius policy (Kihei-scoped search, etc.)."
+    },
+    {
+      "file": "src/vacation/search-event-logo.mjs",
+      "line": 80,
+      "preview": "* Logo hostname must match the attributed official website (not a borrowed unrelated brand)."
+    },
+    {
+      "file": "src/vacation/search-event-logo.mjs",
+      "line": 173,
+      "preview": "* Same logo URL on unrelated event rows with different official sites is a contract failure."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 15,
+      "preview": "* Minimum restaurant/store/event Things in a trip batch (VK contract v1.3.0)."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 17,
+      "preview": "* Theme-based xAI reviews use real theme text only (no word-count padding)."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 19,
+      "preview": "* Max share of Things that may miss required fields when each gap is flagged in missingFields."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 59,
+      "preview": "* Normalize search/list categories to the six VK product place types."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 125,
+      "preview": "* VK v1.5.0: ~25 words, allowed source label, numeric star — no review URL required."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 221,
+      "preview": "* Stored reviews when average+count+themes (xAI) or legacy mix rules are satisfied."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 258,
+      "preview": "* Same long review text must not appear on more than one product place row."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 322,
+      "preview": "* Fail when search output is missing required product fields for a place row."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 363,
+      "preview": "* Violations that still fail after missingFields acknowledges flaggable gaps (20% missing-field cap)."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 406,
+      "preview": "* Trip-level VK contract violations for a place list (v1.3.0)."
+    },
+    {
+      "file": "src/vacation/search-place-output.mjs",
+      "line": 467,
+      "preview": "* Enrich search rows; callers that require VK contract proof assert separately (fixture generator, contract tests)."
+    },
+    {
+      "file": "src/vacation/search-progress.mjs",
+      "line": 5,
+      "preview": "* Customer-facing labels for live search progress counts in the vacation app shell."
+    },
+    {
+      "file": "src/vacation/search-progress.mjs",
+      "line": 81,
+      "preview": "*\n * Apply one producer snapshot. Dedupes by eventId and place identity; ignores stale jobId."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 117,
+      "preview": "* Same map the live Budget tab reads via `thingOverrides.__budgetTargets` (plus saved trip metadata)."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 138,
+      "preview": "* Promote saved bucket targets from trip metadata onto `thingOverrides.__budgetTargets` before API budget sync."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 155,
+      "preview": "* Trip total target on the Budget tab (sum of saved per-bucket targets only)."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 189,
+      "preview": "* Dollar amounts rendered on the live Budget tab (planned, targets, under/over chips)."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 222,
+      "preview": "* Dollar amounts Gate B BUD may show on the Budget tab (planned + saved targets only)."
+    },
+    {
+      "file": "src/vacation/shared-trip-api-budget.mjs",
+      "line": 233,
+      "preview": "* Align API `budget` lines with live Budget tab dollar amounts (TREK zt/ua/Mo rules)."
+    },
+    {
+      "file": "src/vacation/shared-trip-live-app-fields.mjs",
+      "line": 118,
+      "preview": "* Map catalog row fields the TREK Oe list reads via ha() / rr() / bi() / J() / uc()."
+    },
+    {
+      "file": "src/vacation/shared-trip-live-app-fields.mjs",
+      "line": 228,
+      "preview": "* Drive TREK Ds()/Is() + Ji()/jr() day rows from explicit timeline picks (ha().timeline, dayIds)."
+    },
+    {
+      "file": "src/vacation/shared-trip-oe-list-row-patch.mjs",
+      "line": 38,
+      "preview": "* Gate B markers on served shared-trip Oe() catalog rows (li + data-shared-live-tab panels)."
+    },
+    {
+      "file": "src/vacation/shared-trip-served-page.mjs",
+      "line": 3,
+      "preview": "* API + served shared page: one payload shape for the live React shell."
+    },
+    {
+      "file": "src/vacation/thing-detail-fields.mjs",
+      "line": 51,
+      "preview": "* Skip title-only itinerary lines on customer stubs; search/enriched things still get notes."
+    },
+    {
+      "file": "src/vacation/thing-detail-fields.mjs",
+      "line": 143,
+      "preview": "* Prefer stored trip category over airport-code heuristics for attractions and tours."
+    },
+    {
+      "file": "src/vacation/thing-logo-capture.mjs",
+      "line": 3,
+      "preview": "* Known rental/hotel brand favicons when trip rows lack source URLs."
+    },
+    {
+      "file": "src/vacation/thing-logo-capture.mjs",
+      "line": 102,
+      "preview": "* Why captureThingLogo returned empty (for shared API diagnostics)."
+    },
+    {
+      "file": "src/vacation/thing-logo-capture.mjs",
+      "line": 158,
+      "preview": "* Logo or favicon on the source record, else the favicon of its page URL. Otherwise none."
+    },
+    {
+      "file": "src/vacation/thing-logo-capture.mjs",
+      "line": 203,
+      "preview": "* Names are not a logo source. The shared bundle calls this with a title and gets nothing."
+    },
+    {
+      "file": "src/vacation/thing-logo-capture.mjs",
+      "line": 212,
+      "preview": "* Same logo fields as live tab rows and the shared trek bundle (_l / ha)."
+    },
+    {
+      "file": "src/vacation/thing-media-bind.mjs",
+      "line": 8,
+      "preview": "* Color-card stubs were 15–21KB @ 960×640; TREK placeholder canvases are 1024² @ 3071B."
+    },
+    {
+      "file": "src/vacation/thing-media-bind.mjs",
+      "line": 11,
+      "preview": "* TREK shared API host comes from TIMESYNCHER_TRAVEL_BASE_URL (no baked-in default)."
+    },
+    {
+      "file": "src/vacation/thing-media-bind.mjs",
+      "line": 107,
+      "preview": "* Inline real JPEG/PNG bytes for Ae() print. Refuses TREK/color-card stubs."
+    },
+    {
+      "file": "src/vacation/thing-media-bind.mjs",
+      "line": 168,
+      "preview": "* Print/share only. Do not call from mergeBindingsIntoShared — bind tests keep proof rows."
+    },
+    {
+      "file": "src/vacation/trek-budget-target-patches.mjs",
+      "line": 14,
+      "preview": "* Budget tab: only show/sync targets saved on thingOverrides.__budgetTargets (no expense-derived defaults)."
+    },
+    {
+      "file": "src/vacation/trek-day-by-day-map-patches.mjs",
+      "line": 17,
+      "preview": "* Keepsake `xa()` OpenTopo + `data-ts-day-map` on live Leaflet (Gate B: Leaflet/OSM unchanged vs base)."
+    },
+    {
+      "file": "src/vacation/trek-default-map-tiles.mjs",
+      "line": 1,
+      "preview": "* OpenTopo raster host for keepsake / live static day-map tiles (`xa()` img grid)."
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 24,
+      "preview": "Saved-story flag lives on the Thing. Style one fs() + Style two Ae(true) always embed"
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 25,
+      "preview": "that Thing's bound_media / /ts-thing-media image BYTES (printDataUrl) in THIS print code."
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 26,
+      "preview": "Drop TREK 1024² @ 3071B placeholder canvases and 960×640 color-card stubs."
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 27,
+      "preview": "SoTs: saved-story-media-in-print-code-20260916, saved-story-flag-on-thing-20260916."
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 178,
+      "preview": "Trip overrides supply summary and happy-hour text. Do not embed a venue catalog."
+    },
+    {
+      "file": "src/vacation/trek-style2-bundle.mjs",
+      "line": 266,
+      "preview": "* Product Ae() honors Keepsakes Config. zu() is the stub that omitted ON sections."
+    },
+    {
+      "file": "src/vacation/trip-intake-classify.mjs",
+      "line": 250,
+      "preview": "* Merge classifier things with job wantedThings when the live queue passes only one shape."
+    },
+    {
+      "file": "src/vacation/trip-map-hook.mjs",
+      "line": 1,
+      "preview": "*\n * Publish stable read-only trip map state for external harnesses (staging smoke).\n * @param {import('leaflet').Map | { getCenter: () => { lat: number, lng: number }, getZoom: () => number, getBounds: () => { getSouth: () => number, getWe"
+    },
+    {
+      "file": "src/vacation/trip-map-hook.mjs",
+      "line": 35,
+      "preview": "* @param {import('leaflet').Map} map"
+    },
+    {
+      "file": "src/vacation/trip-map-initial-view.mjs",
+      "line": 44,
+      "preview": "*\n * @param {{ places?: object[], trip?: object }} input\n * @returns {{\n *   ok: true,\n *   mode: 'bounds' | 'point' | 'destination',\n *   center: { lat: number, lng: number },\n *   zoom: number,\n *   maxZoom: number,\n *   points: { lat: nu"
+    },
+    {
+      "file": "src/vacation/trip-thing-logo-metadata.mjs",
+      "line": 7,
+      "preview": "* Attach logoUrl (or logoCaptureReason) from provider source fields at trip_things persist time."
+    },
+    {
+      "file": "src/vacation/turn-tags.mjs",
+      "line": 47,
+      "preview": "* Speaker and payload tags only. Customer-word tags come from the model."
+    },
+    {
+      "file": "src/vacation/vk-search-place-source-contract.mjs",
+      "line": 43,
+      "preview": "* VK source + product contract for fixture/search rows with ccab provenance."
+    },
+    {
+      "file": "src/vacation/web-access.mjs",
+      "line": 23,
+      "preview": "* Staging website already honors Style two Config (`Ae()`). Do not invent hosts."
+    },
+    {
+      "file": "src/vacation/wind-backup.mjs",
+      "line": 1,
+      "preview": "* Wind readings from NWS, then Open-Meteo. Forecast data only. No composed swim note."
+    }
+  ]
+}

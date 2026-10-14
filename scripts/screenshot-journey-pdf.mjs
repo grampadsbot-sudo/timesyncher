@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-/**
- * Re-runnable Screenshot Journey PDF.
- * Overwrites <out>/screenshot-journey.pdf. Does not redeem a coupon.
- * The EULA shot clicks Agree. Duplicate image hashes fail the build.
- * The real-app gate runs first. A surface with no screenshot is a GAP in the PDF
- * contents page and in VERIFY.md. Shell screens are refused.
- */
+
 import { spawnSync } from 'node:child_process';
 import { inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';

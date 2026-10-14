@@ -127,7 +127,7 @@ console.log = (...args) => {
 };
 
 try {
-  // (a) GET after EULA, then POST "hi" path: exactly one welcome row.
+
   await ensureOnboardingOpener(db, session, null, {});
   await ensureOnboardingOpener(db, session, null, {});
 
@@ -144,7 +144,6 @@ try {
   assert.equal(cannedLogsAfterLanding[0].tripId, null);
   assert.equal(cannedLogsAfterLanding[0].welcomeAudience, 'owner');
 
-  // (b) Two concurrent ensureOnboardingOpener calls for the same session: one row, one log.
   const concurrentState = {
     welcomeClaims: new Set(),
     welcomeTurns: [],
@@ -171,7 +170,6 @@ try {
     .filter((row) => row.event === 'canned_welcome');
   assert.equal(concurrentCanned.length, 1);
 
-  // (c) Conflict path does not throw; reply to "hi" still goes out.
   console.log = (...args) => {
     state.logs.push(args.map((item) => String(item)).join(' '));
   };

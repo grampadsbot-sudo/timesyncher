@@ -370,7 +370,6 @@ function sourceObject(place = {}) {
   return row && typeof row === 'object' && !Array.isArray(row) ? row : null;
 }
 
-/** Tags and happy hour come from the Thing's source record. Missing fields stay blank. */
 function sourcedRestaurantFields(place = {}) {
   const source = sourceObject(place);
   const tags = Array.isArray(place.restaurantTags)

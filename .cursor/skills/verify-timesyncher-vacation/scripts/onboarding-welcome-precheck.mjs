@@ -1,7 +1,4 @@
-/**
- * Deterministic gates for the onboarding welcome verify.
- * A passing shape is not a pass. PASS requires an external judge grade.
- */
+
 import { renderOnboardingWelcome } from '../../../../src/vacation/onboarding-welcome.mjs';
 
 export const LONG_VOICE_TEMPLATE = [

@@ -9,15 +9,13 @@ import {
 } from './shepherd-staging-smoke-shared-ui.mjs';
 import { insertTripThing } from '../src/vacation/trip-things.mjs';
 
-/** @typedef {{ BASE: string, RUN_TS: number, DECOY_TITLE: string, HYATT_CANON: string, REAL_HYATT: { lat: number, lng: number, street: string }, SHA7: string, commerceHits: (text: string) => string[] }} ShepherdHelperConfig */
-
 let BASE = '';
 let RUN_TS = 0;
 let DECOY_TITLE = '';
 let HYATT_CANON = '';
 let REAL_HYATT = { lat: 0, lng: 0, street: '' };
 let SHA7 = '';
-/** @type {(text: string) => string[]} */
+
 let commerceHits = () => [];
 
 export function configureShepherdSmokeHelpers(cfg) {
@@ -97,7 +95,6 @@ export function itineraryPostOk(res) {
   return Boolean(res) && res.status >= 200 && res.status < 300;
 }
 
-/** Server-reported timings from vacation-itinerary JSON (ms). */
 export function serverTimingFromItineraryJson(json = {}) {
   const serverTiming = json.serverTiming && typeof json.serverTiming === 'object' ? json.serverTiming : json;
   const latencyMs = Number(serverTiming.latencyMs ?? json.latencyMs);
@@ -163,7 +160,6 @@ export function classifierSnapshot(payload) {
   };
 }
 
-/** Provider stage timings from itinerary JSON / persisted placeSearch (or literal absent). */
 export function smokeProviderTimingsReport({ payload, placeSearch, itineraryJson } = {}) {
   const ps = placeSearch || payload?.placeSearch || itineraryJson?.placeSearch || itineraryJson?.search;
   const candidates = [

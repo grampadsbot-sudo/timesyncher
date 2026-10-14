@@ -4,14 +4,6 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { growthFails, pruneBaseline } from './baseline-subset.mjs';
 
-// Baselined hits report. A hit that is not in the baseline fails.
-// Every baseline row must already exist on the PR base (file, rule, symbol, inventory id). A missing base file may seed; a missing ref fails closed.
-// MODEL_CLIENT is the only module allowed to call an LLM HTTP API.
-// SEARCH_MODULES are the only modules allowed to call a search or place HTTP API.
-// Floating promise, one line: a same-file async call or fetch, or .then(, fails unless that line has await, return, or void. .then is handled when it has .catch or a second argument.
-// Empty catch is a catch body or .catch( callback whose body is only whitespace or comments.
-// import() and export * mark every export of that module used. A static import { name } marks only that name.
-
 export const MODEL_CLIENT = 'scripts/vacation-app-reply-rules.mjs';
 export const SEARCH_MODULES = ['src/vacation/poi-search.mjs', 'src/vacation/place-search-geocode.mjs'];
 export const SPLIT_BY_FEATURE = 'src/vacation/live-app-turn.mjs';
@@ -36,6 +28,10 @@ const ROOTS = ['src', 'routes', 'scripts', 'api', 'apps/vacation-client/src'];
 const GUARD = new Set([
   'scripts/check-code-ratchet.mjs',
   'scripts/test_check_code_ratchet.mjs',
+  'scripts/check-no-comments.mjs',
+  'scripts/test_check_no_comments.mjs',
+  'scripts/lib/comment-tools.mjs',
+  'scripts/strip-scoped-comments.mjs',
 ]);
 
 const LLM_HOSTS = [

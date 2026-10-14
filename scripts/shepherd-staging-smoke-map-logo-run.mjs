@@ -44,7 +44,6 @@ async function runDedicatedSharedCheck(ctx, checkName, timeoutMs, runOnPage) {
   }, { timeoutMs });
 }
 
-/** MAP/BUD/LOGO each use a dedicated browser (one retry on connection closed). */
 export async function runShepherdSmokeMapBudLogoChecks(ctx) {
   const { out, BASE } = ctx;
   const cacheResult = await runBindThingMediaCacheCheck({ BASE, fetchImpl: fetch, env: process.env });

@@ -6,7 +6,6 @@ function envKeyBySuffix(env, suffix) {
 const BRAVE_ENV_NAME = ['BRAVE', 'SEARCH', 'API', 'KEY'].join('_');
 const TAVILY_ENV_NAME = ['TAVILI', 'API', 'KEY'].join('_');
 
-/** Maps deploy env var names to the shape place search and probes expect. */
 export function buildProviderEnv(processEnv = process.env) {
   return {
     brave: String(processEnv.brave || envKeyBySuffix(processEnv, 'E_SEARCH_API_KEY') || '').trim(),

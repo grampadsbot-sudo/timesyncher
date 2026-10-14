@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Proof runner: LAYOUT + VISUAL against live staging (fail-closed). */
+
 import { writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);

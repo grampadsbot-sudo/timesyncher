@@ -125,7 +125,6 @@ export function assertServedBundleClean(source) {
   }
 }
 
-/** Drop every getAppConfig caller after the auth-client method is removed (no Promise.resolve stubs). */
 const APP_CONFIG_REMOVALS = [
   {
     id: 'login-oidc-bootstrap',

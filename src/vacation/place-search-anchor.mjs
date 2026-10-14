@@ -33,7 +33,6 @@ export async function loadTripPlaceSearchContext(db, tripId) {
   };
 }
 
-/** Area text for place search: lodging Thing, stated lodging area, trip destination, resolved metadata area; else named anchor. */
 export function resolvePlaceSearchAreaDetail({
   classification = null,
   lodgingText = '',
@@ -65,7 +64,6 @@ export function resolvePlaceSearchDestination(params = {}) {
   return resolvePlaceSearchAreaDetail(params).text;
 }
 
-/** Geographic area for the relevance judge (not a lodging property name). */
 export function resolvePlaceSearchRelevanceArea({
   classification = null,
   lodgingText = '',

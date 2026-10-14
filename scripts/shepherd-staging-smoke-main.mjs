@@ -40,13 +40,6 @@ import {
 import { registerLayoutVisualSpineChecks } from './shepherd-staging-smoke-layout-visual-spine.mjs';
 import { registerLayoutSpineChecks } from './shepherd-staging-smoke-layout-spine.mjs';
 
-/**
- * @param {object} ctx
- * @param {Function} ctx.runCheck
- * @param {Record<string, unknown>} ctx.out
- * @param {import('/workspace/src/vacation/db.mjs').sql} ctx.db
- * @param {Record<string, unknown>} ctx.state mutable run state (session, tripId, replies, …)
- */
 export async function runShepherdSmokeBootstrap(ctx) {
   const { runCheck, out, db, state, EXPECT_SHA, BASE, SHA7, RUN_TS, couponMain, CHROME, sharedBrowser } = ctx;
   const wPoints = {};

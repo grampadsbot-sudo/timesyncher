@@ -10,7 +10,6 @@ const all = readdirSync(testDir)
   .filter((name) => name.endsWith('.mjs') && name !== 'run-all.mjs')
   .sort();
 
-/** Layout modules are imported by shell-layout.mjs; only run that entry for layout. */
 const layoutModules = new Set(all.filter((name) => name.endsWith('-layout.mjs') || name === 'shell-layout.mjs'));
 
 function runFile(name) {

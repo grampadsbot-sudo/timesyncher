@@ -1,4 +1,4 @@
-/** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
+
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 

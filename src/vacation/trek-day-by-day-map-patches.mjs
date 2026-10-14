@@ -14,7 +14,6 @@ const MAP_OPEN_MARKERS = [
   ],
 ];
 
-/** Keepsake `xa()` OpenTopo + `data-ts-day-map` on live Leaflet (Gate B: Leaflet/OSM unchanged vs base). */
 export function patchDayByDayKeepsakeMap(source = '', options = {}) {
   const served = options.served === true;
   let js = String(source || '');

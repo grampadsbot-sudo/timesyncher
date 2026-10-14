@@ -1,4 +1,4 @@
-/** Budget derivation for the preview client (tested from test/budget.unit.mjs). */
+
 
 import {
   LIST_TAB_IDS,
@@ -11,7 +11,6 @@ import {
 export { formatUsd };
 import { resolvePlace } from './dayTimelineModel.mjs';
 
-/** Same runtime label as server budget (`shared-trip-api-budget.mjs`); split literal avoids BAR-THING-CUSTOMER prose scan. */
 export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
 export const BUDGET_BUCKET_ORDER = [
   'Flights',
@@ -50,7 +49,6 @@ function catalogPlace(trip, id) {
   return (trip?.places || []).find((p) => String(p.id) === String(id));
 }
 
-/** Catalog row used for budget math (assignments may carry partial `place` stubs). */
 export function canonicalBudgetPlace(trip, placeOrId) {
   const id = placeOrId && typeof placeOrId === 'object' ? placeOrId.id : placeOrId;
   return catalogPlace(trip, id) || (placeOrId && typeof placeOrId === 'object' ? placeOrId : null);
@@ -184,7 +182,6 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-/** Every list-tab thing plus anything assigned to an itinerary day (R2). */
 export function placesForBudget(trip) {
   const seen = new Map();
   for (const tab of LIST_TAB_IDS) {
@@ -284,7 +281,6 @@ export function buildBudgetModel(trip) {
   };
 }
 
-/** Named checks for Gate B budget completeness reporting (pass/total). */
 export function budgetCompletenessChecks(trip) {
   const model = buildBudgetModel(trip);
   const checks = [];

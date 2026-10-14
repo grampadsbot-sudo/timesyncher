@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Provision four chat fixture states for verify-layout (DATABASE_URL only; no Vercel). */
+
 import { sql } from '../../../../src/vacation/db.mjs';
 import { mintVisualStateCustomers } from '../../../../scripts/shepherd-staging-smoke-visual-states.mjs';
 

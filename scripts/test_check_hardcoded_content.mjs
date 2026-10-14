@@ -307,11 +307,7 @@ const liveReport = Number(liveSummary[1]);
 const liveFail = Number(liveSummary[2]);
 const failRows = identities(repoRun.stderr);
 assert.equal(failRows.length, liveFail);
-// The travel download is gone and the served bundle is stripped. A live
-// NO-CROSS-ORIGIN-BUNDLE, BUNDLE-LEAK, or EVASION hit still fails the run.
-// Customer-facing unlimited-vacation wording still fails and stays out of the baseline.
-// The paid Foursquare client is gone. Those hosts stay out of the baseline.
-// The free OpenStreetMap places URL is not one of those hosts.
+
 const foursquarePaid = /^(?:api\.foursquare\.com|places-api\.foursquare\.com|\/v3\/places|X-Places-Api-Version|foursquare-sdk) ::/;
 assert.equal(liveFail, 0);
 assert.deepEqual(failRows, []);
@@ -717,14 +713,6 @@ assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /js\.stripe\.com
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
 
-// Dual-state shared-bundle check.
-// While public/assets/index-BKun7ofk.js is not committed, explainSharedBundle.url
-// must be the travel.timesyncher.com asset. Once that served file is committed
-// and public/assets/upstream/index-BKun7ofk.js is absent, url must be ''.
-// A travel.timesyncher.com fetch or URL then fails the test when it shows up
-// in explainSharedBundle or in the build/runtime files this guard already
-// reads: scripts/write-shared-assets.mjs, vite.config.mjs, and the committed
-// HTML the served-bundle scan reads.
 const SERVED_BUNDLE = 'public/assets/index-BKun7ofk.js';
 const UPSTREAM_BUNDLE = 'public/assets/upstream/index-BKun7ofk.js';
 const TRAVEL_HOST = /travel\.timesyncher\.com/;

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225: verify side-by-side artifacts exist and patched/right matches prod/left layout size. */
+
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';

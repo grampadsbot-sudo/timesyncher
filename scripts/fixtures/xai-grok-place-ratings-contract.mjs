@@ -13,7 +13,6 @@ export function normalizeVkContractReviewBody(body) {
   return vkContractText(body).toLowerCase();
 }
 
-/** Mocked xAI payload contract checks for issue #360 (imported from offline-listed contract test). */
 export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations) {
   const mockXaiJson = {
     google: { average: 4.6, reviewCount: 820, sourceUrl: 'https://example.com/google', notPublished: false },

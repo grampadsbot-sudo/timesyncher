@@ -36,7 +36,6 @@ function overflowSamples(...nodes) {
   return sampleUnclippedHorizontalOverflow(vw, gcs, queryAll, rectObj);
 }
 
-// (a) Leaflet-like tiles clipped inside overflow:hidden map pane -> pass
 const mapPane = el('div', {
   className: 'leaflet-pane',
   rect: { x: 0, y: 0, width: 390, height: 200, top: 0, left: 0, right: 390, bottom: 200 },
@@ -60,7 +59,6 @@ mapPane.parentElement = docRoot;
 assert.equal(elementClippedByAncestorOverflow(tile, vw, gcs, docRoot), true);
 assert.equal(overflowSamples(tile, tileHolder, mapPane).length, 0);
 
-// (b) Unclipped 500px-wide div at 390 viewport -> fail
 const wide = el('div', {
   id: 'wide',
   parent: docRoot,

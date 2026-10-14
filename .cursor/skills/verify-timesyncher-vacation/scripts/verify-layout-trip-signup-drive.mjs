@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Shared-trip and signup drives for verify-layout. */
+
 import { VIEWPORTS, applyViewport, measurePage } from './layout-measure.mjs';
 import { clickTab } from './verify-layout-shared-helpers.mjs';
 

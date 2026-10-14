@@ -135,7 +135,6 @@ async function closeThingDetailIfOpen(page) {
   });
 }
 
-/** Harvest selected tag chips from open thing detail (restaurants / stores). */
 async function readSelectedTagsFromThingDetail(page, fieldLabel) {
   return page.evaluate((labelText) => {
     const tags = [];

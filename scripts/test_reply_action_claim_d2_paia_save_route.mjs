@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * Route path for D-d2. vacation-itinerary.mjs maps queued.ok false to HTTP 502
- * (`const postStatus = queued.ok ? (selected ? 201 : 200) : 502`).
- * vacation-app.html sendMessage treats that as the composer retry state:
- * `if (!res.ok || data.ok === false) failAppRequest(...)` then the catch calls
- * showComposerStatus(customerSafeErrorMessage(...)). A successful same-tier
- * rewrite is the model reply. A rewrite that is still blocked leaves reply null
- * and ok false, which is that same retry state. The blocked draft is not the reply.
- */
+
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { queueVacationAppTurnForTests } from '../routes/vacation-itinerary.mjs';

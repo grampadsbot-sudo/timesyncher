@@ -6,7 +6,6 @@ function throwRelevanceJudgeFailed(message, extra = {}) {
   throw new PlaceSearchError(message, 'relevance_judge_failed', extra);
 }
 
-/** OpenRouter decisions type score: `answers.relevance.score` is the weighted mean of criterion indices 0–4 (see legend keys). Map to rubric 1–5 as indexMean + 1. */
 export function parseJevRelevanceScoreAnswer(answer) {
   if (!answer || typeof answer !== 'object') {
     throwRelevanceJudgeFailed('Jev relevance judge returned no answer object.');

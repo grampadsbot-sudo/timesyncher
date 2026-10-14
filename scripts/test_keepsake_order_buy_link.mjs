@@ -56,8 +56,6 @@ function frameOptionsFor(headers, pathname) {
   return value;
 }
 
-// Vercel writes vercel.json headers onto the response, then the function's
-// setHeader replaces the same key. A keepsake-order header wins; other routes do not set one.
 function deliveredFrame(platform, responseHeader) {
   return responseHeader || platform;
 }

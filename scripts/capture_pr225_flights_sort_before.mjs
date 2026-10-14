@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** One-off: flights sort header crops from pre-label bundle (pill sort). */
+
 import { createServer } from 'node:http';
 import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';

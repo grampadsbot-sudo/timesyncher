@@ -54,7 +54,6 @@ function osmHasBusinessPoiTag(tags = {}) {
   return false;
 }
 
-/** Structural gate: only named OSM POIs, not highways, junctions, or generic access features. */
 export function osmPlaceQualifiesForSave(tags = {}) {
   const title = String(tags.name || '').trim();
   if (!title) return false;

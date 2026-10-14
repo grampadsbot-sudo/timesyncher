@@ -213,7 +213,6 @@ export function buildEnrichedDetailSharedTrip() {
   });
 }
 
-/** Layout/detail acceptance rows: every presentation type at 390 and 1280. */
 export const ENRICHED_DETAIL_SCENARIOS = [
   { tab: 'Restaurants', slug: 'restaurant', namePattern: /Harbor Room/i },
   { tab: 'Restaurants', slug: 'bar', namePattern: /Copper Lantern Bar/i },

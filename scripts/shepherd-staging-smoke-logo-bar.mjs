@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Run LOGO bar only against live staging (shared Hotels + Cars logo chips). */
+
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);

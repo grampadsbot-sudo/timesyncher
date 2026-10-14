@@ -23,7 +23,6 @@ function placeCoords(row = {}) {
   return { lat, lng };
 }
 
-/** Geocode label for named_place anchor-radius (town in target, lodging area, not whole-island destination). */
 export function resolveNamedPlaceRadiusGeocodeLabel({
   namedTarget = '',
   namedArea = '',
@@ -49,7 +48,6 @@ export function resolveNamedPlaceRadiusGeocodeLabel({
   return '';
 }
 
-/** Label geocoded to break named_place score ties (relevance area, then non-lodging anchor). */
 export function resolveNamedPlaceTieBreakLabel({
   namedArea = '',
   searchAnchor = null,
@@ -121,7 +119,6 @@ function breakScoreTieWithAnchor(tiedRows, anchorCenter) {
   return { places: [winners[0].row], ambiguous: false };
 }
 
-/** Named-place saves persist one venue: the highest Jev relevance survivor, never every passing row. */
 export function finalizeNamedPlaceSearchResults(places = [], targetKind = '', { anchorCenter = null } = {}) {
   const rows = Array.isArray(places) ? places : [];
   if (normalizePlaceSearchTargetKind(targetKind) !== 'named_place') {

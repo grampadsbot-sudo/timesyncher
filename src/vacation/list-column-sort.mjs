@@ -1,4 +1,4 @@
-/** Sort helpers for offline tests (UI uses original TREK Wr pill buttons). */
+
 export const LIST_SORT_PRESENTATION = 'pills';
 
 export function nextColumnSort(current = {}, which = 'name') {

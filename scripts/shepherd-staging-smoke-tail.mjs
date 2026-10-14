@@ -41,7 +41,6 @@ async function freshOwnerSession(ctx, couponCode, tag, firstName = tag, lastName
   return { session: tok, customerId: cid, email };
 }
 
-/** @returns {Array<{ name: string, timeoutMs: number, run: Function }>} */
 export function buildTailIndependentParallelChecks(ctx) {
   const {
     db, out, BASE, SHA7, RUN_TS, couponA1, couponA2, couponDTrip, couponInvClaim,

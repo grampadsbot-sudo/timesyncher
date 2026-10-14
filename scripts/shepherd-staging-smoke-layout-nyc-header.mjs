@@ -1,4 +1,4 @@
-/** LAYOUT-NYC shared-trip header probe (harness-only, testable + in-browser snippet). */
+
 
 export function layoutNycSharedHeaderVisible(el, getComputedStyle) {
   if (!el || typeof getComputedStyle !== 'function') return false;
@@ -16,7 +16,6 @@ export function layoutNycSharedHeaderPresentFromProbe(probe = {}) {
   return Boolean(probe.present);
 }
 
-/** Injected inside summarizeLayoutNyc(); uses page scrollY=0 so header is not missed after tab scroll. */
 export const LAYOUT_NYC_SHARED_HEADER_PROBE_SOURCE = `function __layoutNycPickHeaderRoot() {
   const marked = document.querySelector('[data-ts-shared-header],[data-shared-trip-header]');
   if (marked) return marked;

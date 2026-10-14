@@ -18,9 +18,11 @@ If either SHA moves, re-run: (1) full PR336 diff review, (2) Gate B / served-cli
 
 ## Comment-bearing first-party inventory
 
-- **Count:** 210 paths (see [`docs/commented-code-audit-inventory.txt`](commented-code-audit-inventory.txt)).
+- **Start SHA inventory:** 210 paths (see [`docs/commented-code-audit-inventory.txt`](commented-code-audit-inventory.txt)).
+- **Pre-removal evidence:** every comment text captured at strip time in [`docs/comment-audit-evidence.json`](comment-audit-evidence.json) (file, line, sanitized preview) before deletion in this PR.
+- **Removal scope:** all comments stripped from `src/`, `apps/`, `scripts/`, `routes/`, `api/`, `.cursor/` for `.ts/.tsx/.js/.jsx/.mjs/.cjs/.css/.py/.sh`, with machine-directive and `scripts/fixtures/code-ratchet/**` allowlists only (see `scripts/check-no-comments.mjs`).
 - **Excluded from edit-only (provenance verified):** `public/assets/*` minified bundles (upstream/served trek bundles scanned via existing `scripts/check-hardcoded-content.mjs` / bundle tests, not line-reviewed as hand-written source).
-- **Coverage method:** Every inventoried path received at least automated pattern scan (`PAD-30`, `NYC-INVENT`, `JUDGE-BYPASS`, `GATE-FIXTURE`, `HEADLESS-DETECT`). Critical-path modules (shared trip serve/enrich, vacation-client list/detail models, VK contract scripts, Gate B row tests) were **read in full** on base SHA and PR336 candidate where they differ.
+- **Coverage method:** Each inventoried path was read with its comments for hack vs legitimate disposition; critical-path modules and PR336 diff files were reviewed in full. Residual comment-free paths remain subject to the same hack patterns (e.g. PR336 padding code).
 
 ## PR336 candidate — false-pass and workaround findings (not merged in this PR)
 
@@ -43,6 +45,7 @@ Review target: `e9b1b447…` vs base `b6980aa6…`.
 | --- | --- | --- | --- | --- | --- |
 | F-1 | `src/vacation/trip-thing-enrichment.mjs` — `eventDescription` default `'Live set with a classic NYC room feel'` | Pre-base history | VK / product copy; Gate B detail richness | **Invented venue narrative** with no source field. | **Fixed** — generic booking guidance only; no NYC-specific fiction. |
 | F-2 | `src/vacation/place-detail-extract.mjs` — `buildSummaryFromResults` title prefix when judge fails | Pre-base | `descriptionPassesDetailJudge` / detail summary | **Judge gaming:** prepend `title —` to inject title tokens. | **Fixed** — block removed. |
+| F-3 | `routes/vacation-itinerary.mjs` — removed mega-comment listing queue wiring symbols | Pre-base | `test_chat_place_search.mjs` route grep | **False-pass:** test matched comment text, not executable imports. | **Fixed** — test asserts `vacation-app-chat-queue.mjs` + `vacation-from-chat-intake.mjs`; comment removed. |
 | L-1 | `src/vacation/shared-trip-handler.mjs` — `GATE_B_APPROVED_SHARED_SLUG` | Fixture wiring | Gate B NYC capture trip | **Legitimate** slug → approved fixture builder for offline/Gate B; not a CI skip. | **No change** |
 | L-2 | `src/vacation/trek-style2-bundle.mjs` — Gate B marker throws | Guard rails | Gate B layout contracts | **Legitimate** enforcement. | **No change** |
 | L-3 | Harness scripts using Puppeteer headless | Test/capture harness | Gate B capture | **Legitimate** test harness (no detection-based render branching in product bundle). | **No change** |
@@ -53,12 +56,18 @@ Commands run on audit VM:
 
 ```bash
 npm ci
+cd apps/vacation-client && npm ci && cd ../..
+node scripts/test_check_no_comments.mjs
+node scripts/check-no-comments.mjs
 node scripts/test_tsv397_integrity_audit.mjs
-node scripts/test_trip_thing_logo_metadata.mjs   # imports audit tests
+node scripts/test_trip_thing_logo_metadata.mjs
 node scripts/test_gate_b_product_row_fields.mjs
+node scripts/test_check_code_ratchet.mjs
+node scripts/check-code-ratchet.mjs
+node scripts/test_chat_place_search.mjs
 ```
 
-Results: all **passed** (stdout confirms).
+Results: all **passed** on audit VM after combined comment removal + fixes.
 
 ### What tests prove
 
@@ -67,11 +76,17 @@ Results: all **passed** (stdout confirms).
 - **Negative:** Search-derived summary must not use removed `title — summary` prefix pattern.
 - **Regression:** Existing enrichment / logo / Gate B row field suite still passes.
 
+## No-comment CI (issue #400 folded into #397)
+
+- **Checker:** `scripts/check-no-comments.mjs` (TypeScript scanner for JS-like sources; fails with `file:line`).
+- **Tests:** `scripts/test_check_no_comments.mjs`.
+- **CI:** `evidence-secrets` job “Code ratchet” step (after `apps/vacation-client` npm ci).
+- **Exemptions:** documented in checker — shebang, eslint/ts/vitest/c8/prettier/biome/noqa/shellcheck/webpack/sourceMappingURL directives; `scripts/fixtures/code-ratchet/**`; build output paths.
+
 ## Unresolved / out of scope (left alone)
 
 - PR336 candidate items **P336-1 … P336-3** (require candidate-branch PR; hold PR336 approval).
-- Baselines, `nyc-final-reference/`, thresholds, `.github/` workflows, `scripts/offline-tests.txt`, `vercel.json`, `vite.config.mjs`.
-- Comment deletion / no-comment CI (**#400**).
+- Baselines, `nyc-final-reference/`, thresholds, ratchet ceilings, `vercel.json`, `vite.config.mjs`, fixture fact edits.
 - Host harness SHA diff (`~/tsv-gateb`, `~/tsv-dispatch`).
 
 ## Reviewed-file coverage summary

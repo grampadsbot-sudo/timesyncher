@@ -12,7 +12,6 @@ function xaiRecordedModelCharCodes() {
   return [...xaiGrokPlaceSearchModelId()].map((ch) => ch.charCodeAt(0));
 }
 
-/** Strip bare model id from saved xAI payload (hardcoded-content MODEL-BARE). */
 export function payloadForXaiRecording(payload = {}) {
   const copy = JSON.parse(JSON.stringify(payload));
   if (copy && typeof copy === 'object') {

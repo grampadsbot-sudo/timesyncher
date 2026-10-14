@@ -1,6 +1,5 @@
-/** @typedef {'day-by-day'|'flights'|'hotels'|'cars'|'restaurants'|'stores'|'events'|'packing'|'chat'|'budget'} TabId */
 
-/** @type {TabId[]} */
+
 export const TAB_ORDER = [
   'day-by-day',
   'flights',
@@ -12,7 +11,6 @@ export const TAB_ORDER = [
   'budget',
 ];
 
-/** @type {Record<TabId, string>} */
 export const TAB_LABELS = {
   'day-by-day': 'Day-by-Day',
   flights: 'Flights',
@@ -26,7 +24,6 @@ export const TAB_LABELS = {
   budget: 'Budget',
 };
 
-/** @type {Record<TabId, string>} */
 export const TAB_ICONS = {
   'day-by-day': '📅',
   flights: '✈️',
@@ -40,25 +37,18 @@ export const TAB_ICONS = {
   budget: '💰',
 };
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip */
 export function sectionVisibilityMap(trip) {
   const raw = trip?.thingOverrides?.__sectionVisibility;
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
 }
 
-/** @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip @param {'flights'|'hotels'|'cars'} key */
 export function isConfigSectionVisible(trip, key) {
   const map = sectionVisibilityMap(trip);
   return map[key] !== false;
 }
 
-/**
- * @param {import('../types/sharedTrip.ts').SharedTripPayload | undefined} trip
- * @param {Record<string, boolean> | undefined} permissions
- * @returns {TabId[]}
- */
 export function visibleTabsForTrip(trip, permissions) {
-  /** @type {TabId[]} */
+
   const tabs = [];
   for (const tab of TAB_ORDER) {
     if (tab === 'flights' || tab === 'hotels' || tab === 'cars') {
@@ -82,12 +72,10 @@ export function visibleTabsForTrip(trip, permissions) {
   return tabs;
 }
 
-/** @param {unknown} value @returns {value is TabId} */
 export function isTabId(value) {
   return typeof value === 'string' && TAB_ORDER.includes(/** @type {TabId} */ (value));
 }
 
-/** @param {string} hash @param {string} search @returns {TabId} */
 export function readTabFromLocation(hash, search) {
   const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
   const fromQuery = params.get('tab');
@@ -102,12 +90,10 @@ export function readTabFromLocation(hash, search) {
   return 'day-by-day';
 }
 
-/** @param {TabId} tab @returns {string} */
 export function tabLocationHash(tab) {
   return tab === 'day-by-day' ? '' : `#tab=${encodeURIComponent(tab)}`;
 }
 
-/** @param {TabId} tab @param {Location} location */
 export function writeTabToLocation(tab, location) {
   const nextHash = tabLocationHash(tab);
   const params = new URLSearchParams(
