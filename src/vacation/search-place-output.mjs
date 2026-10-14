@@ -360,7 +360,7 @@ function missingFieldsOnPlace(place = {}) {
   return raw.map((field) => text(field, 80).toLowerCase()).filter(Boolean);
 }
 
-/** Violations that still fail after missingFields acknowledges flaggable gaps (Craig 20% rule). */
+/** Violations that still fail after missingFields acknowledges flaggable gaps (20% missing-field cap). */
 export function searchPlaceOutputAcknowledgedViolations(place = {}) {
   const violations = searchPlaceOutputViolations(place);
   const flagged = new Set(missingFieldsOnPlace(place));
@@ -376,7 +376,7 @@ function isNonExemptTripThing(place = {}) {
   return category !== 'flight' && category !== 'hotel' && category !== 'car';
 }
 
-export function classifyPlaceContractViolations(place = {}) {
+function classifyPlaceContractViolations(place = {}) {
   const violations = searchPlaceOutputViolations(place);
   if (!violations.length) {
     return { hard: [], flaggedMissing: [], hasMissing: false };

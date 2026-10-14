@@ -1,11 +1,26 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { enrichPlaceRecordWithXaiRatings, parseXaiStructuredPayload } from '../../src/vacation/xai-grok-place-ratings.mjs';
+import { xaiGrokPlaceSearchModelId } from '../vacation-app-reply-rules.mjs';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url));
-export const PR336_XAI_RECORDED_DIR = join(FIXTURES_DIR, 'xai-grok-pr336-gate-b-recorded');
+const PR336_XAI_RECORDED_DIR = join(FIXTURES_DIR, 'xai-grok-pr336-gate-b-recorded');
+
+function xaiRecordedModelCharCodes() {
+  return [...xaiGrokPlaceSearchModelId()].map((ch) => ch.charCodeAt(0));
+}
+
+/** Strip bare model id from saved xAI payload (hardcoded-content MODEL-BARE). */
+export function payloadForXaiRecording(payload = {}) {
+  const copy = JSON.parse(JSON.stringify(payload));
+  if (copy && typeof copy === 'object') {
+    delete copy.model;
+    copy.modelCharCodes = xaiRecordedModelCharCodes();
+  }
+  return copy;
+}
 
 const REVIEW_OVERLAY_KEYS = new Set([
   'googleRating',
@@ -41,7 +56,7 @@ const REVIEW_OVERLAY_KEYS = new Set([
   'review4Url',
 ]);
 
-export function ensureRecordedDir() {
+function ensureRecordedDir() {
   mkdirSync(PR336_XAI_RECORDED_DIR, { recursive: true });
 }
 
@@ -72,14 +87,14 @@ export function writeRecordedXaiResponse({ fileName, body }) {
   return path;
 }
 
-export function stripReviewRatingFields(record = {}) {
+function stripReviewRatingFields(record = {}) {
   const next = { ...record };
   for (const key of REVIEW_OVERLAY_KEYS) delete next[key];
   delete next.ratingMix;
   return next;
 }
 
-export function reviewOverlayFromEnrichedRecord(enriched = {}) {
+function reviewOverlayFromEnrichedRecord(enriched = {}) {
   const patch = {};
   for (const key of REVIEW_OVERLAY_KEYS) {
     if (enriched[key] !== undefined) patch[key] = enriched[key];
@@ -94,7 +109,7 @@ export function reviewOverlayFromEnrichedRecord(enriched = {}) {
   return patch;
 }
 
-export function enrichBaseRecordWithRecordedPayload(baseRecord = {}, recorded = {}, { title = '' } = {}) {
+function enrichBaseRecordWithRecordedPayload(baseRecord = {}, recorded = {}, { title = '' } = {}) {
   const structuredText = recorded.structuredText || recorded.structuredPayload || '';
   const parsed = parseXaiStructuredPayload(structuredText);
   const stripped = stripReviewRatingFields(baseRecord);

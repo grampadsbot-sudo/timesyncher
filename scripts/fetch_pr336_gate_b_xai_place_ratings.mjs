@@ -2,6 +2,7 @@
 import { fetchXaiPlaceRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
 import { PR336_GATE_B_XAI_PLACE_TARGETS } from './fixtures/pr336-gate-b-xai-place-targets.mjs';
 import {
+  payloadForXaiRecording,
   slugifyRecordedName,
   writeRecordedXaiResponse,
 } from './lib/pr336-gate-b-xai-recorded-lib.mjs';
@@ -48,7 +49,7 @@ async function main() {
         ccabKey: target.ccabKey,
         title: target.title,
         structuredText,
-        payload,
+        payload: payloadForXaiRecording(payload),
       },
     });
     results.push({

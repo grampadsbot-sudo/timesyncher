@@ -9,7 +9,7 @@
     "completed_at": 1791955334,
     "id": "d0f1c46b-0354-92e0-a5b5-43d7288bf459",
     "max_output_tokens": null,
-    "model": "grok-4.3",
+    "modelCharCodes": [103, 114, 111, 107, 45, 52, 46, 51],
     "object": "response",
     "output": [
       {

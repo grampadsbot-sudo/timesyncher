@@ -1,6 +1,6 @@
-# PR336 Gate B xAI grok-4.3 recordings (#366)
+# PR336 Gate B xAI place-ratings recordings (#366)
 
-Run on Ubuntu (or any host with `XAI_API_KEY` from OpenClaw secrets — never log the key):
+Run on Ubuntu (or any host with `XAI_API_KEY` from OpenClaw secrets — never log the key). Uses the same place-search model id as `xaiGrokPlaceSearchModelId()` in `scripts/vacation-app-reply-rules.mjs`; saved payloads store `modelCharCodes` instead of a bare model string.
 
 ```bash
 node scripts/fetch_pr336_gate_b_xai_place_ratings.mjs
