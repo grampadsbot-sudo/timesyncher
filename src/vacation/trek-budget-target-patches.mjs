@@ -37,10 +37,17 @@ export const RS_FLIGHTS_CATALOG_PATCH =
 export const BC_CARS_TIMELINE_NEEDLE = 'bc=(Gt||[]).filter(G=>It(G)==="car")';
 export const BC_CARS_TIMELINE_PATCH = 'bc=(Gt||[]).filter(G=>It(G)==="car"&&!!ha(G).timeline)';
 
+const TS_HOTEL_CHECKOUT_TYPE = ['hotel-', 'check', 'out'].join('');
+const MO_BUDGET_SKIP_TYPES =
+  '["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","' + TS_HOTEL_CHECKOUT_TYPE + '"]';
 const MO_BUDGET_TIMELINE_ONLY_NEEDLE =
-  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!' +
+  MO_BUDGET_SKIP_TYPES +
+  '.includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE =
-  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0}]})).values())';
+  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!' +
+  MO_BUDGET_SKIP_TYPES +
+  '.includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0}]})).values())';
 const MO_BUDGET_ALL_TABS_SERVING_PATCH =
   'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0}])).values())';
 export const MO_BUDGET_ALL_TABS_MARKER =
