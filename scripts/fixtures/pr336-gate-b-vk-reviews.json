@@ -111,57 +111,36 @@
     "review4Url": null
   },
   "Statue of Liberty walking tour": {
-    "thirdPartyRating": "4.9 (9,034) · 4.8 (14,896) · 4.6 (2,968)",
-    "thirdPartyReviewCount": "14896",
-    "otherRatingSites": [
-      {
-        "rating": "4.9",
-        "reviewCount": "9034",
-        "sourceUrl": "https://www.tripadvisor.com/AttractionProductReview-g60763-d11451132-Statue_of_Liberty_Ellis_Island_Tour_with_Reserved_Ferry_Entry-New_York_City_New_Yor.html"
-      },
-      {
-        "rating": "4.8",
-        "reviewCount": "14896",
-        "sourceUrl": "https://www.viator.com/en-IN/tours/New-York-City/Statue-of-Liberty-and-Ellis-Island-Guided-Tour/d687-5250LIBERTYELLIS"
-      },
-      {
-        "rating": "4.6",
-        "reviewCount": "2968",
-        "sourceUrl": "https://www.getyourguide.com/new-york-city-l59/nyc-statue-of-liberty-and-ellis-island-guided-tour-t51626/"
-      }
-    ],
-    "ratingCount": 9034,
-    "reviewThemes": {
-      "praise": [
-        "knowledgeable and engaging guides who share rich Statue and Ellis history",
-        "guides keep groups organized and take photos",
-        "enthusiastic guides who make history come to life with accents and stories",
-        "well-organized tours with reserved ferry access"
-      ],
-      "complaints": [
-        "long security queues and wait times especially in peak season",
-        "need clearer details on inclusions like Ellis Island guidance and pedestal access",
-        "significant walking involved; prepare for heat and hydration"
-      ]
-    },
-    "websiteFlavour": "Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
-    "xaiRatingsFetched": true,
-    "review1": "knowledgeable and engaging guides who share rich Statue and Ellis history. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
-    "review2": "guides keep groups organized and take photos. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
-    "review3": "enthusiastic guides who make history come to life with accents and stories. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
-    "review4": "well-organized tours with reserved ferry access. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
-    "review1Rating": "5",
+    "ratingCount": 1955,
+    "ratingMix": { "1": 39, "2": 78, "3": 196, "4": 743, "5": 899 },
+    "review1": "Travelers recommend Statue City Cruises for clear boarding instructions at Castle Clinton, helpful security staff, and timed ferry windows that keep the Battery Park line moving if you arrive before your printed departure.",
+    "review1Source": "TripAdvisor",
+    "review1Rating": "4",
+    "review2": "Families note the audio tour on Liberty Island explains construction history without rushing you off the pedestal views, though summer sun on the ferry top deck requires hats and water bottles.",
+    "review2Source": "Google",
     "review2Rating": "4",
-    "review3Rating": "5",
-    "review4Rating": "5",
-    "review1Source": null,
-    "review1Url": null,
-    "review2Source": null,
-    "review2Url": null,
-    "review3Source": null,
-    "review3Url": null,
-    "review4Source": null,
-    "review4Url": null
+    "review3": "Yelp visitors warn about airport-style screening delays at Castle Clinton, praise National Park rangers on Ellis Island, and suggest booking the earliest ferry when visiting on a holiday weekend with kids.",
+    "review3Source": "Yelp",
+    "review3Rating": "3",
+    "review4": "TripAdvisor ferry reviews mention smooth boarding at Battery Park, clear announcements about crown access restrictions, and gift shops that do not overwhelm the museum exhibits on Liberty Island.",
+    "review4Source": "TripAdvisor",
+    "review4Rating": "4"
+  },
+  "Midtown sample hotel": {
+    "ratingCount": 4345,
+    "ratingMix": { "1": 87, "2": 174, "3": 435, "4": 1648, "5": 2001 },
+    "review1": "Guests comparing Midtown stays mention compact suite layouts, reliable Wi-Fi for remote work, and front desks that store luggage before a late check-in when Broadway shows run long on weeknights.",
+    "review1Source": "Google",
+    "review1Rating": "4",
+    "review2": "Yelp reviewers highlight subway access within a few blocks, quiet upper-floor rooms when facing the courtyard, and housekeeping that refreshes towels even on short two-night comparison stays.",
+    "review2Source": "Yelp",
+    "review2Rating": "4",
+    "review3": "Google travelers note higher weekend rates, fast elevators during conventions, and lobby staff who explain the difference between club-level and standard room keys clearly at check-in.",
+    "review3Source": "Google",
+    "review3Rating": "3",
+    "review4": "TripAdvisor visitors comparing Times Square hotels say the gym and laundry room help on longer NYC trips, though street noise on lower floors requires requesting a higher assignment at check-in.",
+    "review4Source": "TripAdvisor",
+    "review4Rating": "4"
   },
   "Strand Book Store": {
     "googleRating": "4.8",

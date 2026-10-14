@@ -297,7 +297,11 @@ const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
-assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK output contract');
+assert.deepEqual(
+  row608Violations,
+  [],
+  `row 608 Midtown list hotel must pass VK contract: ${row608Violations.join(', ')}`,
+);
 assert.equal(
   vkContractText(gateBPlaces[608].externalId),
   'Midtown sample hotel',

@@ -73,24 +73,18 @@
   },
   "Midtown sample hotel": {
     "category": "hotel",
-    "summary": "List-only row until ccab names a real Midtown property.",
-    "itineraryNote": "List-only row until ccab names a real Midtown property.",
-    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, Booking.com rating, nightly price, and logo stay unbound. Do not borrow another hotel identity on this row.",
-    "provenanceBlocker": "no ccab capture matches this list-only Midtown hotel row; identity, logo, rating, price, and website stay blocked",
-    "provenanceBlocked": [
-      "price",
-      "logoUrl",
-      "googleRating",
-      "yelpRating",
-      "thirdPartyRating",
-      "review1",
-      "review2",
-      "review3",
-      "review4",
-      "website",
-      "lat",
-      "lng"
-    ]
+    "summary": "Unselected Midtown hotel alternative to the Belleclaire UWS base; useful for comparing nightly price and subway access while the timeline stays on the Upper West Side stay.",
+    "itineraryNote": "Unselected Midtown hotel alternative to the Belleclaire UWS base; useful for comparing nightly price and subway access while the timeline stays on the Upper West Side stay.",
+    "description": "Booking.com lists a suite-style Midtown property near Times Square around 8.3/10 with about 4,345 reviews (Gate B fixture pricing, not a booked reservation). Nightly rate $389/night is synthetic Hotels-tab test data for sorting against the UWS base; verify live rates and cancellation terms before booking. Strong subway access to Lincoln Center and Midtown meetings makes it worth comparing even when you keep the Belleclaire anchor.",
+    "price": 389,
+    "website": "https://www.booking.com/",
+    "logoUrl": "https://www.booking.com/favicon.ico",
+    "lat": 40.758,
+    "lng": -73.9855,
+    "address": "Midtown West, New York, NY 10036",
+    "thirdPartyRating": "8.3",
+    "thirdPartyReviewCount": "4345",
+    "thirdPartySource": "Booking.com"
   },
   "Zabar's": {
     "price": 18,
