@@ -65,6 +65,8 @@ const trip = {
 
 assert.equal(parseClockToMinutes('11:00'), 11 * 60);
 assert.equal(parseClockToMinutes('4:30 pm'), 16 * 60 + 30);
+assert.equal(parseClockToMinutes('7:30 p.m.'), 19 * 60 + 30);
+assert.equal(parseClockToMinutes('7-9pm'), 7 * 60);
 assert.equal(parseDurationMinutes('3h 45m'), 225);
 assert.equal(parseDurationMinutes('45'), 45);
 assert.equal(dayChipLabel({ day_number: 5 }), 'Day 5');

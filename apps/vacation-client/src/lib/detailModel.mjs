@@ -4,6 +4,7 @@ import {
   carPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
+  formatUsd,
   hotelPriceDisplay,
   logoUrlForPlace,
   numericPrice,
@@ -18,6 +19,23 @@ const XAI_REPRESENTATIVE_REVIEW_MIN_WORDS = 12;
 
 function text(value) {
   return String(value ?? '').trim();
+}
+
+function tripCurrency(trip) {
+  return text(trip?.trip?.currency) || 'USD';
+}
+
+export function safeHttpUrl(raw) {
+  const value = text(raw);
+  if (!value) return null;
+  if (!/^https?:\/\//i.test(value)) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 function wordCount(value) {
@@ -81,18 +99,38 @@ function descriptionPassesDetailJudge(description, placeName = '') {
   return !genericOnly;
 }
 
+function coordValue(primary, ...fallbacks) {
+  if (typeof primary === 'number' && Number.isFinite(primary)) return primary;
+  if (primary === null || primary === undefined || primary === '') {
+    for (const candidate of fallbacks) {
+      if (typeof candidate === 'number' && Number.isFinite(candidate)) return candidate;
+      if (candidate !== null && candidate !== undefined && candidate !== '') {
+        const parsed = Number(candidate);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    }
+    return null;
+  }
+  const parsed = Number(primary);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function detailCoordinates(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  const lat =
-    typeof place.lat === 'number'
-      ? place.lat
-      : Number(override.lat ?? source.lat ?? place.location?.lat);
-  const lng =
-    typeof place.lng === 'number'
-      ? place.lng
-      : Number(override.lng ?? source.lng ?? place.location?.lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const lat = coordValue(
+    place.lat,
+    override.lat,
+    source.lat,
+    place.location?.lat,
+  );
+  const lng = coordValue(
+    place.lng,
+    override.lng,
+    source.lng,
+    place.location?.lng,
+  );
+  if (lat == null || lng == null) return null;
   return { lat, lng };
 }
 
@@ -193,7 +231,7 @@ export function detailPriceLabel(place, trip, category) {
   if (cat === 'hotel') return hotelPriceDisplay(place, trip);
   if (cat === 'car') return carPriceDisplay(place, trip);
   const price = numericPrice(place, trip);
-  if (price != null) return `$${price}`;
+  if (price != null) return formatUsd(price, tripCurrency(trip));
   const level = text(override.priceLevel || override.price_level);
   return level;
 }
@@ -251,7 +289,15 @@ export function detailReviews(override, category) {
 export function detailSummarySourceUrls(override) {
   const raw = override.summarySourceUrls;
   if (!Array.isArray(raw)) return [];
-  return raw.map((row) => text(row)).filter(Boolean);
+  const urls = [];
+  const seen = new Set();
+  for (const row of raw) {
+    const safe = safeHttpUrl(row);
+    if (!safe || seen.has(safe)) continue;
+    seen.add(safe);
+    urls.push(safe);
+  }
+  return urls;
 }
 
 function flightDetailRows(place, trip, override) {
@@ -306,7 +352,15 @@ function standardContactRows(place, override) {
   const phone = text(override.phone || place.phone || source.phone || source.telephone);
   if (phone) rows.push({ key: 'phone', label: 'Phone', value: phone, href: `tel:${phone.replace(/\s+/g, '')}` });
   const website = text(override.website || override.url || place.url || source.website || source.url);
-  if (website) rows.push({ key: 'website', label: 'Website', value: website, href: website });
+  const websiteHref = safeHttpUrl(website);
+  if (website) {
+    rows.push({
+      key: 'website',
+      label: 'Website',
+      value: websiteHref ? website : website,
+      href: websiteHref || undefined,
+    });
+  }
   return rows;
 }
 

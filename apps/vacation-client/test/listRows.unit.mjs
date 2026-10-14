@@ -6,6 +6,7 @@ import {
   filterPlaces,
   flightPriceDisplay,
   flightSchedule,
+  parsePrice,
   placesForCategoryTab,
   sortPlaces,
   tabCategoryKey,
@@ -45,7 +46,20 @@ assert.equal(priceSorted[1].id, 1);
 const nameSorted = sortPlaces(hotels, trip, { key: 'name', dir: 'asc' });
 assert.equal(nameSorted[0].name, 'Alpha Hotel');
 
+assert.equal(parsePrice('1,200'), 1200);
+assert.equal(parsePrice('$899'), 899);
 assert.equal(flightPriceDisplay(trip.places[2], trip), '$248 one-way');
+
+const hotelSortTrip = {
+  places: [
+    { id: 10, name: 'Hotel 10', category_name: 'Hotel' },
+    { id: 9, name: 'Hotel 9', category_name: 'Hotel' },
+  ],
+  thingOverrides: {},
+};
+const hotelNameSort = sortPlaces(hotelSortTrip.places, hotelSortTrip, { key: 'name', dir: 'asc' });
+assert.equal(hotelNameSort[0].name, 'Hotel 9');
+assert.equal(hotelNameSort[1].name, 'Hotel 10');
 const schedule = flightSchedule(trip.places[2], trip);
 assert.equal(schedule.depart, '6:30 am');
 assert.equal(schedule.arrive, '10:15 am');

@@ -24,10 +24,53 @@ function sourceRecord(place, override) {
 export function parsePrice(value) {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number' && Number.isFinite(value)) return value;
-  const direct = Number(value);
-  if (Number.isFinite(direct)) return direct;
-  const match = String(value).match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  const s = String(value).trim();
+  if (!s) return null;
+  const plain = s.match(/^([\d,]+(?:\.\d+)?)$/);
+  if (plain) return Number(plain[1].replace(/,/g, ''));
+  const direct = Number(s.replace(/,/g, ''));
+  if (Number.isFinite(direct) && /^[\d.]/.test(s.replace(/,/g, ''))) return direct;
+  const match = s.match(/\$\s*([\d,]+(?:\.\d+)?)/);
   return match ? Number(match[1].replace(/,/g, '')) : null;
+}
+
+export function formatUsd(amount, currency = 'USD') {
+  const code = text(currency).toUpperCase();
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '—';
+  const body = n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (code === 'USD' || code === '') return `$${body}`;
+  return `${code} ${body}`;
+}
+
+function tripCurrency(trip) {
+  return text(trip?.trip?.currency) || 'USD';
+}
+
+const EVENT_TYPE_LABELS = {
+  family_event: 'Family event',
+  tour: 'Tour',
+  music: 'Music',
+  workout: 'Workout',
+  artist: 'Artist',
+  theatre: 'Theatre',
+  sightseeing: 'Sightseeing',
+  activity: 'Activity',
+  event: 'Event',
+};
+
+function humanizeTypeKey(raw) {
+  const key = text(raw).toLowerCase();
+  if (EVENT_TYPE_LABELS[key]) return EVENT_TYPE_LABELS[key];
+  if (key.includes('_')) {
+    return key
+      .split('_')
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+  if (!raw) return 'Event';
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 export function tabCategoryKey(place, trip) {
@@ -100,8 +143,7 @@ function restTypeLabel(place, override) {
       place.category?.name ||
       override.category,
   );
-  if (!raw) return 'event';
-  return raw;
+  return humanizeTypeKey(raw);
 }
 
 export function areaChipsForTab(places, trip, tab) {
@@ -131,15 +173,17 @@ export function typeChipsForTab(places, trip, tab) {
       const source = sourceRecord(place, override);
       if (tab === 'events') {
         const label = restTypeLabel(place, override);
-        if (label && !seen.has(label)) {
-          seen.add(label);
+        const dedupeKey = label.toLowerCase();
+        if (label && !seen.has(dedupeKey)) {
+          seen.add(dedupeKey);
           chips.push(label);
         }
         continue;
       }
       for (const tag of tagList(place, override, source)) {
-        if (!seen.has(tag)) {
-          seen.add(tag);
+        const dedupeKey = tag.toLowerCase();
+        if (!seen.has(dedupeKey)) {
+          seen.add(dedupeKey);
           chips.push(tag);
         }
       }
@@ -193,13 +237,15 @@ export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
       const pb = numericPrice(b, trip);
       const aMissing = pa == null;
       const bMissing = pb == null;
-      if (aMissing && bMissing) return sign * placeName(a).localeCompare(placeName(b));
+      if (aMissing && bMissing) {
+        return sign * placeName(a).localeCompare(placeName(b), undefined, { numeric: true, sensitivity: 'base' });
+      }
       if (aMissing) return 1;
       if (bMissing) return -1;
       if (pa !== pb) return sign * (pa - pb);
-      return sign * placeName(a).localeCompare(placeName(b));
+      return sign * placeName(a).localeCompare(placeName(b), undefined, { numeric: true, sensitivity: 'base' });
     }
-    return sign * placeName(a).localeCompare(placeName(b));
+    return sign * placeName(a).localeCompare(placeName(b), undefined, { numeric: true, sensitivity: 'base' });
   });
   return rows;
 }
@@ -224,7 +270,7 @@ export function flightPriceDisplay(place, trip) {
   const price = numericPrice(place, trip);
   if (price == null) return '';
   const fare = fareDirectionLabel(override);
-  const amt = `$${price}`;
+  const amt = formatUsd(price, tripCurrency(trip));
   return fare ? `${amt} ${fare}` : amt;
 }
 
@@ -245,12 +291,12 @@ export function flightSchedule(place, trip) {
 
 export function hotelPriceDisplay(place, trip) {
   const price = numericPrice(place, trip);
-  return price == null ? '' : `$${price}`;
+  return price == null ? '' : formatUsd(price, tripCurrency(trip));
 }
 
 export function carPriceDisplay(place, trip) {
   const price = numericPrice(place, trip);
-  return price == null ? '' : `$${price}`;
+  return price == null ? '' : formatUsd(price, tripCurrency(trip));
 }
 
 export function carSubtitle(place, trip) {
