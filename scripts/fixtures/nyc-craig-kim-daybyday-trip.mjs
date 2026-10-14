@@ -89,6 +89,63 @@ export function expectedSummariesOnDay(dayNumber) {
   return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || SUMMARIES[id] || '');
 }
 
+function applyVkSearchSnapshotContractFields(search, place, override) {
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
+  if (search.price != null) override.price = search.price;
+  if (search.logoUrl) {
+    override.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  if (search.url) {
+    place.website = search.url;
+    override.website = search.url;
+  }
+  if (search.address && text(search.address)) {
+    place.address = search.address;
+    override.address = search.address;
+  }
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
+    }
+  }
+}
+
 function applyVkSearchSnapshotCopyFields(search, place, override) {
   const title = text(search.title);
   if (title) place.name = title;
@@ -97,6 +154,7 @@ function applyVkSearchSnapshotCopyFields(search, place, override) {
     override.longDetails = search.description;
   }
   if (search.summary) override.summary = search.summary;
+  applyVkSearchSnapshotContractFields(search, place, override);
 }
 
 function applyPr336SearchFields(row, place, override) {
@@ -254,49 +312,20 @@ function buildPayload() {
       category: row.cat,
       summary: SUMMARIES[row.id] || '',
     };
-    if (row.id === 608) {
-      override.price = 389;
-      override.logoUrl = 'https://example-hotel.test/favicon.ico';
-    }
+    applyPr336SearchFields(row, place, override);
     if (row.id === 609) {
-      override.price = 172;
       override.rentalCompany = 'Priceline opaque';
       override.vehicleClass = 'Toyota Corolla or similar';
     }
-    if (row.id === 601) {
-      override.price = 257;
-      override.logoUrl = 'https://www.aa.com/favicon.ico';
-      override.airline = 'American';
-      override.departureTime = '12:37 pm';
-      override.arrivalTime = '8:59 pm';
-    }
-    if (row.id === 635) {
-      override.price = 257;
-      override.logoUrl = 'https://www.aa.com/favicon.ico';
-      override.airline = 'American';
-      override.departureTime = '6:00 pm';
-      override.arrivalTime = '8:59 pm';
-    }
     if (row.id === 603) {
-      override.price = 518;
-      override.logoUrl = 'https://www.hotelbelleclaire.com/favicon.ico';
       override.stayDays = 7;
       override.checkInDate = '2026-06-23';
       override.checkOutDate = '2026-06-30';
       override.checkInTime = '16:00';
       override.checkOutTime = '11:00';
     }
-    if (row.id === 602) {
-      override.logoUrl = 'https://www.zabars.com/favicon.ico';
-    }
-    if (row.id === 610) {
-      override.price = 95;
-      override.logoUrl = 'https://www.carbonegreenwichvillage.com/favicon.ico';
-    }
     if (row.id === 611) {
-      override.price = 85;
       override.category = 'music';
-      override.logoUrl = 'https://www.bluenotejazz.com/favicon.ico';
     }
     if (row.id === 630) {
       override.price = 164;
@@ -338,7 +367,6 @@ function buildPayload() {
     if (row.id === 616) {
       override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
     }
-    applyPr336SearchFields(row, place, override);
     thingOverrides[`place:${row.id}`] = override;
   }
   const reservations = rows.map((row) => {
