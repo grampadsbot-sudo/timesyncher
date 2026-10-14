@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from work_groups import consolidate
 
 def pr(n, issue=None, labels=(), draft=False, body=""):
@@ -57,5 +58,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(rows),1)
         self.assertIn("PR #10 / PR #11 / issue #5",info[rows[0][0]]["who"])
         self.assertIn("#10",info[rows[0][0]]["sha"]);self.assertIn("#11",info[rows[0][0]]["sha"])
+
+    def test_named_parked_job_stays_visible_without_action_bell(self):
+        import tsv_stuck_check as watcher
+        rows,info=self.run_group([pr(207,labels=["parked:photos-videos"],draft=True)],
+             [issue(393,["parked:photos-videos"],"Related draft: #207.")],
+             [("PR",207,5000,"parked:photos-videos"),("issue",393,5000,"hold:after-blockers")])
+        with patch.dict(watcher.INFO,info,clear=True), patch.object(watcher,"find",return_value=rows), patch.object(watcher,"GH"), patch.object(watcher,"load_json",return_value={}), patch.object(watcher,"logline"), patch.object(watcher,"ring_claude") as bell, patch.object(watcher,"ring_openclaw") as escalation, patch.object(watcher,"tell_craig") as report, patch.object(watcher.sys,"argv",["watcher","--dry-run"]), patch("builtins.print"):
+            watcher.main()
+            bell.assert_not_called();escalation.assert_not_called()
+            self.assertIn("VK PR #207 / issue #393 | PARKED",report.call_args.args[0])
 
 if __name__=="__main__":unittest.main()

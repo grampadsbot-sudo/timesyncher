@@ -187,7 +187,8 @@ def main():
         live = {k for k, _, _ in items}
         for k in [k for k in seen if k not in live]: seen.pop(k)
         if not dry: save_json(STATE, st)
-        line = "%s stuck=%d [%s] rang=[%s] escalated=[%s]" % ("DRY" if dry else "LIVE", len(items),
+        parked_count = sum(bool(INFO[k].get("parked_job")) for k, _, _ in items)
+        line = "%s jobs=%d stuck=%d parked=%d [%s] rang=[%s] escalated=[%s]" % ("DRY" if dry else "LIVE", len(items), len(items) - parked_count, parked_count,
                "; ".join(r for _, _, r in items), ", ".join(rang), ", ".join(esc))
         logline(line)
         if dry: print(line); print("TELEGRAM would post:\nVK stuck list %s\n" % dt.datetime.now(PT).strftime("%-I:%M %p PT") + "\n".join(tg))
