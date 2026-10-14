@@ -136,6 +136,31 @@ function applyInTurnRewriteShipGate(shippedText, pending, log, carry = {}) {
   return { shippedText: rewriteShip.reply };
 }
 
+function recoverInTurnPlaceRewriteDeadEnd({
+  finished,
+  pending,
+  inTurnProviderResults,
+  carry = {},
+  failureBase = {},
+}) {
+  if (finished?.reply || !pending?.enforceInTurnPlaces) return null;
+  const ship = finalizeInTurnPlaceShipReply(
+    pending?.draft,
+    true,
+    inTurnProviderResults,
+    { ...carry, tripContext: pending?.tripContext },
+  );
+  if (!ship.ok || !ship.reply) return null;
+  return {
+    ...failureBase,
+    reply: ship.reply,
+    model: finished.model,
+    quality: finished.quality,
+    log: finished.log,
+    reason: null,
+  };
+}
+
 export function inTurnPlaceLiveReplyHooks(tripContext, enforceInTurnPlaces, env = process.env) {
   const carry = inTurnPlaceReplyCarry(tripContext);
   return {
@@ -156,5 +181,12 @@ export function inTurnPlaceLiveReplyHooks(tripContext, enforceInTurnPlaces, env 
       { ...extra, ...carry },
     ),
     rewriteGate: (shippedText, pending, log, extra = {}) => applyInTurnRewriteShipGate(shippedText, pending, log, extra),
+    recoverRewriteDeadEnd: ({ finished, pending, inTurnProviderResults, failureBase }) => recoverInTurnPlaceRewriteDeadEnd({
+      finished,
+      pending,
+      inTurnProviderResults,
+      carry,
+      failureBase,
+    }),
   };
 }
