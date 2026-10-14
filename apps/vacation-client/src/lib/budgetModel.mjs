@@ -10,16 +10,14 @@ import {
 
 export { formatUsd };
 import { resolvePlace } from './dayTimelineModel.mjs';
-
-export const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-export const BUDGET_BUCKET_ORDER = [
-  'Flights',
-  'Hotel',
-  'Cars',
-  'Restaurants',
-  'Stores',
+import {
+  BUDGET_BUCKET_ORDER,
   OTHER_THINGS_BUCKET,
-];
+  bucketDisplayLabel as sharedBucketDisplayLabel,
+  bucketTargetAmountFromMap,
+} from '../../../../src/vacation/budget-bucket-keys.mjs';
+
+export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant',
@@ -155,19 +153,8 @@ function readBudgetTargetsMap(trip = {}) {
   return merged;
 }
 
-function budgetTargetKey(bucket) {
-  return `overall:${bucket}`;
-}
-
 export function bucketTargetAmount(trip, bucket) {
-  const targets = readBudgetTargetsMap(trip);
-  const key = budgetTargetKey(bucket);
-  if (!Object.prototype.hasOwnProperty.call(targets, key)) return null;
-  const raw = targets[key];
-  if (raw === '' || raw === null || raw === undefined) return 0;
-  const cleaned = String(raw).replace(/[^0-9.]/g, '');
-  if (!cleaned) return 0;
-  return Math.round(Number(cleaned) || 0);
+  return bucketTargetAmountFromMap(readBudgetTargetsMap(trip), bucket);
 }
 
 export function tripBudgetTargetTotal(trip) {
@@ -207,7 +194,7 @@ export function placesForBudget(trip) {
 }
 
 export function bucketDisplayLabel(bucket) {
-  return bucket === OTHER_THINGS_BUCKET ? 'The Rest' : bucket;
+  return sharedBucketDisplayLabel(bucket);
 }
 
 export function bucketIcon(bucket) {
