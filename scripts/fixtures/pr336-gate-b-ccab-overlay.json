@@ -3,16 +3,13 @@
     "category": "event",
     "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
     "itineraryNote": "Ferry and grounds; keep tickets on phone and arrive early for security.",
-    "description": "Tripadvisor lists Statue City Cruises at 3.8/5 with about 1,955 reviews. Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+    "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
     "price": 26,
     "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
     "logoUrl": "https://statuecitycruises.com/favicon.ico",
     "lat": 40.6892,
     "lng": -74.0445,
-    "address": "Castle Clinton, Battery Park, New York, NY 10004",
-    "thirdPartyRating": "3.8",
-    "thirdPartyReviewCount": "1955",
-    "thirdPartySource": "Tripadvisor"
+    "address": "Castle Clinton, Battery Park, New York, NY 10004"
   },
   "Carbone": {
     "category": "restaurant",
@@ -75,7 +72,7 @@
     "category": "hotel",
     "summary": "List-only row until ccab names a real Midtown property.",
     "itineraryNote": "List-only row until ccab names a real Midtown property.",
-    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, Booking.com rating, nightly price, and logo stay unbound. Do not borrow another hotel identity on this row.",
+    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row.",
     "provenanceBlocker": "no ccab capture matches this list-only Midtown hotel row; identity, logo, rating, price, and website stay blocked",
     "provenanceBlocked": [
       "price",

@@ -116,7 +116,30 @@ function enrichBaseRecordWithRecordedPayload(baseRecord = {}, recorded = {}, { t
   return enrichPlaceRecordWithXaiRatings(stripped, parsed, { title });
 }
 
+function sanitizeUnbrandedXaiReviewOverlay(patch = {}) {
+  delete patch.thirdPartySource;
+  delete patch.googleRatingSourceUrl;
+  delete patch.yelpRatingSourceUrl;
+  delete patch.ratingMix;
+  if (Array.isArray(patch.otherRatingSites)) {
+    patch.otherRatingSites = patch.otherRatingSites.slice(0, 3).map((row) => ({
+      rating: String(row.rating ?? ''),
+      reviewCount: String(row.reviewCount ?? ''),
+    }));
+    const primary = patch.otherRatingSites.find((row) => row.rating && row.reviewCount);
+    if (primary) {
+      patch.thirdPartyRating = primary.rating;
+      patch.thirdPartyReviewCount = primary.reviewCount;
+    }
+  }
+  if (typeof patch.thirdPartyRating === 'string' && patch.thirdPartyRating.includes('·')) {
+    const first = patch.otherRatingSites?.[0]?.rating;
+    if (first) patch.thirdPartyRating = first;
+  }
+  return patch;
+}
+
 export function buildReviewOverlayFromRecorded({ baseRecord, recorded, title }) {
   const enriched = enrichBaseRecordWithRecordedPayload(baseRecord, recorded, { title });
-  return reviewOverlayFromEnrichedRecord(enriched);
+  return sanitizeUnbrandedXaiReviewOverlay(reviewOverlayFromEnrichedRecord(enriched));
 }
