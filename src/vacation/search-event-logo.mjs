@@ -88,7 +88,7 @@ export function eventLogoMatchesWebsite({ logoUrl = '', website = '' } = {}) {
   return false;
 }
 
-export function markEventLogoSearchBlocked(place = {}, reason = 'no_official_website_found') {
+function markEventLogoSearchBlocked(place = {}, reason = 'no_official_website_found') {
   const sourceRecord = { ...sourceRecordOn(place) };
   sourceRecord.logoSearchBlocked = text(reason, 160);
   addMissingFields(sourceRecord, ['logoUrl']);
