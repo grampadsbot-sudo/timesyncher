@@ -222,13 +222,21 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
       continue;
     }
     if (domProvesSortOverflow && layoutNycVisionSortOverflowClaim(judgeText)) {
-      if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
+      const nycSortPillDiff = /nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons();
+      const bundledHeaderRow = layoutNycVisionBundledTabHeaderRowClaim(judgeText);
+      if (nycSortPillDiff && !bundledHeaderRow) {
         expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
+      } else if (bundledHeaderRow && reason) {
+        kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
       }
       continue;
     }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
-      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+      if (layoutNycVisionBundledTabHeaderRowClaim(judgeText)) {
+        if (reason) kept.push({ rule: 'LAYOUT-NYC', rubricItem: f.rubricItem, detail: reason });
+      } else {
+        expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
+      }
     } else if (nycDefects.some((d) => d.code === 'horizontal_overflow') && /nyc.*overflow|left.*clip|reference.*horizontal/.test(lower)) {
       expectedDiffs.push({ kind: 'nyc_horizontal_overflow', reason });
     } else if (/column label|label.*sort|header.*sort/.test(lower) && (stagingDom?.columnSortLabels?.name || stagingDom?.columnSortLabels?.price)) {

@@ -212,4 +212,43 @@ assert.equal(
   'permitted sort diff plus genuine row-layout defect stays fail',
 );
 
+const flights390Dom = {
+  ...stagingOk,
+  tabOrder: LAYOUT_NYC_TAB_ORDER,
+  sortPills: ['Name', 'Price'],
+  columnSortLabels: {},
+  rowCount: 2,
+  rowsNameLeft: true,
+  header: { present: true },
+  horizontalOverflow: false,
+};
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'header/row layout mismatch',
+        reason: 'NYC left shows sort pills in different position; staging header and row layout mismatch remains.',
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: flights390Dom },
+  ).pass,
+  false,
+  'mixed SINGLE finding: permitted NYC sort pill diff plus header/row stays fail-closed',
+);
+assert.equal(
+  reconcileLayoutNycJudgeVerdict(
+    {
+      pass: false,
+      failures: [{
+        rubricItem: 'header/row layout mismatch',
+        reason: 'Sort buttons do not overflow, but staging header/row layout mismatch remains.',
+      }],
+    },
+    { tab: 'flights', viewport: '390', stagingDom: flights390Dom },
+  ).pass,
+  false,
+  'mixed SINGLE finding: sort wording plus header/row stays fail-closed when DOM is OK',
+);
+
 console.log('shepherd layout-nyc tests passed');
