@@ -129,5 +129,15 @@ assert.equal(legacyBucket.displayLabel, 'The Rest');
 assert.equal(legacyBucket.target, 500);
 const rendered = JSON.stringify(legacyModel);
 assert.equal(rendered.includes(forbiddenCustomerBucketLabel), false);
+assert.equal(
+  bucketTargetAmount(legacyTargetsTrip, forbiddenCustomerBucketLabel),
+  500,
+  'lookup by legacy bucket name in key must resolve',
+);
+const legacyScore = budgetCompletenessScore(legacyTargetsTrip);
+assert.equal(
+  legacyScore.checks.some((c) => c.name === `saved_target_${forbiddenCustomerBucketLabel}` && c.pass),
+  true,
+);
 
 console.log('vacation-client budget unit checks passed');

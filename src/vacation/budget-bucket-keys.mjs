@@ -7,6 +7,12 @@ export const BUDGET_BUCKET_ORDER = [...STANDARD_BUDGET_BUCKETS, OTHER_THINGS_BUC
 
 const STANDARD_BUCKET_SET = new Set(STANDARD_BUDGET_BUCKETS);
 
+function targetBucketId(bucket) {
+  const name = String(bucket ?? '').trim();
+  if (STANDARD_BUCKET_SET.has(name) || name === OTHER_THINGS_BUCKET) return name;
+  return OTHER_THINGS_BUCKET;
+}
+
 export function budgetTargetKey(bucket) {
   return `overall:${bucket}`;
 }
@@ -37,11 +43,12 @@ function legacyMiscTargetEntry(targets) {
 
 export function bucketTargetAmountFromMap(targets, bucket) {
   if (!targets || typeof targets !== 'object') return null;
-  const key = budgetTargetKey(bucket);
+  const bucketId = targetBucketId(bucket);
+  const key = budgetTargetKey(bucketId);
   if (Object.prototype.hasOwnProperty.call(targets, key)) {
     return parseTargetRaw(targets[key]);
   }
-  if (bucket === OTHER_THINGS_BUCKET) {
+  if (bucketId === OTHER_THINGS_BUCKET) {
     const legacy = legacyMiscTargetEntry(targets);
     if (legacy) return parseTargetRaw(legacy.raw);
   }
