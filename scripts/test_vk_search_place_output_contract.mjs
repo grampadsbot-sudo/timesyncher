@@ -6,6 +6,7 @@ import {
   assertSearchPlaceOutputContract,
   crossPlaceDuplicateReviewBodyFailures,
   finalizeSearchPlaces,
+  searchPlaceOutputAcknowledgedViolations,
   searchPlaceOutputViolations,
   TRIP_MIN_NON_EXEMPT_THINGS,
 } from '../src/vacation/search-place-output.mjs';
@@ -13,7 +14,6 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   gateBRowsForSearchPlaceOutputContract,
-  PENDING_REAL_FETCH_ROW_IDS,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import {
   assertXaiGrokPlaceRatingsContract,
@@ -325,8 +325,7 @@ for (const place of positiveContractPlaces) {
 
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   if (row.cat === 'flight' || row.cat === 'car') continue;
-  if (PENDING_REAL_FETCH_ROW_IDS.has(row.id)) continue; // #366 real fetch
-  const violations = searchPlaceOutputViolations(gateBPlaces[row.id]);
+  const violations = searchPlaceOutputAcknowledgedViolations(gateBPlaces[row.id]);
   assert.deepEqual(
     violations,
     [],

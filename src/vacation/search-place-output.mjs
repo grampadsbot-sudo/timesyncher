@@ -360,12 +360,23 @@ function missingFieldsOnPlace(place = {}) {
   return raw.map((field) => text(field, 80).toLowerCase()).filter(Boolean);
 }
 
+/** Violations that still fail after missingFields acknowledges flaggable gaps (Craig 20% rule). */
+export function searchPlaceOutputAcknowledgedViolations(place = {}) {
+  const violations = searchPlaceOutputViolations(place);
+  const flagged = new Set(missingFieldsOnPlace(place));
+  return violations.filter((violation) => {
+    if (!FLAGGABLE_MISSING_VIOLATIONS.has(violation)) return true;
+    const fieldKey = VIOLATION_TO_MISSING_FIELD[violation];
+    return !fieldKey || !flagged.has(fieldKey);
+  });
+}
+
 function isNonExemptTripThing(place = {}) {
   const category = searchProductCategory(place.category);
   return category !== 'flight' && category !== 'hotel' && category !== 'car';
 }
 
-function classifyPlaceContractViolations(place = {}) {
+export function classifyPlaceContractViolations(place = {}) {
   const violations = searchPlaceOutputViolations(place);
   if (!violations.length) {
     return { hard: [], flaggedMissing: [], hasMissing: false };
