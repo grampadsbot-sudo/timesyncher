@@ -124,10 +124,15 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                       <div className="tsv-review-stars">{review.rating} ★</div>
                     ) : null}
                     <p>{review.text}</p>
-                    {review.source ? <footer>{review.source}</footer> : null}
+                    {review.source && !model.reviewFootnote ? <footer>{review.source}</footer> : null}
                   </li>
                 ))}
               </ul>
+              {model.reviewFootnote ? (
+                <p className="tsv-detail-review-footnote" data-ts-detail-review-footnote="1">
+                  {model.reviewFootnote}
+                </p>
+              ) : null}
               {model.reviewTotalsLine ? (
                 <p className="tsv-detail-review-totals" data-ts-detail-review-totals="1">
                   {model.reviewTotalsLine}

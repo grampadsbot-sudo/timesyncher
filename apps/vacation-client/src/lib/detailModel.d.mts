@@ -58,6 +58,7 @@ export type DetailViewModel = {
     compositeLabel?: string;
   }>;
   reviewTotalsLine: string;
+  reviewFootnote: string;
   summarySourceUrls: string[];
   fieldRows: Array<{ key: string; label: string; value: string; href?: string }>;
 };

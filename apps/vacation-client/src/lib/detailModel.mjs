@@ -12,6 +12,9 @@ import {
 } from './listTabModel.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
+export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
+  'Reviews usually created to be representative of all reviews found.';
+const XAI_REPRESENTATIVE_REVIEW_MIN_WORDS = 12;
 
 function text(value) {
   return String(value ?? '').trim();
@@ -97,13 +100,21 @@ function formatCoordinates(coords) {
   return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
 }
 
+function xaiRepresentativeReviews(override) {
+  if (override.xaiRatingsFetched === true) return true;
+  const nested = override.sourceRecord;
+  return nested && typeof nested === 'object' && nested.xaiRatingsFetched === true;
+}
+
 function reviewIsComplete(override, index) {
   const body = text(override[`review${index}`], 2000);
   const source = text(override[`review${index}Source`], 40);
   const rating = text(override[`review${index}Rating`], 20);
-  if (wordCount(body) < 25) return false;
-  if (!REVIEW_SOURCES.has(source)) return false;
-  return /\d/.test(rating);
+  const minWords = xaiRepresentativeReviews(override) ? XAI_REPRESENTATIVE_REVIEW_MIN_WORDS : 25;
+  if (wordCount(body) < minWords) return false;
+  if (!/\d/.test(rating)) return false;
+  if (xaiRepresentativeReviews(override)) return true;
+  return REVIEW_SOURCES.has(source);
 }
 
 function reviewCompositeLabel(override, index) {
@@ -356,6 +367,10 @@ export function buildDetailViewModel(place, trip) {
     priceLabel: detailPriceLabel(place, trip, category),
     ratingLines: detailRatingLines(override),
     reviews: detailReviews(override, category),
+    reviewFootnote:
+      xaiRepresentativeReviews(override) && detailReviews(override, category).length
+        ? REPRESENTATIVE_REVIEWS_FOOTNOTE
+        : '',
     reviewTotalsLine: detailReviewTotalsLine(override),
     summarySourceUrls: detailSummarySourceUrls(override),
     fieldRows: detailFieldRows(place, trip),

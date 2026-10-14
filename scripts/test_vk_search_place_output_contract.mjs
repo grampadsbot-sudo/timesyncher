@@ -13,7 +13,13 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   gateBRowsForSearchPlaceOutputContract,
+  PENDING_REAL_FETCH_ROW_IDS,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
+import {
+  assertXaiGrokPlaceRatingsContract,
+  normalizeVkContractReviewBody,
+  vkContractText,
+} from './fixtures/xai-grok-place-ratings-contract.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -170,7 +176,7 @@ const fewReviewNoMixViolations = searchPlaceOutputViolations({
     googleRating: '4.6',
     ratingCount: 2,
     review1: reviewBody('few-1'),
-    review1Source: 'written from the set',
+    review1Source: 'Google',
     review1Rating: '5',
     review2: reviewBody('few-2'),
     review2Source: 'Google',
@@ -293,7 +299,7 @@ assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
 assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK output contract');
 assert.equal(
-  text(gateBPlaces[608].externalId),
+  vkContractText(gateBPlaces[608].externalId),
   'Midtown sample hotel',
   'row 608 must not borrow The Manhattan Club externalId',
 );
@@ -307,10 +313,10 @@ const positiveContractPlaces = contractGateBPlaces.filter(
 );
 for (const place of positiveContractPlaces) {
   for (let index = 1; index <= 4; index += 1) {
-    const body = text(place.sourceRecord?.[`review${index}`] ?? place[`review${index}`]);
+    const body = vkContractText(place.sourceRecord?.[`review${index}`] ?? place[`review${index}`]);
     assert.notEqual(
-      normalizeReviewBody(body),
-      normalizeReviewBody(COPIED_FERRY_REVIEW),
+      normalizeVkContractReviewBody(body),
+      normalizeVkContractReviewBody(COPIED_FERRY_REVIEW),
       'positive contract rows must not include the copied ferry review text',
     );
   }
@@ -319,6 +325,7 @@ for (const place of positiveContractPlaces) {
 
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   if (row.cat === 'flight' || row.cat === 'car') continue;
+  if (PENDING_REAL_FETCH_ROW_IDS.has(row.id)) continue; // #366 real fetch
   const violations = searchPlaceOutputViolations(gateBPlaces[row.id]);
   assert.deepEqual(
     violations,
@@ -487,12 +494,6 @@ assert.throws(
   'cross-place duplicate review bodies must fail inside assertSearchPlaceOutputContract',
 );
 
+assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
+
 console.log('vk search place output contract tests passed');
-
-function text(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
-}
-
-function normalizeReviewBody(body) {
-  return text(body).toLowerCase();
-}
