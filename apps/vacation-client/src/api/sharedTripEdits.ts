@@ -33,7 +33,7 @@ export async function saveSharedTripOverrides(
       if (body.customerMessage) message = body.customerMessage;
       else if (body.error) message = body.error;
     } catch {
-      /* ignore */
+      void 0;
     }
     throw new Error(message);
   }

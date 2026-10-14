@@ -1,100 +1,88 @@
 # TSV #397 — Comment-bearing code integrity audit
 
-## Evidence SHAs (immutable audit inputs)
+## Immutable inputs
 
-| Label | SHA | Branch / note |
+| Label | SHA | Note |
 | --- | --- | --- |
-| Migration base (start) | `b6980aa6e3c710a00c5d979064dff671855b4e29` | `migrate/trek-source` at brief time |
-| PR336 candidate | `e9b1b447c3dc4a6a154725f76a78a3ba052c891a` | `cursor/tsv-335-tsv-p3a-wiring-restart-serve-repaired-client-from-current-migration-base-b850` |
+| PR401 GPT-round start | `ed302dc1eecf4450b956e950218ca6da039cf5e0` | Existing PR401 branch after the CI-only repair |
+| Migration audit base | `b6980aa6e3c710a00c5d979064dff671855b4e29` | Required original comment/source evidence |
+| PR336 candidate | `e9b1b447c3dc4a6a154725f76a78a3ba052c891a` | Read-only candidate evidence |
 
-If either SHA moves, re-run: (1) full PR336 diff review, (2) Gate B / served-client wiring diff, (3) fixture ↔ API binding checks on the candidate head, (4) this inventory diff against the new base.
+If either audit input moves, re-review the complete PR336 diff, served-source/capture wiring, fixture/API provenance, acceptance return paths, and the comment inventory delta. Nothing in this report approves a later head.
 
-## Runtime harness (read-only)
+## Inventory and evidence integrity
 
-| Path | Status |
-| --- | --- |
-| `~/tsv-gateb` | **Unavailable** on audit VM (path missing). Deployed/source SHA comparison not performed here. |
-| `~/tsv-dispatch` | **Unavailable** on audit VM (path missing). |
+- [`comment-audit-evidence.json`](comment-audit-evidence.json) is the canonical pre-deletion inventory: **405 comments in 192 unique scoped first-party files** at the migration audit base. It includes the three paths omitted by the earlier text list: `scripts/export_trek_sqlite_to_hosted.py`, `scripts/fixtures/seed_nyc_trip_ccab.py`, and `scripts/run-once.sh`.
+- The saved previews match the original source. The sole sanitizer transformation is `api[.]foursquare[.]com` host defanging.
+- [`commented-code-audit-inventory.txt`](commented-code-audit-inventory.txt) is retained only as a supplemental broad review corpus. It contains generated, HTML, JSON, and package paths and is not the scoped coverage denominator.
+- Generated `public/assets/**` output was not edited. Existing bundle/source checks cover its first-party needles; vendored license text remains intact.
+- Current enforcement scans the requested source roots and root code/config files. Only shebangs, behavior-changing machine directives, `scripts/fixtures/code-ratchet/**`, dependencies, and generated output are exempt.
 
-## Comment-bearing first-party inventory
+## Coverage status
 
-- **Start SHA inventory:** 210 paths (see [`docs/commented-code-audit-inventory.txt`](commented-code-audit-inventory.txt)).
-- **Pre-removal evidence:** every comment text captured at strip time in [`docs/comment-audit-evidence.json`](comment-audit-evidence.json) (file, line, sanitized preview) before deletion in this PR.
-- **Removal scope:** all comments stripped from `src/`, `apps/`, `scripts/`, `routes/`, `api/`, `.cursor/` for `.ts/.tsx/.js/.jsx/.mjs/.cjs/.css/.py/.sh`, with machine-directive and `scripts/fixtures/code-ratchet/**` allowlists only (see `scripts/check-no-comments.mjs`).
-- **Excluded from edit-only (provenance verified):** `public/assets/*` minified bundles (upstream/served trek bundles scanned via existing `scripts/check-hardcoded-content.mjs` / bundle tests, not line-reviewed as hand-written source).
-- **Coverage method:** Each inventoried path was read with its comments for hack vs legitimate disposition; critical-path modules and PR336 diff files were reviewed in full. Residual comment-free paths remain subject to the same hack patterns (e.g. PR336 padding code).
+All 405 preserved comment sites and adjacent source were reviewed. The critical PR336 and acceptance flows and 52 migration-base files were read in full. The other **140 comment-bearing files have comment-context review but not the required full module/data-flow/history review**. Therefore this is not an exhaustive clean audit and PR401 must remain on `hold:integrity-review`.
 
-## PR336 candidate — false-pass and workaround findings (not merged in this PR)
+The read-only runtime paths `~/tsv-gateb` and `~/tsv-dispatch` are absent on this VM, so deployed/source SHAs and drift could not be checked. That is an additional coverage gap.
 
-Review target: `e9b1b447…` vs base `b6980aa6…`.
+## PR336 candidate findings
 
-| ID | Location (candidate) | Criterion / check | Assessment | Disposition |
+| ID | Location | Original criterion | Finding | Disposition |
 | --- | --- | --- | --- | --- |
-| P336-1 | `apps/vacation-client/src/lib/listTabModel.mjs` — `SUMMARY_QUALITY_PAD`, `ensureMinSummaryWords()` | List row / Gate B copy quality (≥30 words, event field tokens) | **Confirmed bypass:** appends fixed generic pad in a loop until word count ≥30 regardless of source data. | **Unresolved on candidate** — remove pad; fail closed or use `buildCategoryDescription` only. |
-| P336-2 | Same file — `rowSummary()` | Event rows must include `what it is:` / `when:` / `price:` patterns | **Risk:** synthesizes `When:` / `Price:` lines from schedule/price hints then still runs `ensureMinSummaryWords`. | **Unresolved on candidate** — tied to P336-1. |
-| P336-3 | `src/vacation/shared-trip-live-app-fields.mjs` — `wordCount(enrichedDescription) >= 30` writes `longDetails`/`details` | Product row long copy / detail completeness | **Risk:** server-side padding of overrides to 30 words using enrichment templates (may mask missing VK fields). | **Unresolved on candidate** — should mirror VK contract failures, not template-fill. |
-| P336-4 | `trip-thing-enrichment.mjs` (candidate) — `eventDescription` fallback string `classic NYC crowd` | DATA-CONTRACT / no invented venue narrative | **Invented geography/crowd copy** when performers missing. | **Partially addressed on base** in this PR (see F-1); candidate still needs matching removal. |
-| P336-5 | `scripts/fixtures/nyc-craig-kim-daybyday-positive-v1.mjs`, `gate-b-approved-shared-trip.mjs` (candidate diff) | Gate B fixture | Not edited (out of scope for coder audit round). | **Documented only** — fixture truth is #339/#362 family, not re-litigated here. |
-| P336-6 | `vercel.json`, `vite.config.mjs`, `capture/serve-dist.py` (candidate) | Serve wiring / capture | Not edited per audit scope. | **Documented only** — no approval inferred from CI green alone. |
+| P336-1 | `apps/vacation-client/src/lib/listTabModel.mjs` — `SUMMARY_QUALITY_PAD`, `ensureMinSummaryWords()` | ≥30-word sourced list-row copy | Fixed generic text is appended until the count passes. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
+| P336-2 | Same file — `rowSummary()` | Event source fields | Synthesized labels still flow through the fixed-word pad. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
+| P336-3 | `src/vacation/shared-trip-live-app-fields.mjs` — 30-word branch | VK long-description contract | Template enrichment can turn a source gap into a passing long description. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
+| P336-4 | Candidate `trip-thing-enrichment.mjs` event fallback | VK no-invented-data rule | Invented NYC room/crowd narrative remains on the immutable candidate. | **Open on candidate:** base fix F-1 cannot approve or mutate PR336. |
 
-**Legitimate on candidate (not workarounds):** `prepareServedTrip.mjs` re-export of `finalizeServedSharedTripPayload`; `opaqueCarPricelineLogoUrl` for Priceline opaque car SKUs; shared `buildCategoryDescription` import for real template enrichment (when not paired with P336-1 pad).
+P336-1 through P336-3 stay unresolved exactly as Craig directed. Candidate fixture facts, deployment config, baselines, capture config, and generated bundles were not changed. The candidate does not contain several later migration-base harness files, so migration-base review cannot be silently treated as candidate proof.
 
-## Migration base — findings and fixes (this PR)
+## Migration-base findings
 
-| ID | File / symbol | Introduced | Criterion | Why workaround vs legitimate | Disposition |
-| --- | --- | --- | --- | --- | --- |
-| F-1 | `src/vacation/trip-thing-enrichment.mjs` — `eventDescription` default `'Live set with a classic NYC room feel'` | Pre-base history | VK / product copy; Gate B detail richness | **Invented venue narrative** with no source field. | **Fixed** — generic booking guidance only; no NYC-specific fiction. |
-| F-2 | `src/vacation/place-detail-extract.mjs` — `buildSummaryFromResults` title prefix when judge fails | Pre-base | `descriptionPassesDetailJudge` / detail summary | **Judge gaming:** prepend `title —` to inject title tokens. | **Fixed** — block removed. |
-| F-3 | `routes/vacation-itinerary.mjs` — removed mega-comment listing queue wiring symbols | Pre-base | `test_chat_place_search.mjs` route grep | **False-pass:** test matched comment text, not executable imports. | **Fixed** — test asserts `vacation-app-chat-queue.mjs` + `vacation-from-chat-intake.mjs`; comment removed. |
-| L-1 | `src/vacation/shared-trip-handler.mjs` — `GATE_B_APPROVED_SHARED_SLUG` | Fixture wiring | Gate B NYC capture trip | **Legitimate** slug → approved fixture builder for offline/Gate B; not a CI skip. | **No change** |
-| L-2 | `src/vacation/trek-style2-bundle.mjs` — Gate B marker throws | Guard rails | Gate B layout contracts | **Legitimate** enforcement. | **No change** |
-| L-3 | Harness scripts using Puppeteer headless | Test/capture harness | Gate B capture | **Legitimate** test harness (no detection-based render branching in product bundle). | **No change** |
+| ID | Original source / introducing commit | Criterion | Assessment | Disposition |
+| --- | --- | --- | --- | --- |
+| F-1 | `src/vacation/trip-thing-enrichment.mjs` — event fallback | VK sourced-data contract | Invented NYC venue narrative. | **Fixed earlier in PR401:** fallback no longer invents NYC facts; focused positive/negative regression retained. |
+| F-2 | `src/vacation/place-detail-extract.mjs` — `buildSummaryFromResults()` | Detail judge | Prefixing the title injected judge tokens. | **Fixed earlier in PR401:** prefix removed; regression retained. |
+| F-3 | `routes/vacation-itinerary.mjs` mega-comment | Route wiring grep | Comment text, not executable wiring, satisfied the test. | **Fixed earlier in PR401:** test checks executable module wiring. |
+| F-4 | `scripts/lib/pr336-gate-b-xai-recorded-lib.mjs`, `0def5822` | `MODEL-BARE` hard-coded-content rule | The forbidden model ID was deleted and then reversibly encoded as character codes solely to pass the rule. | **Fixed:** recording sanitizer now removes both forms while preserving ordinary payload fields; regression covers positive and negative paths. |
+| F-5 | `scripts/lib/comment-tools.mjs` | No-comment acceptance | AST-only traversal missed comments in empty blocks and inline type casts; checker falsely passed. | **Fixed:** token-inclusive AST traversal, root-file coverage, no self-exemption, 14 residual comments removed, and real executable rejection/acceptance proof added. |
+| U-1 | `apps/vacation-client/src/lib/budgetModel.mjs:14`, `58719dc8`; same split in server/search modules | `BAR-THING-CUSTOMER` | `'Other ' + 'Thi' + 'ngs'` was explicitly introduced to evade the prose scan. The runtime key spans client/server and persisted budget targets. | **Unresolved/nontrivial:** needs a narrowly owned contract migration; no owning issue exists. Do not call comment deletion a fix. |
+| U-2 | `scripts/shepherd-staging-smoke-layout-nyc.mjs` — `reconcileLayoutNycJudgeVerdict()`, `44ed9f45`/`9cf49b97` | LAYOUT-NYC vision + DOM acceptance | A bundled `header/row layout mismatch` vision failure can be suppressed when partial DOM checks pass. This changes grade acceptance. | **Unresolved/nontrivial:** grade-criterion edits are forbidden here; needs a separate owning issue/PR and exact-head negative proof. |
+| L-1 | `scripts/shepherd-staging-smoke-thing-card-eval.mjs`, `41b5a4fa` | Current Name/Price controls | Default-off legacy “forbid sort pills” check does not make the current LAYOUT-NYC check pass; current LAYOUT-NYC requires Name/Price buttons and fails when absent. | **Reviewed/no current bypass; no change.** |
+| L-2 | `src/vacation/thing-logo-capture.mjs`, `5db91bf4`/`7f138e8c` | VK real-logo contract | Exact known brands map to their official first-party favicon URLs; generic/shared placeholders remain rejected. | **Legitimate sourced brand constants; no change.** |
+| L-3 | `src/vacation/shared-trip-handler.mjs` approved slug and harness headless use | Offline fixture/capture wiring | Fixture selection and capture execution, not product render branching. | **Legitimate harness behavior; no change.** |
 
-## Test evidence (base after fixes)
+U-1 and U-2 lack the separately linked owning issue/PR required by Craig. GitHub access in this round is read-only for issue creation. The managing doctor must route two separate briefs because their roots and done-checks differ.
 
-Commands run on audit VM:
+## No-comment acceptance and pstack status
 
-```bash
-npm ci
-cd apps/vacation-client && npm ci && cd ../..
-node scripts/test_check_no_comments.mjs
-node scripts/check-no-comments.mjs
-node scripts/test_tsv397_integrity_audit.mjs
-node scripts/test_trip_thing_logo_metadata.mjs
-node scripts/test_gate_b_product_row_fields.mjs
-node scripts/test_check_code_ratchet.mjs
-node scripts/check-code-ratchet.mjs
-node scripts/test_chat_place_search.mjs
-```
+- Repository executable: `scripts/check-no-comments.mjs`; it now reports `file:line` and scans 747 current files.
+- Regression: `scripts/test_check_no_comments.mjs` writes a temporary real scoped source comment, proves the executable fails at its exact line, removes it, then proves the clean repository passes. It also covers comments in empty blocks and inline type casts.
+- CI path remains the existing `evidence-secrets` job’s “Code ratchet” step; no workflow was loosened or edited in this round.
+- Applicable pstack rule is external to this repository at `/home/ubuntu/.cursor/plugins/cache/cursor-public/9717366/837067b75aa20ab58d7b2a2f6c0531e37118c596/skills/no-comments/SKILL.md`. It belongs to pstack plugin v0.15.23 (owner Lauren Tan, `cursor/plugins`). No `pstack` executable or repository pstack-lint command exists. That external lint does not invoke the repository verifier, and this branch cannot commit a host-plugin change.
+- Required host follow-through: the `cursor/plugins` pstack owner must make `/no-comments` acceptance invoke both `node scripts/test_check_no_comments.mjs` and `node scripts/check-no-comments.mjs` at the target repository root. Until that exact path is updated and independently proven, Craig’s pstack-lint requirement is **not done**.
 
-Results: all **passed** on audit VM after combined comment removal + fixes.
+## Verification
 
-### What tests prove
+Passed locally:
 
-- **Negative:** Empty event source must not emit `classic NYC` / `Live set with` invented strings (`test_tsv397_integrity_audit.mjs`).
-- **Positive:** Sourced event summary still includes schedule and source summary text.
-- **Negative:** Search-derived summary must not use removed `title — summary` prefix pattern.
-- **Regression:** Existing enrichment / logo / Gate B row field suite still passes.
+- `npm run typecheck && npm run lint && npm run test` in `apps/vacation-client`
+- `node scripts/test_check_no_comments.mjs && node scripts/check-no-comments.mjs`
+- `node scripts/test_tsv397_integrity_audit.mjs`
+- `node scripts/test_check_hardcoded_content.mjs && node scripts/check-hardcoded-content.mjs`
+- `node scripts/test_check_code_ratchet.mjs && node scripts/check-code-ratchet.mjs`
+- `node scripts/test_evidence_secrets.mjs && node scripts/check-evidence-secrets.mjs`
+- `node scripts/scan-built-bundles.mjs`
+- affected chat, logo, and Gate B product-row regressions
 
-## No-comment CI (issue #400 folded into #397)
+Focused proof covers:
 
-- **Checker:** `scripts/check-no-comments.mjs` (TypeScript scanner for JS-like sources; fails with `file:line`).
-- **Tests:** `scripts/test_check_no_comments.mjs`.
-- **CI:** `evidence-secrets` job “Code ratchet” step (after `apps/vacation-client` npm ci).
-- **Exemptions:** documented in checker — shebang, eslint/ts/vitest/c8/prettier/biome/noqa/shellcheck/webpack/sourceMappingURL directives; `scripts/fixtures/code-ratchet/**`; build output paths.
+- sourced event detail remains intact and unsourced NYC fiction cannot pass;
+- title-prefix judge gaming cannot pass;
+- reversible model-ID encoding cannot survive the recording sanitizer;
+- a real scoped comment fails and a comment-free tree passes;
+- existing focused unit, hard-coded-content, ratchet, secrets, and client type/lint/test suites.
 
-## Unresolved / out of scope (left alone)
+`node scripts/run-offline-tests.mjs` is **not green**. After installing the exact CI PDF packages, it reaches `scripts/test_offline_manifest.mjs` and fails because the existing PR401 files `scripts/test_check_no_comments.mjs` and `scripts/test_tsv397_integrity_audit.mjs` are unclassified. Registering them requires the explicitly protected `scripts/offline-tests.txt`; changing the manifest or misclassifying them as online would weaken or bypass that check. No such shortcut was taken.
 
-- PR336 candidate items **P336-1 … P336-3** (require candidate-branch PR; hold PR336 approval).
-- Baselines, `nyc-final-reference/`, thresholds, ratchet ceilings, `vercel.json`, `vite.config.mjs`, fixture fact edits.
-- Host harness SHA diff (`~/tsv-gateb`, `~/tsv-dispatch`).
+## Blocking conclusion
 
-## Reviewed-file coverage summary
-
-| Bucket | Paths | Depth |
-| --- | ---: | --- |
-| Full read (base + PR336 diff where changed) | 52 | Manual |
-| Pattern scan only (remaining inventory) | 158 | Automated + spot checks |
-| **Total inventoried** | **210** | |
-
-No claim of “zero workarounds” on PR336 candidate until P336-1–P336-3 are fixed and re-reviewed on an updated candidate SHA.
+PR401 must remain held. The blockers are: the offline manifest failure above, 140 files short of full file/data-flow/history audit, unavailable deployed harness provenance, U-1 and U-2 without linked owning work, unresolved [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402), and external pstack lint not yet wired to the verifier. Green CI cannot override these gaps.

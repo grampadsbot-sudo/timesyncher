@@ -3,20 +3,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { enrichPlaceRecordWithXaiRatings, parseXaiStructuredPayload } from '../../src/vacation/xai-grok-place-ratings.mjs';
-import { xaiGrokPlaceSearchModelId } from '../vacation-app-reply-rules.mjs';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url));
 const PR336_XAI_RECORDED_DIR = join(FIXTURES_DIR, 'xai-grok-pr336-gate-b-recorded');
-
-function xaiRecordedModelCharCodes() {
-  return [...xaiGrokPlaceSearchModelId()].map((ch) => ch.charCodeAt(0));
-}
 
 export function payloadForXaiRecording(payload = {}) {
   const copy = JSON.parse(JSON.stringify(payload));
   if (copy && typeof copy === 'object') {
     delete copy.model;
-    copy.modelCharCodes = xaiRecordedModelCharCodes();
+    delete copy.modelCharCodes;
   }
   return copy;
 }

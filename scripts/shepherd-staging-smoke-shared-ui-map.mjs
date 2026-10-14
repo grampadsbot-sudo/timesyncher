@@ -98,7 +98,7 @@ function sharedIntakeTabShellReadyInBrowser() {
 }
 
 export function configureSharedUiMapHelpers(_cfg) {
-  /* BASE reserved for future shared URLs in map tab helpers */
+
 }
 
 export async function clickSharedTabByKeyword(page, keyword) {

@@ -43,7 +43,7 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
       const body = (await response.json()) as { customerMessage?: string };
       if (body.customerMessage) message = body.customerMessage;
     } catch {
-      /* ignore */
+      void 0;
     }
     throw new Error(message);
   }

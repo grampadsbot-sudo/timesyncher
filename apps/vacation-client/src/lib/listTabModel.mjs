@@ -158,9 +158,9 @@ export function areaChipsForTab(places, trip, tab) {
       chips.push(area);
     }
   }
-  if (tab === 'events' && chips.length === 1) {
-    /* Rest tabs still expose area row when list is empty. */
-  }
+
+
+
   return chips;
 }
 

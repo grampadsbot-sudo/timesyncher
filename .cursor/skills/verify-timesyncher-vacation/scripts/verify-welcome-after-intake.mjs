@@ -730,7 +730,7 @@ async function shippedTemplateSources() {
     try {
       sources.push({ file: path.relative(root, file), text: await readFile(file, 'utf8') });
     } catch {
-      /* missing optional file */
+
     }
   }
   return sources;

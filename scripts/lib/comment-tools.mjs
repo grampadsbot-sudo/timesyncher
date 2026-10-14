@@ -28,12 +28,6 @@ const COMMENT_PATH_PREFIX_ALLOW = [
   'public/assets/',
 ];
 
-const COMMENT_GUARD = new Set([
-  'scripts/check-no-comments.mjs',
-  'scripts/test_check_no_comments.mjs',
-  'scripts/lib/comment-tools.mjs',
-]);
-
 const DIRECTIVE_RES = [
   /^\s*eslint-disable(?:-next-line|-line)?(?:\s|$)/,
   /^\s*eslint-enable(?:\s|$)/,
@@ -103,15 +97,12 @@ function forEachJsLikeComment(file, text, visit) {
     seen.add(key);
     visit(text.slice(pos, end), pos);
   };
-  ts.forEachLeadingCommentRange(text, 0, (pos, end) => addRange(pos, end));
   const walk = (node) => {
     ts.forEachLeadingCommentRange(text, node.getFullStart(), (pos, end) => addRange(pos, end));
     ts.forEachTrailingCommentRange(text, node.end, (pos, end) => addRange(pos, end));
-    ts.forEachChild(node, walk);
+    for (const child of node.getChildren(sourceFile)) walk(child);
   };
   walk(sourceFile);
-  const eofPos = text.length;
-  ts.forEachTrailingCommentRange(text, eofPos, (pos, end) => addRange(pos, end));
 }
 
 function forEachCssComment(text, visit) {
@@ -263,7 +254,6 @@ function stripShellComments(text) {
 
 export function inCommentScope(file) {
   const rel = norm(file);
-  if (COMMENT_GUARD.has(rel)) return false;
   if (COMMENT_PATH_PREFIX_ALLOW.some((prefix) => rel.startsWith(prefix))) return false;
   if (!COMMENT_SCAN_EXT.has(path.extname(rel))) return false;
   const parts = rel.split('/');
@@ -286,6 +276,9 @@ export function walkCommentFiles(rootDir = '.') {
   for (const root of COMMENT_ROOTS) {
     const abs = path.join(rootDir, root);
     if (fs.existsSync(abs)) walk(abs, root);
+  }
+  for (const ent of fs.readdirSync(rootDir, { withFileTypes: true })) {
+    if (ent.isFile() && inCommentScope(ent.name)) files.push(norm(ent.name));
   }
   return files.sort();
 }

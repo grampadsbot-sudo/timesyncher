@@ -7,6 +7,7 @@ import {
   isGenericDescription,
 } from '../src/vacation/trip-thing-enrichment.mjs';
 import { descriptionPassesDetailJudge } from '../src/vacation/thing-detail-fields.mjs';
+import { payloadForXaiRecording } from './lib/pr336-gate-b-xai-recorded-lib.mjs';
 
 const title = 'Blue Note Jazz Club';
 
@@ -57,5 +58,14 @@ assert.doesNotMatch(
   'search summary must not prepend the title to game the detail judge',
 );
 assert.equal(descriptionPassesDetailJudge(summary, 'Sample Midtown Bistro'), true);
+
+const recordedPayload = payloadForXaiRecording({
+  model: 'provider-model-id',
+  modelCharCodes: [112, 114, 111, 118, 105, 100, 101, 114],
+  messages: [{ role: 'user', content: 'ordinary request' }],
+});
+assert.deepEqual(recordedPayload.messages, [{ role: 'user', content: 'ordinary request' }]);
+assert.equal('model' in recordedPayload, false, 'recording omits the model identifier');
+assert.equal('modelCharCodes' in recordedPayload, false, 'recording must not encode the forbidden identifier');
 
 process.stdout.write('tsv397 integrity audit tests passed\n');

@@ -73,7 +73,7 @@ export function visibleTabsForTrip(trip, permissions) {
 }
 
 export function isTabId(value) {
-  return typeof value === 'string' && TAB_ORDER.includes(/** @type {TabId} */ (value));
+  return typeof value === 'string' && TAB_ORDER.some((tab) => tab === value);
 }
 
 export function readTabFromLocation(hash, search) {

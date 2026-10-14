@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -33,6 +34,21 @@ assert.deepEqual(
   scanComments('src/sample.mjs', 'const sampleValue = 1;\n// leftover\n').map((row) => row.line),
   [2],
 );
+
+assert.equal(scanComments('src/sample.mjs', 'try {} catch { /* hidden */ }\n').length, 1);
+assert.equal(scanComments('src/sample.mjs', 'const value = /** @type {string} */ (input);\n').length, 1);
+assert.equal(scanComments('src/sample.mjs', 'const protocol = /https?:\\/\\//;\n').length, 0);
+
+const negativeRel = `src/no-comment-negative-${process.pid}.mjs`;
+const negativeFile = path.join(repo, negativeRel);
+try {
+  fs.writeFileSync(negativeFile, 'export const value = true;\n// executable checker must reject this\n', 'utf8');
+  const negativeRun = spawnSync(process.execPath, [checker], { cwd: repo, encoding: 'utf8' });
+  assert.notEqual(negativeRun.status, 0, 'checker accepted a real scoped source comment');
+  assert.match(negativeRun.stderr, new RegExp(`${negativeRel}:2`));
+} finally {
+  fs.rmSync(negativeFile, { force: true });
+}
 
 const repoRun = spawnSync(process.execPath, [checker], { cwd: repo, encoding: 'utf8' });
 assert.equal(

@@ -1,3 +1,9 @@
+SUPPLEMENTAL REVIEW CORPUS — NOT THE CANONICAL COMMENT-BEARING INVENTORY
+The canonical start-SHA inventory is docs/comment-audit-evidence.json:
+405 comment records across 192 unique scoped first-party files.
+This broader historical list also contains generated, HTML, JSON, and package paths
+and must not be used as the denominator for scoped comment-bearing coverage.
+
 .cursor/skills/verify-timesyncher-vacation/scripts/layout-fixtures.mjs
 .cursor/skills/verify-timesyncher-vacation/scripts/layout-judge.mjs
 .cursor/skills/verify-timesyncher-vacation/scripts/layout-rules.mjs
@@ -39,6 +45,7 @@ scripts/capture_pr225_tabs_nyc_compare.mjs
 scripts/check-code-ratchet.mjs
 scripts/check-hardcoded-content.mjs
 scripts/diag-eula-readback.mjs
+scripts/export_trek_sqlite_to_hosted.py
 scripts/fixtures/code-ratchet/empty-catch.mjs
 scripts/fixtures/code-ratchet/floating.mjs
 scripts/fixtures/code-ratchet/workaround.mjs
@@ -48,6 +55,7 @@ scripts/fixtures/hardcoded-content/inventory.json
 scripts/fixtures/intake-hyatt-app-handler-fixtures.mjs
 scripts/fixtures/nominatim-store-test-double.mjs
 scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs
+scripts/fixtures/seed_nyc_trip_ccab.py
 scripts/fixtures/place-relevance-kaanapali-brave.mjs
 scripts/fixtures/place-search-brave-hertz-kahului.mjs
 scripts/fixtures/place-search-brave-kihei-caffe.mjs
@@ -72,6 +80,7 @@ scripts/live-transcript-dialog-pdf.mjs
 scripts/live_v7_dialog_pdf.py
 scripts/openrouter-tier-provider.mjs
 scripts/product-gbrain-dispatch.mjs
+scripts/run-once.sh
 scripts/screenshot-journey-pdf.mjs
 scripts/screenshot_journey_pdf.py
 scripts/shepherd-staging-smoke-ask.mjs
