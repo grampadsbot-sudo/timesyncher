@@ -763,6 +763,13 @@
     "note": "removed by Search Eng / Reply Eng deletion PR"
   },
   {
+    "file": "src/vacation/trek-budget-target-patches.mjs",
+    "rule": "BAR-RESERVATION-PAYMENT",
+    "symbol_or_pattern": "e\",\"hotel-sleep\",\"hotel-checkout\"].includes(di.type)).ma",
+    "inventory_id": "9c983fc6",
+    "note": "removed by Search Eng / Reply Eng deletion PR"
+  },
+  {
     "file": "src/vacation/trek-style2-bundle.mjs",
     "rule": "BAR-RESERVATION-PAYMENT",
     "symbol_or_pattern": "event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type",
