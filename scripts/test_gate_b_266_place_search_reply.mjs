@@ -9,6 +9,7 @@ import { inTurnPlaceReplyViolation } from '../src/vacation/chat-place-search.mjs
 import {
   finalizeInTurnPlaceShipReply,
   inTurnPlaceGroundedFallbackReply,
+  inTurnPlaceLiveReplyHooks,
   PLACE_SEARCH_TIERED_REPLY_TIMEOUT_MS,
   placeSearchTieredReplyTimeoutMs,
 } from '../src/vacation/in-turn-place-reply-fallback.mjs';
@@ -99,5 +100,15 @@ const invented = finalizeInTurnPlaceShipReply('Try lunch at Secret Taco Cove nea
 assert.equal(invented.ok, true);
 assert.equal(invented.usedFallback, true);
 assert.equal(/Secret Taco Cove/i.test(invented.reply), false);
+
+const hooks = inTurnPlaceLiveReplyHooks(tripContext, true);
+const rewriteDeadEnd = hooks.recoverRewriteDeadEnd({
+  finished: { reply: null, reason: hertzViolation?.error, model: {}, quality: {}, log: {} },
+  pending: { draft: hertzMention, enforceInTurnPlaces: true, tripContext },
+  inTurnProviderResults: tacoResults,
+  failureBase: { rules: {}, jev: {} },
+});
+assert.ok(rewriteDeadEnd?.reply);
+assert.equal(/hertz/i.test(rewriteDeadEnd.reply), false);
 
 console.log('test_gate_b_266_place_search_reply: ok');
