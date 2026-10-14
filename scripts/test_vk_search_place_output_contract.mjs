@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-
 import {
   assertCrossPlaceReviewBodiesDistinct,
   assertSearchPlaceOutputContract,
@@ -492,6 +491,7 @@ assert.throws(
 
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
 
+await import('./vk_search_place_source_contract_check.mjs');
 await assertVkSearchEventLogoSource(assert);
 
 console.log('vk search place output contract tests passed');
