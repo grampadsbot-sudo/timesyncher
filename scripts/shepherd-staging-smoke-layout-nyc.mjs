@@ -233,16 +233,6 @@ export function reconcileLayoutNycJudgeVerdict(verdict = {}, { tab, viewport, st
       }
       continue;
     }
-    if (
-      listSortTab
-      && domProvesSortOverflow
-      && stagingHasSortButtons()
-      && layoutNycDomProvesListChromeOk(stagingDom)
-      && layoutNycVisionBundledTabHeaderRowClaim(judgeText)
-    ) {
-      expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason: reason || f.rubricItem });
-      continue;
-    }
     if (/nyc.*pill|reference.*pill|left.*pill|sort pill|sort button/.test(lower) && stagingHasSortButtons()) {
       expectedDiffs.push({ kind: 'nyc_sort_buttons_layout', reason });
     } else if (nycDefects.some((d) => d.code === 'horizontal_overflow') && /nyc.*overflow|left.*clip|reference.*horizontal/.test(lower)) {
