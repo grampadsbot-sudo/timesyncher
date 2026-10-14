@@ -560,7 +560,7 @@ body {
 }
 
 .tsv-row-car-head .tsv-logo-chip {
-  grid-row: 1;
+  grid-row: 1 / -1;
   grid-column: 1;
   align-self: center;
 }
@@ -925,6 +925,11 @@ body {
   align-items: center;
   min-width: 0;
   align-self: center;
+}
+
+.tsv-timeline-head--with-icon {
+  grid-column: 2 / -1;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
 }
 
 .tsv-timeline-details {

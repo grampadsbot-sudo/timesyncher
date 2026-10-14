@@ -254,7 +254,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 </span>
               ) : null}
             </div>
-            <TimelineIcon entry={entry} trip={trip} />
+            {!isTravel ? <TimelineIcon entry={entry} trip={trip} /> : null}
             {entry.conflictWith ? (
               <div
                 className="tsv-timeline-conflict tsv-timeline-conflict--full"
@@ -264,7 +264,8 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 Conflict with {entry.conflictWith}
               </div>
             ) : null}
-            <div className="tsv-timeline-head">
+            <div className={`tsv-timeline-head${isTravel ? ' tsv-timeline-head--with-icon' : ''}`}>
+              {isTravel ? <TimelineIcon entry={entry} trip={trip} /> : null}
               {isTravel || !place ? (
                 <span className="tsv-timeline-title" data-ts-timeline-title="1">
                   {entry.title}
