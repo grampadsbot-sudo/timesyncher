@@ -4,13 +4,13 @@ import { purchaseEmail } from '../src/vacation/email.mjs';
 import { collaboratorSeatJoinEvent } from '../src/vacation/collaborator-app-seat.mjs';
 
 const page = await readFile(new URL('../vacation-app.html', import.meta.url), 'utf8');
-const vacationAppRequest = await readFile(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
 assert.match(page, /TimeSyncher Vacation App/);
 assert.match(page, /id="splitter"/);
 assert.match(page, /class="trip-list"/);
 assert.match(page, /type="file"/);
-assert.match(vacationAppRequest, /SpeechRecognition|webkitSpeechRecognition/);
 assert.match(page, /tsVacationAppChrome\.bindVoice/);
+const vacationAppRequest = await readFile(new URL('../public/vacation-app-request.js', import.meta.url), 'utf8');
+assert.match(vacationAppRequest, /SpeechRecognition|webkitSpeechRecognition/);
 assert.match(page, /\/api\/vacation-itinerary\?app=1&session=/);
 assert.match(page, /<iframe title=/);
 assert.match(page, /state\.turns/);
