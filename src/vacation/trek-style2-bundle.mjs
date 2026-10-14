@@ -250,9 +250,10 @@ const MO_BUDGET_SKIP_TYPES = '["travel","travel-to-thing","transport","hotel-wak
 const MO_BUDGET_FLATMAP_HEAD = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!' + MO_BUDGET_SKIP_TYPES + '.includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),';
 const MO_BUDGET_TIMELINE_ONLY_NEEDLE = MO_BUDGET_FLATMAP_HEAD + 'amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
   MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE = MO_BUDGET_FLATMAP_HEAD + 'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
-  MO_BUDGET_SERVING_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))}])).values())',
+  MO_BUDGET_FLATMAP_TS_ONLY_NEEDLE = MO_BUDGET_FLATMAP_HEAD + 'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)}]})).values())',
+  MO_BUDGET_SERVING_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)}])).values())',
   MO_BUDGET_ALL_TABS_MARKER = '[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),',
-  MO_BUDGET_LINE_AMT_MARKER = 'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))';
+  MO_BUDGET_LINE_AMT_MARKER = 'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
@@ -404,6 +405,8 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   patched = applyLiveProductPatches(patched, { served });
   if (patched.includes(MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_TIMELINE_ONLY_BUDGET_NEEDLE, MO_BUDGET_SERVING_PATCH);
+  } else if (patched.includes(MO_BUDGET_FLATMAP_TS_ONLY_NEEDLE)) {
+    patched = patched.replace(MO_BUDGET_FLATMAP_TS_ONLY_NEEDLE, MO_BUDGET_SERVING_PATCH);
   } else if (patched.includes(MO_BUDGET_TIMELINE_ONLY_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_TIMELINE_ONLY_NEEDLE, MO_BUDGET_SERVING_PATCH);
   }

@@ -309,7 +309,6 @@ function buildPayload() {
     }
     const override = {
       timeline: !row.listOnly,
-      listOnly: Boolean(row.listOnly),
       category: row.cat,
       summary: SUMMARIES[row.id] || '',
     };

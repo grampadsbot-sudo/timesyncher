@@ -11,23 +11,22 @@ const BUDGET_IS_PATCH = 'children:Xi==null?`${Re(di)} timeline`:Xi?`${fr?"Under"
 const BUDGET_TARGET_PLACEHOLDER_NEEDLE = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"0",inputMode:"decimal"';
 const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"",inputMode:"decimal"';
 
-const MO_BUDGET_LINE_AMT_SNIPPET =
-  'tsBudgetLineAmt=G=>{const pid=Qt(G),lines=cn||[];for(const row of lines){if(row.place_id!=null&&Number(row.place_id)===Number(pid)){const n=Number(row.total_price);if(Number.isFinite(n))return n}}const z=zt(G);return typeof z=="number"&&Number.isFinite(z)?z:null}';
+/** Budget-tab IIFE only: `cn` is API budget[] state (same closure as Zn category sums). */
+const BUDGET_TS_LINE_AMT_SNIPPET =
+  'tsBudgetLineAmt=Xi=>{const pid=Qt(Xi);for(const row of cn||[]){if(row.place_id!=null&&Number(row.place_id)===Number(pid)){const n=Number(row.total_price);if(Number.isFinite(n))return n}}return null}';
+const BUDGET_MO_INJECT_NEEDLE =
+  'pe(Ul=>({...Ul,__budgetTargets:{...Ul.__budgetTargets||{},[Pn(di,Xi)]:fr}}))},Mo=Array.from';
+const BUDGET_MO_INJECT_PATCH = `pe(Ul=>({...Ul,__budgetTargets:{...Ul.__budgetTargets||{},[Pn(di,Xi)]:fr}}))},${BUDGET_TS_LINE_AMT_SNIPPET},Mo=Array.from`;
 
 const MO_BUDGET_LINE_NEEDLE =
   'amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))';
 const MO_BUDGET_LINE_PATCH =
-  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)||/\\$?\\d/.test(String(bi(Xi)||""))';
+  'amount:(tsBudgetLineAmt(Xi)??0),hasPrice:(tsBudgetLineAmt(Xi)!=null&&tsBudgetLineAmt(Xi)>0)';
 
 const IE_BUDGET_LINE_NEEDLE =
   'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return`$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")}';
 const IE_BUDGET_LINE_PATCH =
   'ie=G=>{var ua,Rn;const Re=bi(G);if(typeof Re=="number"&&Number.isFinite(Re))return `$${Math.round(Re).toLocaleString()}`;const zt=String(Re||"");return((Rn=(ua=zt.match(/\\$\\s?\\d[\\d,]*/))==null?void 0:ua[0])==null?void 0:Rn.replace(/\\s+/g,""))||(/quote\\s*tbd/i.test(zt)?"Quote TBD":"")}';
-
-const FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE =
-  'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$"';
-const FLIGHT_EU_PRICE_FROM_BUDGET_PATCH =
-  'const bl=typeof tsBudgetLineAmt=="function"?tsBudgetLineAmt(G):null;const price=bl!=null?String(bl):Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$"';
 
 export const PO_HOTELS_LISTONLY_NEEDLE = 'Po=(Gt||[]).filter(Zi)';
 export const PO_HOTELS_LISTONLY_PATCH = 'Po=(Gt||[]).filter(G=>Zi(G)&&!ha(G).listOnly)';
@@ -55,24 +54,31 @@ export function patchBudgetSavedTargetsOnly(source = '', options = {}) {
   if (js.includes(BUDGET_TARGET_PLACEHOLDER_NEEDLE)) {
     js = js.replace(BUDGET_TARGET_PLACEHOLDER_NEEDLE, BUDGET_TARGET_PLACEHOLDER_PATCH);
   }
-  if (!js.includes('tsBudgetLineAmt=G=>') && js.includes('ie=G=>')) {
-    js = js.replace('ie=G=>', `${MO_BUDGET_LINE_AMT_SNIPPET},ie=G=>`);
+  if (js.includes(BUDGET_MO_INJECT_NEEDLE) && !js.includes(BUDGET_TS_LINE_AMT_SNIPPET)) {
+    js = js.replace(BUDGET_MO_INJECT_NEEDLE, BUDGET_MO_INJECT_PATCH);
   }
-  if (js.includes('ie=G=>{const bl=tsBudgetLineAmt(G)')) {
+  if (served && js.includes(BUDGET_MO_INJECT_NEEDLE) && !js.includes(BUDGET_TS_LINE_AMT_SNIPPET)) {
+    throw new Error('budget tsBudgetLineAmt inject before Mo did not apply');
+  }
+  if (js.includes('tsBudgetLineAmt=G=>') || js.includes(',ie=G=>{const bl=tsBudgetLineAmt')) {
+    js = js.replace(/tsBudgetLineAmt=G=>\{[^}]+\}(?:\{[^}]+\})*,?/g, '');
     js = js.replace(
       /ie=G=>\{const bl=tsBudgetLineAmt\(G\);if\(bl==null\)return "";if\(typeof bl=="number"&&Number\.isFinite\(bl\)\)return `\$\$\{Math\.round\(bl\)\.toLocaleString\(\)\}`;return ""\}/,
       IE_BUDGET_LINE_PATCH,
     );
-  } else if (!js.includes('ie=G=>{var ua,Rn;const Re=bi(G)')) {
+  }
+  if (!js.includes('ie=G=>{var ua,Rn;const Re=bi(G)')) {
     js = js.replace(IE_BUDGET_LINE_NEEDLE, IE_BUDGET_LINE_PATCH);
   }
   if (js.includes(MO_BUDGET_LINE_NEEDLE)) {
     js = js.replace(MO_BUDGET_LINE_NEEDLE, MO_BUDGET_LINE_PATCH);
+  } else if (js.includes(MO_BUDGET_LINE_PATCH.split(',')[0])) {
+    js = js.replace(
+      /amount:\(tsBudgetLineAmt\(Xi\)\?\?0\),hasPrice:\(tsBudgetLineAmt\(Xi\)!=null&&tsBudgetLineAmt\(Xi\)>0\)\|\|\\\/\\\$\\?\\d\/\.test\(String\(bi\(Xi\)\|\|""\)\)/,
+      MO_BUDGET_LINE_PATCH,
+    );
   } else if (served && js.includes('amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))')) {
     throw new Error('budget Mo line amount patch did not apply');
-  }
-  if (js.includes(FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE)) {
-    js = js.replace(FLIGHT_EU_PRICE_FROM_BUDGET_NEEDLE, FLIGHT_EU_PRICE_FROM_BUDGET_PATCH);
   }
   return js;
 }

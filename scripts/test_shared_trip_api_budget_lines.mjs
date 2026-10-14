@@ -226,6 +226,69 @@ assert.equal(
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
 
+const vkOnlyPlaceId = 7777;
+const vkOnlyPriceTrip = prepareSharedTripForLiveApp({
+  ...base,
+  places: [
+    {
+      id: vkOnlyPlaceId,
+      name: 'VK planning priced cafe',
+      category_name: 'Restaurant',
+      category: { name: 'Restaurant', icon: '🍽️' },
+    },
+  ],
+  thingOverrides: {
+    [`place:${vkOnlyPlaceId}`]: { price: 99, category: 'restaurant' },
+  },
+});
+assert.equal(Number(vkOnlyPriceTrip.thingOverrides[`place:${vkOnlyPlaceId}`]?.price), 99);
+vkOnlyPriceTrip.budget = [
+  {
+    id: 1,
+    trip_id: tripId,
+    category: 'Restaurants',
+    name: 'Restaurants',
+    total_price: 0,
+    note: '',
+    sort_order: 0,
+  },
+  {
+    id: 2,
+    trip_id: tripId,
+    category: 'Trip',
+    name: 'Trip budget total',
+    total_price: 0,
+    note: '',
+    sort_order: 1,
+  },
+];
+assert.equal(
+  vkOnlyPriceTrip.budget.some((line) => Number(line.total_price) === 99 || Number(line.total_price) === 198),
+  false,
+  'fixture must omit priced API budget lines while thing override still carries VK planning price',
+);
+const vkOnlyBudgetTab = [
+  'Restaurants',
+  'VK planning priced cafe',
+  'Add price',
+  '$0',
+  '$0 timeline',
+].join('\n');
+assert.deepEqual(
+  budgetHardcodedHits(vkOnlyBudgetTab, vkOnlyPriceTrip.budget, vkOnlyPriceTrip),
+  [],
+  'Budget tab must not show thing/VK planning prices when no matching budget line exists',
+);
+const vkOnlyLeak = budgetHardcodedHits(
+  `${vkOnlyBudgetTab}\nVK planning priced cafe $99`,
+  vkOnlyPriceTrip.budget,
+);
+assert.equal(
+  vkOnlyLeak.some((hit) => hit.amount === 99),
+  true,
+  'BUD must reject invented thing-only row prices on the Budget tab',
+);
+
 const gateBIntake = prepareSharedTripForLiveApp(buildGateBApprovedSharedTrip());
 assert.equal(budgetSyncUsesThingDerivedLines(gateBIntake), true);
 assert.equal(gateBIntake.budget.length > 0, true, 'intake Gate B trip must sync thing-derived API budget lines');
