@@ -2,13 +2,16 @@ import assert from 'node:assert/strict';
 
 import { finalizeServedSharedTripPayload } from '../../../src/vacation/shared-trip-served-page.mjs';
 import {
+  REPRESENTATIVE_REVIEWS_FOOTNOTE,
   buildDetailViewModel,
   detailCoordinates,
   detailFieldRows,
   detailHappyHour,
+  detailRatingLines,
   detailReviewTotalsLine,
   detailReviews,
   detailSummary,
+  safeHttpUrl,
 } from '../src/lib/detailModel.mjs';
 import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
 
@@ -18,6 +21,10 @@ function wordCount(value) {
     .split(/\s+/)
     .filter(Boolean).length;
 }
+
+assert.equal(safeHttpUrl('https://example.com/path'), 'https://example.com/path');
+assert.equal(safeHttpUrl('javascript:alert(1)'), null);
+assert.equal(safeHttpUrl('example.com'), null);
 
 const enrichedTrip = finalizeServedSharedTripPayload(buildEnrichedDetailSharedTrip());
 const restaurant = enrichedTrip.places.find((place) => /Harbor Room/i.test(place.name || ''));
@@ -31,7 +38,12 @@ assert.ok(
   'pure field probe includes coordinates',
 );
 assert.equal(restaurantModel.reviews.length, 4);
-assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6/i);
+assert.ok(
+  restaurantModel.reviews.every((review) => review.source),
+  'review sources remain on the detail model for legacy enriched rows',
+);
+assert.equal(restaurantModel.reviewFootnote, '');
+assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6 \(other ratings\)/i);
 assert.match(restaurantModel.headerLabel, /Restaurant · Brave/i);
 assert.ok(wordCount(restaurantModel.summary) >= 30);
 assert.match(restaurantModel.happyHourDetails, /oyster/i);
@@ -40,9 +52,64 @@ assert.equal(restaurantModel.summarySourceUrls.length, 2);
 assert.equal(detailHappyHour(restaurantOverride), restaurantModel.happyHourDetails);
 assert.equal(detailReviewTotalsLine(restaurantOverride), restaurantModel.reviewTotalsLine);
 
+assert.deepEqual(detailRatingLines(restaurantOverride), [
+  { id: 'google', text: '4.6 on Google (820 reviews)' },
+  { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
+  { id: 'third', text: 'Other ratings: 4.6' },
+]);
+assert.deepEqual(
+  detailRatingLines({
+    thirdPartyRating: '4.7',
+    thirdPartyReviewCount: '15,309',
+    source: 'Tripadvisor',
+  }),
+  [{ id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' }],
+);
+assert.deepEqual(
+  detailRatingLines({
+    googleRating: '4.6',
+    googleReviewCount: '820',
+    yelpRating: '4.4',
+    yelpReviewCount: '410',
+    thirdPartyRating: '4.7',
+    thirdPartyReviewCount: '15,309',
+    source: 'Tripadvisor',
+  }),
+  [
+    { id: 'google', text: '4.6 on Google (820 reviews)' },
+    { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
+    { id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' },
+  ],
+);
+assert.equal(
+  detailReviewTotalsLine({
+    review_totals: { count: 15309, average: 4.7, sources: ['Tripadvisor'] },
+  }),
+  'Based on 15309 reviews, avg 4.7 (other ratings)',
+);
+
 const bar = enrichedTrip.places.find((place) => /Copper Lantern/i.test(place.name || ''));
 const barModel = buildDetailViewModel(bar, enrichedTrip);
 assert.ok(barModel.reviews.some((review) => /Composite of 120 Google\/Yelp reviews/i.test(review.compositeLabel || '')));
+
+const xaiReviewBody =
+  'Representative review themes mention fresh ingredients, attentive staff, and a lively room even when the waitlist runs long on weekend nights downtown.';
+const xaiTrip = {
+  places: [{ id: 3, name: 'xAI Place', category_name: 'Restaurant', lat: 40.73, lng: -74.0 }],
+  thingOverrides: {
+    'place:3': {
+      category: 'restaurant',
+      xaiRatingsFetched: true,
+      review1: xaiReviewBody,
+      review1Source: 'TripAdvisor',
+      review1Rating: '4.6',
+    },
+  },
+};
+const xaiModel = buildDetailViewModel(xaiTrip.places[0], xaiTrip);
+assert.equal(xaiModel.reviews.length, 1);
+assert.equal(xaiModel.reviews[0].source, 'TripAdvisor');
+assert.equal(xaiModel.reviewFootnote, REPRESENTATIVE_REVIEWS_FOOTNOTE);
 
 const sparseTrip = {
   places: [{ id: 1, name: 'Sparse Place', category_name: 'Restaurant', lat: 40.73, lng: -74.0 }],

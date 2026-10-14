@@ -25,14 +25,9 @@ function TargetReadout({
     <span className="tsv-budget-target-line">
       <span className="tsv-budget-planned">{formatUsd(planned, currency)}</span>
       <span className="tsv-budget-target-sep"> / </span>
-      <span className="tsv-budget-target-prefix">$</span>
-      <input
-        className="tsv-budget-target-input"
-        type="text"
-        readOnly
-        aria-label={ariaLabel}
-        value={target !== null ? String(target) : '0'}
-      />
+      <span className="tsv-budget-target-input" aria-label={ariaLabel}>
+        {formatUsd(target ?? 0, currency)}
+      </span>
     </span>
   );
 }
@@ -44,7 +39,7 @@ export function BudgetScreen({ trip }: Props) {
     return (
       <section className="tsv-screen tsv-budget-screen" data-tab="budget">
         <p className="tsv-empty" role="alert">
-          Budget is empty — production must include every priced thing (R2).
+          No budget items yet. Prices from your trip list will appear here when available.
         </p>
       </section>
     );

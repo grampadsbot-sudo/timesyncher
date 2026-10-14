@@ -21,9 +21,18 @@ export function TabEmojiIcon({ emoji, tabId, isActive }: Props) {
       observer = new ResizeObserver(() => paintTabEmoji(node, emoji));
       observer.observe(btn);
     }
+    let dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    const onResolutionChange = () => {
+      paintTabEmoji(node, emoji);
+      dprQuery.removeEventListener('change', onResolutionChange);
+      dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      dprQuery.addEventListener('change', onResolutionChange);
+    };
+    dprQuery.addEventListener('change', onResolutionChange);
     return () => {
       cancelAnimationFrame(frame);
       observer?.disconnect();
+      dprQuery.removeEventListener('change', onResolutionChange);
     };
   }, [emoji, isActive]);
 

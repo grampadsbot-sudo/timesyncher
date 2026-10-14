@@ -20,6 +20,7 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
   const model = buildDetailViewModel(place, trip);
   const titleId = useId();
   const sheetRef = useRef<HTMLElement>(null);
+  const backdropDownRef = useRef(false);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -42,8 +43,14 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
     <div
       className="tsv-detail-backdrop"
       data-ts-detail-backdrop="1"
-      onClick={onClose}
       role="presentation"
+      onPointerDown={(event) => {
+        backdropDownRef.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && backdropDownRef.current) onClose();
+        backdropDownRef.current = false;
+      }}
     >
       <aside
         ref={sheetRef}
@@ -124,7 +131,6 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                       <div className="tsv-review-stars">{review.rating} ★</div>
                     ) : null}
                     <p>{review.text}</p>
-                    {review.source && !model.reviewFootnote ? <footer>{review.source}</footer> : null}
                   </li>
                 ))}
               </ul>
@@ -144,8 +150,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
             <section className="tsv-detail-sources">
               <h3>Summary sources</h3>
               <ul>
-                {model.summarySourceUrls.map((url) => (
-                  <li key={url}>
+                {model.summarySourceUrls.map((url, index) => (
+                  <li key={`${index}-${url}`}>
                     <a href={url} target="_blank" rel="noreferrer">
                       {url}
                     </a>

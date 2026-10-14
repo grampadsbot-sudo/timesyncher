@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
 import type { SharedPlace } from '../types/sharedTrip';
@@ -6,9 +6,10 @@ import { placeName } from '../lib/placeHelpers';
 
 type Props = {
   places: SharedPlace[];
+  hideHeading?: boolean;
 };
 
-function FitBounds({ places }: { places: SharedPlace[] }) {
+function FitBounds({ boundsKey, places }: { boundsKey: string; places: SharedPlace[] }) {
   const map = useMap();
   useEffect(() => {
     if (places.length < 2) return;
@@ -16,14 +17,20 @@ function FitBounds({ places }: { places: SharedPlace[] }) {
       (place) => [place.lat as number, place.lng as number] as [number, number],
     );
     map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 });
-  }, [map, places]);
+  }, [map, boundsKey, places]);
   return null;
 }
 
-export function DayMap({ places }: Props) {
-  const withCoords = places.filter(
-    (p) => typeof p.lat === 'number' && typeof p.lng === 'number',
+export function DayMap({ places, hideHeading = false }: Props) {
+  const withCoords = useMemo(
+    () => places.filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number'),
+    [places],
   );
+  const boundsKey = useMemo(
+    () => withCoords.map((p) => `${p.id}:${p.lat},${p.lng}`).join('|'),
+    [withCoords],
+  );
+
   if (!withCoords.length) {
     return (
       <section className="tsv-day-map tsv-day-map--empty" data-ts-day-map="1">
@@ -34,7 +41,7 @@ export function DayMap({ places }: Props) {
   const center = withCoords[0];
   return (
     <section className="tsv-day-map" data-ts-day-map="1">
-      <h2 className="tsv-subhead">Day map</h2>
+      {hideHeading ? null : <h2 className="tsv-subhead">Day map</h2>}
       <MapContainer
         center={[center.lat as number, center.lng as number]}
         zoom={12}
@@ -45,7 +52,7 @@ export function DayMap({ places }: Props) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {withCoords.length > 1 ? <FitBounds places={withCoords} /> : null}
+        {withCoords.length > 1 ? <FitBounds boundsKey={boundsKey} places={withCoords} /> : null}
         {withCoords.map((place) => (
           <Marker key={String(place.id)} position={[place.lat as number, place.lng as number]}>
             <Popup>{placeName(place)}</Popup>
