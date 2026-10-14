@@ -261,4 +261,4 @@ console.log(JSON.stringify({
   persistCountsOffMs,
   persistOverheadMs: persistCountsOnMs - persistCountsOffMs,
 }));
-console.log('test_search_progress_flow: ok');
+console.log('search_progress_flow_check: ok');

@@ -317,7 +317,9 @@ function thingSourceFindings(file, text, findings, seen) {
   match = inserts.exec(text);
   while (match) {
     const slice = text.slice(match.index, match.index + 1200);
-    if (!/\bsource\s*:/.test(slice)) {
+    const hasSourceField = /\bsource\s*:/.test(slice);
+    const bindsSourceColumn = /\$\{[^}]*\.source\s*\}/.test(slice);
+    if (!hasSourceField && !bindsSourceColumn) {
       add(findings, seen, 'THING-SOURCE', file, text, match.index, 'insert trip_things');
     }
     match = inserts.exec(text);

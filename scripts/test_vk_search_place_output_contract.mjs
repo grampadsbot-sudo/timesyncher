@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-
 import {
   assertCrossPlaceReviewBodiesDistinct,
   assertSearchPlaceOutputContract,
@@ -20,7 +19,6 @@ import {
   normalizeVkContractReviewBody,
   vkContractText,
 } from './fixtures/xai-grok-place-ratings-contract.mjs';
-
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
   { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602 },
@@ -495,5 +493,7 @@ assert.throws(
 );
 
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
+
+await import('./vk_search_place_source_contract_check.mjs');
 
 console.log('vk search place output contract tests passed');

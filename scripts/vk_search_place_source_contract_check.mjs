@@ -150,4 +150,4 @@ for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   );
 }
 
-console.log('vk search place source contract tests passed');
+console.log('vk_search_place_source_contract_check: passed');

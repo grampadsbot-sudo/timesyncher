@@ -137,7 +137,8 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
     insert into trip_things (
       trip_id, source_request_id, category, subtype, title, description, starts_at, ends_at,
       cost_estimate_cents, currency, location, links, ratings, metadata, source
-    ) values ( /* source: column */
+    )
+    values (
       ${tripId}, ${requestId}, ${item.category}, ${item.subtype},
       ${item.title}, ${item.description}, ${item.startsAt}, ${item.endsAt},
       ${item.costEstimateCents}, ${item.currency},
