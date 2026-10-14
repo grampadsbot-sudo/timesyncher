@@ -38,6 +38,7 @@ export function flightSchedule(
 export function hotelPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carSubtitle(place: SharedPlace, trip: SharedTripPayload): string;
+export function itinerarySummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(

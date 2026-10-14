@@ -367,10 +367,32 @@ function isEventLikePlace(place, trip) {
   return /^(event|music|activity|tour|theatre|artist|sightseeing|family_event|other)$/.test(raw);
 }
 
+function listLongDescription(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  return text(
+    override.longDetails ||
+      override.details ||
+      source.longDetails ||
+      source.description ||
+      source.details ||
+      place.longDetails ||
+      place.description,
+  );
+}
+
+/** Short stored summary for day-by-day itinerary rows (never the list long description). */
+export function itinerarySummary(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  return text(override.summary || source.summary || place.summary);
+}
+
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   const category = tabCategoryKey(place, trip);
+  const longDescription = listLongDescription(place, trip);
   if (category === 'car') {
     const enrichedSource = {
       ...source,
@@ -389,9 +411,10 @@ export function rowSummary(place, trip) {
       dropoffLocation: text(override.dropoffLocation || source.returnLocation || source.dropoffLocation),
       dropoffHours: text(override.endTime || source.returnTime || source.dropoffTime || '4:00 pm'),
       carType: text(override.vehicleClass || override.carType || source.vehicleClass || source.carType),
-      summary: text(override.summary || source.summary || place.description),
+      summary: longDescription || text(override.summary || source.summary || place.description),
       price: numericPrice(place, trip) ?? parsePrice(override.price) ?? parsePrice(source.price),
     };
+    if (longDescription) return ensureMinSummaryWords(longDescription);
     return ensureMinSummaryWords(
       text(
         buildCategoryDescription({
@@ -432,8 +455,8 @@ export function rowSummary(place, trip) {
           title: placeName(place),
           sourceRecord: {
             ...withPrice,
-            summary: text(override.summary || source.summary || place.description),
-            description: text(override.details || source.description),
+            summary: longDescription || text(override.summary || source.summary || place.description),
+            description: text(override.details || source.description || longDescription),
           },
           address: text(place.address),
           rawDescription: '',
@@ -455,15 +478,10 @@ export function rowSummary(place, trip) {
     return ensureMinSummaryWords(eventSummary);
   }
   const candidates = [
-    override.longDetails,
-    override.details,
+    longDescription,
     override.summary,
-    source.longDetails,
-    source.details,
     source.summary,
-    source.description,
-    place.longDetails,
-    place.description,
+    place.summary,
   ]
     .map((value) => text(value))
     .filter(Boolean);

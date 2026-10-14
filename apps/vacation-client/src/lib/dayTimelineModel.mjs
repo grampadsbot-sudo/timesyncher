@@ -5,7 +5,7 @@ import {
   flightSchedule,
   hotelFirstRowNote,
   placeName,
-  rowSummary,
+  itinerarySummary,
   tabCategoryKey,
 } from './listTabModel.mjs';
 
@@ -410,7 +410,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       durationMin,
       category: 'flight',
       fare: flightPriceDisplay(place, trip),
-      summary: rowSummary(place, trip),
+      summary: itinerarySummary(place, trip),
     });
     seen.add(String(place.id));
   }
@@ -441,7 +441,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       durationMin,
       category: 'flight',
       fare: flightPriceDisplay(place, trip),
-      summary: rowSummary(place, trip),
+      summary: itinerarySummary(place, trip),
     });
     seen.add(id);
   }
@@ -519,7 +519,7 @@ export function buildDayTimeline(trip, day) {
       durationMin: schedule.durationMin,
       assignmentNotes: row.notes,
       category,
-      summary: rowSummary(place, trip),
+      summary: itinerarySummary(place, trip),
       itineraryNote: itineraryNoteFor(place, trip, row.notes),
       media: mediaForPlace(trip, place),
     });

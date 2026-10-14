@@ -287,7 +287,10 @@ export function applyLiveAppListRowFields(shared = {}) {
     });
     if (wordCount(enrichedDescription) >= 30) {
       if (wordCount(override.longDetails) < 30) override.longDetails = enrichedDescription;
-      if (wordCount(override.summary) < 30) override.summary = enrichedDescription;
+      // Itinerary copy stays on override.summary (often short); list rows use longDetails/description.
+      if (!text(override.summary) && wordCount(enrichedDescription) >= 30) {
+        override.summary = enrichedDescription;
+      }
       if (wordCount(override.details) < 30) override.details = enrichedDescription;
     }
 
