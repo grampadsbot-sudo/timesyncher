@@ -5,9 +5,12 @@ import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import {
   applyTripMetadataBudgetTargets,
+  budgetGateAllowedAmounts,
+  budgetSyncUsesThingDerivedLines,
   trekBudgetAmount,
   tripBudgetTargetTotal,
 } from '../src/vacation/shared-trip-api-budget.mjs';
+import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
 
 const tripId = 63357430;
 const base = {
@@ -216,5 +219,10 @@ assert.equal(
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
+
+const gateBIntake = prepareSharedTripForLiveApp(buildGateBApprovedSharedTrip());
+assert.equal(budgetSyncUsesThingDerivedLines(gateBIntake), false);
+assert.equal(gateBIntake.budget.length, 0);
+assert.deepEqual([...budgetGateAllowedAmounts(gateBIntake)].sort((a, b) => a - b), [0]);
 
 console.log('shared trip API budget lines sync passed');

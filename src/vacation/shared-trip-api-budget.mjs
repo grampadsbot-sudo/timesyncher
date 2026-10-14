@@ -92,7 +92,15 @@ export function trekBudgetAmount(place = {}, override = {}, category = '') {
   return { amount: Math.round(amount), hasPrice, nightly: Math.round(nightly) };
 }
 
+/** Intake demo trips keep VK planning prices on Things but not on Budget until targets or budget lines exist. */
+export function budgetSyncUsesThingDerivedLines(shared = {}) {
+  if (Object.keys(readBudgetTargetsMap(shared)).length > 0) return true;
+  if (shared?.timesyncherIntake === true) return false;
+  return true;
+}
+
 function budgetRowsFromShared(shared = {}) {
+  if (!budgetSyncUsesThingDerivedLines(shared)) return [];
   const places = Array.isArray(shared.places) ? shared.places : [];
   const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {};
   const rows = [];
@@ -234,8 +242,9 @@ export function budgetGateAllowedAmounts(shared = {}) {
 export function syncSharedTripApiBudget(shared = {}) {
   if (!shared?.permissions?.share_budget) return shared;
   const tripId = shared.trip?.id;
+  const useThingLines = budgetSyncUsesThingDerivedLines(shared);
   const rows = budgetRowsFromShared(shared);
-  const visible = visibleAmountSet(rows, shared);
+  const visible = useThingLines ? visibleAmountSet(rows, shared) : new Set([0]);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
   const covered = new Set(
@@ -245,11 +254,15 @@ export function syncSharedTripApiBudget(shared = {}) {
   );
 
   let sortOrder = lines.length;
+  if (!useThingLines) {
+    return { ...shared, budget: lines };
+  }
   for (const row of rows) {
     if (covered.has(row.amount)) continue;
     lines.push({
       id: intId(`${tripId}:budget:place:${row.place.id}`),
       trip_id: tripId,
+      place_id: row.place.id,
       category: row.bucket,
       name: text(row.place.name || row.place.title) || 'Trip item',
       total_price: row.amount,
