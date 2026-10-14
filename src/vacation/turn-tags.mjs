@@ -44,7 +44,6 @@ function categoryFor(tags) {
 
 const CONTENT_TAG_SET = new Set(CONTENT_TAGS);
 
-/** Speaker and payload tags only. Customer-word tags come from the model. */
 export function classifyTurn({ speaker = '', direction = '', channel = '', payload = {} } = {}) {
   const tags = [];
   if (speaker === 'assistant') tags.push('assistant_response');

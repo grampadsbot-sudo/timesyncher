@@ -10,7 +10,7 @@ from typing import Any, Iterable
 
 try:
     from .tsv_dispatch import VkFixtureIntegrity, verify_vk_fixture_integrity
-except ImportError:  # unittest imports this directory on sys.path
+except ImportError:
     from tsv_dispatch import VkFixtureIntegrity, verify_vk_fixture_integrity
 
 DATA_FAULT_VERDICT = 'DATA_FAULT'

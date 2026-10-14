@@ -1847,7 +1847,7 @@ function customerVacationUrl(artifacts) {
       if (parsed.pathname.startsWith('/shared/')) continue;
       return parsed.toString();
     } catch {
-      // Ignore malformed optional customer URL fields.
+
     }
   }
   return '';

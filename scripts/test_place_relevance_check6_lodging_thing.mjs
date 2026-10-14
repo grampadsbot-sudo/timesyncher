@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * Staging check 6 (turn 6c2a042e): named Kaanapali anchor with a lodging Thing on the trip.
- * Geocoded locationText includes zip; the judge must still see the classifier anchor.
- */
+
 import assert from 'node:assert/strict';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { runCustomerChatPlaceSearch } from '../src/vacation/chat-place-search.mjs';

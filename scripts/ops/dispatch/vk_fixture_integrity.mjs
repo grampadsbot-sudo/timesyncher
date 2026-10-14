@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * Deterministic VK fixture integrity + contract proof for harness data-fault resolution.
- * stdout: JSON { ok, repoHeadSha, snapshotSha256, bindingSha256, contractErrors[] }
- */
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';

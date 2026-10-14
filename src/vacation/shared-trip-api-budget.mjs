@@ -114,7 +114,6 @@ function budgetTargetsRecord(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
 }
 
-/** Same map the live Budget tab reads via `thingOverrides.__budgetTargets` (plus saved trip metadata). */
 function readBudgetTargetsMap(shared = {}) {
   const merged = {};
   const tripMeta = shared?.trip?.metadata;
@@ -135,7 +134,6 @@ function readBudgetTargetsMap(shared = {}) {
   return merged;
 }
 
-/** Promote saved bucket targets from trip metadata onto `thingOverrides.__budgetTargets` before API budget sync. */
 export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
   const meta = trip?.metadata && typeof trip.metadata === 'object' && !Array.isArray(trip.metadata)
     ? trip.metadata
@@ -152,7 +150,6 @@ export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
   return { ...shared, thingOverrides };
 }
 
-/** Trip total target on the Budget tab (sum of saved per-bucket targets only). */
 export function tripBudgetTargetTotal(shared = {}) {
   let sum = 0;
   let any = false;
@@ -186,7 +183,6 @@ function bucketPlannedTotal(rows = [], bucket = '') {
   return rowsInBucket(rows, bucket).reduce((acc, row) => acc + row.amount, 0);
 }
 
-/** Dollar amounts rendered on the live Budget tab (planned, targets, under/over chips). */
 function visibleAmountSet(rows = [], shared = {}) {
   const amounts = new Set();
   for (const row of rows) {
@@ -219,7 +215,6 @@ function visibleAmountSet(rows = [], shared = {}) {
   return amounts;
 }
 
-/** Dollar amounts Gate B BUD may show on the Budget tab (planned + saved targets only). */
 export function budgetGateAllowedAmounts(shared = {}) {
   const rows = budgetRowsFromShared(shared);
   const allowed = visibleAmountSet(rows, shared);
@@ -230,7 +225,6 @@ export function budgetGateAllowedAmounts(shared = {}) {
   return allowed;
 }
 
-/** Align API `budget` lines with live Budget tab dollar amounts (TREK zt/ua/Mo rules). */
 export function syncSharedTripApiBudget(shared = {}) {
   if (!shared?.permissions?.share_budget) return shared;
   const tripId = shared.trip?.id;

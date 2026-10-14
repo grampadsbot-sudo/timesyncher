@@ -1,4 +1,4 @@
-/** Collect providerLog rows from itinerary payloads and fail loudly on HTTP 429. */
+
 
 function finiteMs(value) {
   const n = Number(value);
@@ -17,7 +17,6 @@ function pushRowsFromProviderArray(rows, source, into) {
   }
 }
 
-/** @returns {object[]} raw provider / providerLog rows from a turn payload or placeSearch blob */
 export function extractProviderLogRows({ payload, placeSearch, itineraryJson } = {}) {
   const collected = [];
   const ps = placeSearch || payload?.placeSearch || itineraryJson?.placeSearch || itineraryJson?.search;
@@ -86,10 +85,6 @@ export function formatProvider429HarnessMessage(violations = []) {
   }).join(' | ');
 }
 
-/**
- * Append provider call timestamps for a check; return a runCheck result when any row is HTTP 429.
- * @returns {null | { pass: false, harnessError: true, harnessMessage: string, http?: number }}
- */
 export function attachProviderLogAndMaybeFail(out, checkName, sources = {}, { http } = {}) {
   const records = recordProviderCallsForCheck(out, checkName, sources);
   const hits = provider429Violations(records);
@@ -109,7 +104,6 @@ function nominatimRow(row = {}) {
   return String(row.provider || '').toLowerCase() === 'nominatim';
 }
 
-/** Nominatim provider rows that resolved from cache (no outbound HTTP timestamp). */
 export function nominatimCacheHitCount(calls = []) {
   let hits = 0;
   for (const row of calls) {
@@ -122,7 +116,6 @@ export function nominatimCacheHitCount(calls = []) {
   return hits;
 }
 
-/** Rows that represent a live Nominatim HTTP call (have calledAtMs, not skipped). */
 export function nominatimOutboundHttpRows(calls = []) {
   return (Array.isArray(calls) ? calls : []).filter((row) => {
     if (!nominatimRow(row)) return false;

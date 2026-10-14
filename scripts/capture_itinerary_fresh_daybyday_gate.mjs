@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Day-by-day keepsake gate: prod travel bundle vs patched, Day 1/2 @390/1280. */
+
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { execFileSync } from 'node:child_process';

@@ -60,7 +60,6 @@ export function everyPlaceResultProviderErrored(providerLog = []) {
   return ran.length > 0 && ran.every((row) => providerRowIsError(row));
 }
 
-/** All place-result providers finished without errors and none returned live rows. */
 export function placeSearchProvidersAllEmpty(providerLog = []) {
   const rows = placeResultProviderRows(providerLog);
   if (!rows.length) return false;

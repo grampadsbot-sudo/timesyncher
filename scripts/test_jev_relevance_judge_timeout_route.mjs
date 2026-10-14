@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B check 6b relevance: loud timeout errors, stage budget, and capped judges.
- */
+
 import assert from 'node:assert/strict';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';
 import { attachPlaceRelevance } from '../src/vacation/place-search-relevance.mjs';

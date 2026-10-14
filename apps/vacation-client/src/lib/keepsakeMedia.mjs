@@ -1,4 +1,4 @@
-/** Saved-story / print media helpers (browser-safe; mirrors thing-media-bind rules). */
+
 
 const JUNK_RE = /bind[- ]?proof|neon file bind proof|placeholder|1024.?1024|default[-_]?thumb/i;
 
@@ -61,7 +61,6 @@ export function normalizeMediaRows(rows) {
   return rows.filter((row) => row && typeof row === 'object' && !isKeepsakeJunkMedia(row));
 }
 
-/** @param {Record<string, unknown>} place */
 export function boundMediaForPlace(place) {
   const bound = normalizeMediaRows(place.bound_media);
   if (bound.length) return bound;
@@ -71,7 +70,6 @@ export function boundMediaForPlace(place) {
   ]);
 }
 
-/** Saved Story flag on the Thing (TREK `ha(nr).story`). */
 export function savedStoryFlagActive(place = {}, override = {}) {
   if (override.savedStory === true || override.isSavedStory === true) return true;
   const raw = override.story ?? place.story ?? place.saved_story ?? place.savedStory;

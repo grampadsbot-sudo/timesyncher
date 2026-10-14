@@ -16,7 +16,7 @@ export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisi
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
-// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 retire rationale lives in tier_models.json source (former T1 was google/gemini-2.5-flash-lite).
+
 const BAKEOFF_TIER_MODELS = {
   1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
@@ -67,7 +67,6 @@ export function bakeoffTierModels() {
   return { ...OPENROUTER_TIER_CHAT_MODELS };
 }
 
-// Decisions score is the 0-based weighted index of this list, so index 0 is tier 1.
 const JEV_MODEL_TIER_CRITERIA = [
   '1 cheapest model that can still answer this vacation-app turn adequately',
   '2 light inexpensive reasoning',

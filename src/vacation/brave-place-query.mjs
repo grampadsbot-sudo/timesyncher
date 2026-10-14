@@ -151,7 +151,6 @@ export function braveTitle(value) {
   return cut || raw;
 }
 
-/** Brave local rows expose the venue label on `title` (no separate `name` in live payloads). */
 export function bravePlaceDisplayTitle(result) {
   return braveTitle(result?.title);
 }
@@ -166,7 +165,6 @@ function braveProviderRank(place = {}) {
   return Number.isFinite(rank) ? rank : Number.POSITIVE_INFINITY;
 }
 
-/** Same Brave listing URL can appear as multiple rows; keep the earliest provider rank. */
 export function preferBraveUrlDuplicates(places = []) {
   const kept = [];
   const urlIndex = new Map();

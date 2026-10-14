@@ -1,4 +1,4 @@
-/** OSM Overpass category keys in `place-search.mjs` OSM_CATEGORIES. */
+
 export const PLACE_SEARCH_CATEGORY_KEYS = Object.freeze([
   'grocery',
   'market',
@@ -10,7 +10,6 @@ export const PLACE_SEARCH_CATEGORY_KEYS = Object.freeze([
 
 const KEY_SET = new Set(PLACE_SEARCH_CATEGORY_KEYS);
 
-/** JSON-schema enum for trip intake extraction (`''` only for non-place_search turns). */
 export function tripIntakePlaceSearchCategorySchemaEnum() {
   return [...PLACE_SEARCH_CATEGORY_KEYS, ''];
 }
@@ -28,7 +27,6 @@ export function intakePlaceSearchCategoryError(extractedFields = {}) {
   return '';
 }
 
-/** Live queue / in-turn search: normalized category required on ok place_search classifications. */
 export function placeSearchTurnClassificationError(classification = {}) {
   if (classification?.ok !== true) return '';
   if (String(classification.turnKind || '').trim().toLowerCase() !== 'place_search') return '';

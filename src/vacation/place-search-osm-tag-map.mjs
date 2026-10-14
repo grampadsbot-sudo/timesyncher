@@ -1,4 +1,4 @@
-/** Structural OSM tag → app place category (no name/word intent). */
+
 
 const OSM_ACTIVITY_TOURISM = /^(?:attraction|museum|gallery|viewpoint)$/;
 
@@ -71,9 +71,6 @@ function displayFromTags(tags) {
   return '';
 }
 
-/**
- * @type {ReadonlyArray<{ appCategory: string, filter: string, match: (tags: object) => boolean, displayName: (tags: object) => string }>}
- */
 export const OSM_TAG_TO_APP_CATEGORY = Object.freeze([
   {
     appCategory: 'grocery',

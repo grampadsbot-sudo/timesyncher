@@ -1,6 +1,5 @@
 import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 
-/** Post turns so shared tabs (hotels, cars, restaurants, budget, map) have real rows. */
 export async function seedVisualSmokeTripContent(session, tripId, { setStage } = {}) {
   if (!session || !tripId) {
     return { ok: false, reason: 'missing_session_or_trip' };

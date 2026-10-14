@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * Drive the staging vacation app the way a customer does.
- * Geometry is measured. Intent is judged from the screen spec. Fail closed.
- */
+
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';

@@ -1,4 +1,4 @@
-/** Shared-page thing-card DOM grading (harness-only; approved PDF thing print contract). */
+
 
 import { logoChipInkPresent } from './lib/logo-pixel-ink-grade.mjs';
 import { gradeSharedTabLogoUrlRecords } from './shepherd-staging-smoke-grader-lib.mjs';
@@ -6,7 +6,6 @@ import { gradeThingCardSortButtonsHarness } from './shepherd-staging-smoke-thing
 
 const THING_CARD_TAB_KEYWORDS = ['cars', 'hotels', 'restaurants', 'stores', 'flights', 'events'];
 
-/** Tabs that render list-level tag filter chips (All tags + ci / $n). */
 export const THING_CARD_TAG_FILTER_TABS = new Set(['restaurants', 'stores']);
 
 const SORT_CONTROL_RE = /^(name|price)(\s*[↑↓])?$/i;
@@ -51,7 +50,6 @@ function thingCardTagFieldForTab(tab = '') {
   return null;
 }
 
-/** Tags on Things in this tab from shared API payload (thingOverrides + place). */
 export function apiThingTagsForTab(sharedJson = {}, tab = '') {
   const field = thingCardTagFieldForTab(tab);
   if (!field) return [];
@@ -76,10 +74,6 @@ export function apiThingTagsForTab(sharedJson = {}, tab = '') {
   return [...tags].sort((a, b) => a.localeCompare(b));
 }
 
-/**
- * Fail-closed tag-filter parity: filter chip set must equal union of thing tags.
- * @returns {{ pass: boolean, failures: object[], filterTags: string[], thingTags: string[], apiThingTags: string[] }}
- */
 export function gradeThingCardTagFilterParity({
   tab = 'unknown',
   viewport = null,
@@ -155,7 +149,6 @@ export function thingCardFailOnSortControlsFromEnv(env = process.env) {
   return v === '1' || v === 'true' || v === 'yes';
 }
 
-/** Default off; set env `THING_CARD_FAIL_ON_SORT_CONTROLS` to `1`/`true`/`yes` to forbid standalone Name/Price sort pills. */
 export const THING_CARD_FAIL_ON_SORT_CONTROLS = thingCardFailOnSortControlsFromEnv();
 
 export function thingCardSortControlLabel(text) {
@@ -166,7 +159,6 @@ export function thingCardSortControlLabel(text) {
   return null;
 }
 
-/** Standalone pill sort controls (not list column header labels). */
 export function forbiddenSortControlsFromMatches(sortControlMatches = []) {
   return (sortControlMatches || []).map((m) => m?.label).filter(Boolean);
 }
@@ -188,9 +180,6 @@ export function populatedThingCardTabs(sharedJson = {}) {
   return tabs;
 }
 
-/**
- * Pure grade from in-page scan rows (see evaluateThingCardTabDom source in thing-card harness).
- */
 export function gradeThingCardTabScan(scan = {}, inkByRowIndex = {}, options = {}) {
   const failures = [];
   const tab = scan.tab || 'unknown';

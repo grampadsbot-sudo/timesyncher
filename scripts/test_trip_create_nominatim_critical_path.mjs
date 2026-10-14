@@ -12,8 +12,6 @@ const named = await resolveIntakePlace({
 assert.equal(named.destination, 'Maui');
 assert.equal(named.title, 'Maui with my wife');
 
-// Maui chat trip create (no lodging lookup on intake): 0 synchronous Nominatim on the HTTP critical path.
-// Destination geocode is deferred via scheduleTripDestinationGeocode after the response ships.
 const CRITICAL_PATH_NOMINATIM_CALLS = 0;
 assert.equal(CRITICAL_PATH_NOMINATIM_CALLS, 0);
 

@@ -1,4 +1,4 @@
-/** Pure list-tab logic (sort, filters, row fields, empty copy). Tested from test/listRows.unit.mjs */
+
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -158,9 +158,9 @@ export function areaChipsForTab(places, trip, tab) {
       chips.push(area);
     }
   }
-  if (tab === 'events' && chips.length === 1) {
-    /* Rest tabs still expose area row when list is empty. */
-  }
+
+
+
   return chips;
 }
 

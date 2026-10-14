@@ -2,7 +2,6 @@ function clean(value, max) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-/** Structural proper-name gate for intake Things (no category deny-list). */
 export function intakeThingHasProperName(name) {
   const text = clean(name, 180);
   if (!text) return false;

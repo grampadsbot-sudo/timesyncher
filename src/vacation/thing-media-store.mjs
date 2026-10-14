@@ -133,7 +133,7 @@ export async function listBindings(shareToken, env = process.env) {
       `;
       rows.forEach(push);
     } catch {
-      // fall through to blob/public
+
     }
   }
 

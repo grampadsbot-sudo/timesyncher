@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * Independent rendered positive-fixture contract for apps/vacation-client (TSV #343).
- * Fixture passability evidence only — not a Gate B verdict or staging approval.
- *
- * Usage:
- *   node scripts/verify-positive-fixture-render-contract.mjs [--artifact-dir=PATH]
- *
- * See scripts/verify-positive-fixture-render-contract.md
- */
+
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

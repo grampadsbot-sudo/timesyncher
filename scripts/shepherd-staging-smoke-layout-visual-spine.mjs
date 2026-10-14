@@ -1,4 +1,4 @@
-/** Register VISUAL spine check (LAYOUT shared probes register after share publish in main.mjs). */
+
 import { runVisualHarnessCheck } from './shepherd-staging-smoke-visual.mjs';
 import { visualInfraBlockedFromPreflight, visualPreflightReady } from './shepherd-staging-smoke-visual-preflight.mjs';
 import { withBrowserPageSlot } from './shepherd-staging-smoke-browser-pool.mjs';

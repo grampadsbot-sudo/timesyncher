@@ -38,7 +38,6 @@ async function freshClassifierSession(ctx) {
   return { session, customerId, couponHttp: couponRes.status };
 }
 
-/** Independent checks C, H2, K (parallel pool after bootstrap). */
 export function buildMainIndependentParallelChecks(ctx) {
   const {
     db, out, BASE, SHA7, RUN_TS, couponMain, couponH2, artifactPath, CHROME, sharedBrowser,

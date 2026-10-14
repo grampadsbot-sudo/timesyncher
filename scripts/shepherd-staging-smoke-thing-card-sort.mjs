@@ -1,4 +1,4 @@
-/** SORT-BUTTONS tab + harness grading (Shepherd thing-card). */
+
 
 function rowTitlesFromScanRows(rows = []) {
   return (rows || []).map((r) => String(r?.title || '').trim()).filter(Boolean);

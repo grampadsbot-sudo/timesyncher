@@ -26,7 +26,7 @@ process.on('exit', () => {
     try {
       fs.rmSync(TEST_TREK_DB_PATH, { force: true });
     } catch {
-      // Best-effort cleanup only.
+
     }
   }
 });

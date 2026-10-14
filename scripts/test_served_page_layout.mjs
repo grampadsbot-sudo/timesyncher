@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-/**
- * Served-page layout checks for features/screens/app.md.
- * Headless Chrome against local HTML and fixture JSON. No network.
- *
- * The offline unit-test job does not install Chrome or puppeteer-core
- * (PUPPETEER_SKIP_DOWNLOAD=1), so this file is listed in
- * scripts/online-tests.txt, not scripts/offline-tests.txt.
- * Run: node scripts/test_served_page_layout.mjs
- */
+
 import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';

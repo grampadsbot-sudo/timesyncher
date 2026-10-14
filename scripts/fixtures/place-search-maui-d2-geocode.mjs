@@ -1,4 +1,4 @@
-/** Nominatim-shaped geocode for trip destination "Maui" (shepherd 4eff9d1 check D-d2). */
+
 export const MAUI_D2_GEOCODE = {
   lat: '20.8029568',
   lon: '-156.3106833',

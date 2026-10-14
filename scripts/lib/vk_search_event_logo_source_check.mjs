@@ -15,7 +15,6 @@ const GATE_B_EVENT_ROWS = [
   { id: 611, name: 'Jazz at Lincoln Center', cat: 'activity' },
 ];
 
-/** Dedicated event-logo source checks for #388 (invoked from VK contract test). */
 export async function assertVkSearchEventLogoSource(assert) {
   assert.match(eventLogoSearchQuery('Afternoon matinee show', 'New York'), /official website/i);
   assert.equal(

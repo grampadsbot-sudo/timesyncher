@@ -1,4 +1,4 @@
-/** Coffee + logo chip graders for staging smoke. */
+
 
 import {
   gradeAskLodgingReplyQuestion,
@@ -39,8 +39,6 @@ export async function gradeCoffeeReplyRows(rows = [], opts = {}) {
   };
 }
 
-/** Budget tab must not show dollar amounts absent from planned lines and saved __budgetTargets. */
-
 export const LOGO_CENTER_TOLERANCE_PX = 1.5;
 
 export function isRealBrandLogoSrc(src) {
@@ -65,7 +63,6 @@ function placeMatchesLogoTab(place = {}, tabKeyword = '') {
   return false;
 }
 
-/** Shared API places for a tab must carry logoUrl in thingOverrides (or place). */
 export function gradeSharedTabLogoUrlRecords(sharedJson = {}, tabKeyword = '') {
   const places = Array.isArray(sharedJson?.places) ? sharedJson.places : [];
   const overrides = sharedJson?.thingOverrides && typeof sharedJson.thingOverrides === 'object'
@@ -110,7 +107,6 @@ export function gradeCarTabRowIcons(iconScan = {}) {
   };
 }
 
-/** Pixel box of drawn image content inside a CSS object-fit box (viewport coords). */
 export function objectFitContentBox({
   boxLeft,
   boxTop,
@@ -197,7 +193,6 @@ function gradeLogoChipCom(row = {}) {
   return { comCentered, comError: null, comDx, comDy };
 }
 
-/** Grade one brand logo chip row (center-of-mass of img inside chip). */
 export function gradeLogoChipRow(row = {}) {
   const geometry = gradeLogoChipGeometry(row);
   const comGrade = gradeLogoChipCom(row);
@@ -281,7 +276,6 @@ export function gradeLogoTabResult({
   };
 }
 
-/** Map computed layout hints to likely source files (harness attribution, not runtime). */
 export function attributeLogoMisalignmentCss(computed = {}) {
   const suspects = [];
   const liAlign = String(computed.liAlignItems || '');
@@ -342,7 +336,6 @@ export function mergeLogoCssSuspects(rows = []) {
   return out;
 }
 
-/** Persisted per-fact lodging ask flags on a customer/app turn payload or turn JSON. */
 export function persistedLodgingAskSignals(payload = {}, turnJson = {}) {
   const p = payload && typeof payload === 'object' ? payload : {};
   const j = turnJson && typeof turnJson === 'object' ? turnJson : {};

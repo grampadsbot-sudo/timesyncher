@@ -1,4 +1,4 @@
-/** Vertically center emoji ink in a 16px tab icon canvas (R1). */
+
 export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
   if (!node || !emoji) return;
 

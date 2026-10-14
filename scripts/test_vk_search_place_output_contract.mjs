@@ -317,7 +317,6 @@ for (const place of positiveContractPlaces) {
     );
   }
 }
-// Full-trip batch assert is covered by synthetic rows below; the Gate B fixture has ~8 non-exempt Things.
 
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   if (row.cat === 'flight' || row.cat === 'car') continue;

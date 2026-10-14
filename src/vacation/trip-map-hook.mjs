@@ -1,9 +1,4 @@
-/**
- * Publish stable read-only trip map state for external harnesses (staging smoke).
- * @param {import('leaflet').Map | { getCenter: () => { lat: number, lng: number }, getZoom: () => number, getBounds: () => { getSouth: () => number, getWest: () => number, getNorth: () => number, getEast: () => number }, getContainer?: () => HTMLElement | null }} map
- * @param {'leaflet' | 'mapbox-gl'} engine
- * @returns {boolean}
- */
+
 function publishTsTripMapHook(map, engine) {
   const container = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
   if (!container) return false;
@@ -32,7 +27,6 @@ function publishTsTripMapHook(map, engine) {
   return true;
 }
 
-/** @param {import('leaflet').Map} map */
 function bindTsTripMapHookLeaflet(map) {
   if (!map || map.__tsTripMapHookBound) return;
   map.__tsTripMapHookBound = true;

@@ -1,4 +1,4 @@
-/** Model extraction. Missing key or bad JSON throws. No keyword fallback. */
+
 
 import { bakeoffTierModels } from '../../scripts/vacation-app-reply-rules.mjs';
 import { openRouterTier1CompactCallSpread } from '../../scripts/openrouter-tier-provider.mjs';

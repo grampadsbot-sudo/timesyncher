@@ -1,4 +1,4 @@
-/** Trimmed from live Brave local place_search (Hertz Kahului, Kahului), 2026-10-03. */
+
 export const HERTZ_KAHULUI_BRAVE = [{
   id: 'loc4BQHOL6RN4Q2EBJ6TCXDRZDTDYD22FFMBAAAAAAA=',
   title: 'Hertz Car Rental - Kahului Airport',

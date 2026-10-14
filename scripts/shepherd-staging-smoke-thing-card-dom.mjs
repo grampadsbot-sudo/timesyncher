@@ -1,4 +1,4 @@
-/** Serialized for page.evaluate — keep self-contained. */
+
 export const EVALUATE_THING_CARD_TAB_DOM_SOURCE = `(() => {
   function tagFilterChips() {
     for (const btn of document.querySelectorAll('button')) {

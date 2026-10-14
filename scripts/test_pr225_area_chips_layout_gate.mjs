@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** PR #225 gate (a)+(b): chip tabs pixel match prod + exact chip text @390/1280. */
+
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';

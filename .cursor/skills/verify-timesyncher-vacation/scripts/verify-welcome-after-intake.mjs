@@ -1,12 +1,5 @@
 #!/usr/bin/env node
-/**
- * Onboarding welcome verify against staging.
- * Signs up a fresh customer, agrees, captures the welcome, then sends three
- * fresh-trip fixtures. Shape alone is not a pass.
- * DATABASE_URL and TIMESYNCHER_COLLABORATOR_SINGLE_PRICE_CENTS come from the
- * environment. A missing value fails this process. The values are never
- * printed, logged, or written to disk.
- */
+
 import { randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
@@ -737,7 +730,7 @@ async function shippedTemplateSources() {
     try {
       sources.push({ file: path.relative(root, file), text: await readFile(file, 'utf8') });
     } catch {
-      /* missing optional file */
+
     }
   }
   return sources;

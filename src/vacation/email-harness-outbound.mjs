@@ -2,7 +2,6 @@ function cleanText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
 }
 
-/** When TIMESYNCHER_HARNESS_STUB_OUTBOUND=1, only bundle-spine recipients hit Resend. */
 export function harnessOutboundEmailAllowed(to, env = process.env) {
   if (env.TIMESYNCHER_HARNESS_STUB_OUTBOUND !== '1') return true;
   const addr = cleanText(to, 180).toLowerCase();
@@ -12,7 +11,6 @@ export function harnessOutboundEmailAllowed(to, env = process.env) {
   return false;
 }
 
-/** Shepherd smoke + purchase paths: only real Resend sends pass (never stubbed/pending/failed). */
 export function outboundEmailPassesSmokeHarness(row = {}) {
   if (!row || typeof row !== 'object') return false;
   if (String(row.status || '') !== 'sent') return false;

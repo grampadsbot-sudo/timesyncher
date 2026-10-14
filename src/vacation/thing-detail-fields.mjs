@@ -48,7 +48,6 @@ function detailBagHasExplicitFields(bag = {}) {
   return Object.values(bag).some((value) => text(value));
 }
 
-/** Skip title-only itinerary lines on customer stubs; search/enriched things still get notes. */
 function shouldApplyAutoDetailFields(thing = {}) {
   const bag = detailBagFrom(thing);
   if (detailBagHasExplicitFields(bag)) return true;
@@ -140,7 +139,6 @@ function explicitCategoryForThing(thing = {}) {
   return text(thing.category || thing.category_name || thing.category?.name, 80).toLowerCase();
 }
 
-/** Prefer stored trip category over airport-code heuristics for attractions and tours. */
 export function resolvedPresentationCategory(thing = {}) {
   const explicit = explicitCategoryForThing(thing);
   if (NON_TRANSPORT_CATEGORIES.has(explicit)) {

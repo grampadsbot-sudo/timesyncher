@@ -3,11 +3,6 @@ import { readFile } from 'node:fs/promises';
 export const JUDGE_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JUDGE_MODEL = 'qwen/qwen2.5-vl-72b-instruct';
 
-/**
- * One vision call per screenshot. Same OpenRouter chat path as
- * scripts/vacation-app-reply-rules.mjs (OPENROUTER_CHAT_COMPLETIONS_URL).
- * The key is OPENROUTER_API_KEY. A missing key, timeout, or bad verdict is a failure.
- */
 export async function judgeScreenshot({
   pngPath,
   specText,

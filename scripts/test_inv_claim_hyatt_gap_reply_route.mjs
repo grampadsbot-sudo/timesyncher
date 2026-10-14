@@ -1,10 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B check H / INV-CLAIM lodging turn: trip_intake gap answer must not run first-intake
- * collaborator quality gates (missingCollaborators) or surface bogus titleError when the trip
- * already has a saved title. After lodging, the shipped reply must use inviteContactAsk and
- * ask for the companion name and/or email.
- */
+
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

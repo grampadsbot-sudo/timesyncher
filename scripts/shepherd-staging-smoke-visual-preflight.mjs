@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * OpenRouter vision preflight for shepherd VISUAL judge (harness-only HTTP).
- * Uses OPENROUTER_CHAT_COMPLETIONS_URL from the model client module; no openrouter host literals here (ratchet).
- */
+
 import { OPENROUTER_CHAT_COMPLETIONS_URL } from './vacation-app-reply-rules.mjs';
 import { VISUAL_JUDGE_MODEL } from './shepherd-staging-smoke-visual-rubric.mjs';
 
@@ -142,7 +139,6 @@ export async function runVisualOpenRouterPreflight({
   };
 }
 
-/** VISUAL spine: missing or non-vision preflight is INFRA_BLOCKED, never PASS. */
 export function visualPreflightReady(preflight) {
   return Boolean(preflight && preflight.ok === true && preflight.imageOk === true);
 }

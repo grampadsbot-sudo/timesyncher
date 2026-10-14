@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/**
- * A live run counts only when vacation-staging's deployed commit equals the
- * tested tip. A mismatch aborts with VOID_STALE_BUILD and is not graded.
- */
+
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';

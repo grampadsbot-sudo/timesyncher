@@ -77,7 +77,6 @@ function logoFromWebsite(website = '') {
   }
 }
 
-/** Logo hostname must match the attributed official website (not a borrowed unrelated brand). */
 export function eventLogoMatchesWebsite({ logoUrl = '', website = '' } = {}) {
   const logoHost = hostname(logoUrl);
   const siteHost = hostname(website);
@@ -170,7 +169,6 @@ export async function enrichSearchPlacesWithEventLogos(places = [], options = {}
   return { places: enriched };
 }
 
-/** Same logo URL on unrelated event rows with different official sites is a contract failure. */
 export function sharedUnrelatedEventLogoFailures(places = []) {
   const byLogo = new Map();
   for (const place of places) {

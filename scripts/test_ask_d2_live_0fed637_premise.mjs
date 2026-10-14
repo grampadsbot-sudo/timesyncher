@@ -1,15 +1,5 @@
 #!/usr/bin/env node
-/**
- * ASK-d2 repro at 0fed637. Staging trip a9832c18-32fa-4a99-926b-98dd306e8b44,
- * customer turn 80059df2-a044-4e43-8205-5ba80bdb3726, request e0198eef-8445-4a09-80b6-4e77ddac38b5.
- * Customer text "save Paia Fish Market". Stored turnTag travel_research, ask false.
- * Stored jev routeType notes_where, needsDayForNote 0.32, model tier 2
- * qwen/qwen3-235b-a22b-2507. Things on the trip at reply time are Mama's Fish House
- * (Saturday) and Paia Fish Market Restaurant (no day). The live reply asked which
- * afternoon to drop in.
- *
- * Rebuilds the system and user messages callOpenRouterTieredChat sends for that turn.
- */
+
 import assert from 'node:assert/strict';
 import { chatPlaceSearchSavedReplyFacts } from '../src/vacation/chat-place-search-when.mjs';
 import { annotateLiveTurnGapAnswer, mergeSavedTripGapFields } from '../src/vacation/gap-ask-reply-context.mjs';

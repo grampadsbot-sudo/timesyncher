@@ -82,7 +82,7 @@ export function createHyattHandlerDb(state) {
       if (jsonMetaPatch) {
         try {
           state.trip.metadata = { ...state.trip.metadata, ...JSON.parse(jsonMetaPatch) };
-        } catch { /* ignore */ }
+        } catch {}
       }
       const metaPatch = values.find((v) => v && typeof v === 'object' && !Array.isArray(v) && ('dialogParty' in v || 'titleSource' in v || 'titleError' in v || 'publicSlug' in v || 'publicUrl' in v));
       if (metaPatch) state.trip.metadata = { ...state.trip.metadata, ...metaPatch };

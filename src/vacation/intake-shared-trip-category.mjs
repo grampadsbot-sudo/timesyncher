@@ -36,7 +36,6 @@ const PINNED_CATEGORY = {
   sightseeing: ['sightseeing', '🎟️', 'sightseeing'],
 };
 
-/** Map intake thing rows to shared-trip category labels (attraction/tour before flight heuristics). */
 export function categoryFor(thing) {
   const lodging = isLodgingStay(thing);
   const rawCategory = String(thing.category || '').trim().toLowerCase();

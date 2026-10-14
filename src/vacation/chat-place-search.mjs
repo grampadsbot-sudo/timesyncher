@@ -51,7 +51,6 @@ export function intakeExtractedThings(placeSearchTurn, classification, webResear
   return classification?.ok === true ? classification.things : [];
 }
 
-/** Trip intake ship path: classifier things, else job wantedThings (firstIntake queue). */
 export function intakeThingsForPersistence(placeSearchTurn, classification, webResearchTurn = false, wantedThings = []) {
   if (webResearchTurn) return [];
   if (placeSearchTurn) return intakeLodgingFromClassification(classification);

@@ -1,4 +1,4 @@
-/** Cap concurrent Puppeteer pages on the shared smoke browser. */
+
 
 let activePages = 0;
 const waiters = [];
@@ -22,12 +22,6 @@ function acquirePageSlot(maxConcurrent = 3) {
   });
 }
 
-/**
- * @param {import('puppeteer-core').Browser} browser
- * @param {(page: import('puppeteer-core').Page) => Promise<T>} fn
- * @param {{ maxConcurrent?: number }} [opts]
- * @returns {Promise<T>}
- */
 export async function withBrowserPageSlot(browser, fn, opts = {}) {
   const maxConcurrent = opts.maxConcurrent ?? 3;
   await acquirePageSlot(maxConcurrent);

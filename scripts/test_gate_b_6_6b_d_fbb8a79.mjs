@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/**
- * Gate B residuals @ fbb8a79: check 6 brave taco persist, check 6b non-502 lodging path, check D Paia save radius.
- */
+
 import assert from 'node:assert/strict';
 import { orderRowsForRelevanceJudge } from '../src/vacation/place-relevance-stage-budget.mjs';
 import { placeSearchClientError } from '../src/vacation/place-search-reply-facts.mjs';

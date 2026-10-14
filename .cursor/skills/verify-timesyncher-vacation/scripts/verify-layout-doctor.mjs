@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Staging doctor pass for verify-layout (no Vercel). */
+
 import { VIEWPORTS, applyViewport } from './layout-measure.mjs';
 
 export async function runVerifyLayoutDoctor(browser, { staging, sharedPath, redact }) {

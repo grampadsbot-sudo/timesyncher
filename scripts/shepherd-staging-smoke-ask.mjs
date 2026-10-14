@@ -17,7 +17,6 @@ async function freshAskLodgingSession(ctx) {
   return { session, couponHttp: couponRes.status };
 }
 
-/** @returns {Array<{ name: string, timeoutMs: number, run: Function }>} */
 export function buildAskLodgingParallelCheck(ctx) {
   const { db, out } = ctx;
   return [

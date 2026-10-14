@@ -91,7 +91,7 @@ export async function startPreviewServer(tripPayload, options = {}) {
             : 'application/octet-stream';
         return send(res, 200, data, type);
       } catch {
-        /* fall through */
+
       }
     }
     send(res, 404, 'missing', 'text/plain');

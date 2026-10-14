@@ -12,13 +12,11 @@ export function wordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
 }
 
-/** Same merge the live list/day rows use: place fields plus thingOverrides (ha). */
 function haFields(shared = {}, place = {}) {
   const override = shared.thingOverrides?.[`place:${place.id}`] || {};
   return { ...place, ...override };
 }
 
-/** Summary string after prepareSharedTripForLiveApp / finalizeServedSharedTripPayload. */
 export function renderedSummary(shared = {}, place = {}) {
   const row = haFields(shared, place);
   const override = shared.thingOverrides?.[`place:${place.id}`] || {};
@@ -60,7 +58,6 @@ function stableValue(value) {
   return value;
 }
 
-/** Digest Gate B harness uses to pin candidate/base to one payload blob. */
 export function gateBNycFixturePayloadSha256(shared = {}) {
   const body = stableValue({
     trip: {
@@ -84,10 +81,6 @@ export function gateBNycFixturePayloadSha256(shared = {}) {
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
 }
 
-/**
- * Offline contract for the NYC Gate B capture fixture.
- * Validates fields that must survive finalizeServedSharedTripPayload.
- */
 export function assessGateBNycFixtureContract(shared = {}, options = {}) {
   const { profile = 'positive' } = options;
   const violations = [];

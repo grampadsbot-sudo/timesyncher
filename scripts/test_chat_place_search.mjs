@@ -21,7 +21,8 @@ import { placeResultExtra } from '../src/vacation/provider-result-context.mjs';
 
 const rulesSource = fs.readFileSync(new URL('./vacation-app-reply-rules.mjs', import.meta.url), 'utf8');
 const liveSource = fs.readFileSync(new URL('../src/vacation/live-app-turn.mjs', import.meta.url), 'utf8');
-const routeSource = fs.readFileSync(new URL('../routes/vacation-itinerary.mjs', import.meta.url), 'utf8');
+const routeSource = fs.readFileSync(new URL('../routes/vacation-app-chat-queue.mjs', import.meta.url), 'utf8');
+const chatIntakeSource = fs.readFileSync(new URL('../src/vacation/vacation-from-chat-intake.mjs', import.meta.url), 'utf8');
 const chatPlaceSearchSource = fs.readFileSync(new URL('../src/vacation/chat-place-search.mjs', import.meta.url), 'utf8');
 const chatPlaceSearchOutcomesSource = fs.readFileSync(new URL('../src/vacation/chat-place-search-outcomes.mjs', import.meta.url), 'utf8');
 const chatPlaceWhenSource = fs.readFileSync(new URL('../src/vacation/chat-place-search-when.mjs', import.meta.url), 'utf8');
@@ -29,7 +30,7 @@ const chatPlaceWhenSource = fs.readFileSync(new URL('../src/vacation/chat-place-
 assert.doesNotMatch(rulesSource, /THAT_ID/);
 assert.doesNotMatch(liveSource, /THAT_ID/);
 assert.match(sourcedPlaceRule(), /Results/);
-assert.match(routeSource, /classifyVacationAppCustomerTurn/);
+assert.match(chatIntakeSource, /classifyVacationAppCustomerTurn/);
 assert.match(routeSource, /intakeExtractedThings\(placeSearchTurn/);
 assert.match(routeSource, /runVacationAppInTurnSearch/);
 assert.match(routeSource, /workerJobId:\s*jobRows\[0\]\.id/);

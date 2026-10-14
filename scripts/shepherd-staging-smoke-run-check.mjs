@@ -21,9 +21,6 @@ function createCheckStageTools(runStartedAt) {
   return { setStage, getStage: () => stage, stages, resetStages: () => { stages.length = 0; } };
 }
 
-/**
- * @param {{ out: Record<string, unknown>, sha7: string, artifactDir?: string, runStartedAt?: number, wholeRunCapMs?: number }} ctx
- */
 export function createSmokeRunner(ctx) {
   const {
     out,
@@ -134,11 +131,6 @@ export function createSmokeRunner(ctx) {
     process.exit(code);
   }
 
-  /**
-   * @param {string} name
-   * @param {(tools: { setStage: (s: string) => void, registerBrowser: (b: unknown) => void, stages: { label: string, atMs: number }[] }) => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnessMessage?: string }>} fn
-   * @param {{ timeoutMs: number }} opts
-   */
   async function runCheck(name, fn, { timeoutMs }) {
     if (timeoutMs == null || !Number.isFinite(timeoutMs)) {
       throw new Error(`runCheck(${name}) requires timeoutMs`);
@@ -240,10 +232,6 @@ export function createSmokeRunner(ctx) {
     }
   }
 
-  /**
-   * @param {Array<{ name: string, timeoutMs: number, run: () => Promise<{ pass?: boolean, http?: number, harnessError?: boolean, harnessMessage?: string }> }>} entries
-   * @param {number} [concurrency]
-   */
   async function runChecksParallel(entries, concurrency = SMOKE_PARALLEL_CONCURRENCY) {
     let next = 0;
     async function worker() {

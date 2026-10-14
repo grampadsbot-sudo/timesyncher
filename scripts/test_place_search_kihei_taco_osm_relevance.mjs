@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/**
- * Kihei lodging anchor + tacos: relevance judge must use Kihei (not property name) so OSM taco rows pass.
- */
+
 import assert from 'node:assert/strict';
 import { searchPlaces } from '../src/vacation/place-search.mjs';
 import { runCustomerChatPlaceSearch } from '../src/vacation/chat-place-search.mjs';

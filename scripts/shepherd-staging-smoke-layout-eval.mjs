@@ -1,4 +1,4 @@
-/** In-browser layout assertions for chat + shared staging pages (harness-only). */
+
 
 import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
 
@@ -7,7 +7,6 @@ export const LAYOUT_VIEWPORTS = [
   { width: 1280, height: 800, label: '1280' },
 ];
 
-/** Which rules run on chat vs shared (documented in checkLAYOUT.applicability). */
 export const LAYOUT_RULE_APPLICABILITY = {
   composer_in_viewport: ['chat'],
   horizontal_overflow: ['chat', 'shared'],

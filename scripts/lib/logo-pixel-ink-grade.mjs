@@ -1,4 +1,4 @@
-/** Pixel ink helpers for shepherd LOGO smoke (no DOM box / naturalWidth gates). */
+
 
 const LOGO_INK_MIN_MASS = 4;
 const CARS_HEADING_LOGO_MAX_VERTICAL_PX = 1;
@@ -17,7 +17,6 @@ export function gradeLogoChipInkPresence(com = {}) {
   };
 }
 
-/** Vertical ink alignment for Cars tab icon vs visible label text (page Y delta). */
 export function gradeCarsHeadingLogoInk(
   row = {},
   { maxVerticalPx = CARS_HEADING_LOGO_MAX_VERTICAL_PX } = {},

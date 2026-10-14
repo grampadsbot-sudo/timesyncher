@@ -5,10 +5,8 @@ import { crc32, deflateSync } from 'node:zlib';
 
 import { cleanText } from './http.mjs';
 
-/** Color-card stubs were 15–21KB @ 960×640; TREK placeholder canvases are 1024² @ 3071B. */
 export const PRINT_STUB_MAX_BYTES = 24 * 1024;
 
-/** TREK shared API host comes from TIMESYNCHER_TRAVEL_BASE_URL (no baked-in default). */
 export function trekSharedApiBase(env = process.env) {
   const value = String(
     env.TIMESYNCHER_TRAVEL_BASE_URL
@@ -104,7 +102,6 @@ export function publicMediaDiskPath(publicUrl = '') {
   return join(process.cwd(), 'public', rel);
 }
 
-/** Inline real JPEG/PNG bytes for Ae() print. Refuses TREK/color-card stubs. */
 export function printDataUrlForPublicFile(publicUrl = '', mimeType = 'image/jpeg') {
   const url = String(publicUrl || '');
   const mime = String(mimeType || 'image/jpeg');
@@ -165,7 +162,6 @@ export function isKeepsakeJunkMedia(item = {}) {
   return KEEPSAKE_JUNK_MEDIA_RE.test(blob);
 }
 
-/** Print/share only. Do not call from mergeBindingsIntoShared — bind tests keep proof rows. */
 export function stripKeepsakeJunkMedia(shared = {}) {
   const media = Array.isArray(shared.media)
     ? shared.media.filter((item) => !isKeepsakeJunkMedia(item))
