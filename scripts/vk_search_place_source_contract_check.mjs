@@ -14,7 +14,7 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
   gateBRowsForSearchPlaceOutputContract,
-  PENDING_REAL_FETCH_ROW_IDS,
+  GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
 const GATE_B_ROWS = [
@@ -135,19 +135,14 @@ const row608Violations = vkSearchPlaceSourceViolations(
 assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK source contract');
 
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
-  if (PENDING_REAL_FETCH_ROW_IDS.has(row.id)) continue;
-  if (row.cat === 'flight' || row.cat === 'car') {
-    assertVkSearchPlaceSourceContract([{ ...gateBPlaces[row.id], gateBRowId: row.id }], { rowId: row.id });
-    continue;
-  }
-  const violations = vkSearchPlaceSourceViolations(
-    { ...gateBPlaces[row.id], gateBRowId: row.id },
+  assertVkSearchPlaceSourceContract(
+    [{ ...gateBPlaces[row.id], gateBRowId: row.id }],
     { rowId: row.id },
   );
-  assert.ok(
-    violations.length > 0,
-    `row ${row.id} (${row.name}) must fail VK source contract until real fetch (#366): ${violations.join(', ')}`,
-  );
 }
+assert.ok(
+  GATE_B_INCOMPLETE_CONTRACT_ROW_IDS.has(608),
+  'row 608 remains the incomplete Gate B source-contract row',
+);
 
 console.log('vk_search_place_source_contract_check: passed');

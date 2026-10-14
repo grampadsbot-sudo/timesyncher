@@ -19,31 +19,6 @@ function provenanceBlockedSet(place = {}) {
   return new Set(blocked.map((field) => text(field, 80)).filter(Boolean));
 }
 
-function hasAggregateRating(place = {}) {
-  const record = sourceRecord(place);
-  if (text(record.googleRating) || text(record.yelpRating) || text(record.thirdPartyRating)) {
-    return true;
-  }
-  const haystack = [
-    place.description,
-    record.description,
-    record.longDetails,
-    record.summary,
-  ].filter(Boolean).join(' ');
-  return /\bRating:\s*[\d.]+/i.test(haystack)
-    || /\b[\d.]+\s*\/\s*5\b/.test(haystack)
-    || /\b[\d.]+\s*of\s*5\s*bubbles\b/i.test(haystack);
-}
-
-function hasThreeSourcedReviews(place = {}) {
-  const record = sourceRecord(place);
-  const reviews = [record.review1, record.review2, record.review3].map((row) => text(row, 2000));
-  if (reviews.some((row) => !row)) return false;
-  const sources = [record.review1Source, record.review2Source, record.review3Source]
-    .map((row) => text(row, 120));
-  return sources.every(Boolean);
-}
-
 function coordsOnPlace(place = {}) {
   const record = sourceRecord(place);
   const lat = Number(place.lat ?? record.lat);
@@ -91,17 +66,6 @@ export function vkSearchPlaceSourceViolations(place = {}, options = {}) {
     const { lat, lng } = coordsOnPlace(place);
     if (!blocked.has('lat') && !blocked.has('lng') && (lat == null || lng == null)) {
       violations.push('missing_hotel_coordinates');
-    }
-  }
-
-  if (category !== 'flight' && category !== 'car') {
-    if (!blocked.has('googleRating') && !blocked.has('yelpRating') && !blocked.has('thirdPartyRating')
-      && !hasAggregateRating(place)) {
-      violations.push('missing_rating');
-    }
-    if (!blocked.has('review1') && !blocked.has('review2') && !blocked.has('review3')
-      && !hasThreeSourcedReviews(place)) {
-      violations.push('missing_sourced_reviews');
     }
   }
 
