@@ -308,9 +308,16 @@ for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
     `${rowId} description`,
   );
 }
-const flight601Binding = vkSnapshotBindingTrip.thingOverrides['place:601'] || {};
-assert.equal(flight601Binding.price, 257, '601 keeps fixture price overlay');
-assert.equal(flight601Binding.logoUrl, 'https://www.aa.com/favicon.ico', '601 keeps fixture logo overlay');
+for (const rowId of VK_SEARCH_SNAPSHOT_COPY_ROW_IDS) {
+  const snapshot = pr336SearchSnapshot[String(rowId)];
+  const override = vkSnapshotBindingTrip.thingOverrides[`place:${rowId}`] || {};
+  if (snapshot.price != null) {
+    assert.equal(override.price, snapshot.price, `${rowId} price must match pr336 snapshot`);
+  }
+  if (snapshot.logoUrl) {
+    assert.equal(override.logoUrl, snapshot.logoUrl, `${rowId} logoUrl must match pr336 snapshot`);
+  }
+}
 assert.equal(vkSnapshotBindingTrip.places.find((p) => p.id === 601)?.lat, 36.084, '601 keeps fixture coordinates');
 
 console.log('gate b product row field tests passed');

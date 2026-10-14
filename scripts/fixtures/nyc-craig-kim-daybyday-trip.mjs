@@ -314,44 +314,18 @@ function buildPayload() {
     };
     applyPr336SearchFields(row, place, override);
     if (row.id === 609) {
-      override.price = 172;
       override.rentalCompany = 'Priceline opaque';
       override.vehicleClass = 'Toyota Corolla or similar';
     }
-    if (row.id === 601) {
-      override.price = 257;
-      override.logoUrl = 'https://www.aa.com/favicon.ico';
-      override.airline = 'American';
-      override.departureTime = '12:37 pm';
-      override.arrivalTime = '8:59 pm';
-    }
-    if (row.id === 635) {
-      override.price = 257;
-      override.logoUrl = 'https://www.aa.com/favicon.ico';
-      override.airline = 'American';
-      override.departureTime = '6:00 pm';
-      override.arrivalTime = '8:59 pm';
-    }
     if (row.id === 603) {
-      override.price = 518;
-      override.logoUrl = 'https://www.hotelbelleclaire.com/favicon.ico';
       override.stayDays = 7;
       override.checkInDate = '2026-06-23';
       override.checkOutDate = '2026-06-30';
       override.checkInTime = '16:00';
       override.checkOutTime = '11:00';
     }
-    if (row.id === 602) {
-      override.logoUrl = 'https://www.zabars.com/favicon.ico';
-    }
-    if (row.id === 610) {
-      override.price = 95;
-      override.logoUrl = 'https://www.carbonegreenwichvillage.com/favicon.ico';
-    }
     if (row.id === 611) {
-      override.price = 85;
       override.category = 'music';
-      override.logoUrl = 'https://www.bluenotejazz.com/favicon.ico';
     }
     if (row.id === 630) {
       override.price = 164;

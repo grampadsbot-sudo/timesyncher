@@ -2,22 +2,18 @@
   "Zabar's": {
     "googleRating": "4.5",
     "googleReviewCount": "6665",
-    "googleRatingSourceUrl": "https://goo.gl/maps/3Ae1wGfMRqhpjaZQ7",
     "yelpRating": "3.9",
     "yelpReviewCount": "1448",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/zabars-new-york",
-    "thirdPartyRating": "4.2 (532) · 4.4 (562)",
-    "thirdPartyReviewCount": "562",
+    "thirdPartyRating": "4.2",
+    "thirdPartyReviewCount": "532",
     "otherRatingSites": [
       {
         "rating": "4.2",
-        "reviewCount": "532",
-        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d948624-Reviews-Zabar_s-New_York_City_New_York.html"
+        "reviewCount": "532"
       },
       {
         "rating": "4.4",
-        "reviewCount": "562",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zabars-2/"
+        "reviewCount": "562"
       }
     ],
     "ratingCount": 6665,
@@ -54,27 +50,22 @@
   "Motto by Hilton New York City Times Square": {
     "googleRating": "3.9",
     "googleReviewCount": "1070",
-    "googleRatingSourceUrl": "https://www.google.com/travel/hotels/entity/CgsIpdftvZHByv6JARAB",
     "yelpRating": "3.3",
     "yelpReviewCount": "66",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/motto-by-hilton-new-york-city-times-square-new-york-2",
-    "thirdPartyRating": "4.1 (293) · 4.2 (3,376) · 4.4 (722)",
-    "thirdPartyReviewCount": "3376",
+    "thirdPartyRating": "4.1",
+    "thirdPartyReviewCount": "293",
     "otherRatingSites": [
       {
         "rating": "4.1",
-        "reviewCount": "293",
-        "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d26335829-Reviews-Motto_By_Hilton_New_York_City_Times_Square-New_York_City_New_York.html"
+        "reviewCount": "293"
       },
       {
         "rating": "4.2",
-        "reviewCount": "3376",
-        "sourceUrl": "https://www.booking.com/hotel/us/motto-by-hilton-new-york-city-times-square.html"
+        "reviewCount": "3376"
       },
       {
         "rating": "4.4",
-        "reviewCount": "722",
-        "sourceUrl": "https://uk.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+        "reviewCount": "722"
       }
     ],
     "ratingCount": 1070,
@@ -111,61 +102,74 @@
     "review4Url": null
   },
   "Statue of Liberty walking tour": {
-    "ratingCount": 1955,
-    "ratingMix": { "1": 39, "2": 78, "3": 196, "4": 743, "5": 899 },
-    "review1": "Travelers recommend Statue City Cruises for clear boarding instructions at Castle Clinton, helpful security staff, and timed ferry windows that keep the Battery Park line moving if you arrive before your printed departure.",
-    "review1Source": "TripAdvisor",
-    "review1Rating": "4",
-    "review2": "Families note the audio tour on Liberty Island explains construction history without rushing you off the pedestal views, though summer sun on the ferry top deck requires hats and water bottles.",
-    "review2Source": "Google",
+    "thirdPartyRating": "4.9",
+    "thirdPartyReviewCount": "9034",
+    "otherRatingSites": [
+      {
+        "rating": "4.9",
+        "reviewCount": "9034"
+      },
+      {
+        "rating": "4.8",
+        "reviewCount": "14896"
+      },
+      {
+        "rating": "4.6",
+        "reviewCount": "2968"
+      }
+    ],
+    "ratingCount": 9034,
+    "reviewThemes": {
+      "praise": [
+        "knowledgeable and engaging guides who share rich Statue and Ellis history",
+        "guides keep groups organized and take photos",
+        "enthusiastic guides who make history come to life with accents and stories",
+        "well-organized tours with reserved ferry access"
+      ],
+      "complaints": [
+        "long security queues and wait times especially in peak season",
+        "need clearer details on inclusions like Ellis Island guidance and pedestal access",
+        "significant walking involved; prepare for heat and hydration"
+      ]
+    },
+    "websiteFlavour": "Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "xaiRatingsFetched": true,
+    "review1": "knowledgeable and engaging guides who share rich Statue and Ellis history. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review2": "guides keep groups organized and take photos. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review3": "enthusiastic guides who make history come to life with accents and stories. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review4": "well-organized tours with reserved ferry access. Official ferry tickets for round-trip service from Battery Park to Liberty Island (Statue of Liberty grounds and museum) and Ellis Island (Immigration Museum); explore at your own pace with included audio tours; starting at $26 including fees; focus on iconic landmarks, history, immigration stories and views.",
+    "review1Rating": "5",
     "review2Rating": "4",
-    "review3": "Yelp visitors warn about airport-style screening delays at Castle Clinton, praise National Park rangers on Ellis Island, and suggest booking the earliest ferry when visiting on a holiday weekend with kids.",
-    "review3Source": "Yelp",
-    "review3Rating": "3",
-    "review4": "TripAdvisor ferry reviews mention smooth boarding at Battery Park, clear announcements about crown access restrictions, and gift shops that do not overwhelm the museum exhibits on Liberty Island.",
-    "review4Source": "TripAdvisor",
-    "review4Rating": "4"
-  },
-  "Midtown sample hotel": {
-    "ratingCount": 4345,
-    "ratingMix": { "1": 87, "2": 174, "3": 435, "4": 1648, "5": 2001 },
-    "review1": "Guests comparing Midtown stays mention compact suite layouts, reliable Wi-Fi for remote work, and front desks that store luggage before a late check-in when Broadway shows run long on weeknights.",
-    "review1Source": "Google",
-    "review1Rating": "4",
-    "review2": "Yelp reviewers highlight subway access within a few blocks, quiet upper-floor rooms when facing the courtyard, and housekeeping that refreshes towels even on short two-night comparison stays.",
-    "review2Source": "Yelp",
-    "review2Rating": "4",
-    "review3": "Google travelers note higher weekend rates, fast elevators during conventions, and lobby staff who explain the difference between club-level and standard room keys clearly at check-in.",
-    "review3Source": "Google",
-    "review3Rating": "3",
-    "review4": "TripAdvisor visitors comparing Times Square hotels say the gym and laundry room help on longer NYC trips, though street noise on lower floors requires requesting a higher assignment at check-in.",
-    "review4Source": "TripAdvisor",
-    "review4Rating": "4"
+    "review3Rating": "5",
+    "review4Rating": "5",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
   },
   "Strand Book Store": {
     "googleRating": "4.8",
     "googleReviewCount": "16273",
-    "googleRatingSourceUrl": "https://www.google.com/maps/place/Strand+Book+Store/@40.7332515,-73.9935281,16z/data=!3m1!4b1!4m6!3m5!1s0x89c259991086229d:0x5ecdcafc0a628a40!8m2!3d40.7332515!4d-73.9909532!16s%2Fg%2F1ydpv9vcj",
     "yelpRating": "4.4",
     "yelpReviewCount": "1800",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/strand-bookstore-new-york",
-    "thirdPartyRating": "4.7 (842) · 4.8 (8,005) · 4.8 (4,373)",
-    "thirdPartyReviewCount": "8005",
+    "thirdPartyRating": "4.7",
+    "thirdPartyReviewCount": "842",
     "otherRatingSites": [
       {
         "rating": "4.7",
-        "reviewCount": "842",
-        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+        "reviewCount": "842"
       },
       {
         "rating": "4.8",
-        "reviewCount": "8005",
-        "sourceUrl": "https://www.provenexpert.com/en-us/strand-book-store/"
+        "reviewCount": "8005"
       },
       {
         "rating": "4.8",
-        "reviewCount": "4373",
-        "sourceUrl": "https://www.provenexpert.com/en-us/strand-book-store/"
+        "reviewCount": "4373"
       }
     ],
     "ratingCount": 16273,
@@ -202,17 +206,14 @@
   "Afternoon matinee show": {
     "googleRating": "4.5",
     "googleReviewCount": "3607",
-    "googleRatingSourceUrl": "https://maps.app.goo.gl/R6DFvRBe9grt99kc7",
     "yelpRating": "4",
     "yelpReviewCount": "336",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/tkts-times-square-new-york",
-    "thirdPartyRating": "4.6 (17)",
+    "thirdPartyRating": "4.6",
     "thirdPartyReviewCount": "17",
     "otherRatingSites": [
       {
         "rating": "4.6",
-        "reviewCount": "17",
-        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d25265232-Reviews-TKTS_Times_Square-New_York_City_New_York.html"
+        "reviewCount": "17"
       }
     ],
     "ratingCount": 3607,
@@ -249,17 +250,14 @@
   "Friend meetup at Bryant Park": {
     "googleRating": "4.7",
     "googleReviewCount": "108706",
-    "googleRatingSourceUrl": "https://goo.gl/maps/kt36oPqKcKeKPLY3A",
     "yelpRating": "4.6",
     "yelpReviewCount": "1429",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/bryant-park-new-york-2",
-    "thirdPartyRating": "4.6 (24,055)",
+    "thirdPartyRating": "4.6",
     "thirdPartyReviewCount": "24055",
     "otherRatingSites": [
       {
         "rating": "4.6",
-        "reviewCount": "24055",
-        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+        "reviewCount": "24055"
       }
     ],
     "ratingCount": 108706,
@@ -301,14 +299,12 @@
     "googleReviewCount": "2498",
     "yelpRating": "4",
     "yelpReviewCount": "2073",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/carbone-new-york",
-    "thirdPartyRating": "4 (531)",
+    "thirdPartyRating": "4",
     "thirdPartyReviewCount": "531",
     "otherRatingSites": [
       {
         "rating": "4",
-        "reviewCount": "531",
-        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html"
+        "reviewCount": "531"
       }
     ],
     "ratingCount": 2498,
@@ -350,17 +346,14 @@
   "Jazz at Lincoln Center": {
     "googleRating": "4.6",
     "googleReviewCount": "1335",
-    "googleRatingSourceUrl": "https://maps.google.com/maps?q=Dizzy%27s+%40JALC,New+York,NY,US",
     "yelpRating": "4.1",
     "yelpReviewCount": "467",
-    "yelpRatingSourceUrl": "https://www.yelp.com/biz/dizzys-club-new-york",
-    "thirdPartyRating": "4.5 (879)",
+    "thirdPartyRating": "4.5",
     "thirdPartyReviewCount": "879",
     "otherRatingSites": [
       {
         "rating": "4.5",
-        "reviewCount": "879",
-        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
+        "reviewCount": "879"
       }
     ],
     "ratingCount": 1335,

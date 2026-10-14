@@ -47,7 +47,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
 };
 
 /** Gate B rows that must fail the VK search output contract (list-only / blocked source). */
-export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([]);
+export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
 
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
