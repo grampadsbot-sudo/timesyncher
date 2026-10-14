@@ -85,6 +85,11 @@ import { blockVacationAppReplyIdCitation } from '../src/vacation/reply-id-citati
 import { loadSessionOwnerReplyPlan } from '../src/vacation/reply-plan-entitlement.mjs';
 import { scheduleChatThing } from '../src/vacation/chat-thing-schedule.mjs';
 import { resolveVacationAppQueueIntake } from '../src/vacation/vacation-app-queue-intake.mjs';
+import {
+  refreshSearchProgressFromTripThings,
+  searchProgressForClient,
+  syncSearchProgressStage,
+} from '../src/vacation/search-progress.mjs';
 
 let vacationAppDatabase = null;
 
@@ -909,6 +914,12 @@ async function handleVacationApp(req, res, db, url) {
     }
     const turns = await loadVacationAppTurns(db, session, selected?.id || null);
     const itinerary = selected ? await loadTripThings(db, selected.id) : [];
+    let searchProgress = null;
+    if (selected?.id) {
+      await refreshSearchProgressFromTripThings(db, selected.id, { stage: 'searching' });
+      const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
+      searchProgress = searchProgressForClient(synced);
+    }
     const seat = seatFromSession(session);
     const tripSiteUrl = selected ? tripWelcomeSiteUrl(selected) : '';
     return sendJson(res, 200, {
@@ -929,6 +940,7 @@ async function handleVacationApp(req, res, db, url) {
       vacations,
       turns,
       itinerary,
+      searchProgress,
     });
   }
 
@@ -1050,9 +1062,15 @@ async function handleVacationApp(req, res, db, url) {
       latencyMs: queued.latencyMs,
       sessionE2eMs: queued.sessionE2eMs,
     });
+    let searchProgress = null;
+    if (selected?.id) {
+      const synced = await syncSearchProgressStage(db, selected.id, { publicUrl: selected?.publicUrl || '' });
+      searchProgress = searchProgressForClient(synced);
+    }
     return sendJson(res, postStatus, {
       trip: selected,
       ...queued,
+      searchProgress,
       serverTiming,
     });
   }
