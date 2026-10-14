@@ -119,7 +119,6 @@ function normalizeReviewSource(source = '') {
 
 function isAllowedReviewSource(source = '') {
   const row = normalizeReviewSource(source);
-  if (row === 'written from the set') return true;
   return ['Google', 'Yelp', 'TripAdvisor'].includes(row);
 }
 
