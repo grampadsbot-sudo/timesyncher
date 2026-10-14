@@ -6,7 +6,6 @@
     "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
     "price": 26,
     "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
-    "logoUrl": "https://statuecitycruises.com/favicon.ico",
     "lat": 40.6892,
     "lng": -74.0445,
     "address": "Castle Clinton, Battery Park, New York, NY 10004"
@@ -32,7 +31,6 @@
     "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
     "price": 35,
     "website": "https://jazz.org/dizzys/",
-    "logoUrl": "https://jazz.org/favicon.ico",
     "lat": 40.7725,
     "lng": -73.9838,
     "address": "Broadway at 60th Street, New York, NY 10019",
@@ -46,7 +44,6 @@
     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
     "price": 78,
     "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-    "logoUrl": "https://www.tdf.org/favicon.ico",
     "lat": 40.758,
     "lng": -73.9855,
     "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
@@ -61,7 +58,6 @@
     "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
     "price": 20,
     "website": "https://bryantpark.org/",
-    "logoUrl": "https://bryantpark.org/favicon.ico",
     "lat": 40.7536,
     "lng": -73.9832,
     "address": "Bryant Park, New York, NY 10018",
@@ -132,5 +128,26 @@
     "thirdPartyRating": "6.8",
     "thirdPartyReviewCount": "3898",
     "thirdPartySource": "Booking.com"
+  },
+  "Priceline opaque JFK — Standard sedan": {
+    "category": "car",
+    "price": 306,
+    "totalPrice": 306,
+    "rentalCompany": "Priceline opaque",
+    "vehicleClass": "Standard sedan",
+    "carType": "Standard sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "pickupHours": "Counter hours are not shown before booking; Priceline hides the supplier until checkout.",
+    "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
+    "missingFields": ["ratings", "reviews"],
+    "reviewThemes": [
+      "No company-specific JFK counter reputation before booking",
+      "Supplier brand hidden until checkout",
+      "Choose only if savings outweigh counter uncertainty"
+    ],
+    "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty."
   }
 }

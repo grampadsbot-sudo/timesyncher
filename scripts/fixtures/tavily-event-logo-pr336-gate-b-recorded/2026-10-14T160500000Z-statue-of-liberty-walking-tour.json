@@ -1,0 +1,17 @@
+{
+  "fetchedAt": "2026-10-14T16:05:00.000Z",
+  "rowId": 604,
+  "ccabKey": "Statue of Liberty walking tour",
+  "title": "Statue of Liberty walking tour",
+  "query": "Statue of Liberty walking tour New York official website",
+  "tavilyResponse": {
+    "query": "Statue of Liberty walking tour New York official website",
+    "results": [
+      {
+        "title": "Statue City Cruises",
+        "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+        "content": "Official ferry tickets from Battery Park at https://statuecitycruises.com/tickets/new-york-general-admission include Liberty and Ellis islands."
+      }
+    ]
+  }
+}

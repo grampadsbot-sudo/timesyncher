@@ -6,6 +6,7 @@ import {
   assertGateBRowProvenance,
   buildPr336VkSearchPlacesByRowId,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
+import { applyPr336GateBEventLogosFromRecorded } from './lib/pr336-gate-b-event-logo-recorded-lib.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -18,12 +19,20 @@ const GATE_B_ROWS = [
   { day: 3, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
   { day: 3, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
   { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-  { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+  { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
 ];
 
-const placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
+let placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, placesById);
+
+const eventLogoBinding = await applyPr336GateBEventLogosFromRecorded(placesById);
+placesById = eventLogoBinding.placesById;
 
 const outPath = fileURLToPath(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url));
 writeFileSync(outPath, `${JSON.stringify(placesById, null, 2)}\n`, 'utf8');
-console.log(JSON.stringify({ ok: true, wrote: outPath, places: Object.keys(placesById).length }));
+console.log(JSON.stringify({
+  ok: true,
+  wrote: outPath,
+  places: Object.keys(placesById).length,
+  eventLogoSources: eventLogoBinding.sources,
+}, null, 2));

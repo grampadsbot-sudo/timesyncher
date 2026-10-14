@@ -11,7 +11,7 @@ import {
 } from '../src/vacation/search-place-output.mjs';
 import {
   assertGateBRowProvenance,
-  buildPr336VkSearchPlacesByRowId,
+  buildPr336VkSearchPlacesByRowIdWithEventLogos,
   gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import {
@@ -19,6 +19,8 @@ import {
   normalizeVkContractReviewBody,
   vkContractText,
 } from './fixtures/xai-grok-place-ratings-contract.mjs';
+import { assertVkSearchEventLogoSource } from './lib/vk_search_event_logo_source_check.mjs';
+
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
   { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602 },
@@ -30,7 +32,7 @@ const GATE_B_ROWS = [
   { day: 3, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
   { day: 3, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
   { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-  { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+  { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
 ];
 
 const COPIED_FERRY_REVIEW = 'At all times the company staff treated him preferentially both for boarding and disembarking from the ferry, and the Battery Park security line moved steadily when we arrived early.';
@@ -291,7 +293,7 @@ assert.throws(
   'assertSearchPlaceOutputContract must reject banned zero price after enrichment',
 );
 
-const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
+const gateBPlaces = await buildPr336VkSearchPlacesByRowIdWithEventLogos(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
@@ -490,5 +492,6 @@ assert.throws(
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
 
 await import('./vk_search_place_source_contract_check.mjs');
+await assertVkSearchEventLogoSource(assert);
 
 console.log('vk search place output contract tests passed');

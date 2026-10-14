@@ -1,0 +1,17 @@
+{
+  "fetchedAt": "2026-10-14T16:05:00.000Z",
+  "rowId": 606,
+  "ccabKey": "Afternoon matinee show",
+  "title": "Afternoon matinee show",
+  "query": "Afternoon matinee show New York official website",
+  "tavilyResponse": {
+    "query": "Afternoon matinee show New York official website",
+    "results": [
+      {
+        "title": "TKTS by TDF",
+        "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+        "content": "Official TKTS booth site https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/ sells same-day Broadway matinee tickets."
+      }
+    ]
+  }
+}
