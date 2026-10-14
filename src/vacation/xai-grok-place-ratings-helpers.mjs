@@ -1,17 +1,26 @@
-const WRITTEN_FROM_SET = 'written from the set';
-
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-function wordCount(value = '') {
-  return text(value, 4000).split(/\s+/).filter(Boolean).length;
+function ratingScaleMax(block = {}, rawAverage = null) {
+  const explicit = Number(block?.scaleMax);
+  if (Number.isFinite(explicit) && explicit > 0) return explicit;
+  const parsed = Number(rawAverage ?? block?.average);
+  if (Number.isFinite(parsed) && parsed > 5 && parsed <= 10) return 10;
+  return 5;
 }
 
-function numericRating(value) {
+function normalizeAverageToFive(value, block = {}) {
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 5) return null;
-  return Math.round(parsed * 10) / 10;
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  const scale = ratingScaleMax(block, parsed);
+  const onFive = (parsed / scale) * 5;
+  if (!Number.isFinite(onFive) || onFive <= 0 || onFive > 5) return null;
+  return Math.round(onFive * 10) / 10;
+}
+
+function numericRating(value, block = {}) {
+  return normalizeAverageToFive(value, block);
 }
 
 function numericCount(value) {
@@ -45,7 +54,7 @@ function normalizeSiteBlock(block = {}) {
   if (block.notPublished === true) {
     return { average: null, reviewCount: null, sourceUrl: text(block.sourceUrl, 500), notPublished: true };
   }
-  const average = numericRating(block.average);
+  const average = normalizeAverageToFive(block.average, block);
   const reviewCount = numericCount(block.reviewCount);
   if (average == null || reviewCount == null) {
     return { average: null, reviewCount: null, sourceUrl: text(block.sourceUrl, 500), notPublished: true };
@@ -70,7 +79,7 @@ export function parseXaiStructuredPayload(raw = '') {
   const yelp = normalizeSiteBlock(parsed.yelp);
   const otherSites = (Array.isArray(parsed.otherSites) ? parsed.otherSites : [])
     .map((row) => ({
-      average: numericRating(row?.average),
+      average: normalizeAverageToFive(row?.average, row),
       reviewCount: numericCount(row?.reviewCount),
       sourceUrl: text(row?.sourceUrl, 500),
     }))
@@ -174,28 +183,11 @@ function reviewStarsForAverage(average, slot) {
   return String(Math.min(5, Math.max(1, star)));
 }
 
-function buildReviewBody(theme, flavour, title, slot) {
-  const name = text(title, 120) || 'this spot';
-  const flavourBit = flavour ? `${flavour}.` : '';
-  const variants = [
-    `${theme}. ${flavourBit} That theme shows up often in recent feedback about ${name}.`,
-    `${theme}, and regulars at ${name} keep mentioning it in recent write-ups. ${flavourBit}`,
-    `Recent visitors to ${name} highlight that ${theme.charAt(0).toLowerCase()}${theme.slice(1)}. ${flavourBit}`,
-    `${theme}; people planning a visit to ${name} should expect that pattern in recent reviews. ${flavourBit}`,
-  ];
-  let body = text(variants[(slot - 1) % variants.length], 2000);
-  const pad = [
-    'The overall average rating aligns with that experience.',
-    'It matches the published average for the venue.',
-    'That fits the rating picture people see on review sites.',
-    'The published average reflects that mix of feedback.',
-  ];
-  let cursor = 0;
-  while (wordCount(body) < 25 && cursor < pad.length) {
-    body = text(`${body} ${pad[(slot + cursor) % pad.length]}`, 2000);
-    cursor += 1;
-  }
-  return body;
+function buildReviewBody(theme, flavour) {
+  const themeText = text(theme, 1500);
+  const flavourText = text(flavour, 800);
+  if (themeText && flavourText) return text(`${themeText}. ${flavourText}`, 2000);
+  return text(themeText || flavourText, 2000);
 }
 
 export function writeRepresentativeReviews(record = {}, parsed = {}, { title = '' } = {}) {
@@ -205,9 +197,10 @@ export function writeRepresentativeReviews(record = {}, parsed = {}, { title = '
   const flavour = text(parsed.websiteFlavour, 800);
   for (let index = 1; index <= 4; index += 1) {
     const theme = themes[index - 1];
-    record[`review${index}`] = buildReviewBody(theme, flavour, title, index);
-    record[`review${index}Source`] = WRITTEN_FROM_SET;
+    record[`review${index}`] = buildReviewBody(theme, flavour);
     record[`review${index}Rating`] = reviewStarsForAverage(average, index);
+    delete record[`review${index}Source`];
+    delete record[`review${index}Url`];
   }
 }
 

@@ -5,6 +5,7 @@ import {
 import {
   applyXaiPlaceRatingsToRecord,
   parseXaiStructuredPayload,
+  reviewThemesDistinctCount,
   searchProductCategoryFromPlace,
   writeRepresentativeReviews,
 } from './xai-grok-place-ratings-helpers.mjs';
@@ -231,7 +232,12 @@ export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}, { titl
   }
 
   applyXaiPlaceRatingsToRecord(next, parsed);
-  writeRepresentativeReviews(next, parsed, { title });
+  clearReviewFields(next);
+  if (reviewThemesDistinctCount(next) < 4) {
+    addMissingFields(next, ['reviews']);
+  } else {
+    writeRepresentativeReviews(next, parsed, { title });
+  }
   next.xaiRatingsFetched = true;
   return next;
 }

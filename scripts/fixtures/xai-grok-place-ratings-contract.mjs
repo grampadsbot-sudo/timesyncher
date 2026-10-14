@@ -46,8 +46,9 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
   assert.equal(xaiRecord.ratingCount, 820);
   assert.equal(xaiRecord.ratingMix, undefined);
   writeRepresentativeReviews(xaiRecord, parsedXai, { title: 'Sample Cocktail Bar' });
-  assert.match(xaiRecord.review1Source, /written from the set/i);
-  assert.ok(String(xaiRecord.review1).split(/\s+/).length >= 25);
+  assert.equal(xaiRecord.review1Source, undefined);
+  assert.ok(String(xaiRecord.review1).split(/\s+/).length >= 12);
+  assert.match(String(xaiRecord.review1), /Seasonal Italian-American/i);
   const xaiPlace = {
     category: 'restaurant',
     title: 'Sample Cocktail Bar',
@@ -76,4 +77,31 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
   assert.ok(flaggedXai.missingFields.includes('reviews'));
   assert.equal(flaggedXai.review1, undefined);
   assert.equal(flaggedXai.xaiRatingsFetched, false);
+
+  const sparseThemes = enrichPlaceRecordWithXaiRatings(
+    {},
+    parseXaiStructuredPayload(JSON.stringify({
+      google: { average: 4.5, reviewCount: 100, sourceUrl: 'https://example.com/google', notPublished: false },
+      yelp: { notPublished: true },
+      otherSites: [],
+      reviewThemes: {
+        praise: ['Friendly staff', 'Good value'],
+        complaints: ['Noise on weekends'],
+      },
+      websiteFlavour: 'Casual dining room',
+    })),
+    { title: 'Sparse themes place' },
+  );
+  assert.ok(sparseThemes.missingFields.includes('reviews'));
+  assert.equal(sparseThemes.review1, undefined);
+  assert.equal(sparseThemes.xaiRatingsFetched, true);
+
+  const tenPoint = parseXaiStructuredPayload(JSON.stringify({
+    google: { notPublished: true },
+    yelp: { notPublished: true },
+    otherSites: [{ average: 8.6, reviewCount: 500, sourceUrl: 'https://example.com/booking' }],
+    reviewThemes: { praise: [], complaints: [] },
+    websiteFlavour: '',
+  }));
+  assert.equal(tenPoint.otherSites[0].average, 4.3);
 }

@@ -175,7 +175,7 @@ const fewReviewNoMixViolations = searchPlaceOutputViolations({
     googleRating: '4.6',
     ratingCount: 2,
     review1: reviewBody('few-1'),
-    review1Source: 'written from the set',
+    review1Source: 'Google',
     review1Rating: '5',
     review2: reviewBody('few-2'),
     review2Source: 'Google',

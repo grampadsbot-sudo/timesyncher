@@ -14,6 +14,8 @@ const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder
 
 /** Minimum restaurant/store/event Things in a trip batch (VK contract v1.3.0). */
 export const TRIP_MIN_NON_EXEMPT_THINGS = 15;
+/** Theme-based xAI reviews use real theme text only (no word-count padding). */
+const XAI_REPRESENTATIVE_REVIEW_MIN_WORDS = 12;
 /** Max share of Things that may miss required fields when each gap is flagged in missingFields. */
 const TRIP_MAX_MISSING_THING_FRACTION = 0.2;
 
@@ -117,12 +119,15 @@ function normalizeReviewSource(source = '') {
 
 function isAllowedReviewSource(source = '') {
   const row = normalizeReviewSource(source);
-  if (row === 'written from the set') return true;
   return ['Google', 'Yelp', 'TripAdvisor'].includes(row);
 }
 
 /** VK v1.5.0: ~25 words, allowed source label, numeric star — no review URL required. */
 function reviewBodyIsPresent(place = {}, index = 1) {
+  const record = sourceRecordOnPlace(place);
+  if (xaiThemesReviewPath(record) && reviewThemesDistinctCount(record) >= 4) {
+    return xaiRepresentativeReviewBodyPresent(place, index);
+  }
   const body = reviewField(place, index);
   const source = reviewField(place, index, 'Source');
   const rating = reviewField(place, index, 'Rating');
@@ -191,10 +196,17 @@ function requiredDistinctReviewCount(place = {}) {
   return 4;
 }
 
-function writtenFromSetReviewsComplete(place = {}) {
+function xaiRepresentativeReviewBodyPresent(place = {}, index = 1) {
+  const body = reviewField(place, index);
+  const rating = reviewField(place, index, 'Rating');
+  if (wordCount(body) < XAI_REPRESENTATIVE_REVIEW_MIN_WORDS) return false;
+  if (!/\d/.test(rating)) return false;
+  return true;
+}
+
+function xaiRepresentativeReviewsComplete(place = {}) {
   for (let index = 1; index <= 4; index += 1) {
-    if (!reviewBodyIsPresent(place, index)) return false;
-    if (reviewField(place, index, 'Source') !== 'written from the set') return false;
+    if (!xaiRepresentativeReviewBodyPresent(place, index)) return false;
   }
   return true;
 }
@@ -203,7 +215,7 @@ function xaiAverageCountThemesPath(place = {}) {
   const record = sourceRecordOnPlace(place);
   if (!xaiThemesReviewPath(record)) return false;
   if (reviewThemesDistinctCount(record) < 4) return false;
-  return writtenFromSetReviewsComplete(place);
+  return xaiRepresentativeReviewsComplete(place);
 }
 
 /** Stored reviews when average+count+themes (xAI) or legacy mix rules are satisfied. */
