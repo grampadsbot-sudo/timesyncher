@@ -6,6 +6,9 @@ STUCK rules (repo grampadsbot-sudo/timesyncher):
   C. zero merges in the last 4 h while there are ready (open, non-draft, unheld) PRs
   D. issue status:ready + executor:* with no agent comment / linked PR within 60 min
 On STUCK: `tincan ask claude-code --notify` (cheap lane, the managing dr Claude Code on the MacBook), one line.
+Dr scorecard (skills/tsv-manager v1.8.0): a ring on an item with no PR/issue comment or label/state event since the previous ring is a miss.
+Each miss appends a -2 logged-only event to the owning dr's section of bot-admin/lanes/dr-scorecard and prints `score: <dr> <total>`.
+Three misses on one item escalate to dr eggbot via `tincan ask grokbot`, naming the dr. Unknown owner is recorded as dr `unknown`.
 Same item still stuck after 3 h -> also one OpenClaw doorbell ring (kind vk-stuck, same webhook as escalation_bell.py).
 Telegram feed lines go out on EVERY run while stuck (no dedup). Claude Code Tincan bell also rings every run while stuck (Craig 6:25 AM PT); dr eggbot OpenClaw doorbell 60 min after first detection, then at most hourly (Craig 6:28 AM PT) (state stuck-check-state.json). Silent when nothing stuck.
 Report grouping (Craig 2026-10-14): one entry per job, joining a PR with its explicit owning issue; dependency mentions do not join jobs. Valid named future-phase pairs remain visible as PARKED and do not ring action bells. Tracker objects and launch/merge guards remain unchanged.
@@ -14,6 +17,7 @@ import datetime as dt, json, os, re, subprocess, sys, time, urllib.request, urll
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tsv_common import GH, REPO, D, PT, load_json, save_json, scrub, tell_craig
 from work_groups import consolidate
+from dr_scorecard import ASSESS_SLUG, owner_of, read_page, record_miss, should_escalate
 STATE = D + "/stuck-check-state.json"; SEC = D + "/.drEgg-doorbell.json"
 QUIET_S = 60 * 60; HOLD_S = 60 * 60; MERGE_S = 4 * 3600; READY_S = 60 * 60; ESC_S = 60 * 60; ESC_EVERY = 60 * 60; RING_EVERY = 0; SCOPE_S = 7 * 86400; IDLE_S = 10 * 60
 DONE = {"done", "awaiting-craig-review"}
@@ -147,6 +151,34 @@ def ring_claude(msg, dry):
         r = subprocess.run(["tincan", "ask", "claude-code", "--notify", msg], capture_output=True, text=True, timeout=40)
         return "ok" if r.returncode == 0 else "rc%d" % r.returncode
     except Exception as e: return type(e).__name__
+def ring_grok(msg, dry):
+    if dry: return "dry"
+    try:
+        r = subprocess.run(["tincan", "ask", "grokbot", "--notify", msg], capture_output=True, text=True, timeout=40)
+        return "ok" if r.returncode == 0 else "rc%d" % r.returncode
+    except Exception as e: return type(e).__name__
+ACTION_EVENTS = {"labeled", "unlabeled", "closed", "reopened", "merged", "ready_for_review", "convert_to_draft"}
+def posted_since(gh, n, since):
+    """True if PR/issue n got a comment or a label/state event after epoch `since`, i.e. the last ring was answered."""
+    if any(iso(c["created_at"]) > since for c in gh.pages("/repos/%s/issues/%d/comments" % (REPO, n))): return True
+    return any(e.get("event") in ACTION_EVENTS and iso(e["created_at"]) > since for e in gh.pages("/repos/%s/issues/%d/events" % (REPO, n)))
+ASSESS = {}   # running-assessment text, read at most once per run and only when a miss needs an owner
+def score_miss(key, n, s, now, gh):
+    """Miss bookkeeping for a ring on an item that was rung before. Returns a 'score: <dr> <total>' piece, or None if answered."""
+    if posted_since(gh, n, s["last_ring"]):
+        s["misses"] = 0; return None
+    s["misses"] = s.get("misses", 0) + 1
+    if "text" not in ASSESS:
+        try: ASSESS["text"] = read_page(ASSESS_SLUG)
+        except Exception: ASSESS["text"] = ""
+    dr = owner_of(n, ASSESS["text"])
+    label = INFO[key].get("who") or ("PR #%d" % n if key.startswith("pr") else "issue #%d" % n)
+    total = record_miss(dr, label, now)
+    out = "score: %s %d" % (dr, total)
+    if should_escalate(s["misses"]):
+        res = ring_grok("[ubuntu stuck-check] spin escalation: %s has %d rings with no PR/issue post. Missed dr: %s (score %d). Name the one concrete action." % (label, s["misses"], dr, total), False)
+        out += " escalated(%d misses)=%s" % (s["misses"], res)
+    return out
 def ring_openclaw(n, key, reason, dry, maxlen=300):
     if dry: return "dry"
     try:
@@ -163,13 +195,18 @@ def main():
     dry = "--dry-run" in sys.argv
     if os.path.exists(D + "/STUCK_STOP") and not dry: logline("STUCK_STOP present; skipped"); return
     try:
-        st = load_json(STATE, {}); now = time.time()
-        items = find(GH(), st, now)
-        seen = st.setdefault("items", {}); rang = []; esc = []; tg = []
+        st = load_json(STATE, {}); now = time.time(); gh = GH()
+        items = find(gh, st, now)
+        seen = st.setdefault("items", {}); rang = []; esc = []; tg = []; scores = []
         for key, n, reason in items:
             s = seen.setdefault(key, {"first": now, "last_ring": 0, "escalated": 0})
             tg.append(short(key, n))   # Telegram feed: every run, no dedup (Craig 6:24 AM PT)
             if not INFO[key].get("parked_job") and now - s["last_ring"] >= RING_EVERY:
+                if not dry and s["last_ring"]:
+                    try:
+                        sc = score_miss(key, n, s, now, gh)
+                        if sc: scores.append(sc)
+                    except Exception as e: scores.append("%s score error %s" % (key, type(e).__name__))
                 res = ring_claude("[ubuntu stuck-check] " + short(key, n) + ". Please unstick or say why it waits.", dry)
                 rang.append("%s:%s" % (key, res))
                 if not dry: s["last_ring"] = now
@@ -188,8 +225,8 @@ def main():
         for k in [k for k in seen if k not in live]: seen.pop(k)
         if not dry: save_json(STATE, st)
         parked_count = sum(bool(INFO[k].get("parked_job")) for k, _, _ in items)
-        line = "%s jobs=%d stuck=%d parked=%d [%s] rang=[%s] escalated=[%s]" % ("DRY" if dry else "LIVE", len(items), len(items) - parked_count, parked_count,
-               "; ".join(r for _, _, r in items), ", ".join(rang), ", ".join(esc))
+        line = "%s jobs=%d stuck=%d parked=%d [%s] rang=[%s] escalated=[%s] %s" % ("DRY" if dry else "LIVE", len(items), len(items) - parked_count, parked_count,
+               "; ".join(r for _, _, r in items), ", ".join(rang), ", ".join(esc), "; ".join(scores))
         logline(line)
         if dry: print(line); print("TELEGRAM would post:\nVK stuck list %s\n" % dt.datetime.now(PT).strftime("%-I:%M %p PT") + "\n".join(tg))
     except Exception as e:
