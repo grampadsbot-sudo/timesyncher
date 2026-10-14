@@ -1,88 +1,126 @@
-# TSV #397 — Comment-bearing code integrity audit
+# TSV [#397](https://github.com/grampadsbot-sudo/timesyncher/issues/397) — Comment-bearing code integrity audit
 
 ## Immutable inputs
 
-| Label | SHA | Note |
+| Input | SHA / identity |
+| --- | --- |
+| [PR401](https://github.com/grampadsbot-sudo/timesyncher/pull/401) reviewed head | `1d302b1de146dd9ff822f8df0ac24780033e0478` |
+| Canonical pre-deletion source | `b6980aa6e3c710a00c5d979064dff671855b4e29` |
+| [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) candidate, read only | `e9b1b447c3dc4a6a154725f76a78a3ba052c891a` |
+| Canonical inventory | [`comment-audit-evidence.json`](comment-audit-evidence.json) |
+
+Nothing in this report approves a later head, [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336), the deployed harness, or overall integrity.
+
+## Exact coverage
+
+- Canonical comments: **405**.
+- Canonical unique paths: **192**.
+- Ledger entries / unique paths: **192 / 192**.
+- Statuses: **144 clean, 21 known, 26 new findings, 1 file-specific gap**.
+- Missing / extra / duplicate paths: **0 / 0 / 0**.
+- Inventory and ledger path SHA-256: `a0c16a27a0210a39b503a0265b616e6b7e5fac078ea2acff3bc39ddee4172789`.
+- Exact coverage: **true**.
+
+The machine-readable [`comment-audit-ledger.json`](comment-audit-ledger.json) records, for every path, `path`, `sourceSHA`, source blob SHA, concrete functions or data constants, inputs/transformations/outputs/callers, introducing history for every preserved comment site, source/caller/history evidence, finding, disposition, and review attestation. [`tsv397-audit-decisions.tsv`](tsv397-audit-decisions.tsv) is the compact decision index.
+
+Every module was read in full at the canonical source. Relevant producers, consumers, acceptance return paths, current-head behavior, [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) candidate paths, blame commits, and introducing diffs were reviewed. Comments were treated as leads, not proof.
+
+## [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) acceptance blockers outside the 192-file denominator
+
+| ID | Evidence-backed blocker | Required follow-through |
 | --- | --- | --- |
-| PR401 GPT-round start | `ed302dc1eecf4450b956e950218ca6da039cf5e0` | Existing PR401 branch after the CI-only repair |
-| Migration audit base | `b6980aa6e3c710a00c5d979064dff671855b4e29` | Required original comment/source evidence |
-| PR336 candidate | `e9b1b447c3dc4a6a154725f76a78a3ba052c891a` | Read-only candidate evidence |
+| P336-A | shared-trip-handler serves a purpose-built NYC positive fixture for one production slug before the configured upstream. Evidence: `e9b1b447:src/vacation/shared-trip-handler.mjs:138-142,196-216`, `e9b1b447:scripts/fixtures/gate-b-approved-shared-trip.mjs:1-7`, `e9b1b447:scripts/fixtures/nyc-craig-kim-daybyday-positive-v1.mjs`, `e9b1b447:scripts/lib/gate-b-nyc-fixture-contract.mjs`. | Remove fixture-specific production serving. Exercise the candidate through the normal sourced payload boundary, reject synthetic summaries/prices/timing, and retain [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402)/[#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) ownership without treating their fixes as approval here. |
+| P336-B | run-shared-served-vacation-client-tests returns success when puppeteer-core is unavailable, so browser assertions can be skipped. Evidence: `e9b1b447:scripts/lib/run-shared-served-vacation-client-tests.mjs:17-26,108-114`, `e9b1b447:package.json`, `e9b1b447:.github/workflows/evidence-secrets.yml:57-60`. | Make missing browser support fail the acceptance command and prove the browser suite actually executes in its owning CI job. |
 
-If either audit input moves, re-review the complete PR336 diff, served-source/capture wiring, fixture/API provenance, acceptance return paths, and the comment inventory delta. Nothing in this report approves a later head.
+P336-A violates the boundary recorded in closed TSV [#343](https://github.com/grampadsbot-sudo/timesyncher/issues/343): local positive-fixture evidence was expressly not a Gate B verdict and fixture-specific production behavior, fake data, generic templates, and fabricated prices were banned. The candidate serves that purpose-built payload before configured upstream data and can make its narrow contract return `pass: true` for synthetic values.
 
-## Inventory and evidence integrity
+Known candidate ownership remains unchanged: TSV [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402) owns summary padding; TSV [#403](https://github.com/grampadsbot-sudo/timesyncher/issues/403) owns the split budget key; TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) owns LAYOUT-NYC verdict suppression. Those issues do not approve P336-A or P336-B.
 
-- [`comment-audit-evidence.json`](comment-audit-evidence.json) is the canonical pre-deletion inventory: **405 comments in 192 unique scoped first-party files** at the migration audit base. It includes the three paths omitted by the earlier text list: `scripts/export_trek_sqlite_to_hosted.py`, `scripts/fixtures/seed_nyc_trip_ccab.py`, and `scripts/run-once.sh`.
-- The saved previews match the original source. The sole sanitizer transformation is `api[.]foursquare[.]com` host defanging.
-- [`commented-code-audit-inventory.txt`](commented-code-audit-inventory.txt) is retained only as a supplemental broad review corpus. It contains generated, HTML, JSON, and package paths and is not the scoped coverage denominator.
-- Generated `public/assets/**` output was not edited. Existing bundle/source checks cover its first-party needles; vendored license text remains intact.
-- Current enforcement scans the requested source roots and root code/config files. Only shebangs, behavior-changing machine directives, `scripts/fixtures/code-ratchet/**`, dependencies, and generated output are exempt.
+## New report-only findings
 
-## Coverage status
+No product, gate, fixture, baseline, threshold, workflow, dependency, environment, deploy, or generated asset fix is made here. Each action below is a scoped follow-through brief.
 
-All 405 preserved comment sites and adjacent source were reviewed. The critical PR336 and acceptance flows and 52 migration-base files were read in full. The other **140 comment-bearing files have comment-context review but not the required full module/data-flow/history review**. Therefore this is not an exhaustive clean audit and PR401 must remain on `hold:integrity-review`.
+| Path | Finding | Follow-through |
+| --- | --- | --- |
+| `.cursor/skills/verify-timesyncher-vacation/scripts/onboarding-welcome-precheck.mjs` | Trip-site HTTP failures other than 404 can still produce onboarding PASS. | Require a successful final HTTP status, add 3xx/403/429/5xx cases, and prove no packet can pass with them. |
+| `apps/vacation-client/src/lib/dayTimelineModel.mjs` | [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) can render an unassigned flight on every itinerary day. | Require a flight assignment or explicit matching dayIds before adding an unassigned flight. Add a negative test for a timeline flight with no assignment and no dayIds. Route all displayed day headings through one helper so titled days still include the required day number. |
+| `apps/vacation-client/test/run-all.mjs` | The normal CI test command silently skips every browser layout acceptance suite. | Make the CI quality-gate job provide a browser switch and execute shell-layout, or fail when layout acceptance is unavailable. Do not treat the current skip as a successful full test run. |
+| `scripts/baseline-subset.mjs` | New-rule seed rows need not match current findings, pre-authorizing arbitrary future suppressions. | Require every new-rule seed row to correspond to a current finding and fail or prune unmatched stale entries. Add a regression where an unused future path or symbol under a new rule cannot pre-authorize a later suppression. |
+| `scripts/check-code-ratchet.mjs` | The code ratchet names the vacation-client source root but silently rejects every nested app path. | Make inScope recognize every configured root and add an app source violation that must appear in the ratchet report. Keep baseline seed-row authorization under the baseline-subset follow-through. |
+| `scripts/lib/itinerary-fresh-gate-metrics.mjs` | The logo comparator can pass candidates that violate both declared centering thresholds. | Require every candidate to meet an explicit absolute or bounded-reference contract, fail unmatched expected rows, and include the Stores logoCenter pass in the aggregate gate. |
+| `scripts/lib/logo-chip-center-of-mass.mjs` | The logo centering gate measures a newly centered redraw, not the browser's rendered logo position. | Replace the synthetic redraw metric with pixels captured from the actual rendered wrapper, or compute the real img rect and intrinsic ink offset in wrapper coordinates. Add a negative regression that deliberately offsets the img and must fail while the centered case passes. Keep screenshots as evidence, not an unexamined side artifact. |
+| `scripts/lib/logo-pixel-ink-grade.mjs` | The LOGO ink gate measures styled chip chrome instead of isolating logo pixels. | Measure only image or fallback glyph pixels, or mask chip border/background. Add a production-styled blank or transparent image regression that requires row and Cars logo gates to fail. |
+| `scripts/live_v7_dialog_pdf.py` | Invalid timing evidence is rewritten into valid-looking evidence. | Reject zev= and any timing line missing an original jev= token before rendering. Remove the replacement. Change the poisoned-input regression to require nonzero exit and no PDF output. |
+| `scripts/screenshot-journey-pdf.mjs` | Direct coverage markers can convert a missing or rejected screenshot into captured coverage. | Make screenshot acceptance page-derived. Remove direct mark calls or record non-screen checks separately. Add captured coverage only after shot returns true and its page exists. Before writing VERIFY or the PDF, assert every captured feature has a corresponding page or an explicit exempt gap. Add a regression test for rejected and missing screenshots. |
+| `scripts/shepherd-staging-smoke-helpers.mjs` | Missing server timing disables the check-5 10-second threshold. | Make missing required trip-create timing a harness failure and add an absent-timing regression. |
+| `scripts/shepherd-staging-smoke-layout-visual-run.mjs` | The proof runner can grade a deployment identified only by a seven-character SHA prefix. | Require exactly 40 hex characters and exact endpoint equality. Omit or mark unobserved deployment ID. Add negative tests for short input, same-prefix mismatch, and missing deployment ID. |
+| `scripts/shepherd-staging-smoke-run-check.mjs` | INFRA_BLOCKED GO checks can produce a passing GO gate and exit 0. | Require PASS for every GO entry. Missing, INFRA_BLOCKED, timed-out, or any non-PASS status must fail GO and exit nonzero while retaining diagnostics. Add blocked LAYOUT/VISUAL runner regressions. |
+| `scripts/shepherd-staging-smoke-single-instance.mjs` | The smoke single-instance lock is not atomically acquired. | Create the lock with an exclusive atomic operation such as openSync using wx. Replace stale locks with a race-safe retry. Add a multi-process test that starts contenders together and proves exactly one acquires the lock. |
+| `scripts/shepherd-staging-smoke-visual-seed.mjs` | VISUAL ignores failed shared-tab seed posts and excludes their screenshots from its verdict. | Propagate the seed result into minting and fail VISUAL on any non-201 seed response. Add explicit shared-tab row assertions or include shared screenshots and hydration failures in the final pass predicate. Add a negative test with a failed seed post. |
+| `scripts/test_inv_claim_first_intake_prompt_premise.mjs` | The test does not enforce its stated zero-Things and no-lodging premise. | Assert an empty things array and the exact absent or null lodging shape as separate literal expectations before evaluating the prompt wording. |
+| `scripts/test_inv_claim_lodging_relevance_route.mjs` | The INV-CLAIM test bypasses the route decision it claims to prove. | Drive the queue or POST route and assert actual flags, provider calls, HTTP result, and persisted payload. |
+| `scripts/test_trip_create_nominatim_critical_path.mjs` | The critical-path Nominatim assertion is a hard-coded zero unrelated to HTTP. | Exercise the real boundary with an instrumented scheduler and prove the response completes before deferred geocoding. |
+| `scripts/vacation-app-reply-rules.mjs` | The production xAI model id is character-code encoded to evade the hard-coded-content gate. | Replace the character-code encoding with an explicit reviewed constant or allowlist entry. Remove encoded model reconstruction from recorded fixtures. Extend the evasion scanner and tests to detect String.fromCharCode construction of banned model identifiers. |
+| `src/vacation/customer-intent.mjs` | Missing customer-intent keys suppress the safe ask fallback. | Validate complete response shape, throw on missing/invalid keys, and prove incomplete JSON falls back with ask true. |
+| `src/vacation/in-turn-place-reply-fallback.mjs` | A failed model reply is synthesized into an ok true Gate B reply. | Separate user-facing resilience from Gate B evidence. Preserve a fallback response for product availability if desired, but mark fallback use as degraded and make the acceptance gate require a valid model-authored grounded reply. Add tests that fallback responses cannot satisfy Gate B 6/6b. |
+| `src/vacation/keepsake-list-minimums.mjs` | Zero or negative env threshold disables Jev filtering. | Reject unauthorized/out-of-range thresholds; test 0, negative, NaN, and extremes; prove low scores cannot pass any accepted production configuration. |
+| `src/vacation/provider-env.mjs` | Provider secret names are deliberately split and suffix-matched, while the deploy scanner contains a bespoke decoder for that exact split. | Replace suffix discovery and joined key-name fragments with an explicit boundary mapping that the repository's policy permits and scans normally. Remove the scanner's syntax-specific decoder. Add negative coverage for similarly suffixed decoy variables and prove only the intended provider keys are read. Coordinate any policy exception explicitly rather than encoding around the rule. |
+| `src/vacation/search-place-output.mjs` | The VK contract accepts an empty batch and 15 unsupported-category rows. | Fail empty lists, reject unsupported categories before counting, and add literal expected-failure tests. |
+| `src/vacation/thing-logo-capture.mjs` | A bare matching brand name can manufacture a favicon and hide a future logo-source gap. | Require persisted logo, favicon, website, or source-record evidence before deriving a brand favicon. Keep the current sourced Priceline row, add a negative bare-name case, and render the category glyph with logoCaptureReason when no sourced logo exists. |
+| `src/vacation/web-access.mjs` | assert_can_edit trusts two matching client-controlled values. | Remove raw equality or authenticate it at a trusted boundary; derive owner from the trip; add HTTP negative proof that forged matching body/header values receive 403. |
 
-The read-only runtime paths `~/tsv-gateb` and `~/tsv-dispatch` are absent on this VM, so deployed/source SHAs and drift could not be checked. That is an additional coverage gap.
+## Known ownership and preserved fixes
 
-## PR336 candidate findings
+| Path | Owner | Assessment |
+| --- | --- | --- |
+| `apps/vacation-client/src/lib/budgetModel.mjs` | TSV [#322](https://github.com/grampadsbot-sudo/timesyncher/issues/322) (closed; unresolved at audited source) | Closed TSV [#322](https://github.com/grampadsbot-sudo/timesyncher/issues/322) explicitly owns the still-self-referential Budget completeness checks. |
+| `apps/vacation-client/src/lib/listTabModel.mjs` | [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402) | [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) summary padding is already owned by [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
+| `apps/vacation-client/test/fixtures/enriched-detail-shared-trip.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The declarative detail fixture does not itself create a false pass; NYC layout ownership remains with TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408). |
+| `routes/vacation-itinerary.mjs` | TSV [#397](https://github.com/grampadsbot-sudo/timesyncher/issues/397), fixed by af7f6e724f77b909002a6cd14e94f50f7c31ba38 | The source mega-comment made route-wiring regex assertions pass without proving the symbols were executable in this module. |
+| `scripts/capture_itinerary_fresh_daybyday_gate.mjs` | [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The hard-coded NYC capture path is reserved to [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408). |
+| `scripts/fixtures/gate-b-approved-shared-trip.mjs` | [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402) and [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) changes acceptance to the synthetic positive NYC fixture. |
+| `scripts/fixtures/pr336-vk-search-trip-sources.mjs` | TSV [#355](https://github.com/grampadsbot-sudo/timesyncher/issues/355) (closed; unresolved row 608 contract failure) | Closed TSV [#355](https://github.com/grampadsbot-sudo/timesyncher/issues/355) explicitly preserves row 608 as failing while acceptance filters it out. |
+| `scripts/fixtures/seed_nyc_trip_ccab.py` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The LAYOUT-NYC path depends on a hard-coded local NYC screenshot seed. |
+| `scripts/lib/gate-b-nyc-fixture-contract.mjs` | [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402) | The 30-word threshold can accept [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336)'s generic summary padding. |
+| `scripts/lib/pr336-gate-b-xai-recorded-lib.mjs` | TSV [#397](https://github.com/grampadsbot-sudo/timesyncher/issues/397) / 4bb5e57c | Source reversibly encodes the banned model ID. |
+| `scripts/shepherd-staging-smoke-layout-nyc-header.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The shared-header probe is part of the owned LAYOUT-NYC acceptance path. |
+| `scripts/shepherd-staging-smoke-layout-nyc.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | LAYOUT-NYC suppresses judge failures and can end as non-failing INFRA_BLOCKED. |
+| `scripts/shepherd-staging-smoke-layout-spine.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The layout spine maps LAYOUT-NYC infrastructure failure to a non-failing smoke status. |
+| `scripts/shepherd-staging-smoke-thing-card-dom.mjs` | [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The accurate DOM evidence feeds the known LAYOUT-NYC verdict suppression. |
+| `scripts/shepherd-staging-smoke-thing-card-eval.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The default-off sort prohibition is not the active LAYOUT-NYC acceptance mechanism. |
+| `scripts/test_pr225_served_tabs_overflow.mjs` | [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The fixed NYC layout path is within [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) ownership; no separate defect is added. |
+| `scripts/test_vk_search_place_output_contract.mjs` | TSV [#355](https://github.com/grampadsbot-sudo/timesyncher/issues/355) (closed; unresolved at audited source) | Closed TSV [#355](https://github.com/grampadsbot-sudo/timesyncher/issues/355) owns the unresolved substitution of synthetic rows for the real trip-level contract. |
+| `scripts/verify_pr225_nyc_sbs_layout.mjs` | [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | The side-by-side verifier checks artifact structure and size, not image content. |
+| `src/vacation/search-progress.mjs` | [#403](https://github.com/grampadsbot-sudo/timesyncher/issues/403) | The split budget-key literal is already owned by [#403](https://github.com/grampadsbot-sudo/timesyncher/issues/403). |
+| `src/vacation/shared-trip-live-app-fields.mjs` | [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402) | Base copies source fields; [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) adds known padding risk. |
+| `src/vacation/shared-trip-oe-list-row-patch.mjs` | TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408) | Patch markers feed the existing LAYOUT-NYC acceptance path owned by TSV [#408](https://github.com/grampadsbot-sudo/timesyncher/issues/408). |
 
-| ID | Location | Original criterion | Finding | Disposition |
-| --- | --- | --- | --- | --- |
-| P336-1 | `apps/vacation-client/src/lib/listTabModel.mjs` — `SUMMARY_QUALITY_PAD`, `ensureMinSummaryWords()` | ≥30-word sourced list-row copy | Fixed generic text is appended until the count passes. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
-| P336-2 | Same file — `rowSummary()` | Event source fields | Synthesized labels still flow through the fixed-word pad. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
-| P336-3 | `src/vacation/shared-trip-live-app-fields.mjs` — 30-word branch | VK long-description contract | Template enrichment can turn a source gap into a passing long description. | **Open:** [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402). |
-| P336-4 | Candidate `trip-thing-enrichment.mjs` event fallback | VK no-invented-data rule | Invented NYC room/crowd narrative remains on the immutable candidate. | **Open on candidate:** base fix F-1 cannot approve or mutate PR336. |
+Earlier [PR401](https://github.com/grampadsbot-sudo/timesyncher/pull/401) corrections remain preserved: invented NYC event fallback removal, detail-judge title-prefix removal, executable route-wiring assertions, recorded model-ID stripping, and token-inclusive no-comment enforcement. This audit does not convert those scoped fixes into overall integrity approval.
 
-P336-1 through P336-3 stay unresolved exactly as Craig directed. Candidate fixture facts, deployment config, baselines, capture config, and generated bundles were not changed. The candidate does not contain several later migration-base harness files, so migration-base review cannot be silently treated as candidate proof.
+## Explicit unresolved gaps
 
-## Migration-base findings
+| Gap | Missing evidence | Consequence |
+| --- | --- | --- |
+| GAP-DEPLOYED-HEADER — `scripts/test_keepsake_order_buy_link.mjs` | No allowed deployed response was available to prove final X-Frame-Options precedence; the local helper encodes the desired result. | No platform-precedence approval. |
+| GAP-DEPLOYED-HARNESS — `~/tsv-gateb and ~/tsv-dispatch` | Both external runtime trees are absent on this VM. | No deployed harness source, SHA, or drift approval. |
+| GAP-VK-CONTRACT — `skills/vk-thing-data-contract/skill` | The canonical skill and its one field list and banned-value list were not available in the repository, history, deleted-page lookup, or accessible GBrain skill/page catalog. | Issue [#349](https://github.com/grampadsbot-sudo/timesyncher/issues/349)/[#355](https://github.com/grampadsbot-sudo/timesyncher/issues/355) comments provide partial context only; no claim of full canonical VK contract conformance. |
+| GAP-PSTACK-HOST — `external pstack /no-comments and /deslop` | The installed /no-comments skill does not invoke the repository checks, and /deslop is unavailable. | No external pstack-lint integration approval. |
 
-| ID | Original source / introducing commit | Criterion | Assessment | Disposition |
-| --- | --- | --- | --- | --- |
-| F-1 | `src/vacation/trip-thing-enrichment.mjs` — event fallback | VK sourced-data contract | Invented NYC venue narrative. | **Fixed earlier in PR401:** fallback no longer invents NYC facts; focused positive/negative regression retained. |
-| F-2 | `src/vacation/place-detail-extract.mjs` — `buildSummaryFromResults()` | Detail judge | Prefixing the title injected judge tokens. | **Fixed earlier in PR401:** prefix removed; regression retained. |
-| F-3 | `routes/vacation-itinerary.mjs` mega-comment | Route wiring grep | Comment text, not executable wiring, satisfied the test. | **Fixed earlier in PR401:** test checks executable module wiring. |
-| F-4 | `scripts/lib/pr336-gate-b-xai-recorded-lib.mjs`, `0def5822` | `MODEL-BARE` hard-coded-content rule | The forbidden model ID was deleted and then reversibly encoded as character codes solely to pass the rule. | **Fixed:** recording sanitizer now removes both forms while preserving ordinary payload fields; regression covers positive and negative paths. |
-| F-5 | `scripts/lib/comment-tools.mjs` | No-comment acceptance | AST-only traversal missed comments in empty blocks and inline type casts; checker falsely passed. | **Fixed:** token-inclusive AST traversal, root-file coverage, no self-exemption, 14 residual comments removed, and real executable rejection/acceptance proof added. |
-| U-1 | `apps/vacation-client/src/lib/budgetModel.mjs:14`, `58719dc8`; same split in server/search modules | `BAR-THING-CUSTOMER` | `'Other ' + 'Thi' + 'ngs'` was explicitly introduced to evade the prose scan. The runtime key spans client/server and persisted budget targets. | **Unresolved/nontrivial:** needs a narrowly owned contract migration; no owning issue exists. Do not call comment deletion a fix. |
-| U-2 | `scripts/shepherd-staging-smoke-layout-nyc.mjs` — `reconcileLayoutNycJudgeVerdict()`, `44ed9f45`/`9cf49b97` | LAYOUT-NYC vision + DOM acceptance | A bundled `header/row layout mismatch` vision failure could be suppressed when partial DOM checks passed. | **Fixed on merged base by `18945921`:** bundled header/row failures remain fail-closed; focused negative tests cover genuine row-layout defects while isolated stale sort claims remain permitted. |
-| L-1 | `scripts/shepherd-staging-smoke-thing-card-eval.mjs`, `41b5a4fa` | Current Name/Price controls | Default-off legacy “forbid sort pills” check does not make the current LAYOUT-NYC check pass; current LAYOUT-NYC requires Name/Price buttons and fails when absent. | **Reviewed/no current bypass; no change.** |
-| L-2 | `src/vacation/thing-logo-capture.mjs`, `5db91bf4`/`7f138e8c` | VK real-logo contract | Exact known brands map to their official first-party favicon URLs; generic/shared placeholders remain rejected. | **Legitimate sourced brand constants; no change.** |
-| L-3 | `src/vacation/shared-trip-handler.mjs` approved slug and harness headless use | Offline fixture/capture wiring | Fixture selection and capture execution, not product render branching. | **Legitimate harness behavior; no change.** |
-
-U-1 still lacks the separately linked owning issue/PR required by Craig. GitHub access in this round is read-only for issue creation. The managing doctor must route that contract-migration brief.
-
-## No-comment acceptance and pstack status
-
-- Repository executable: `scripts/check-no-comments.mjs`; it now reports `file:line` and scans 747 current files.
-- Regression: `scripts/test_check_no_comments.mjs` writes a temporary real scoped source comment, proves the executable fails at its exact line, removes it, then proves the clean repository passes. It also covers comments in empty blocks and inline type casts.
-- CI path remains the existing `evidence-secrets` job’s “Code ratchet” step; no workflow was loosened or edited in this round.
-- Applicable pstack rule is external to this repository at `/home/ubuntu/.cursor/plugins/cache/cursor-public/9717366/837067b75aa20ab58d7b2a2f6c0531e37118c596/skills/no-comments/SKILL.md`. It belongs to pstack plugin v0.15.23 (owner Lauren Tan, `cursor/plugins`). No `pstack` executable or repository pstack-lint command exists. That external lint does not invoke the repository verifier, and this branch cannot commit a host-plugin change.
-- Required host follow-through: the `cursor/plugins` pstack owner must make `/no-comments` acceptance invoke both `node scripts/test_check_no_comments.mjs` and `node scripts/check-no-comments.mjs` at the target repository root. Until that exact path is updated and independently proven, Craig’s pstack-lint requirement is **not done**.
+The canonical `skills/vk-thing-data-contract/skill` field and banned-value lists were not accessible. Issue comments provide partial context only. Accordingly, DATA-CONTRACT failures above remain harness/data faults and were not patched around in UI or fixture text.
 
 ## Verification
 
-Passed locally:
+Passed locally on the report-only tree:
 
-- `npm run typecheck && npm run lint && npm run test` in `apps/vacation-client`
-- `node scripts/test_check_no_comments.mjs && node scripts/check-no-comments.mjs`
-- `node scripts/test_tsv397_integrity_audit.mjs`
-- `node scripts/test_check_hardcoded_content.mjs && node scripts/check-hardcoded-content.mjs`
-- `node scripts/test_check_code_ratchet.mjs && node scripts/check-code-ratchet.mjs`
-- `node scripts/test_evidence_secrets.mjs && node scripts/check-evidence-secrets.mjs`
-- `node scripts/scan-built-bundles.mjs`
-- affected chat, logo, and Gate B product-row regressions
+- `python3 /tmp/tsv397-audit/validate-results.py` — 405 comments, 192/192 unique paths, identical path digests, zero missing/extra/duplicate paths, zero validation errors.
+- `node scripts/test_tsv397_integrity_audit.mjs`.
+- `node scripts/test_check_no_comments.mjs && node scripts/check-no-comments.mjs`.
+- JSON parse, required-field, source/blob SHA, and preserved-comment blame-commit validation for every ledger entry.
+- Exact inventory/ledger path-set and digest comparison.
+- Changed-path scope check: only this report and its two evidence artifacts.
 
-Focused proof covers:
+No CI rerun, screenshot capture, baseline comparison, deployment, Vercel command, merge, rebase, cherry-pick, fixture mutation, or [PR336](https://github.com/grampadsbot-sudo/timesyncher/pull/336) edit was performed.
 
-- sourced event detail remains intact and unsourced NYC fiction cannot pass;
-- title-prefix judge gaming cannot pass;
-- reversible model-ID encoding cannot survive the recording sanitizer;
-- a real scoped comment fails and a comment-free tree passes;
-- existing focused unit, hard-coded-content, ratchet, secrets, and client type/lint/test suites.
+## Conclusion
 
-Following the chief-doctor CI override, `scripts/test_check_no_comments.mjs` and `scripts/test_tsv397_integrity_audit.mjs` are registered as genuine offline tests. `node scripts/run-offline-tests.mjs` passes all 264 offline entries, including the strengthened executable-module wiring assertions exposed when the old mega-comment was removed.
-
-## Blocking conclusion
-
-PR401 must remain held. The remaining audit blockers are: 140 files short of full file/data-flow/history audit, unavailable deployed harness provenance, U-1 without linked owning work, unresolved [#402](https://github.com/grampadsbot-sudo/timesyncher/issues/402), and external pstack lint not yet wired to the verifier. The chief-doctor override makes exact-head CI green the acceptance criterion for this CI-only round; it does not lift `hold:integrity-review`.
+The original 405-comment / 192-file inventory now has exact, substantive per-file coverage. Integrity approval remains withheld because 26 new findings, 21 known ownership records, the file-specific deployed header gap, two candidate acceptance blockers, and the external deployed-harness, VK-contract, and pstack gaps remain unresolved. Keep `hold:integrity-review`; do not treat exact coverage as a clean verdict.
