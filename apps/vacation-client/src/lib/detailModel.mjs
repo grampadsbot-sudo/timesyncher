@@ -148,8 +148,7 @@ export function detailReviewTotals(override) {
 export function detailReviewTotalsLine(override) {
   const totals = detailReviewTotals(override);
   if (!totals) return '';
-  const sourceLabel = totals.sources.length ? totals.sources.join(', ') : 'public reviews';
-  return `Based on ${totals.count} reviews, avg ${totals.average.toFixed(1)} (${sourceLabel})`;
+  return `Based on ${totals.count} reviews, avg ${totals.average.toFixed(1)} (other ratings)`;
 }
 
 export function detailHeaderLabel(categoryLabel, source) {
@@ -217,16 +216,15 @@ export function detailRatingLines(override) {
       text: yelpCount ? `${yelpRating} on Yelp (${yelpCount} reviews)` : `${yelpRating} on Yelp`,
     });
   }
-  const thirdRating = text(override.thirdPartyRating || override.rating);
+  const explicitThird = text(override.thirdPartyRating);
+  const fallbackRating = text(override.rating);
+  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
   const thirdCount = text(override.thirdPartyReviewCount || override.count);
-  const source = text(override.source);
-  if (thirdRating && !googleRating && !yelpRating) {
-    const label = source && !/^customer$/i.test(source) ? source : 'Rating';
+  if (thirdRating) {
     const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
     lines.push({
       id: 'third',
-      text: label ? `${label}: ${value}` : value,
-      label,
+      text: `Other ratings: ${value}`,
     });
   }
   return lines;

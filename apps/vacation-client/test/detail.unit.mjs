@@ -6,6 +6,7 @@ import {
   detailCoordinates,
   detailFieldRows,
   detailHappyHour,
+  detailRatingLines,
   detailReviewTotalsLine,
   detailReviews,
   detailSummary,
@@ -31,7 +32,7 @@ assert.ok(
   'pure field probe includes coordinates',
 );
 assert.equal(restaurantModel.reviews.length, 4);
-assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6/i);
+assert.match(restaurantModel.reviewTotalsLine, /Based on 820 reviews, avg 4\.6 \(other ratings\)/i);
 assert.match(restaurantModel.headerLabel, /Restaurant · Brave/i);
 assert.ok(wordCount(restaurantModel.summary) >= 30);
 assert.match(restaurantModel.happyHourDetails, /oyster/i);
@@ -39,6 +40,42 @@ assert.match(restaurantModel.itineraryNote, /Harbor Room/i);
 assert.equal(restaurantModel.summarySourceUrls.length, 2);
 assert.equal(detailHappyHour(restaurantOverride), restaurantModel.happyHourDetails);
 assert.equal(detailReviewTotalsLine(restaurantOverride), restaurantModel.reviewTotalsLine);
+
+assert.deepEqual(detailRatingLines(restaurantOverride), [
+  { id: 'google', text: '4.6 on Google (820 reviews)' },
+  { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
+  { id: 'third', text: 'Other ratings: 4.6' },
+]);
+assert.deepEqual(
+  detailRatingLines({
+    thirdPartyRating: '4.7',
+    thirdPartyReviewCount: '15,309',
+    source: 'Tripadvisor',
+  }),
+  [{ id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' }],
+);
+assert.deepEqual(
+  detailRatingLines({
+    googleRating: '4.6',
+    googleReviewCount: '820',
+    yelpRating: '4.4',
+    yelpReviewCount: '410',
+    thirdPartyRating: '4.7',
+    thirdPartyReviewCount: '15,309',
+    source: 'Tripadvisor',
+  }),
+  [
+    { id: 'google', text: '4.6 on Google (820 reviews)' },
+    { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
+    { id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' },
+  ],
+);
+assert.equal(
+  detailReviewTotalsLine({
+    review_totals: { count: 15309, average: 4.7, sources: ['Tripadvisor'] },
+  }),
+  'Based on 15309 reviews, avg 4.7 (other ratings)',
+);
 
 const bar = enrichedTrip.places.find((place) => /Copper Lantern/i.test(place.name || ''));
 const barModel = buildDetailViewModel(bar, enrichedTrip);
