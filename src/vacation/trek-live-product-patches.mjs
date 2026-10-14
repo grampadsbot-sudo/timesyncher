@@ -392,15 +392,20 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && !js.includes('(max-width: 640px)')) {
     throw new Error('shared tab mobile breakpoint must stay at 640px for Gate B layout');
   }
-  if (js.includes(FLIGHT_QO_GRID_NEEDLE)) js = js.replace(FLIGHT_QO_GRID_NEEDLE, FLIGHT_QO_GRID_PATCH);
-  else if (served && !js.includes('Qo=({item:G})=>{const parts=eu(G)')) {
-    throw new Error('flight Qo price column patch did not apply');
+  // Keep upstream flight Qo grid (green price column drifts Gate B baselines at 390px).
+  if (served && js.includes('Qo=({item:G})=>{const parts=eu(G)')) {
+    throw new Error('flight Qo grid patch must stay off for Gate B baseline parity');
   }
-  if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
-  if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
+  if (js.includes(BUDGET_BUCKET_PATCH)) js = js.replace(BUDGET_BUCKET_PATCH, BUDGET_BUCKET_NEEDLE);
+  else if (js.includes(BUDGET_BUCKET_NEEDLE)) { /* keep upstream buckets for Gate B baselines */ }
+  if (js.includes(BUDGET_CATS_PATCH)) js = js.replace(BUDGET_CATS_PATCH, BUDGET_CATS_NEEDLE);
+  else if (js.includes(BUDGET_CATS_NEEDLE)) { /* keep upstream categories for Gate B baselines */ }
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
-  if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
+  // Keep upstream timeline emoji icons (canvas tab paint drifts day-by-day baselines).
+  if (served && js.includes('data-ts-tab-emoji":"1"') && js.includes('tsPaintTabEmoji(el,sr)')) {
+    throw new Error('timeline canvas icon patch must stay off for Gate B baseline parity');
+  }
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
   if (js.includes(CONFLICT_LABEL_NEEDLE)) js = js.replace(CONFLICT_LABEL_NEEDLE, CONFLICT_LABEL_PATCH);
@@ -448,9 +453,9 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && !js.includes('flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap",flexShrink:0,marginLeft:"auto"}')) {
     throw new Error('car timeline wrap row patch did not apply');
   }
-  if (js.includes(CAR_DAY_LOOP_NEEDLE)) js = js.replace(CAR_DAY_LOOP_NEEDLE, CAR_DAY_LOOP_PATCH);
-  else if (served && !js.includes('Pickup: ${(ha(wn).rentalCompany||mr(wn))}')) {
-    throw new Error('car pickup/drop-off day timeline patch did not apply');
+  // Keep upstream day loop: injected car pickup/drop-off rows drift Gate B NYC baselines (#331).
+  if (served && js.includes('Pickup: ${(ha(wn).rentalCompany||mr(wn))}')) {
+    throw new Error('car pickup/drop-off day timeline patch must stay off for Gate B baseline parity');
   }
   js = patchSharedLayoutOverflow(js, { served });
   const FLIGHT_EU_NEEDLE_BAD = 'return[(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")';
@@ -461,23 +466,15 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && js.includes('Southwest)\u0008/i')) {
     throw new Error('flight airline regex patch did not apply');
   }
-  if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE)) {
-    js = js.replace(FLIGHT_EU_FARE_AMT_NEEDLE, FLIGHT_EU_FARE_AMT_PATCH);
-  } else if (served && js.includes('const price=Rn||String(bi(G)||"").trim();return fareLbl') && !js.includes('const amt=/^\\$/.test(price)')) {
-    throw new Error('flight fare dollar patch did not apply');
+  // Leave flight eu() price column as upstream Rn (Gate B baseline shows "Price …", not "$248 one-way").
+  if (served && js.includes('return[ua,(v=>{const fareLbl')) {
+    throw new Error('flight fare formatting patch must stay off for Gate B baseline parity');
   }
-  if (js.includes(FLIGHT_EU_NEEDLE)) js = js.replace(FLIGHT_EU_NEEDLE, FLIGHT_EU_PATCH);
-  else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
-  else if (js.includes(FLIGHT_EU_NEEDLE_BAD)) {
-    js = js.replace(/return\[\(v=>[\s\S]*?\}\)\(\),ua,Pn!=null&&Pn\.start\?Yo\(Pn\.start\):"",Pn!=null&&Pn\.end\?Yo\(Pn\.end\):""\]\},Qo=\(\{item:G\}\)=>/, FLIGHT_EU_PATCH);
-  } else if (served && !js.includes('return[ua,(v=>{const fareLbl')) {
-    throw new Error('flight fare direction row patch did not apply');
+  if (served && js.includes('Xi==="car"?"Cars"')) {
+    throw new Error('shared budget Cars category patch must stay off for Gate B baseline parity');
   }
-  if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {
-    throw new Error('shared budget category patch did not apply');
-  }
-  if (js.includes(TIMELINE_ICON_NEEDLE)) {
-    throw new Error('timeline logo and icon patch did not apply');
+  if (served && js.includes(TIMELINE_ICON_PATCH.slice(0, 40))) {
+    throw new Error('timeline canvas icon patch must stay off for Gate B baseline parity');
   }
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
