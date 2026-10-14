@@ -929,13 +929,25 @@ body {
 
 .tsv-timeline-head--with-icon {
   grid-column: 2 / -1;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .tsv-timeline-head--with-icon .tsv-timeline-icon {
-  grid-column: auto;
-  grid-row: auto;
+  flex: 0 0 22px;
   align-self: center;
+}
+
+.tsv-timeline-head--with-icon .tsv-timeline-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tsv-timeline-head--with-icon .tsv-timeline-media-wrap {
+  flex: 0 0 auto;
 }
 
 .tsv-timeline-details {
@@ -1470,6 +1482,19 @@ button.tsv-timeline-link {
 
 .tsv-budget-logo-chip {
   flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.tsv-budget-logo-chip .tsv-logo {
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
 }
 
 @media (min-width: 900px) {

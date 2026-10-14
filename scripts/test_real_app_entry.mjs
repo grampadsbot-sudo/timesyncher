@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { purchaseEmail } from '../src/vacation/email.mjs';
 import { intakeShareSlug, sharedTripFromIntake } from '../src/vacation/intake-shared-trip.mjs';
 import { intakeSharedResponse } from '../src/vacation/shared-trip-handler.mjs';
@@ -191,4 +193,8 @@ const carScript = await readFile(new URL('../public/ts-car-brand-filter.js', imp
 assert.doesNotMatch(carScript, /Payless/);
 assert.match(carScript, /Remove a brand/);
 assert.match(sharedApp, /ts-car-brand-filter\.js/);
+{
+  const child = spawnSync(process.execPath, [fileURLToPath(new URL('./search_progress_flow_check.mjs', import.meta.url))], { encoding: 'utf8' });
+  assert.equal(child.status, 0, child.stderr || child.stdout || 'search_progress_flow_check.mjs');
+}
 console.log('real app entry gate passed');

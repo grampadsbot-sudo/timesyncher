@@ -51,30 +51,16 @@ const SYNTHETIC_BY_PLACE_ID = {
       'Blue Note Jazz Club evening set in the Village with will-call pickup and a 8:30 pm show time after dinner. Fixture ticket planning price is $85 per person including a modest service fee placeholder for Gate B budget math. Arrive early for security and seating; late sets can sell standing-room only.',
     price: 85,
   },
+  608: {
+    summary:
+      'Midtown sample hotel remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
+    price: 389,
+  },
   635: {
     summary:
       'American Airlines nonstop JFK to LAS on the final evening departure after Columbus Circle errands. Fixture uses $257 one-way per traveler for return-flight budget arithmetic only, not a verified live fare. Build in extra time for JFK security and AirTrain from Manhattan; evening weekday queues can run long.',
     price: 257,
   },
-  608: {
-    summary:
-      'Midtown sample hotel listed as an unselected alternative to the Belleclaire UWS base; useful for comparing price and subway access. Fixture nightly rate is $389 as synthetic test data for the Hotels tab, not a booked reservation. Keep this row unselected so the timeline still anchors on the Upper West Side stay.',
-    price: 389,
-  },
-};
-
-const TEST_ONLY_CAR = {
-  summary:
-    'Priceline opaque Toyota Corolla or similar at JFK Federal Circle; supplier name stays hidden until booking. Fixture pickup Jun 23 2026 10:00 at JFK rental shuttle, return Jun 30 2026 09:00 same facility; $172 total is synthetic test pricing only. Review toll, fuel, and cancellation terms before paying; do not treat counter reputation as verified.',
-  price: 172,
-  rentalCompany: 'Priceline opaque (test fixture)',
-  vehicleClass: 'Toyota Corolla or similar',
-  pickupLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 23 2026 10:00)',
-  returnLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 30 2026 09:00)',
-  startTime: '10:00',
-  endTime: '09:00',
-  rentalTermsNote:
-    'Illustrative test-only terms: unlimited miles placeholder, refuel-to-full policy, LDW declined unless explicitly approved in chat.',
 };
 
 function text(value) {
@@ -171,7 +157,7 @@ export function buildNycCraigKimDaybydayTripPositiveV1() {
     const synthetic = SYNTHETIC_BY_PLACE_ID[place.id] || null;
     let patch = applyEnrichmentPatch(place, prior, enrich, synthetic);
     if (Number(place.id) === 609) {
-      patch = { ...patch, ...TEST_ONLY_CAR, timeline: false };
+      patch = { ...patch, timeline: false };
     }
     base.thingOverrides[key] = patch;
   }

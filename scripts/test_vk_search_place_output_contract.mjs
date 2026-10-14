@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-
 import {
   assertCrossPlaceReviewBodiesDistinct,
   assertSearchPlaceOutputContract,
@@ -12,7 +11,7 @@ import {
 } from '../src/vacation/search-place-output.mjs';
 import {
   assertGateBRowProvenance,
-  buildPr336VkSearchPlacesByRowId,
+  buildPr336VkSearchPlacesByRowIdWithEventLogos,
   gateBRowsForSearchPlaceOutputContract,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import {
@@ -20,6 +19,7 @@ import {
   normalizeVkContractReviewBody,
   vkContractText,
 } from './fixtures/xai-grok-place-ratings-contract.mjs';
+import { assertVkSearchEventLogoSource } from './lib/vk_search_event_logo_source_check.mjs';
 
 const GATE_B_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -293,7 +293,7 @@ assert.throws(
   'assertSearchPlaceOutputContract must reject banned zero price after enrichment',
 );
 
-const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
+const gateBPlaces = await buildPr336VkSearchPlacesByRowIdWithEventLogos(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
 const row608Violations = searchPlaceOutputViolations(gateBPlaces[608]);
@@ -490,5 +490,8 @@ assert.throws(
 );
 
 assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViolations);
+
+await import('./vk_search_place_source_contract_check.mjs');
+await assertVkSearchEventLogoSource(assert);
 
 console.log('vk search place output contract tests passed');

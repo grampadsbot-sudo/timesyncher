@@ -57,7 +57,7 @@ function sourceRecordOnPlace(place = {}) {
 }
 
 /** Normalize search/list categories to the six VK product place types. */
-function searchProductCategory(category = '') {
+export function searchProductCategory(category = '') {
   const cat = text(category, 80).toLowerCase();
   if (cat === 'lodging' || cat === 'accommodation') return 'hotel';
   if (cat === 'grocery' || cat === 'market' || cat === 'shopping' || cat === 'shop') return 'store';

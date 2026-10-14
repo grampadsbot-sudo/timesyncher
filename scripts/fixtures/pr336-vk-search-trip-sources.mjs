@@ -117,6 +117,14 @@ export function buildPr336VkSearchPlacesByRowId(rows = []) {
   return out;
 }
 
+/** Gate B builder plus #388 event-logo binding from committed Tavily recordings (#391). */
+export async function buildPr336VkSearchPlacesByRowIdWithEventLogos(rows = [], options = {}) {
+  const { applyPr336GateBEventLogosFromRecorded } = await import('../lib/pr336-gate-b-event-logo-recorded-lib.mjs');
+  const placesById = buildPr336VkSearchPlacesByRowId(rows);
+  const bound = await applyPr336GateBEventLogosFromRecorded(placesById, options);
+  return bound.placesById;
+}
+
 function flightRouteFromPlace(place = {}) {
   const haystack = [
     place.description,

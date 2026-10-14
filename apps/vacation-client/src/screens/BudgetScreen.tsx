@@ -44,11 +44,14 @@ function timelineRemoveLabel(place: SharedPlace, trip: SharedTripPayload) {
   const icon = bucketIcon(bucket);
   const category = tabCategoryKey(place, trip);
   if (category === 'car') {
+    const name = catalogRowDisplayName(place, trip);
+    if (/priceline/i.test(name) && /opaque/i.test(name)) {
+      return { icon, label: name };
+    }
     let company = text(override.rentalCompany || '');
     const opaqueMatch = company.match(/^(Priceline\s+opaque)/i);
     if (opaqueMatch) company = opaqueMatch[1];
     if (company) return { icon, label: company };
-    const name = catalogRowDisplayName(place, trip);
     const parts = name.split(/\s+/);
     if (/priceline/i.test(name) && parts.length >= 2) {
       return { icon, label: `${parts[0]} ${parts[1]}` };
