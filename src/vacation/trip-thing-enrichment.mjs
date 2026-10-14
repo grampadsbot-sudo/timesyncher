@@ -186,9 +186,22 @@ function storeDescription(title = '', source = {}, raw = '') {
 
 function eventDescription(title = '', source = {}, raw = '') {
   if (raw && !isGenericDescription(raw)) return text(raw, 4000);
-  const when = text(source.when || source.startsAt || source.schedule || '', 120);
-  const why = text(source.why || source.summary || 'Live set with a classic NYC room feel', 200);
-  return text([title, when, why, 'book ahead on weekends'].filter(Boolean).join('; '), 4000);
+  const when = text(
+    source.when || source.startsAt || source.schedule || source.startTime || source.place_time,
+    160,
+  );
+  const why = text(source.why || source.summary || source.description || '', 240);
+  const bits = [
+    title,
+    when
+      ? `When: ${when} (confirm doors and set times on the venue calendar).`
+      : 'When: check the posted show date and start time before you buy tickets.',
+    why && !isGenericDescription(why)
+      ? why
+      : 'Compare ticket tiers, fees, and refund rules on the official listing before you commit.',
+    'Book ahead on weekends; arrive early for will-call or bar seating.',
+  ].filter(Boolean);
+  return text(bits.join(' '), 4000);
 }
 
 export function buildCategoryDescription({
