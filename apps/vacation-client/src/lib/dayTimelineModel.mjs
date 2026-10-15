@@ -6,6 +6,11 @@ import {
   itinerarySummary,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { dayItineraryHeading, flightTimelineTitle } from './dayTimelinePresentation.mjs';
+import { mapPlacesForTimeline, placeCoords } from './dayTimelineMap.mjs';
+
+export { dayItineraryHeading, flightTimelineTitle } from './dayTimelinePresentation.mjs';
+export { mapPlacesForTimeline, placeCoords } from './dayTimelineMap.mjs';
 function text(value) {
   return String(value ?? '').trim();
 }
@@ -31,33 +36,6 @@ export function dayChipLabel(day) {
   if (day?.day_number != null) return `Day ${day.day_number}`;
   return 'Day';
 }
-export function flightTimelineTitle(place, trip) {
-  const raw = placeName(place);
-  const override = overrideFor(trip, place);
-  const blob = `${raw} ${text(override.summary || place.description || '')}`;
-  const airlineMatch = blob.match(/\b(American|JetBlue|Southwest|United|Delta|Alaska|Spirit|Frontier)\b/i);
-  const routeMatch = blob.match(/\b([A-Z]{3})\s*(?:→|->|—|-)\s*([A-Z]{3})\b/);
-  if (airlineMatch && routeMatch) {
-    const airline = airlineMatch[1];
-    const label = /^american$/i.test(airline) ? `${airline} Airlines` : airline;
-    return `${label} ${routeMatch[1]} → ${routeMatch[2]}`;
-  }
-  return text(raw.replace(/^\s*Flight option:\s*/i, '')) || raw;
-}
-
-export function dayItineraryHeading(day) {
-  const title = text(day?.title);
-  const number = day?.day_number;
-  if (number != null) {
-    if (title && !new RegExp(`\\bDay\\s+${number}\\b`, 'i').test(title)) {
-      return `Day ${number} · ${title}`;
-    }
-    if (title) return title;
-    return `Day ${number}`;
-  }
-  return title || 'Day';
-}
-
 export function parseDurationMinutes(raw) {
   const s = text(raw).toLowerCase();
   if (!s) return null;
@@ -500,57 +478,6 @@ export function buildDayTimeline(trip, day) {
   const withTravel = insertTravelRows(entries, trip);
   markConflicts(withTravel);
   return withTravel;
-}
-
-function finiteCoord(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-export function placeCoords(place, trip) {
-  const override = overrideFor(trip, place);
-  const meta =
-    place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
-      ? place.metadata
-      : {};
-  const metaSource =
-    meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
-  const source =
-    override.sourceRecord ||
-    place.sourceRecord ||
-    metaSource ||
-    (place.source && typeof place.source === 'object' ? place.source : null) ||
-    {};
-  const lat =
-    finiteCoord(place.lat) ??
-    finiteCoord(override.lat) ??
-    finiteCoord(source.lat) ??
-    finiteCoord(source.latitude);
-  const lng =
-    finiteCoord(place.lng) ??
-    finiteCoord(override.lng) ??
-    finiteCoord(source.lng) ??
-    finiteCoord(source.longitude);
-  if (lat == null || lng == null) return null;
-  return { lat, lng };
-}
-
-export function mapPlacesForTimeline(trip, entries) {
-  const seen = new Set();
-  const markers = [];
-  for (const entry of entries) {
-    if (entry.kind === 'travel' || !entry.place) continue;
-    const category = tabCategoryKey(entry.place, trip);
-    if (category === 'flight' || category === 'car') continue;
-    const coords = placeCoords(entry.place, trip);
-    if (!coords) continue;
-    const key = String(entry.place.id);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    markers.push({ ...entry.place, lat: coords.lat, lng: coords.lng });
-  }
-  return markers;
 }
 
 export function shiftDayIndex(trip, currentIndex, delta) {
