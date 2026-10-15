@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
 import { openRouterProviderSpread, openRouterTier1CompactReasoningSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -464,11 +465,7 @@ export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, tit
 export const XAI_PLACE_SEARCH_MODEL_ENV = 'XAI_PLACE_SEARCH_MODEL';
 
 export function xaiGrokPlaceSearchModelId(env = process.env) {
-  const model = text(env?.[XAI_PLACE_SEARCH_MODEL_ENV] || '', 120);
-  if (!model) {
-    throw Object.assign(new Error(`${XAI_PLACE_SEARCH_MODEL_ENV} is not set.`), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
-  }
-  return model;
+  return xaiPlaceSearchModelId(env);
 }
 export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl = fetch, timeoutMs = 120000 } = {}) {
   const key = text(apiKey, 500);
