@@ -24,9 +24,7 @@ if (TAVILI_PROVIDER_KEY_NAME !== TAVILI_KEY_PARTS.join('_')) {
 
 function keyFromEnv(processEnv = process.env, envName = '', shortAlias = '') {
   if (!envName) return '';
-  const direct = String(processEnv[envName] || (shortAlias ? processEnv[shortAlias] : '') || '').trim();
-  if (direct || processEnv !== process.env) return direct;
-  return String(process.env[envName] || '').trim();
+  return String(processEnv[envName] || (shortAlias ? processEnv[shortAlias] : '') || '').trim();
 }
 
 export function buildProviderEnv(processEnv = process.env) {
