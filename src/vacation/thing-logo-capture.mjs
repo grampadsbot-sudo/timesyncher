@@ -87,6 +87,17 @@ function brandLogoFromName(name = '') {
   return '';
 }
 
+function pricelineOpaqueCarLogo(thing = {}, override = {}) {
+  const source = sourceRecord(thing, override);
+  const category = text(override.category || thing.category_name || thing.category?.name).toLowerCase();
+  if (category && category !== 'car') return '';
+  const name = text(thing.name || thing.title);
+  const company = text(override.rentalCompany || source.rentalCompany);
+  if (!(/opaque/i.test(name) || /opaque/i.test(company))) return '';
+  if (!/priceline/i.test(name) && !/priceline/i.test(company)) return '';
+  return brandLogoFromName(name) || brandLogoFromName(company);
+}
+
 function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   return text(
@@ -188,14 +199,14 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   }
   const thumb = thumbnailFromSource(source);
   if (thumb) return thumb;
-  const named = brandLogoFromName(thing.name || thing.title || override.title);
-  if (named) return named;
   const page = httpUrl(pageUrlForLogo(thing, override));
-  if (!page) return '';
+  if (!page) return pricelineOpaqueCarLogo(thing, override) || '';
   if (/\.hyatt\.com$/i.test(page.hostname)) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (named) return named;
   return `${page.origin}/favicon.ico`;
 }
 
