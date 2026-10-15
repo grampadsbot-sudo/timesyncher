@@ -457,10 +457,5 @@ export async function requireWebEditAccess(db, req, { tripId, ownerCustomerId = 
   const webGrant = await webAccessForSession(db, { sessionToken, tripId, env });
   if (webGrant) return { ok: true, role: webGrant.role, grant: webGrant };
 
-  const ownerToken = req?.headers?.['x-timesyncher-owner-customer-id'] || '';
-  if (ownerCustomerId && ownerToken && ownerToken === ownerCustomerId) {
-    return { ok: true, role: 'owner' };
-  }
-
   throw Object.assign(new Error('Website editing requires the owner or an accepted owner-approved email invite.'), { statusCode: 403 });
 }

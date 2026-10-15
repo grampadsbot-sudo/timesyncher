@@ -68,4 +68,6 @@ assert.deepEqual(recordedPayload.messages, [{ role: 'user', content: 'ordinary r
 assert.equal('model' in recordedPayload, false, 'recording omits the model identifier');
 assert.equal('modelCharCodes' in recordedPayload, false, 'recording must not encode the forbidden identifier');
 
+await import('./test_tsv397_follow_through_415.mjs');
+
 process.stdout.write('tsv397 integrity audit tests passed\n');

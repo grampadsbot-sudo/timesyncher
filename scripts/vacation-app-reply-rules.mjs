@@ -461,7 +461,15 @@ export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, tit
   return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
 }
 
-export const xaiGrokPlaceSearchModelId = () => String.fromCharCode(103, 114, 111, 107, 45, 52, 46, 51);
+export const XAI_PLACE_SEARCH_MODEL_ENV = 'XAI_PLACE_SEARCH_MODEL';
+
+export function xaiGrokPlaceSearchModelId(env = process.env) {
+  const model = text(env?.[XAI_PLACE_SEARCH_MODEL_ENV] || '', 120);
+  if (!model) {
+    throw Object.assign(new Error(`${XAI_PLACE_SEARCH_MODEL_ENV} is not set.`), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
+  }
+  return model;
+}
 export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl = fetch, timeoutMs = 120000 } = {}) {
   const key = text(apiKey, 500);
   if (!key) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'XAI_API_KEY_MISSING' });

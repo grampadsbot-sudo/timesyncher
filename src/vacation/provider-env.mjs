@@ -1,17 +1,24 @@
-function envKeyBySuffix(env, suffix) {
-  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
-  return hit ? String(hit[1] || '').trim() : '';
+export const BRAVE_SEARCH_API_KEY_NAME = 'BRAVE_SEARCH_API_KEY';
+export const TAVILI_API_KEY_NAME = 'TAVILI_API_KEY';
+
+function braveSearchApiKey(processEnv = process.env) {
+  const direct = String(processEnv.BRAVE_SEARCH_API_KEY || processEnv.brave || '').trim();
+  if (direct || processEnv !== process.env) return direct;
+  return String(process.env.BRAVE_SEARCH_API_KEY || '').trim();
 }
 
-const BRAVE_ENV_NAME = ['BRAVE', 'SEARCH', 'API', 'KEY'].join('_');
-const TAVILY_ENV_NAME = ['TAVILI', 'API', 'KEY'].join('_');
+function tavilyApiKeyFromEnv(processEnv = process.env) {
+  const direct = String(processEnv.TAVILI_API_KEY || processEnv.tavily || '').trim();
+  if (direct || processEnv !== process.env) return direct;
+  return String(process.env.TAVILI_API_KEY || '').trim();
+}
 
 export function buildProviderEnv(processEnv = process.env) {
   return {
-    brave: String(processEnv.brave || envKeyBySuffix(processEnv, 'E_SEARCH_API_KEY') || '').trim(),
-    tavily: String(processEnv.tavily || envKeyBySuffix(processEnv, 'ILI_API_KEY') || '').trim(),
-    braveName: BRAVE_ENV_NAME,
-    tavilyName: TAVILY_ENV_NAME,
+    brave: braveSearchApiKey(processEnv),
+    tavily: tavilyApiKeyFromEnv(processEnv),
+    braveName: 'BRAVE_SEARCH_API_KEY',
+    tavilyName: 'TAVILI_API_KEY',
     OPENROUTER_API_KEY: String(processEnv.OPENROUTER_API_KEY || processEnv.JEV_API_KEY || '').trim(),
     JEV_RELEVANCE_MINIMUM: processEnv.JEV_RELEVANCE_MINIMUM,
     JEV_RELEVANCE_JUDGE_TIMEOUT_MS: processEnv.JEV_RELEVANCE_JUDGE_TIMEOUT_MS,

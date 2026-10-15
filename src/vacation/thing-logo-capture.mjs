@@ -186,10 +186,10 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   }
   const thumb = thumbnailFromSource(source);
   if (thumb) return thumb;
-  const named = brandLogoFromName(thing.name || thing.title || override.title);
-  if (named) return named;
   const page = httpUrl(pageUrlForLogo(thing, override));
   if (!page) return '';
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (named) return named;
   if (/\.hyatt\.com$/i.test(page.hostname)) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
