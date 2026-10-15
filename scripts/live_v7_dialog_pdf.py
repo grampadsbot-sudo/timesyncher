@@ -49,8 +49,8 @@ def latin(value):
 
 
 def guard_timing(value):
-    """Timing lines may only say jev=. zev= is a typo and is rewritten, then refused if it remains."""
-    text = latin(value).replace("zev=", "jev=")
+    """Timing lines may only say jev=; invalid zev= evidence is refused, not rewritten."""
+    text = latin(value)
     if "zev" in text.lower():
         raise SystemExit("refused: timing line contains zev")
     if "jev=" not in text:

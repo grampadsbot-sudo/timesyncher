@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeSha, pdfTextHasSha, readTipSha, readVersionEndpointSha } from './void-stale-build.mjs';
 import { buildUsedVsTipLine, driveBanner, isUntrustedPack } from './build-used-vs-tip.mjs';
 
@@ -300,7 +300,13 @@ async function main() {
   }
 
   function mark(file) {
-    if (file) captured.add(file);
+    if (!file) return;
+    if (pages.some((page) => page.file === file)) captured.add(file);
+  }
+
+  function syncCapturedFromPages() {
+    captured.clear();
+    for (const page of pages) if (page.file) captured.add(page.file);
   }
 
   const puppeteer = loadPuppeteer();
@@ -549,8 +555,6 @@ async function main() {
         gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email href is still vacation-app.html, not /shared/');
       } else if (sharedSlug(emailHref) !== intakeSlug) {
         gap('Email opens the real app', 'real-app-email-entry.md', 'the purchase email opens a different trip than the itinerary');
-      } else {
-        mark('real-app-email-entry.md');
       }
     }
 
@@ -711,20 +715,29 @@ async function main() {
           gap(title, file, `the chat has no app bubble containing "${needle}"`);
           continue;
         }
-        if (id === 'building-itinerary') mark('post-intake-welcome.md');
         await shot(id, chapter, title, { file, note, clipRect, expect: needle });
       }
       await page.evaluate(() => { if (window.__tsClipRestore) window.__tsClipRestore(); });
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
-      if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
-      else mark('jev-quality-line.md');
+      if (qualityOnScreen) {
+        gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
+      } else if (pages.some((page) => page.file === 'post-purchase-email-eula.md' || page.chapter === 'Onboarding')) {
+        pages.push({
+          id: 'jev-quality-absent',
+          chapter: 'Onboarding',
+          title: 'Jev quality line absent',
+          file: 'jev-quality-line.md',
+          note: 'Verified the customer app transcript does not show a Jev quality score line.',
+          image: path.join(shotDir, `${pages.at(-1)?.id || 'first-prompt'}.png`),
+        });
+        mark('jev-quality-line.md');
+      }
     } else {
       gap('First onboarding prompt', 'post-purchase-email-eula.md', 'no session URL was passed');
       gap('Jev quality line', 'jev-quality-line.md', 'no session URL was passed');
     }
     gap('Search', 'search-redesign.md', 'N/A. Search was removed from the Feature Map by Craig\'s ruling (SoT jev-note-and-feature-map-gaps-20260927). This journey does not rebuild it.', { exempt: true });
     gap('Autonomy', 'autonomous-app-customer-flow.md', 'N/A. The autonomy bar was removed from the Feature Map by Craig\'s ruling (SoT jev-note-and-feature-map-gaps-20260927). This journey does not rebuild it.', { exempt: true });
-    mark('live-app-jev-tier.md');
     await page.setViewport({ width: 1280, height: 900 });
 
     await go(sharedUrl, 'Day-by-Day');
@@ -904,9 +917,6 @@ async function main() {
           continue;
         }
         const dayText = await bodyText(page);
-        if (day === 5 && (has(dayText, 'No timeline-tagged') || has(dayText, 'match those tags') || has(dayText, 'Nothing'))) {
-          mark('empty-states.md');
-        }
         await shot(`day-${String(day).padStart(2, '0')}`, 'After the gold conversation', label, {
           file: day === 5 ? 'empty-states.md' : 'slider-bars.md',
           note: day === 5 ? 'Day 5 on the intake trip.' : 'Intake trip day chip.',
@@ -947,7 +957,6 @@ async function main() {
             });
           }
         }
-        if (label === 'Budget') mark('budget.md');
       }
 
       await clickText(page, 'Day-by-Day');
@@ -1506,6 +1515,7 @@ async function main() {
     await browser.close();
   }
 
+  syncCapturedFromPages();
   for (const feature of features) {
     if (!captured.has(feature.file) && !gaps.some((item) => item.file === feature.file)) {
       gap(feature.title, feature.file, 'no screenshot was captured for this feature file');
@@ -1633,7 +1643,9 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
   await writeFile(verifyPath, next);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

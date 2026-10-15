@@ -315,8 +315,12 @@ function titleViolations(place = {}) {
 }
 
 export function searchPlaceOutputViolations(place = {}) {
+  const rawCategory = text(place.category, 80).toLowerCase();
   const category = searchProductCategory(place.category);
-  if (!SEARCH_PRODUCT_CATEGORIES.has(category)) return [];
+  if (!SEARCH_PRODUCT_CATEGORIES.has(category)) {
+    if (!rawCategory) return ['missing_category'];
+    return ['unsupported_category'];
+  }
   const violations = [];
   const description = text(place.description);
   const summary = text(place.summary);
@@ -398,7 +402,9 @@ function classifyPlaceContractViolations(place = {}) {
 
 function searchPlaceOutputTripViolations(places = []) {
   const list = Array.isArray(places) ? places : [];
-  if (!list.length) return [];
+  if (!list.length) {
+    return [{ scope: 'trip', violations: ['trip_empty_batch'] }];
+  }
   const tripFailures = [];
   let thingsWithFlaggedMissing = 0;
   for (const place of list) {

@@ -12,37 +12,58 @@ const all = readdirSync(testDir)
 
 const layoutModules = new Set(all.filter((name) => name.endsWith('-layout.mjs') || name === 'shell-layout.mjs'));
 
-function runFile(name) {
+function resolveLayoutChromeEnv() {
+  if (process.env.VACATION_CLIENT_ALLOW_LAYOUT_SKIP === '1') return null;
+  const explicit = process.env.CHROME_PATH
+    || process.env.VACATION_CLIENT_RUN_LAYOUT
+    || process.env.VACATION_CLIENT_SHELL_ARTIFACT_ROOT;
+  if (explicit) return { ...process.env };
+  if (Object.prototype.hasOwnProperty.call(process.env, 'CHROME_PATH') && process.env.CHROME_PATH === '') {
+    return null;
+  }
+  if (spawnSync('test', ['-x', '/usr/local/bin/google-chrome']).status === 0) {
+    return { ...process.env, CHROME_PATH: '/usr/local/bin/google-chrome' };
+  }
+  return null;
+}
+
+function runFile(name, env = process.env) {
   console.log(`> node test/${name}`);
   const result = spawnSync(process.execPath, [path.join(testDir, name)], {
     cwd: clientRoot,
     stdio: 'inherit',
-    env: process.env,
+    env,
   });
   if (result.status !== 0) {
     process.exit(result.status === null ? 1 : result.status);
   }
 }
 
+let layoutRan = false;
+
 for (const name of all) {
   if (name.endsWith('.unit.mjs')) {
+    if (name === 'run-all.unit.mjs' && process.env.VACATION_CLIENT_RUN_ALL_GATE_TEST === '1') {
+      continue;
+    }
     runFile(name);
     continue;
   }
   if (layoutModules.has(name)) {
     if (name !== 'shell-layout.mjs') continue;
-    const chrome =
-      process.env.CHROME_PATH ||
-      process.env.VACATION_CLIENT_RUN_LAYOUT ||
-      process.env.VACATION_CLIENT_SHELL_ARTIFACT_ROOT;
-    if (!chrome) {
-      console.log(
-        'skip shell-layout.mjs (offline CI: set CHROME_PATH or VACATION_CLIENT_RUN_LAYOUT to run layout tests)',
-      );
-      continue;
+    const layoutEnv = resolveLayoutChromeEnv();
+    if (!layoutEnv) {
+      process.stderr.write('layout acceptance unavailable: set CHROME_PATH or install google-chrome for shell-layout.mjs\n');
+      process.exit(1);
     }
-    runFile(name);
+    runFile(name, layoutEnv);
+    layoutRan = true;
   }
+}
+
+if (!layoutRan) {
+  process.stderr.write('layout acceptance unavailable: shell-layout.mjs did not run\n');
+  process.exit(1);
 }
 
 console.log('vacation-client tests finished');

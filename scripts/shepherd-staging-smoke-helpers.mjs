@@ -113,8 +113,9 @@ export function classifySmokeServerTiming(timing = {}, { slowMs = SMOKE_SERVER_S
   const sessionE2eMs = timing.sessionE2eMs ?? null;
   const candidates = [latencyMs, sessionE2eMs].filter((n) => Number.isFinite(n));
   const serverSideMs = candidates.length ? Math.max(...candidates) : null;
-  const appFail = serverSideMs != null && serverSideMs > slowMs;
-  return { latencyMs, sessionE2eMs, serverSideMs, appFail, slowThresholdMs: slowMs };
+  const missingTiming = serverSideMs == null;
+  const appFail = missingTiming || serverSideMs > slowMs;
+  return { latencyMs, sessionE2eMs, serverSideMs, missingTiming, appFail, slowThresholdMs: slowMs };
 }
 
 export async function measureCheckoutIndexFetchMs(baseUrl = BASE) {

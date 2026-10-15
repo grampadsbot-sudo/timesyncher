@@ -312,7 +312,8 @@ assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [] }).failures.some
 assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [{ target: '/', sha: '' }] }).failures.some((item) => item.detail === 'empty'), true);
 assert.equal(gradeBuildStamps({ versionSha: buildSha, pages: [{ target: '/', sha: 'b'.repeat(40) }] }).failures.some((item) => item.detail === 'mismatch'), true);
 assert.equal(gradeTripSite({ url: site, status: 200, body: 'plans' }).length, 0);
-assert.equal(gradeTripSite({ url: site, status: 500, body: 'busy' }).length, 0);
+assert.equal(gradeTripSite({ url: site, status: 500, body: 'busy' }).some((item) => item.detail === 'status'), true);
+assert.equal(gradeTripSite({ url: site, status: 503, body: 'busy' }).some((item) => item.detail === 'status'), true);
 assert.equal(gradeTripSite({ url: '', status: 200 }).some((item) => item.detail === 'missing'), true);
 assert.equal(gradeTripSite({ url: site, status: 404, body: 'missing' }).some((item) => item.detail === 'status'), true);
 assert.equal(gradeTripSite({ url: site, status: null, body: '' }).some((item) => item.detail === 'status'), true);

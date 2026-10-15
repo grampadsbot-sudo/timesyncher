@@ -13,6 +13,7 @@ import {
   scanRoots,
   scanText,
 } from './check-code-ratchet.mjs';
+import { growthFails } from './baseline-subset.mjs';
 
 const script = fileURLToPath(new URL('./check-code-ratchet.mjs', import.meta.url));
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -250,7 +251,31 @@ fs.writeFileSync(path.join(addedRule, 'scripts/code-ratchet-baseline.json'), `${
   entry('NO-WORKAROUND-COMMENTS', 'src/vacation/catch.mjs', 'TODO'),
 ])}\n`);
 const addedRuleRun = runGuard(addedRule, { BASE: 'base' });
-assert.equal(addedRuleRun.status, 0, addedRuleRun.stderr);
+assert.equal(addedRuleRun.status, 1, addedRuleRun.stdout);
+assert.match(addedRuleRun.stderr, /FAIL\tBASELINE-GROWTH/);
+
+assert.deepEqual(
+  growthFails(
+    [entry('NO-WORKAROUND-COMMENTS', 'src/vacation/phantom.mjs', 'TODO')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [],
+  ),
+  ['src/vacation/phantom.mjs|NO-WORKAROUND-COMMENTS|TODO|'],
+);
+assert.deepEqual(
+  growthFails(
+    [entry('NO-WORKAROUND-COMMENTS', 'scripts/a-keep.mjs', 'TODO')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [{ rule: 'NO-WORKAROUND-COMMENTS', file: 'scripts/a-keep.mjs', symbol: 'TODO', line: 2 }],
+  ),
+  [],
+);
+
+const nestedClientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-ratchet-nested-client-'));
+fs.mkdirSync(path.join(nestedClientDir, 'apps/vacation-client/src'), { recursive: true });
+fs.writeFileSync(path.join(nestedClientDir, 'apps/vacation-client/src/nested-rogue.mjs'), modelText);
+const nestedFindings = scanRoots(nestedClientDir).filter((finding) => finding.file === 'apps/vacation-client/src/nested-rogue.mjs');
+assert.ok(nestedFindings.some((finding) => finding.rule === 'MODEL-CLIENT-ONLY'));
 
 const oldRule = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
 fs.writeFileSync(path.join(oldRule, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([

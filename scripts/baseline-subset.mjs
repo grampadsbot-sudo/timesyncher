@@ -23,16 +23,30 @@ function ruleId(entry) {
   return entry.rule || entry.inventory_id || '';
 }
 
-export function growthFails(baseline, base) {
+function findingSymbol(finding) {
+  return finding.symbol_or_pattern || finding.symbol || '';
+}
+
+function entryMatchesFinding(entry, finding) {
+  return entry.file === finding.file
+    && ruleId(entry) === finding.rule
+    && symbolOf(entry) === findingSymbol(finding);
+}
+
+export function growthFails(baseline, base, findings = null) {
   if (!base || base.status === 'skip' || base.status === 'missing') return [];
   if (base.status !== 'ok') return [base.error || 'baseline ceiling unavailable'];
   const baseRows = base.entries || base.rows || [];
   const known = new Set(baseRows.map(rowId));
   const baseRules = new Set(baseRows.map(ruleId));
   const allowNewRules = baseRows.length > 0;
+  const liveFindings = Array.isArray(findings) ? findings : null;
   return baseline.filter((entry) => {
     if (known.has(rowId(entry))) return false;
-    if (allowNewRules && !baseRules.has(ruleId(entry))) return false;
+    if (allowNewRules && !baseRules.has(ruleId(entry))) {
+      if (!liveFindings) return false;
+      return !liveFindings.some((finding) => entryMatchesFinding(entry, finding));
+    }
     return true;
   }).map(rowText);
 }

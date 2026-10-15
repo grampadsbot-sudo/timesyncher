@@ -22,7 +22,7 @@ import { loadAppScreenSpecText } from './shepherd-staging-smoke-ui-spec.mjs';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 
 const EXPECT_SHA = process.argv[2];
-if (!EXPECT_SHA || !/^[0-9a-f]{7,40}$/i.test(EXPECT_SHA)) {
+if (!EXPECT_SHA || !/^[0-9a-f]{40}$/i.test(EXPECT_SHA)) {
   console.error('Usage: node scripts/shepherd-staging-smoke-layout-visual-run.mjs <full40Sha>');
   process.exit(1);
 }
@@ -52,7 +52,8 @@ if (!jev.ok) {
 
 const vres = await fetch(`${BASE}/api/version`);
 const version = await vres.json();
-if (version.sha !== EXPECT_SHA && !String(version.sha || '').startsWith(SHA7)) {
+const liveSha = String(version.sha || '').trim().toLowerCase();
+if (liveSha !== EXPECT_SHA.toLowerCase()) {
   console.error(JSON.stringify({ error: 'version_mismatch', want: EXPECT_SHA, got: version.sha }));
   process.exit(2);
 }

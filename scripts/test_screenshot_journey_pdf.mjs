@@ -1,10 +1,20 @@
+import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { capturedFeatureFilesFromPages } from './lib/journey-feature-capture.mjs';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
+
+assert.deepEqual([...capturedFeatureFilesFromPages([
+  { file: 'budget.md', id: 'tab-budget' },
+])], ['budget.md']);
+assert.equal(capturedFeatureFilesFromPages([]).has('budget.md'), false);
+assert.equal(capturedFeatureFilesFromPages([]).has('live-app-jev-tier.md'), false);
+assert.match(readFileSync(new URL('./screenshot-journey-pdf.mjs', import.meta.url), 'utf8'), /syncCapturedFromPages\(\)/);
 const journeySource = readFileSync(new URL('./screenshot-journey-pdf.mjs', import.meta.url), 'utf8');
 for (const kept of ['Review Terms & Privacy', 'Kimberly welcome', 'Print and PDF', 'Keepsakes config', 'Ratings and reviews', 'First onboarding prompt']) {
   if (!journeySource.includes(kept)) {

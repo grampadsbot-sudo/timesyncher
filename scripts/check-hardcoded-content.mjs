@@ -2459,7 +2459,7 @@ export function evaluate(cwd = process.cwd()) {
   const findings = scanRoots(cwd);
   const { report, fail } = classify(findings, baseline);
   const ceiling = baseBaselineCount(cwd);
-  for (const symbol of growthFails(baseline, ceiling)) {
+  for (const symbol of growthFails(baseline, ceiling, findings)) {
     fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol_or_pattern: symbol });
   }
   return { report, fail, baselineCount: baseline.length, ceiling };
