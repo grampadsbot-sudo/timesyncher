@@ -555,20 +555,24 @@ body {
   grid-template-rows: auto auto;
   column-gap: 8px;
   row-gap: 2px;
-  align-items: center;
+  align-items: start;
   min-width: 0;
+  --tsv-row-name-lh: 1.2;
 }
 
 .tsv-row-car-head .tsv-logo-chip {
-  grid-row: 1 / -1;
+  grid-row: 1;
   grid-column: 1;
-  align-self: center;
+  align-self: start;
+  line-height: var(--tsv-row-name-lh);
+  margin-top: calc((1lh - 22px) / 2);
 }
 
 .tsv-row-car-head .tsv-row-name {
   grid-row: 1;
   grid-column: 2;
-  align-self: center;
+  align-self: start;
+  line-height: var(--tsv-row-name-lh);
 }
 
 .tsv-row-car-head .tsv-row-car-sub {
