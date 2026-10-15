@@ -214,16 +214,7 @@ export function placesForBudget(trip) {
     const match =
       (trip.places || []).find((p) => placeName(p) === name)
       || (trip.places || []).find((p) => placeName(p).includes(name) || name.includes(placeName(p)));
-    if (match) {
-      rememberBudgetPlace(seen, match);
-      continue;
-    }
-    rememberBudgetPlace(seen, {
-      id: line.id ?? `budget-line:${name}`,
-      name,
-      category_name: text(line.category),
-      source: 'budget-line',
-    });
+    if (match) rememberBudgetPlace(seen, match);
   }
   for (const res of trip?.reservations || []) {
     const title = text(res?.title || res?.name);

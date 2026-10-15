@@ -154,7 +154,8 @@ assert.equal(
   true,
 );
 
-function uncategorisedUnmatchedBudgetLineLandsInTheRest() {
+// Craig 2026-10-15: only itinerary things are listed on the Budget.
+function unmatchedBudgetLineAddsNoRow() {
   const trip = {
     trip: { currency: 'USD' },
     places: [{ id: 1, name: 'Known hotel', category_name: 'Hotel' }],
@@ -168,26 +169,37 @@ function uncategorisedUnmatchedBudgetLineLandsInTheRest() {
         note: '',
         sort_order: 0,
       },
+      {
+        id: 89,
+        trip_id: 1,
+        name: 'Known hotel',
+        total_price: 300,
+        note: '',
+        sort_order: 1,
+      },
     ],
   };
   const model = buildBudgetModel(trip);
-  const row = model.rows.find((item) => item.name === 'Misc outing');
-  assert.ok(row, 'uncategorised unmatched budget line is on the budget');
-  assert.equal(row.place.category_name, '');
-  assert.notEqual(row.place.category_name, 'Flight');
-  assert.equal(row.bucket, OTHER_THINGS_BUCKET);
-  const rest = model.buckets.find((bucket) => bucket.rows.some((item) => item.name === 'Misc outing'));
-  assert.ok(rest, 'uncategorised unmatched budget line has a bucket');
-  assert.equal(rest.label, OTHER_THINGS_BUCKET);
-  assert.equal(rest.displayLabel, 'The Rest');
   assert.equal(
-    model.buckets.some(
-      (bucket) => bucket.label === 'Flights' && bucket.rows.some((item) => item.name === 'Misc outing'),
-    ),
+    model.rows.some((item) => item.name === 'Misc outing'),
     false,
+    'unmatched budget line adds no Budget row',
   );
+  assert.equal(
+    model.buckets.some((bucket) => bucket.rows.some((item) => item.name === 'Misc outing')),
+    false,
+    'no bucket contains the unmatched budget line',
+  );
+  assert.equal(
+    model.buckets.some((bucket) => bucket.label === OTHER_THINGS_BUCKET),
+    false,
+    'no bucket is created for the unmatched budget line',
+  );
+  const matched = model.rows.find((item) => item.name === 'Known hotel');
+  assert.ok(matched, 'matched budget line still appears as a row');
+  assert.equal(String(matched.place.id), '1');
 }
 
-uncategorisedUnmatchedBudgetLineLandsInTheRest();
+unmatchedBudgetLineAddsNoRow();
 
 console.log('vacation-client budget unit checks passed');
