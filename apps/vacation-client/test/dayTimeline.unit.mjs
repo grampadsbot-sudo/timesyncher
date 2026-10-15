@@ -4,7 +4,6 @@ import {
   buildDayTimeline,
   dayChipLabel,
   estimateTravelMinutes,
-  flightScheduledOnDay,
   mapPlacesForTimeline,
   parseClockToMinutes,
   parseDurationMinutes,
@@ -164,8 +163,8 @@ const dayIdsFlightTrip = {
     },
   },
 };
-assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], dayIdsFlightTrip, dayIdsFlightTrip.days[1]), true);
-assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], dayIdsFlightTrip, dayIdsFlightTrip.days[0]), false);
+const day1OrphanRows = buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[0]);
+assert.equal(day1OrphanRows.some((row) => row.kind === 'flight'), false);
 const day2Rows = buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[1]);
 assert.ok(day2Rows.some((row) => row.kind === 'flight' && row.place?.id === 77));
 
@@ -178,6 +177,4 @@ assert.equal(
   true,
   'PR336 empty dayIds matched every day before fix',
 );
-assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], { thingOverrides: {} }, dayIdsFlightTrip.days[0]), false);
-
 console.log('vacation-client day timeline unit checks passed');

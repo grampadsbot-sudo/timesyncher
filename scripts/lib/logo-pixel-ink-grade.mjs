@@ -20,7 +20,6 @@ function readRgb(data, w, x, y) {
   return [data[i], data[i + 1], data[i + 2], data[i + 3]];
 }
 
-/** Sample fill inside the chip, away from the 1px border chrome. */
 export function chipInteriorBackgroundRgb(data, w, h) {
   const inset = Math.max(2, Math.floor(Math.min(w, h) * 0.22));
   const points = [

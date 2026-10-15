@@ -1,5 +1,3 @@
-
-
 import {
   flightPriceDisplay,
   flightSchedule,
@@ -188,52 +186,33 @@ function flightDurationMinutes(depart, arrive) {
 export function mediaForPlace(trip, place) {
   const placeId = Number(place?.id);
   if (!Number.isFinite(placeId)) return [];
-  const fromTrip = (trip?.media || []).filter((row) => {
-    const thingId = Number(row?.thingId ?? row?.thing_id ?? row?.place_id);
-    return thingId === placeId;
-  });
+  const fromTrip = (trip?.media || []).filter(
+    (row) => Number(row?.thingId ?? row?.thing_id ?? row?.place_id) === placeId,
+  );
   if (fromTrip.length) return fromTrip;
   const bound = place?.photos || place?.bound_media || place?.media;
   return Array.isArray(bound) ? bound : [];
 }
 
 function haversineMiles(from, to) {
-  const earthRadiusMiles = 3958.8;
-  const toRadians = (deg) => (deg * Math.PI) / 180;
-  const dLat = toRadians(to.lat - from.lat);
-  const dLng = toRadians(to.lng - from.lng);
-  const lat1 = toRadians(from.lat);
-  const lat2 = toRadians(to.lat);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * earthRadiusMiles * Math.asin(Math.sqrt(a));
+  const rad = (deg) => (deg * Math.PI) / 180;
+  const dLat = rad(to.lat - from.lat);
+  const dLng = rad(to.lng - from.lng);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(rad(from.lat)) * Math.cos(rad(to.lat)) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.asin(Math.sqrt(a));
 }
 
 export function estimateTravelMinutes(fromPlace, toPlace) {
   if (typeof fromPlace?.lat !== 'number' || typeof fromPlace?.lng !== 'number') return null;
   if (typeof toPlace?.lat !== 'number' || typeof toPlace?.lng !== 'number') return null;
-  const miles = haversineMiles(
-    { lat: fromPlace.lat, lng: fromPlace.lng },
-    { lat: toPlace.lat, lng: toPlace.lng },
-  );
-  const rawMinutes = Math.round((miles / 25) * 60);
-  return Math.max(5, Math.round(rawMinutes / 5) * 5);
+  const miles = haversineMiles(fromPlace, toPlace);
+  return Math.max(5, Math.round(Math.round((miles / 25) * 60) / 5) * 5);
 }
 
 export function itineraryNoteFor(place, trip, assignmentNotes) {
   const override = overrideFor(trip, place);
-  return text(
-    override.itineraryNote ||
-      override.itinerary_note ||
-      assignmentNotes ||
-      override.notes,
-  );
-}
-
-function endMinutes(entry) {
-  if (entry.startMin == null || entry.durationMin == null) return null;
-  return entry.startMin + entry.durationMin;
+  return text(override.itineraryNote || override.itinerary_note || assignmentNotes || override.notes);
 }
 
 function markConflicts(entries) {
@@ -247,9 +226,9 @@ function markConflicts(entries) {
         b.conflictWith = a.title;
         continue;
       }
-      const aEnd = endMinutes(a);
-      const bEnd = endMinutes(b);
-      if (aEnd == null || bEnd == null) continue;
+      if (a.durationMin == null || b.durationMin == null) continue;
+      const aEnd = a.startMin + a.durationMin;
+      const bEnd = b.startMin + b.durationMin;
       if (a.startMin < bEnd && b.startMin < aEnd) {
         a.conflictWith = b.title;
         b.conflictWith = a.title;
@@ -365,53 +344,45 @@ function pushHotelRows(entries, trip, day) {
   }
 }
 
-export function flightScheduledOnDay(place, trip, day) {
-  const override = overrideFor(trip, place);
-  const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
-  if (!dayIds.length) return false;
-  return dayIds.includes(String(day.id)) || dayIds.includes(String(day.day_number));
-}
-
-function appendFlightEntry(entries, place, trip) {
-  const override = overrideFor(trip, place);
-  const { depart, arrive } = flightSchedule(place, trip);
-  const durationMin =
-    parseDurationMinutes(override.duration) ??
-    flightDurationMinutes(depart, arrive) ??
-    null;
-  entries.push({
-    kind: 'flight',
-    id: `flight-${place.id}`,
-    place,
-    title: placeName(place),
-    startMin: parseClockToMinutes(depart),
-    startLabel: depart,
-    endLabel: arrive,
-    durationMin,
-    category: 'flight',
-    fare: flightPriceDisplay(place, trip),
-    summary: rowSummary(place, trip),
-  });
-}
-
 function pushFlightRows(entries, trip, day, dayId) {
   const seen = new Set();
+  const addFlight = (place) => {
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') return;
+    const { depart, arrive } = flightSchedule(place, trip);
+    entries.push({
+      kind: 'flight',
+      id: `flight-${place.id}`,
+      place,
+      title: placeName(place),
+      startMin: parseClockToMinutes(depart),
+      startLabel: depart,
+      endLabel: arrive,
+      durationMin:
+        parseDurationMinutes(override.duration) ??
+        flightDurationMinutes(depart, arrive) ??
+        null,
+      category: 'flight',
+      fare: flightPriceDisplay(place, trip),
+      summary: rowSummary(place, trip),
+    });
+    seen.add(String(place.id));
+  };
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
-    if (!place) continue;
-    const override = overrideFor(trip, place);
-    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
-    appendFlightEntry(entries, place, trip);
-    seen.add(String(place.id));
+    if (place) addFlight(place);
   }
   for (const place of trip.places || []) {
-    const id = String(place.id);
-    if (seen.has(id)) continue;
     const override = overrideFor(trip, place);
-    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
-    if (!flightScheduledOnDay(place, trip, day)) continue;
-    appendFlightEntry(entries, place, trip);
-    seen.add(id);
+    const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
+    if (
+      seen.has(String(place.id))
+      || !override.timeline
+      || tabCategoryKey(place, trip) !== 'flight'
+      || !dayIds.length
+      || !(dayIds.includes(String(day.id)) || dayIds.includes(String(day.day_number)))
+    ) continue;
+    addFlight(place);
   }
 }
 
