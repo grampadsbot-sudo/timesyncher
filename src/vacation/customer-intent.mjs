@@ -24,6 +24,22 @@ export function seatsFromModel(seats) {
 
 export const emptyIntent = () => ({ asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: true });
 
+const CUSTOMER_INTENT_KEYS = ['asksPrice', 'asksAccess', 'pullsAccess', 'ask'];
+
+export function customerIntentFromBody(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return emptyIntent();
+  for (const key of CUSTOMER_INTENT_KEYS) {
+    if (!(key in body)) return emptyIntent();
+  }
+  return {
+    asksPrice: body.asksPrice === true,
+    asksAccess: body.asksAccess === true,
+    pullsAccess: body.pullsAccess === true,
+    seats: seatsFromModel(body.seats),
+    ask: body.ask === true,
+  };
+}
+
 async function askModelJson(instructions, state, { fetchImpl = fetch, env = process.env, signal } = {}) {
   const key = env.OPENROUTER_API_KEY || env.TIMESYNCHER_OPENROUTER_API_KEY || env.JEV_OPENROUTER_API_KEY || '';
   if (!key) throw Object.assign(new Error('OPENROUTER_API_KEY missing'), { code: 'model_unavailable' });
@@ -52,13 +68,7 @@ export async function customerIntent(text, options) {
     { customerTurn: String(text || '').slice(0, 4000) },
     options,
   );
-  return {
-    asksPrice: body.asksPrice === true,
-    asksAccess: body.asksAccess === true,
-    pullsAccess: body.pullsAccess === true,
-    seats: seatsFromModel(body.seats),
-    ask: body.ask === true,
-  };
+  return customerIntentFromBody(body);
 }
 
 export async function activityCommits(sentences, options) {
