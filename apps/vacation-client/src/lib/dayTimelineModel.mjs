@@ -386,7 +386,7 @@ function pushFlightRows(entries, trip, day, dayId) {
     if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
     const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
     if (!dayIds.length) continue;
-    if (!dayIds.includes(String(day.id)) && !dayIds.includes(String(day.day_number))) continue;
+    if (!dayIds.includes(String(day.id))) continue;
     pushFlight(place);
   }
 }
