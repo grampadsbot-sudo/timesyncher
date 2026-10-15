@@ -13,7 +13,7 @@ function unquoteLiteral(literal) {
   return body.replace(new RegExp(`\\\\${quote}|\\\\.`, 'g'), (esc) => (esc.length === 2 ? esc[1] : esc));
 }
 
-export function mergeAdjacentStringLiterals(source = '') {
+function mergeAdjacentStringLiterals(source = '') {
   let text = String(source);
   for (let pass = 0; pass < 32; pass++) {
     const next = text.replace(ADJACENT_LITERAL_CONCAT_RE, (segment) => {
