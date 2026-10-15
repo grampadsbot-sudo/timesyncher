@@ -221,7 +221,7 @@ export function placesForBudget(trip) {
     rememberBudgetPlace(seen, {
       id: line.id ?? `budget-line:${name}`,
       name,
-      category_name: text(line.category) || 'Flight',
+      category_name: text(line.category),
       source: 'budget-line',
     });
   }

@@ -154,4 +154,40 @@ assert.equal(
   true,
 );
 
+function uncategorisedUnmatchedBudgetLineLandsInTheRest() {
+  const trip = {
+    trip: { currency: 'USD' },
+    places: [{ id: 1, name: 'Known hotel', category_name: 'Hotel' }],
+    reservations: [],
+    budget: [
+      {
+        id: 88,
+        trip_id: 1,
+        name: 'Misc outing',
+        total_price: 40,
+        note: '',
+        sort_order: 0,
+      },
+    ],
+  };
+  const model = buildBudgetModel(trip);
+  const row = model.rows.find((item) => item.name === 'Misc outing');
+  assert.ok(row, 'uncategorised unmatched budget line is on the budget');
+  assert.equal(row.place.category_name, '');
+  assert.notEqual(row.place.category_name, 'Flight');
+  assert.equal(row.bucket, OTHER_THINGS_BUCKET);
+  const rest = model.buckets.find((bucket) => bucket.rows.some((item) => item.name === 'Misc outing'));
+  assert.ok(rest, 'uncategorised unmatched budget line has a bucket');
+  assert.equal(rest.label, OTHER_THINGS_BUCKET);
+  assert.equal(rest.displayLabel, 'The Rest');
+  assert.equal(
+    model.buckets.some(
+      (bucket) => bucket.label === 'Flights' && bucket.rows.some((item) => item.name === 'Misc outing'),
+    ),
+    false,
+  );
+}
+
+uncategorisedUnmatchedBudgetLineLandsInTheRest();
+
 console.log('vacation-client budget unit checks passed');
