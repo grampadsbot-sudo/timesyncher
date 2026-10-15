@@ -125,14 +125,6 @@ export function DayMap({ places, trip, hideHeading = false }: Props) {
     [withCoords],
   );
 
-  if (!withCoords.length) {
-    return (
-      <section className="tsv-day-map tsv-day-map--empty" data-ts-day-map="1">
-        <p className="tsv-muted">Map appears when places include coordinates.</p>
-      </section>
-    );
-  }
-
   const centerPlace = withCoords[0];
   const center: [number, number] = centerPlace
     ? [Number(centerPlace.lat), Number(centerPlace.lng)]
@@ -149,7 +141,8 @@ export function DayMap({ places, trip, hideHeading = false }: Props) {
         <MapReady />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          referrerPolicy="strict-origin-when-cross-origin"
         />
         {withCoords.length > 1 ? <FitBounds boundsKey={boundsKey} places={withCoords} /> : null}
         {withCoords.map((place) => (

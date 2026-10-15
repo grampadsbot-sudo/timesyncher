@@ -193,13 +193,40 @@ function TimelineMediaThumb({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null);
   const primary = media.find((row) => mediaUrl(row)) || media[0];
   const url = primary ? mediaUrl(primary) : '';
+
+  useLayoutEffect(() => {
+    if (!expanded || !buttonRef.current) {
+      setAnchor(null);
+      return;
+    }
+    const place = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = 248;
+      const height = 190;
+      const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8));
+      const top = Math.max(8, rect.top - height - 6);
+      setAnchor({ top, left });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [expanded]);
+
   if (!url) return null;
   const video = isVideoMedia(primary);
   return (
     <div className="tsv-timeline-media-wrap">
       <button
+        ref={buttonRef}
         type="button"
         className="tsv-timeline-media-thumb"
         aria-expanded={expanded}
@@ -214,7 +241,17 @@ function TimelineMediaThumb({
         <img src={url} alt="" loading="lazy" />
       </button>
       {expanded ? (
-        <div data-ts-pic-popup="1" className="tsv-timeline-pic-popup" role="dialog" aria-label="Photo">
+        <div
+          data-ts-pic-popup="1"
+          className="tsv-timeline-pic-popup"
+          role="dialog"
+          aria-label="Photo"
+          style={
+            anchor
+              ? { position: 'fixed', top: anchor.top, left: anchor.left, right: 'auto', bottom: 'auto' }
+              : undefined
+          }
+        >
           <span className="tsv-timeline-pic-popup-tip" data-ts-pic-popup-tip="1" aria-hidden="true" />
           <div className="tsv-timeline-pic-popup-body">
             {video ? (

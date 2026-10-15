@@ -120,6 +120,66 @@ export function paintAlignedEmoji(
   };
   for (let step = -4; step <= 4.001; step += 0.5) score(target + step);
   paint(best);
+  node.toDataURL();
+  return colorInkOffsetY(ctx, dpr, cssSize, bg);
+}
+
+function paintLabelInk(label: HTMLElement, iconOffset: number) {
+  const button = label.closest('button');
+  if (!button || getComputedStyle(label).display === 'none') {
+    label.style.color = '';
+    label.querySelector('canvas.tsv-tab-label-ink')?.remove();
+    return;
+  }
+  const text = (label.textContent || '').replace(/\s+/g, ' ').trim();
+  if (!text) return;
+  const color = getComputedStyle(button).color;
+  const bg = backdropRgb(button);
+  const box = label.getBoundingClientRect();
+  const cssW = box.width;
+  const cssH = box.height;
+  if (cssW < 1 || cssH < 1) return;
+  const dpr = window.devicePixelRatio || 1;
+  let canvas = label.querySelector('canvas.tsv-tab-label-ink') as HTMLCanvasElement | null;
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.className = 'tsv-tab-label-ink';
+    canvas.setAttribute('aria-hidden', 'true');
+    label.appendChild(canvas);
+  }
+  canvas.width = Math.max(1, Math.ceil(cssW * dpr));
+  canvas.height = Math.max(1, Math.ceil(cssH * dpr));
+  canvas.style.position = 'absolute';
+  canvas.style.inset = '0';
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.pointerEvents = 'none';
+  label.style.position = 'relative';
+  label.style.color = 'transparent';
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return;
+  const font = `${getComputedStyle(label).fontWeight} ${getComputedStyle(label).fontSize} ${getComputedStyle(label).fontFamily}`;
+  const paint = (shift: number) => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 0, cssH / 2 + shift);
+    canvas.toDataURL();
+  };
+  let best = 0;
+  let bestAbs = Number.POSITIVE_INFINITY;
+  for (let shift = -2; shift <= 3.001; shift += 0.25) {
+    paint(shift);
+    const err = Math.abs(colorInkOffsetY(ctx, dpr, cssH, bg) - iconOffset);
+    if (err < bestAbs) {
+      bestAbs = err;
+      best = shift;
+    }
+  }
+  paint(best);
 }
 
 export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
@@ -153,5 +213,11 @@ export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
       }
     }
   }
-  paintAlignedEmoji(node, emoji, 16, null, 0);
+  const iconOffset = paintAlignedEmoji(node, emoji, 16, null, 0) ?? 0;
+  if (btn) {
+    const label = [...btn.children].find((n) => n !== chip && !n.hasAttribute('data-ts-logo-chip')) as
+      | HTMLElement
+      | undefined;
+    if (label) paintLabelInk(label, iconOffset);
+  }
 }

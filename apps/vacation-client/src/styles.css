@@ -30,6 +30,20 @@ body {
   overflow-x: hidden;
 }
 
+.tsv-shell:has(.tsv-day-screen) {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.tsv-shell:has(.tsv-day-screen) .tsv-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .tsv-header {
   display: flex;
   flex-direction: column;
@@ -38,6 +52,7 @@ body {
   padding: 8px 12px 10px;
   border-bottom: 1px solid var(--border);
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .tsv-shared-header-brand {
@@ -296,6 +311,8 @@ body {
   padding: 8px 10px;
   border-bottom: 1px solid var(--border);
   overflow-x: hidden;
+  overflow-y: hidden;
+  flex-shrink: 0;
   max-width: 100%;
 }
 
@@ -359,6 +376,7 @@ body {
 }
 
 .tsv-tab-label {
+  position: relative;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -397,6 +415,7 @@ body {
 }
 
 .tsv-build-footer {
+  flex-shrink: 0;
   text-align: center;
   font: 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: rgba(255, 255, 255, 0.9);
@@ -872,6 +891,9 @@ body {
   margin: 0;
   padding: 0;
   min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .tsv-timeline-row {
@@ -1136,8 +1158,26 @@ button.tsv-timeline-link {
   font-weight: 800;
 }
 
+.tsv-day-screen {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tsv-day-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .tsv-day-map {
-  margin-top: 16px;
+  flex: 0 0 auto;
+  margin-top: 12px;
 }
 
 .tsv-map-box {
