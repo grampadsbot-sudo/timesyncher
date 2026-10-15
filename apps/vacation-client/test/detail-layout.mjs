@@ -262,5 +262,8 @@ export async function runVacationClientDetailLayoutTests() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await runVacationClientDetailLayoutTests();
+  runVacationClientDetailLayoutTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }

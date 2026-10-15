@@ -78,7 +78,7 @@ export function tabCategoryKey(place, trip) {
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
   ).toLowerCase();
-  if (raw.includes('flight') || raw === 'transport') return 'flight';
+  if (raw.includes('flight')) return 'flight';
   if (raw.includes('hotel') || raw.includes('lodging')) return 'hotel';
   if (raw.includes('restaurant') || raw === 'bar') return 'restaurant';
   if (raw.includes('car')) return 'car';
