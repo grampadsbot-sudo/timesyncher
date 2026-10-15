@@ -1,3 +1,5 @@
+
+
 import {
   flightPriceDisplay,
   flightSchedule,
@@ -6,12 +8,15 @@ import {
   rowSummary,
   tabCategoryKey,
 } from './listTabModel.mjs';
+
 function text(value) {
   return String(value ?? '').trim();
 }
+
 function overrideFor(trip, place) {
   return trip?.thingOverrides?.[`place:${place.id}`] || {};
 }
+
 export function resolvePlace(row, trip) {
   const id = row?.place_id ?? row?.place?.id;
   const catalog = (trip.places || []).find((p) => String(p.id) === String(id));
@@ -20,17 +25,20 @@ export function resolvePlace(row, trip) {
   }
   return catalog;
 }
+
 export function sortedDays(trip) {
   return [...(trip?.days || [])].sort(
     (a, b) => Number(a.day_number ?? 0) - Number(b.day_number ?? 0),
   );
 }
+
 export function dayChipLabel(day) {
   const title = text(day?.title);
   if (title) return title;
   if (day?.day_number != null) return `Day ${day.day_number}`;
   return 'Day';
 }
+
 export function parseDurationMinutes(raw) {
   const s = text(raw).toLowerCase();
   if (!s) return null;
@@ -43,6 +51,7 @@ export function parseDurationMinutes(raw) {
   const match = s.match(/(\d+(?:\.\d+)?)/);
   return match ? Number(match[1]) : null;
 }
+
 export function parseClockToMinutes(clock) {
   let s = text(clock).toLowerCase();
   if (!s) return null;
@@ -58,6 +67,7 @@ export function parseClockToMinutes(clock) {
   if (meridiem === 'am' && hours === 12) hours = 0;
   return hours * 60 + minutes;
 }
+
 export function formatClockMinutes(totalMinutes) {
   if (totalMinutes == null || !Number.isFinite(totalMinutes)) return '';
   const normalized = ((Math.round(totalMinutes) % (24 * 60)) + 24 * 60) % (24 * 60);
@@ -69,6 +79,7 @@ export function formatClockMinutes(totalMinutes) {
   if (minutes === 0) return `${hours12} ${meridiem}`;
   return `${hours12}:${String(minutes).padStart(2, '0')} ${meridiem}`;
 }
+
 function scheduleForDay(place, trip, dayId) {
   const override = overrideFor(trip, place);
   const perDay =
@@ -100,6 +111,7 @@ function scheduleForDay(place, trip, dayId) {
   }
   return { startTime: '', durationMin: parseDurationMinutes(override.duration) };
 }
+
 function carSpanDayNumbers(place, trip) {
   const override = overrideFor(trip, place);
   const dayIds = Array.isArray(override.dayIds) ? override.dayIds : [];
@@ -111,6 +123,7 @@ function carSpanDayNumbers(place, trip) {
   if (!numbers.length) return null;
   return { start: Math.min(...numbers), end: Math.max(...numbers) };
 }
+
 function assignmentDayNumbers(place, trip) {
   const placeId = String(place.id);
   const days = sortedDays(trip);
@@ -386,7 +399,7 @@ function pushFlightRows(entries, trip, day, dayId) {
     if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
     const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
     if (!dayIds.length) continue;
-    if (!dayIds.includes(String(day.id)) && !dayIds.includes(String(day.day_number))) continue;
+    if (!dayIds.includes(String(day.id))) continue;
     pushFlight(place);
   }
 }

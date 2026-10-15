@@ -7,9 +7,9 @@ const LOGO_INK_MIN_MASS = 4;
 const CARS_HEADING_LOGO_MAX_VERTICAL_PX = 1;
 const CHIP_INTERIOR_INSET_PX = 3;
 
-function interiorLogoMassFromPng(png, { inset = CHIP_INTERIOR_INSET_PX, threshold = 18 } = {}) {
+function interiorLogoInkStatsFromPng(png, { inset = CHIP_INTERIOR_INSET_PX, threshold = 18 } = {}) {
   const { width: w, height: h, data } = png;
-  if (!w || !h) return 0;
+  if (!w || !h) return { mass: 0, sumX: 0, sumY: 0, w, h };
   const x0 = Math.min(inset, Math.floor(w / 3));
   const y0 = Math.min(inset, Math.floor(h / 3));
   const x1 = Math.max(x0 + 1, w - inset);
@@ -29,6 +29,8 @@ function interiorLogoMassFromPng(png, { inset = CHIP_INTERIOR_INSET_PX, threshol
     [0, 0, 0],
   ).map((v) => v / corners.length);
   let mass = 0;
+  let sumX = 0;
+  let sumY = 0;
   for (let y = y0; y < y1; y += 1) {
     for (let x = x0; x < x1; x += 1) {
       const i = (y * w + x) * 4;
@@ -38,58 +40,32 @@ function interiorLogoMassFromPng(png, { inset = CHIP_INTERIOR_INSET_PX, threshol
       const dg = Math.abs(data[i + 1] - bg[1]);
       const db = Math.abs(data[i + 2] - bg[2]);
       if (dr + dg + db < threshold) continue;
-      mass += (dr + dg + db) * (a / 255);
-    }
-  }
-  return mass;
-}
-
-export function measureLogoInkComFromPngBuffer(buf) {
-  const png = PNG.sync.read(Buffer.isBuffer(buf) ? buf : Buffer.from(buf));
-  const logoMass = interiorLogoMassFromPng(png);
-  const { width: w, height: h } = png;
-  if (logoMass <= 0) {
-    return { error: 'empty_mass', w, h, logoMass: 0, mass: 0 };
-  }
-  let sumX = 0;
-  let sumY = 0;
-  let mass = 0;
-  const inset = CHIP_INTERIOR_INSET_PX;
-  const x0 = Math.min(inset, Math.floor(w / 3));
-  const y0 = Math.min(inset, Math.floor(h / 3));
-  const x1 = Math.max(x0 + 1, w - inset);
-  const y1 = Math.max(y0 + 1, h - inset);
-  const corners = [
-    [x0, y0], [x1 - 1, y0], [x0, y1 - 1], [x1 - 1, y1 - 1],
-  ].map(([x, y]) => {
-    const i = (y * w + x) * 4;
-    return [png.data[i], png.data[i + 1], png.data[i + 2]];
-  });
-  const bg = corners.reduce(
-    (acc, [r, g, b]) => [acc[0] + r, acc[1] + g, acc[2] + b],
-    [0, 0, 0],
-  ).map((v) => v / corners.length);
-  const threshold = 18;
-  for (let y = y0; y < y1; y += 1) {
-    for (let x = x0; x < x1; x += 1) {
-      const i = (y * w + x) * 4;
-      const a = png.data[i + 3];
-      if (a < 16) continue;
-      const dr = Math.abs(png.data[i] - bg[0]);
-      const dg = Math.abs(png.data[i + 1] - bg[1]);
-      const db = Math.abs(png.data[i + 2] - bg[2]);
-      if (dr + dg + db < threshold) continue;
       const weight = (dr + dg + db) * (a / 255);
       sumX += x * weight;
       sumY += y * weight;
       mass += weight;
     }
   }
-  if (mass <= 0) {
+  return { mass, sumX, sumY, w, h };
+}
+
+function interiorLogoMassFromPng(png, options) {
+  return interiorLogoInkStatsFromPng(png, options).mass;
+}
+
+export function interiorLogoMassFromPngBuffer(buf) {
+  const png = PNG.sync.read(Buffer.isBuffer(buf) ? buf : Buffer.from(buf));
+  return interiorLogoMassFromPng(png);
+}
+
+export function measureLogoInkComFromPngBuffer(buf) {
+  const png = PNG.sync.read(Buffer.isBuffer(buf) ? buf : Buffer.from(buf));
+  const { mass: logoMass, sumX, sumY, w, h } = interiorLogoInkStatsFromPng(png);
+  if (logoMass <= 0) {
     return { error: 'empty_mass', w, h, logoMass: 0, mass: 0 };
   }
-  const comX = sumX / mass;
-  const comY = sumY / mass;
+  const comX = sumX / logoMass;
+  const comY = sumY / logoMass;
   const chipCx = w / 2;
   const chipCy = h / 2;
   return {
@@ -112,19 +88,7 @@ export function logoChipInkPresent(com = {}, minMass = LOGO_INK_MIN_MASS) {
     return com.logoMass >= minMass;
   }
   const mass = Number(com.mass);
-  if (!Number.isFinite(mass) || mass < minMass) return false;
-  const dxPx = Number(com.dxPx);
-  const dyPx = Number(com.dyPx);
-  if (
-    Number.isFinite(dxPx)
-    && Number.isFinite(dyPx)
-    && dxPx <= 1.5
-    && dyPx <= 1.5
-    && mass >= 8000
-  ) {
-    return false;
-  }
-  return true;
+  return Number.isFinite(mass) && mass >= minMass;
 }
 
 export function gradeLogoChipInkPresence(com = {}) {

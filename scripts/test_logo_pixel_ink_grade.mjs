@@ -14,6 +14,9 @@ import {
   logoChipInkPresent,
   measureLogoInkComFromPngBuffer,
 } from './lib/logo-pixel-ink-grade.mjs';
+import { importAtGitRef } from './lib/import-at-git-ref.mjs';
+
+const NEGATIVE_PROOF_SHA = '5dd95c1f';
 
 function pngWithDot({ width = 22, height = 22, dotX = 11, dotY = 11 }) {
   const png = new PNG({ width, height });
@@ -30,7 +33,7 @@ function pngWithDot({ width = 22, height = 22, dotX = 11, dotY = 11 }) {
   return PNG.sync.write(png);
 }
 
-const centeredChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: 11, dotY: 11 }));
+const centeredChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 11, dotY: 11 }));
 assert.equal(centeredChip.error, undefined);
 assert.equal(logoChipInkPresent(centeredChip), true);
 assert.equal(gradeLogoChipRow({
@@ -40,7 +43,7 @@ assert.equal(gradeLogoChipRow({
   com: centeredChip,
 }).pass, true);
 
-const emojiChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
+const emojiChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
 assert.equal(gradeLogoChipRow({
   isListRowChip: true,
   isBrandImg: false,
@@ -48,7 +51,7 @@ assert.equal(gradeLogoChipRow({
   com: emojiChip,
 }).pass, true);
 
-const emptyChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
+const emptyChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
 assert.equal(emptyChip.error, 'empty_mass');
 assert.equal(gradeLogoChipInkPresence(emptyChip).inkPresent, false);
 assert.equal(gradeLogoChipRow({
@@ -57,6 +60,22 @@ assert.equal(gradeLogoChipRow({
   src: 'https://cdn.example/logo.png',
   com: emptyChip,
 }).pass, false);
+
+const interiorCenteredChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: 11, dotY: 11 }));
+assert.equal(interiorCenteredChip.error, undefined);
+assert.equal(logoChipInkPresent(interiorCenteredChip), true);
+
+const interiorEmojiChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
+assert.equal(gradeLogoChipRow({
+  isListRowChip: true,
+  isBrandImg: false,
+  src: '',
+  com: interiorEmojiChip,
+}).pass, true);
+
+const interiorEmptyChip = measureLogoInkComFromPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
+assert.equal(interiorEmptyChip.error, 'empty_mass');
+assert.equal(gradeLogoChipInkPresence(interiorEmptyChip).inkPresent, false);
 
 const tabNoInk = gradeLogoTabResult({
   tab: 'hotels',
@@ -100,11 +119,10 @@ function pngProductionStyledBlankChip() {
 }
 
 const legacyBlankChip = await measureLogoComFromPngBuffer(pngProductionStyledBlankChip());
-function logoChipInkPresentAtBase(com = {}) {
-  if (!com || com.error) return false;
-  const mass = Number(com.mass);
-  return Number.isFinite(mass) && mass >= 4;
-}
+const { logoChipInkPresent: logoChipInkPresentAtBase } = await importAtGitRef(
+  NEGATIVE_PROOF_SHA,
+  'scripts/lib/logo-pixel-ink-grade.mjs',
+);
 assert.equal(logoChipInkPresentAtBase(legacyBlankChip), true, '5dd95c1 full-chip metric false-passed on border chrome');
 assert.equal(logoChipInkPresent(legacyBlankChip), false, 'border chrome alone must not count as logo ink');
 const interiorBlankChip = measureLogoInkComFromPngBuffer(pngProductionStyledBlankChip());
@@ -131,30 +149,14 @@ const offCenterLayout = centerOfMassFromRgba(rgbaBufferWithDot({ chipW: 30, chip
 assert.ok(centeredLayout && Math.hypot(centeredLayout.absDx, centeredLayout.absDy) <= 1.5);
 assert.ok(offCenterLayout && Math.hypot(offCenterLayout.absDx, offCenterLayout.absDy) > 1.5);
 
-function compareLogoMidlineRowsLegacy(referenceRows, candidateRows, { maxAbs = 2, maxDrift = 1.5 } = {}) {
-  const refByTitle = new Map((referenceRows || []).map((row) => [String(row.title || '').trim(), row]));
-  const compared = (candidateRows || []).map((cand) => {
-    const ref = refByTitle.get(String(cand.title || '').trim());
-    const refDelta = ref?.midDeltaPx ?? null;
-    const absCand = Math.abs(cand.midDeltaPx);
-    const absRef = refDelta == null ? null : Math.abs(refDelta);
-    const drift = refDelta == null ? null : Math.abs(cand.midDeltaPx - refDelta);
-    const improvedVsTrek = absRef != null && absRef > maxAbs && absCand + 1 <= absRef;
-    const pass = refDelta == null
-      ? absCand <= maxAbs
-      : improvedVsTrek
-        ? true
-        : absRef > maxAbs
-          ? drift <= maxDrift
-          : absCand <= maxAbs && drift <= maxDrift;
-    return { pass, improvedVsTrek };
-  });
-  return { pass: compared.length > 0 && compared.every((row) => row.pass), rows: compared };
-}
+const { compareLogoMidlineRows: compareLogoMidlineRowsAtBase } = await importAtGitRef(
+  NEGATIVE_PROOF_SHA,
+  'scripts/lib/itinerary-fresh-gate-metrics.mjs',
+);
 
 const badCandidate = [{ title: 'Harbor Hyatt', midDeltaPx: 99 }];
 const badReference = [{ title: 'Harbor Hyatt', midDeltaPx: 100 }];
-assert.equal(compareLogoMidlineRowsLegacy(badReference, badCandidate).pass, true);
+assert.equal(compareLogoMidlineRowsAtBase(badReference, badCandidate).pass, true);
 assert.equal(compareLogoMidlineRows(badReference, badCandidate).pass, false);
 assert.equal(
   compareLogoMidlineRows(
