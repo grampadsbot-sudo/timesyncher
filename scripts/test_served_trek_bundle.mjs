@@ -3,7 +3,13 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
+import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
+import {
+  BUDGET_BUCKET_CLASSIFIER_PATCH,
+  BUDGET_CATEGORIES_PATCH,
+  extractUpstreamMiscBucketLabel,
+} from '../src/vacation/trek-budget-upstream-misc-patch.mjs';
 
 const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
 const UPSTREAM_PATH = 'public/assets/upstream/index-BKun7ofk.js';
@@ -14,8 +20,24 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 assert.equal(createHash('sha256').update(raw).digest('hex'), UPSTREAM_SHA256);
 
-const rendered = renderServedTrekBundle(raw.toString('utf8'));
+const upstreamJs = raw.toString('utf8');
+const upstreamMiscLabel = extractUpstreamMiscBucketLabel(upstreamJs);
+assert.ok(upstreamMiscLabel, 'upstream bundle must expose misc bucket label');
+assert.notEqual(upstreamMiscLabel, OTHER_THINGS_BUCKET);
+assert.match(upstreamJs, new RegExp(`Hotel":"${upstreamMiscLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+
+const rendered = renderServedTrekBundle(upstreamJs);
 assert.equal(rendered.includes('getAppConfig'), false);
+assert.match(rendered, new RegExp(BUDGET_BUCKET_CLASSIFIER_PATCH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+assert.match(rendered, new RegExp(BUDGET_CATEGORIES_PATCH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+assert.doesNotMatch(
+  rendered,
+  new RegExp(`Stores","${upstreamMiscLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`),
+);
+assert.doesNotMatch(
+  rendered,
+  new RegExp(`di==="${upstreamMiscLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"&&!fr.includes\\("entertainment"\\)`),
+);
 
 function sliceBetween(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
