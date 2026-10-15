@@ -13,6 +13,7 @@ const ENRICHMENT_BY_NAME = JSON.parse(
 );
 
 const ENRICHMENT_KEY_BY_PLACE_ID = {
+  609: 'Priceline opaque JFK — Standard sedan',
   630: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
   631: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25',
   632: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
