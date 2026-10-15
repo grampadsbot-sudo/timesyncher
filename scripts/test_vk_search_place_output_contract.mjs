@@ -53,25 +53,9 @@ assert.deepEqual(
   'price 0 must fail the VK contract validator',
 );
 
-assert.deepEqual(
-  searchPlaceOutputViolations({ category: 'unknown-kind', title: 'Mystery row' }),
-  ['unsupported_category'],
-  'unsupported category rows must fail the contract',
-);
-assert.deepEqual(
-  searchPlaceOutputViolations({ category: '', title: 'No category' }),
-  ['missing_category'],
-);
-
-const emptyTripFailures = (() => {
-  try {
-    assertSearchPlaceOutputContract([]);
-    return null;
-  } catch (error) {
-    return String(error.message || error);
-  }
-})();
-assert.match(emptyTripFailures, /trip_empty_batch/, 'empty search batch must fail trip contract');
+assert.deepEqual(searchPlaceOutputViolations({ category: 'unknown-kind', title: 'Mystery row' }), ['unsupported_category'], 'unsupported category rows must fail the contract');
+assert.deepEqual(searchPlaceOutputViolations({ category: '', title: 'No category' }), ['missing_category']);
+assert.throws(() => assertSearchPlaceOutputContract([]), /trip_empty_batch/);
 
 const negativeMissing = searchPlaceOutputViolations({
   category: 'hotel',

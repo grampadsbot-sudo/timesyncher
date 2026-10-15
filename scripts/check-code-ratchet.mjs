@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { growthFails, pruneBaseline } from './baseline-subset.mjs';
+import { allowedFileSize, growthFails, pruneBaseline, scanAtRef } from './baseline-subset.mjs';
 
 export const MODEL_CLIENT = 'scripts/vacation-app-reply-rules.mjs';
 export const SEARCH_MODULES = ['src/vacation/poi-search.mjs', 'src/vacation/place-search-geocode.mjs'];
@@ -24,6 +24,7 @@ export const RULE_IDS = [
 
 const CODE_EXT = new Set(['.mjs', '.js', '.cjs', '.html']);
 const MODULE_EXT = new Set(['.mjs', '.js', '.cjs']);
+const IMPORTER_EXT = new Set(['.svelte', '.jsx', '.tsx', '.ts']);
 const ROOTS = ['src', 'routes', 'scripts', 'api', 'apps/vacation-client/src'];
 const GUARD = new Set([
   'scripts/check-code-ratchet.mjs',
@@ -35,20 +36,10 @@ const GUARD = new Set([
 ]);
 
 const LLM_HOSTS = [
-  ['openrouter.ai', 'openrouter.ai'],
-  ['api.x.ai', 'api.x.ai'],
-  ['api.openai.com', 'api.openai.com'],
-  ['api.anthropic.com', 'api.anthropic.com'],
-  ['api.perplexity.ai', 'api.perplexity.ai'],
-  ['generativelanguage.googleapis.com', 'generativelanguage.googleapis.com'],
-  ['api.groq.com', 'api.groq.com'],
-  ['api.mistral.ai', 'api.mistral.ai'],
-  ['api.cohere.ai', 'api.cohere.ai'],
-  ['api.cohere.com', 'api.cohere.com'],
-  ['api.deepseek.com', 'api.deepseek.com'],
-  ['api.together.xyz', 'api.together.xyz'],
-  ['api.fireworks.ai', 'api.fireworks.ai'],
-];
+  'openrouter.ai', 'api.x.ai', 'api.openai.com', 'api.anthropic.com', 'api.perplexity.ai',
+  'generativelanguage.googleapis.com', 'api.groq.com', 'api.mistral.ai', 'api.cohere.ai', 'api.cohere.com',
+  'api.deepseek.com', 'api.together.xyz', 'api.fireworks.ai',
+].map((host) => [host, host]);
 
 const SEARCH_HOSTS = [
   ['api.search.brave.com', 'brave'],
@@ -75,17 +66,8 @@ const TEST_TRIP_LITERALS = [
   ['vegas-anniversary', 'vegas-anniversary'],
 ];
 
-const WORKAROUNDS = [
-  [/\bTODO\b/i, 'TODO'],
-  [/\bFIXME\b/i, 'FIXME'],
-  [/\bHACK\b/i, 'HACK'],
-  [/\bXXX\b/i, 'XXX'],
-  [/\btemporary\b/i, 'temporary'],
-  [/\btemp fix\b/i, 'temp fix'],
-  [/\bworkaround\b/i, 'workaround'],
-  [/\bfor now\b/i, 'for now'],
-  [/\bquick fix\b/i, 'quick fix'],
-];
+const WORKAROUNDS = ['TODO', 'FIXME', 'HACK', 'XXX', 'temporary', 'temp fix', 'workaround', 'for now', 'quick fix']
+  .map((symbol) => [new RegExp(`\\b${symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'), symbol]);
 
 function norm(file) {
   return String(file || '').split(path.sep).join('/');
@@ -457,11 +439,13 @@ function refTarget(from, spec, files) {
   return null;
 }
 
-function deadCodeFindings(modules, refs = []) {
+function deadCodeFindings(modules, refs = [], extra = []) {
   const files = new Set(modules.keys());
   const imports = new Map();
   const exporters = new Map();
-  for (const [file, raw] of modules) {
+  const consider = new Map(modules);
+  for (const pair of extra) if (!consider.has(pair[0])) consider.set(pair[0], pair[1]);
+  for (const [file, raw] of consider) {
     const text = mask(raw, { comments: true, strings: false });
     const imported = [];
     const fromRe = /\bimport\s+([\s\S]*?)\s+from\s*(['"])([^'"]+)\2/g;
@@ -496,6 +480,7 @@ function deadCodeFindings(modules, refs = []) {
       match = expFrom.exec(text);
     }
     imports.set(file, imported);
+    if (!modules.has(file)) continue;
     const exports = new Map();
     const mark = (name, index) => { if (name && !exports.has(name)) exports.set(name, index); };
     const patterns = [
@@ -565,11 +550,16 @@ function deadCodeFindings(modules, refs = []) {
 
 function walk(cwd) {
   const files = [];
+  const importers = [];
   const visit = (abs, rel) => {
     if (!fs.existsSync(abs)) return;
     const stat = fs.statSync(abs);
     if (stat.isFile()) {
-      if (CODE_EXT.has(path.extname(abs)) && inScope(rel)) files.push(rel);
+      const ext = path.extname(abs);
+      const parts = rel.split('/');
+      const asImporter = IMPORTER_EXT.has(ext) || ((parts.includes('test') || parts.includes('tests')) && CODE_EXT.has(ext));
+      if (CODE_EXT.has(ext) && (inScope(rel) || !rel.includes('/'))) files.push(rel);
+      else if (asImporter) importers.push(rel);
       return;
     }
     for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
@@ -577,16 +567,16 @@ function walk(cwd) {
       visit(path.join(abs, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
     }
   };
-  for (const root of ROOTS) visit(path.join(cwd, root), root);
+  for (const root of [...ROOTS, 'apps/vacation-client/test']) visit(path.join(cwd, root), root);
   for (const name of fs.readdirSync(cwd)) {
     const abs = path.join(cwd, name);
     if (fs.statSync(abs).isFile() && CODE_EXT.has(path.extname(name))) files.push(name);
   }
-  return files;
+  return { files, importers };
 }
 
 export function scanRoots(cwd = process.cwd()) {
-  const files = walk(cwd);
+  const { files, importers } = walk(cwd);
   const findings = [];
   const modules = new Map();
   for (const file of files) {
@@ -605,27 +595,20 @@ export function scanRoots(cwd = process.cwd()) {
       match = scripts.exec(text);
     }
   }
-  findings.push(...deadCodeFindings(modules, refs));
+  const extra = importers.map((file) => [file, fs.readFileSync(path.join(cwd, file), 'utf8')]);
+  findings.push(...deadCodeFindings(modules, refs, extra));
   findings.sort((a, b) => a.rule.localeCompare(b.rule) || a.file.localeCompare(b.file) || a.symbol.localeCompare(b.symbol) || a.line - b.line);
   return findings;
 }
 
-function sizeCap(entries, file) {
-  const row = (entries || []).find((entry) => entry.rule === 'FILE-SIZE-500' && entry.file === file);
-  if (!row) return FILE_SIZE_LIMIT;
-  const value = Number(String(row.symbol).slice('lines:'.length));
-  return Number.isFinite(value) ? value : FILE_SIZE_LIMIT;
-}
-
-export function classify(findings, baseline, baseEntries = null) {
+export function classify(findings, baseline, baseEntries = null, baseFindings = null) {
   const keys = new Set((baseline || []).map((entry) => `${entry.rule}\0${entry.file}\0${entry.symbol}`));
   const report = [];
   const fail = [];
   for (const finding of findings) {
     if (finding.rule === 'FILE-SIZE-500') {
       const lines = Number(finding.symbol.slice('lines:'.length));
-      let cap = sizeCap(baseline, finding.file);
-      if (baseEntries) cap = Math.min(cap, sizeCap(baseEntries, finding.file));
+      const cap = allowedFileSize(baseline, baseEntries, baseFindings, finding.file, FILE_SIZE_LIMIT);
       if (lines > cap) fail.push({ ...finding, symbol: `lines:${lines}>${cap}` });
       else report.push(finding);
       continue;
@@ -667,8 +650,12 @@ export function evaluate(cwd = process.cwd()) {
   const baseline = fs.existsSync(baselinePath) ? loadBaselineFile(baselinePath) : [];
   const findings = scanRoots(cwd);
   const base = readBaseBaseline(cwd);
-  const { report, fail } = classify(findings, baseline, base.status === 'ok' ? base.entries : null);
-  for (const symbol of growthFails(baseline, base, findings)) {
+  const baseRef = process.env.BASE || process.env.GITHUB_BASE_REF || '';
+  const baseScan = baseRef && base.status === 'ok' ? scanAtRef(cwd, `origin/${baseRef}`, scanRoots) : { status: 'skip' };
+  const baseFindings = baseScan.status === 'ok' ? baseScan.findings : null;
+  const { report, fail } = classify(findings, baseline, base.status === 'ok' ? base.entries : null, baseFindings);
+  if (baseScan.status === 'error') fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol: baseScan.error || 'base tree unavailable' });
+  for (const symbol of growthFails(baseline, base, findings, baseFindings)) {
     const [file, rule, sym] = String(symbol).split('|'); const row = (base.entries || []).find((entry) => entry.rule === 'FILE-SIZE-500' && entry.file === file); const next = /^lines:(\d+)$/.exec(sym || ''); const prev = /^lines:(\d+)$/.exec(String(row?.symbol || row?.symbol_or_pattern || '')); if (!(rule === 'FILE-SIZE-500' && row && next && prev && Number(next[1]) < Number(prev[1]))) fail.push({ rule: 'BASELINE-GROWTH', file: BASELINE_REL, line: 1, symbol });
   }
   return { report, fail, baselineCount: baseline.length, base };

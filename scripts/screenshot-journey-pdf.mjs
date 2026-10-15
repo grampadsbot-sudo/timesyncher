@@ -300,8 +300,7 @@ async function main() {
   }
 
   function mark(file) {
-    if (!file) return;
-    if (pages.some((page) => page.file === file)) captured.add(file);
+    if (file && pages.some((page) => page.file === file)) captured.add(file);
   }
 
   function syncCapturedFromPages() {
@@ -719,16 +718,13 @@ async function main() {
       }
       await page.evaluate(() => { if (window.__tsClipRestore) window.__tsClipRestore(); });
       const qualityOnScreen = await page.evaluate(() => /quality:\s*[1-5]/i.test(document.body.innerText || ''));
-      if (qualityOnScreen) {
-        gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
-      } else if (pages.some((page) => page.file === 'post-purchase-email-eula.md' || page.chapter === 'Onboarding')) {
+      if (qualityOnScreen) gap('Jev quality line', 'jev-quality-line.md', 'the customer app is showing the Jev score line');
+      else if (pages.some((item) => item.file === 'post-purchase-email-eula.md' || item.chapter === 'Onboarding')) {
+        const priorId = pages.at(-1)?.id || 'first-prompt';
         pages.push({
-          id: 'jev-quality-absent',
-          chapter: 'Onboarding',
-          title: 'Jev quality line absent',
-          file: 'jev-quality-line.md',
+          id: 'jev-quality-absent', chapter: 'Onboarding', title: 'Jev quality line absent', file: 'jev-quality-line.md',
           note: 'Verified the customer app transcript does not show a Jev quality score line.',
-          image: path.join(shotDir, `${pages.at(-1)?.id || 'first-prompt'}.png`),
+          image: path.join(shotDir, `${priorId}.png`),
         });
         mark('jev-quality-line.md');
       }
@@ -1644,8 +1640,5 @@ async function writeJourneySection(verifyPath, featureCount, captured, gaps, sha
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  main().catch((error) => { console.error(error); process.exit(1); });
 }

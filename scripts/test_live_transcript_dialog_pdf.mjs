@@ -1017,21 +1017,10 @@ const poisoned = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_p
 });
 assert.notEqual(poisoned.status, 0, 'zev= timing evidence must be refused, not rewritten');
 assert.match(String(poisoned.stderr || ''), /refused: timing line contains zev/i);
-const validTiming = {
-  ...poison,
-  turns: [{
-    ...poison.turns[0],
-    timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 jev=222ms max_tokens=900',
-  }],
-};
-const valid = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], {
-  input: JSON.stringify(validTiming),
-  maxBuffer: 8 * 1024 * 1024,
-});
+const validTiming = { ...poison, turns: [{ ...poison.turns[0], timing: 'timing: gen=750ms model=deepseek/deepseek-v4-flash tier=1 jev=222ms max_tokens=900' }] };
+const valid = spawnSync('python3', [fileURLToPath(new URL('./live_v7_dialog_pdf.py', import.meta.url))], { input: JSON.stringify(validTiming), maxBuffer: 8 * 1024 * 1024 });
 assert.equal(valid.status, 0, valid.stderr?.toString());
-const validPdf = Buffer.from(valid.stdout);
-assert.equal(validPdf.includes(Buffer.from('jev=222ms')), true);
-const validText = extractPdfText(validPdf);
+const validText = extractPdfText(Buffer.from(valid.stdout));
 assert.match(validText, /jev=222ms/);
 assert.equal(validText.includes('zev'), false);
 const item34 = {

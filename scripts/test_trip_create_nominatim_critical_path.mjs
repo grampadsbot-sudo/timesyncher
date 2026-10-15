@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { resolveIntakePlace } from '../src/vacation/trip-intake-classify.mjs';
+import { isNominatimOpenStreetMapUrl } from '../src/vacation/place-search-geocode.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
 
 installNoopNominatimStore();
@@ -8,8 +9,7 @@ installNoopNominatimStore();
 let nominatimOutboundCalls = 0;
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
-  const href = String(url);
-  if (href.includes('nominatim.openstreetmap.org')) {
+  if (isNominatimOpenStreetMapUrl(url)) {
     nominatimOutboundCalls += 1;
     return { ok: true, json: async () => [] };
   }
