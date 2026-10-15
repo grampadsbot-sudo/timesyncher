@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import {
   buildDayTimeline,
@@ -10,6 +12,22 @@ import {
   shiftDayIndex,
   sortedDays,
 } from '../src/lib/dayTimelineModel.mjs';
+import {
+  NEGATIVE_PROOF_SHA as PR336_NEGATIVE_PROOF_SHA,
+  pr336FlightOnDay,
+} from './fixtures/pr336-flight-on-day-negative-proof.mjs';
+
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+const pr336OnDaySrc = execFileSync(
+  'git',
+  ['show', `${PR336_NEGATIVE_PROOF_SHA}:apps/vacation-client/src/lib/dayTimelineModel.mjs`],
+  { cwd: repoRoot, encoding: 'utf8', maxBuffer: 512 * 1024 },
+);
+assert.match(
+  pr336OnDaySrc,
+  /dayIds\.length === 0[\s\S]*dayIds\.includes\(String\(day\.day_number\)\)/,
+  'negative-proof fixture must match PR336 onDay logic in git',
+);
 
 const trip = {
   days: [
@@ -149,14 +167,8 @@ const unassignedFlightTrip = {
   },
 };
 
-function pr336BugWouldShowFlightEveryDay(dayIds, day) {
-  return dayIds.length === 0
-    || dayIds.includes(String(day.id))
-    || dayIds.includes(String(day.day_number));
-}
-
 assert.equal(
-  pr336BugWouldShowFlightEveryDay([], unassignedFlightTrip.days[0]),
+  pr336FlightOnDay([], unassignedFlightTrip.days[0]),
   true,
   'PR336 empty dayIds matched every day',
 );
@@ -188,6 +200,48 @@ assert.ok(
 assert.equal(
   buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[1]).some((row) => row.kind === 'flight'),
   false,
+);
+
+const dayIdNumberCollisionTrip = {
+  days: [
+    { id: 100, day_number: 2, title: 'Day with number 2' },
+    { id: 2, day_number: 1, title: 'Day id 2' },
+  ],
+  places: [
+    {
+      id: 88,
+      name: 'Delta SEA → JFK 9:00 am–5:00 pm',
+      category_name: 'Flight',
+      lat: 47.45,
+      lng: -122.3,
+    },
+  ],
+  assignments: { 100: [], 2: [] },
+  thingOverrides: {
+    'place:88': {
+      timeline: true,
+      category: 'flight',
+      price: 401,
+      fareDirection: 'one-way',
+      dayIds: [2],
+    },
+  },
+};
+const collisionDayById = dayIdNumberCollisionTrip.days.find((day) => day.id === 2);
+const collisionDayByNumber = dayIdNumberCollisionTrip.days.find((day) => day.day_number === 2);
+assert.ok(
+  buildDayTimeline(dayIdNumberCollisionTrip, collisionDayById).some((row) => row.kind === 'flight'),
+  'dayIds must match day.id only',
+);
+assert.equal(
+  buildDayTimeline(dayIdNumberCollisionTrip, collisionDayByNumber).some((row) => row.kind === 'flight'),
+  false,
+  'dayIds must not cross-match day_number when it differs from day.id',
+);
+assert.equal(
+  pr336FlightOnDay([2], collisionDayByNumber),
+  true,
+  'PR336 onDay wrongly matched day_number 2 to dayIds [2]',
 );
 
 console.log('vacation-client day timeline unit checks passed');

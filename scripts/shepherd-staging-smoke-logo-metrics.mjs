@@ -14,6 +14,7 @@ import {
 import {
   findCarsTabInkMetric,
   gradeCarsHeadingLogoInk,
+  interiorLogoMassFromPngBuffer,
   logoChipInkPresent,
 } from './lib/logo-pixel-ink-grade.mjs';
 
@@ -118,7 +119,8 @@ export async function measureLogoComFromPngBuffer(buf) {
       mass += weight;
     }
   }
-  if (mass <= 0) return { error: 'empty_mass', w, h };
+  const logoMass = interiorLogoMassFromPngBuffer(buf);
+  if (mass <= 0) return { error: 'empty_mass', w, h, logoMass: 0, mass: 0 };
   const comX = sumX / mass;
   const comY = sumY / mass;
   const chipCx = w / 2;
@@ -133,6 +135,7 @@ export async function measureLogoComFromPngBuffer(buf) {
     dxPx: Math.abs(comX - chipCx),
     dyPx: Math.abs(comY - chipCy),
     mass,
+    logoMass,
   };
 }
 
@@ -271,6 +274,7 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
         chipCx: com.chipCx,
         chipCy: com.chipCy,
         mass: com.mass,
+        logoMass: com.logoMass,
       },
       cssSuspects,
     });
