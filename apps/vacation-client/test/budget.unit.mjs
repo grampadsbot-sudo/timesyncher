@@ -154,7 +154,6 @@ assert.equal(
   true,
 );
 
-// Craig 2026-10-15: only itinerary things are listed on the Budget.
 function unmatchedBudgetLineAddsNoRow() {
   const trip = {
     trip: { currency: 'USD' },
