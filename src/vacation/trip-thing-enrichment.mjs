@@ -188,18 +188,11 @@ function carDescription(title = '', source = {}) {
   if (pickupLoc) parts.push(`Pickup location: ${pickupLoc}.`);
   if (pickupHours) parts.push(`Pickup hours: ${pickupHours}.`);
   if (dropLoc) {
-    parts.push(
-      dropLoc === pickupLoc
-        ? `Return location: same as pickup (${dropLoc}).`
-        : `Return location: ${dropLoc}.`,
-    );
+    const sameStop = dropLoc === pickupLoc;
+    parts.push(sameStop ? `Return location: same as pickup (${dropLoc}).` : `Return location: ${dropLoc}.`);
   }
   if (dropHours) parts.push(`Return hours: ${dropHours}.`);
-  if (price != null) {
-    parts.push(
-      `Price: about $${price.toLocaleString('en-US')} total from source pricing (confirm taxes, fees, and add-ons at checkout).`,
-    );
-  }
+  if (price != null) parts.push(`Price: about $${price.toLocaleString('en-US')} total.`);
   if (reputation) parts.push(reputation.endsWith('.') ? reputation : `${reputation}.`);
   if (themes.length) parts.push(`Renter notes from source: ${themes.join('; ')}.`);
   if (upsell) parts.push(`Terms to confirm before booking: ${upsell}.`);
@@ -226,7 +219,7 @@ function carDescription(title = '', source = {}) {
   return body;
 }
 
-export function carListSummaryFromSource(place = {}, override = {}, source = null) {
+function carListSummaryFromSource(place = {}, override = {}, source = null) {
   const row = source && typeof source === 'object' ? source : {};
   const merged = { ...row, ...override };
   return carDescription(text(place.name || place.title || override.title), merged);
