@@ -452,15 +452,27 @@ export async function webAccessForSession(db, {
   return rows[0];
 }
 
+async function verifiedOwnerWebGrant(db, webGrant, tripId) {
+  if (!webGrant || webGrant.role !== 'owner') return webGrant;
+  const normalizedTripId = clean(tripId, 80);
+  if (!normalizedTripId) return null;
+  const rows = await db`
+    select customer_id
+    from trips
+    where id = ${normalizedTripId}
+    limit 1
+  `;
+  const tripOwnerId = clean(rows[0]?.customer_id, 80);
+  const grantOwnerId = clean(webGrant.owner_customer_id, 80);
+  if (!tripOwnerId || !grantOwnerId || tripOwnerId !== grantOwnerId) return null;
+  return webGrant;
+}
+
 export async function requireWebEditAccess(db, req, { tripId, ownerCustomerId = '', env = process.env }) {
   const sessionToken = readCookie(req, WEB_ACCESS_COOKIE) || req?.headers?.['x-timesyncher-web-access-token'] || '';
   const webGrant = await webAccessForSession(db, { sessionToken, tripId, env });
-  if (webGrant) return { ok: true, role: webGrant.role, grant: webGrant };
-
-  const ownerToken = req?.headers?.['x-timesyncher-owner-customer-id'] || '';
-  if (ownerCustomerId && ownerToken && ownerToken === ownerCustomerId) {
-    return { ok: true, role: 'owner' };
-  }
+  const verifiedGrant = webGrant ? await verifiedOwnerWebGrant(db, webGrant, tripId) : null;
+  if (verifiedGrant) return { ok: true, role: verifiedGrant.role, grant: verifiedGrant };
 
   throw Object.assign(new Error('Website editing requires the owner or an accepted owner-approved email invite.'), { statusCode: 403 });
 }

@@ -1,17 +1,38 @@
-function envKeyBySuffix(env, suffix) {
-  const hit = Object.entries(env || {}).find(([name]) => String(name).endsWith(suffix));
-  return hit ? String(hit[1] || '').trim() : '';
+import { readFileSync } from 'node:fs';
+
+const BRAVE_KEY_PARTS = ['BRAVE', 'SEARCH', 'API', 'KEY'];
+const TAVILI_KEY_PARTS = ['TAVILI', 'API', 'KEY'];
+
+const REQUIRED_ENV_ROWS = JSON.parse(
+  readFileSync(new URL('../../scripts/deploy-required-env.json', import.meta.url), 'utf8'),
+).required;
+
+function requiredEnvName(matcher) {
+  const row = REQUIRED_ENV_ROWS.find((entry) => matcher(String(entry.name || '')));
+  return row ? row.name : '';
 }
 
-const BRAVE_ENV_NAME = ['BRAVE', 'SEARCH', 'API', 'KEY'].join('_');
-const TAVILY_ENV_NAME = ['TAVILI', 'API', 'KEY'].join('_');
+export const BRAVE_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('BRAVE_') && name.endsWith('_API_KEY'));
+export const TAVILI_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('TAVILI') && name.endsWith('_API_KEY'));
+
+if (BRAVE_PROVIDER_KEY_NAME !== BRAVE_KEY_PARTS.join('_')) {
+  throw new Error('deploy-required-env.json brave search key name drifted');
+}
+if (TAVILI_PROVIDER_KEY_NAME !== TAVILI_KEY_PARTS.join('_')) {
+  throw new Error('deploy-required-env.json tavily key name drifted');
+}
+
+function keyFromEnv(processEnv = process.env, envName = '', shortAlias = '') {
+  if (!envName) return '';
+  return String(processEnv[envName] || (shortAlias ? processEnv[shortAlias] : '') || '').trim();
+}
 
 export function buildProviderEnv(processEnv = process.env) {
   return {
-    brave: String(processEnv.brave || envKeyBySuffix(processEnv, 'E_SEARCH_API_KEY') || '').trim(),
-    tavily: String(processEnv.tavily || envKeyBySuffix(processEnv, 'ILI_API_KEY') || '').trim(),
-    braveName: BRAVE_ENV_NAME,
-    tavilyName: TAVILY_ENV_NAME,
+    brave: keyFromEnv(processEnv, BRAVE_PROVIDER_KEY_NAME, 'brave'),
+    tavily: keyFromEnv(processEnv, TAVILI_PROVIDER_KEY_NAME, 'tavily'),
+    braveName: BRAVE_PROVIDER_KEY_NAME,
+    tavilyName: TAVILI_PROVIDER_KEY_NAME,
     OPENROUTER_API_KEY: String(processEnv.OPENROUTER_API_KEY || processEnv.JEV_API_KEY || '').trim(),
     JEV_RELEVANCE_MINIMUM: processEnv.JEV_RELEVANCE_MINIMUM,
     JEV_RELEVANCE_JUDGE_TIMEOUT_MS: processEnv.JEV_RELEVANCE_JUDGE_TIMEOUT_MS,
@@ -28,4 +49,19 @@ export function missingSearchKeys(processEnv = process.env) {
   const missing = [];
   if (!String(providerEnv.brave || '').trim()) missing.push(String(providerEnv.braveName || 'brave'));
   return missing;
+}
+
+export function xaiPlaceSearchModelId(processEnv = process.env) {
+  const direct = String(processEnv.XAI_PLACE_SEARCH_MODEL || '').trim();
+  if (direct || processEnv !== process.env) {
+    if (!direct) {
+      throw Object.assign(new Error('XAI_PLACE_SEARCH_MODEL is not set.'), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
+    }
+    return direct;
+  }
+  const model = String(process.env.XAI_PLACE_SEARCH_MODEL || '').trim();
+  if (!model) {
+    throw Object.assign(new Error('XAI_PLACE_SEARCH_MODEL is not set.'), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
+  }
+  return model;
 }

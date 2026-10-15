@@ -83,10 +83,20 @@ assert.doesNotThrow(() => {
 
 assert.equal(
   resolveThingLogoUrl({ name: 'Hertz', category_name: 'Car' }, { category: 'car' }),
+  '',
+);
+assert.equal(
+  resolveThingLogoUrl(
+    { name: 'Hertz', category_name: 'Car', url: 'https://www.hertz.com/' },
+    { category: 'car' },
+  ),
   NAMED_THING_LOGOS.hertz,
 );
 assert.equal(
-  resolveThingLogoUrl({ name: 'Alamo rental car', category_name: 'Car' }, { category: 'car' }),
+  resolveThingLogoUrl(
+    { name: 'Alamo rental car', category_name: 'Car', url: 'https://www.alamo.com/' },
+    { category: 'car' },
+  ),
   NAMED_THING_LOGOS.alamo,
 );
 
