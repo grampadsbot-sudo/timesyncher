@@ -109,174 +109,122 @@ function priceFromSourceText(...values) {
   return null;
 }
 
-function airlineFromTitle(title = '') {
-  const row = text(title, 240);
-  for (const [pattern] of AIRLINE_LOGOS) {
-    const match = row.match(pattern);
-    if (match) return match[0];
-  }
-  const head = row.split(/\s+/)[0];
-  return head || 'Airline';
+const CANNED_CATEGORY_TEMPLATE_RES = [
+  /Book ahead on weekends/i,
+  /walkable neighborhood access/i,
+  /fits couples who want an easy subway/i,
+  /source-backed option to compare/i,
+  /confirm doors and set times/i,
+  /compare ticket tiers and fees/i,
+  /table-service dining room/i,
+  /go for a sit-down meal/i,
+  /worth a stop for gifts or trip supplies/i,
+  /nonstop when available/i,
+  /worth it if the timing beats a connection/i,
+  /When: check the posted show date/i,
+  /Price: compare ticket/i,
+  /Price: tickets from about/i,
+  /Price: about \$/i,
+];
+
+export function isCannedCategoryTemplate(value = '') {
+  const row = text(value, 4000);
+  if (!row) return false;
+  return CANNED_CATEGORY_TEMPLATE_RES.some((pattern) => pattern.test(row));
 }
 
-function flightDescription(title = '', source = {}) {
-  const airline = text(source.airline || airlineFromTitle(title), 80);
-  const times = text(source.schedule || source.summary || title, 240);
-  const stops = text(source.stops || source.stopSummary || '', 120);
-  const duration = text(source.duration || source.flightDuration || '', 80);
-  const bits = [
-    `${airline} option`,
-    times.includes('→') || times.includes('-') ? `schedule ${times}` : times,
-    stops ? `${stops} stops` : 'nonstop when available',
-    duration ? `${duration} block` : '',
-    'worth it if the timing beats a connection; pass if you need a late hotel departure',
-  ].filter(Boolean);
-  return text(bits.join('; '), 4000);
+function sentence(value) {
+  const row = text(value, 2000);
+  if (!row) return '';
+  return /[.!?]$/.test(row) ? row : `${row}.`;
 }
 
-function hotelDescription(title = '', source = {}, address = '') {
-  const area = text(source.neighborhood || source.area || address, 160);
-  const rating = text(source.rating || source.googleRating || source.bookingRating || '', 40);
-  const amenity = text(source.amenity || source.standoutAmenity || source.highlight || '', 120);
-  const price = firstPrice(source.price, source.rate, source.nightlyRate);
-  const bits = [
-    area ? `${area} base` : text(title, 120),
-    amenity || 'walkable neighborhood access',
-    rating ? `${rating} guest rating` : '',
-    price != null ? `about $${price.toLocaleString('en-US')}/night` : '',
-    'fits couples who want an easy subway link and late dinners',
-  ].filter(Boolean);
-  return text(bits.join('; '), 4000);
+function usableSourceText(value) {
+  const row = text(value, 4000);
+  if (!row) return '';
+  const parts = row.split(/(?<=[.!?])\s+/).filter((part) => {
+    const line = text(part, 4000);
+    if (!line) return false;
+    if (GENERIC_DESCRIPTION_RES.some((pattern) => pattern.test(line))) return false;
+    if (isCannedCategoryTemplate(line)) return false;
+    if (/^\S+\s+\S+\s*,\s*New York/i.test(line) && wordCount(line) < 10) return false;
+    return true;
+  });
+  return text(parts.join(' '), 4000);
 }
 
-function restaurantDescription(title = '', source = {}, raw = '') {
-  if (raw && !isGenericDescription(raw)) return text(raw, 4000);
-  const cuisine = text(source.cuisine || source.category || source.categoryName || 'Seasonal', 80);
-  const vibe = text(source.vibe || source.signature || source.highlight || '', 120);
-  const priceLevel = text(source.priceLevel || source.price_level || '', 40);
-  const bits = [
-    `${cuisine} spot`,
-    vibe || 'table-service dining room',
-    priceLevel || 'mid-range check',
-    'go for a sit-down meal; skip if you need a quick counter bite',
-  ].filter(Boolean);
-  return text(bits.join('; '), 4000);
-}
-
-function carDescription(title = '', source = {}) {
-  const company = text(source.rentalCompany || source.vendor || source.company, 120)
-    || text(String(title || '').split('—')[0], 120);
-  const vehicle = text(source.carType || source.vehicleClass || source.model, 120);
-  const pickupLoc = text(source.pickupLocation || source.pickup || source.address, 160);
-  const dropLoc = text(
-    source.dropoffLocation || source.returnLocation || source.dropoff,
-    160,
+function themesAreFetched(record = {}) {
+  if (record.xaiRatingsFetched === true) return true;
+  if (text(record.websiteFlavour, 1200)) return true;
+  const themes = record.reviewThemes;
+  return Boolean(
+    themes
+    && typeof themes === 'object'
+    && !Array.isArray(themes)
+    && (Array.isArray(themes.praise) || Array.isArray(themes.complaints)),
   );
-  const pickupHours = text(source.pickupHours || source.pickupTime || source.startTime, 160);
-  const dropHours = text(source.dropoffHours || source.returnTime || source.endTime, 160);
-  const price = firstPrice(source.price, source.rate, source.totalPrice);
-  const terms = text(source.terms || source.rentalTerms || source.bookingTerms, 280);
-  const reputation = text(source.reputationNote || source.reputation, 360);
-  const themes = Array.isArray(source.reviewThemes)
-    ? source.reviewThemes.map((row) => text(row, 120)).filter(Boolean)
-    : [];
-  const upsell = text(source.upsells || source.upsellNotes, 200);
-
-  const parts = [];
-  if (company) parts.push(`Rental company: ${company}.`);
-  if (vehicle) parts.push(`Vehicle class: ${vehicle}.`);
-  if (pickupLoc) parts.push(`Pickup location: ${pickupLoc}.`);
-  if (pickupHours) parts.push(`Pickup hours: ${pickupHours}.`);
-  if (dropLoc) {
-    const sameStop = dropLoc === pickupLoc;
-    parts.push(sameStop ? `Return location: same as pickup (${dropLoc}).` : `Return location: ${dropLoc}.`);
-  }
-  if (dropHours) parts.push(`Return hours: ${dropHours}.`);
-  if (price != null) parts.push(`Price: about $${price.toLocaleString('en-US')} total.`);
-  if (reputation) parts.push(reputation.endsWith('.') ? reputation : `${reputation}.`);
-  if (themes.length) parts.push(`Renter notes from source: ${themes.join('; ')}.`);
-  if (upsell) parts.push(`Terms to confirm before booking: ${upsell}.`);
-  else if (terms) parts.push(`Terms to confirm before booking: ${terms}.`);
-
-  const blurb = text(source.summary || source.description || source.longDetails, 400);
-  if (blurb && !isGenericDescription(blurb)) {
-    const hay = parts.join(' ').toLowerCase();
-    const novel = blurb
-      .split(/\s+/)
-      .map((token) => token.replace(/[^A-Za-z0-9'-]/g, ''))
-      .filter((token) => token.length > 4)
-      .some((token) => !hay.includes(token.toLowerCase()));
-    if (novel) parts.push(blurb.endsWith('.') ? blurb : `${blurb}.`);
-  }
-
-  let body = text(parts.join(' '), 4000);
-  if (wordCount(body) < 30) {
-    const extra = text(source.description || source.longDetails || source.summary, 400);
-    if (extra && !isGenericDescription(extra) && !body.includes(extra.slice(0, 20))) {
-      body = text(`${body} ${extra.endsWith('.') ? extra : `${extra}.`}`, 4000);
-    }
-  }
-  return body;
 }
 
-function storeDescription(title = '', source = {}, raw = '') {
-  if (raw && !isGenericDescription(raw)) return text(raw, 4000);
-  const focus = text(source.summary || source.description || title, 200);
-  return text(`${focus}; worth a stop for gifts or trip supplies, skip if you are tight on time`, 4000);
+function reviewThemeLines(record = {}) {
+  if (!themesAreFetched(record)) return [];
+  const themes = record.reviewThemes;
+  const rows = [];
+  if (Array.isArray(themes)) rows.push(...themes);
+  else if (themes && typeof themes === 'object') {
+    rows.push(...(Array.isArray(themes.praise) ? themes.praise : []));
+    rows.push(...(Array.isArray(themes.complaints) ? themes.complaints : []));
+  }
+  const seen = new Set();
+  const lines = [];
+  for (const row of rows) {
+    const line = text(row, 240);
+    const key = line.toLowerCase();
+    if (!line || seen.has(key)) continue;
+    seen.add(key);
+    lines.push(line);
+  }
+  return lines;
 }
 
-function eventDescription(title = '', source = {}, raw = '') {
-  const when = text(
-    source.when || source.startsAt || source.schedule || source.startTime || source.place_time,
-    160,
-  );
-  const performers = text(source.performers || source.artist || source.headliner || '', 160);
-  const genre = text(source.genre || source.musicGenre || source.categoryLabel, 80);
-  const venueType = text(source.venueType || source.presentationType, 80);
-  const why = text(source.why || source.summary || source.description || raw, 240);
-  const price = firstPrice(source.price, source.ticketPrice, source.ticketsFrom);
-  const whatItIs = [venueType, genre ? `music genre: ${genre}` : ''].filter(Boolean).join('; ');
-  const bits = [
-    whatItIs ? `What it is: ${whatItIs}.` : '',
-    title,
-    when
-      ? `When: ${when} (confirm doors and set times on the venue calendar).`
-      : 'When: check the posted show date and start time before you buy tickets.',
-    performers ? `Featured performers: ${performers}.` : '',
-    why && !isGenericDescription(why) ? why : '',
-    price != null
-      ? `Price: tickets from about $${price.toLocaleString('en-US')} before fees.`
-      : 'Price: compare ticket tiers and fees on the venue site before booking.',
-    'Book ahead on weekends; arrive early for will-call or bar seating.',
-  ].filter(Boolean);
-  const body = text(bits.join(' '), 4000);
-  if (wordCount(body) >= 30) return body;
-  if (raw && !isGenericDescription(raw)) return text(`${raw} ${body}`.trim(), 4000);
-  return body;
+function bareClock(value) {
+  return /^\d{1,2}:\d{2}$/.test(text(value, 40));
+}
+
+export function descriptionFromFetchedPlace(record = {}) {
+  const flavour = text(record.websiteFlavour, 1200);
+  const themes = reviewThemeLines(record);
+  if (flavour || themes.length) {
+    return text([sentence(flavour), ...themes.map(sentence)].filter(Boolean).join(' '), 4000);
+  }
+  const stored = usableSourceText(record.longDetails)
+    || usableSourceText(record.details)
+    || usableSourceText(record.description)
+    || usableSourceText(record.summary);
+  const when = text(record.when || record.schedule, 160);
+  const whenBit = when && !bareClock(when) && stored && !stored.toLowerCase().includes(when.toLowerCase())
+    ? sentence(when)
+    : '';
+  if (stored) return text(`${stored} ${whenBit}`.trim(), 4000);
+  const facts = [
+    record.airline,
+    record.performers || record.artist || record.headliner,
+    record.rentalCompany || record.vendor,
+    record.carType || record.vehicleClass,
+    when && !bareClock(when) ? when : '',
+  ].map(sentence).filter(Boolean);
+  return text(facts.join(' '), 4000);
 }
 
 export function buildCategoryDescription({
-  category = '',
-  title = '',
   sourceRecord = {},
-  address = '',
   rawDescription = '',
 } = {}) {
-  const cat = text(category, 80).toLowerCase();
-  const raw = text(rawDescription, 4000);
-  if (cat === 'car') {
-    if (raw && !isGenericDescription(raw) && wordCount(raw) >= 30) return raw;
-    return carDescription(title, { ...sourceRecord, pickupLocation: sourceRecord.pickupLocation || address });
-  }
-  if (raw && !isGenericDescription(raw)) return raw;
-  if (cat === 'flight') return flightDescription(title, sourceRecord);
-  if (cat === 'hotel' || cat === 'lodging') return hotelDescription(title, sourceRecord, address);
-  if (cat === 'restaurant') return restaurantDescription(title, sourceRecord, raw);
-  if (cat === 'store' || cat === 'grocery' || cat === 'market') return storeDescription(title, sourceRecord, raw);
-  if (cat === 'music' || cat === 'event' || cat === 'tour' || cat === 'activity') {
-    return eventDescription(title, sourceRecord, raw);
-  }
-  return text(raw || `${title}; source-backed option to compare against your shortlist`, 4000);
+  return descriptionFromFetchedPlace({
+    ...sourceRecord,
+    description: text(rawDescription, 4000) || sourceRecord.description || '',
+    longDetails: sourceRecord.longDetails || '',
+    summary: sourceRecord.summary || '',
+  });
 }
 
 function airlineLogoFromTitle(title = '') {

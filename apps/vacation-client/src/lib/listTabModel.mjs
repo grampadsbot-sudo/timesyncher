@@ -2,7 +2,6 @@
 
 import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineCategoryIcon } from '../../../../src/vacation/timeline-icons.mjs';
-export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
 export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
 
@@ -397,4 +396,4 @@ export function sortIndicator(activeKey, activeDir, key) {
   return activeDir === 'asc' ? ' ↑' : ' ↓';
 }
 
-export { itinerarySummary, rowSummary } from './listTabSummaries.mjs';
+export { rowSummary } from './listTabSummaries.mjs';

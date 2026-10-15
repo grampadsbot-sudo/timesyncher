@@ -3,7 +3,7 @@ import {
   flightSchedule,
   hotelFirstRowNote,
   placeName,
-  itinerarySummary,
+  rowSummary,
   tabCategoryKey,
 } from './listTabModel.mjs';
 import { dayItineraryHeading, flightTimelineTitle } from './dayTimelinePresentation.mjs';
@@ -379,7 +379,7 @@ function pushFlightRows(entries, trip, day, dayId) {
         null,
       category: 'flight',
       fare: flightPriceDisplay(place, trip),
-      summary: itinerarySummary(place, trip),
+      summary: rowSummary(place, trip),
     });
   };
   for (const row of trip.assignments?.[dayId] || []) {
@@ -462,7 +462,7 @@ export function buildDayTimeline(trip, day) {
       durationMin: schedule.durationMin,
       assignmentNotes: row.notes,
       category,
-      summary: itinerarySummary(place, trip),
+      summary: rowSummary(place, trip),
       itineraryNote: itineraryNoteFor(place, trip, row.notes),
       media: mediaForPlace(trip, place),
     });

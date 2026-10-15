@@ -1,7 +1,129 @@
 
+function inkOffsetY(ctx: CanvasRenderingContext2D, dpr: number, cssHeight: number) {
+  const width = ctx.canvas.width;
+  const height = ctx.canvas.height;
+  const img = ctx.getImageData(0, 0, width, height);
+  let sum = 0;
+  let mass = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const a = img.data[(y * width + x) * 4 + 3];
+      if (a < 20) continue;
+      sum += y * a;
+      mass += a;
+    }
+  }
+  if (!mass) return 0;
+  return sum / mass / dpr - cssHeight / 2;
+}
+
+function backdropRgb(node: HTMLElement): [number, number, number] {
+  let el: HTMLElement | null = node;
+  while (el) {
+    const raw = getComputedStyle(el).backgroundColor;
+    const match = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
+    if (match && (match[4] == null || Number(match[4]) >= 0.05)) {
+      return [Number(match[1]), Number(match[2]), Number(match[3])];
+    }
+    el = el.parentElement;
+  }
+  return [255, 255, 255];
+}
+
+function colorInkOffsetY(
+  ctx: CanvasRenderingContext2D,
+  dpr: number,
+  cssHeight: number,
+  bg: [number, number, number],
+) {
+  const width = ctx.canvas.width;
+  const height = ctx.canvas.height;
+  const img = ctx.getImageData(0, 0, width, height);
+  let sum = 0;
+  let mass = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const a = img.data[i + 3];
+      if (a < 16) continue;
+      const cover = a / 255;
+      const r = img.data[i] * cover + bg[0] * (1 - cover);
+      const g = img.data[i + 1] * cover + bg[1] * (1 - cover);
+      const b = img.data[i + 2] * cover + bg[2] * (1 - cover);
+      const dist = Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]);
+      if (dist < 18) continue;
+      sum += y * dist;
+      mass += dist;
+    }
+  }
+  if (!mass) return 0;
+  return sum / mass / dpr - cssHeight / 2;
+}
+
+function labelInkOffsetY(label: HTMLElement) {
+  const sample = document.createElement('canvas');
+  const cssHeight = 32;
+  const cssWidth = 96;
+  const dpr = window.devicePixelRatio || 1;
+  sample.width = cssWidth * dpr;
+  sample.height = cssHeight * dpr;
+  const ctx = sample.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return 0;
+  const cs = getComputedStyle(label);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  ctx.fillStyle = '#000';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const row = (label.textContent || '').trim().slice(0, 18);
+  if (!row) return 0;
+  ctx.fillText(row, 2, cssHeight / 2);
+  return inkOffsetY(ctx, dpr, cssHeight);
+}
+
+export function paintAlignedEmoji(
+  node: HTMLCanvasElement,
+  emoji: string,
+  cssSize: number,
+  label: HTMLElement | null = null,
+  bias = 0,
+) {
+  if (!node || !emoji) return;
+  const dpr = window.devicePixelRatio || 1;
+  node.width = cssSize * dpr;
+  node.height = cssSize * dpr;
+  const ctx = node.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return;
+  const cs = getComputedStyle(node);
+  const font = `${cs.fontWeight || '600'} ${cs.fontSize || '16px'} ${cs.fontFamily}`;
+  const visible = label && getComputedStyle(label).display !== 'none' ? label : null;
+  const target = (visible ? labelInkOffsetY(visible) : 0) + bias;
+  const bg = backdropRgb(node);
+  const paint = (shift: number) => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssSize, cssSize);
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, cssSize / 2, cssSize / 2 + shift);
+  };
+  let best = target;
+  let bestAbs = Number.POSITIVE_INFINITY;
+  const score = (shift: number) => {
+    paint(shift);
+    node.toDataURL();
+    const err = Math.abs(colorInkOffsetY(ctx, dpr, cssSize, bg) - target);
+    if (err < bestAbs) {
+      bestAbs = err;
+      best = shift;
+    }
+  };
+  for (let step = -4; step <= 4.001; step += 0.5) score(target + step);
+  paint(best);
+}
+
 export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
   if (!node || !emoji) return;
-
   const chip = node.closest('[data-ts-category-tab-icon]') as HTMLElement | null;
   if (chip) {
     chip.style.setProperty('display', 'inline-flex', 'important');
@@ -11,8 +133,11 @@ export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
     chip.style.setProperty('position', 'relative', 'important');
     chip.style.setProperty('top', '0px', 'important');
     chip.style.setProperty('align-self', 'center', 'important');
+    const font = getComputedStyle(chip);
+    node.style.fontFamily = font.fontFamily;
+    node.style.fontSize = font.fontSize;
+    node.style.fontWeight = font.fontWeight;
   }
-
   const btn = chip?.closest('button') as HTMLButtonElement | null;
   if (btn) {
     btn.style.alignItems = 'center';
@@ -28,43 +153,5 @@ export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
       }
     }
   }
-
-  const cssSize = 16;
-  const dpr = window.devicePixelRatio || 1;
-  node.width = cssSize * dpr;
-  node.height = cssSize * dpr;
-  const ctx = node.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return;
-
-  const cs = getComputedStyle(chip || node);
-  const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-
-  const paint = (shift: number) => {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, cssSize, cssSize);
-    ctx.font = font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, cssSize / 2, cssSize / 2 + shift);
-  };
-
-  paint(0);
-  const img = ctx.getImageData(0, 0, node.width, node.height);
-  let sum = 0;
-  let mass = 0;
-  for (let y = 0; y < node.height; y += 1) {
-    for (let x = 0; x < node.width; x += 1) {
-      const a = img.data[(y * node.width + x) * 4 + 3];
-      if (a < 20) continue;
-      sum += y * a;
-      mass += a;
-    }
-  }
-  if (mass) {
-    let shift = (node.height / 2 - sum / mass) / dpr;
-    if (emoji === '🎭') shift -= 0.5;
-    paint(shift);
-  } else if (emoji === '🎭') {
-    paint(-0.25);
-  }
+  paintAlignedEmoji(node, emoji, 16, null, 0);
 }

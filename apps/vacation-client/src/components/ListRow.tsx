@@ -139,7 +139,12 @@ export function ListRow({
     const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
-      <li className="tsv-row tsv-row-flight" data-ts-list-row="1" data-list-row="1">
+      <li
+        className="tsv-row tsv-row-flight"
+        data-ts-list-row="1"
+        data-list-row="1"
+        data-description-missing={summary ? undefined : '1'}
+      >
         <div className="tsv-row-car-grid">
           <button
             type="button"
@@ -189,7 +194,12 @@ export function ListRow({
     const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
-      <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1">
+      <li
+        className="tsv-row tsv-row-car"
+        data-ts-list-row="1"
+        data-list-row="1"
+        data-description-missing={summary ? undefined : '1'}
+      >
         <div className="tsv-row-car-grid">
           <button
             type="button"
@@ -241,7 +251,12 @@ export function ListRow({
 
   if (tab === 'events') {
     return (
-      <li className="tsv-row tsv-row-event" data-ts-list-row="1" data-list-row="1">
+      <li
+        className="tsv-row tsv-row-event"
+        data-ts-list-row="1"
+        data-list-row="1"
+        data-description-missing={summary ? undefined : '1'}
+      >
         <div className="tsv-row-car-grid">
           <button
             type="button"
@@ -272,7 +287,12 @@ export function ListRow({
   }
 
   return (
-    <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
+    <li
+      className="tsv-row"
+      data-ts-list-row="1"
+      data-list-row="1"
+      data-description-missing={summary ? undefined : '1'}
+    >
       <div className="tsv-row-car-grid">
         <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
           <LogoChip key={String(place.id)} place={place} trip={trip} />

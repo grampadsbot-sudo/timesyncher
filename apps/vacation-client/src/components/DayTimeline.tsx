@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   NAMED_THING_LOGOS,
   resolveThingLogoUrl,
 } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
+import { paintAlignedEmoji } from '../lib/paintTabEmoji';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
@@ -68,6 +69,21 @@ function airlineLogoFromTitle(title = '') {
   return '';
 }
 
+function TimelineEmoji({ emoji }: { emoji: string }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const title = node.closest('.tsv-timeline-head')?.querySelector('[data-ts-timeline-title="1"]');
+    const paint = () =>
+      paintAlignedEmoji(node, emoji, 22, title instanceof HTMLElement ? title : null, 0);
+    paint();
+    const frame = requestAnimationFrame(paint);
+    return () => cancelAnimationFrame(frame);
+  }, [emoji]);
+  return <canvas ref={ref} className="tsv-timeline-emoji-canvas" width={44} height={44} />;
+}
+
 function TimelineIcon({
   entry,
   trip,
@@ -80,7 +96,7 @@ function TimelineIcon({
   if (entry.kind === 'travel') {
     return (
       <span className="tsv-timeline-icon tsv-timeline-icon--travel" data-ts-timeline-icon="1">
-        🚗
+        <TimelineEmoji emoji="🚗" />
       </span>
     );
   }
@@ -131,7 +147,7 @@ function TimelineIcon({
             data-logo-src={src}
           />
         ) : (
-          <span className="tsv-timeline-emoji">{flightGlyph}</span>
+          <TimelineEmoji emoji={flightGlyph} />
         )}
       </span>
     );
@@ -140,7 +156,7 @@ function TimelineIcon({
   if (entry.kind === 'hotel-wake' || entry.kind === 'hotel-sleep') {
     return (
       <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-        <span className="tsv-timeline-emoji">🛏️</span>
+        <TimelineEmoji emoji="🛏️" />
       </span>
     );
   }
@@ -163,7 +179,7 @@ function TimelineIcon({
           onError={() => setLogoBroken(true)}
         />
       ) : null}
-      {showEmoji ? <span className="tsv-timeline-emoji">{flightGlyph}</span> : null}
+      {showEmoji ? <TimelineEmoji emoji={flightGlyph} /> : null}
     </span>
   );
 }

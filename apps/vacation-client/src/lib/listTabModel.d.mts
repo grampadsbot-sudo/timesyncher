@@ -1,6 +1,5 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
-export const LIST_TAB_IDS: readonly string[];
 export const DEFAULT_SORT: { key: string; dir: 'asc' | 'desc' };
 
 export function parsePrice(value: unknown): number | null;
@@ -39,7 +38,6 @@ export function flightSchedule(
 export function hotelPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carSubtitle(place: SharedPlace, trip: SharedTripPayload): string;
-export function itinerarySummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(

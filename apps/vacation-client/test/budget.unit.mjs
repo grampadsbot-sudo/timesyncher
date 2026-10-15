@@ -83,8 +83,9 @@ const unionTrip = {
   },
 };
 const budgetPlaces = placesForBudget(unionTrip);
-assert.equal(budgetPlaces.length, 2);
-assert.equal(numericPrice(budgetPlaces[1], unionTrip), 50);
+assert.equal(budgetPlaces.length, 1);
+assert.equal(String(budgetPlaces[0].id), '20');
+assert.equal(numericPrice(budgetPlaces[0], unionTrip), 100);
 
 const score = budgetCompletenessScore(unionTrip);
 assert.equal(score.pass, score.total);

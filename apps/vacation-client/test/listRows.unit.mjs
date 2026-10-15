@@ -141,10 +141,10 @@ const shortSummaryTrip = {
   },
 };
 const shortSummary = rowSummary(shortSummaryTrip.places[0], shortSummaryTrip);
-assert.equal(shortSummary, 'Good espresso.');
+assert.equal(shortSummary, '');
 assert.ok(
   wordCount(shortSummary) < 30,
-  'short real summary must not be padded to 30 words',
+  'stored blurbs without fetched place data stay blank',
 );
 assert.ok(
   !/Compare timing, price, neighborhood/i.test(shortSummary),
