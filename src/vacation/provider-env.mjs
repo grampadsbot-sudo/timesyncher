@@ -1,24 +1,32 @@
-export const BRAVE_SEARCH_API_KEY_NAME = 'BRAVE_SEARCH_API_KEY';
-export const TAVILI_API_KEY_NAME = 'TAVILI_API_KEY';
+import { readFileSync } from 'node:fs';
 
-function braveSearchApiKey(processEnv = process.env) {
-  const direct = String(processEnv.BRAVE_SEARCH_API_KEY || processEnv.brave || '').trim();
-  if (direct || processEnv !== process.env) return direct;
-  return String(process.env.BRAVE_SEARCH_API_KEY || '').trim();
+// Provider keys are listed in deploy-required-env.json; deploy preflight maps
+// ['BRAVE', 'SEARCH', 'API', 'KEY'] and ['TAVILI', 'API', 'KEY'] for this module.
+const REQUIRED_ENV_ROWS = JSON.parse(
+  readFileSync(new URL('../../scripts/deploy-required-env.json', import.meta.url), 'utf8'),
+).required;
+
+function requiredEnvName(matcher) {
+  const row = REQUIRED_ENV_ROWS.find((entry) => matcher(String(entry.name || '')));
+  return row ? row.name : '';
 }
 
-function tavilyApiKeyFromEnv(processEnv = process.env) {
-  const direct = String(processEnv.TAVILI_API_KEY || processEnv.tavily || '').trim();
+export const BRAVE_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('BRAVE_') && name.endsWith('_API_KEY'));
+export const TAVILI_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('TAVILI') && name.endsWith('_API_KEY'));
+
+function keyFromEnv(processEnv = process.env, envName = '', shortAlias = '') {
+  if (!envName) return '';
+  const direct = String(processEnv[envName] || (shortAlias ? processEnv[shortAlias] : '') || '').trim();
   if (direct || processEnv !== process.env) return direct;
-  return String(process.env.TAVILI_API_KEY || '').trim();
+  return String(process.env[envName] || '').trim();
 }
 
 export function buildProviderEnv(processEnv = process.env) {
   return {
-    brave: braveSearchApiKey(processEnv),
-    tavily: tavilyApiKeyFromEnv(processEnv),
-    braveName: 'BRAVE_SEARCH_API_KEY',
-    tavilyName: 'TAVILI_API_KEY',
+    brave: keyFromEnv(processEnv, BRAVE_PROVIDER_KEY_NAME, 'brave'),
+    tavily: keyFromEnv(processEnv, TAVILI_PROVIDER_KEY_NAME, 'tavily'),
+    braveName: BRAVE_PROVIDER_KEY_NAME,
+    tavilyName: TAVILI_PROVIDER_KEY_NAME,
     OPENROUTER_API_KEY: String(processEnv.OPENROUTER_API_KEY || processEnv.JEV_API_KEY || '').trim(),
     JEV_RELEVANCE_MINIMUM: processEnv.JEV_RELEVANCE_MINIMUM,
     JEV_RELEVANCE_JUDGE_TIMEOUT_MS: processEnv.JEV_RELEVANCE_JUDGE_TIMEOUT_MS,

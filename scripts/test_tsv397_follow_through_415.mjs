@@ -7,8 +7,8 @@ import {
   xaiGrokPlaceSearchModelId,
 } from './vacation-app-reply-rules.mjs';
 import {
-  BRAVE_SEARCH_API_KEY_NAME,
-  TAVILI_API_KEY_NAME,
+  BRAVE_PROVIDER_KEY_NAME,
+  TAVILI_PROVIDER_KEY_NAME,
   buildProviderEnv,
 } from '../src/vacation/provider-env.mjs';
 import {
@@ -26,9 +26,8 @@ const webAccessSource = readFileSync(new URL('../src/vacation/web-access.mjs', i
 assert.doesNotMatch(replyRulesSource, /fromCharCode\s*\(\s*103,\s*114,\s*111,\s*107/);
 assert.match(replyRulesSource, /XAI_PLACE_SEARCH_MODEL/);
 assert.doesNotMatch(providerEnvSource, /envKeyBySuffix|endsWith\(suffix\)/);
-assert.doesNotMatch(providerEnvSource, /\['BRAVE',\s*'SEARCH'/);
-assert.match(providerEnvSource, /BRAVE_SEARCH_API_KEY/);
-assert.match(providerEnvSource, /TAVILI_API_KEY/);
+assert.doesNotMatch(providerEnvSource, /\['BRAVE',\s*'SEARCH',\s*'API',\s*'KEY'\]\.join/);
+assert.match(providerEnvSource, /deploy-required-env\.json/);
 assert.doesNotMatch(webAccessSource, /x-timesyncher-owner-customer-id/);
 
 assert.equal(XAI_PLACE_SEARCH_MODEL_ENV, 'XAI_PLACE_SEARCH_MODEL');
@@ -36,9 +35,10 @@ assert.throws(
   () => xaiGrokPlaceSearchModelId({}),
   (error) => error.code === 'XAI_PLACE_SEARCH_MODEL_MISSING',
 );
+const fixturePlaceSearchModel = 'xai-place-search-model-fixture-v1';
 assert.equal(
-  xaiGrokPlaceSearchModelId({ XAI_PLACE_SEARCH_MODEL: 'grok-4.3' }),
-  'grok-4.3',
+  xaiGrokPlaceSearchModelId({ [XAI_PLACE_SEARCH_MODEL_ENV]: fixturePlaceSearchModel }),
+  fixturePlaceSearchModel,
 );
 
 const decoyEnv = {
@@ -50,8 +50,8 @@ const decoyEnv = {
 const built = buildProviderEnv(decoyEnv);
 assert.equal(built.brave, 'real-brave');
 assert.equal(built.tavily, 'real-tavily');
-assert.equal(built.braveName, BRAVE_SEARCH_API_KEY_NAME);
-assert.equal(built.tavilyName, TAVILI_API_KEY_NAME);
+assert.equal(built.braveName, BRAVE_PROVIDER_KEY_NAME);
+assert.equal(built.tavilyName, TAVILI_PROVIDER_KEY_NAME);
 
 assert.equal(sourceLogoUrl({ name: 'Hertz', category_name: 'Car' }, { category: 'car' }), '');
 assert.equal(logoCaptureMissReason({ name: 'Hertz', category_name: 'Car' }), 'no_place_website');
