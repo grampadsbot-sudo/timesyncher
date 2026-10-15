@@ -4,7 +4,6 @@ import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
 import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
-import { backfillSharedTripCarSummaries } from './trip-thing-enrichment.mjs';
 import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
 
 const LOGO_IMG_STYLE = 'width:18px;height:18px;max-width:18px;max-height:18px;object-fit:contain;object-position:center center;display:block';
@@ -22,7 +21,7 @@ function escapeHtml(value) {
 }
 
 export function prepareSharedTripForLiveApp(shared = {}) {
-  const presented = applyThingPresentation(backfillSharedTripCarSummaries(shared));
+  const presented = applyThingPresentation(shared);
   const detailed = applyThingDetailOverrides(presented);
   const keepsake = applyProductKeepsakeOverrides(detailed);
   const withListFields = applyLiveAppListRowFields(keepsake);

@@ -219,39 +219,6 @@ function carDescription(title = '', source = {}) {
   return body;
 }
 
-function carListSummaryFromSource(place = {}, override = {}, source = null) {
-  const row = source && typeof source === 'object' ? source : {};
-  const merged = { ...row, ...override };
-  return carDescription(text(place.name || place.title || override.title), merged);
-}
-
-export function backfillSharedTripCarSummaries(shared = {}) {
-  const version = text(shared.trip?.metadata?.gateBNycFixtureVersion);
-  if (version !== 'gate-b-nyc-positive-v1') return shared;
-  const places = Array.isArray(shared.places) ? shared.places : [];
-  const thingOverrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
-    ? { ...shared.thingOverrides }
-    : {};
-  for (const place of places) {
-    const key = `place:${place.id}`;
-    const override = { ...(thingOverrides[key] || {}) };
-    const category = text(override.category || place.category_name || place.category?.name).toLowerCase();
-    if (category !== 'car') continue;
-    const current = text(override.summary || place.summary);
-    if (wordCount(current) >= 30) continue;
-    const source = override.sourceRecord
-      || place.sourceRecord
-      || (place.source && typeof place.source === 'object' ? place.source : null)
-      || {};
-    const built = carListSummaryFromSource(place, override, source);
-    if (wordCount(built) >= 30) {
-      override.summary = built;
-      thingOverrides[key] = override;
-    }
-  }
-  return { ...shared, thingOverrides };
-}
-
 function storeDescription(title = '', source = {}, raw = '') {
   if (raw && !isGenericDescription(raw)) return text(raw, 4000);
   const focus = text(source.summary || source.description || title, 200);

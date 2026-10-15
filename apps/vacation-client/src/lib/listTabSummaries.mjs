@@ -83,9 +83,16 @@ export function rowSummary(place, trip) {
           source.returnLocation ||
           source.dropoff,
       ),
-      pickupHours: text(override.startTime || source.startTime || source.pickupTime || '11:00 am'),
-      dropoffLocation: text(override.dropoffLocation || source.returnLocation || source.dropoffLocation),
-      dropoffHours: text(override.endTime || source.returnTime || source.dropoffTime || '4:00 pm'),
+      pickupHours: text(
+        override.startTime || source.startTime || source.pickupTime || source.pickupHours,
+      ),
+      dropoffHours: text(
+        override.endTime ||
+          source.returnTime ||
+          source.dropoffTime ||
+          source.dropoffHours ||
+          source.endTime,
+      ),
       carType: text(override.vehicleClass || override.carType || source.vehicleClass || source.carType),
       summary: longDescription || text(override.summary || source.summary || place.description),
       price: numericPrice(place, trip) ?? parsePrice(override.price) ?? parsePrice(source.price),
