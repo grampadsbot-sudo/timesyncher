@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { xaiGrokPlaceSearchModelId } from './vacation-app-reply-rules.mjs';
-
-const placeSearchModelEnv = 'XAI_PLACE_SEARCH_MODEL';
+import {
+  XAI_PLACE_SEARCH_MODEL_ENV,
+  xaiGrokPlaceSearchModelId,
+} from './vacation-app-reply-rules.mjs';
 
 assert.throws(
   () => xaiGrokPlaceSearchModelId({}),
@@ -13,7 +14,7 @@ assert.throws(
 
 const fixturePlaceSearchModel = 'xai-place-search-model-fixture-v1';
 assert.equal(
-  xaiGrokPlaceSearchModelId({ [placeSearchModelEnv]: fixturePlaceSearchModel }),
+  xaiGrokPlaceSearchModelId({ [XAI_PLACE_SEARCH_MODEL_ENV]: fixturePlaceSearchModel }),
   fixturePlaceSearchModel,
   'configured place search model is used verbatim',
 );
