@@ -164,43 +164,99 @@ function restaurantDescription(title = '', source = {}, raw = '') {
 }
 
 function carDescription(title = '', source = {}) {
-  const company = text(
-    source.rentalCompany || source.vendor || source.company || title.split('—')[0],
-    120,
-  );
-  const vehicle = text(source.carType || source.vehicleClass || source.model || 'Compact automatic', 120);
-  const pickupLoc = text(
-    source.pickupLocation || source.pickup || source.address || 'airport rental counter',
-    160,
-  );
-  const pickupHours = text(
-    source.pickupHours || source.pickupTime || source.startTime || source.hours || 'Confirm counter hours when you book.',
-    160,
-  );
+  const company = text(source.rentalCompany || source.vendor || source.company, 120)
+    || text(String(title || '').split('—')[0], 120);
+  const vehicle = text(source.carType || source.vehicleClass || source.model, 120);
+  const pickupLoc = text(source.pickupLocation || source.pickup || source.address, 160);
   const dropLoc = text(
-    source.dropoffLocation || source.returnLocation || source.dropoff || pickupLoc,
+    source.dropoffLocation || source.returnLocation || source.dropoff,
     160,
   );
-  const dropHours = text(
-    source.dropoffHours || source.returnTime || source.endTime || 'Match your return flight or hotel departure time.',
-    160,
-  );
-  const reputation = text(source.summary || source.description || source.reputation || '', 400);
-  const upsell = text(source.upsells || source.upsellNotes || 'Optional insurance and prepaid fuel; compare options before booking.', 160);
+  const pickupHours = text(source.pickupHours || source.pickupTime || source.startTime, 160);
+  const dropHours = text(source.dropoffHours || source.returnTime || source.endTime, 160);
   const price = firstPrice(source.price, source.rate, source.totalPrice);
-  const bits = [
-    `Rental company: ${company || text(title, 80)}.`,
-    `Pickup location: ${pickupLoc}.`,
-    `Pickup hours: ${pickupHours}.`,
-    `Drop-off location: ${dropLoc}.`,
-    `Drop-off hours: ${dropHours}.`,
-    vehicle ? `Vehicle: ${vehicle}.` : '',
-    price != null ? `Price: about $${price.toLocaleString('en-US')} before taxes and fees.` : '',
-    reputation ? `Reputation: ${reputation}` : 'Reputation: compare recent renter reviews for counter wait times and vehicle condition.',
-    `Reputation: upsells — ${upsell}`,
-    'Worth comparing if you want trunk space; skip if you are staying near transit.',
-  ].filter(Boolean);
-  return text(bits.join(' '), 4000);
+  const terms = text(source.terms || source.rentalTerms || source.bookingTerms, 280);
+  const reputation = text(source.reputationNote || source.reputation, 360);
+  const themes = Array.isArray(source.reviewThemes)
+    ? source.reviewThemes.map((row) => text(row, 120)).filter(Boolean)
+    : [];
+  const upsell = text(source.upsells || source.upsellNotes, 200);
+
+  const parts = [];
+  if (company) parts.push(`Rental company: ${company}.`);
+  if (vehicle) parts.push(`Vehicle class: ${vehicle}.`);
+  if (pickupLoc) parts.push(`Pickup location: ${pickupLoc}.`);
+  if (pickupHours) parts.push(`Pickup hours: ${pickupHours}.`);
+  if (dropLoc) {
+    parts.push(
+      dropLoc === pickupLoc
+        ? `Return location: same as pickup (${dropLoc}).`
+        : `Return location: ${dropLoc}.`,
+    );
+  }
+  if (dropHours) parts.push(`Return hours: ${dropHours}.`);
+  if (price != null) {
+    parts.push(
+      `Price: about $${price.toLocaleString('en-US')} total from source pricing (confirm taxes, fees, and add-ons at checkout).`,
+    );
+  }
+  if (reputation) parts.push(reputation.endsWith('.') ? reputation : `${reputation}.`);
+  if (themes.length) parts.push(`Renter notes from source: ${themes.join('; ')}.`);
+  if (upsell) parts.push(`Terms to confirm before booking: ${upsell}.`);
+  else if (terms) parts.push(`Terms to confirm before booking: ${terms}.`);
+
+  const blurb = text(source.summary || source.description || source.longDetails, 400);
+  if (blurb && !isGenericDescription(blurb)) {
+    const hay = parts.join(' ').toLowerCase();
+    const novel = blurb
+      .split(/\s+/)
+      .map((token) => token.replace(/[^A-Za-z0-9'-]/g, ''))
+      .filter((token) => token.length > 4)
+      .some((token) => !hay.includes(token.toLowerCase()));
+    if (novel) parts.push(blurb.endsWith('.') ? blurb : `${blurb}.`);
+  }
+
+  let body = text(parts.join(' '), 4000);
+  if (wordCount(body) < 30) {
+    const extra = text(source.description || source.longDetails || source.summary, 400);
+    if (extra && !isGenericDescription(extra) && !body.includes(extra.slice(0, 20))) {
+      body = text(`${body} ${extra.endsWith('.') ? extra : `${extra}.`}`, 4000);
+    }
+  }
+  return body;
+}
+
+export function carListSummaryFromSource(place = {}, override = {}, source = null) {
+  const row = source && typeof source === 'object' ? source : {};
+  const merged = { ...row, ...override };
+  return carDescription(text(place.name || place.title || override.title), merged);
+}
+
+export function backfillSharedTripCarSummaries(shared = {}) {
+  const version = text(shared.trip?.metadata?.gateBNycFixtureVersion);
+  if (version !== 'gate-b-nyc-positive-v1') return shared;
+  const places = Array.isArray(shared.places) ? shared.places : [];
+  const thingOverrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
+    ? { ...shared.thingOverrides }
+    : {};
+  for (const place of places) {
+    const key = `place:${place.id}`;
+    const override = { ...(thingOverrides[key] || {}) };
+    const category = text(override.category || place.category_name || place.category?.name).toLowerCase();
+    if (category !== 'car') continue;
+    const current = text(override.summary || place.summary);
+    if (wordCount(current) >= 30) continue;
+    const source = override.sourceRecord
+      || place.sourceRecord
+      || (place.source && typeof place.source === 'object' ? place.source : null)
+      || {};
+    const built = carListSummaryFromSource(place, override, source);
+    if (wordCount(built) >= 30) {
+      override.summary = built;
+      thingOverrides[key] = override;
+    }
+  }
+  return { ...shared, thingOverrides };
 }
 
 function storeDescription(title = '', source = {}, raw = '') {
@@ -249,11 +305,14 @@ export function buildCategoryDescription({
 } = {}) {
   const cat = text(category, 80).toLowerCase();
   const raw = text(rawDescription, 4000);
+  if (cat === 'car') {
+    if (raw && !isGenericDescription(raw) && wordCount(raw) >= 30) return raw;
+    return carDescription(title, { ...sourceRecord, pickupLocation: sourceRecord.pickupLocation || address });
+  }
   if (raw && !isGenericDescription(raw)) return raw;
   if (cat === 'flight') return flightDescription(title, sourceRecord);
   if (cat === 'hotel' || cat === 'lodging') return hotelDescription(title, sourceRecord, address);
   if (cat === 'restaurant') return restaurantDescription(title, sourceRecord, raw);
-  if (cat === 'car') return carDescription(title, sourceRecord);
   if (cat === 'store' || cat === 'grocery' || cat === 'market') return storeDescription(title, sourceRecord, raw);
   if (cat === 'music' || cat === 'event' || cat === 'tour' || cat === 'activity') {
     return eventDescription(title, sourceRecord, raw);
