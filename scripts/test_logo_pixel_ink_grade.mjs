@@ -2,11 +2,11 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
-import { measureLogoComFromPngBuffer } from './shepherd-staging-smoke-logo-metrics.mjs';
 const require = createRequire(import.meta.url);
 const { PNG } = require('pngjs');
 import { gradeLogoChipRow, gradeLogoTabResult } from './shepherd-staging-smoke-grader-lib.mjs';
 import {
+  analyzeLogoChipPngBuffer,
   gradeCarsHeadingLogoInk,
   gradeLogoChipInkPresence,
   logoChipInkPresent,
@@ -27,7 +27,7 @@ function pngWithDot({ width = 22, height = 22, dotX = 11, dotY = 11 }) {
   return PNG.sync.write(png);
 }
 
-const centeredChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 11, dotY: 11 }));
+const centeredChip = analyzeLogoChipPngBuffer(pngWithDot({ dotX: 11, dotY: 11 }));
 assert.equal(centeredChip.error, undefined);
 assert.equal(logoChipInkPresent(centeredChip), true);
 assert.equal(gradeLogoChipRow({
@@ -37,7 +37,7 @@ assert.equal(gradeLogoChipRow({
   com: centeredChip,
 }).pass, true);
 
-const emojiChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
+const emojiChip = analyzeLogoChipPngBuffer(pngWithDot({ dotX: 10, dotY: 11 }));
 assert.equal(gradeLogoChipRow({
   isListRowChip: true,
   isBrandImg: false,
@@ -45,7 +45,7 @@ assert.equal(gradeLogoChipRow({
   com: emojiChip,
 }).pass, true);
 
-const emptyChip = await measureLogoComFromPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
+const emptyChip = analyzeLogoChipPngBuffer(pngWithDot({ dotX: -1, dotY: -1 }));
 assert.equal(emptyChip.error, 'empty_mass');
 assert.equal(gradeLogoChipInkPresence(emptyChip).inkPresent, false);
 assert.equal(gradeLogoChipRow({
@@ -78,4 +78,6 @@ assert.equal(
   gradeCarsHeadingLogoInk({ tab: 'Cars', labelVisible: true, iconVsLabelPx: 0.4, chipMass: 40 }).pass,
   true,
 );
+await import('./test_tsv414_layout_failure_suppression.mjs');
+
 console.log('logo pixel ink grade tests passed');

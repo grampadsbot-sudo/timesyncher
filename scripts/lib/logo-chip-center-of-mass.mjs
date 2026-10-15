@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { analyzeLogoChipPngBuffer } from './logo-pixel-ink-grade.mjs';
+
 export async function collectBrandLogoChips(page) {
   return page.evaluate(() => {
     const out = [];
@@ -26,99 +28,21 @@ export async function collectBrandLogoChips(page) {
 }
 
 export async function measureCenterOfMassOffset(page, selector) {
-  return page.evaluate(async (sel) => {
-    const chip = document.querySelector(sel);
-    if (!chip) return null;
-    const rect = chip.getBoundingClientRect();
-    const w = Math.max(1, Math.round(rect.width));
-    const h = Math.max(1, Math.round(rect.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return null;
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, w, h);
-
-    const img = chip.matches('img') ? chip : chip.querySelector('img');
-    const emojiSpan = !img
-      ? (chip.matches('span') && !chip.querySelector('img')
-        ? chip
-        : chip.querySelector('span'))
-      : null;
-
-    const drawContainedImage = (image, boxW, boxH) => {
-      const nw = image.naturalWidth;
-      const nh = image.naturalHeight;
-      if (!nw || !nh) return false;
-      const scale = Math.min(boxW / nw, boxH / nh);
-      const dw = nw * scale;
-      const dh = nh * scale;
-      const dx = (boxW - dw) / 2;
-      const dy = (boxH - dh) / 2;
-      ctx.drawImage(image, dx, dy, dw, dh);
-      return true;
-    };
-
-    const draw = () => {
-      if (img && img.complete && img.naturalWidth > 0) {
-        return drawContainedImage(img, w, h);
-      }
-      if (emojiSpan) {
-        const fontSize = Math.max(12, Math.round(Math.min(w, h) * 0.62));
-        ctx.font = `${fontSize}px system-ui, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#111827';
-        ctx.fillText(emojiSpan.textContent || '', w / 2, h / 2);
-        return true;
-      }
-      return false;
-    };
-
-    if (img && !img.complete) {
-      await new Promise((resolve, reject) => {
-        img.addEventListener('load', resolve, { once: true });
-        img.addEventListener('error', reject, { once: true });
-      });
-    }
-    if (!draw()) return null;
-
-    const { data } = ctx.getImageData(0, 0, w, h);
-    let sumX = 0;
-    let sumY = 0;
-    let mass = 0;
-    for (let y = 0; y < h; y += 1) {
-      for (let x = 0; x < w; x += 1) {
-        const i = (y * w + x) * 4;
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-        if (a < 16) continue;
-        if (r > 245 && g > 245 && b > 245) continue;
-        if (r > 248 && g > 250 && b > 252) continue;
-        const weight = a / 255;
-        sumX += x * weight;
-        sumY += y * weight;
-        mass += weight;
-      }
-    }
-    if (mass < 4) return null;
-    const cx = sumX / mass;
-    const cy = sumY / mass;
-    const boxCx = (w - 1) / 2;
-    const boxCy = (h - 1) / 2;
-    return {
-      dx: cx - boxCx,
-      dy: cy - boxCy,
-      absDx: Math.abs(cx - boxCx),
-      absDy: Math.abs(cy - boxCy),
-      width: w,
-      height: h,
-      mass,
-    };
-  }, selector);
+  const handle = await page.$(selector);
+  if (!handle) return null;
+  const pngBuf = Buffer.from(await handle.screenshot({ type: 'png' }));
+  await handle.dispose();
+  const com = analyzeLogoChipPngBuffer(pngBuf);
+  if (com.error || com.mass < 4) return null;
+  return {
+    dx: com.comX - com.chipCx,
+    dy: com.comY - com.chipCy,
+    absDx: com.dxPx,
+    absDy: com.dyPx,
+    width: com.w,
+    height: com.h,
+    mass: com.mass,
+  };
 }
 
 export async function screenshotChipCrop(page, selector, filePath) {

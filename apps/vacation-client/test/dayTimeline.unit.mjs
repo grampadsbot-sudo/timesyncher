@@ -4,6 +4,7 @@ import {
   buildDayTimeline,
   dayChipLabel,
   estimateTravelMinutes,
+  flightScheduledOnDay,
   mapPlacesForTimeline,
   parseClockToMinutes,
   parseDurationMinutes,
@@ -125,5 +126,58 @@ const sameDayCarTrip = {
 const sameDayRows = buildDayTimeline(sameDayCarTrip, sameDayCarTrip.days[0]);
 assert.ok(sameDayRows.some((row) => row.kind === 'car-pickup'));
 assert.ok(sameDayRows.some((row) => row.kind === 'car-dropoff'));
+
+const orphanFlightTrip = {
+  days: [
+    { id: 10, day_number: 1, title: 'Day 1' },
+    { id: 20, day_number: 2, title: 'Day 2' },
+  ],
+  places: [
+    {
+      id: 77,
+      name: 'Delta LAX → JFK 9:00 am–5:15 pm',
+      category_name: 'Flight',
+    },
+  ],
+  assignments: {},
+  thingOverrides: {
+    'place:77': { timeline: true, category: 'flight', price: 312, fareDirection: 'one-way' },
+  },
+};
+for (const day of orphanFlightTrip.days) {
+  const rows = buildDayTimeline(orphanFlightTrip, day);
+  assert.equal(
+    rows.some((row) => row.kind === 'flight'),
+    false,
+    `unassigned flight must not render on day ${day.day_number}`,
+  );
+}
+
+const dayIdsFlightTrip = {
+  ...orphanFlightTrip,
+  thingOverrides: {
+    'place:77': {
+      timeline: true,
+      category: 'flight',
+      price: 312,
+      dayIds: [20],
+    },
+  },
+};
+assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], dayIdsFlightTrip, dayIdsFlightTrip.days[1]), true);
+assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], dayIdsFlightTrip, dayIdsFlightTrip.days[0]), false);
+const day2Rows = buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[1]);
+assert.ok(day2Rows.some((row) => row.kind === 'flight' && row.place?.id === 77));
+
+function pr336BuggyFlightOnDay(dayIds, day) {
+  const ids = Array.isArray(dayIds) ? dayIds.map(String) : [];
+  return ids.length === 0 || ids.includes(String(day.id)) || ids.includes(String(day.day_number));
+}
+assert.equal(
+  pr336BuggyFlightOnDay([], dayIdsFlightTrip.days[0]),
+  true,
+  'PR336 empty dayIds matched every day before fix',
+);
+assert.equal(flightScheduledOnDay(dayIdsFlightTrip.places[0], { thingOverrides: {} }, dayIdsFlightTrip.days[0]), false);
 
 console.log('vacation-client day timeline unit checks passed');

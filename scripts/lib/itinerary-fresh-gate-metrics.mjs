@@ -30,14 +30,7 @@ export function compareLogoMidlineRows(referenceRows, candidateRows, {
     const absCand = Math.abs(candDelta);
     const absRef = refDelta == null ? null : Math.abs(refDelta);
     const drift = refDelta == null ? null : Math.abs(candDelta - refDelta);
-    const improvedVsTrek = absRef != null && absRef > maxAbs && absCand + 1 <= absRef;
-    const pass = refDelta == null
-      ? absCand <= maxAbs
-      : improvedVsTrek
-        ? true
-        : absRef > maxAbs
-          ? drift <= maxDrift
-          : absCand <= maxAbs && drift <= maxDrift;
+    const pass = absCand <= maxAbs && (refDelta == null || drift == null || drift <= maxDrift);
     return {
       title: cand.title,
       candidateMidDeltaPx: candDelta,
@@ -45,7 +38,6 @@ export function compareLogoMidlineRows(referenceRows, candidateRows, {
       absCandidatePx: absCand,
       driftFromReferencePx: drift,
       pass,
-      improvedVsTrek,
     };
   });
   const pass = compared.length > 0 && compared.every((row) => row.pass);
@@ -65,9 +57,10 @@ export async function measureListRowLogoCentering(page, tabLabel = '') {
     const nameFrom = (el) => (el?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 64);
     const pushRow = (chip, name) => {
       if (!chip || !name || seen.has(name)) return;
-      const chipRect = chip.getBoundingClientRect();
+      const logoEl = chip.querySelector('img.tiny-logo, img[src][alt=""]') || chip;
+      const logoRect = logoEl.getBoundingClientRect();
       const nameRect = name.getBoundingClientRect();
-      if (chipRect.height < 4 || nameRect.height < 8) return;
+      if (logoRect.height < 2 || nameRect.height < 8) return;
       const range = document.createRange();
       range.selectNodeContents(name);
       const firstLine = range.getClientRects()[0];
@@ -75,7 +68,7 @@ export async function measureListRowLogoCentering(page, tabLabel = '') {
       const nameMid = firstLine
         ? firstLine.top + firstLine.height / 2
         : nameRect.top + Math.min(parseFloat(getComputedStyle(name).lineHeight) || 16, nameRect.height) / 2;
-      const chipMid = chipRect.top + chipRect.height / 2;
+      const chipMid = logoRect.top + logoRect.height / 2;
       const midDeltaPx = chipMid - nameMid;
       seen.add(name);
       rows.push({

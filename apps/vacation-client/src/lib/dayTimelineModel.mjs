@@ -365,30 +365,53 @@ function pushHotelRows(entries, trip, day) {
   }
 }
 
+export function flightScheduledOnDay(place, trip, day) {
+  const override = overrideFor(trip, place);
+  const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
+  if (!dayIds.length) return false;
+  return dayIds.includes(String(day.id)) || dayIds.includes(String(day.day_number));
+}
+
+function appendFlightEntry(entries, place, trip) {
+  const override = overrideFor(trip, place);
+  const { depart, arrive } = flightSchedule(place, trip);
+  const durationMin =
+    parseDurationMinutes(override.duration) ??
+    flightDurationMinutes(depart, arrive) ??
+    null;
+  entries.push({
+    kind: 'flight',
+    id: `flight-${place.id}`,
+    place,
+    title: placeName(place),
+    startMin: parseClockToMinutes(depart),
+    startLabel: depart,
+    endLabel: arrive,
+    durationMin,
+    category: 'flight',
+    fare: flightPriceDisplay(place, trip),
+    summary: rowSummary(place, trip),
+  });
+}
+
 function pushFlightRows(entries, trip, day, dayId) {
+  const seen = new Set();
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
     if (!place) continue;
     const override = overrideFor(trip, place);
     if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
-    const { depart, arrive } = flightSchedule(place, trip);
-    const durationMin =
-      parseDurationMinutes(override.duration) ??
-      flightDurationMinutes(depart, arrive) ??
-      null;
-    entries.push({
-      kind: 'flight',
-      id: `flight-${place.id}`,
-      place,
-      title: placeName(place),
-      startMin: parseClockToMinutes(depart),
-      startLabel: depart,
-      endLabel: arrive,
-      durationMin,
-      category: 'flight',
-      fare: flightPriceDisplay(place, trip),
-      summary: rowSummary(place, trip),
-    });
+    appendFlightEntry(entries, place, trip);
+    seen.add(String(place.id));
+  }
+  for (const place of trip.places || []) {
+    const id = String(place.id);
+    if (seen.has(id)) continue;
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
+    if (!flightScheduledOnDay(place, trip, day)) continue;
+    appendFlightEntry(entries, place, trip);
+    seen.add(id);
   }
 }
 
