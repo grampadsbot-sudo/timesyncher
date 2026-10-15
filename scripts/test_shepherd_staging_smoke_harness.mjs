@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   SMOKE_CHECK_ORDER,
   SMOKE_PARALLEL_INDEPENDENT_NAMES,
+  smokeGoGateFromChecks,
 } from './shepherd-staging-smoke-run-check.mjs';
 import { SMOKE_FAIL_CLOSED_GO } from './shepherd-staging-smoke-plan.mjs';
 import {
@@ -75,5 +76,14 @@ if (SMOKE_CHECK_ORDER.includes('VISUAL')) {
   assert.ok(registered.has('VISUAL'), 'main spine must register runCheck(VISUAL) when VISUAL is in check order');
 }
 assert.ok(registered.has('LAYOUT'), 'main spine must register runCheck(LAYOUT)');
+
+const goName = SMOKE_FAIL_CLOSED_GO[0];
+assert.equal(smokeGoGateFromChecks({ [goName]: 'PASS' }).pass, true);
+assert.equal(smokeGoGateFromChecks({ [goName]: 'INFRA_BLOCKED' }).pass, false);
+assert.deepEqual(smokeGoGateFromChecks({ [goName]: 'INFRA_BLOCKED' }).infraBlocked, [goName]);
+
+const layoutVisualRun = readFileSync(join(scriptsDir, 'shepherd-staging-smoke-layout-visual-run.mjs'), 'utf8');
+assert.match(layoutVisualRun, /^\s*if \(!EXPECT_SHA \|\| !\/\^\[0-9a-f\]\{40\}\$/m);
+assert.doesNotMatch(layoutVisualRun, /startsWith\(SHA7\)/);
 
 console.log(JSON.stringify({ ok: true, harnessFiles, registered: [...registered].sort() }));

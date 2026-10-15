@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { JEV_RELEVANCE_MINIMUM } from '../src/vacation/keepsake-list-minimums.mjs';
+import { JEV_RELEVANCE_MINIMUM, jevRelevanceMinimum } from '../src/vacation/keepsake-list-minimums.mjs';
 import { PlaceSearchError, fillTripIntake } from '../src/vacation/place-search.mjs';
 import { runPublicResearch } from './vacation-public-research-worker.mjs';
 import { installNoopNominatimStore } from './fixtures/nominatim-store-test-double.mjs';
@@ -102,5 +102,9 @@ assert.equal(scored.things[0].metadata.jevScore, high);
 assert.deepEqual(scored.things[0].metadata.sourceRef, { source: 'brave', id: 'high-cafe' });
 assert.equal(scored.things.some((thing) => thing.title === 'Low Cafe'), false);
 assert.equal(scored.search.places.some((place) => place.title === 'Low Cafe'), false);
+
+assert.equal(jevRelevanceMinimum({ JEV_RELEVANCE_MINIMUM: '0' }), JEV_RELEVANCE_MINIMUM);
+assert.equal(jevRelevanceMinimum({ JEV_RELEVANCE_MINIMUM: '-2' }), JEV_RELEVANCE_MINIMUM);
+assert.equal(jevRelevanceMinimum({ JEV_RELEVANCE_MINIMUM: '4' }), 4);
 
 console.log('jev relevance gate ok');

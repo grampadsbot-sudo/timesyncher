@@ -13,6 +13,7 @@ import {
   scanRoots,
   scanText,
 } from './check-code-ratchet.mjs';
+import { growthFails } from './baseline-subset.mjs';
 
 const script = fileURLToPath(new URL('./check-code-ratchet.mjs', import.meta.url));
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -250,7 +251,104 @@ fs.writeFileSync(path.join(addedRule, 'scripts/code-ratchet-baseline.json'), `${
   entry('NO-WORKAROUND-COMMENTS', 'src/vacation/catch.mjs', 'TODO'),
 ])}\n`);
 const addedRuleRun = runGuard(addedRule, { BASE: 'base' });
-assert.equal(addedRuleRun.status, 0, addedRuleRun.stderr);
+assert.equal(addedRuleRun.status, 1, addedRuleRun.stdout);
+assert.match(addedRuleRun.stderr, /FAIL\tBASELINE-GROWTH/);
+
+assert.deepEqual(
+  growthFails(
+    [entry('NO-WORKAROUND-COMMENTS', 'src/vacation/phantom.mjs', 'TODO')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [],
+  ),
+  ['src/vacation/phantom.mjs|NO-WORKAROUND-COMMENTS|TODO|'],
+);
+assert.deepEqual(
+  growthFails(
+    [entry('NO-WORKAROUND-COMMENTS', 'scripts/a-keep.mjs', 'TODO')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [{ rule: 'NO-WORKAROUND-COMMENTS', file: 'scripts/a-keep.mjs', symbol: 'TODO', line: 2 }],
+  ),
+  [],
+);
+assert.deepEqual(
+  growthFails(
+    [entry('DEAD-CODE', 'src/vacation/legacy.mjs', 'export:old')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [],
+    [{ rule: 'DEAD-CODE', file: 'src/vacation/legacy.mjs', symbol: 'export:old', line: 1 }],
+  ),
+  [],
+);
+assert.deepEqual(
+  growthFails(
+    [entry('DEAD-CODE', 'src/vacation/fresh.mjs', 'export:new')],
+    { status: 'ok', entries: [entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')] },
+    [],
+    [{ rule: 'DEAD-CODE', file: 'src/vacation/legacy.mjs', symbol: 'export:old', line: 1 }],
+  ),
+  ['src/vacation/fresh.mjs|DEAD-CODE|export:new|'],
+);
+
+const nestedClientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-ratchet-nested-client-'));
+fs.mkdirSync(path.join(nestedClientDir, 'apps/vacation-client/src'), { recursive: true });
+fs.writeFileSync(path.join(nestedClientDir, 'apps/vacation-client/src/nested-rogue.mjs'), modelText);
+const nestedFindings = scanRoots(nestedClientDir).filter((finding) => finding.file === 'apps/vacation-client/src/nested-rogue.mjs');
+assert.ok(nestedFindings.some((finding) => finding.rule === 'MODEL-CLIENT-ONLY'));
+
+const importerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-ratchet-importers-'));
+writeTree(importerDir, {
+  'src/client-lib.mjs': [
+    'export function usedBySvelte() { return 1; }',
+    'export function usedByJsx() { return 1; }',
+    'export function usedByTsx() { return 1; }',
+    'export function usedByTest() { return 1; }',
+    'export function stillDead() { return 1; }',
+    '',
+  ].join('\n'),
+  'apps/vacation-client/src/Panel.svelte': '<script>\nimport { usedBySvelte } from "../../../src/client-lib.mjs";\nusedBySvelte();\n</script>\n',
+  'apps/vacation-client/src/Panel.jsx': 'import { usedByJsx } from "../../../src/client-lib.mjs";\nusedByJsx();\n',
+  'apps/vacation-client/src/Panel.tsx': 'import { usedByTsx } from "../../../src/client-lib.mjs";\nusedByTsx();\n',
+  'apps/vacation-client/test/panel.unit.mjs': 'import { usedByTest } from "../../../src/client-lib.mjs";\nusedByTest();\n',
+}, []);
+const importerDead = scanRoots(importerDir).filter((finding) => finding.rule === 'DEAD-CODE' && finding.file === 'src/client-lib.mjs');
+assert.deepEqual(importerDead.map((finding) => finding.symbol), ['export:stillDead']);
+
+const recorded = repoWithBase([
+  entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch'),
+  entry('FILE-SIZE-500', 'scripts/keep.mjs', 'lines:10'),
+]);
+const recordedBody = `${'const line = 1;\n'.repeat(520)}try { return 1; } catch {}\n`;
+fs.writeFileSync(path.join(recorded, 'scripts/legacy.mjs'), recordedBody);
+git(recorded, ['add', '.']);
+git(recorded, ['commit', '-m', 'legacy']);
+git(recorded, ['push', 'origin', 'base']);
+const recordedLines = lineCount(recordedBody);
+const recordedBaseline = [
+  entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch'),
+  entry('FILE-SIZE-500', 'scripts/keep.mjs', 'lines:10'),
+  entry('NO-EMPTY-CATCH', 'scripts/legacy.mjs', 'empty-catch'),
+  entry('FILE-SIZE-500', 'scripts/legacy.mjs', `lines:${recordedLines}`),
+];
+fs.writeFileSync(path.join(recorded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify(recordedBaseline)}\n`);
+const recordedRun = runGuard(recorded, { BASE: 'base' });
+assert.equal(recordedRun.status, 0, recordedRun.stderr);
+fs.writeFileSync(path.join(recorded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([
+  ...recordedBaseline.slice(0, 3),
+  entry('FILE-SIZE-500', 'scripts/legacy.mjs', `lines:${recordedLines + 20}`),
+])}\n`);
+const raisedRun = runGuard(recorded, { BASE: 'base' });
+assert.equal(raisedRun.status, 1, raisedRun.stdout);
+assert.match(raisedRun.stderr, /BASELINE-GROWTH/);
+const freshBody = `${'const n = 1;\n'.repeat(510)}`;
+fs.writeFileSync(path.join(recorded, 'scripts/fresh.mjs'), freshBody);
+fs.writeFileSync(path.join(recorded, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([
+  ...recordedBaseline,
+  entry('FILE-SIZE-500', 'scripts/fresh.mjs', `lines:${lineCount(freshBody)}`),
+])}\n`);
+const freshRun = runGuard(recorded, { BASE: 'base' });
+assert.equal(freshRun.status, 1, freshRun.stdout);
+assert.match(freshRun.stderr, /BASELINE-GROWTH/);
+assert.match(freshRun.stderr, /FILE-SIZE-500\tscripts\/fresh\.mjs/);
 
 const oldRule = repoWithBase([entry('NO-EMPTY-CATCH', 'src/vacation/catch.mjs', 'empty-catch')]);
 fs.writeFileSync(path.join(oldRule, 'scripts/code-ratchet-baseline.json'), `${JSON.stringify([

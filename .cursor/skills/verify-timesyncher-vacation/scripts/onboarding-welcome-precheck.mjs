@@ -311,7 +311,7 @@ export function gradeTripSite(site = {}) {
     return failures;
   }
   const status = site.status;
-  if (!Number.isInteger(status) || status === 404) {
+  if (!Number.isInteger(status) || status < 200 || status >= 300) {
     failures.push({ code: 'trip_site', detail: 'status', status: Number.isInteger(status) ? status : null, url });
   }
   if (/invalid or expired link/i.test(String(site.body || ''))) {

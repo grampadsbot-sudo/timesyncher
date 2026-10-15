@@ -99,5 +99,8 @@ export async function runVacationClientKeepsakeLayoutTests() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await runVacationClientKeepsakeLayoutTests();
+  runVacationClientKeepsakeLayoutTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }

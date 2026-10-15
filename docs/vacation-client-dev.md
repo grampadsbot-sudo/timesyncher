@@ -29,4 +29,4 @@ Requires Chrome/Chromium at `CHROME_PATH` (defaults to `/usr/local/bin/google-ch
 
 ## CI
 
-The `unit-tests` job runs `npm ci`, `typecheck`, `lint`, and `test` inside `apps/vacation-client`. Offline CI skips headless layout unless Chrome is configured; layout proof also runs in shared-trip chrome gates (see `features/vacation-client-screens.md`).
+The `unit-tests` job installs Chrome, exports `CHROME_PATH`, and runs `npm ci`, `typecheck`, `lint`, and `test` inside `apps/vacation-client`. Layout acceptance runs there and fails when Chrome is missing. Layout proof also runs in shared-trip chrome gates (see `features/vacation-client-screens.md`).

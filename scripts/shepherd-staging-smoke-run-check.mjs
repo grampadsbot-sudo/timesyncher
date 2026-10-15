@@ -9,6 +9,17 @@ import { finalizeSmokeProviderLogSummary } from './shepherd-staging-smoke-provid
 
 export { SMOKE_CHECK_ORDER, SMOKE_PARALLEL_INDEPENDENT_NAMES };
 
+export function smokeGoGateFromChecks(checks = {}) {
+  const goFails = SMOKE_FAIL_CLOSED_GO.filter((name) => checks[name] === 'FAIL');
+  const goInfraBlocked = SMOKE_FAIL_CLOSED_GO.filter((name) => checks[name] === 'INFRA_BLOCKED');
+  return {
+    pass: goFails.length === 0 && goInfraBlocked.length === 0,
+    checks: SMOKE_FAIL_CLOSED_GO,
+    fails: goFails,
+    infraBlocked: goInfraBlocked,
+  };
+}
+
 const WHOLE_RUN_CAP_MS = 12 * 60 * 1000;
 
 function createCheckStageTools(runStartedAt) {
@@ -251,8 +262,8 @@ export function createSmokeRunner(ctx) {
   async function finish() {
     out.totalRuntimeMs = Date.now() - runStartedAt;
     finalizeSmokeProviderLogSummary(out);
-    const goFails = SMOKE_FAIL_CLOSED_GO.filter((name) => out.checks[name] === 'FAIL');
-    out.goGate = { pass: goFails.length === 0, checks: SMOKE_FAIL_CLOSED_GO, fails: goFails };
+    out.goGate = smokeGoGateFromChecks(out.checks);
+    const goInfraBlocked = out.goGate.infraBlocked || [];
     const failed = Object.values(out.checks).some((v) => v === 'FAIL');
     const infraBlocked = out.infraBlockedChecks || [];
     if (infraBlocked.length) {
@@ -261,7 +272,7 @@ export function createSmokeRunner(ctx) {
         detail: out[`check${name}`]?.infraReason || out[`check${name.toLowerCase()}`]?.infraReason || null,
       }));
     }
-    await writeOutAndExit(failed ? 1 : 0);
+    await writeOutAndExit(failed || goInfraBlocked.length ? 1 : 0);
   }
 
   return { runCheck, runChecksParallel, registerBrowser, killBrowsers, finish, writeOutAndExit };

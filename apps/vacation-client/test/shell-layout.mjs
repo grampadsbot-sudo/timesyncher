@@ -65,6 +65,9 @@ export async function startPreviewServer(tripPayload, options = {}) {
     if (pathname === '/api/version') {
       return send(res, 200, '{"sha":"vacation-client-test"}', 'application/json; charset=utf-8');
     }
+    if (/^\/api\/shared\/[^/]+\/edit-access\/?$/.test(pathname)) {
+      return send(res, 200, JSON.stringify({ canEdit: false }), 'application/json; charset=utf-8');
+    }
     const sharedMatch = pathname.match(/^\/api\/shared\/([^/]+)\/?$/);
     if (sharedMatch && req.method === 'GET') {
       if (decodeURIComponent(sharedMatch[1]) === sharedSlug) {
@@ -229,5 +232,8 @@ export async function runVacationClientShellTests() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await runVacationClientShellTests();
+  runVacationClientShellTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }

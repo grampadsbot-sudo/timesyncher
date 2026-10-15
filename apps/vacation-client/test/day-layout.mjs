@@ -124,7 +124,8 @@ export async function runVacationClientDayLayoutTests() {
 
       const clickedDay5 = await page.evaluate(() => {
         for (const btn of document.querySelectorAll('button.tsv-day-chip')) {
-          if (btn.getAttribute('aria-label') === 'Day 5') {
+          const label = btn.getAttribute('aria-label') || '';
+          if (label === 'Day 5' || label.startsWith('Day 5,')) {
             btn.click();
             return true;
           }
@@ -161,5 +162,8 @@ export async function runVacationClientDayLayoutTests() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await runVacationClientDayLayoutTests();
+  runVacationClientDayLayoutTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }

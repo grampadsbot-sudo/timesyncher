@@ -1,5 +1,161 @@
 [
   {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+    "symbol": "export:BUDGET_BUCKET_ORDER",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+    "symbol": "export:budgetCompletenessChecks",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+    "symbol": "export:canonicalBudgetPlace",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/budgetModel.mjs",
+    "symbol": "export:varianceLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+    "symbol": "export:formatClockMinutes",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+    "symbol": "export:itineraryNoteFor",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+    "symbol": "export:mediaForPlace",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+    "symbol": "export:timeRangeLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "FILE-SIZE-500",
+    "file": "apps/vacation-client/src/lib/dayTimelineModel.mjs",
+    "symbol": "lines:539",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailCategoryKey",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailCategoryLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailHeaderLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailItineraryNote",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailPriceLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailReviewTotals",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/detailModel.mjs",
+    "symbol": "export:detailSummarySourceUrls",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeMedia.mjs",
+    "symbol": "export:isKeepsakeJunkMedia",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeMedia.mjs",
+    "symbol": "export:normalizeMediaRows",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+    "symbol": "export:buildKeepsakeDayPages",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+    "symbol": "export:directorySection",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+    "symbol": "export:eventExperienceCount",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+    "symbol": "export:itineraryStatBuckets",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/keepsakeModel.mjs",
+    "symbol": "export:keepsakeStyleFromSearch",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/listTabModel.mjs",
+    "symbol": "export:DEFAULT_SORT",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/listTabModel.mjs",
+    "symbol": "export:fareDirectionLabel",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
+    "rule": "DEAD-CODE",
+    "file": "apps/vacation-client/src/lib/tabNavModel.mjs",
+    "symbol": "export:sectionVisibilityMap",
+    "note": "existing; ratchet only shrinks"
+  },
+  {
     "rule": "FILE-SIZE-500",
     "file": "index.html",
     "symbol": "lines:941",

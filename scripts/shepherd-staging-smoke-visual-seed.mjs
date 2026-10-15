@@ -1,5 +1,14 @@
 import { postItinerary } from './shepherd-staging-smoke-helpers.mjs';
 
+export function assertVisualSeedHttpOk(http = []) {
+  const failed = http.filter((row) => row.status !== 201);
+  if (!failed.length) return;
+  const err = new Error(`visual smoke seed failed: ${failed.map((row) => `${row.label}:${row.status}`).join(', ')}`);
+  err.code = 'VISUAL_SEED_FAILED';
+  err.http = http;
+  throw err;
+}
+
 export async function seedVisualSmokeTripContent(session, tripId, { setStage } = {}) {
   if (!session || !tripId) {
     return { ok: false, reason: 'missing_session_or_trip' };
@@ -16,5 +25,6 @@ export async function seedVisualSmokeTripContent(session, tripId, { setStage } =
     const res = await postItinerary(session, step.body);
     http.push({ label: step.label, status: res.status });
   }
-  return { ok: http.every((r) => r.status === 201), http };
+  assertVisualSeedHttpOk(http);
+  return { ok: true, http };
 }
