@@ -75,38 +75,53 @@ assert.match(fallback, /Taco Bell/);
 assert.match(fallback, /El Taco Borracho/);
 assert.equal(/hertz/i.test(fallback), false);
 
+const groundedReply = 'Taco Bell and El Taco Borracho are good taco spots nearby.';
+const validShip = finalizeInTurnPlaceShipReply(groundedReply, true, tacoResults, {
+  tripContext,
+  tripPlaceAllowRows: tripContext.tripReplyGate,
+});
+assert.equal(validShip.ok, true);
+assert.equal(validShip.reply, groundedReply);
+assert.equal(validShip.usedFallback, undefined);
+
 const recovered = finalizeInTurnPlaceShipReply(hertzMention, true, tacoResults, {
   tripContext,
   tripPlaceAllowRows: tripContext.tripReplyGate,
 });
-assert.equal(recovered.ok, true);
-assert.equal(recovered.usedFallback, true);
-assert.equal(inTurnPlaceReplyViolation(recovered.reply, tacoResults, { tripPlaceAllowRows: tripContext.tripReplyGate }), null);
+assert.equal(recovered.ok, false);
+assert.ok(recovered.blocked);
 
 const emptyRecovered = finalizeInTurnPlaceShipReply('', true, tacoResults, {
   tripContext,
   tripPlaceAllowRows: tripContext.tripReplyGate,
 });
-assert.equal(emptyRecovered.ok, true);
-assert.equal(emptyRecovered.usedFallback, true);
-assert.ok(String(emptyRecovered.reply || '').trim().length > 0);
+assert.equal(emptyRecovered.ok, false);
+assert.ok(emptyRecovered.blocked);
 
 const invented = finalizeInTurnPlaceShipReply('Try lunch at Secret Taco Cove near the hotel.', true, tacoResults, {
   tripContext,
   tripPlaceAllowRows: tripContext.tripReplyGate,
 });
-assert.equal(invented.ok, true);
-assert.equal(invented.usedFallback, true);
-assert.equal(/Secret Taco Cove/i.test(invented.reply), false);
+assert.equal(invented.ok, false);
+assert.ok(invented.blocked);
 
 const hooks = inTurnPlaceLiveReplyHooks(tripContext, true);
+const bannedRecovery = hooks.recoverBanned({
+  reply: hertzMention,
+  banned: hertzViolation?.error || 'unsourced_place',
+  model: {},
+  inTurnProviderResults: tacoResults,
+  failureBase: { rules: {}, jev: {} },
+});
+assert.equal(bannedRecovery.continue, false);
+assert.equal(bannedRecovery.result?.reply, null);
+
 const rewriteDeadEnd = hooks.recoverRewriteDeadEnd({
   finished: { reply: null, reason: hertzViolation?.error, model: {}, quality: {}, log: {} },
   pending: { draft: hertzMention, enforceInTurnPlaces: true, tripContext },
   inTurnProviderResults: tacoResults,
   failureBase: { rules: {}, jev: {} },
 });
-assert.ok(rewriteDeadEnd?.reply);
-assert.equal(/hertz/i.test(rewriteDeadEnd.reply), false);
+assert.equal(rewriteDeadEnd, null);
 
 console.log('test_gate_b_266_place_search_reply: ok');
