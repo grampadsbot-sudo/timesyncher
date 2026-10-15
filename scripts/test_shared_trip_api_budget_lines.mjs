@@ -295,6 +295,15 @@ assert.equal(miscBudgetJson.includes(OTHER_THINGS_BUCKET), true, 'misc bucket li
 const servedBundlePath = fileURLToPath(new URL('../public/assets/index-BKun7ofk.js', import.meta.url));
 assertNoLegacyMiscBucketStrings(readFileSync(servedBundlePath, 'utf8'), 'patched served trek bundle');
 
+const patchSourcePath = fileURLToPath(new URL('../src/vacation/trek-live-product-patches.mjs', import.meta.url));
+const patchSource = readFileSync(patchSourcePath, 'utf8');
+assert.equal(patchSource.includes('Other ' + 'Thi' + 'ngs'), false, 'trek-live-product-patches must not contain split Other Things variant');
+assert.equal(
+  patchSource.includes(`'Other ' + 'Thi' + 'ngs'`),
+  false,
+  'trek-live-product-patches must not define split Other Things bucket id',
+);
+
 const legacyMiscShared = prepareSharedTripForLiveApp({
   ...base,
   places: [{ id: 77, name: 'Harbor tour', category_name: 'Tour', category: { name: 'Tour', icon: '🎟️' } }],

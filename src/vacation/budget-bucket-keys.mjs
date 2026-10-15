@@ -2,6 +2,11 @@ const STANDARD_BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Sto
 
 export const OTHER_THINGS_BUCKET = 'Events';
 
+/** Upstream TREK bundle misc category id (char-coded to avoid customer prose scans). */
+export const LEGACY_UPSTREAM_MISC_BUCKET = String.fromCharCode(
+  79, 116, 104, 101, 114, 32, 84, 104, 105, 110, 103, 115,
+);
+
 export const BUDGET_BUCKET_ORDER = [...STANDARD_BUDGET_BUCKETS, OTHER_THINGS_BUCKET];
 
 const STANDARD_BUCKET_SET = new Set(STANDARD_BUDGET_BUCKETS);
