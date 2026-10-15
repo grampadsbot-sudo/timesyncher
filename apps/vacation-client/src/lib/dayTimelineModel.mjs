@@ -365,30 +365,51 @@ function pushHotelRows(entries, trip, day) {
   }
 }
 
+function appendFlightEntry(entries, place, trip) {
+  const override = overrideFor(trip, place);
+  const { depart, arrive } = flightSchedule(place, trip);
+  const durationMin =
+    parseDurationMinutes(override.duration) ??
+    flightDurationMinutes(depart, arrive) ??
+    null;
+  entries.push({
+    kind: 'flight',
+    id: `flight-${place.id}`,
+    place,
+    title: placeName(place),
+    startMin: parseClockToMinutes(depart),
+    startLabel: depart,
+    endLabel: arrive,
+    durationMin,
+    category: 'flight',
+    fare: flightPriceDisplay(place, trip),
+    summary: rowSummary(place, trip),
+  });
+}
+
 function pushFlightRows(entries, trip, day, dayId) {
+  const seen = new Set();
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
     if (!place) continue;
     const override = overrideFor(trip, place);
     if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
-    const { depart, arrive } = flightSchedule(place, trip);
-    const durationMin =
-      parseDurationMinutes(override.duration) ??
-      flightDurationMinutes(depart, arrive) ??
-      null;
-    entries.push({
-      kind: 'flight',
-      id: `flight-${place.id}`,
-      place,
-      title: placeName(place),
-      startMin: parseClockToMinutes(depart),
-      startLabel: depart,
-      endLabel: arrive,
-      durationMin,
-      category: 'flight',
-      fare: flightPriceDisplay(place, trip),
-      summary: rowSummary(place, trip),
-    });
+    appendFlightEntry(entries, place, trip);
+    seen.add(String(place.id));
+  }
+  for (const place of trip.places || []) {
+    const id = String(place.id);
+    if (seen.has(id)) continue;
+    const override = overrideFor(trip, place);
+    if (!override.timeline || tabCategoryKey(place, trip) !== 'flight') continue;
+    const dayIds = Array.isArray(override.dayIds) ? override.dayIds.map(String) : [];
+    if (!dayIds.length) continue;
+    const onDay =
+      dayIds.includes(String(day.id))
+      || dayIds.includes(String(day.day_number));
+    if (!onDay) continue;
+    appendFlightEntry(entries, place, trip);
+    seen.add(id);
   }
 }
 
