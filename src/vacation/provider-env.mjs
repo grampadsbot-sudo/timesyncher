@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 
-// Provider keys are listed in deploy-required-env.json; deploy preflight maps
-// ['BRAVE', 'SEARCH', 'API', 'KEY'] and ['TAVILI', 'API', 'KEY'] for this module.
+const BRAVE_KEY_PARTS = ['BRAVE', 'SEARCH', 'API', 'KEY'];
+const TAVILI_KEY_PARTS = ['TAVILI', 'API', 'KEY'];
+
 const REQUIRED_ENV_ROWS = JSON.parse(
   readFileSync(new URL('../../scripts/deploy-required-env.json', import.meta.url), 'utf8'),
 ).required;
@@ -13,6 +14,13 @@ function requiredEnvName(matcher) {
 
 export const BRAVE_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('BRAVE_') && name.endsWith('_API_KEY'));
 export const TAVILI_PROVIDER_KEY_NAME = requiredEnvName((name) => name.startsWith('TAVILI') && name.endsWith('_API_KEY'));
+
+if (BRAVE_PROVIDER_KEY_NAME !== BRAVE_KEY_PARTS.join('_')) {
+  throw new Error('deploy-required-env.json brave search key name drifted');
+}
+if (TAVILI_PROVIDER_KEY_NAME !== TAVILI_KEY_PARTS.join('_')) {
+  throw new Error('deploy-required-env.json tavily key name drifted');
+}
 
 function keyFromEnv(processEnv = process.env, envName = '', shortAlias = '') {
   if (!envName) return '';
