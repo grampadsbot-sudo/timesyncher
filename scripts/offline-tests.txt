@@ -56,6 +56,7 @@ scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
 scripts/test_provider_env.mjs
 scripts/test_keepsake_style2.mjs
+scripts/test_keepsake_style2_helpers.mjs
 scripts/test_real_app_entry.mjs
 scripts/test_check_hardcoded_content.mjs
 scripts/test_check-no-hardcoded-product-cosmetic.mjs
@@ -239,6 +240,10 @@ scripts/test_checkout_products_live_gate.mjs
 scripts/test_trip_intake_search.mjs
 scripts/test_trip_literal_ban_g2a.mjs
 scripts/test_tsv397_integrity_audit.mjs
+scripts/test_tsv415_vacation_app_reply_rules.mjs
+scripts/test_tsv415_provider_env.mjs
+scripts/test_tsv415_thing_logo_capture.mjs
+scripts/test_tsv415_web_access.mjs
 scripts/test_keepsake_order_buy_link.mjs
 scripts/test_sct_a78799b_search_fill.mjs
 scripts/test_shepherd_staging_smoke_layout_visual_exports.mjs

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 
 import {
   OTHER_THINGS_BUCKET,
@@ -12,6 +13,8 @@ import {
   tripBudgetTargetTotal,
 } from '../src/lib/budgetModel.mjs';
 import { numericPrice } from '../src/lib/listTabModel.mjs';
+import { findLegacyMiscBucketLabelInVacationSource } from '../../../src/vacation/budget-legacy-label-source-scan.mjs';
+import { extractUpstreamMiscBucketLabel } from '../../../src/vacation/trek-budget-upstream-misc-patch.mjs';
 
 const hotelTrip = {
   trip: { currency: 'USD' },
@@ -106,12 +109,23 @@ assert.equal(budgetBucketForPlace(placesForBudget(partialAssignmentTrip)[0], par
 const partialScore = budgetCompletenessScore(partialAssignmentTrip);
 assert.equal(partialScore.pass, partialScore.total);
 
-const forbiddenCustomerBucketLabel = ['Other', 'Things'].join(' ');
-assert.notEqual(OTHER_THINGS_BUCKET, forbiddenCustomerBucketLabel);
+const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
+const UPSTREAM_PATH = 'public/assets/upstream/index-BKun7ofk.js';
+const upstreamBundleJs = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`], {
+  maxBuffer: 25 * 1024 * 1024,
+}).toString('utf8');
+const legacyCustomerBucketLabel = extractUpstreamMiscBucketLabel(upstreamBundleJs);
+assert.ok(legacyCustomerBucketLabel, 'upstream trek bundle must expose misc bucket label');
+assert.notEqual(OTHER_THINGS_BUCKET, legacyCustomerBucketLabel);
+assert.deepEqual(
+  findLegacyMiscBucketLabelInVacationSource(legacyCustomerBucketLabel, { assertScanProbes: true }),
+  [],
+  'budget legacy label sources must not rebuild the upstream misc bucket label',
+);
 assert.equal(bucketDisplayLabel(OTHER_THINGS_BUCKET), 'The Rest');
 assert.equal(bucketDisplayLabel('Flights'), 'Flights');
 
-const legacyMiscTargetKey = `overall:${forbiddenCustomerBucketLabel}`;
+const legacyMiscTargetKey = `overall:${legacyCustomerBucketLabel}`;
 const legacyTargetsTrip = {
   trip: { currency: 'USD' },
   places: [{ id: 40, name: 'Broadway show', category_name: 'Event' }],
@@ -128,15 +142,15 @@ assert.ok(legacyBucket, 'legacy misc target resolves to Events bucket');
 assert.equal(legacyBucket.displayLabel, 'The Rest');
 assert.equal(legacyBucket.target, 500);
 const rendered = JSON.stringify(legacyModel);
-assert.equal(rendered.includes(forbiddenCustomerBucketLabel), false);
+assert.equal(rendered.includes(legacyCustomerBucketLabel), false);
 assert.equal(
-  bucketTargetAmount(legacyTargetsTrip, forbiddenCustomerBucketLabel),
+  bucketTargetAmount(legacyTargetsTrip, legacyCustomerBucketLabel),
   500,
   'lookup by legacy bucket name in key must resolve',
 );
 const legacyScore = budgetCompletenessScore(legacyTargetsTrip);
 assert.equal(
-  legacyScore.checks.some((c) => c.name === `saved_target_${forbiddenCustomerBucketLabel}` && c.pass),
+  legacyScore.checks.some((c) => c.name === `saved_target_${legacyCustomerBucketLabel}` && c.pass),
   true,
 );
 

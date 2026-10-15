@@ -23,21 +23,16 @@ export function compareLogoMidlineRows(referenceRows, candidateRows, {
   maxDrift = LOGO_MAX_REF_DRIFT,
 } = {}) {
   const refByTitle = new Map((referenceRows || []).map((row) => [rowTitleKey(row.title), row]));
+  const candByTitle = new Map((candidateRows || []).map((row) => [rowTitleKey(row.title), row]));
   const compared = (candidateRows || []).map((cand) => {
     const ref = refByTitle.get(rowTitleKey(cand.title));
     const refDelta = ref?.midDeltaPx ?? null;
     const candDelta = cand.midDeltaPx;
     const absCand = Math.abs(candDelta);
-    const absRef = refDelta == null ? null : Math.abs(refDelta);
     const drift = refDelta == null ? null : Math.abs(candDelta - refDelta);
-    const improvedVsTrek = absRef != null && absRef > maxAbs && absCand + 1 <= absRef;
-    const pass = refDelta == null
-      ? absCand <= maxAbs
-      : improvedVsTrek
-        ? true
-        : absRef > maxAbs
-          ? drift <= maxDrift
-          : absCand <= maxAbs && drift <= maxDrift;
+    const withinAbs = absCand <= maxAbs;
+    const withinDrift = refDelta == null || drift <= maxDrift;
+    const pass = withinAbs && withinDrift;
     return {
       title: cand.title,
       candidateMidDeltaPx: candDelta,
@@ -45,9 +40,22 @@ export function compareLogoMidlineRows(referenceRows, candidateRows, {
       absCandidatePx: absCand,
       driftFromReferencePx: drift,
       pass,
-      improvedVsTrek,
+      improvedVsTrek: false,
     };
   });
+  for (const [titleKey, ref] of refByTitle) {
+    if (candByTitle.has(titleKey)) continue;
+    compared.push({
+      title: ref.title,
+      candidateMidDeltaPx: null,
+      referenceMidDeltaPx: ref.midDeltaPx,
+      absCandidatePx: null,
+      driftFromReferencePx: null,
+      pass: false,
+      missingCandidate: true,
+      improvedVsTrek: false,
+    });
+  }
   const pass = compared.length > 0 && compared.every((row) => row.pass);
   return { pass, rows: compared };
 }

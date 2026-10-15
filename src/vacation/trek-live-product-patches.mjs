@@ -5,6 +5,7 @@ import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-sha
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
+import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -309,11 +310,6 @@ const TAB_MOBILE_MEDIA_NEEDLE = 'zt.call(window,"(max-width: 640px)").matches';
 const TAB_MOBILE_MEDIA_PATCH = 'zt.call(window,"(max-width: 759px)").matches';
 const FLIGHT_QO_GRID_NEEDLE = 'Qo=({item:G})=>n.jsx("span",{style:{display:"grid",gridTemplateColumns:"minmax(54px, 1fr) 44px 54px 54px",gap:8,width:"100%",alignItems:"center"},children:eu(G).map((Re,zt)=>n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re},zt))})';
 const FLIGHT_QO_GRID_PATCH = 'Qo=({item:G})=>{const parts=eu(G);return n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto auto",gap:8,width:"100%",alignItems:"center",minWidth:0},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[0]||""}),n.jsx("span",{style:{whiteSpace:"nowrap",flexShrink:0,color:"#0f766e",fontWeight:900},children:parts[1]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[2]||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:parts[3]||""})]})}';
-const OTHER_BUCKET = 'Other ' + 'Thi' + 'ngs';
-const BUDGET_BUCKET_NEEDLE = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":"' + OTHER_BUCKET + '"}';
-const BUDGET_BUCKET_PATCH = 'ua=di=>{const Xi=It(di);return Xi==="restaurant"?"Restaurants":Xi==="store"?"Stores":Xi==="flight"?"Flights":Xi==="hotel"?"Hotel":Xi==="car"?"Cars":"' + OTHER_BUCKET + '"}';
-const BUDGET_CATS_NEEDLE = 'nr=["Flights","Hotel","Restaurants","Stores","' + OTHER_BUCKET + '"]';
-const BUDGET_CATS_PATCH = 'nr=["Flights","Hotel","Cars","Restaurants","Stores","' + OTHER_BUCKET + '"]';
 const BUDGET_ICON_NEEDLE = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
 const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈️":di==="Hotel"?"🧳":di==="Cars"?"🚗":di==="Restaurants"?"🍽️":di==="Stores"?"🛍️":"🎟️"';
 const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
@@ -396,8 +392,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (served && !js.includes('Qo=({item:G})=>{const parts=eu(G)')) {
     throw new Error('flight Qo price column patch did not apply');
   }
-  if (js.includes(BUDGET_BUCKET_NEEDLE)) js = js.replace(BUDGET_BUCKET_NEEDLE, BUDGET_BUCKET_PATCH);
-  if (js.includes(BUDGET_CATS_NEEDLE)) js = js.replace(BUDGET_CATS_NEEDLE, BUDGET_CATS_PATCH);
+  js = patchBudgetUpstreamMiscBucket(js, { served });
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);

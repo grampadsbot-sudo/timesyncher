@@ -183,7 +183,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     fetchImpl,
     timeoutMs,
     payload: {
-      model: xaiGrokPlaceSearchModelId(),
+      model: xaiGrokPlaceSearchModelId(env),
       input: [{ role: 'user', content: buildPlaceRatingsPrompt(place, destination) }],
       tools: [{ type: 'web_search' }],
       text: {

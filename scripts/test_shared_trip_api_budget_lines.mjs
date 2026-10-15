@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
 import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
+import { findLegacyMiscBucketLabelInVacationSource } from '../src/vacation/budget-legacy-label-source-scan.mjs';
+import { extractUpstreamMiscBucketLabel } from '../src/vacation/trek-budget-upstream-misc-patch.mjs';
 import {
   applyTripMetadataBudgetTargets,
   budgetGateAllowedAmounts,
@@ -274,16 +276,52 @@ try {
   rmSync(gatebTmpDir, { recursive: true, force: true });
 }
 
-const legacyMiscBucketLabel = ['Other', 'Things'].join(' ');
+const UPSTREAM_COMMIT = '06e47169699ffdee8accf48e74b0a247a8793ebc^';
+const UPSTREAM_PATH = 'public/assets/upstream/index-BKun7ofk.js';
+const upstreamBundleJs = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`], {
+  maxBuffer: 25 * 1024 * 1024,
+}).toString('utf8');
+const upstreamMiscBucketLabel = extractUpstreamMiscBucketLabel(upstreamBundleJs);
+assert.ok(upstreamMiscBucketLabel, 'upstream trek bundle must expose misc bucket label');
+assert.notEqual(upstreamMiscBucketLabel, OTHER_THINGS_BUCKET);
+
+function assertNoLegacyMiscBucketStrings(text, label) {
+  assert.equal(
+    text.includes(upstreamMiscBucketLabel),
+    false,
+    `${label} must not contain legacy upstream misc bucket id`,
+  );
+}
+
+assert.deepEqual(
+  findLegacyMiscBucketLabelInVacationSource(upstreamMiscBucketLabel),
+  [],
+  'src/vacation must not rebuild the legacy upstream misc bucket label',
+);
+
+const miscPlaceShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [{ id: 88, name: 'Jazz club', category_name: 'Event', category: { name: 'Event', icon: '🎟️' } }],
+  thingOverrides: {
+    'place:88': { price: 80, category: 'event' },
+  },
+});
+const miscBudgetJson = JSON.stringify(syncSharedTripApiBudget(miscPlaceShared).budget);
+assertNoLegacyMiscBucketStrings(miscBudgetJson, 'syncSharedTripApiBudget output');
+assert.equal(miscBudgetJson.includes(OTHER_THINGS_BUCKET), true, 'misc bucket lines must use Events category id');
+
+const servedBundlePath = fileURLToPath(new URL('../public/assets/index-BKun7ofk.js', import.meta.url));
+assertNoLegacyMiscBucketStrings(readFileSync(servedBundlePath, 'utf8'), 'patched served trek bundle');
+
 const legacyMiscShared = prepareSharedTripForLiveApp({
   ...base,
   places: [{ id: 77, name: 'Harbor tour', category_name: 'Tour', category: { name: 'Tour', icon: '🎟️' } }],
   thingOverrides: {
-    __budgetTargets: { [`overall:${legacyMiscBucketLabel}`]: '275' },
+    __budgetTargets: { [`overall:${upstreamMiscBucketLabel}`]: '275' },
     'place:77': { price: 60, category: 'tour' },
   },
 });
-assert.notEqual(OTHER_THINGS_BUCKET, legacyMiscBucketLabel);
+assert.notEqual(OTHER_THINGS_BUCKET, upstreamMiscBucketLabel);
 assert.equal(tripBudgetTargetTotal(legacyMiscShared), 275, 'legacy misc overall target must resolve after bucket-key migration');
 const legacyGateAllowed = budgetGateAllowedAmounts(legacyMiscShared);
 assert.equal(legacyGateAllowed.has(275), true, 'legacy misc target must appear in budget gate allowed amounts');

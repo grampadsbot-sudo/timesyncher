@@ -88,7 +88,16 @@ if (JSON.stringify(facts.needsCustomerInput) !== '["lodging"]') {
 }
 if (JSON.stringify(facts.gaps) !== '["lodging"]') violations.push(`gaps=${JSON.stringify(facts.gaps)}`);
 if (facts.who?.join(',') !== 'my wife') violations.push(`who=${JSON.stringify(facts.who)}`);
-if (!Array.isArray(facts.things) && facts.lodging) violations.push(`lodging fact=${JSON.stringify(facts.lodging)}`);
+const intakeThings = Array.isArray(facts.things) ? facts.things : [];
+if (intakeThings.length !== 0) {
+  violations.push(`things=${JSON.stringify(intakeThings)}`);
+}
+if (Array.isArray(facts.wantedThings) && facts.wantedThings.length !== 0) {
+  violations.push(`wantedThings=${JSON.stringify(facts.wantedThings)}`);
+}
+if (facts.lodging != null && facts.lodging !== '') {
+  violations.push(`lodging fact=${JSON.stringify(facts.lodging)}`);
+}
 if (Array.isArray(facts.activities) && facts.activities.length) violations.push('activities present');
 const factStart = system.indexOf('Intake facts: ');
 const systemFacts = factStart >= 0 ? JSON.parse(system.slice(factStart + 'Intake facts: '.length)) : null;

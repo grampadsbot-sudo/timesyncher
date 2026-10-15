@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { activityCommits, contentTags, customerIntent, seatsFromModel } from '../src/vacation/customer-intent.mjs';
+import { activityCommits, contentTags, customerIntent, customerIntentFromBody, seatsFromModel } from '../src/vacation/customer-intent.mjs';
 import { applyCustomerNotes } from '../src/vacation/live-app-turn.mjs';
 import { payerPriceLine, payerSeats } from '../src/vacation/seat-price.mjs';
 import { classifyTurn, classifyTurnWithModel } from '../src/vacation/turn-tags.mjs';
@@ -46,11 +46,20 @@ function jsonFetch(payload) {
   });
 }
 
+assert.deepEqual(customerIntentFromBody({}), { asksPrice: false, asksAccess: false, pullsAccess: false, seats: [], ask: true });
+
 const intent = await customerIntent(priceTurn, {
   env: { OPENROUTER_API_KEY: 'test' },
   fetchImpl: jsonFetch({ asksPrice: true, asksAccess: false, pullsAccess: true, seats: [{ name: 'Kimberly', payer: 'you' }], ask: false }),
 });
 assert.equal(intent.asksPrice, true);
+
+const emptyModelIntent = await customerIntent(priceTurn, {
+  env: { OPENROUTER_API_KEY: 'test' },
+  fetchImpl: jsonFetch({}),
+});
+assert.equal(emptyModelIntent.ask, true);
+assert.equal(emptyModelIntent.asksPrice, false);
 assert.deepEqual(intent.seats, [{ name: 'Kimberly', payer: 'you' }]);
 assert.deepEqual(seatsFromModel([{ name: '', payer: 'you' }, { name: 'Kimberly', payer: 'you' }]), [{ name: 'Kimberly', payer: 'you' }]);
 

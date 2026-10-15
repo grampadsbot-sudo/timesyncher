@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import {
   isoDateFromStartsAt,
   d1StartsOnDate,
@@ -34,6 +37,8 @@ import {
   serverTimingFromItineraryJson,
   smokeProviderTimingsReport,
 } from './shepherd-staging-smoke-helpers.mjs';
+import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from './shepherd-staging-smoke-single-instance.mjs';
+import { assertVisualSeedHttpOk } from './shepherd-staging-smoke-visual-seed.mjs';
 import {
   APP_MAP_READY_FAIL_MS,
   SHARED_GOTO_TIMEOUT_MS,
@@ -67,6 +72,8 @@ assert.equal(pickSlowLogoStage(emptyStages), null);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).slowThresholdMs, 10000);
 assert.equal(classifySmokeServerTiming({ latencyMs: 5000, sessionE2eMs: 4000 }).appFail, false);
 assert.equal(classifySmokeServerTiming({ latencyMs: 11000, sessionE2eMs: 4000 }).appFail, true);
+assert.equal(classifySmokeServerTiming({}).appFail, true, 'missing server timing must fail the slow threshold gate');
+assert.equal(classifySmokeServerTiming({ latencyMs: null, sessionE2eMs: null }).missingTiming, true);
 const st5 = serverTimingFromItineraryJson({
   serverTiming: {
     latencyMs: 2913,
@@ -341,5 +348,24 @@ const stubCoffeeJev = async () => ({
 const coffeeGrade = await gradeCoffeeReplyRows([{ title: 'Maui Coffee Roasters' }], { judgeFn: stubCoffeeJev });
 assert.equal(coffeeGrade.pass, true);
 assert.equal(coffeeGrade.rows[0].jev.verdict, 'yes');
+
+const lockPath = path.join(mkdtempSync(path.join(tmpdir(), 'smoke-lock-')), 'shepherd-staging-smoke.lock');
+const lockSource = readFileSync(new URL('./shepherd-staging-smoke-single-instance.mjs', import.meta.url), 'utf8');
+assert.match(lockSource, /openSync\(lockPath, 'wx'\)/);
+const first = acquireShepherdStagingSmokeLock(lockPath);
+const contended = spawnSync(process.execPath, [
+  '-e',
+  `import { acquireShepherdStagingSmokeLock, isSmokeLockHeldError } from ${JSON.stringify(new URL('./shepherd-staging-smoke-single-instance.mjs', import.meta.url).href)};
+try { acquireShepherdStagingSmokeLock(${JSON.stringify(lockPath)}); process.exit(2); } catch (err) { process.exit(isSmokeLockHeldError(err) ? 0 : 1); }`,
+], { encoding: 'utf8' });
+assert.equal(contended.status, 0, contended.stderr || contended.stdout);
+first.release();
+rmSync(path.dirname(lockPath), { recursive: true, force: true });
+
+assert.throws(
+  () => assertVisualSeedHttpOk([{ label: 'seed restaurant', status: 502 }]),
+  (err) => err?.code === 'VISUAL_SEED_FAILED',
+);
+assert.doesNotThrow(() => assertVisualSeedHttpOk([{ label: 'seed restaurant', status: 201 }]));
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));

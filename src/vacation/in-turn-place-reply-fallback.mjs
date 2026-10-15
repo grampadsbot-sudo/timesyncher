@@ -54,18 +54,22 @@ export function finalizeInTurnPlaceShipReply(reply, enforceInTurnPlaces, inTurnP
   const tripPlaceAllowRows = tripPlaceAllowRowsFromCarry(carry);
   const direct = groundedShipCandidate(reply, inTurnPlaceResults, tripPlaceAllowRows);
   if (direct) return { ok: true, reply: direct };
-  const fallback = inTurnPlaceGroundedFallbackReply(carry.tripContext, inTurnPlaceResults);
-  const fromFallback = groundedShipCandidate(fallback, inTurnPlaceResults, tripPlaceAllowRows);
-  if (fromFallback) {
-    return { ok: true, reply: fromFallback, usedFallback: true };
-  }
+  const replyText = String(reply || '').trim();
   const blocked = blockInTurnPlaceReply(
-    String(reply || '').trim() || fallback || ' ',
+    replyText || ' ',
     true,
     inTurnPlaceResults,
     { ...carry, tripPlaceAllowRows },
   );
-  return { ok: false, blocked };
+  if (blocked) return { ok: false, blocked };
+  return {
+    ok: false,
+    blocked: {
+      reply: null,
+      reason: replyText ? 'in-turn place reply failed grounding' : 'app reply text is empty',
+      ...carry,
+    },
+  };
 }
 
 function inTurnPlaceReplyCarry(tripContext) {

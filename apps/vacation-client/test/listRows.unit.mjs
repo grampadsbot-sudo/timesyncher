@@ -55,6 +55,10 @@ assert.equal(
 );
 assert.equal(tabCategoryKey(trip.places[3], trip), 'restaurant');
 assert.equal(tabCategoryKey(trip.places[4], trip), 'event');
+assert.equal(
+  tabCategoryKey({ id: 6, name: 'AirTrain JFK link', category_name: 'transport' }, { places: [], thingOverrides: {} }),
+  'event',
+);
 
 const hotels = placesForCategoryTab(trip, 'hotels');
 assert.equal(hotels.length, 2);

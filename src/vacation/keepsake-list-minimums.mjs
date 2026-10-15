@@ -49,7 +49,8 @@ export function jevRelevanceMinimum(env = process.env) {
   const raw = env?.JEV_RELEVANCE_MINIMUM;
   if (raw === undefined || raw === null || String(raw).trim() === '') return JEV_RELEVANCE_MINIMUM;
   const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : JEV_RELEVANCE_MINIMUM;
+  if (!Number.isFinite(parsed) || parsed <= 0) return JEV_RELEVANCE_MINIMUM;
+  return parsed;
 }
 
 export function firstPassSearchLimit(category) {

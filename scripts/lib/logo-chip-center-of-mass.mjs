@@ -1,6 +1,47 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+export function centerOfMassFromRgba(data, w, h, {
+  originX = 0,
+  originY = 0,
+  minAlpha = 16,
+} = {}) {
+  let sumX = 0;
+  let sumY = 0;
+  let mass = 0;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const i = (y * w + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      if (a < minAlpha) continue;
+      if (r > 245 && g > 245 && b > 245) continue;
+      if (r > 248 && g > 250 && b > 252) continue;
+      const weight = a / 255;
+      sumX += (originX + x) * weight;
+      sumY += (originY + y) * weight;
+      mass += weight;
+    }
+  }
+  if (mass < 4) return null;
+  const cx = sumX / mass;
+  const cy = sumY / mass;
+  const boxCx = (w - 1) / 2 + originX;
+  const boxCy = (h - 1) / 2 + originY;
+  return {
+    dx: cx - boxCx,
+    dy: cy - boxCy,
+    absDx: Math.abs(cx - boxCx),
+    absDy: Math.abs(cy - boxCy),
+    width: w,
+    height: h,
+    mass,
+    logoMass: mass,
+  };
+}
+
 export async function collectBrandLogoChips(page) {
   return page.evaluate(() => {
     const out = [];
@@ -29,16 +70,14 @@ export async function measureCenterOfMassOffset(page, selector) {
   return page.evaluate(async (sel) => {
     const chip = document.querySelector(sel);
     if (!chip) return null;
-    const rect = chip.getBoundingClientRect();
-    const w = Math.max(1, Math.round(rect.width));
-    const h = Math.max(1, Math.round(rect.height));
+    const chipRect = chip.getBoundingClientRect();
+    const w = Math.max(1, Math.round(chipRect.width));
+    const h = Math.max(1, Math.round(chipRect.height));
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return null;
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, w, h);
 
     const img = chip.matches('img') ? chip : chip.querySelector('img');
     const emojiSpan = !img
@@ -47,33 +86,29 @@ export async function measureCenterOfMassOffset(page, selector) {
         : chip.querySelector('span'))
       : null;
 
-    const drawContainedImage = (image, boxW, boxH) => {
-      const nw = image.naturalWidth;
-      const nh = image.naturalHeight;
-      if (!nw || !nh) return false;
-      const scale = Math.min(boxW / nw, boxH / nh);
-      const dw = nw * scale;
-      const dh = nh * scale;
-      const dx = (boxW - dw) / 2;
-      const dy = (boxH - dh) / 2;
+    const drawRenderedImage = (image) => {
+      const imgRect = image.getBoundingClientRect();
+      const dx = imgRect.left - chipRect.left;
+      const dy = imgRect.top - chipRect.top;
+      const dw = imgRect.width;
+      const dh = imgRect.height;
+      if (!dw || !dh) return false;
       ctx.drawImage(image, dx, dy, dw, dh);
       return true;
     };
 
-    const draw = () => {
-      if (img && img.complete && img.naturalWidth > 0) {
-        return drawContainedImage(img, w, h);
-      }
-      if (emojiSpan) {
-        const fontSize = Math.max(12, Math.round(Math.min(w, h) * 0.62));
-        ctx.font = `${fontSize}px system-ui, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#111827';
-        ctx.fillText(emojiSpan.textContent || '', w / 2, h / 2);
-        return true;
-      }
-      return false;
+    const drawRenderedEmoji = (span) => {
+      const spanRect = span.getBoundingClientRect();
+      const fontSize = Math.max(8, Math.round(spanRect.height * 0.92));
+      ctx.font = `${fontSize}px system-ui, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#111827';
+      const text = span.textContent || '';
+      const dx = spanRect.left - chipRect.left;
+      const dy = spanRect.top - chipRect.top;
+      ctx.fillText(text, dx, dy);
+      return Boolean(text.trim());
     };
 
     if (img && !img.complete) {
@@ -82,7 +117,14 @@ export async function measureCenterOfMassOffset(page, selector) {
         img.addEventListener('error', reject, { once: true });
       });
     }
-    if (!draw()) return null;
+
+    let drew = false;
+    if (img && img.complete && img.naturalWidth > 0) {
+      drew = drawRenderedImage(img);
+    } else if (emojiSpan) {
+      drew = drawRenderedEmoji(emojiSpan);
+    }
+    if (!drew) return null;
 
     const { data } = ctx.getImageData(0, 0, w, h);
     let sumX = 0;
@@ -117,6 +159,7 @@ export async function measureCenterOfMassOffset(page, selector) {
       width: w,
       height: h,
       mass,
+      logoMass: mass,
     };
   }, selector);
 }

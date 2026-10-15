@@ -148,7 +148,7 @@ export function buildEnrichedDetailSharedTrip() {
       price: 192,
       detail: {
         summary:
-          'Mid-size sedan pickup near the hotel with unlimited mileage and an airport return option that travelers mention when they want a simple automatic for city driving and day trips.',
+          'Mid-size sedan pickup near the hotel with unlimited mileage and an airport return option that travelers mention when they want a simple automatic for city driving and longer day trips.',
         itineraryNote: 'Hertz Midtown sedan — confirm return hours before the trip.',
         rentalCompany: 'Hertz',
         carType: 'Toyota Camry or similar',

@@ -196,5 +196,8 @@ export async function runVacationClientBudgetLayoutTests() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await runVacationClientBudgetLayoutTests();
+  runVacationClientBudgetLayoutTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }

@@ -126,4 +126,68 @@ const sameDayRows = buildDayTimeline(sameDayCarTrip, sameDayCarTrip.days[0]);
 assert.ok(sameDayRows.some((row) => row.kind === 'car-pickup'));
 assert.ok(sameDayRows.some((row) => row.kind === 'car-dropoff'));
 
+const unassignedFlightTrip = {
+  days: [
+    { id: 10, day_number: 1, title: 'Arrival' },
+    { id: 20, day_number: 2, title: 'Explore' },
+  ],
+  places: [
+    {
+      id: 77,
+      name: 'Southwest LAS → LGA 8:05 am–4:10 pm',
+      category_name: 'Flight',
+      lat: 36.08,
+      lng: -115.15,
+    },
+  ],
+  assignments: {
+    10: [],
+    20: [],
+  },
+  thingOverrides: {
+    'place:77': { timeline: true, category: 'flight', price: 312, fareDirection: 'one-way' },
+  },
+};
+
+function pr336BugWouldShowFlightEveryDay(dayIds, day) {
+  return dayIds.length === 0
+    || dayIds.includes(String(day.id))
+    || dayIds.includes(String(day.day_number));
+}
+
+assert.equal(
+  pr336BugWouldShowFlightEveryDay([], unassignedFlightTrip.days[0]),
+  true,
+  'PR336 empty dayIds matched every day',
+);
+
+for (const day of unassignedFlightTrip.days) {
+  const rows = buildDayTimeline(unassignedFlightTrip, day);
+  assert.equal(
+    rows.some((row) => row.kind === 'flight'),
+    false,
+    `unassigned timeline flight must not render on day ${day.day_number}`,
+  );
+}
+
+const dayIdsFlightTrip = {
+  ...unassignedFlightTrip,
+  thingOverrides: {
+    'place:77': {
+      timeline: true,
+      category: 'flight',
+      price: 312,
+      fareDirection: 'one-way',
+      dayIds: [10],
+    },
+  },
+};
+assert.ok(
+  buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[0]).some((row) => row.kind === 'flight'),
+);
+assert.equal(
+  buildDayTimeline(dayIdsFlightTrip, dayIdsFlightTrip.days[1]).some((row) => row.kind === 'flight'),
+  false,
+);
+
 console.log('vacation-client day timeline unit checks passed');
