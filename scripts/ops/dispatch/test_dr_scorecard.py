@@ -133,11 +133,11 @@ class Stuck(unittest.TestCase):
 
     def iso(self, t): return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t))
 
-    def test_no_post_since_ring_counts_a_miss_and_scores_it(self):
+    def test_no_dr_post_since_state_counts_a_miss_and_scores_it(self):
         recorded = []
         with patch.object(watcher, "record_miss", lambda dr, label, now: recorded.append((dr, label)) or -2), \
              patch.object(watcher, "ring_grok", lambda msg, dry: recorded.append("grok") or "ok"):
-            out = watcher.score_miss("pr336", 336, self.s, self.since + 600, self.GH())
+            out = watcher.score_miss("pr336", 336, self.s, 0, self.since, self.since + 600, False)
         self.assertEqual(out, "score: claude-code -2")
         self.assertEqual(self.s["misses"], 1)
         self.assertEqual(recorded, [("claude-code", "VK PR #336")])
@@ -146,23 +146,22 @@ class Stuck(unittest.TestCase):
         self.s["misses"] = 2
         gh = self.GH(comments=[{"created_at": self.iso(self.since + 60)}])
         with patch.object(watcher, "record_miss", lambda *a: self.fail("should not score")):
-            self.assertIsNone(watcher.score_miss("pr336", 336, self.s, self.since + 600, gh))
+            self.assertIsNone(watcher.score_miss("pr336", 336, self.s, self.since + 60, self.since, self.since + 600, False))
         self.assertEqual(self.s["misses"], 0)
 
     def test_comment_before_ring_does_not_count_as_post(self):
         gh = self.GH(comments=[{"created_at": self.iso(self.since - 60)}])
         with patch.object(watcher, "record_miss", lambda *a: -2), patch.object(watcher, "ring_grok", lambda *a: "ok"):
-            self.assertEqual(watcher.score_miss("pr336", 336, self.s, self.since + 600, gh), "score: claude-code -2")
+            self.assertEqual(watcher.score_miss("pr336", 336, self.s, self.since - 60, self.since, self.since + 600, False), "score: claude-code -2")
 
-    def test_third_miss_escalates_to_grokbot_naming_the_dr(self):
+    def test_scorecard_does_not_send_independent_tincan_escalation(self):
         self.s["misses"] = 2
         msgs = []
         with patch.object(watcher, "record_miss", lambda *a: -6), \
              patch.object(watcher, "ring_grok", lambda msg, dry: msgs.append(msg) or "ok"):
-            out = watcher.score_miss("pr336", 336, self.s, self.since + 1800, self.GH())
-        self.assertEqual(out, "score: claude-code -6 escalated(3 misses)=ok")
-        self.assertEqual(len(msgs), 1)
-        self.assertIn("claude-code", msgs[0])
+            out = watcher.score_miss("pr336", 336, self.s, 0, self.since, self.since + 1800, False)
+        self.assertEqual(out, "score: claude-code -6")
+        self.assertEqual(msgs, [])
 
 if __name__ == "__main__":
     unittest.main()
