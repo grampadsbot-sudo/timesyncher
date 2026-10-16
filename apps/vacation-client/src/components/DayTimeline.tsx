@@ -1,12 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import {
-  NAMED_THING_LOGOS,
-  resolveThingLogoUrl,
-} from '../../../../src/vacation/thing-logo-capture.mjs';
+import { NAMED_THING_LOGOS } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineIcon } from '../../../../src/vacation/timeline-icons.mjs';
 import { paintAlignedEmoji } from '../lib/paintTabEmoji';
-import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { logoSrcCandidates, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { useResolvedLogo } from '../lib/useResolvedLogo';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
 type TimelineMedia = {
@@ -55,10 +53,6 @@ function mediaUrl(row: TimelineMedia) {
   return String(row.publicUrl || row.url || row.thumbnail_url || row.thumbnailUrl || '').trim();
 }
 
-function text(value: unknown) {
-  return String(value ?? '').trim();
-}
-
 function airlineLogoFromTitle(title = '') {
   const label = String(title || '');
   if (/\bsouthwest\b/i.test(label)) return NAMED_THING_LOGOS.southwest;
@@ -91,7 +85,8 @@ function TimelineIcon({
   entry: TimelineEntry;
   trip: SharedTripPayload;
 }) {
-  const [logoBroken, setLogoBroken] = useState(false);
+  const placeForLogo = entry.place;
+  const resolvedSrc = useResolvedLogo(placeForLogo ? logoSrcCandidates(placeForLogo, trip) : []);
 
   if (entry.kind === 'travel') {
     return (
@@ -114,24 +109,11 @@ function TimelineIcon({
     /^Flight option:/i.test(entry.title);
   const resolved = timelineIcon(stub, override, isFlight ? 'flight' : '');
   const flightTitle = entry.title || place?.name || '';
-  let logo = '';
-  if (place) {
-    logo =
-      logoUrlForPlace(place, trip) ||
-      resolveThingLogoUrl(place, override) ||
-      text(resolved.logoUrl);
-  }
-  if (!logo) {
-    logo = text(resolved.logoUrl) || resolveThingLogoUrl(stub, override);
-  }
-  if (isFlight && !logo) {
-    logo = airlineLogoFromTitle(flightTitle);
-  }
   const flightGlyph = resolved.icon || '✈️';
-  const flightLogo = isFlight ? logo || airlineLogoFromTitle(flightTitle) : logo;
+  const flightLogo = resolvedSrc || (isFlight ? airlineLogoFromTitle(flightTitle) : '');
 
   if (isFlight) {
-    const src = flightLogo || airlineLogoFromTitle(flightTitle);
+    const src = flightLogo;
     return (
       <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
         {src ? (
@@ -161,8 +143,8 @@ function TimelineIcon({
     );
   }
 
-  const showLogo = Boolean(flightLogo) && !logoBroken;
-  const showEmoji = !showLogo || logoBroken;
+  const showLogo = Boolean(flightLogo);
+  const showEmoji = !showLogo;
 
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
@@ -176,7 +158,6 @@ function TimelineIcon({
           loading="eager"
           decoding="sync"
           data-ts-timeline-logo="1"
-          onError={() => setLogoBroken(true)}
         />
       ) : null}
       {showEmoji ? <TimelineEmoji emoji={flightGlyph} /> : null}
@@ -318,11 +299,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
             ) : null}
             <div className="tsv-timeline-head tsv-timeline-head--with-icon">
               <TimelineIcon entry={entry} trip={trip} />
-              {isTravel || !place ? (
-                <span className="tsv-timeline-title" data-ts-timeline-title="1">
-                  {entry.title}
-                </span>
-              ) : (
+              {place ? (
                 <button
                   type="button"
                   className="tsv-timeline-title tsv-timeline-link"
@@ -331,6 +308,10 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 >
                   {entry.title || placeName(place)}
                 </button>
+              ) : (
+                <span className="tsv-timeline-title" data-ts-timeline-title="1">
+                  {entry.title}
+                </span>
               )}
               {media.length ? (
                 <TimelineMediaThumb

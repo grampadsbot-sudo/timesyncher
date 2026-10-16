@@ -1,22 +1,4 @@
 
-function inkOffsetY(ctx: CanvasRenderingContext2D, dpr: number, cssHeight: number) {
-  const width = ctx.canvas.width;
-  const height = ctx.canvas.height;
-  const img = ctx.getImageData(0, 0, width, height);
-  let sum = 0;
-  let mass = 0;
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const a = img.data[(y * width + x) * 4 + 3];
-      if (a < 20) continue;
-      sum += y * a;
-      mass += a;
-    }
-  }
-  if (!mass) return 0;
-  return sum / mass / dpr - cssHeight / 2;
-}
-
 function backdropRgb(node: HTMLElement): [number, number, number] {
   let el: HTMLElement | null = node;
   while (el) {
@@ -30,7 +12,7 @@ function backdropRgb(node: HTMLElement): [number, number, number] {
   return [255, 255, 255];
 }
 
-function colorInkOffsetY(
+function compositedInkOffsetY(
   ctx: CanvasRenderingContext2D,
   dpr: number,
   cssHeight: number,
@@ -38,26 +20,51 @@ function colorInkOffsetY(
 ) {
   const width = ctx.canvas.width;
   const height = ctx.canvas.height;
+  if (!width || !height) return 0;
   const img = ctx.getImageData(0, 0, width, height);
   let sum = 0;
   let mass = 0;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const i = (y * width + x) * 4;
-      const a = img.data[i + 3];
-      if (a < 16) continue;
-      const cover = a / 255;
+      const cover = img.data[i + 3] / 255;
+      if (cover <= 0) continue;
       const r = img.data[i] * cover + bg[0] * (1 - cover);
       const g = img.data[i + 1] * cover + bg[1] * (1 - cover);
       const b = img.data[i + 2] * cover + bg[2] * (1 - cover);
       const dist = Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]);
       if (dist < 18) continue;
-      sum += y * dist;
-      mass += dist;
+      const weight = dist * cover;
+      sum += y * weight;
+      mass += weight;
     }
   }
   if (!mass) return 0;
   return sum / mass / dpr - cssHeight / 2;
+}
+
+function settleShift(
+  paint: (shift: number) => void,
+  offsetAt: () => number,
+  target: number,
+) {
+  let best = target;
+  let bestAbs = Number.POSITIVE_INFINITY;
+  const score = (shift: number) => {
+    paint(shift);
+    const err = offsetAt() - target;
+    const abs = Math.abs(err);
+    if (abs < bestAbs) {
+      bestAbs = abs;
+      best = shift;
+    }
+    return err;
+  };
+  for (let shift = target - 2; shift <= target + 2.001; shift += 0.25) score(shift);
+  const err = score(best);
+  score(best - err);
+  paint(best);
+  return offsetAt();
 }
 
 function labelInkOffsetY(label: HTMLElement) {
@@ -78,7 +85,7 @@ function labelInkOffsetY(label: HTMLElement) {
   const row = (label.textContent || '').trim().slice(0, 18);
   if (!row) return 0;
   ctx.fillText(row, 2, cssHeight / 2);
-  return inkOffsetY(ctx, dpr, cssHeight);
+  return compositedInkOffsetY(ctx, dpr, cssHeight, [255, 255, 255]);
 }
 
 export function paintAlignedEmoji(
@@ -95,7 +102,8 @@ export function paintAlignedEmoji(
   const ctx = node.getContext('2d', { willReadFrequently: true });
   if (!ctx) return;
   const cs = getComputedStyle(node);
-  const font = `${cs.fontWeight || '600'} ${cs.fontSize || '16px'} ${cs.fontFamily}`;
+  const fontSize = Math.max(10, cssSize - 4);
+  const font = `${cs.fontWeight || '600'} ${fontSize}px ${cs.fontFamily}`;
   const visible = label && getComputedStyle(label).display !== 'none' ? label : null;
   const target = (visible ? labelInkOffsetY(visible) : 0) + bias;
   const bg = backdropRgb(node);
@@ -107,21 +115,15 @@ export function paintAlignedEmoji(
     ctx.textBaseline = 'middle';
     ctx.fillText(emoji, cssSize / 2, cssSize / 2 + shift);
   };
-  let best = target;
-  let bestAbs = Number.POSITIVE_INFINITY;
-  const score = (shift: number) => {
-    paint(shift);
-    node.toDataURL();
-    const err = Math.abs(colorInkOffsetY(ctx, dpr, cssSize, bg) - target);
-    if (err < bestAbs) {
-      bestAbs = err;
-      best = shift;
-    }
-  };
-  for (let step = -4; step <= 4.001; step += 0.5) score(target + step);
-  paint(best);
-  node.toDataURL();
-  return colorInkOffsetY(ctx, dpr, cssSize, bg);
+  const placed = settleShift(
+    (shift) => {
+      paint(shift);
+      node.toDataURL();
+    },
+    () => compositedInkOffsetY(ctx, dpr, cssSize, bg),
+    target,
+  );
+  return placed;
 }
 
 function paintLabelInk(label: HTMLElement, iconOffset: number) {
@@ -169,17 +171,7 @@ function paintLabelInk(label: HTMLElement, iconOffset: number) {
     ctx.fillText(text, 0, cssH / 2 + shift);
     canvas.toDataURL();
   };
-  let best = 0;
-  let bestAbs = Number.POSITIVE_INFINITY;
-  for (let shift = -2; shift <= 3.001; shift += 0.25) {
-    paint(shift);
-    const err = Math.abs(colorInkOffsetY(ctx, dpr, cssH, bg) - iconOffset);
-    if (err < bestAbs) {
-      bestAbs = err;
-      best = shift;
-    }
-  }
-  paint(best);
+  settleShift(paint, () => compositedInkOffsetY(ctx, dpr, cssH, bg), iconOffset);
 }
 
 export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {

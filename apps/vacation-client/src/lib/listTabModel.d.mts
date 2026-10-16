@@ -19,7 +19,6 @@ export function filterPlaces(
 export function numericPrice(place: SharedPlace, trip: SharedTripPayload): number | null;
 export function eventListPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function categoryLogoGlyph(place: SharedPlace, trip: SharedTripPayload): string;
-export function opaqueCarPricelineLogoUrl(place: SharedPlace, trip: SharedTripPayload): string;
 export function sortPlaces(
   places: SharedPlace[],
   trip: SharedTripPayload,
@@ -39,6 +38,7 @@ export function hotelPriceDisplay(place: SharedPlace, trip: SharedTripPayload): 
 export function carPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carSubtitle(place: SharedPlace, trip: SharedTripPayload): string;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
+export function logoSrcCandidates(place: SharedPlace, trip: SharedTripPayload): string[];
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(
   place: SharedPlace,

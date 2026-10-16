@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useResolvedLogo } from '../lib/useResolvedLogo';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
@@ -10,9 +10,8 @@ import {
   formatUsd,
   hotelFirstRowNote,
   hotelPriceDisplay,
-  logoUrlForPlace,
+  logoSrcCandidates,
   numericPrice,
-  opaqueCarPricelineLogoUrl,
   placeName,
   rowSummary,
   tabCategoryKey,
@@ -34,37 +33,20 @@ type Props = {
 };
 
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
-  const pricelineCarLogo = opaqueCarPricelineLogoUrl(place, trip);
-  const baseLogo = logoUrlForPlace(place, trip) || pricelineCarLogo;
-  const [retrySrc, setRetrySrc] = useState('');
-  const [logoBroken, setLogoBroken] = useState(false);
-  const logoSrc = retrySrc || baseLogo;
+  const logoSrc = useResolvedLogo(logoSrcCandidates(place, trip));
   const override = overrideFor(trip, place);
   const fallback =
     text(override.icon) ||
     text(place.category?.icon) ||
     text(place.category_icon) ||
     categoryLogoGlyph(place, trip);
-  const carBrandOnly = Boolean(pricelineCarLogo);
-
-  const markLogoBroken = () => {
-    if (carBrandOnly && pricelineCarLogo && logoSrc !== pricelineCarLogo) {
-      setRetrySrc(pricelineCarLogo);
-      setLogoBroken(false);
-      return;
-    }
-    if (carBrandOnly) return;
-    setLogoBroken(true);
-  };
-
-  const showLogo = Boolean(logoSrc) && !logoBroken;
+  const showLogo = Boolean(logoSrc);
 
   return (
     <span
       className="tsv-logo-chip"
       data-ts-logo-chip="1"
       data-has-logo={showLogo ? '1' : '0'}
-      data-ts-fallback-emoji={fallback}
       aria-hidden="true"
     >
       {showLogo ? (
@@ -72,18 +54,11 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
           className="tsv-logo tiny-logo"
           src={logoSrc}
           alt=""
-          loading="lazy"
-          onError={markLogoBroken}
-          onLoad={(event) => {
-            const img = event.currentTarget;
-            const box = img.getBoundingClientRect();
-            if (box.width < 4 || box.height < 4 || img.naturalWidth < 1 || img.naturalHeight < 1) {
-              markLogoBroken();
-            }
-          }}
+          width={18}
+          height={18}
+          loading="eager"
+          decoding="sync"
         />
-      ) : carBrandOnly ? (
-        <img className="tsv-logo tiny-logo" src={pricelineCarLogo} alt="" loading="lazy" />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}

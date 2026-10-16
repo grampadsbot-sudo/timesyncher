@@ -260,7 +260,7 @@ export function eventListPriceDisplay(place, trip) {
   return `$${price}`;
 }
 
-export function opaqueCarPricelineLogoUrl(place, trip) {
+function opaqueCarPricelineLogoUrl(place, trip) {
   if (tabCategoryKey(place, trip) !== 'car') return '';
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
@@ -361,6 +361,37 @@ export function carSubtitle(place, trip) {
       override.rentalCompany ||
       source.rentalCompany,
   );
+}
+
+function domainFaviconUrl(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const page = text(
+    override.website ||
+      place.website ||
+      source.website ||
+      source.url ||
+      place.url,
+  );
+  if (!page) return '';
+  try {
+    const parsed = new URL(page);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
+    const host = parsed.hostname;
+    if (!host || /(^|\.)google\./i.test(host) || /(^|\.)gstatic\.com$/i.test(host)) return '';
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
+  } catch {
+    return '';
+  }
+}
+
+export function logoSrcCandidates(place, trip) {
+  const primary = text(logoUrlForPlace(place, trip));
+  const domain = domainFaviconUrl(place, trip);
+  const urls = [];
+  if (primary) urls.push(primary);
+  if (domain && domain !== primary) urls.push(domain);
+  return urls;
 }
 
 export function logoUrlForPlace(place, trip) {

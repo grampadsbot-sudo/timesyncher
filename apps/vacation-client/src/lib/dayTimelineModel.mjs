@@ -1,3 +1,4 @@
+import { airportTransferLegs } from './airportTransferLegs.mjs';
 import {
   flightPriceDisplay,
   flightSchedule,
@@ -364,13 +365,16 @@ function pushFlightRows(entries, trip, day, dayId) {
     const id = String(place.id);
     if (seen.has(id) || !override.timeline || tabCategoryKey(place, trip) !== 'flight') return;
     seen.add(id);
-    const { depart, arrive } = flightSchedule(place, trip);
+    const plan = airportTransferLegs(place, trip, parseClockToMinutes, formatClockMinutes);
+    const depart = plan?.depart || '';
+    const arrive = plan?.arrive || '';
+    if (plan) entries.push(plan.to);
     entries.push({
       kind: 'flight',
       id: `flight-${place.id}`,
       place,
       title: flightTimelineTitle(place, trip),
-      startMin: parseClockToMinutes(depart),
+      startMin: plan?.startMin ?? null,
       startLabel: depart,
       endLabel: arrive,
       durationMin:
@@ -381,6 +385,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       fare: flightPriceDisplay(place, trip),
       summary: rowSummary(place, trip),
     });
+    if (plan) entries.push(plan.from);
   };
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
