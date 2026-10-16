@@ -176,6 +176,146 @@ function paintLabelInk(label: HTMLElement, iconOffset: number) {
 
 const RIGID_TABS = new Set(['day-by-day', 'flights', 'budget']);
 
+const INK_CHANNEL_DELTA = 24;
+
+export function inkBBoxCentre(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  bg: [number, number, number],
+): { cx: number; cy: number } | null {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const cover = data[i + 3] / 255;
+      if (cover <= 0) continue;
+      const r = data[i] * cover + bg[0] * (1 - cover);
+      const g = data[i + 1] * cover + bg[1] * (1 - cover);
+      const b = data[i + 2] * cover + bg[2] * (1 - cover);
+      const delta = Math.max(Math.abs(r - bg[0]), Math.abs(g - bg[1]), Math.abs(b - bg[2]));
+      if (delta <= INK_CHANNEL_DELTA) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return null;
+  return { cx: (minX + maxX + 1) / 2, cy: (minY + maxY + 1) / 2 };
+}
+
+export function settleCentreShift(
+  paint: (shiftX: number, shiftY: number) => void,
+  measure: () => { x: number; y: number },
+): { x: number; y: number } {
+  let bestX = 0;
+  let bestY = 0;
+  let bestAbsY = Number.POSITIVE_INFINITY;
+  let bestAbsX = Number.POSITIVE_INFINITY;
+  let bestMag = Number.POSITIVE_INFINITY;
+  const consider = (shiftX: number, shiftY: number) => {
+    paint(shiftX, shiftY);
+    const off = measure();
+    const absY = Math.abs(off.y);
+    const absX = Math.abs(off.x);
+    const mag = Math.abs(shiftX) + Math.abs(shiftY);
+    const yWin = absY < bestAbsY - 1e-6;
+    const yTie = Math.abs(absY - bestAbsY) <= 1e-6;
+    const xWin = absX < bestAbsX - 1e-6;
+    const xTie = Math.abs(absX - bestAbsX) <= 1e-6;
+    if (yWin || (yTie && (xWin || (xTie && mag < bestMag)))) {
+      bestAbsY = absY;
+      bestAbsX = absX;
+      bestMag = mag;
+      bestX = shiftX;
+      bestY = shiftY;
+    }
+  };
+  const scan = (axis: 'x' | 'y') => {
+    const fixedX = bestX;
+    const fixedY = bestY;
+    for (let shift = -4; shift <= 4.001; shift += 0.25) {
+      if (axis === 'y') consider(fixedX, shift);
+      else consider(shift, fixedY);
+    }
+  };
+  scan('y');
+  scan('x');
+  scan('y');
+  paint(bestX, bestY);
+  return { x: bestX, y: bestY };
+}
+
+function centreContainer(node: HTMLElement): HTMLElement {
+  if (node.closest('[data-ts-category-tab-icon]')) {
+    return (node.closest('button') as HTMLElement | null) || node;
+  }
+  return (node.closest('.tsv-logo-chip') as HTMLElement | null) || node;
+}
+
+function targetInCanvas(node: HTMLCanvasElement, cssW: number, cssH: number) {
+  const container = centreContainer(node);
+  const canvasBox = node.getBoundingClientRect();
+  const box = container.getBoundingClientRect();
+  if (canvasBox.width < 1 || canvasBox.height < 1 || box.width < 1 || box.height < 1) {
+    return { x: cssW / 2, y: cssH / 2 };
+  }
+  return {
+    x: box.left + box.width / 2 - canvasBox.left,
+    y: box.top + box.height / 2 - canvasBox.top,
+  };
+}
+
+export function paintCenteredEmoji(
+  node: HTMLCanvasElement,
+  emoji: string,
+  cssSize: number,
+  fontPx = Math.max(10, cssSize - 4),
+) {
+  if (!node || !emoji || cssSize < 1) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = cssSize;
+  const cssH = cssSize;
+  const bw = Math.max(1, Math.round(cssW * dpr));
+  const bh = Math.max(1, Math.round(cssH * dpr));
+  node.width = bw;
+  node.height = bh;
+  const ctx = node.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return;
+  const scaleX = bw / cssW;
+  const scaleY = bh / cssH;
+  const cs = getComputedStyle(node);
+  const font = `${cs.fontWeight || '600'} ${fontPx}px ${cs.fontFamily}`;
+  const bg = backdropRgb(centreContainer(node));
+  const target = targetInCanvas(node, cssW, cssH);
+  const paint = (shiftX: number, shiftY: number) => {
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, cssW / 2 + shiftX, cssH / 2 + shiftY);
+    node.toDataURL();
+  };
+  const measure = () => {
+    const width = ctx.canvas.width;
+    const height = ctx.canvas.height;
+    if (!width || !height) return { x: 0, y: 0 };
+    const img = ctx.getImageData(0, 0, width, height);
+    const centre = inkBBoxCentre(img.data, width, height, bg);
+    if (!centre) return { x: 100, y: 100 };
+    return {
+      x: (centre.cx * cssW) / width - target.x,
+      y: (centre.cy * cssH) / height - target.y,
+    };
+  };
+  settleCentreShift(paint, measure);
+}
+
 function screenshotInkOffsetY(
   ctx: CanvasRenderingContext2D,
   dpr: number,
@@ -218,38 +358,6 @@ function screenshotInkOffsetY(
   }
   if (!mass) return 0;
   return sum / mass / dpr - cssHeight / 2;
-}
-
-function blitCenteredEmoji(node: HTMLCanvasElement, emoji: string, cssSize: number) {
-  const dpr = window.devicePixelRatio || 1;
-  const pad = 12;
-  const box = cssSize + pad * 2;
-  const off = document.createElement('canvas');
-  off.width = Math.ceil(box * dpr);
-  off.height = Math.ceil(box * dpr);
-  const offCtx = off.getContext('2d', { willReadFrequently: true });
-  if (!offCtx) return 0;
-  const font = getComputedStyle(node);
-  offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  offCtx.clearRect(0, 0, box, box);
-  offCtx.font = `${font.fontWeight || '600'} ${Math.max(10, cssSize - 4)}px ${font.fontFamily}`;
-  offCtx.textAlign = 'center';
-  offCtx.textBaseline = 'middle';
-  offCtx.fillText(emoji, box / 2, box / 2);
-  const bg = backdropRgb(node);
-  const com = screenshotInkOffsetY(offCtx, dpr, box, bg);
-  node.width = Math.ceil(cssSize * dpr);
-  node.height = Math.ceil(cssSize * dpr);
-  const ctx = node.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return 0;
-  const destH = node.height;
-  const inkDeviceY = (box / 2 + com) * dpr;
-  const sy = inkDeviceY - destH / 2;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, node.width, node.height);
-  ctx.drawImage(off, 0, sy, off.width, destH, 0, 0, node.width, destH);
-  node.toDataURL();
-  return screenshotInkOffsetY(ctx, dpr, cssSize, bg);
 }
 
 function blitCenteredLabel(label: HTMLElement) {
@@ -343,21 +451,12 @@ export function paintTabEmoji(node: HTMLCanvasElement, emoji: string) {
     }
   }
   const tabId = chip?.getAttribute('data-tab-category') || '';
-  if (RIGID_TABS.has(tabId)) {
-    blitCenteredEmoji(node, emoji, 16);
-    if (btn) {
-      const label = [...btn.children].find((n) => n !== chip && !n.hasAttribute('data-ts-logo-chip')) as
-        | HTMLElement
-        | undefined;
-      if (label) blitCenteredLabel(label);
-    }
-    return;
-  }
-  const iconOffset = paintAlignedEmoji(node, emoji, 16, null, 0) ?? 0;
-  if (btn) {
-    const label = [...btn.children].find((n) => n !== chip && !n.hasAttribute('data-ts-logo-chip')) as
-      | HTMLElement
-      | undefined;
-    if (label) paintLabelInk(label, iconOffset);
-  }
+  paintCenteredEmoji(node, emoji, 16);
+  if (!btn) return;
+  const label = [...btn.children].find((n) => n !== chip && !n.hasAttribute('data-ts-logo-chip')) as
+    | HTMLElement
+    | undefined;
+  if (!label) return;
+  if (RIGID_TABS.has(tabId)) blitCenteredLabel(label);
+  else paintLabelInk(label, 0);
 }
