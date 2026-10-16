@@ -105,7 +105,7 @@ function mapEvidence() {
   const cut = shot.t_ms != null ? shot.t_ms : Infinity;
   const tiles = (log.requests || []).filter((q) => (q.w == null || q.w === VW) && (q.t_ms == null || q.t_ms <= cut));
   const isImg = (q) => /^image\//i.test(q.content_type || '');
-  const isOsm = (q) => /\.tile\.openstreetmap\.org$/i.test(q.host || '');
+  const isOsm = (q) => /(^|\.)tile\.openstreetmap\.org$/i.test(q.host || '');
   const ok = tiles.filter((q) => q.status === 200 && isImg(q) && isOsm(q));
   const wrong = tiles.filter((q) => q.status === 200 && isImg(q) && !isOsm(q));
   const bad = tiles.filter((q) => !(q.status === 200 && isImg(q) && isOsm(q)));
