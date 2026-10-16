@@ -17,7 +17,6 @@ import {
   tabCategoryKey,
 } from '../lib/listTabModel.mjs';
 import { overrideFor } from '../lib/placeHelpers';
-import { LogoFallbackGlyph } from './LogoFallbackGlyph';
 
 type TabKind = 'flights' | 'hotels' | 'cars' | 'restaurants' | 'stores' | 'events';
 
@@ -61,7 +60,7 @@ function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload
           decoding="sync"
         />
       ) : (
-        <LogoFallbackGlyph glyph={fallback} />
+        <span className="tsv-logo-fallback">{fallback}</span>
       )}
     </span>
   );
