@@ -13,6 +13,22 @@ const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summ
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
 
+const OE_NARROW_SR_NEEDLE = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
+const OE_NARROW_SR_PATCH = 'tsName=n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),tsName]})';
+const OE_NARROW_STACK_NEEDLE = 'maxWidth:"100%"},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:sr}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap",flexShrink:0,marginLeft:"auto"},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]';
+const OE_NARROW_STACK_PATCH = 'maxWidth:"100%",display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",columnGap:9,alignItems:"center"},children:[n.jsx(dc,{item:G}),n.jsxs("div",{style:{minWidth:0},children:[n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),style:{border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:"#111827",fontSize:bn(G)||Mi(G)?11:13,fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3},children:tsName}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,n.jsxs("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginTop:7,paddingTop:7,borderTop:"1px solid #f3f4f6",flexWrap:"nowrap",minWidth:0,maxWidth:"100%"},children:[kl(G),n.jsxs("label",{style:{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,fontWeight:900,color:Ds(G)?"#0f766e":"#6b7280",whiteSpace:"nowrap",flexShrink:0,marginLeft:"auto"},children:[n.jsx("input",{type:"checkbox",disabled:!Ce,checked:Ds(G),onChange:zr=>lc(G,zr.target.checked)})," Timeline"]})]}),n.jsx(Nr,{items:Xr,scopeKey:Qt(G),compact:!0})]})]';
+
+function patchOeNarrowListRow(js) {
+  const centred = 'gridTemplateColumns:"28px minmax(0,1fr)",columnGap:9,alignItems:"center"';
+  if (js.includes(centred) && js.includes('tsName=n.jsx("span",{"data-ts-list-row-name":"1"')) return js;
+  if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;
+  if (!js.includes(OE_NARROW_SR_NEEDLE) || !js.includes(OE_NARROW_STACK_NEEDLE)) {
+    throw new Error('shared trip Oe() narrow row cross-axis patch did not apply');
+  }
+  return js.replace(OE_NARROW_SR_NEEDLE, OE_NARROW_SR_PATCH).replace(OE_NARROW_STACK_NEEDLE, OE_NARROW_STACK_PATCH);
+}
+
+
 const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
 
 function patchCarBeGrid(js = '') {
@@ -67,5 +83,6 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
   }
+  js = patchOeNarrowListRow(js);
   return js;
 }
