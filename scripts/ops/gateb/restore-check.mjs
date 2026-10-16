@@ -17,6 +17,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
+import {
+  chipCaptureClipRelation,
+  isCaptureCoverageGap,
+  viewportCaptureFrame,
+} from '../../lib/gate-b-shell-layout-checker.mjs';
 
 const [baseF, candF, specF] = process.argv.slice(2);
 const spec = JSON.parse(fs.readFileSync(specF, 'utf8'));
@@ -137,7 +142,23 @@ function logoCentres() {
   const CHIP_TOL = 0.5;
   const bad = [];
   const nameBad = [];
+  const captureCoverageGaps = [];
   out.logo_centres = [];
+
+  function logoChipRectFromBox(box) {
+    const [x, y, w, h] = box;
+    return { left: x, top: y, right: x + w, bottom: y + h };
+  }
+
+  function resolveCaptureFrame() {
+    if (spec.capture_frame && typeof spec.capture_frame === 'object') {
+      return spec.capture_frame;
+    }
+    const vh = (r && r.viewport && r.viewport[1]) || Hc;
+    return viewportCaptureFrame(VW, vh);
+  }
+
+  const captureFrame = resolveCaptureFrame();
 
   function insetBox(box, inset) {
     const [cx, cy, cw, ch] = box;
@@ -247,6 +268,18 @@ function logoCentres() {
   }
   for (const c of spec.logo_chips || []) {
     if (!c.box || c.box[0] < 0 || c.box[0] + c.box[2] > VW) continue;
+    const chipRect = logoChipRectFromBox(c.box);
+    if (isCaptureCoverageGap(chipRect, captureFrame)) {
+      const relation = chipCaptureClipRelation(chipRect, captureFrame);
+      const label = c.name || '?';
+      captureCoverageGaps.push({ name: label, relation });
+      out.logo_centres.push({
+        where: `row logo ${label}`,
+        capture_coverage_gap: true,
+        capture_clip_relation: relation,
+      });
+      continue;
+    }
     judgeContainer(
       {
         where: `row logo ${c.name || '?'}`,
@@ -259,6 +292,12 @@ function logoCentres() {
       },
       inkBboxCenterY,
       CHIP_TOL,
+    );
+  }
+  if (captureCoverageGaps.length) {
+    out.capture_coverage_gaps = captureCoverageGaps;
+    out.reasons.push(
+      `capture coverage gap: ${captureCoverageGaps.map((g) => `row logo ${g.name} (chip ${g.relation} capture frame)`).join('; ')}`,
     );
   }
   if (bad.length) out.reasons.push(`logo not vertically centred: ${bad.join('; ')}`);
