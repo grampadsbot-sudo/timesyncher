@@ -1,4 +1,5 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { discoverLogoFieldsForSharedPlaceAtIngest } from './intake-shared-place-source.mjs';
 
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
@@ -300,6 +301,41 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
   if (summary) return summary;
   if (longDescription) return shortLineFromSourceText(longDescription);
   return itinerary;
+}
+
+export async function enrichSearchPlaceWithPageIcon(place = {}, { fetchImpl = globalThis.fetch } = {}) {
+  const enriched = enrichSearchPlace({ ...place });
+  const sourceRecord = sourceRecordFrom(enriched);
+  const logoFields = await discoverLogoFieldsForSharedPlaceAtIngest(
+    {
+      ...enriched,
+      title: enriched.title,
+      category: enriched.category,
+      sourceRecord,
+    },
+    { category: enriched.category, sourceRecord },
+    { fetchImpl },
+  );
+  const nextRecord = { ...sourceRecord };
+  if (logoFields.logoUrl) {
+    nextRecord.logoUrl = logoFields.logoUrl;
+    if (logoFields.url) {
+      nextRecord.url = logoFields.url;
+      nextRecord.website = logoFields.website || logoFields.url;
+    }
+  } else if (logoFields.logoCaptureReason) {
+    delete nextRecord.logoUrl;
+    nextRecord.logoCaptureReason = logoFields.logoCaptureReason;
+  }
+  const next = {
+    ...enriched,
+    sourceRecord: nextRecord,
+    ...(logoFields.logoUrl ? { logoUrl: logoFields.logoUrl } : {}),
+    ...(logoFields.logoCaptureReason ? { logoCaptureReason: logoFields.logoCaptureReason } : {}),
+    ...(logoFields.url ? { url: logoFields.url } : {}),
+  };
+  if (logoFields.logoCaptureReason && !logoFields.logoUrl) delete next.logoUrl;
+  return next;
 }
 
 export function enrichSearchPlace(place = {}) {

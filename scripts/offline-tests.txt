@@ -140,6 +140,8 @@ scripts/test_gate_b_live_tab_logo_rows.mjs
 scripts/test_gate_b_product_row_fields.mjs
 scripts/test_shared_trip_served_live_tab_mount.mjs
 scripts/test_shared_tab_filter_chips.mjs
+scripts/test_page_icon_discovery.mjs
+scripts/test_page_icon_persist_boundary.mjs
 scripts/test_trip_thing_logo_metadata.mjs
 scripts/test_vk_search_place_output_contract.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs

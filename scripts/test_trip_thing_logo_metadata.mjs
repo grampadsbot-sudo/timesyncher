@@ -5,6 +5,7 @@ import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
   buildCategoryDescription,
   enrichSearchPlace,
+  enrichSearchPlaceWithPageIcon,
   enrichTripThing,
   isGenericDescription,
   logoUrlFromSearchPlace,
@@ -216,6 +217,50 @@ for (const { category, place } of enrichmentCategories) {
   assert.equal(violations.includes('blank_description'), false, `${category} blank description`);
   assert.equal(violations.includes('blank_summary'), false, `${category} blank summary`);
   assert.equal(violations.includes('missing_logoUrl'), false, `${category} missing logo`);
+}
+
+{
+  const BLUE_NOTE_HEAD = `<head>
+<link rel="icon" href="https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png" sizes="32x32" />
+<link rel="icon" href="https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-192x192.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-180x180.png" />
+</head>`;
+  const ICON_192 = 'https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-192x192.png';
+  const pageUrl = 'https://www.bluenote.net/jazz-club-new-york/';
+  const fetchImpl = async (url) => {
+    if (url === pageUrl) {
+      return {
+        ok: true,
+        status: 200,
+        url: 'https://www.bluenotejazz.com/',
+        headers: new Headers({ 'content-type': 'text/html; charset=UTF-8' }),
+        text: async () => BLUE_NOTE_HEAD,
+        body: null,
+      };
+    }
+    if (url === ICON_192) {
+      return {
+        ok: true,
+        status: 200,
+        url: ICON_192,
+        headers: new Headers({ 'content-type': 'image/png' }),
+        text: async () => '',
+        body: null,
+      };
+    }
+    return { ok: false, status: 404, url, headers: new Headers(), text: async () => '', body: null };
+  };
+  const ingested = await enrichSearchPlaceWithPageIcon({
+    source: 'brave',
+    category: 'music',
+    title: 'Blue Note Jazz Club',
+    url: pageUrl,
+    sourceRecord: { source: 'brave', url: pageUrl },
+  }, { fetchImpl });
+  assert.equal(ingested.logoUrl, ICON_192);
+  const persisted = placeToTripThing(ingested);
+  assert.equal(persisted.metadata.logoUrl, ICON_192);
+  assert.equal(persisted.metadata.sourceRecord.logoUrl, ICON_192);
 }
 
 await import('./test_tsv397_integrity_audit.mjs');

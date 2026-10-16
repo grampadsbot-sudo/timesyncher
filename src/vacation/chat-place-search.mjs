@@ -72,6 +72,7 @@ export async function applyChatPlaceSearchForVacationTurn({
   env = process.env,
   publishShare,
   searchImpl,
+  fetchImpl = globalThis.fetch,
   workerJobId = null,
   workerJobContext = null,
 } = {}) {
@@ -133,6 +134,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       classification,
       chatSearch,
       insertStampedChatPlaceThings,
+      fetchImpl,
     });
     if (savedMisses.placeResults?.length && publishShare) await publishShare(db, tripId);
     return {
@@ -152,6 +154,7 @@ export async function applyChatPlaceSearchForVacationTurn({
       classification,
       chatSearch,
       insertStampedChatPlaceThings,
+      fetchImpl,
     });
     const placeSearch = placeSearchTelemetry({
       status: 'failed',
@@ -193,6 +196,7 @@ export async function applyChatPlaceSearchForVacationTurn({
     requestId,
     things: chatSearch.things,
     classification,
+    fetchImpl,
   });
   const placeSearch = placeSearchTelemetry({
     status: 'ok',
