@@ -103,27 +103,45 @@ def main():
         case("off-frame chip reports capture coverage gap", len(cov) == 1 and "Clip Me" in cov[0], str(res.get("reasons")))
         case("off-frame chip not no glyph drawn", not no_glyph, str(logo_centre))
 
-    # In-frame blank chip: still no glyph drawn.
-    in_box = [20, 20, 48, 28]
-    in_base = os.path.join(OUT, "in-base.png")
-    in_cand = os.path.join(OUT, "in-cand.png")
-    blank_chip_image(in_base, w, h, in_box)
-    blank_chip_image(in_cand, w, h, in_box)
-    in_spec = {
+    # Same chip box: clipped capture frame -> coverage gap; full capture frame -> no glyph drawn.
+    shared_box = [20, 20, 48, 28]
+    shared_base = os.path.join(OUT, "shared-base.png")
+    shared_cand = os.path.join(OUT, "shared-cand.png")
+    blank_chip_image(shared_base, w, h, shared_box)
+    blank_chip_image(shared_cand, w, h, shared_box)
+    chip = [{"name": "Shared Row", "box": list(shared_box)}]
+    clip_spec = {
         **base_spec,
-        "file": "in-frame-blank-chip.png",
-        "overlay": os.path.join(OUT, "ov-in.png"),
-        "logo_chips": [{"name": "Blank Row", "box": list(in_box)}],
+        "file": "shared-clipped-chip.png",
+        "overlay": os.path.join(OUT, "ov-shared-clip.png"),
+        "logo_chips": chip,
+        "capture_frame": {"x": 0, "y": 0, "width": w, "height": 40},
     }
-    res, err = run_restore(in_spec, in_base, in_cand, "in-frame")
+    res, err = run_restore(clip_spec, shared_base, shared_cand, "shared-clip")
     if err:
-        case("in-frame blank chip no glyph drawn", False, err)
+        case("same chip clipped frame -> coverage gap", False, err)
+    else:
+        cov = [r for r in res.get("reasons", []) if r.startswith("capture coverage gap")]
+        logo_centre = [r for r in res.get("reasons", []) if r.startswith("logo not vertically centred")]
+        case("same chip clipped frame -> coverage gap", len(cov) == 1 and "Shared Row" in cov[0], str(res.get("reasons")))
+        case("same chip clipped frame not no glyph", not any("no glyph drawn" in r for r in logo_centre), str(logo_centre))
+
+    full_spec = {
+        **base_spec,
+        "file": "shared-full-blank-chip.png",
+        "overlay": os.path.join(OUT, "ov-shared-full.png"),
+        "logo_chips": chip,
+        "capture_frame": {"x": 0, "y": 0, "width": w, "height": h},
+    }
+    res, err = run_restore(full_spec, shared_base, shared_cand, "shared-full")
+    if err:
+        case("same chip full frame blank -> no glyph drawn", False, err)
     else:
         logo_centre = [r for r in res.get("reasons", []) if r.startswith("logo not vertically centred")]
-        no_glyph = any("row logo Blank Row (no glyph drawn)" in r for r in logo_centre)
+        no_glyph = any("row logo Shared Row (no glyph drawn)" in r for r in logo_centre)
         cov = [r for r in res.get("reasons", []) if r.startswith("capture coverage gap")]
-        case("in-frame blank chip no glyph drawn", no_glyph, str(logo_centre))
-        case("in-frame blank chip not coverage gap", len(cov) == 0, str(res.get("reasons")))
+        case("same chip full frame blank -> no glyph drawn", no_glyph, str(logo_centre))
+        case("same chip full frame not coverage gap", len(cov) == 0, str(res.get("reasons")))
 
     if FAILS:
         print("FAILED:", ", ".join(FAILS))
