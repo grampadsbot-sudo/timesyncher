@@ -25,46 +25,43 @@ function wordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
 }
 
-function sentence(value) {
-  const row = text(value);
-  if (!row) return '';
-  return /[.!?]$/.test(row) ? row : `${row}.`;
+function hoursLookFetched(value) {
+  const row = text(value).toLowerCase();
+  if (!row) return false;
+  if (/not shown|confirm |before booking|when you pay|hides the supplier|until checkout|until booking/i.test(row)) {
+    return false;
+  }
+  return true;
 }
 
-function fetchedRentalCopy(place, override, source) {
-  const category = text(override.category || place.category_name || place.category?.name).toLowerCase();
-  if (category !== 'car') return '';
-  const carClass = text(override.vehicleClass || override.carType || source.vehicleClass || source.carType);
-  const pickup = text(override.pickupLocation || source.pickupLocation);
-  const dropoff = text(override.returnLocation || source.returnLocation || source.dropoffLocation);
-  const pickupHours = text(override.pickupHours || source.pickupHours);
-  const dropoffHours = text(override.dropoffHours || source.dropoffHours);
-  const reputation = text(override.reputationNote || source.reputationNote);
-  const price = override.totalPrice ?? override.price ?? source.totalPrice ?? source.price;
-  const parts = [];
-  if (carClass) parts.push(sentence(`Car class: ${carClass}`));
-  if (pickup) parts.push(sentence(`Pickup location: ${pickup}`));
-  if (dropoff) parts.push(sentence(`Drop-off location: ${dropoff}`));
-  if (pickupHours) parts.push(sentence(`Pickup hours: ${pickupHours}`));
-  if (dropoffHours) parts.push(sentence(`Drop-off hours: ${dropoffHours}`));
-  if (price != null && price !== '' && Number(price) > 0) parts.push(sentence(`Price: $${price}`));
-  if (reputation) parts.push(sentence(`Reputation: ${reputation}`));
-  if (parts.length < 4) return '';
-  return parts.join(' ');
-}
-
-function isNameFragment(description, name) {
-  const body = text(description).toLowerCase();
+export function isDisplayNameFragment(value, name) {
+  const body = text(value).toLowerCase();
   const title = text(name).toLowerCase();
   if (!body || !title) return false;
   if (body === title) return true;
   return title.startsWith(body) && wordCount(body) <= 4;
 }
 
+export function opaqueCarNeedsBlank(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const category = text(override.category || place.category_name || place.category?.name).toLowerCase();
+  if (category !== 'car') return false;
+  const blob = `${place.name || place.title || ''} ${override.rentalCompany || ''} ${source.rentalCompany || ''}`;
+  if (!/\bopaque\b/i.test(blob)) return false;
+  const pickup = text(override.pickupLocation || source.pickupLocation);
+  const dropoff = text(override.returnLocation || source.returnLocation || source.dropoffLocation);
+  const pickupHours = text(override.pickupHours || source.pickupHours);
+  const dropoffHours = text(override.dropoffHours || source.dropoffHours);
+  const price = override.totalPrice ?? override.price ?? source.totalPrice ?? source.price;
+  const priceOk = price != null && price !== '' && Number(price) > 0;
+  return !(priceOk && pickup && dropoff && hoursLookFetched(pickupHours) && hoursLookFetched(dropoffHours));
+}
+
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  const rental = fetchedRentalCopy(place, override, source);
+  if (opaqueCarNeedsBlank(place, trip)) return '';
   const fetched = descriptionFromFetchedPlace({
     websiteFlavour: text(override.websiteFlavour || source.websiteFlavour || place.websiteFlavour),
     reviewThemes: override.reviewThemes || source.reviewThemes || place.reviewThemes,
@@ -75,13 +72,7 @@ export function rowSummary(place, trip) {
     summary: text(source.summary || override.summary),
   });
   const name = place.name || place.title;
-  const fetchedOk = fetched && !isGenericDescription(fetched) && !isCannedCategoryTemplate(fetched) && !isNameFragment(fetched, name)
-    ? fetched
-    : '';
-  if (rental) {
-    const body = fetchedOk ? `${rental} ${fetchedOk}` : rental;
-    if (isNameFragment(body, name)) return '';
-    return body;
-  }
-  return fetchedOk;
+  if (!fetched || isGenericDescription(fetched) || isCannedCategoryTemplate(fetched)) return '';
+  if (isDisplayNameFragment(fetched, name)) return '';
+  return fetched;
 }

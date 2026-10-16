@@ -1,5 +1,6 @@
 
 
+import { isDisplayNameFragment, opaqueCarNeedsBlank } from './listTabSummaries.mjs';
 import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { timelineCategoryIcon } from '../../../../src/vacation/timeline-icons.mjs';
 
@@ -351,16 +352,24 @@ export function carPriceDisplay(place, trip) {
 }
 
 export function carSubtitle(place, trip) {
+  if (opaqueCarNeedsBlank(place, trip)) return '';
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    override.carType ||
-      override.vehicleClass ||
-      source.carType ||
-      source.vehicleClass ||
-      override.rentalCompany ||
-      source.rentalCompany,
-  );
+  const name = placeName(place);
+  const parts = [
+    override.carType,
+    override.vehicleClass,
+    source.carType,
+    source.vehicleClass,
+    override.rentalCompany,
+    source.rentalCompany,
+  ];
+  for (const part of parts) {
+    const row = text(part);
+    if (!row || isDisplayNameFragment(row, name)) continue;
+    return row;
+  }
+  return '';
 }
 
 function domainFaviconUrl(place, trip) {
@@ -427,4 +436,4 @@ export function sortIndicator(activeKey, activeDir, key) {
   return activeDir === 'asc' ? ' ↑' : ' ↓';
 }
 
-export { rowSummary } from './listTabSummaries.mjs';
+export { isDisplayNameFragment, opaqueCarNeedsBlank, rowSummary } from './listTabSummaries.mjs';

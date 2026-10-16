@@ -45,17 +45,11 @@ function timelineRemoveLabel(place: SharedPlace, trip: SharedTripPayload) {
   const category = tabCategoryKey(place, trip);
   if (category === 'car') {
     const name = catalogRowDisplayName(place, trip);
-    if (/priceline/i.test(name) && /opaque/i.test(name)) {
-      return { icon, label: name };
-    }
-    let company = text(override.rentalCompany || '');
-    const opaqueMatch = company.match(/^(Priceline\s+opaque)/i);
-    if (opaqueMatch) company = opaqueMatch[1];
-    if (company) return { icon, label: company };
-    const parts = name.split(/\s+/);
-    if (/priceline/i.test(name) && parts.length >= 2) {
-      return { icon, label: `${parts[0]} ${parts[1]}` };
-    }
+    const company = text(override.rentalCompany || '');
+    const companyIsFragment = company
+      && (name.toLowerCase() === company.toLowerCase() || name.toLowerCase().startsWith(`${company.toLowerCase()} `));
+    if (company && !companyIsFragment) return { icon, label: company };
+    return { icon, label: name };
   }
   return { icon, label: catalogRowDisplayName(place, trip) };
 }

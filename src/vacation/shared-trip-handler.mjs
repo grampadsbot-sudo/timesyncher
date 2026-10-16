@@ -3,6 +3,7 @@ import { cleanText, headerValue, sendJson, vacationAppErrorBody } from './http.m
 import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRecordFromTripRow, windLookupPointsFromThings } from './intake-shared-trip.mjs';
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
+import { centreResolvedLogoPayload } from './logo-ink-centre.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 
@@ -126,7 +127,7 @@ export async function intakeSharedResponse(shareToken, db = null) {
     forecast = [];
   }
   const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
-  const captured = applyCapturedLogos(presented);
+  const captured = centreResolvedLogoPayload(applyCapturedLogos(presented));
   const withBudgetTargets = applyTripMetadataBudgetTargets(captured, trip);
   return finalizeServedSharedTripPayload(withBudgetTargets);
 }
