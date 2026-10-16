@@ -16,6 +16,11 @@ import {
   gradeCarsHeadingLogoInk,
   logoChipInkPresent,
 } from './lib/logo-pixel-ink-grade.mjs';
+import {
+  fullPageCaptureFrame,
+  isCaptureCoverageGap,
+  viewportCaptureFrame,
+} from './lib/gate-b-shell-layout-checker.mjs';
 
 export const LOGO_VIEWPORT_WIDTHS = [1280, 390];
 export const LOGO_TAB_SETTLE_MS = 400;
@@ -219,6 +224,12 @@ async function collectLogoDescriptors(page) {
         src,
         title: li?.querySelector('strong')?.textContent?.trim() || logoEl?.getAttribute('alt') || '',
         alt: logoEl?.getAttribute('alt') || '',
+        chipRect: {
+          left: chipR.left,
+          top: chipR.top,
+          right: chipR.right,
+          bottom: chipR.bottom,
+        },
         chipW: chipR.width,
         chipH: chipR.height,
         imgW: logoEl?.getBoundingClientRect().width || 0,
@@ -238,13 +249,21 @@ async function collectLogoDescriptors(page) {
 }
 
 async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measureKey, tabClicked, opts = {}) {
-  const { carsHeadingCheck = false } = opts;
+  const { carsHeadingCheck = false, captureFrame: captureFrameOverride = null } = opts;
   const startKey = `${measureKey}StartMs`;
   const endKey = `${measureKey}EndMs`;
   stamp(stageTimestamps, startKey);
   await page.setViewport({ width: viewportWidth, height: 900 });
   await new Promise((r) => setTimeout(r, LOGO_TAB_SETTLE_MS));
   await waitLogoImagesBounded(page, LOGO_IMG_LOAD_CAP_MS);
+  const scrollHeight = await page.evaluate(() => Math.max(
+    document.documentElement.scrollHeight,
+    document.body?.scrollHeight || 0,
+  ));
+  const captureFrame = captureFrameOverride
+    || (opts.captureMode === 'full_page'
+      ? fullPageCaptureFrame(viewportWidth, scrollHeight, 900)
+      : viewportCaptureFrame(viewportWidth, 900));
   const descriptors = await collectLogoDescriptors(page);
   const cropBuffers = [];
   const gradedRows = [];
@@ -261,8 +280,10 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
       await chipHandle.dispose();
     }
     const cssSuspects = attributeLogoMisalignmentCss(desc.computed || {});
+    const captureCoverageGap = isCaptureCoverageGap(desc.chipRect, captureFrame);
     gradedRows.push({
       ...desc,
+      captureCoverageGap,
       com: com.error ? com : {
         dxPx: com.dxPx,
         dyPx: com.dyPx,
@@ -276,8 +297,10 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
     });
   }
   for (const desc of descriptors.slice(screenshotLimit)) {
+    const captureCoverageGap = isCaptureCoverageGap(desc.chipRect, captureFrame);
     gradedRows.push({
       ...desc,
+      captureCoverageGap,
       com: { error: 'screenshot_cap_skipped' },
       cssSuspects: attributeLogoMisalignmentCss(desc.computed || {}),
     });
@@ -285,6 +308,7 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
   const chipRows = gradedRows.filter((r) => r.isListRowChip === true);
   const brandCount = chipRows.filter((r) => isRealBrandLogoSrc(r.src) && logoChipInkPresent(r.com)).length;
   const viewportPass = chipRows.length > 0 && chipRows.every((r) => {
+    if (r.captureCoverageGap) return true;
     const com = r.com || {};
     if (com.error === 'screenshot_cap_skipped') return true;
     if (!logoChipInkPresent(com)) return false;
@@ -305,6 +329,7 @@ async function measureRowsAtViewport(page, viewportWidth, stageTimestamps, measu
     brandImgCount: brandCount,
     cropBuffers,
     carsHeadingInk,
+    captureFrame,
     pass: Boolean(tabClicked) && viewportPass && headingPass,
     failReason: !tabClicked ? 'tab_not_clicked' : (chipRows.length === 0 ? 'zero_list_row_logo_chips' : (!viewportPass ? 'empty_logo_chip' : (!headingPass ? (carsHeadingInk?.reason || 'cars_heading_logo_off_center') : null))),
   };
@@ -343,6 +368,14 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
   onPersist?.({ stageTimestamps, hotels: isHotels ? { viewports: { ...viewports } } : undefined, cars: !isHotels ? { viewports: { ...viewports } } : undefined });
 
   const rows = viewports[1280]?.rows || [];
+  const fullPageMeasure = await measureRowsAtViewport(
+    page,
+    1280,
+    stageTimestamps,
+    isHotels ? 'hotelsMeasure1280Full' : 'carsMeasure1280Full',
+    clicked,
+    { carsHeadingCheck: !isHotels, captureMode: 'full_page' },
+  );
   const cropBuffers = [...(viewports[1280]?.cropBuffers || []), ...(viewports[390]?.cropBuffers || [])];
   const tabResult = gradeLogoTabResult({
     tab: tabKeyword,
@@ -351,6 +384,8 @@ export async function sharedLogoTabCheck(page, tabKeyword, sharedApiJson, opts =
     cssSuspects: mergeLogoCssSuspects(rows),
     logoUrlEvidence,
     viewports,
+    captureFrame: viewports[1280]?.captureFrame || viewportCaptureFrame(1280, 900),
+    fullPageRows: fullPageMeasure.rows || [],
   });
   return { ...tabResult, cropBuffers, viewports };
 }

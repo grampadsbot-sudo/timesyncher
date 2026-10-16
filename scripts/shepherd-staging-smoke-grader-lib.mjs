@@ -10,6 +10,7 @@ import {
   gradeLogoChipInkPresence,
   logoChipInkPresent,
 } from './lib/logo-pixel-ink-grade.mjs';
+import { gradeLogoTabRowsWithCaptureCoverage } from './lib/gate-b-shell-layout-checker.mjs';
 
 function coffeeRowLabel(row = {}) {
   return String(row.name || row.title || row.placeName || row.displayName || row.label || '').trim();
@@ -245,9 +246,16 @@ export function gradeLogoTabResult({
   logoUrlEvidence = null,
   viewports = null,
   carsHeadingInk = null,
+  captureFrame = null,
+  fullPageRows = null,
 }) {
   const chipRows = listRowLogoChipRows(rows);
-  const graded = chipRows.map((r) => gradeLogoChipRow(r));
+  const { graded, captureCoverageGaps } = gradeLogoTabRowsWithCaptureCoverage({
+    rows: chipRows,
+    captureFrame,
+    fullPageRows: fullPageRows || [],
+    gradeLogoChipRow,
+  });
   const brandInkCount = countBrandLogoRowsWithInk(graded);
   const emptyChips = graded.filter((r) => !logoChipInkPresent(r.com));
   const isCars = String(tab || '').toLowerCase() === 'cars';
@@ -275,6 +283,7 @@ export function gradeLogoTabResult({
     logoUrlEvidence,
     viewports,
     carsHeadingInk: carsHeadingGrade,
+    captureCoverageGaps,
     failReason,
     pass,
     cssSuspects,

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   isoDateFromStartsAt,
   d1StartsOnDate,
@@ -341,5 +343,12 @@ const stubCoffeeJev = async () => ({
 const coffeeGrade = await gradeCoffeeReplyRows([{ title: 'Maui Coffee Roasters' }], { judgeFn: stubCoffeeJev });
 assert.equal(coffeeGrade.pass, true);
 assert.equal(coffeeGrade.rows[0].jev.verdict, 'yes');
+
+const captureCoverageSelftest = spawnSync(
+  process.execPath,
+  [fileURLToPath(new URL('./test_gate_b_capture_coverage_selftest.mjs', import.meta.url))],
+  { stdio: 'inherit' },
+);
+assert.equal(captureCoverageSelftest.status, 0, 'gate b capture coverage selftest');
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));
