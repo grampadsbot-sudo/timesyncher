@@ -1,0 +1,83 @@
+/** VK NYC list-tab rows from issue #429 (ccab-backed; list-only in Gate B fixture). */
+
+export const NYC_CCAB_DISPLAY_ALIASES = {
+  'Motto by Hilton Chelsea': 'Motto by Hilton New York City Times Square',
+  "Romer Hell's Kitchen": 'Romer Hell\u2019s Kitchen',
+  'JetBlue BOS → JFK': 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
+  'Priceline opaque Toyota Corolla': 'Priceline opaque JFK — Standard sedan',
+};
+
+/** Rows that must expose price + logo on VK list tabs (staging capture parity). */
+export const NYC_VK_ISSUE_429_LIST_ROWS = [
+  { name: 'Arthouse Hotel', cat: 'hotel', ccabKey: 'Arthouse Hotel' },
+  { name: 'Hilton Club New York', cat: 'hotel', ccabKey: 'Hilton Club New York' },
+  { name: 'Hotel Beacon', cat: 'hotel', ccabKey: 'Hotel Beacon' },
+  { name: 'Hotel Belleclaire Central Park', cat: 'hotel', ccabKey: 'Hotel Belleclaire Central Park' },
+  { name: 'Hotel Edison', cat: 'hotel', ccabKey: 'Hotel Edison' },
+  { name: 'Hotel Lucerne', cat: 'hotel', ccabKey: 'Hotel Lucerne' },
+  { name: 'Hyatt Grand Central New York', cat: 'hotel', ccabKey: 'Hyatt Grand Central New York' },
+  { name: 'Hyatt House New York/Chelsea', cat: 'hotel', ccabKey: 'Hyatt House New York/Chelsea' },
+  { name: 'Midtown sample hotel', cat: 'hotel', ccabKey: 'Midtown sample hotel' },
+  { name: 'Motto by Hilton New York City Times Square', cat: 'hotel', ccabKey: 'Motto by Hilton New York City Times Square' },
+  { name: 'New York Marriott Downtown', cat: 'hotel', ccabKey: 'New York Marriott Downtown' },
+  { name: 'New York Marriott Marquis', cat: 'hotel', ccabKey: 'New York Marriott Marquis' },
+  { name: 'Night Hotel Broadway', cat: 'hotel', ccabKey: 'Night Hotel Broadway' },
+  { name: 'Park Central Hotel New York', cat: 'hotel', ccabKey: 'Park Central Hotel New York' },
+  { name: 'Pod Times Square', cat: 'hotel', ccabKey: 'Pod Times Square' },
+  { name: "Romer Hell's Kitchen", cat: 'hotel', ccabKey: "Romer Hell\u2019s Kitchen" },
+  { name: 'Sheraton New York Times Square Hotel', cat: 'hotel', ccabKey: 'Sheraton New York Times Square Hotel' },
+  { name: 'The Empire Hotel New York', cat: 'hotel', ccabKey: 'The Empire Hotel New York' },
+  { name: 'The Manhattan at Times Square Hotel', cat: 'hotel', ccabKey: 'The Manhattan at Times Square Hotel' },
+  { name: 'The Manhattan Club', cat: 'hotel', ccabKey: 'The Manhattan Club' },
+  { name: 'The Wallace Hotel', cat: 'hotel', ccabKey: 'The Wallace Hotel' },
+  { name: 'TownePlace Suites by Marriott New York Manhattan/Chelsea', cat: 'hotel', ccabKey: 'TownePlace Suites by Marriott New York Manhattan/Chelsea' },
+  { name: 'Apple Fifth Avenue', cat: 'store', ccabKey: 'Apple Fifth Avenue' },
+  { name: 'Bergdorf Goodman', cat: 'store', ccabKey: 'Bergdorf Goodman' },
+  { name: 'Chelsea Market', cat: 'store', ccabKey: 'Chelsea Market' },
+  { name: 'Juice Generation Columbus Circle', cat: 'store', ccabKey: 'Juice Generation Columbus Circle' },
+  { name: 'Juice Generation Upper West Side', cat: 'store', ccabKey: 'Juice Generation Upper West Side' },
+  { name: "Macy's Herald Square", cat: 'store', ccabKey: "Macy's Herald Square" },
+  { name: 'MoMA Design Store - 53rd Street', cat: 'store', ccabKey: 'MoMA Design Store - 53rd Street' },
+  { name: 'Nordstrom NYC Flagship', cat: 'store', ccabKey: 'Nordstrom NYC Flagship' },
+  { name: 'Pure Green UWS', cat: 'store', ccabKey: 'Pure Green UWS' },
+  { name: 'Saks Fifth Avenue', cat: 'store', ccabKey: 'Saks Fifth Avenue' },
+  { name: 'Strand Book Store', cat: 'store', ccabKey: 'Strand Book Store' },
+  { name: 'Tiffany & Co. The Landmark', cat: 'store', ccabKey: 'Tiffany & Co. The Landmark' },
+  { name: 'Whole Foods Market Columbus Circle', cat: 'store', ccabKey: 'Whole Foods Market Columbus Circle' },
+  { name: 'Whole Foods Market Upper West Side', cat: 'store', ccabKey: 'Whole Foods Market Upper West Side' },
+  { name: "Zabar's", cat: 'store', ccabKey: "Zabar's" },
+  { name: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59', cat: 'flight', ccabKey: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59' },
+  { name: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13', cat: 'flight', ccabKey: 'Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13' },
+  { name: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31', cat: 'flight', ccabKey: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31' },
+  { name: 'Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1', cat: 'flight', ccabKey: 'Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1' },
+  { name: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45', cat: 'flight', ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45' },
+  { name: 'Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55', cat: 'flight', ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55' },
+  { name: 'Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55', cat: 'flight', ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55' },
+  { name: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35', cat: 'flight', ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35' },
+  { name: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25', cat: 'flight', ccabKey: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25' },
+  { name: 'Flight option: United LAS-EWR 2026-06-23 07:00-15:00', cat: 'flight', ccabKey: 'Flight option: United LAS-EWR 2026-06-23 07:00-15:00' },
+  { name: 'Blue Note', cat: 'activity', ccabKey: 'Blue Note' },
+  { name: 'Blue Note Jazz Club', cat: 'activity', ccabKey: 'Blue Note Jazz Club' },
+  { name: 'Blue Note Jazz Festival New York 2026', cat: 'activity', ccabKey: 'Blue Note Jazz Festival New York 2026' },
+  { name: 'Boat tour candidates', cat: 'activity', ccabKey: 'Boat tour candidates' },
+  { name: 'Dizzy\u2019s Club / Jazz at Lincoln Center', cat: 'activity', ccabKey: 'Dizzy\u2019s Club / Jazz at Lincoln Center' },
+  { name: 'Guided walking/audio history tours', cat: 'activity', ccabKey: 'Guided walking/audio history tours' },
+  { name: 'Open-air bus tour candidates', cat: 'activity', ccabKey: 'Open-air bus tour candidates' },
+  { name: 'Smoke Jazz & Supper Club', cat: 'activity', ccabKey: 'Smoke Jazz & Supper Club' },
+  { name: 'Statue of Liberty / Ellis Island tour candidate', cat: 'activity', ccabKey: 'Statue of Liberty / Ellis Island tour candidate' },
+  { name: 'Village Vanguard', cat: 'activity', ccabKey: 'Village Vanguard' },
+  { name: 'Village Vanguard / Smoke / Birdland / Jazz Gallery', cat: 'activity', ccabKey: 'Village Vanguard / Smoke / Birdland / Jazz Gallery' },
+  { name: 'Amelie Bistro & Wine Bar', cat: 'restaurant', ccabKey: 'Amelie Bistro & Wine Bar' },
+  { name: 'Bodega 88', cat: 'restaurant', ccabKey: 'Bodega 88' },
+  { name: 'e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine', cat: 'restaurant', ccabKey: 'e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine' },
+  { name: 'Nobody Told Me', cat: 'restaurant', ccabKey: 'Nobody Told Me' },
+  { name: 'Rosa Mexicano - Lincoln Center', cat: 'restaurant', ccabKey: 'Rosa Mexicano - Lincoln Center' },
+  { name: 'The Smith - Lincoln Square', cat: 'restaurant', ccabKey: 'The Smith - Lincoln Square' },
+];
+
+export function resolveNycCcabKey(displayName = '') {
+  const name = String(displayName || '').trim();
+  if (!name) return '';
+  if (NYC_CCAB_DISPLAY_ALIASES[name]) return NYC_CCAB_DISPLAY_ALIASES[name];
+  return name;
+}
