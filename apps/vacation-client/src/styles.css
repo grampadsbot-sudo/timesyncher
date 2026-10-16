@@ -749,7 +749,7 @@ body {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   gap: 8px;
-  align-items: center;
+  align-items: start;
   min-width: 0;
 }
 
@@ -851,7 +851,9 @@ body {
   height: 22px;
   display: inline-grid;
   place-items: center;
-  align-self: center;
+  align-self: start;
+  /* Centre on the first line’s ink box (13px cap height in the 1.15 line box). */
+  margin-top: calc((13px - 22px) / 2);
 }
 
 .tsv-timeline-logo {

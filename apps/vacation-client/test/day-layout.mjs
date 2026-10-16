@@ -38,8 +38,14 @@ async function measureTimelineInk(page) {
       const iconRect = icon.getBoundingClientRect();
       const titleRect = title.getBoundingClientRect();
       if (iconRect.height < 4 || titleRect.height < 4) continue;
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const firstLine = range.getClientRects()[0];
+      range.detach();
+      const titleMid = firstLine
+        ? firstLine.top + firstLine.height / 2
+        : titleRect.top + titleRect.height / 2;
       const iconMid = iconRect.top + iconRect.height / 2;
-      const titleMid = titleRect.top + titleRect.height / 2;
       const deltaPx = Math.abs(iconMid - titleMid);
       rows.push({
         title: (title.textContent || '').trim().slice(0, 48),
