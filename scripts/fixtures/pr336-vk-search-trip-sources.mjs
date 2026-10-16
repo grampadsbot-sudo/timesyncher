@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
 const ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -19,7 +20,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   605: 'Strand Book Store',
   606: 'Whole Foods Market Columbus Circle',
   607: 'Whole Foods Market Upper West Side',
-  608: 'The Manhattan Club',
+  608: 'Midtown sample hotel',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Juice Generation Columbus Circle',
   611: 'MoMA Design Store - 53rd Street',
@@ -58,8 +59,8 @@ export function rawSearchPlaceFromCcab({
   };
 }
 
-export function buildGateBSearchPlaceForRow({ id, name, cat }) {
-  const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[id];
+export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
+  const ccabKey = rowCcabKey || NYC_GATE_B_ROW_CCAB_KEYS[id] || resolveNycCcabKey(name);
   const ccabRecord = ccabKey ? ENRICHMENT[ccabKey] : null;
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);
