@@ -177,6 +177,7 @@ function paintLabelInk(label: HTMLElement, iconOffset: number) {
 const RIGID_TABS = new Set(['day-by-day', 'flights', 'budget']);
 
 const INK_CHANNEL_DELTA = 24;
+const MASS_CHANNEL_SUM = 18;
 
 export function inkBBoxCentre(
   data: Uint8ClampedArray,
@@ -206,6 +207,33 @@ export function inkBBoxCentre(
   }
   if (maxX < 0) return null;
   return { cx: (minX + maxX + 1) / 2, cy: (minY + maxY + 1) / 2 };
+}
+
+function glyphMassCentre(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  bg: [number, number, number],
+): { cx: number; cy: number } | null {
+  let sumX = 0;
+  let sumY = 0;
+  let mass = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const cover = data[i + 3] / 255;
+      const r = data[i] * cover + bg[0] * (1 - cover);
+      const g = data[i + 1] * cover + bg[1] * (1 - cover);
+      const b = data[i + 2] * cover + bg[2] * (1 - cover);
+      const dist = Math.abs(r - bg[0]) + Math.abs(g - bg[1]) + Math.abs(b - bg[2]);
+      if (dist < MASS_CHANNEL_SUM) continue;
+      sumX += x * dist;
+      sumY += y * dist;
+      mass += dist;
+    }
+  }
+  if (mass <= 0) return null;
+  return { cx: sumX / mass, cy: sumY / mass };
 }
 
 export function settleCentreShift(
@@ -306,7 +334,9 @@ export function paintCenteredEmoji(
     const height = ctx.canvas.height;
     if (!width || !height) return { x: 0, y: 0 };
     const img = ctx.getImageData(0, 0, width, height);
-    const centre = inkBBoxCentre(img.data, width, height, bg);
+    const centre = node.closest('[data-ts-category-tab-icon]')
+      ? glyphMassCentre(img.data, width, height, bg)
+      : inkBBoxCentre(img.data, width, height, bg);
     if (!centre) return { x: 100, y: 100 };
     return {
       x: (centre.cx * cssW) / width - target.x,
