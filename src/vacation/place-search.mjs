@@ -13,6 +13,7 @@ import {
 import { finalizeSearchPlaces } from './search-place-output.mjs';
 import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
 import { enrichSearchPlacesWithEventLogos } from './search-event-logo.mjs';
+import { enrichSearchPlacesWithPageIcons } from './trip-thing-enrichment.mjs';
 import { placePersistCategory } from './intake-car-category.mjs';
 import { categoryRadiusMeters, firstPassSearchLimit } from './keepsake-list-minimums.mjs';
 import { searchTavily } from './poi-search.mjs';
@@ -631,7 +632,8 @@ export async function searchPlaces({
     fetchImpl,
     destination: dest || center?.label || locationText || '',
   });
-  places = finalizeSearchPlaces(eventLogos.places);
+  const pageIcons = await enrichSearchPlacesWithPageIcons(eventLogos.places, { fetchImpl });
+  places = finalizeSearchPlaces(pageIcons.places);
   return {
     destination: dest || center?.label || locationText || '',
     center,

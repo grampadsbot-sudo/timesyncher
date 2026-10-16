@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 
 import { fetchPageIconUrl, iconCandidatesFromHtml } from '../src/vacation/page-icon-discovery.mjs';
 
-// Head markup as served by the canonical host (bluenotejazz.com) for the Blue Note pages.
 const BLUE_NOTE_HEAD = `<head>
 <link rel="icon" href="https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png" sizes="32x32" />
 <link rel="icon" href="https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-192x192.png" sizes="192x192" />
@@ -30,20 +29,17 @@ function stubFetch(routes) {
   return { fetchImpl, calls };
 }
 
-// Candidates: resolved, largest declared size first, duplicates removed.
 assert.deepEqual(iconCandidatesFromHtml(BLUE_NOTE_HEAD, 'https://www.bluenotejazz.com/'), [
   ICON_192,
   'https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png',
   'https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-180x180.png',
 ]);
 
-// Relative hrefs resolve against the final (post-redirect) page URL.
 assert.deepEqual(
   iconCandidatesFromHtml('<link rel="shortcut icon" href="/img/i.png">', 'https://venue.example/a/b'),
   ['https://venue.example/img/i.png'],
 );
 
-// A bluenote.net-style host redirects to the canonical host; the icon comes from the final page.
 {
   const { fetchImpl, calls } = stubFetch({
     'https://www.bluenote.net/jazz-club-new-york/': {
@@ -60,7 +56,6 @@ assert.deepEqual(
   assert.equal(calls[1], ICON_192);
 }
 
-// A declared icon that answers with HTML (not an image) is rejected; the next candidate wins.
 {
   const { fetchImpl } = stubFetch({
     'https://venue.example/': {
@@ -73,7 +68,6 @@ assert.deepEqual(
   assert.equal(got.logoUrl, 'https://venue.example/good.png');
 }
 
-// No declared icon and /favicon.ico is 404: nothing is returned, so the caller can flag the row.
 {
   const { fetchImpl } = stubFetch({ 'https://gone.example/': { html: '<title>x</title>' } });
   const got = await fetchPageIconUrl('https://gone.example/', { fetchImpl });
@@ -81,7 +75,6 @@ assert.deepEqual(
   assert.equal(got.reason, 'no_icon_answered_with_image');
 }
 
-// Unreachable page and missing URL are reported, not thrown.
 {
   const { fetchImpl } = stubFetch({});
   assert.equal((await fetchPageIconUrl('https://down.example/', { fetchImpl })).reason, 'page_http_404');
