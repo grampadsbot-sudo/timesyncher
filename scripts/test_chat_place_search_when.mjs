@@ -78,6 +78,15 @@ function placeClassification(when = '') {
   };
 }
 
+const offlineFetch = async (url) => ({
+  ok: false,
+  status: 404,
+  url: String(url),
+  headers: new Headers(),
+  text: async () => '',
+  body: null,
+});
+
 function mockPlace(title) {
   return {
     source: 'brave',
@@ -103,6 +112,7 @@ const satApplied = await applyChatPlaceSearchForVacationTurn({
   customerLive: {},
   turnId: 'turn-sat',
   publishShare: async () => {},
+  fetchImpl: offlineFetch,
   searchImpl: async () => ({ places: [mockPlace('Saturday Harbor Grill')], notes: [] }),
 });
 assert.equal(satApplied.kind, 'ok');
@@ -125,6 +135,7 @@ const plainApplied = await applyChatPlaceSearchForVacationTurn({
   customerLive: {},
   turnId: 'turn-plain',
   publishShare: async () => {},
+  fetchImpl: offlineFetch,
   searchImpl: async () => ({
     places: [mockPlace('Plain Taco Spot'), mockPlace('Second Taco Spot')],
     notes: [],

@@ -324,6 +324,7 @@ export async function enrichSearchPlaceWithPageIcon(place = {}, { fetchImpl = gl
       nextRecord.website = logoFields.website || logoFields.url;
     }
   } else if (logoFields.logoCaptureReason) {
+    delete nextRecord.logoUrl;
     nextRecord.logoCaptureReason = logoFields.logoCaptureReason;
   }
   const next = {
@@ -333,16 +334,8 @@ export async function enrichSearchPlaceWithPageIcon(place = {}, { fetchImpl = gl
     ...(logoFields.logoCaptureReason ? { logoCaptureReason: logoFields.logoCaptureReason } : {}),
     ...(logoFields.url ? { url: logoFields.url } : {}),
   };
+  if (logoFields.logoCaptureReason && !logoFields.logoUrl) delete next.logoUrl;
   return next;
-}
-
-export async function enrichSearchPlacesWithPageIcons(places = [], options = {}) {
-  const list = Array.isArray(places) ? places : [];
-  const enriched = [];
-  for (const place of list) {
-    enriched.push(await enrichSearchPlaceWithPageIcon(place, options));
-  }
-  return { places: enriched };
 }
 
 export function enrichSearchPlace(place = {}) {

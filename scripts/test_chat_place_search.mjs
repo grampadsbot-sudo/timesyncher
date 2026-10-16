@@ -81,6 +81,15 @@ const SCT_QUERIES = [
   },
 ];
 
+const offlineFetch = async (url) => ({
+  ok: false,
+  status: 404,
+  url: String(url),
+  headers: new Headers(),
+  text: async () => '',
+  body: null,
+});
+
 function mockPlace({ mockId, provider, category, title }) {
   return {
     source: provider,
@@ -175,6 +184,7 @@ for (const query of SCT_QUERIES) {
     turnId: 'turn-sct',
     env: { OPENROUTER_API_KEY: 'test', brave: 'brave-key' },
     publishShare: async () => {},
+    fetchImpl: offlineFetch,
     searchImpl: async () => ({
       places: [mockPlace({ ...query, title: `Persisted ${query.name}` })],
       notes: [],
@@ -254,6 +264,7 @@ const failed = await applyChatPlaceSearchForVacationTurn({
   payload: failPayload,
   customerLive: {},
   turnId: 'turn-fail',
+  fetchImpl: offlineFetch,
   searchImpl: async () => ({ places: [], notes: [], providers: [] }),
 });
 assert.equal(failed.kind, 'failed');
@@ -279,6 +290,7 @@ const errored = await applyChatPlaceSearchForVacationTurn({
   payload: { wantedThings: [] },
   customerLive: {},
   turnId: 'turn-err',
+  fetchImpl: offlineFetch,
   searchImpl: async () => {
     throw new Error('Brave Place Search failed: HTTP 503');
   },
@@ -310,6 +322,7 @@ const intakeSaved = await persistChatIntakePlaceThing(intakeDb, {
     providers: [],
   }),
   env: { OPENROUTER_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'brave-key' },
+  fetchImpl: offlineFetch,
 });
 assert.equal(Number(intakeSaved.location.lat), 47.609);
 assert.equal(intakeSaved.metadata.sourceRef.id, 'brave-bistro');

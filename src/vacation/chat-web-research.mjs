@@ -99,7 +99,7 @@ export async function applyChatWebResearchForVacationTurn({
     return { kind: 'failed', error: chatSearch.error, webSearch, webResearchTurn };
   }
   for (const thing of chatSearch.things) {
-    await insertTripThing(db, { tripId, requestId, thing });
+    await insertTripThing(db, { tripId, requestId, thing, fetchImpl });
   }
   const webSearch = {
     ...inTurnSearchTelemetry(chatSearch.things),

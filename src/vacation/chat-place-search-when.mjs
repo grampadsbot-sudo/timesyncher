@@ -248,7 +248,7 @@ export async function insertStampedChatPlaceThings(db, {
         ...(scheduled.candidateDates.length ? { candidateDates: scheduled.candidateDates } : {}),
       },
     };
-    const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing });
+    const inserted = await insertTripThing(db, { tripId, requestId, thing: scheduledThing, fetchImpl });
     savedForFacts.push({
       title: inserted?.title || enriched.title,
       whenLabel: meta.whenLabel || '',
