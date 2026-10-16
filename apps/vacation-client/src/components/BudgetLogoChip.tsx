@@ -2,6 +2,7 @@ import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { categoryLogoGlyph, logoSrcCandidates } from '../lib/listTabModel.mjs';
 import { useResolvedLogo } from '../lib/useResolvedLogo';
 import { overrideFor } from '../lib/placeHelpers';
+import { LogoFallbackGlyph } from './LogoFallbackGlyph';
 
 type Props = {
   place: SharedPlace;
@@ -35,7 +36,7 @@ export function BudgetLogoChip({ place, trip, fallback = '📍' }: Props) {
           decoding="sync"
         />
       ) : (
-        <span className="tsv-logo-fallback">{glyph}</span>
+        <LogoFallbackGlyph glyph={glyph} />
       )}
     </span>
   );
