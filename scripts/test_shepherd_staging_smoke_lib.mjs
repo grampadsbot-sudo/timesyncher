@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { assertGateBCaptureCoverageSelftest } from './lib/gate-b-capture-coverage-selftest.mjs';
 import {
   isoDateFromStartsAt,
   d1StartsOnDate,
@@ -341,5 +342,7 @@ const stubCoffeeJev = async () => ({
 const coffeeGrade = await gradeCoffeeReplyRows([{ title: 'Maui Coffee Roasters' }], { judgeFn: stubCoffeeJev });
 assert.equal(coffeeGrade.pass, true);
 assert.equal(coffeeGrade.rows[0].jev.verdict, 'yes');
+
+await assertGateBCaptureCoverageSelftest();
 
 console.log(JSON.stringify({ ok: true, checked: 'shepherd-staging-smoke-lib' }));
