@@ -17,6 +17,7 @@ import {
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
+import { patchSharedTripHeaderLogo } from './shared-trip-header-logo-patch.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
@@ -500,7 +501,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return patchThingDetailCapture(js);
+  return patchSharedTripHeaderLogo(patchThingDetailCapture(js), { served: true });
 }
 
 function endOfCall(text, callStart) {
