@@ -1,5 +1,22 @@
 import assert from 'node:assert/strict';
-import { inkBBoxCentre, settleCentreShift } from '../src/lib/paintTabEmoji.ts';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as esbuild from 'esbuild';
+
+const clientRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const bundled = await esbuild.build({
+  absWorkingDir: clientRoot,
+  entryPoints: ['src/lib/paintTabEmoji.ts'],
+  bundle: true,
+  write: false,
+  format: 'esm',
+  platform: 'neutral',
+  logLevel: 'silent',
+});
+
+const bundleUrl = `data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].text).toString('base64')}`;
+const { inkBBoxCentre, settleCentreShift } = await import(bundleUrl);
 
 const WHITE = [255, 255, 255];
 const DARK = [30, 41, 59];
