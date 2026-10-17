@@ -1,0 +1,65 @@
+#!/bin/bash
+# GBrain doorbell job runner (Craig 2026-10-09 Telegram: Haiku on the Claude Pro subscription, "go to town").
+# Installed on Ubuntu as /home/timesyncher-agent/bin/gbrain-bell-job; started detached by the bell script via systemd-run.
+# Usage: gbrain-bell-job <session-key> <ask-file>
+# 1. Claude Code Haiku 5.5 (subscription, ~/bin/claude-haiku as ubishere9995) with file and shell tools.
+# 2. If that fails to run (limit, auth, crash): OpenClaw on OpenRouter Haiku (the previous path).
+key="$1"; askf="$2"
+# Ruling95 authorizes a 2-3h consolidated round. Preserve it through recovery.
+job_timeout=1800
+case "$key" in
+  *claude-manager-r95-resume-20261016-2210*) job_timeout=10800 ;;
+esac
+# A shared -o path can report another concurrent job's result after timeout.
+last_file="/tmp/codex-bell-${key//[^a-zA-Z0-9_-]/_}.last.txt"
+log_dir=/home/timesyncher-agent/.openclaw/logs/gbrain-bell
+ts() { date -u +%FT%TZ; }
+chmod 644 "$askf"
+note='
+You run as Claude Code on Ubuntu, already as user ubishere9995 in ~/gbrain, so drop any "sudo -n -u ubishere9995 bash -lc" prefix and run the inner command directly. The gbrain CLI is ~/gbrain (cd ~/gbrain && gbrain get|put <slug>). Follow the GBrain skills named in the request (they are in ~/gbrain/skills). Never print tokens, keys, DB URLs or share tokens.'
+prompt="$(cat "$askf")$note"
+# Craig 2026-10-10: when the Claude subscription is out of usage (tsv-model-flip state gpt), go straight to OpenClaw on GPT.
+if [ "$(cat /home/timesyncher-agent/.openclaw/model-flip.state 2>/dev/null)" = gpt ]; then
+  # GPT lane worker = Codex CLI (ChatGPT login, shell + file tools), the GPT twin of claude-haiku. If it fails, fall to OpenClaw's default (Grok fallback).
+  echo "$(ts) codex start $key" >> "$log_dir/dispatch.log"
+  out=$(timeout "$job_timeout" sudo -n -H -u ubishere9995 bash -c 'export PATH="$HOME/.npm-global/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"; cd ~/gbrain && exec codex exec --skip-git-repo-check -C "$HOME" -m gpt-6.1-sol -c model_reasoning_effort=medium -o "$2" "$1"' _ "$prompt" "$last_file" 2>&1)
+  rc=$?
+  last=$(sudo -n -u ubishere9995 cat "$last_file" 2>/dev/null | tr '\n' ' ' | cut -c1-600)
+  # claude-code 2026-10-15: Codex sandbox failure (bwrap uid map) exits 0 with no work done; treat it as a failure so Grok runs.
+  case "$out $last" in *"bwrap: setting up uid map"*) rc=97;; esac
+  echo "$(ts) codex end rc=$rc $key | $last" >> "$log_dir/dispatch.log"
+  [ "$rc" -eq 0 ] && { printf '%s\n' "$last"; exit 0; }
+  # This continuation explicitly forbids every fallback lane.
+  case "$key" in
+    *claude-manager-r95-resume-20261016-2210*)
+      echo "$(ts) recovery STOP rc=$rc; no forbidden fallback $key" >> "$log_dir/dispatch.log"
+      exit "$rc" ;;
+  esac
+  # Lane 3 (Craig 2026-10-11): GPT failed or is out, so run the job on Grok Build grok-4.7 (subscription).
+  echo "$(ts) grok start $key (codex rc=$rc)" >> "$log_dir/dispatch.log"
+  gout=$(printf '%s' "$prompt Skip the timesyncher-jev-tier-dispatcher skill; never use OpenRouter." | /home/timesyncher-agent/bin/grok-turn 2>&1)
+  grc=$?
+  echo "$(ts) grok end rc=$grc $key | $(printf '%s' "$gout" | tr '\n' ' ' | cut -c1-500)" >> "$log_dir/dispatch.log"
+  [ "$grc" -eq 0 ] && { printf '%s\n' "$gout"; exit 0; }
+  # No --model: use OpenClaw's default, which tsv-model-flip sets to GPT with Grok as fallback, so a GPT outage falls through to Grok.
+  echo "$(ts) GPT MODE openclaw default model (gpt, grok fallback) $key (claude out of usage)" >> "$log_dir/dispatch.log"
+  exec /home/timesyncher-agent/.npm-global/bin/openclaw agent --session-key "$key" -m "$(cat "$askf")" --timeout 1800
+fi
+echo "$(ts) claude-haiku start $key" >> "$log_dir/dispatch.log"
+out=$(timeout 1800 sudo -n -H -u ubishere9995 bash -c 'export PATH="$HOME/.bun/bin:$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"; cd ~/gbrain && exec ~/bin/claude-haiku "$1" --output-format json --max-turns 160 --allowedTools "Bash" "Read" "Write" "Edit" "Grep" "Glob"' _ "$prompt" 2>&1)
+rc=$?
+summary=$(printf '%s' "$out" | python3 -I -c 'import json,sys
+try:
+    d=json.load(sys.stdin); print("is_error=%s turns=%s cost_equiv=%s | %s" % (d.get("is_error"), d.get("num_turns"), d.get("total_cost_usd"), str(d.get("result",""))[:600].replace("\n"," ")))
+except Exception as e:
+    print("unparsed output")' 2>/dev/null)
+echo "$(ts) claude-haiku end rc=$rc $key $summary" >> "$log_dir/dispatch.log"
+if [ "$rc" -eq 0 ] && ! printf '%s' "$summary" | grep -q 'is_error=True'; then
+  printf '%s\n' "$summary"
+  exit 0
+fi
+# Craig 2026-10-10: doorbell jobs follow the active worker lane. If Claude failed (often the usage limit), re-check the lane
+# now (tsv-model-flip switches to GPT at the limit) and retry on OpenClaw's current default, which carries the lane's fallbacks.
+/home/timesyncher-agent/bin/tsv-model-flip >/dev/null 2>&1
+echo "$(ts) FALLBACK openclaw default model (lane=$(cat /home/timesyncher-agent/.openclaw/model-flip.state 2>/dev/null)) $key (claude rc=$rc)" >> "$log_dir/dispatch.log"
+exec /home/timesyncher-agent/.npm-global/bin/openclaw agent --session-key "$key" -m "$(cat "$askf")" --timeout 1800
