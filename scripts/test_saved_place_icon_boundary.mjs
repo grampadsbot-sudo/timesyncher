@@ -120,7 +120,7 @@ test('chat intake persists the official icon through its normal save caller', as
 
 test('lodging intake persists the official icon through its normal save caller', async () => {
   const { db, writes } = database(); const h = http();
-  const searchImpl = async () => ({ places: [{ title: 'Blue Note Hotel', category: 'hotel', categoryName: 'Hotel', source: 'brave', lat: 40.73, lng: -74, address: 'New York, NY', url: official, sourceRecord: { website: official, tourism: 'hotel' } }] });
+  const searchImpl = async () => ({ places: [{ title: 'Blue Note Hotel', category: 'hotel', categoryName: 'Hotel', source: 'brave', lat: 40.73, lng: -74, address: 'New York, NY', url: official, sourceRecord: { website: official, categories: ['lodging'] } }] });
   await withFetch(h.fetchImpl, () => persistIntakeLodgingThings(db, tripId, null, [{ title: 'Blue Note Hotel' }], { destinationHint: 'New York', searchImpl, env: {} }));
   assert.equal(writes[0].logoUrl, logo);
   assert.equal(writes[0].sourceRecord.logoUrl, logo);
