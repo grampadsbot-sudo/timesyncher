@@ -125,12 +125,20 @@ class Holds(unittest.TestCase):
         self.assertEqual(w.ladder_action(False,False,1),('ring',2,True))
 
 class Cycle(unittest.TestCase):
-    def run_cycle(self, held=None, escalate=False, lookup_error=False):
+    def run_cycle(self, held=None, escalate=False, lookup_error=False, draft=None):
         info={f'is{n}':dict(kind='issue',age=8000,why='hold',last='old',labels='hold:test',sha='-') for n in [10,11]}
+        if draft is not None:
+            for item in info.values(): item.update(kind='PR', draft=draft, labels='')
         state={'items':{f'is{n}':{'first':0,'last_ring':1,'stall':1 if escalate else 0} for n in [10,11]}}
         with patch.dict(w.INFO,info,clear=True), patch.object(w,'GH'), patch.object(w,'find',return_value=[('is10',10,''),('is11',11,'')]), patch.object(w,'load_json',return_value=state), patch.object(w,'answer_state',return_value=(0,0,False)), patch.object(w,'hold_status',return_value=held,side_effect=OSError if lookup_error else None), patch.object(w,'score_miss'), patch.object(w,'ring_claude',return_value='dry') as managing, patch.object(w,'ring_grok',return_value='dry') as chief, patch.object(w,'ring_openclaw') as oc, patch.object(w,'tell_craig'), patch.object(w,'logline'), patch.object(w.sys,'argv',['watcher','--dry-run']), patch('builtins.print'):
             w.main()
         return managing,chief,oc
+    def test_unlabelled_draft_is_parked_but_nondraft_still_rings(self):
+        for bell in self.run_cycle(draft=True): bell.assert_not_called()
+        self.assertTrue(all(item.get('parked_job') for item in w.INFO.values()))
+        managing,chief,_=self.run_cycle(draft=False)
+        managing.assert_called_once();chief.assert_not_called()
+
     def test_one_bundle_all_due(self):
         managing,chief,_=self.run_cycle()
         managing.assert_called_once();chief.assert_not_called()

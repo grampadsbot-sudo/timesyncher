@@ -322,7 +322,7 @@ def main():
         for key, n, reason in items:
             s = seen.setdefault(key, {"first": now, "last_ring": 0, "escalated": 0})
             labs = INFO[key]["labels"].split(",")
-            if "hold:tracking-only" in labs or any(l.startswith("parked:") for l in labs): INFO[key]["parked_job"] = True   # listed, never rings
+            if INFO[key].get("draft") or "hold:tracking-only" in labs or any(l.startswith("parked:") for l in labs): INFO[key]["parked_job"] = True   # listed, never rings
             if INFO[key].get("parked_job") or now - s["last_ring"] < RING_EVERY: continue
             hs = st.get("heads", {}).get(str(n), {}) if key.startswith("pr") else {}
             try:
