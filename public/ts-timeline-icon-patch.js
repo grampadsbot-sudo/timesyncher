@@ -119,6 +119,51 @@
     return true;
   }
 
+  function firstLineMid(el) {
+    if (!el || !el.getBoundingClientRect) return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const firstLine = range.getClientRects()[0];
+    range.detach();
+    if (firstLine) return firstLine.top + firstLine.height / 2;
+    const rect = el.getBoundingClientRect();
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 16;
+    return rect.top + Math.min(lineHeight, rect.height) / 2;
+  }
+
+  function timelineRowForIcon(icon) {
+    let node = icon?.parentElement;
+    while (node && node !== document.body) {
+      const style = node.getAttribute('style') || '';
+      if (/grid-template-columns/i.test(style) && node.querySelector('[data-ts-timeline-title="1"]')) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function alignDayTimelineIcons() {
+    if (isPrintReport()) return;
+    document.querySelectorAll('[data-ts-timeline-icon="1"]').forEach((icon) => {
+      const row = timelineRowForIcon(icon);
+      const title = row?.querySelector('[data-ts-timeline-title="1"]');
+      if (!title) return;
+      const titleMid = firstLineMid(title);
+      if (titleMid == null) return;
+      const chipRect = icon.getBoundingClientRect();
+      if (chipRect.height < 4) return;
+      const iconMid = chipRect.top + chipRect.height / 2;
+      const delta = iconMid - titleMid;
+      if (Math.abs(delta) < 0.2) return;
+      const baseMargin = icon.dataset.tsTimelineIconBaseMargin
+        ? parseFloat(icon.dataset.tsTimelineIconBaseMargin)
+        : parseFloat(icon.style.marginTop || getComputedStyle(icon).marginTop) || 0;
+      if (!icon.dataset.tsTimelineIconBaseMargin) {
+        icon.dataset.tsTimelineIconBaseMargin = String(baseMargin);
+      }
+      icon.style.marginTop = `${baseMargin - delta}px`;
+    });
+  }
+
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
     const keptLogo = el.querySelector?.('img.tiny-logo');
@@ -271,9 +316,11 @@
     }
     apply(lookup);
     repairStoryCards();
+    alignDayTimelineIcons();
     new MutationObserver(() => {
       apply(lookup);
       repairStoryCards();
+      alignDayTimelineIcons();
     }).observe(document.body, { childList: true, subtree: true });
   }
 
