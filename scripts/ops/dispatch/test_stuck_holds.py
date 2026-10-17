@@ -53,6 +53,13 @@ class Holds(unittest.TestCase):
         gh.blocker='closed'
         with patch.object(w, 'read_page', return_value=request()):
             self.assertEqual(self.hold(gh), 'HELD on '+SLUG)
+    def test_explicit_chief_hold_post_prefixes(self):
+        for prefix in ['Ruling 95 keeps this draft held as a reference only.',
+                       'Ruling 94 administrative hold.',
+                       'hold restamp (dr eggbot, chief dr, 7:10 PM PT):',
+                       'Chief dr hold:']:
+            with self.subTest(prefix=prefix), patch.object(w, 'read_page', return_value=request()):
+                self.assertEqual(self.hold(FakeGH(comments=[comment(prefix+'\nwaits-on: '+SLUG)])), 'HELD on '+SLUG)
     def test_open_and_closed_issue_blocker(self):
         gh=FakeGH(comments=[comment('managing dr\nblocked-by #20')])
         self.assertEqual(self.hold(gh), 'HELD on #20')

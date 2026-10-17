@@ -164,7 +164,7 @@ def ring_grok(msg, dry):
         return "ok" if r.returncode == 0 else "rc%d" % r.returncode
     except Exception as e: return type(e).__name__
 ACTION_EVENTS = {"labeled", "unlabeled", "closed", "reopened", "merged", "ready_for_review", "convert_to_draft"}
-DR_RE = re.compile(r"^\s*(dr eggbot|managing dr|claude-code)\b", re.I)   # dr posts: "dr eggbot (chief dr ...)", "managing dr (claude-code) ..."
+DR_RE = re.compile(r"^\s*(dr eggbot|managing dr|claude-code|chief dr|hold restamp[^\n]*dr eggbot|ruling\s*\d+)\b", re.I)   # dr posts: "dr eggbot (chief dr ...)", "managing dr (claude-code) ..."
 AGENT_ACTIVE_S = 90 * 60
 def head_line(c):
     b = (c.get("body") or "").strip()
