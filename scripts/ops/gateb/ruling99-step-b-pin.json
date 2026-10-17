@@ -1,0 +1,17 @@
+{
+  "checker_sha256": "40c073331171d3b976dc99ab80235bd468792e527abab607e709e2ce22d42174",
+  "bundle_sha256": "72d855452e72acc126c997347c5476089277852ba5725b08d7dc572cc70ef11c",
+  "files": {
+    "restore_check.py": "40c073331171d3b976dc99ab80235bd468792e527abab607e709e2ce22d42174",
+    "restore-check.mjs": "cd34bd5559682d1e3d1081a215ac60e200a2bac2e775d0c81b39c7380fb654a1",
+    "restore-check-logo-centres.mjs": "7af4d7dbfc0c9af4145be980cc8dbe9cfcb04adbe2e5472dc2ff6cf1ddb22d29",
+    "lib/row-name-frame.mjs": "dd2b0681f392a348f50782d936f86d6f5f09e14194b1de34b3a2bbcd1d4fe2e3",
+    "lib/gate-b-shell-layout-checker.mjs": "3ecad7b42d8e195dcb1235ed83ca7a025dc0d61e70010be9ece3d0d7f876239c",
+    "managing_dr_judge.py": "6748418269f1bd1a44e21d13181f120be5efb1435e9d323be4b89070be141288",
+    "ui_paths.py": "c50a6249f9f7031e036068691fc333359970d5d48d16f5976bd68bae294b27bc"
+  },
+  "capture_collector_sha256": "da41aef701d2f761c66b2e03dd2039ccb084b1ad350a1801cdf0ff9c61c3b117",
+  "capture_patch_sha256": "86e333014ae5c07b4087ed7674b57553e33f474d69cbf1a65d949f2149dfa07e",
+  "step_b_precondition": "Independent review plus apply reviewed Range collector patch to the pinned capture source before any Step B capture; use this checker bundle, no other thresholds change.",
+  "legacy_limit": "Historical rev3 fallback is labelled legacy-leaf-box; it cannot establish first-line alignment of a wrapped historical leaf."
+}

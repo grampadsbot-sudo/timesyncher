@@ -7,7 +7,7 @@ the app has a logo for (no emoji/category stand-in), logo chip at the left, name
 the screen width, row height one or two lines, airline names on flights, list starts cheapest first).
 Plus scan_diff(): PR diffs that detect the capture tool or paint bitmap stand-ins of the approved screens = FAIL.
 CLI: restore_check.py --baselines DIR --candidates DIR [--issue 273] [--allow gateb-allow.json] [--out DIR] [--diff-range A..B --repo DIR]"""
-import argparse, fnmatch, hashlib, json, os, re, subprocess, sys
+import argparse, fnmatch, functools, hashlib, json, os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 RC = os.path.join(HERE, "restore-check.mjs")
 ALLOW_F = "/home/ubishere9995/tsv-dispatch/gateb-allow.json"
@@ -34,14 +34,90 @@ def budget_label(n):
     """The name the Budget screen shows: the fixture's internal 'Flight option: ' prefix is not rendered (ask #51(c)(2), 20261014-0530)."""
     return re.sub(r"^\s*Flight option:\s*", "", str(n or ""), flags=re.I)
 
+# Chief dr 2026-10-16 (eggbot-336 rescope, rulings 1-5): parity labels that differ between staging and the PR by rendering only, not by loss.
+# Both sides go through parity_key() before a parity compare. Real app fails (logos, Priceline, airport legs) are not normalised here.
+PARITY_TRUNC = 40                         # staging control labels are cut to 40 characters
+EVENT_FILTER_CHIPS = {"family event", "artist", "bar", "event", "music", "other", "sightseeing", "theatre", "tickets", "tour", "transport", "workout"}
+# Chief dr 2026-10-16 ruling 9: the category legend (food, music, shopping, luggage) is exempt from parity, like EVENT_FILTER_CHIPS.
+CATEGORY_LEGEND = {"🍽", "🎶", "🛍", "🧳"}   # emoji with the variation selector (U+FE0F) removed; see legend_key()
+STAGING_REGIONS = None                    # the staging capture's regions for this check (set per check_dir); None = nothing exempt
+PR_TAB_NAMES = frozenset()                # parity keys of items on the PR's non-events list tabs (set per check_dir): The Rest cross-tab membership
+def legend_key(s): return str(s or "").replace("️", "").strip()
+def parity_key(s):
+    """Comparable form of a label: no 'Flight option:' prefix, 24h times, one dash (en/em dash and → count as '-'), 'Day N, <date>' = 'Day N',
+    'Sleep:' = 'Bed:', an ISO date between the route and the time dropped, a time range (en dash or hyphen) compared on its start time."""
+    t = re.sub(r"^\s*flight option:\s*", "", str(s or "").lower())
+    t = re.sub(r"(\d{1,2}):(\d{2})\s*(am|pm)\b", lambda m: "%02d:%s" % (int(m.group(1)) % 12 + (12 if m.group(3) == "pm" else 0), m.group(2)), t)
+    t = re.sub(r"\s\d{4}-\d{2}-\d{2}(?=\s+\d{1,2}:\d{2})", "", t)   # ruling 10: 'LAS-LGA 2026-06-23 05:05' -> 'LAS-LGA 05:05'
+    t = re.sub(r"\s*[–—→-]\s*", "-", t)
+    t = re.sub(r"\b(\d{1,2}:\d{2})-\d{1,2}:\d{2}\b", r"\1", t)     # ruling 10: '05:05-15:45' -> '05:05'
+    t = re.sub(r"^(day \d+),.*$", r"\1", t)
+    t = re.sub(r"^sleep:", "bed:", t)
+    return re.sub(r"\s+", " ", t).strip()
+def parity_has(keys, raw):
+    """Is this staging label present in the PR's key set? A staging label cut to PARITY_TRUNC characters matches by its prefix.
+    The cut can land inside a date or time that parity_key() drops, so trailing number fragments are removed before the prefix compare."""
+    k = parity_key(raw)
+    if k in keys: return True
+    if len(str(raw or "")) != PARITY_TRUNC: return False
+    while True:
+        n = re.sub(r"\s\d[\d:-]*$", "", k)
+        if n == k: break
+        k = n
+    return bool(k) and any(x.startswith(k) for x in keys)
+
+def timeline_has(keys, raw):
+    """Chief dr 2026-10-16 ruling 10: the PR's flight timeline title can be route-only ('Southwest LAS → LGA') while staging's carries the times.
+    A staging title with a trailing time matches a PR title with no time, and only that. A PR title that does carry a time still compares exactly."""
+    k = parity_key(raw)
+    if k in keys: return True
+    r = re.sub(r"\s\d{2}:\d{2}(-\d{2}:\d{2})?$", "", k)
+    return r != k and r in keys
+
+# Owner ruling (Craig 2026-10-15 11:52 AM PT): the Budget lists only itinerary things. These list-only items are not required as Budget
+# rows, and their absence from a list, the Budget, or a Remove control is never a FAIL (feature parity or budget-complete).
+LIST_ONLY_RE = re.compile(r"Southwest LAS-LGA|Midtown sample hotel|Priceline\b.*\bsedan", re.I)
+def list_only_re(name): return bool(LIST_ONLY_RE.search(str(name or "")))
+
+# Chief dr 2026-10-15 (eggbot-336 ask, PR #336 head 66fda6e6): a budget line the fixture neither places on a day nor reserves (e.g.
+# "Carbone", "Afternoon matinee show") is not an itinerary thing, so its absence from a parity control or list is never a FAIL.
+# Derived from the fixture at run time, not a name list: the line's name must match fixture place(s), and every place with that name
+# must have no day assignment and no reservation row. A name that matches any placed thing stays required. No budget data = none exempt.
+# CAPTURE_FIXTURE is the fixture the candidate capture was built from (capture-manifest.json, set in check_dir); the head fixture carries
+# the head's own budget lines, while the shared NYC fixture has none.
+CAPTURE_FIXTURE = None
+def nonitinerary_budget_names():
+    return _nonitinerary_in(CAPTURE_FIXTURE or FIXTURE_F)
+
+@functools.lru_cache(maxsize=4)
+def _nonitinerary_in(path):
+    try: fx = json.load(open(path))
+    except Exception: return ()
+    placed = {(a.get("place") or {}).get("id") for lst in (fx.get("assignments") or {}).values() for a in lst or [] if isinstance(a, dict) and isinstance(a.get("place"), dict)}
+    placed |= {r.get("place_id") for r in fx.get("reservations") or [] if isinstance(r, dict)}
+    by_name = {}
+    for p in fx.get("places") or []:
+        if isinstance(p, dict): by_name.setdefault(norm_text(budget_label(p.get("name"))), []).append(p.get("id"))
+    out = []
+    for b in fx.get("budget") or []:
+        n = budget_label(b.get("name")) if isinstance(b, dict) else ""
+        ids = by_name.get(norm_text(n)) if n else None
+        if ids and not any(i in placed for i in ids) and n not in out: out.append(n)
+    return tuple(out)
+
+def list_only(name):
+    if list_only_re(name): return True
+    k = norm_text(budget_label(name))
+    return bool(k) and any(norm_text(n) in k for n in nonitinerary_budget_names())
+
 def budget_names():
-    """Names of every thing placed on an itinerary day in the NYC fixture (the trip the Budget screen is captured for). None = unreadable."""
+    """Names of every itinerary thing in the NYC fixture that the Budget screen must list (list-only items excluded). None = unreadable."""
     try:
         fx = json.load(open(FIXTURE_F)); names = []
         for lst in (fx.get("assignments") or {}).values():
             for a in lst or []:
                 n = str(((a or {}).get("place") or {}).get("name") or "").strip()
-                if n and n not in names: names.append(n)
+                if n and n not in names and not list_only_re(n): names.append(n)
         return names
     except Exception:
         return None
@@ -74,8 +150,10 @@ def check_screen(allow, f, reference, cand_dir, workdir, regions=None):
         spec["map_below_fold"] = f.startswith("daybyday") and spec["top"]   # GBrain request claude-manager-pr274-maprule-fix-20261009-1710b: top shots are judged on the full shot
         spec["day_mapped_places"] = day_mapped_places((spec["regions"] or {}).get("struct"))   # pins are required only when this day has mapped places
         spec["tab_boxes"] = ((spec["regions"] or {}).get("struct") or {}).get("tabs") or []   # tab icon centring (Craig 12:41 PM PT)
-        spec["logo_chips"] = [{"name": it.get("name"), "box": it["chip"]["box"], "name_cy": (it["first_text"]["box"][1] + it["first_text"]["box"][3] / 2) if (it.get("first_text") or {}).get("box") else None}
-                              for it in (spec["regions"] or {}).get("items") or []
+        _its = (spec["regions"] or {}).get("items") or []
+        spec["logo_chips"] = [{"name": it.get("name"), "box": it["chip"]["box"], "first_text": it.get("first_text"),
+                               "fixture_gap": staging_lacks_logo(STAGING_REGIONS, f, _its, it)}   # ruling 12: staging also has no real logo for this row; restore-check.mjs skips it in the generic-logo count
+                              for it in _its
                               if (it.get("chip") or {}).get("visible") and (it.get("chip") or {}).get("box")]   # row logo centring (Craig 2026-10-10); name_cy = the row name's line centre (logo centred with the name, Craig 2026-10-10 part 2)
         with open(sp, "w") as fh: json.dump(spec, fh)
         p = subprocess.run(["node", RC, base, cand, sp], capture_output=True, text=True, cwd=HERE, timeout=1800)
@@ -233,6 +311,87 @@ from managing_dr_judge import ManagingDrJudge, ManagingDrJudgmentPending, ROOT a
 JUDGE_CAP = 60
 
 def desc_words(t): return len(re.findall(r"\S+", str(t or "")))
+# Chief dr ruling (2026-10-15, Craig product rule): a row shown blank with no description, for a place with no fetched lookup
+# (no websiteFlavour and no reviewThemes in the fixture), is compliant. Not a description FAIL. Fail closed: unknown place = not exempt.
+_NO_LOOKUP = None
+def no_lookup(name):
+    global _NO_LOOKUP
+    if _NO_LOOKUP is None:
+        _NO_LOOKUP = {}
+        try:
+            fx = json.load(open(FIXTURE_F))
+            for lst in (fx.get("assignments") or {}).values():
+                for a in lst or []:
+                    pl = (a or {}).get("place") or {}
+                    _NO_LOOKUP[str(pl.get("name") or "").strip()] = not pl.get("websiteFlavour") and not pl.get("reviewThemes")
+        except Exception:
+            _NO_LOOKUP = {}
+    return _NO_LOOKUP.get(str(name or "").strip(), False)
+def blank_flagged(it):
+    return not str((it or {}).get("desc") or "").strip() and no_lookup((it or {}).get("name"))
+# Chief dr 2026-10-16 rulings 12-13 (#429 fixture gap): a list row whose staging counterpart also lacks the price, the real logo or the
+# description is fixture data, not a PR loss. A row staging does not carry at all counts as lacking. No staging screen = nothing is
+# exempt (fail closed). Pairing: exact name, then prefix (staging labels carry the price and times), then same price + first word.
+def real_logo(it):
+    img = (it or {}).get("img") or {}
+    return bool(img.get("loaded") and img.get("visible") and min(img.get("natural") or [0]) >= 8 and (img.get("box") or [0, 0, 0, 0])[2] >= 12) or bool((it or {}).get("bgimg"))
+def _staging_items(staging, f):
+    s = staging.get(f) if isinstance(staging, dict) else None
+    return s.get("items") if isinstance(s, dict) and isinstance(s.get("items"), list) else None
+def _match(items, it, used, strict=False):
+    """strict: only a staging row with the same (non-empty) price. Staging rows are not reused."""
+    k = norm_text(it.get("name")); lk = len(k); p = str(it.get("price_text") or "").strip()
+    if strict and not p: return None
+    cands = [s for s in items if id(s) not in used and (not strict or str(s.get("price_text") or "").strip() == p)]
+    for s in cands:
+        if norm_text(s.get("name")) == k: return s
+    if lk >= 4:
+        pre = [s for s in cands if len(norm_text(s.get("name"))) >= 4 and (k.startswith(norm_text(s.get("name"))) or norm_text(s.get("name")).startswith(k))]
+        if pre: return min(pre, key=lambda s: abs(len(norm_text(s.get("name"))) - lk))
+    w = (k.split(" ") or [""])[0]
+    if p and w:
+        for s in cands:
+            if norm_text(s.get("name")).startswith(w): return s
+    return None
+def staging_pairs(items_stg, items_pr):
+    """PR row id -> its staging row. Pass 1: priced rows pair with an equal-price staging row. Pass 2: the rest, in PR order.
+    Each staging row pairs once, so a repeated fixture row (same name twice, one staging row) pairs with only one of its copies."""
+    used, out = set(), {}
+    for strict in (True, False):
+        for it in items_pr:
+            if id(it) in out: continue
+            m = _match(items_stg, it, used, strict)
+            if m is not None: used.add(id(m)); out[id(it)] = m
+    return out
+def staging_row(items_stg, items_pr, it):
+    """This PR row's staging row (None = staging does not carry it)."""
+    if any(p is it for p in items_pr): return staging_pairs(items_stg, items_pr).get(id(it))
+    return _match(items_stg, it, set())
+def staging_lacks_price(staging, f, items_pr, it):
+    items = _staging_items(staging, f)
+    if items is None: return False
+    s = staging_row(items, items_pr, it)
+    return s is None or not re.search(r"\d", str(s.get("price_text") or ""))
+def staging_lacks_logo(staging, f, items_pr, it):
+    items = _staging_items(staging, f)
+    if items is None: return False
+    s = staging_row(items, items_pr, it)
+    return s is None or not real_logo(s)
+def staging_has_logo(staging, f, items_pr, it):
+    items = _staging_items(staging, f)
+    if items is None: return False
+    s = staging_row(items, items_pr, it)
+    return s is not None and real_logo(s)
+def desc_exempt(staging, f, items_pr, it):
+    """Part 3b description FAIL does not apply: list-only (owner ruling), blank and unfetched (blank_flagged), or blank where staging is blank too."""
+    if list_only((it or {}).get("name")) or blank_flagged(it): return True
+    if str((it or {}).get("desc") or "").strip(): return False
+    items = _staging_items(staging, f)
+    if items is None: return False
+    s = staging_row(items, items_pr, it)
+    return s is None or not str(s.get("desc") or "").strip()
+# Canned description templates FAIL (owner rulings): the 'Documented ... option' text, a bare '(category)' tag, and the 'Price:' / 'When:' / 'Book ahead' stock lines.
+TEMPLATE_RE = re.compile(r"\bDocumented\b.*\boption\b|\((hotel|restaurant|flight|car|store|event|tour|music|activity)\)\s*$|\b(Price|When):\s|\bBook ahead\b", re.I)
 
 class DescJudge(ManagingDrJudge):
     rubrics = RUBRIC
@@ -271,25 +430,32 @@ def timeline_checks(st):
         if d > 0.5: reasons.append("timeline icon not centred with name: %s off by %.1f px" % ((t.get("title") or "?")[:40], d))
     return reasons
 
-def feature_parity(f, st, n_pr, ref, label):
+def feature_parity(f, st, n_pr, ref, label, cand_reg=None):
     """Craig 2026-10-10 (part 3): nothing the reference has may be missing on the PR (controls, header controls, timeline items and
-    sub-notes, list rows). A tab whose reference has rows but whose PR shows none (or a Coming soon placeholder) FAILS."""
+    sub-notes, list rows). A tab whose reference has rows but whose PR shows none (or a Coming soon placeholder) FAILS.
+    Chief dr 2026-10-16 ruling 17: a timeline sub-note the structure walk did not bind is not a FAIL when its text is in this
+    screen's own candidate capture (cand_reg)."""
     if not isinstance(ref, dict) or not ref.get("ok") or "struct" not in ref: return ["feature parity: %s capture has no inventory (fail closed; re-capture needed)" % label]
     if not st or "controls" not in st: return ["feature parity: PR capture has no inventory (fail closed; re-capture needed)"]
     stem = f.split("-")[0]; out = []
-    cand_c = set(st.get("controls") or []); ref_st = ref["struct"]
+    cand_c = {parity_key(c) for c in st.get("controls") or []}; ref_st = ref["struct"]
     for c in ref_st.get("header_controls") or []:
-        if c not in cand_c: out.append("feature lost vs %s: %s: header control '%s'" % (label, f, c))
+        if not parity_has(cand_c, c) and not list_only(c): out.append("feature lost vs %s: %s: header control '%s'" % (label, f, c))
     for c in ref_st.get("controls") or []:
-        if c not in cand_c and c not in (ref_st.get("header_controls") or []): out.append("feature lost vs %s: %s: control '%s'" % (label, f, c))
-    cand_titles = {t.get("title") for t in st.get("timeline") or []}
-    cand_notes = {n for t in st.get("timeline") or [] for n in t.get("notes") or []}
+        if stem == "events" and parity_key(c) in EVENT_FILTER_CHIPS: continue   # ruling 5: the PR's coarser type filter is accepted, not a parity fail
+        if legend_key(c) in CATEGORY_LEGEND: continue   # ruling 9: the category legend is not a feature
+        if not parity_has(cand_c, c) and c not in (ref_st.get("header_controls") or []) and not list_only(c): out.append("feature lost vs %s: %s: control '%s'" % (label, f, c))
+    cand_titles = {parity_key(t.get("title")) for t in st.get("timeline") or []}
+    cand_notes = {parity_key(n) for t in st.get("timeline") or [] for n in t.get("notes") or []}
+    cand_text = parity_key(json.dumps(cand_reg)) if cand_reg is not None else ""
     for t in ref_st.get("timeline") or []:
-        if t.get("title") not in cand_titles: out.append("feature lost vs %s: %s: timeline item '%s'" % (label, f, (t.get("title") or "?")[:50]))
+        if not timeline_has(cand_titles, t.get("title")): out.append("feature lost vs %s: %s: timeline item '%s'" % (label, f, (t.get("title") or "?")[:50]))
         for n in t.get("notes") or []:
-            if n not in cand_notes: out.append("feature lost vs %s: %s: timeline note '%s'" % (label, f, n[:60]))
+            if parity_key(n) not in cand_notes and not (cand_text and parity_key(n) in cand_text): out.append("feature lost vs %s: %s: timeline note '%s'" % (label, f, n[:60]))
     if stem in LIST_PREFIX:
-        n_ref = len(ref.get("items") or [])
+        ref_rows = [i for i in ref.get("items") or [] if not list_only(i.get("name"))]
+        if stem == "events": ref_rows = [i for i in ref_rows if not parity_has(PR_TAB_NAMES, i.get("name"))]   # ruling 1: The Rest counts only what is not on another PR tab
+        n_ref = len(ref_rows)
         if n_ref and n_pr == 0: out.append("%s list empty: %d fixture things, 0 rows%s" % (TAB_NAME[stem], n_ref, " (Coming soon placeholder shown)" if st.get("placeholders") else ""))
         elif n_ref and n_pr < n_ref: out.append("feature lost vs %s: %s: %d rows on %s, %d on the PR" % (label, f, n_ref, label, n_pr))
     return out[:14]
@@ -301,16 +467,16 @@ def structure_extras(f, reg, st, staging, judge, vw, vh, top):
     reasons += row_layout(f, reg, vw, vh, top)
     if staging is None: reasons.append("feature parity: staging capture not given (fail closed)")
     else:
-        reasons += feature_parity(f, st, len(reg.get("items") or []), staging.get(f), "staging")
+        reasons += feature_parity(f, st, len([i for i in reg.get("items") or [] if not list_only(i.get("name"))]), staging.get(f), "staging", reg)
     if f.startswith(LIST_PREFIX) and not top:
         items = reg.get("items") or []
-        short = [it for it in items if desc_words(it.get("desc")) < DESC_MIN_WORDS]
+        short = [it for it in items if desc_words(it.get("desc")) < DESC_MIN_WORDS and not desc_exempt(staging, f, items, it)]
         if short: reasons.append("description too short: %s (%d words)" % ((short[0].get("name") or "?")[:40], desc_words(short[0].get("desc"))) + ("" if len(short) == 1 else " and %d more rows under %d words" % (len(short) - 1, DESC_MIN_WORDS)))
         cat = JUDGE_CAT.get(f.split("-")[0])
         for it in items:
             txt = it.get("desc")
             if not txt or not cat: continue
-            if re.search(r"\bDocumented\b.*\boption\b", txt, re.I): continue   # template text: already FAILed by the generic-description check
+            if TEMPLATE_RE.search(txt): continue   # template text: already FAILed by the generic-description check
             name = (it.get("name") or "?")[:40]
             # Ask #51(c)(3), 20261014-0530: an opaque Priceline car (no known rental brand) shows the Priceline logo, so no rental-company name is required
             opaque = cat == "car" and ("opaque" in str(it.get("name") or "").lower() or "priceline" in str(it.get("logo_src") or "").lower())
@@ -368,30 +534,26 @@ def structure_check(f, reg, manifest, staging=None, judge=None):
         elif not any(x.get("pressed") for x in pb): reasons.append("price sort: Price is not the active sort")
         rr, nn = row_design(f, reg, {"rows": []}, {"logo_required_categories": ["hotel"], "row_design": ["hotels-*", "cars-*", "flights-*"]})
         reasons += [r for r in rr if "cheapest" in r]
-    offc = []
-    for i, it in enumerate(reg.get("items") or []):
-        ch, b = it.get("chip") or {}, it.get("box") or [0, 0, 0, 0]
-        if ch.get("visible") and abs((ch["box"][1] + ch["box"][3] / 2) - (b[1] + b[3] / 2)) > 6: offc.append("%d:%s" % (i + 1, (it.get("name") or "?")[:20]))
-    if offc: reasons.append("row logos: not vertically centred on %d row(s): %s" % (len(offc), ", ".join(offc[:4])))
+    # Row frame is judged once, on glyph pixels against the first name line,
+    # by runLogoCentres -> judgeRowNameFrame. No item-box predicate here.
     # Craig 2026-10-10 part 2 (rejected PR 274 again): every row shows its price (list screens with a Price sort), a real logo
     # (no shared placeholder), and a description that says why you would or would not want it. Missing details fail closed.
     items = reg.get("items") or []
     if items and not top:
         if any(str(x.get("text", "")).lower().startswith("price") for x in (reg.get("sort") or [])):
             nop = [it for it in items if not re.search(r"\d", it.get("price_text") or "")]   # a bare "$" with no amount is no price (flight rows)
+            nop = [it for it in nop if not staging_lacks_price(staging, f, items, it)]   # ruling 12: staging also lacks the price (fixture gap)
             if nop: reasons.append("price missing on %d of %d rows (%s): %s" % (len(nop), len(items), f, ", ".join((it.get("name") or "?")[:24] for it in nop[:4])))
-        def real_logo(it):
-            img = it.get("img") or {}
-            return bool(img.get("loaded") and img.get("visible") and min(img.get("natural") or [0]) >= 8 and (img.get("box") or [0, 0, 0, 0])[2] >= 12) or bool(it.get("bgimg"))
         shared = {}
         for it in items:
             ct = ((it.get("chip") or {}).get("text") or "").strip()
-            if ct and not real_logo(it): shared[ct] = shared.get(ct, 0) + 1
+            if ct and not real_logo(it) and not staging_lacks_logo(staging, f, items, it): shared[ct] = shared.get(ct, 0) + 1   # ruling 12: fixture-gap logos excluded
         if shared and max(shared.values()) >= 3:
             ct, n = max(shared.items(), key=lambda kv: kv[1])
             reasons.append("generic logo on %d of %d rows (%s): the same placeholder '%s' on every row" % (n, len(items), f, ct))
-        tmpl = re.compile(r"\bDocumented\b.*\boption\b|\((hotel|restaurant|flight|car|store|event|tour|music|activity)\)\s*$", re.I)
-        tm = [(it, tmpl.search(it.get("desc") or it.get("text") or "")) for it in items]; tm = [(it, m) for it, m in tm if m]
+        lost = [it for it in items if not real_logo(it) and staging_has_logo(staging, f, items, it)]   # ruling 11: staging has a real logo, the PR shows a placeholder
+        if lost: reasons.append("logo lost vs staging on %d of %d rows (%s): %s" % (len(lost), len(items), f, ", ".join((it.get("name") or "?")[:24] for it in lost[:4])))
+        tm = [(it, TEMPLATE_RE.search(it.get("desc") or it.get("text") or "")) for it in items]; tm = [(it, m) for it, m in tm if m]
         if tm: reasons.append("generic description on %d of %d rows (%s): template text '%s'" % (len(tm), len(items), f, tm[0][1].group(0)[:60]))
         if any("desc" not in it for it in items): reasons.append("generic descriptions: capture has no row description field (fail closed; re-capture needed)")
         else:
@@ -402,7 +564,7 @@ def structure_check(f, reg, manifest, staging=None, judge=None):
             if cnt and max(cnt.values()) >= 3:
                 d, n = max(cnt.items(), key=lambda kv: kv[1])
                 reasons.append('generic descriptions: %d rows share "%s"' % (n, d[:60]))
-            short = [it for it in items if len(norm_text(it.get("desc")).split()) < 6]
+            short = [it for it in items if len(norm_text(it.get("desc")).split()) < 6 and not desc_exempt(staging, f, items, it)]
             if short: reasons.append("generic descriptions: %d of %d rows under 6 words (%s), too little to say why you'd want it: %s" % (len(short), len(items), f, ", ".join((it.get("name") or "?")[:24] for it in short[:3])))
     if f.startswith("budget") and not top:   # Craig 2026-10-10: every thing on any itinerary day must be a Budget row; an empty budget with itinerary things FAILS
         body = st.get("body_text")
@@ -517,10 +679,16 @@ def load_regions(cand_dir):
     except Exception: return None
 
 def check_dir(allow, reference, cand_dir, workdir, files=None, staging_dir=None, judge=None):
+    global CAPTURE_FIXTURE, PR_TAB_NAMES, STAGING_REGIONS
+    try: CAPTURE_FIXTURE = json.load(open(os.path.join(cand_dir, "capture-manifest.json"))).get("fixture") or None
+    except Exception: CAPTURE_FIXTURE = None
     regions = load_regions(cand_dir)
+    PR_TAB_NAMES = frozenset(parity_key(i.get("name")) for k, v in (regions or {}).items()
+                             if k.startswith(tuple(p for p in LIST_PREFIX if p != "events")) and isinstance(v, dict) for i in v.get("items") or [])
     if judge is not None and hasattr(judge, "bind_capture"):
         judge.bind_capture(cand_dir)
     staging = load_regions(staging_dir) if staging_dir else None
+    STAGING_REGIONS = staging   # read by check_screen (spec.logo_chips[].fixture_gap) before the structure checks run
     files = files or sorted(f for f in os.listdir(reference) if f.endswith(".png"))
     out = {f: check_screen(allow, f, reference, cand_dir, workdir, regions) for f in files}
     for f, r in out.items():
