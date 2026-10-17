@@ -212,7 +212,7 @@ export function KeepsakeJourneyScreen({ trip, shareToken }: Props) {
                   data-day={String(mapPage.dayNumber)}
                 >
                   <h3>{mapPage.dayTitle} map</h3>
-                  <DayMap places={mapPage.places} hideHeading />
+                  <DayMap places={mapPage.places} trip={trip} hideHeading />
                 </div>
               ))}
             </section>

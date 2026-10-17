@@ -74,13 +74,6 @@
         order.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:99999;background:#0b3d91;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font:600 14px sans-serif';
         document.addEventListener('DOMContentLoaded', () => document.body.appendChild(order));
       }
-      function appendSharedTrekBundle() {
-        const trek = document.createElement('script');
-        trek.type = 'module';
-        trek.crossOrigin = 'anonymous';
-        trek.src = '/assets/index-BKun7ofk.js';
-        document.head.appendChild(trek);
-      }
       function showSharedBootError(customerMessage) {
         const root = document.getElementById('root');
         if (!root) return;
@@ -102,27 +95,6 @@
         }
         return 'This itinerary is not available right now. Please open the vacation app and try again.';
       }
-      (async function bootSharedTrek() {
-        const sharedMatch = location.pathname.match(/^\/shared\/([^/]+)/);
-        if (!sharedMatch) {
-          appendSharedTrekBundle();
-          return;
-        }
-        const token = decodeURIComponent(sharedMatch[1]);
-        const response = await fetch(`/api/shared/${encodeURIComponent(token)}/`, { credentials: 'include' });
-        if (!response.ok) {
-          showSharedBootError(await readSharedBootCustomerMessage(response));
-          return;
-        }
-        const data = await response.json();
-        if (!data || !Array.isArray(data.places)) {
-          showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
-          return;
-        }
-        appendSharedTrekBundle();
-      }()).catch(() => {
-        showSharedBootError('This itinerary is not available right now. Please open the vacation app and try again.');
-      });
     </script>
     <script src="/ts-timeline-icon-patch.js"></script>
     <script src="/ts-car-brand-filter.js"></script>

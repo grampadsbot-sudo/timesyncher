@@ -1,13 +1,19 @@
 import { BudgetLogoChip } from '../components/BudgetLogoChip';
 import {
   buildBudgetModel,
-  formatUsd,
   bucketIcon,
+  budgetBucketForPlace,
+  formatUsd,
 } from '../lib/budgetModel.mjs';
-import type { SharedTripPayload } from '../types/sharedTrip';
+import { catalogRowDisplayName, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { overrideFor } from '../lib/placeHelpers';
+import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
   trip: SharedTripPayload;
+  onOpen: (place: SharedPlace) => void;
+  canEdit?: boolean;
+  onTimelineChange?: (place: SharedPlace, checked: boolean) => void;
 };
 
 function TargetReadout({
@@ -32,8 +38,40 @@ function TargetReadout({
   );
 }
 
-export function BudgetScreen({ trip }: Props) {
+function timelineRemoveLabel(place: SharedPlace, trip: SharedTripPayload) {
+  const override = overrideFor(trip, place);
+  const bucket = budgetBucketForPlace(place, trip);
+  const icon = bucketIcon(bucket);
+  const category = tabCategoryKey(place, trip);
+  if (category === 'car') {
+    const name = catalogRowDisplayName(place, trip);
+    const company = text(override.rentalCompany || '');
+    const companyIsFragment = company
+      && (name.toLowerCase() === company.toLowerCase() || name.toLowerCase().startsWith(`${company.toLowerCase()} `));
+    if (company && !companyIsFragment) return { icon, label: company };
+    return { icon, label: name };
+  }
+  return { icon, label: catalogRowDisplayName(place, trip) };
+}
+
+function text(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function placeOnTimeline(place: SharedPlace, trip: SharedTripPayload) {
+  return Boolean(overrideFor(trip, place).timeline);
+}
+
+function showBudgetRemoveControl(place: SharedPlace, trip: SharedTripPayload) {
+  if (placeOnTimeline(place, trip)) return true;
+  const category = tabCategoryKey(place, trip);
+  if (category !== 'car') return false;
+  return Boolean(text(overrideFor(trip, place).rentalCompany));
+}
+
+export function BudgetScreen({ trip, onOpen, canEdit = false, onTimelineChange }: Props) {
   const model = buildBudgetModel(trip);
+  const timelineRows = model.rows.filter((row) => showBudgetRemoveControl(row.place, trip));
 
   if (model.isEmpty) {
     return (
@@ -48,6 +86,27 @@ export function BudgetScreen({ trip }: Props) {
   return (
     <section className="tsv-screen tsv-budget-screen" data-tab="budget">
       <div className="tsv-budget-panel" data-ts-budget-panel="1">
+        {timelineRows.length ? (
+          <div className="tsv-budget-timeline-controls" data-ts-budget-header-controls="1">
+            {timelineRows.map((row) => {
+              const { icon, label } = timelineRemoveLabel(row.place, trip);
+              const controlLabel = `Remove ${icon} ${label}`;
+              return (
+                <button
+                  key={`remove-${String(row.place.id)}`}
+                  type="button"
+                  className="tsv-budget-remove-control"
+                  data-ts-budget-remove-control="1"
+                  aria-label={controlLabel}
+                  disabled={!canEdit || !onTimelineChange}
+                  onClick={() => onTimelineChange?.(row.place, false)}
+                >
+                  {controlLabel}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <h2 className="tsv-budget-overall-title">Overall trip budget</h2>
 
         <div className="tsv-budget-trip-total" data-ts-budget-trip-total="1">
@@ -106,7 +165,14 @@ export function BudgetScreen({ trip }: Props) {
                     trip={trip}
                     fallback={bucketIcon(bucket.label)}
                   />
-                  <span className="tsv-budget-line-name">{row.name}</span>
+                  <button
+                    type="button"
+                    className="tsv-budget-line-name"
+                    data-ts-budget-control="1"
+                    onClick={() => onOpen(row.place)}
+                  >
+                    {catalogRowDisplayName(row.place, trip)}
+                  </button>
                   <span className="tsv-budget-line-amount">
                     {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}
                   </span>

@@ -191,7 +191,8 @@ const backfilled = enrichTripThing({
   description: 'Documented NYC option (hotel)',
   metadata: { sourceRecord: { url: 'https://www.thelucernehotel.com/', price: 530 } },
 });
-assert.equal(isGenericDescription(backfilled.description), false);
+assert.equal(backfilled.description, '');
+assert.equal(isGenericDescription(backfilled.description), true);
 assert.equal(backfilled.metadata.price, 530);
 
 const built = buildCategoryDescription({

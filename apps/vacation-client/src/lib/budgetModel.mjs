@@ -1,15 +1,13 @@
 
 
 import {
-  LIST_TAB_IDS,
   formatUsd,
   placeName,
-  placesForCategoryTab,
   tabCategoryKey,
 } from './listTabModel.mjs';
 
 export { formatUsd };
-import { resolvePlace } from './dayTimelineModel.mjs';
+import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
 import {
   BUDGET_BUCKET_ORDER,
   OTHER_THINGS_BUCKET,
@@ -119,7 +117,12 @@ export function budgetLineAmount(place, trip) {
   const override = overrideFor(trip, place);
   const priceStr = priceText(place, trip);
   const { nightly, numbers } = parsePriceNumbers(priceStr);
-  if (nightly === null) return { amount: 0, hasPrice: false, nightly: null };
+  if (nightly === null) {
+    const matched = budgetLineForPlace(place, trip);
+    const raw = Number(matched?.total_price ?? matched?.amount ?? matched?.total);
+    if (Number.isFinite(raw)) return { amount: Math.round(raw), hasPrice: true, nightly: null };
+    return { amount: 0, hasPrice: false, nightly: null };
+  }
   const hasPrice = /\$?\d/.test(priceStr);
   let amount = nightly;
   const lower = priceStr.toLowerCase();
@@ -168,27 +171,65 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
-export function placesForBudget(trip) {
+function placesFromItineraryTimeline(trip) {
   const seen = new Map();
-  for (const tab of LIST_TAB_IDS) {
-    for (const place of placesForCategoryTab(trip, tab)) {
-      rememberBudgetPlace(seen, place);
+  for (const day of sortedDays(trip)) {
+    for (const entry of buildDayTimeline(trip, day)) {
+      if (entry.kind === 'travel' || entry.kind === 'car-pickup' || entry.kind === 'car-dropoff') {
+        continue;
+      }
+      if (entry.place) rememberBudgetPlace(seen, entry.place);
     }
+  }
+  return [...seen.values()];
+}
+
+function budgetLineForPlace(place, trip) {
+  const name = placeName(place);
+  if (!name) return null;
+  for (const line of trip?.budget || []) {
+    const lineName = text(line?.name || line?.title);
+    if (lineName && lineName === name) return line;
+  }
+  return null;
+}
+
+function tripHasItineraryStructure(trip) {
+  if (sortedDays(trip).length > 0) return true;
+  for (const rows of Object.values(trip?.assignments || {})) {
+    if (Array.isArray(rows) && rows.length) return true;
+  }
+  for (const place of trip?.places || []) {
+    const dayIds = overrideFor(trip, place).dayIds;
+    if (Array.isArray(dayIds) && dayIds.length) return true;
+  }
+  return false;
+}
+
+function itineraryBudgetPlaces(trip) {
+  const seen = new Map();
+  for (const place of placesFromItineraryTimeline(trip)) {
+    rememberBudgetPlace(seen, place);
   }
   for (const place of trip?.places || []) {
     const override = overrideFor(trip, place);
+    if (override.timeline === true) rememberBudgetPlace(seen, place);
     const dayIds = override.dayIds;
-    if (Array.isArray(dayIds) && dayIds.length) {
-      rememberBudgetPlace(seen, place);
-    }
+    if (Array.isArray(dayIds) && dayIds.length) rememberBudgetPlace(seen, place);
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
     for (const row of rows) {
-      const place = resolvePlace(row, trip);
-      rememberBudgetPlace(seen, place);
+      rememberBudgetPlace(seen, resolvePlace(row, trip));
     }
   }
+  return [...seen.values()];
+}
+
+export function placesForBudget(trip) {
+  if (tripHasItineraryStructure(trip)) return itineraryBudgetPlaces(trip);
+  const seen = new Map();
+  for (const place of trip?.places || []) rememberBudgetPlace(seen, place);
   return [...seen.values()];
 }
 

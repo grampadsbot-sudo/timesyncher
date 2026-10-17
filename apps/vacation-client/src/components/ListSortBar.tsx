@@ -17,7 +17,8 @@ export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
     <div
       className="tsv-list-sort"
       data-ts-list-sort-header="1"
-      role="group"
+      data-ts-sort-active={sortKey}
+      role="toolbar"
       aria-label="Sort list"
       onKeyDown={(event) => {
         if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -33,6 +34,7 @@ export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
           type="button"
           className={`tsv-sort-btn${sortKey === key ? ' is-active' : ''}`}
           aria-pressed={sortKey === key}
+          data-ts-sort-key={key}
           onClick={() => onSort(key)}
         >
           {key === 'name' ? 'Name' : 'Price'}

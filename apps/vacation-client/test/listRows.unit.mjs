@@ -4,13 +4,24 @@ import { applyLiveAppListRowFields } from '../../../src/vacation/shared-trip-liv
 import {
   emptyStateMessage,
   filterPlaces,
+  eventListPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
+  catalogRowDisplayName,
+  logoUrlForPlace,
   parsePrice,
   placesForCategoryTab,
+  rowSummary,
   sortPlaces,
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
+
+function wordCount(value) {
+  return String(value ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
 
 const trip = applyLiveAppListRowFields({
   places: [
@@ -33,6 +44,15 @@ const trip = applyLiveAppListRowFields({
 });
 
 assert.equal(tabCategoryKey(trip.places[2], trip), 'flight');
+const flightOption = {
+  id: 99,
+  name: 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59',
+  category_name: 'Flight',
+};
+assert.equal(
+  catalogRowDisplayName(flightOption, { thingOverrides: { 'place:99': { category: 'flight' } } }),
+  'American LAS-JFK 2026-06-23 12:37-20:59',
+);
 assert.equal(tabCategoryKey(trip.places[3], trip), 'restaurant');
 assert.equal(tabCategoryKey(trip.places[4], trip), 'event');
 assert.equal(
@@ -90,6 +110,45 @@ assert.equal(
 assert.equal(
   emptyStateMessage('stores', { categoryCount: 0, filterActive: false }),
   'No items in this category yet.',
+);
+
+const opaqueCarTrip = {
+  places: [{ id: 609, name: 'Priceline opaque Toyota Corolla', category_name: 'car' }],
+  thingOverrides: {
+    'place:609': { rentalCompany: 'Priceline opaque (test fixture)', category: 'car' },
+  },
+};
+assert.match(logoUrlForPlace(opaqueCarTrip.places[0], opaqueCarTrip), /priceline\.com\/favicon\.ico$/);
+
+const eventTrip = {
+  places: [{ id: 606, name: 'Afternoon matinee show', category_name: 'activity' }],
+  thingOverrides: { 'place:606': { price: 95, category: 'activity' } },
+};
+assert.equal(eventListPriceDisplay(eventTrip.places[0], eventTrip), '$95');
+const freeEventTrip = {
+  places: [{ id: 607, name: 'Friend meetup', category_name: 'activity' }],
+  thingOverrides: { 'place:607': { price: 0 } },
+};
+assert.equal(eventListPriceDisplay(freeEventTrip.places[0], freeEventTrip), '');
+
+const shortSummaryTrip = {
+  places: [{ id: 701, name: 'Corner cafe', category_name: 'Restaurant' }],
+  thingOverrides: {
+    'place:701': {
+      summary: 'Good espresso.',
+      longDetails: 'Good espresso.',
+    },
+  },
+};
+const shortSummary = rowSummary(shortSummaryTrip.places[0], shortSummaryTrip);
+assert.equal(shortSummary, '');
+assert.ok(
+  wordCount(shortSummary) < 30,
+  'stored blurbs without fetched place data stay blank',
+);
+assert.ok(
+  !/Compare timing, price, neighborhood/i.test(shortSummary),
+  'summary must not include quality pad text',
 );
 
 console.log('vacation-client list row unit checks passed');

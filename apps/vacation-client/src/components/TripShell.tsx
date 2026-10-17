@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { SharedTripPayload, TabId } from '../types/sharedTrip';
 import { TAB_LABELS } from '../types/sharedTrip';
 import { BuildStampFooter } from './BuildStampFooter';
+import { SharedBrandHeader } from './SharedBrandHeader';
 import { TabNav } from './TabNav';
 import { TripHeaderActions } from './TripHeaderActions';
 
@@ -36,11 +37,13 @@ export function TripShell({
 }: Props) {
   return (
     <div className="tsv-shell" data-trip-view-root="1">
-      <header className="tsv-header">
-        <h1 className="tsv-title" title={title}>
-          {title}
-        </h1>
-        <TripHeaderActions
+      <header className="tsv-header" data-ts-shared-header="1">
+        <SharedBrandHeader />
+        <div className="tsv-header-row">
+          <h1 className="tsv-title" title={title}>
+            {title}
+          </h1>
+          <TripHeaderActions
           shareToken={shareToken}
           trip={trip}
           canEdit={canEdit}
@@ -49,7 +52,8 @@ export function TripShell({
           activeTab={activeTab}
           onSectionVisibilityChange={onSectionVisibilityChange}
           onActiveTabHidden={onActiveTabHidden}
-        />
+          />
+        </div>
       </header>
       <TabNav active={activeTab} trip={trip} permissions={permissions} onChange={onTabChange} />
       <main className="tsv-main" aria-label={TAB_LABELS[activeTab]}>

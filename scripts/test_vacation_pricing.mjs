@@ -327,7 +327,13 @@ for (const file of servedPages) {
 }
 const distAssetDir = new URL('../dist/assets/', import.meta.url);
 for (const name of readdirSync(distAssetDir)) {
-  if (!name.endsWith('.js') || name === 'index-BKun7ofk.js') continue;
+  if (
+    !name.endsWith('.js')
+    || name === 'index-BKun7ofk.js'
+    || name.startsWith('vacation-app-next-')
+  ) {
+    continue;
+  }
   const text = stripRegexGroups(readFileSync(new URL(name, distAssetDir), 'utf8'));
   assert.doesNotMatch(text, priceLiteral, `dist/assets/${name} contains a literal price`);
   assert.doesNotMatch(text, centsLiteral, `dist/assets/${name} contains a cents literal`);

@@ -82,6 +82,7 @@ export function TripHeaderActions({
   })();
 
   const pdfBase = `/api/pdf/shared/${encodeURIComponent(shareToken)}`;
+  const orderKeepsakesHref = `/api/keepsake-order?slug=${encodeURIComponent(shareToken)}`;
   const printKeepsakeHref = `${pdfBase}/report/keepsake.pdf`;
   const printStyleTwoHref = `${pdfBase}/report/style-2`;
   const printRestaurantsHref = `${pdfBase}/report/restaurants.pdf`;
@@ -104,6 +105,17 @@ export function TripHeaderActions({
 
   return (
     <div className="tsv-header-actions" data-print-menu-root="1" ref={printMenuRef}>
+      <a
+        className="tsv-header-link"
+        href={orderKeepsakesHref}
+        aria-label="Order Keepsakes"
+        data-keepsake-order="1"
+      >
+        Order Keepsakes
+      </a>
+      <a className="tsv-header-link" href={journeyHref}>
+        Keepsakes
+      </a>
       {editStatusLine ? (
         <span className="tsv-header-edit-status" aria-live="polite">
           {editStatusLine}

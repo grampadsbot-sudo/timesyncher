@@ -1,6 +1,8 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { logoUrlForPlace } from '../lib/listTabModel.mjs';
+import { categoryLogoGlyph, logoSrcCandidates } from '../lib/listTabModel.mjs';
+import { useResolvedLogo } from '../lib/useResolvedLogo';
 import { overrideFor } from '../lib/placeHelpers';
+import { LogoFallbackGlyph } from './LogoFallbackGlyph';
 
 type Props = {
   place: SharedPlace;
@@ -9,15 +11,32 @@ type Props = {
 };
 
 export function BudgetLogoChip({ place, trip, fallback = '📍' }: Props) {
-  const logo = logoUrlForPlace(place, trip);
+  const logoSrc = useResolvedLogo(logoSrcCandidates(place, trip));
   const override = overrideFor(trip, place);
-  const glyph = String(override.icon || place.category?.icon || place.category_icon || fallback);
+  const glyph = String(
+    override.icon || place.category?.icon || place.category_icon || categoryLogoGlyph(place, trip) || fallback,
+  );
+  const showLogo = Boolean(logoSrc);
+
   return (
-    <span className="tsv-logo-chip tsv-budget-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+    <span
+      className="tsv-logo-chip tsv-budget-logo-chip"
+      data-ts-logo-chip="1"
+      data-has-logo={showLogo ? '1' : '0'}
+      aria-hidden="true"
+    >
+      {showLogo ? (
+        <img
+          className="tsv-logo"
+          src={logoSrc}
+          alt=""
+          width={18}
+          height={18}
+          loading="eager"
+          decoding="sync"
+        />
       ) : (
-        <span className="tsv-logo-fallback">{glyph}</span>
+        <LogoFallbackGlyph glyph={glyph} />
       )}
     </span>
   );

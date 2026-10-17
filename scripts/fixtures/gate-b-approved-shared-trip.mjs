@@ -1,11 +1,7 @@
-import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
-import {
-  buildNycCraigKimDaybydayTrip,
-  NYC_DAYBYDAY_SLUG,
-} from './nyc-craig-kim-daybyday-trip.mjs';
+import { buildNycCraigKimDaybydayTripPositiveV1 } from './nyc-craig-kim-daybyday-positive-v1.mjs';
 
-export const GATE_B_APPROVED_SHARED_SLUG = NYC_DAYBYDAY_SLUG;
+export { NYC_DAYBYDAY_SLUG as GATE_B_APPROVED_SHARED_SLUG } from './nyc-craig-kim-daybyday-trip.mjs';
 
 export function buildGateBApprovedSharedTrip() {
-  return finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+  return buildNycCraigKimDaybydayTripPositiveV1();
 }

@@ -13,6 +13,7 @@ const ENRICHMENT_BY_NAME = JSON.parse(
 );
 
 const ENRICHMENT_KEY_BY_PLACE_ID = {
+  609: 'Priceline opaque JFK — Standard sedan',
   630: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
   631: 'Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25',
   632: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
@@ -61,20 +62,6 @@ const SYNTHETIC_BY_PLACE_ID = {
       'American Airlines nonstop JFK to LAS on the final evening departure after Columbus Circle errands. Fixture uses $257 one-way per traveler for return-flight budget arithmetic only, not a verified live fare. Build in extra time for JFK security and AirTrain from Manhattan; evening weekday queues can run long.',
     price: 257,
   },
-};
-
-const TEST_ONLY_CAR = {
-  summary:
-    'Priceline opaque Toyota Corolla or similar at JFK Federal Circle; supplier name stays hidden until booking. Fixture pickup Jun 23 2026 10:00 at JFK rental shuttle, return Jun 30 2026 09:00 same facility; $172 total is synthetic test pricing only. Review toll, fuel, and cancellation terms before paying; do not treat counter reputation as verified.',
-  price: 172,
-  rentalCompany: 'Priceline opaque (test fixture)',
-  vehicleClass: 'Toyota Corolla or similar',
-  pickupLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 23 2026 10:00)',
-  returnLocation: 'JFK Federal Circle rental shuttle, Jamaica, NY (fixture test window Jun 30 2026 09:00)',
-  startTime: '10:00',
-  endTime: '09:00',
-  rentalTermsNote:
-    'Illustrative test-only terms: unlimited miles placeholder, refuel-to-full policy, LDW declined unless explicitly approved in chat.',
 };
 
 function text(value) {
@@ -171,7 +158,7 @@ export function buildNycCraigKimDaybydayTripPositiveV1() {
     const synthetic = SYNTHETIC_BY_PLACE_ID[place.id] || null;
     let patch = applyEnrichmentPatch(place, prior, enrich, synthetic);
     if (Number(place.id) === 609) {
-      patch = { ...patch, ...TEST_ONLY_CAR, timeline: false };
+      patch = { ...patch, timeline: false };
     }
     base.thingOverrides[key] = patch;
   }

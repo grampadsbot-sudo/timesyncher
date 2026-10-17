@@ -46,6 +46,8 @@ export type DetailViewModel = {
   logoUrl: string;
   showLogo: boolean;
   summary: string;
+  descriptionMissing: boolean;
+  reviewsMissing: boolean;
   itineraryNote: string;
   happyHourDetails: string;
   priceLabel: string;

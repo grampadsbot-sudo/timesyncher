@@ -83,8 +83,9 @@ const unionTrip = {
   },
 };
 const budgetPlaces = placesForBudget(unionTrip);
-assert.equal(budgetPlaces.length, 2);
-assert.equal(numericPrice(budgetPlaces[1], unionTrip), 50);
+assert.equal(budgetPlaces.length, 1);
+assert.equal(String(budgetPlaces[0].id), '20');
+assert.equal(numericPrice(budgetPlaces[0], unionTrip), 100);
 
 const score = budgetCompletenessScore(unionTrip);
 assert.equal(score.pass, score.total);
@@ -153,5 +154,52 @@ assert.equal(
   legacyScore.checks.some((c) => c.name === `saved_target_${legacyCustomerBucketLabel}` && c.pass),
   true,
 );
+
+function unmatchedBudgetLineAddsNoRow() {
+  const trip = {
+    trip: { currency: 'USD' },
+    places: [{ id: 1, name: 'Known hotel', category_name: 'Hotel' }],
+    reservations: [],
+    budget: [
+      {
+        id: 88,
+        trip_id: 1,
+        name: 'Misc outing',
+        total_price: 40,
+        note: '',
+        sort_order: 0,
+      },
+      {
+        id: 89,
+        trip_id: 1,
+        name: 'Known hotel',
+        total_price: 300,
+        note: '',
+        sort_order: 1,
+      },
+    ],
+  };
+  const model = buildBudgetModel(trip);
+  assert.equal(
+    model.rows.some((item) => item.name === 'Misc outing'),
+    false,
+    'unmatched budget line adds no Budget row',
+  );
+  assert.equal(
+    model.buckets.some((bucket) => bucket.rows.some((item) => item.name === 'Misc outing')),
+    false,
+    'no bucket contains the unmatched budget line',
+  );
+  assert.equal(
+    model.buckets.some((bucket) => bucket.label === OTHER_THINGS_BUCKET),
+    false,
+    'no bucket is created for the unmatched budget line',
+  );
+  const matched = model.rows.find((item) => item.name === 'Known hotel');
+  assert.ok(matched, 'matched budget line still appears as a row');
+  assert.equal(String(matched.place.id), '1');
+}
+
+unmatchedBudgetLineAddsNoRow();
 
 console.log('vacation-client budget unit checks passed');

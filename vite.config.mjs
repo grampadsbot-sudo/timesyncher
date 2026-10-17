@@ -3,6 +3,7 @@ import { appendFile, copyFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { buildSha, visibleBuildFooter } from './routes/version.mjs';
 import { writeSharedAssets } from './scripts/write-shared-assets.mjs';
+import { bundleVacationClientIntoDist } from './scripts/bundle-vacation-client-into-dist.mjs';
 
 function serveSharedApp(req, _res, next) {
   const url = req.url || '';
@@ -10,8 +11,8 @@ function serveSharedApp(req, _res, next) {
   const path = query === -1 ? url : url.slice(0, query);
   const search = query === -1 ? '' : url.slice(query);
   if (path === '/shared' || path === '/shared/') req.url = `/vacation-app.html${search}`;
-  else if (path === '/edit-access' || path === '/edit-access/') req.url = `/shared-app.html${search}`;
-  else if (path.startsWith('/shared/')) req.url = `/shared-app.html${search}`;
+  else if (path === '/edit-access' || path === '/edit-access/') req.url = `/vacation-app-next.html${search}`;
+  else if (path.startsWith('/shared/')) req.url = `/vacation-app-next.html${search}`;
   next();
 }
 
@@ -70,6 +71,7 @@ export default defineConfig({
       },
       async closeBundle() {
         const outDir = resolve(__dirname, 'dist');
+        await bundleVacationClientIntoDist(outDir);
         await copyEulaMarkdown(outDir);
         await stampServedScript(resolve(outDir, 'src/onboarding/eula-markdown.mjs'));
         await stampServedScript(resolve(outDir, 'assets/index-BKun7ofk.js'));

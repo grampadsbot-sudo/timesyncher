@@ -1,6 +1,5 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
-export const LIST_TAB_IDS: readonly string[];
 export const DEFAULT_SORT: { key: string; dir: 'asc' | 'desc' };
 
 export function parsePrice(value: unknown): number | null;
@@ -8,6 +7,7 @@ export function formatUsd(amount: number, currency?: string): string;
 export function tabCategoryKey(place: SharedPlace, trip: SharedTripPayload): string;
 export function placesForCategoryTab(trip: SharedTripPayload, tab: string): SharedPlace[];
 export function placeName(place: SharedPlace): string;
+export function catalogRowDisplayName(place: SharedPlace, trip: SharedTripPayload): string;
 export function areaChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
 export function typeChipsForTab(places: SharedPlace[], trip: SharedTripPayload, tab: string): string[];
 export function filterPlaces(
@@ -17,6 +17,8 @@ export function filterPlaces(
   filters?: Record<string, unknown>,
 ): SharedPlace[];
 export function numericPrice(place: SharedPlace, trip: SharedTripPayload): number | null;
+export function eventListPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
+export function categoryLogoGlyph(place: SharedPlace, trip: SharedTripPayload): string;
 export function sortPlaces(
   places: SharedPlace[],
   trip: SharedTripPayload,
@@ -35,7 +37,10 @@ export function flightSchedule(
 export function hotelPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carSubtitle(place: SharedPlace, trip: SharedTripPayload): string;
+export function isDisplayNameFragment(value: unknown, name: unknown): boolean;
+export function opaqueCarNeedsBlank(place: SharedPlace, trip: SharedTripPayload): boolean;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
+export function logoSrcCandidates(place: SharedPlace, trip: SharedTripPayload): string[];
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(
   place: SharedPlace,

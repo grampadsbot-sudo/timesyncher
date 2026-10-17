@@ -13,6 +13,7 @@ export const NAMED_THING_LOGOS = {
   united: 'https://www.united.com/favicon.ico',
   delta: 'https://www.delta.com/favicon.ico',
   american: 'https://www.aa.com/favicon.ico',
+  priceline: 'https://www.priceline.com/favicon.ico',
 };
 
 const BRAND_LOGO_RULES = [
@@ -28,6 +29,7 @@ const BRAND_LOGO_RULES = [
   [/\bunited\b/i, NAMED_THING_LOGOS.united],
   [/\bdelta\b/i, NAMED_THING_LOGOS.delta],
   [/\bamerican\b/i, NAMED_THING_LOGOS.american],
+  [/\bpriceline\b/i, NAMED_THING_LOGOS.priceline],
 ];
 
 const BOUND_MEDIA_RE = /\/api\/bind-thing-media\b|\/ts-thing-media\//i;
@@ -83,6 +85,17 @@ function brandLogoFromName(name = '') {
     if (pattern.test(label)) return url;
   }
   return '';
+}
+
+function pricelineOpaqueCarLogo(thing = {}, override = {}) {
+  const source = sourceRecord(thing, override);
+  const category = text(override.category || thing.category_name || thing.category?.name).toLowerCase();
+  if (category && category !== 'car') return '';
+  const name = text(thing.name || thing.title);
+  const company = text(override.rentalCompany || source.rentalCompany);
+  if (!(/opaque/i.test(name) || /opaque/i.test(company))) return '';
+  if (!/priceline/i.test(name) && !/priceline/i.test(company)) return '';
+  return brandLogoFromName(name) || brandLogoFromName(company);
 }
 
 function pageUrlForLogo(thing = {}, override = {}) {
@@ -187,13 +200,13 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   const thumb = thumbnailFromSource(source);
   if (thumb) return thumb;
   const page = httpUrl(pageUrlForLogo(thing, override));
-  if (!page) return '';
-  const named = brandLogoFromName(thing.name || thing.title || override.title);
-  if (named) return named;
+  if (!page) return pricelineOpaqueCarLogo(thing, override) || '';
   if (/\.hyatt\.com$/i.test(page.hostname)) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (named) return named;
   return `${page.origin}/favicon.ico`;
 }
 

@@ -124,7 +124,7 @@ for (const probe of former) {
 
 assert.equal(firstRoute('/assets/index-BKun7ofk.js'), null);
 assert.equal(firstRoute('/assets/index-CbEHlMj6.css'), null);
-assert.equal(firstRoute('/shared/las-vegas-vacation-3').route.dest, '/shared-app.html');
+assert.equal(firstRoute('/shared/las-vegas-vacation-3').route.dest, '/vacation-app-next.html');
 assert.equal(firstRoute('/shared').route.dest, '/vacation-app.html');
 assert.equal(firstRoute('/shared/').route.dest, '/vacation-app.html');
 const acceptOriginal = publicApiRequest({ method: 'GET', url: '/accept/vacation-abc', headers: {}, query: {} });

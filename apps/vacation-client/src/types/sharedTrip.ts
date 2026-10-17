@@ -23,8 +23,10 @@ export type SharedDay = {
 };
 
 export type BudgetLine = {
+  id?: number | string;
   category?: string;
   name?: string;
+  title?: string;
   total_price?: number;
   note?: string;
   sort_order?: number;
@@ -38,6 +40,8 @@ export type SharedTripPayload = {
     start_date?: string;
     end_date?: string;
     currency?: string;
+    lat?: number;
+    lng?: number;
   };
   places?: SharedPlace[];
   days?: SharedDay[];
