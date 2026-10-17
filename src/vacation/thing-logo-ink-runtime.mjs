@@ -30,8 +30,8 @@ export function tsPaintTabEmoji(node,emoji){
   if(!node||!emoji)return;
   function render(){
     if(!node.isConnected)return;
-    var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;
-    var button=chip.closest("button"),box=node.getBoundingClientRect();
+    var chip=node.closest("[data-ts-logo-chip],[data-ts-category-tab-icon]")||node.parentElement;
+    var button=chip.closest("button[data-ts-tab]"),box=node.getBoundingClientRect();
     if(!box.width||!box.height)return;
     var dpr=window.devicePixelRatio||1;
     node.width=Math.round(box.width*dpr);node.height=Math.round(box.height*dpr);
@@ -39,26 +39,47 @@ export function tsPaintTabEmoji(node,emoji){
     if(!ctx)return;
     var background=getComputedStyle(button||chip).backgroundColor.match(/[\d.]+/g);
     var bg=background?background.slice(0,3).map(Number):[255,255,255];
-    var target=button?button.getBoundingClientRect():box;
-    var center=(Math.round(target.top)+Math.round(target.height)/2)*dpr-Math.round(box.top*dpr);
+    var target=(button||chip).getBoundingClientRect();
+    var center=(target.top+target.height/2-box.top)*dpr;
     var glyph=document.createElement("canvas");
-    glyph.width=node.width*2;glyph.height=node.height*2;
+    glyph.width=node.width*3;glyph.height=node.height*3;
     var ink=glyph.getContext("2d",{willReadFrequently:true});if(!ink)return;
     ink.font=cs.fontWeight+" "+parseFloat(cs.fontSize)*dpr+"px "+cs.fontFamily;
     ink.textAlign="center";ink.textBaseline="middle";ink.fillStyle=cs.color;
     ink.fillText(emoji,glyph.width/2,glyph.height/2);
-    var data=ink.getImageData(0,0,glyph.width,glyph.height).data,sum=0,mass=0;
-    for(var y=0;y<glyph.height;y++)for(var x=0;x<glyph.width;x++){
-      var i=(y*glyph.width+x)*4,alpha=data[i+3]/255;
-      var weight=(Math.abs(data[i]-bg[0])+Math.abs(data[i+1]-bg[1])+Math.abs(data[i+2]-bg[2]))*alpha;
-      if(weight<18)continue;
-      sum+=y*weight;mass+=weight;
+    function measure(context,width,height){
+      var data=context.getImageData(0,0,width,height).data,sum=0,mass=0;
+      var left=width,right=-1,top=height,bottom=-1;
+      for(var y=0;y<height;y++)for(var x=0;x<width;x++){
+        var i=(y*width+x)*4,alpha=data[i+3]/255;
+        if(alpha<16/255)continue;
+        var diff=[0,1,2].map(function(k){return Math.abs(Math.round(data[i+k]*alpha+bg[k]*(1-alpha))-bg[k])});
+        var weight=diff[0]+diff[1]+diff[2];
+        if(button?weight<18:Math.max.apply(null,diff)<=24)continue;
+        sum+=y*weight;mass+=weight;
+        left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
+      }
+      return mass?{center:button?sum/mass:(top+bottom+1)/2,left:left,right:right,top:top,bottom:bottom}:null;
     }
-    if(!mass)return;
-    ctx.clearRect(0,0,node.width,node.height);
-    ctx.drawImage(glyph,(node.width-glyph.width)/2,center-sum/mass);
+    var source=measure(ink,glyph.width,glyph.height);if(!source)return;
+    var scale=Math.min(1,node.width/(source.right-source.left+1),center/(source.center-source.top),
+      (node.height-center)/(source.bottom+1-source.center));
+    var dx=(node.width-(source.right-source.left+1)*scale)/2-source.left*scale;
+    var dy=center-source.center*scale;
+    for(var pass=0;pass<4;pass++){
+      ctx.clearRect(0,0,node.width,node.height);
+      ctx.drawImage(glyph,dx,dy,glyph.width*scale,glyph.height*scale);
+      var painted=measure(ctx,node.width,node.height);if(!painted)return;
+      var error=center-painted.center;
+      if(Math.abs(error)<=0.05*dpr)break;
+      dy+=error;
+    }
   }
   requestAnimationFrame(render);
-  document.fonts.ready.then(render).catch(function(error){console.error("tab fonts unavailable",error)});
-  if(!node.tsEmojiResize){node.tsEmojiResize=new ResizeObserver(render);node.tsEmojiResize.observe(node)}
+  document.fonts.ready.then(render).catch(function(error){console.error("logo fonts unavailable",error)});
+  if(!node.tsEmojiResize){
+    node.tsEmojiResize=new ResizeObserver(render);node.tsEmojiResize.observe(node);
+    var button=node.closest("button[data-ts-tab]");
+    if(button){node.tsEmojiResize.observe(button);button.addEventListener("transitionend",render)}
+  }
 }
