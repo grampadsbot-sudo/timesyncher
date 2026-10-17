@@ -1,3 +1,4 @@
+import { applyDiscoveredPageIcon } from './intake-shared-place-source.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { loadTripSearchProgress, recordSearchProgressPlaces } from './search-progress.mjs';
 import { samePlace } from './place-search-same-place.mjs';
@@ -94,6 +95,7 @@ export async function insertIntakeTripThingRow(
         starts_at: startsAt,
       },
       env,
+      fetchImpl,
     });
   }
   if (!written?.id) {
@@ -102,8 +104,8 @@ export async function insertIntakeTripThingRow(
   return written.id;
 }
 
-export async function insertTripThing(db, { tripId, requestId, thing, env = process.env }) {
-  const item = tripThingRow(thing);
+export async function insertTripThing(db, { tripId, requestId, thing, env = process.env, fetchImpl = globalThis.fetch }) {
+  let item = tripThingRow(thing);
   if (!item) return null;
   const normalizedTripId = String(tripId || '').trim();
   if (normalizedTripId && item.source) {
@@ -121,18 +123,20 @@ export async function insertTripThing(db, { tripId, requestId, thing, env = proc
       if (item.source && !rowSource) {
         const { rowNeedsPlaceSearch, upgradeTripThingInPlace } = await import('./chat-intake-place-persist.mjs');
         if (rowNeedsPlaceSearch(row)) {
-          const upgraded = await upgradeTripThingInPlace(db, normalizedTripId, row.id, requestId, thing, env);
+          const upgraded = await upgradeTripThingInPlace(db, normalizedTripId, row.id, requestId, thing, env, fetchImpl);
           if (upgraded?.id) return { ...upgraded, deduped: true };
         }
-        return { ...item, source: item.source, id: String(row.id), deduped: true };
+        return { ...item, metadata: row.metadata || item.metadata, source: item.source, id: String(row.id), deduped: true };
       }
       if (item.source && ['prior_db', 'osm', 'brave', 'tavily'].includes(rowSource)) {
-        return { ...item, source: item.source, id: String(row.id), deduped: true };
+        return { ...item, metadata: row.metadata || item.metadata, source: item.source, id: String(row.id), deduped: true };
       }
       if (item.source) continue;
-      return { ...item, source: item.source, id: String(row.id), deduped: true };
+      return { ...item, metadata: row.metadata || item.metadata, source: item.source, id: String(row.id), deduped: true };
     }
   }
+  await applyDiscoveredPageIcon(thing, { fetchImpl });
+  item = tripThingRow(thing);
   function writeTripThing(db, row) {
     return db`
       insert into trip_things (

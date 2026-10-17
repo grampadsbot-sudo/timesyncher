@@ -119,6 +119,30 @@
     return true;
   }
 
+  function alignDayTimelineIcons() {
+    if (isPrintReport()) return;
+    document.querySelectorAll('[data-ts-timeline-icon="1"]').forEach((icon) => {
+      let row = icon.parentElement;
+      while (row && !row.querySelector('[data-ts-timeline-title="1"]')) row = row.parentElement;
+      const title = row?.querySelector('[data-ts-timeline-title="1"]');
+      if (!title) return;
+      const walker = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
+      let text;
+      while ((text = walker.nextNode())) {
+        if (!text.textContent.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(text);
+        const line = [...range.getClientRects()].find((rect) => rect.width && rect.height);
+        if (!line) continue;
+        const box = icon.getBoundingClientRect();
+        const margin = parseFloat(getComputedStyle(icon).marginTop) || 0;
+        const delta = line.top + line.height / 2 - box.top - box.height / 2;
+        if (Math.abs(delta) > .01) icon.style.marginTop = `${margin + delta}px`;
+        break;
+      }
+    });
+  }
+
   function mark(el, resolved) {
     if (!el || el.dataset.tsIconFixed === '1') return;
     const keptLogo = el.querySelector?.('img.tiny-logo');
@@ -271,9 +295,11 @@
     }
     apply(lookup);
     repairStoryCards();
+    alignDayTimelineIcons();
     new MutationObserver(() => {
       apply(lookup);
       repairStoryCards();
+      alignDayTimelineIcons();
     }).observe(document.body, { childList: true, subtree: true });
   }
 

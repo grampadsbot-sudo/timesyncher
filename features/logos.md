@@ -13,3 +13,11 @@ A Thing logo is the source record URL (`source.logo`, `source.favicon`, or the w
 ## Blast radius (this fix)
 
 Las Vegas vacation-3 catalog: Carbone / Shake Shack / Eggslut / Lotus / Conservatory / Bellagio stay plus every first-pass restaurant, store, and Rest name (Bellagio Fountains, High Roller, Sphere, Fremont, Neon Museum, Atomic Museum, …).
+
+## Consolidated served logo repair (ruling 95)
+
+The shared route uses the registered header and row patches in the committed TREK bundle. The brand image has equal side tracks. Row title grids reserve the chip height around the first text line. The existing logo painter normalizes readable image ink, and served tabs and the React shell share the composited ink painter. Timeline placement uses the first text line.
+
+Save paths discover icons from an explicit own-site website and persist page/icon provenance or a missing reason. Search and shared serialization do not discover icons. Existing rows require the separately authorized #449 refresh.
+
+Verification is `scripts/test_saved_place_icon_boundary.mjs`, `scripts/test_shared_logo_rendered_geometry.mjs`, shell-layout, and the unchanged full 32-screen Gate B capture. This entry describes the candidate behavior; it is not an acceptance claim.

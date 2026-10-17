@@ -1,3 +1,4 @@
+import { patchSharedTripHeaderLogo } from './shared-trip-header-logo-patch.mjs';
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
 import {
@@ -500,7 +501,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return patchThingDetailCapture(js);
+  return patchSharedTripHeaderLogo(patchThingDetailCapture(js));
 }
 
 function endOfCall(text, callStart) {

@@ -35,6 +35,27 @@ const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{d
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
 
+const ROW_NAME_AXIS = `function tsAlignRowName(node){
+  if(!node)return;
+  function align(){
+    var chip=node.querySelector("[data-ts-logo-chip]"),name=node.querySelector("[data-ts-list-row-name]");
+    if(!chip||!name)return;
+    var walker=document.createTreeWalker(name,NodeFilter.SHOW_TEXT),text;
+    while(text=walker.nextNode()){
+      if(!text.textContent.trim())continue;
+      var range=document.createRange();range.selectNodeContents(text);
+      var line=[].slice.call(range.getClientRects()).find(function(r){return r.width&&r.height});
+      if(!line)continue;
+      var box=chip.getBoundingClientRect(),nameBox=name.getBoundingClientRect();
+      var padding=parseFloat(getComputedStyle(name).paddingTop)||0;
+      var delta=box.top+box.height/2-line.top-line.height/2;
+      if(Math.abs(delta)>.01)name.style.paddingTop=Math.max(0,padding+delta)+"px";
+      break;
+    }
+  }
+  requestAnimationFrame(align);document.fonts.ready.then(align);
+}`;
+
 export function patchSharedTripOeListRows(source = '') {
   let js = String(source || '');
   if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;
@@ -67,5 +88,10 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
   }
+  const rowGrid = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center"';
+  const nameGrid = 'sr=n.jsxs("span",{ref:tsAlignRowName,style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"start"';
+  if (!js.includes(rowGrid)) throw new Error('shared row first name axis anchor missing');
+  js = js.replace(rowGrid, nameGrid);
+  js = js.replace('function pze({places:e=[],dayPlaces:t=[]', ROW_NAME_AXIS + 'function pze({places:e=[],dayPlaces:t=[]');
   return js;
 }
