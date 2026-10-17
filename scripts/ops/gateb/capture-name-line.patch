@@ -1,0 +1,49 @@
+--- a/capture.mjs
++++ b/capture.mjs
+@@ -120,13 +120,36 @@
+       // design: a real logo for every hotel and every thing the app has a logo for, the right-hand control, rows inside the
+       // screen width, airline names on flights, cheapest first). Read-only DOM inspection; nothing on the page changes.
+       const visible = (el) => { if (!el) return false; const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && Number(cs.opacity) > 0.05; };
++      function captureNameText(nameEl) {
++        const box = (r) => [r.x, r.y, r.width, r.height];
++        const visible = (el) => {
++          if (!el) return false;
++          const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
++          return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden'
++            && cs.display !== 'none' && Number(cs.opacity) > 0.05;
++        };
++        if (!nameEl || !visible(nameEl)) return null;
++        const walker = document.createTreeWalker(nameEl, NodeFilter.SHOW_TEXT);
++        let node;
++        while ((node = walker.nextNode())) {
++          if (!node.textContent.trim() || !visible(node.parentElement)) continue;
++          const range = document.createRange();
++          range.selectNodeContents(node);
++          const lineBoxes = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0
++            && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth)
++            .map((r) => [r.x, r.y, r.width, r.height]);
++          if (lineBoxes.length) return { text: node.textContent.trim().slice(0, 80),
++            box: box(node.parentElement.getBoundingClientRect()), visible: true, line_boxes: lineBoxes };
++        }
++        return null;
++      }
+       const items = rowEls.map((li) => {
+         const rb = li.getBoundingClientRect();
+         const chip = li.querySelector('[data-ts-logo-chip]');
+         const img = chip ? chip.querySelector('img') : li.querySelector('img');
+         let bgimg = null; if (chip && !img) { for (const e of [chip, ...chip.querySelectorAll('*')]) { const b = getComputedStyle(e).backgroundImage; if (b && b !== 'none') { bgimg = b.slice(0, 160); break; } } }
+         const nameEl = li.querySelector('[data-ts-list-row-name]');
+-        const firstText = nameEl ? [...nameEl.querySelectorAll('span,strong')].find((e) => !e.children.length && e.textContent.trim()) : null;
++        const firstText = captureNameText(nameEl);
+         const ctrls = [...li.querySelectorAll('button, label, a, select, input, [title], [role=button]')].filter((e) => e !== li.querySelector('button[aria-label="Open thing details"]') && visible(e));
+         const right = ctrls.map((e) => e.getBoundingClientRect()).filter((r) => r.left >= rb.left + rb.width * 0.5).sort((a, b) => b.right - a.right)[0] || null;
+         const priceEl = [...li.querySelectorAll('span')].find((e) => !e.children.length && /^\s*\$/.test(e.textContent));
+@@ -139,7 +162,7 @@
+           img: img ? { src: (img.currentSrc || img.src || '').slice(0, 200), loaded: img.complete && img.naturalWidth > 0, natural: [img.naturalWidth, img.naturalHeight], box: box(img.getBoundingClientRect()), visible: visible(img) } : null,
+           bgimg,
+           name: nameEl ? (nameEl.textContent || '').trim().slice(0, 120) : null,
+-          first_text: firstText ? { text: firstText.textContent.trim().slice(0, 80), box: box(firstText.getBoundingClientRect()), visible: visible(firstText) } : null,
++          first_text: firstText,
+           right_ctrl: right ? box(right) : null,
+           price_text: priceEl ? priceEl.textContent.trim().slice(0, 30) : null,
+           // Craig 2026-10-10: the row's own description = the longest visible line that is not the name, a price, a control label or a day tag. Gate B generic-description check.

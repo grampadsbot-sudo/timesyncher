@@ -151,7 +151,7 @@ def check_screen(allow, f, reference, cand_dir, workdir, regions=None):
         spec["day_mapped_places"] = day_mapped_places((spec["regions"] or {}).get("struct"))   # pins are required only when this day has mapped places
         spec["tab_boxes"] = ((spec["regions"] or {}).get("struct") or {}).get("tabs") or []   # tab icon centring (Craig 12:41 PM PT)
         _its = (spec["regions"] or {}).get("items") or []
-        spec["logo_chips"] = [{"name": it.get("name"), "box": it["chip"]["box"], "name_cy": (it["first_text"]["box"][1] + it["first_text"]["box"][3] / 2) if (it.get("first_text") or {}).get("box") else None,
+        spec["logo_chips"] = [{"name": it.get("name"), "box": it["chip"]["box"], "first_text": it.get("first_text"),
                                "fixture_gap": staging_lacks_logo(STAGING_REGIONS, f, _its, it)}   # ruling 12: staging also has no real logo for this row; restore-check.mjs skips it in the generic-logo count
                               for it in _its
                               if (it.get("chip") or {}).get("visible") and (it.get("chip") or {}).get("box")]   # row logo centring (Craig 2026-10-10); name_cy = the row name's line centre (logo centred with the name, Craig 2026-10-10 part 2)
@@ -534,11 +534,8 @@ def structure_check(f, reg, manifest, staging=None, judge=None):
         elif not any(x.get("pressed") for x in pb): reasons.append("price sort: Price is not the active sort")
         rr, nn = row_design(f, reg, {"rows": []}, {"logo_required_categories": ["hotel"], "row_design": ["hotels-*", "cars-*", "flights-*"]})
         reasons += [r for r in rr if "cheapest" in r]
-    offc = []
-    for i, it in enumerate(reg.get("items") or []):
-        ch, b = it.get("chip") or {}, it.get("box") or [0, 0, 0, 0]
-        if ch.get("visible") and abs((ch["box"][1] + ch["box"][3] / 2) - (b[1] + b[3] / 2)) > 6: offc.append("%d:%s" % (i + 1, (it.get("name") or "?")[:20]))
-    if offc: reasons.append("row logos: not vertically centred on %d row(s): %s" % (len(offc), ", ".join(offc[:4])))
+    # Row frame is judged once, on glyph pixels against the first name line,
+    # by runLogoCentres -> judgeRowNameFrame. No item-box predicate here.
     # Craig 2026-10-10 part 2 (rejected PR 274 again): every row shows its price (list screens with a Price sort), a real logo
     # (no shared placeholder), and a description that says why you would or would not want it. Missing details fail closed.
     items = reg.get("items") or []

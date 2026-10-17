@@ -1,3 +1,4 @@
+import { judgeRowNameFrame } from './lib/row-name-frame.mjs';
 /** Logo/tab vertical centre checks for restore-check structure mode (#432, #433). */
 import {
   chipCaptureClipRelation,
@@ -103,7 +104,7 @@ export function runLogoCentres({ spec, out, Cd, W, Hc, VW, regions: r }) {
   }
 
   function judgeContainer(entry, measureFn, tol) {
-    const { where, box, gx, gw, inset, name, name_cy: nameCy } = entry;
+    const { where, box, gx, gw, inset, name, first_text: firstText } = entry;
     const { cx, cy, cw, ch, x0, x1, y0, y1 } = insetBox(box, inset);
     const bg = ringBackground(x0, x1, y0, y1);
     const gx0 = Math.max(x0, Math.round(gx - 3));
@@ -120,11 +121,10 @@ export function runLogoCentres({ spec, out, Cd, W, Hc, VW, regions: r }) {
     if (Math.abs(off) > tol) {
       bad.push(`${where} off by ${Math.abs(off).toFixed(1)} px (${off > 0 ? 'low' : 'high'}, tolerance ${tol} px)`);
     }
-    if (nameCy != null) {
-      const no = +(measured.gc - nameCy).toFixed(1);
-      if (Math.abs(no) > CHIP_TOL) {
-        nameBad.push(`${name || '?'} off by ${Math.abs(no).toFixed(1)} px (${no > 0 ? 'logo low' : 'logo high'} vs name, tolerance ${CHIP_TOL} px)`);
-      }
+    if (where.startsWith('row logo ')) {
+      const alignment = judgeRowNameFrame(measured.gc, firstText);
+      out.logo_centres[out.logo_centres.length - 1].name_frame = alignment;
+      if (!alignment.ok) nameBad.push(`${name || '?'}: ${alignment.reason}`);
     }
   }
 
@@ -158,7 +158,7 @@ export function runLogoCentres({ spec, out, Cd, W, Hc, VW, regions: r }) {
         gw: c.box[2],
         inset: 1,
         name: c.name,
-        name_cy: c.name_cy,
+        first_text: c.first_text,
       },
       inkBboxCenterY,
       CHIP_TOL,
