@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { PNG } from 'pngjs';
+import { judgeRowNameFrame } from './ops/gateb/lib/row-name-frame.mjs';
 import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from './fixtures/nyc-pr225-shared-trip.mjs';
 import { collectCategoryTabInkMetrics, inkMetricsFailures } from './lib/shared-trip-category-tab-icon-metrics.mjs';
 
@@ -92,12 +93,12 @@ try {
       const png = PNG.sync.read(Buffer.from(await page.screenshot({ fullPage: true })));
       for (const row of geometry.rows) {
         check(!!row.chip && !!row.name, `${width} ${category} ${row.label}: unmeasured row/name`); if (!row.chip || !row.name) continue;
-        const cy = row.chip[1] + row.chip[3] / 2; const nameCy = row.name[1] + row.name[3] / 2;
-        check(Math.abs(cy - row.row[1] - row.row[3] / 2) <= 6, `${width} ${category} ${row.label}: chip-to-row`);
-        check(Math.abs(cy - nameCy) <= 0.5, `${width} ${category} ${row.label}: chip-to-first-name-line`);
+        const cy = row.chip[1] + row.chip[3] / 2;
+        const firstText = { visible: true, text: row.label, line_boxes: [row.name] };
+        check(judgeRowNameFrame(cy, firstText).ok, `${width} ${category} ${row.label}: chip-to-first-name-line`);
         const raster = ink(png, row.chip, 'bbox'); row.ink = raster;
         check(raster !== null && Math.abs(raster - cy) <= 0.5, `${width} ${category} ${row.label}: raster-ink-to-chip`);
-        check(raster !== null && Math.abs(raster - nameCy) <= 0.5, `${width} ${category} ${row.label}: raster-ink-to-first-name-line`);
+        check(judgeRowNameFrame(raster, firstText).ok, `${width} ${category} ${row.label}: raster-ink-to-first-name-line`);
       }
       for (const t of geometry.tabs) {
         check(!!t.icon, `${width} ${category} ${t.name}: unmeasured tab`); if (!t.icon || t.box[0] < 0 || t.box[0] + t.box[2] > width) continue;
