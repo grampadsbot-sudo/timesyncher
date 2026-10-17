@@ -31,16 +31,21 @@ export function tsPaintTabEmoji(node,emoji){
   function render(){
     if(!node.isConnected)return;
     var chip=node.closest("[data-ts-logo-chip],[data-ts-category-tab-icon]")||node.parentElement;
-    var button=chip.closest("button[data-ts-tab]"),box=node.getBoundingClientRect();
+    var tab=node.closest("[data-tab-category]"),button=tab&&tab.closest("button"),box=node.getBoundingClientRect();
     if(!box.width||!box.height)return;
     var dpr=window.devicePixelRatio||1;
     node.width=Math.round(box.width*dpr);node.height=Math.round(box.height*dpr);
     var ctx=node.getContext("2d",{willReadFrequently:true}),cs=getComputedStyle(chip);
     if(!ctx)return;
-    var background=getComputedStyle(button||chip).backgroundColor.match(/[\d.]+/g);
-    var bg=background?background.slice(0,3).map(Number):[255,255,255];
+    var bg=[255,255,255];
+    for(var layer=button||chip;layer;layer=layer.parentElement){
+      var paint=getComputedStyle(layer).backgroundColor.match(/[\d.]+/g);
+      if(paint&&(paint.length<4||+paint[3]>0)){bg=paint.slice(0,3).map(Number);break}
+    }
     var target=(button||chip).getBoundingClientRect();
-    var center=(target.top+target.height/2-box.top)*dpr;
+    var origin=Math.round(box.top*dpr);
+    var snapped=(Math.round(target.top*dpr)+Math.round((target.top+target.height)*dpr))/2;
+    var center=(snapped+(target.top+target.height/2)*dpr)/2-origin;
     var glyph=document.createElement("canvas");
     glyph.width=node.width*3;glyph.height=node.height*3;
     var ink=glyph.getContext("2d",{willReadFrequently:true});if(!ink)return;
@@ -66,20 +71,23 @@ export function tsPaintTabEmoji(node,emoji){
       (node.height-center)/(source.bottom+1-source.center));
     var dx=(node.width-(source.right-source.left+1)*scale)/2-source.left*scale;
     var dy=center-source.center*scale;
-    for(var pass=0;pass<4;pass++){
-      ctx.clearRect(0,0,node.width,node.height);
-      ctx.drawImage(glyph,dx,dy,glyph.width*scale,glyph.height*scale);
+    function draw(y){ctx.clearRect(0,0,node.width,node.height);ctx.drawImage(glyph,dx,y,glyph.width*scale,glyph.height*scale)}
+    var best=null;
+    for(var pass=0;pass<6;pass++){
+      draw(dy);
       var painted=measure(ctx,node.width,node.height);if(!painted)return;
       var error=center-painted.center;
+      if(!best||Math.abs(error)<Math.abs(best.error))best={error:error,dy:dy};
       if(Math.abs(error)<=0.05*dpr)break;
       dy+=error;
     }
+    if(best.dy!==dy)draw(best.dy);
   }
   requestAnimationFrame(render);
   document.fonts.ready.then(render).catch(function(error){console.error("logo fonts unavailable",error)});
   if(!node.tsEmojiResize){
     node.tsEmojiResize=new ResizeObserver(render);node.tsEmojiResize.observe(node);
-    var button=node.closest("button[data-ts-tab]");
+    var tab=node.closest("[data-tab-category]"),button=tab&&tab.closest("button");
     if(button){node.tsEmojiResize.observe(button);button.addEventListener("transitionend",render)}
   }
 }
