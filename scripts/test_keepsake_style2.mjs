@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { assertTemporaryJavaScriptParses } from './assert-temporary-javascript-parses.mjs';
 
 import { buildStyle2Model, renderStyle2Html, realTripSummary, BOILERPLATE_RE, pickStoryCover, PRODUCT_SOT_SLUG, PRODUCT_SOT_ALIAS, PRODUCT_SOT_TWIN, PRODUCT_SOT_RECEIPT } from '../src/vacation/keepsake-style2.mjs';
 import { applyCapturedLogos, captureThingLogo, thingCreateLogoFields, isBoundStoryMediaUrl, sourceLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
@@ -860,10 +861,7 @@ assertPatchedStyleTwo(livePatched);
 assert.equal(livePatched.includes('8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y'), false);
 assert.equal(livePatched.includes('children:"Trip View"'), false);
 assertStyleTwoPatchParses(livePatched);
-const patchedCheckPath = '/tmp/patched-style2-check.js';
-await writeFile(patchedCheckPath, livePatched);
-const patchedCheck = spawnSync('node', ['--check', patchedCheckPath], { encoding: 'utf8' });
-assert.equal(patchedCheck.status, 0, patchedCheck.stderr || 'patched TREK bundle failed node --check');
+await assertTemporaryJavaScriptParses(livePatched, 'patched TREK bundle failed node --check');
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'restaurants' }),
   `${getProductTrekPublic()}/api/pdf/shared/sample-trip/report/restaurants.pdf`,

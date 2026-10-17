@@ -15,7 +15,9 @@ import {
   loadVisualScreenSpec,
 } from './shepherd-staging-smoke-visual-rubric.mjs';
 import { formatComposerSendDomContextForJudge } from './shepherd-staging-smoke-composer-send-dom.mjs';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { mintVisualStateCustomers } from './shepherd-staging-smoke-visual-states.mjs';
 import { evaluateComposerControlsOnly } from './shepherd-staging-smoke-composer-send.mjs';
 
@@ -74,7 +76,12 @@ assert.match(
   /FAIL/,
 );
 assert.equal(typeof summarizeLayoutFailures([]), 'string');
-ensureLayoutArtifactDir('/tmp/ts-layout-artifact-smoke');
+const artifactDir = mkdtempSync(join(tmpdir(), 'ts-layout-artifact-smoke-'));
+try {
+  ensureLayoutArtifactDir(join(artifactDir, 'layout'));
+} finally {
+  rmSync(artifactDir, { recursive: true, force: true });
+}
 assert.equal(VISUAL_JUDGE_MODEL.includes('/'), true);
 assert.match(VISUAL_RUBRIC_VERSION, /shepherd-visual-rubric/);
 const rubricSource = readFileSync(new URL('./shepherd-staging-smoke-visual-rubric.mjs', import.meta.url), 'utf8');

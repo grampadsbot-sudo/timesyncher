@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import { assertTemporaryJavaScriptParses } from './assert-temporary-javascript-parses.mjs';
 
 import { assertPatchedStyleTwo } from '../src/vacation/trek-style2-bundle.mjs';
 import {
@@ -35,9 +35,6 @@ for (const inserted of [
   assert.equal(served.includes(inserted), false, `committed served bundle still inserts a place name`);
 }
 
-const checkedPath = '/tmp/served-trek-strip-check.js';
-await writeFile(checkedPath, served);
-const checked = spawnSync(process.execPath, ['--check', checkedPath], { encoding: 'utf8' });
-assert.equal(checked.status, 0, checked.stderr || 'served bundle failed node --check');
+await assertTemporaryJavaScriptParses(served, 'served bundle failed node --check');
 
 console.log('trek bundle strip tests passed');
