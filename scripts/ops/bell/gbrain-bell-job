@@ -16,11 +16,37 @@ log_dir=/home/timesyncher-agent/.openclaw/logs/gbrain-bell
 ts() { date -u +%FT%TZ; }
 chmod 644 "$askf"
 note='
-You run as Claude Code on Ubuntu, already as user ubishere9995 in ~/gbrain, so drop any "sudo -n -u ubishere9995 bash -lc" prefix and run the inner command directly. The gbrain CLI is ~/gbrain (cd ~/gbrain && gbrain get|put <slug>). Follow the GBrain skills named in the request (they are in ~/gbrain/skills). Never print tokens, keys, DB URLs or share tokens.'
+You run as Claude Code on Ubuntu, already as user ubishere9995 in ~/gbrain, so drop any "sudo -n -u ubishere9995 bash -lc" prefix and run the inner command directly. The gbrain CLI is ~/gbrain (cd ~/gbrain && gbrain get|put <slug>). Follow the GBrain skills named in the request (they are in ~/gbrain/skills). Never print tokens, keys, DB URLs or share tokens. Codex is dispatched once by the host runner. Do not start nested codex exec/app-server inside this managed worker: protected runtime mounts are intentionally read-only. Host-only quota or runtime operations belong to the host supervisor; report that requirement without retrying in this worker.'
 prompt="$(cat "$askf")$note"
 # Craig 2026-10-10: when the Claude subscription is out of usage (tsv-model-flip state gpt), go straight to OpenClaw on GPT.
 if [ "$(cat /home/timesyncher-agent/.openclaw/model-flip.state 2>/dev/null)" = gpt ]; then
   # GPT lane worker = Codex CLI (ChatGPT login, shell + file tools), the GPT twin of claude-haiku. If it fails, fall to OpenClaw's default (Grok fallback).
+  # Host-only dispatch: do not start Codex from an inherited read-only worker.
+  # Probe only runtime state, never auth/config; refusal never enters a fallback.
+  if ! sudo -n -H -u ubishere9995 python3 - <<'CODEX_RUNTIME_PREFLIGHT'
+import os, pathlib, tempfile
+root = pathlib.Path.home() / '.codex'
+try:
+    for path in (root, root / 'tmp', root / 'log'):
+        if not path.is_dir():
+            raise OSError('missing runtime directory')
+        fd, name = tempfile.mkstemp(prefix='.runtime-preflight-', dir=path)
+        os.close(fd)
+        os.unlink(name)
+    for pattern in ('state_*.sqlite*', 'logs_*.sqlite*', 'installation_id'):
+        for path in root.glob(pattern):
+            if path.is_file():
+                fd = os.open(path, os.O_WRONLY)
+                os.close(fd)
+except OSError:
+    print('CODEX_RUNTIME_READ_ONLY')
+    raise SystemExit(97)
+print('CODEX_RUNTIME_OK host-dispatch')
+CODEX_RUNTIME_PREFLIGHT
+  then
+    echo "$(ts) CODEX_RUNTIME_READ_ONLY STOP before Codex dispatch $key" >> "$log_dir/dispatch.log"
+    exit 97
+  fi
   echo "$(ts) codex start $key" >> "$log_dir/dispatch.log"
   out=$(timeout "$job_timeout" sudo -n -H -u ubishere9995 bash -c 'export PATH="$HOME/.npm-global/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"; cd ~/gbrain && exec codex exec --skip-git-repo-check -C "$HOME" -m gpt-6.1-sol -c model_reasoning_effort=medium -o "$2" "$1"' _ "$prompt" "$last_file" 2>&1)
   rc=$?
