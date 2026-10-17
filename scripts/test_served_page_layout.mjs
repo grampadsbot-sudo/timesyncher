@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { fullScreenSource, measureSource } from './layout-app-measure.mjs';
 import { loadPuppeteer, sessions, slug, startServer, states, viewports } from './layout-shell-harness.mjs';
@@ -262,8 +263,11 @@ async function main() {
     if (!byId.has(id)) results.push({ id, ok: false, detail: { missing: 'not measured' } });
   }
   results.sort((a, b) => a.id.localeCompare(b.id));
-  const outPath = process.env.LAYOUT_RESULTS || '/tmp/layout-results.json';
+  const outPath = process.env.LAYOUT_RESULTS || path.join(
+    await mkdtemp(path.join(tmpdir(), 'served-page-layout-')), 'layout-results.json',
+  );
   await writeFile(outPath, JSON.stringify(results, null, 2));
+  console.log(`LAYOUT_RESULTS_PATH ${outPath}`);
   const brief = results.map(({ id, ok }) => ({ id, ok }));
   console.log(`LAYOUT_RESULTS ${JSON.stringify(brief)}`);
   const failed = results.filter((row) => !row.ok);
