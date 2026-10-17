@@ -1,0 +1,9 @@
+{
+  "restore_check.py": "b435a8c274bdb3bcfd00f93a435beab537f492f03f0fcb38be61846dec3c6ccb",
+  "restore-check.mjs": "cd34bd5559682d1e3d1081a215ac60e200a2bac2e775d0c81b39c7380fb654a1",
+  "restore-check-logo-centres.mjs": "de2662e793bcc8722c75a2537817a1fd7a9ea530c4cd1b16323d669aaaa5b88b",
+  "lib/gate-b-shell-layout-checker.mjs": "03c5fcd48ad44fc75b17c11a7f11b3e686baeafe9c47a6cb23279b23e03ae3d2",
+  "ui_paths.py": "c50a6249f9f7031e036068691fc333359970d5d48d16f5976bd68bae294b27bc",
+  "managing_dr_judge.py": "6748418269f1bd1a44e21d13181f120be5efb1435e9d323be4b89070be141288",
+  "../capture/capture.mjs": "39190e4e7dc1e1eeddfb663d5f40f64703e6737e2321c15a0713e90afd0be28a"
+}

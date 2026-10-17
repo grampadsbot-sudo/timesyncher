@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
+import { runLogoCentres } from './restore-check-logo-centres.mjs';
 
 const [baseF, candF, specF] = process.argv.slice(2);
 const spec = JSON.parse(fs.readFileSync(specF, 'utf8'));
@@ -104,7 +105,7 @@ function mapEvidence() {
   const cut = shot.t_ms != null ? shot.t_ms : Infinity;
   const tiles = (log.requests || []).filter((q) => (q.w == null || q.w === VW) && (q.t_ms == null || q.t_ms <= cut));
   const isImg = (q) => /^image\//i.test(q.content_type || '');
-  const isOsm = (q) => /\.tile\.openstreetmap\.org$/i.test(q.host || '');
+  const isOsm = (q) => /(^|\.)tile\.openstreetmap\.org$/i.test(q.host || '');
   const ok = tiles.filter((q) => q.status === 200 && isImg(q) && isOsm(q));
   const wrong = tiles.filter((q) => q.status === 200 && isImg(q) && !isOsm(q));
   const bad = tiles.filter((q) => !(q.status === 200 && isImg(q) && isOsm(q)));
@@ -127,39 +128,8 @@ function mapEvidence() {
   if (!pinsRequired) out.notes.push('pins not checked: fixture day has no mapped places');
   else if (pins < 1) out.reasons.push('no pins visible');
 }
-// Logo centring (Craig 2026-10-10: "every logo/icon is not vertically centred", tab icons in their pills and row logo chips).
-// Measured on the RENDERED PIXELS, not DOM boxes: the glyph's ink bbox (any pixel more than 24/255 off the container's
-// background, so faint emoji plates count) inside its container; its vertical centre vs the container's centre.
-// Tolerance: 0.5 px on every screen (Craig 2026-10-10: "every logo is not vertically centered"; 1 / 1.5 px let 0.5-1.0 px offsets pass). Containers: category tab pills (spec.tab_boxes)
-// and visible row logo chips (spec.logo_chips). Scrolled-out-of-view tabs are not judged; a container with no glyph fails closed.
 function logoCentres() {
-  const THR = 24, tol = 0.5; const bad = [], nameBad = []; out.logo_centres = [];
-  const conts = [];
-  // inset: tab pills keep 3 px clear of the rounded border; row chips are small (a 16 px emoji chip has no tile), so 1 px
-  for (const t of spec.tab_boxes || []) if (t.icon && t.box && !(t.box[0] < 0 || t.box[0] + t.box[2] > VW)) conts.push({ where: `tab ${t.text}`, box: t.box, gx: t.icon[0], gw: t.icon[2], inset: 3 });
-  for (const c of spec.logo_chips || []) if (c.box && c.box[0] >= 0 && c.box[0] + c.box[2] <= VW) conts.push({ where: `row logo ${c.name || '?'}`, box: c.box, gx: c.box[0], gw: c.box[2], inset: 1, name: c.name, name_cy: c.name_cy });
-  for (const c of conts) {
-    const [cx, cy, cw, ch] = c.box, ins = c.inset;
-    const x0 = Math.round(cx + ins), x1 = Math.round(cx + cw - 1 - ins), y0 = Math.round(cy + ins), y1 = Math.round(cy + ch - 1 - ins);   // last pixel inside the box is cx+cw-1
-    // background = the most common colour on the inset's perimeter (a glyph or logo never covers the whole ring)
-    const ring = new Map(); const addRing = (x, y) => { const k = (y * W + x) * 4, key = `${Cd[k]},${Cd[k + 1]},${Cd[k + 2]}`; ring.set(key, (ring.get(key) || 0) + 1); };
-    for (let x = x0; x <= x1; x++) { addRing(x, y0); addRing(x, y1); } for (let y = y0; y <= y1; y++) { addRing(x0, y); addRing(x1, y); }
-    let bgKey = null, bgN = -1; for (const [key, n] of ring) if (n > bgN) { bgN = n; bgKey = key; }
-    const bg = bgKey.split(',').map(Number);
-    const gx0 = Math.max(x0, Math.round(c.gx - 3)), gx1 = Math.min(x1, Math.round(c.gx + c.gw + 3));
-    let mn = null, mx = null;
-    for (let y = Math.max(0, y0); y <= Math.min(Hc - 1, y1); y++) for (let x = Math.max(0, gx0); x <= Math.min(VW - 1, gx1); x++) {
-      const k = (y * W + x) * 4; if (Math.max(Math.abs(Cd[k] - bg[0]), Math.abs(Cd[k + 1] - bg[1]), Math.abs(Cd[k + 2] - bg[2])) > THR) { if (mn === null || y < mn) mn = y; if (mx === null || y > mx) mx = y; }
-    }
-    if (mn === null) { bad.push(`${c.where} (no glyph drawn)`); out.logo_centres.push({ where: c.where, ink: false }); continue; }
-    const gc = (mn + mx + 1) / 2, cc = cy + ch / 2, off = +(gc - cc).toFixed(1);
-    out.logo_centres.push({ where: c.where, glyph_y: [mn, mx], off });
-    if (Math.abs(off) > tol) bad.push(`${c.where} off by ${Math.abs(off).toFixed(1)} px (${off > 0 ? 'low' : 'high'}, tolerance ${tol} px)`);
-    // Craig 2026-10-10: the logo must be centred with the NAME on its row. Logo glyph centre (pixels) vs the name's text line centre (DOM box).
-    if (c.name_cy != null) { const no = +(gc - c.name_cy).toFixed(1); if (Math.abs(no) > 0.5) nameBad.push(`${c.name || '?'} off by ${Math.abs(no).toFixed(1)} px (${no > 0 ? 'logo low' : 'logo high'} vs name, tolerance 0.5 px)`); }
-  }
-  if (bad.length) out.reasons.push(`logo not vertically centred: ${bad.join('; ')}`);
-  if (nameBad.length) out.reasons.push(`logo not centred with name: ${nameBad.join('; ')}`);
+  runLogoCentres({ spec, out, Cd, W, Hc, VW, regions: r });
 }
 // Craig 2026-10-10: "generic logo". 3 or more row logo chips on one screen with pixel-identical crops = the same placeholder on every row.
 function genericLogos() {
