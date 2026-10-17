@@ -190,9 +190,15 @@ def timestamp(value):
     return value.timestamp()
 
 def named_refs(body, n):
-    issues = sorted({int(x) for x in re.findall(r"blocked-by\s*:?\s*#(\d+)\b", body, re.I)} - {n})
-    requests = sorted(set(re.findall(r"waits-on:\s*`?(bot-admin/requests/[a-z0-9/_-]+)", body, re.I)))
-    return issues, requests
+    issues, requests = set(), set()
+    for sentence in re.split(r"[\n!?]|\.(?=\s|$)", body):
+        marker = re.search(r"\b(?:waits[- ]on|blocked-by)\s*:?\s*", sentence, re.I)
+        if not marker:
+            continue
+        blockers = sentence[marker.end():]
+        issues.update(int(x) for x in re.findall(r"#(\d+)\b", blockers))
+        requests.update(re.findall(r"\bbot-admin/[a-z0-9/_-]+", blockers, re.I))
+    return sorted(issues - {n}), sorted(requests)
 
 REQUESTS = {}
 def request_open(slug, now):

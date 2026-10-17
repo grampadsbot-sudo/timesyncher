@@ -32,6 +32,27 @@ def request(status='open', deadline='2026-10-16T21:00:00Z'):
 class Holds(unittest.TestCase):
     def setUp(self): w.REQUESTS.clear()
     def hold(self, gh, **kw): return w.hold_status(gh, 10, NOW, **kw)
+    def test_real_waits_on_comment_forms(self):
+        cases = [
+            ('dr eggbot\nwaits-on: '+SLUG, 'HELD on '+SLUG),
+            ('dr eggbot: parked. Waits on: the consolidated repair at `'+SLUG+'`.', 'HELD on '+SLUG),
+            ('dr eggbot: waits-on: #20 (and `'+SLUG+'`).', 'HELD on #20'),
+            ('dr eggbot\nwaits-on: `'+SLUG+'`', 'HELD on '+SLUG),
+            ('dr eggbot: no waits marker; see #20 and '+SLUG, None),
+        ]
+        for body, expected in cases:
+            with self.subTest(body=body), patch.object(w, 'read_page', return_value=request()):
+                self.assertEqual(self.hold(FakeGH(comments=[comment(body)])), expected)
+    def test_extract_all_blockers_without_incidental_later_sentence(self):
+        body = 'Past #99. WAITs ON: #20, #30 (and `'+SLUG+'`). History #40.'
+        self.assertEqual(w.named_refs(body, 30), ([20], [SLUG]))
+        self.assertEqual(w.named_refs('blocked-by: #20 and #30', 10), ([20,30], []))
+        self.assertEqual(w.named_refs('waits on: https://gbrain.example/bot-admin/requests/example-request',10), ([],[SLUG]))
+    def test_closed_first_ref_does_not_mask_open_request(self):
+        gh=FakeGH(comments=[comment('dr eggbot: blocked-by: #20 and `'+SLUG+'`')])
+        gh.blocker='closed'
+        with patch.object(w, 'read_page', return_value=request()):
+            self.assertEqual(self.hold(gh), 'HELD on '+SLUG)
     def test_open_and_closed_issue_blocker(self):
         gh=FakeGH(comments=[comment('managing dr\nblocked-by #20')])
         self.assertEqual(self.hold(gh), 'HELD on #20')
