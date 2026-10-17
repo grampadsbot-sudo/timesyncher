@@ -1,4 +1,4 @@
-export function captureNameText(nameEl) {
+function captureNameText(nameEl) {
         const box = (r) => [r.x, r.y, r.width, r.height];
         const visible = (el) => {
           if (!el) return false;

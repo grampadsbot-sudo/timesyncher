@@ -1,5 +1,5 @@
 /** Checks 14/19: one row frame, the first visible name line; tolerance stays 0.5 px. */
-export const ROW_NAME_TOLERANCE = 0.5;
+const ROW_NAME_TOLERANCE = 0.5;
 
 function validBox(box) {
   return Array.isArray(box) && box.length === 4 && box.every(Number.isFinite)
