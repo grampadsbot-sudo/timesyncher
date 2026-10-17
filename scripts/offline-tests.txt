@@ -270,3 +270,4 @@ scripts/test_verify_skill_no_vercel.mjs
 
 scripts/test_saved_place_icon_boundary.mjs
 scripts/test_shared_logo_rendered_geometry.mjs
+scripts/test_logo_reenrichment.mjs
