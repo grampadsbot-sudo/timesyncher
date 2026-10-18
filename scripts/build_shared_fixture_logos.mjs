@@ -43,7 +43,7 @@ const guesser = (value) => {
 };
 const logoContexts = (place, override = {}) => [place, place.metadata, place.sourceRecord, place.metadata?.sourceRecord,
   override, override.sourceRecord, override.metadata, override.metadata?.sourceRecord].filter(Boolean);
-export function logoHasDeclaringDocument(place, logo, website, override = {}) {
+function logoHasDeclaringDocument(place, logo, website, override = {}) {
   for (const context of logoContexts(place, override)) {
     for (const p of [context.logoProvenance, context.airlineLogo, context]) {
       if (!p || text(p.iconUrl ?? p.logo) !== logo) continue;
