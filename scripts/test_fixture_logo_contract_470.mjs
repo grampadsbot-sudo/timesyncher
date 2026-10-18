@@ -4,7 +4,6 @@ import { test } from 'node:test';
 import { buildFixture } from './build_shared_fixture_logos.mjs';
 
 const snapshot = JSON.parse(await readFile(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'));
-const pending = { todo: 'waits on #470 builder integration' };
 const text = (value) => String(value ?? '').trim();
 const pathname = (value) => { try { return decodeURIComponent(url(value)?.pathname || ''); } catch { return ''; } };
 const url = (value) => { try { const u = new URL(value); return /^https?:$/.test(u.protocol) && !u.username && !u.password ? u : null; } catch { return null; } };
@@ -153,13 +152,13 @@ test('snapshot builder replay stays offline and keeps all row identities', async
   assert.deepEqual(output.places.map((p) => p.id), fixture.places.map((p) => p.id));
 });
 
-test('checked-in NYC snapshot has no guessed logos in any row/source field', pending, () => {
+test('checked-in NYC snapshot has no guessed logos in any row/source field', () => {
   assertRows(asShared());
 });
-test('NYC full fixture has no guessed logos in places and Thing overrides', pending, async () => {
+test('NYC full fixture has no guessed logos in places and Thing overrides', async () => {
   assertRows(await nycFixture());
 });
-test('#468 builder output has no guessed logos in any row/Thing field', pending, async () => {
+test('#468 builder output has no guessed logos in any row/Thing field', async () => {
   assertRows(await rebuild(await nycFixture()));
 });
 test('#468 builder output gives every flight its verified airline logo or flagged blank', async () => {

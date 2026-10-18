@@ -16,6 +16,56 @@ const normalize = (value) => text(value).normalize('NFKD').replace(/\p{M}/gu, ''
   .replace(/[’']/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const category = (place) => searchProductCategoryFromPlace({ category: productThingCategory(place) });
 const key = (place) => `${normalize(place.name)}\t${category(place)}`;
+const suffixes = ['com', 'org', 'net', 'edu', 'gov', 'test', 'example', 'co.uk', 'org.uk', 'com.au', 'github.io'];
+const safeUrl = (value) => {
+  try {
+    const u = new URL(value);
+    return /^https?:$/.test(u.protocol) && !u.username && !u.password ? u : null;
+  } catch { return null; }
+};
+const pathname = (value) => {
+  try { return decodeURIComponent(safeUrl(value)?.pathname || ''); } catch { return ''; }
+};
+const registrable = (value) => {
+  const host = safeUrl(value)?.hostname.toLowerCase().replace(/\.$/, '');
+  if (!host) return '';
+  const suffix = suffixes.filter((s) => host.endsWith(`.${s}`)).sort((a, b) => b.length - a.length)[0];
+  if (!suffix) return '';
+  return host.split('.').slice(-(suffix.split('.').length + 1)).join('.');
+};
+const onHost = (host, root) => host === root || host.endsWith(`.${root}`);
+const guesser = (value) => {
+  const u = safeUrl(value);
+  if (!u) return false;
+  return (onHost(u.hostname, 'google.com') && /^\/s2\/favicons(?:\/|$)/i.test(u.pathname))
+    || (onHost(u.hostname, 'gstatic.com') && (/^\/faviconV2(?:\/|$)/i.test(u.pathname) || /^t[^.]*\.gstatic\.com$/i.test(u.hostname)))
+    || ['duckduckgo.com', 'clearbit.com', 'icon.horse', 'faviconkit.com', 'favicongrabber.com', 'favicon.io'].some((h) => onHost(u.hostname, h));
+};
+const logoContexts = (place, override = {}) => [place, place.metadata, place.sourceRecord, place.metadata?.sourceRecord,
+  override, override.sourceRecord, override.metadata, override.metadata?.sourceRecord].filter(Boolean);
+export function logoHasDeclaringDocument(place, logo, website, override = {}) {
+  for (const context of logoContexts(place, override)) {
+    for (const p of [context.logoProvenance, context.airlineLogo, context]) {
+      if (!p || text(p.iconUrl ?? p.logo) !== logo) continue;
+      const source = safeUrl(p.pageUrl ?? p.source);
+      if (!source || source.href === safeUrl(logo)?.href || /\.(?:ico|png|jpe?g|gif|svg|webp)$/i.test(source.pathname)
+        || guesser(source.href) || !registrable(website) || registrable(source.href) !== registrable(website)) continue;
+      if (p.verified === false) continue;
+      return true;
+    }
+  }
+  return false;
+}
+export function effectiveFixtureLogoUrl(place, override = {}) {
+  const website = text(place.website || override.website || override.sourceRecord?.website || place.url);
+  for (const logo of [place.logoUrl, place.image_url, override.logoUrl, override.sourceRecord?.logoUrl]) {
+    const value = text(logo);
+    if (!value || guesser(value)) continue;
+    if (/\/favicon\.ico$/i.test(pathname(value)) && !logoHasDeclaringDocument(place, value, website, override)) continue;
+    return value;
+  }
+  return '';
+}
 
 function assertShared(shared) {
   if (!shared?.trip?.id || !Array.isArray(shared.places) || !shared.places.length) {
@@ -190,7 +240,7 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
       ? staging.places.filter((candidate) => text(candidate.id) === text(place.id))
       : staging.places.filter((candidate) => key(candidate) === key(place));
     const matched = candidates.length === 1 ? candidates[0] : null;
-    const logoUrl = text(place.logoUrl || place.image_url || override.logoUrl || override.sourceRecord?.logoUrl);
+    const logoUrl = effectiveFixtureLogoUrl(place, override);
     const unmatched = candidates.length > 1 ? 'ambiguous_name_category' : !matched ? 'no_exact_match'
       : key(matched) !== key(place) ? 'stable_id_identity_conflict'
         : !text(matched.website) ? 'matched_website_empty'

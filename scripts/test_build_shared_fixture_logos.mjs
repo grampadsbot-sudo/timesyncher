@@ -126,6 +126,14 @@ test('nonempty existing fixture logos are preserved, not audited as new or fetch
   assert.deepEqual(result.audit, []);
 });
 
+test('guessed favicon.ico without a declaring document is re-resolved instead of skipped_has_logo', async () => {
+  const guess = `${site}favicon.ico`;
+  const input = shared(1, [{ ...place(1), logoUrl: guess }]);
+  const result = await run({ fixture: input, staging: shared(99, [{ ...place(1), website: site }]), fetchImpl: http });
+  assert.notEqual(result.applied.report[0].outcome, 'skipped_has_logo');
+  assert.equal(result.fixture.places[0].logoUrl, logo);
+});
+
 test('malformed or duplicate source ids fail instead of emitting plausible empty fixtures', async () => {
   await assert.rejects(run({ staging: {} }), /Shared response requires/);
   await assert.rejects(run({ staging: shared(99, [place(601), place(601)]) }), /unique/);

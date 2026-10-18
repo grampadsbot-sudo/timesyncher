@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { effectiveFixtureLogoUrl } from '../../scripts/build_shared_fixture_logos.mjs';
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
 import {
@@ -45,6 +46,14 @@ const SUMMARIES = {
   632: 'Early Southwest via Houston; useful if you want a morning departure from LAS.',
   633: 'Southwest via Denver; mid-morning LAS departure with one connection.',
   634: 'Southwest via STL; slowest option but sometimes the only seats left.',
+};
+
+const NYC_LIST_ONLY_WEBSITES = {
+  612: 'https://www.chelseamarket.com/',
+  613: 'https://www.macys.com/',
+  614: 'https://store.moma.org/',
+  615: 'https://www.bergdorfgoodman.com/',
+  616: 'https://www.wholefoodsmarket.com/',
 };
 
 const NYC_COORDS = {
@@ -147,6 +156,19 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
     override.logoUrl = search.logoUrl;
     place.logoUrl = search.logoUrl;
   }
+  if (search.logoProvenance) {
+    override.logoProvenance = search.logoProvenance;
+    place.logoProvenance = search.logoProvenance;
+    if (record && typeof record === 'object') record.logoProvenance = search.logoProvenance;
+  }
+  if (search.logoCaptureReason) {
+    override.logoCaptureReason = search.logoCaptureReason;
+    place.logoCaptureReason = search.logoCaptureReason;
+  }
+  if (search.airlineLogo) {
+    override.airlineLogo = search.airlineLogo;
+    place.airlineLogo = search.airlineLogo;
+  }
   if (search.url) {
     place.website = search.url;
     override.website = search.url;
@@ -241,6 +263,19 @@ function applyPr336SearchFields(row, place, override) {
     override.logoUrl = search.logoUrl;
     place.logoUrl = search.logoUrl;
   }
+  if (search.logoProvenance) {
+    override.logoProvenance = search.logoProvenance;
+    place.logoProvenance = search.logoProvenance;
+    if (record && typeof record === 'object') record.logoProvenance = search.logoProvenance;
+  }
+  if (search.logoCaptureReason) {
+    override.logoCaptureReason = search.logoCaptureReason;
+    place.logoCaptureReason = search.logoCaptureReason;
+  }
+  if (search.airlineLogo) {
+    override.airlineLogo = search.airlineLogo;
+    place.airlineLogo = search.airlineLogo;
+  }
   if (search.url) {
     place.website = search.url;
     override.website = search.url;
@@ -292,7 +327,62 @@ function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
-function buildPayload() {
+function syncServedFixtureLogos(served, draft) {
+  const next = {
+    ...served,
+    places: served.places.map((place) => ({ ...place })),
+    thingOverrides: { ...served.thingOverrides },
+  };
+  for (const place of next.places) {
+    const key = `place:${place.id}`;
+    const draftPlace = draft.places.find((row) => row.id === place.id) || {};
+    const draftOverride = draft.thingOverrides[key] || {};
+    const override = { ...(next.thingOverrides[key] || {}) };
+    const logoUrl = text(draftOverride.logoUrl || draftPlace.logoUrl);
+    const provenance = draftOverride.logoProvenance || draftPlace.logoProvenance;
+    const airlineLogo = draftOverride.airlineLogo || draftPlace.airlineLogo;
+    const reason = draftOverride.logoCaptureReason || draftPlace.logoCaptureReason;
+    const allowed = logoUrl && (
+      provenance
+      || (airlineLogo?.verified && text(airlineLogo.logo))
+      || effectiveFixtureLogoUrl(draftPlace, draftOverride) === logoUrl
+    );
+    if (allowed) {
+      place.logoUrl = logoUrl;
+      override.logoUrl = logoUrl;
+      if (provenance) {
+        place.logoProvenance = provenance;
+        override.logoProvenance = provenance;
+      }
+      if (airlineLogo) {
+        place.airlineLogo = airlineLogo;
+        override.airlineLogo = airlineLogo;
+      }
+      delete place.logoCaptureReason;
+      delete override.logoCaptureReason;
+    } else {
+      delete place.logoUrl;
+      delete override.logoUrl;
+      delete place.logoProvenance;
+      delete override.logoProvenance;
+      if (reason) {
+        place.logoCaptureReason = reason;
+        override.logoCaptureReason = reason;
+      }
+      if (airlineLogo) {
+        place.airlineLogo = airlineLogo;
+        override.airlineLogo = airlineLogo;
+      } else {
+        delete place.airlineLogo;
+        delete override.airlineLogo;
+      }
+    }
+    next.thingOverrides[key] = override;
+  }
+  return next;
+}
+
+export function buildNycCraigKimDaybydaySharedDraft() {
   const categories = {
     hotel: { id: 1, name: 'Hotel', icon: '🧳' },
     restaurant: { id: 2, name: 'Restaurant', icon: '🍽️' },
@@ -372,6 +462,11 @@ function buildPayload() {
       category: row.cat,
       summary: SUMMARIES[row.id] || '',
     };
+    const listWebsite = NYC_LIST_ONLY_WEBSITES[row.id];
+    if (listWebsite) {
+      place.website = listWebsite;
+      override.website = listWebsite;
+    }
     applyPr336SearchFields(row, place, override);
     if (row.id === 603) {
       override.stayDays = 7;
@@ -385,43 +480,50 @@ function buildPayload() {
     }
     if (row.id === 630) {
       override.price = 164;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
       override.airline = 'Southwest';
+      override.logoCaptureReason = 'airline_logo_unverified:no_declared_icon';
+      override.airlineLogo = { logo: '', source: 'https://www.southwest.com/', verified: false, reason: 'airline_logo_unverified:no_declared_icon' };
     }
     if (row.id === 631) {
       override.price = 194;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
       override.airline = 'Southwest';
+      override.logoCaptureReason = 'airline_logo_unverified:no_declared_icon';
+      override.airlineLogo = { logo: '', source: 'https://www.southwest.com/', verified: false, reason: 'airline_logo_unverified:no_declared_icon' };
     }
     if (row.id === 632) {
       override.price = 239;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
       override.airline = 'Southwest';
+      override.logoCaptureReason = 'airline_logo_unverified:no_declared_icon';
+      override.airlineLogo = { logo: '', source: 'https://www.southwest.com/', verified: false, reason: 'airline_logo_unverified:no_declared_icon' };
     }
     if (row.id === 633) {
       override.price = 239;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
       override.airline = 'Southwest';
+      override.logoCaptureReason = 'airline_logo_unverified:no_declared_icon';
+      override.airlineLogo = { logo: '', source: 'https://www.southwest.com/', verified: false, reason: 'airline_logo_unverified:no_declared_icon' };
     }
     if (row.id === 634) {
       override.price = 249;
-      override.logoUrl = 'https://www.southwest.com/favicon.ico';
       override.airline = 'Southwest';
+      override.logoCaptureReason = 'airline_logo_unverified:no_declared_icon';
+      override.airlineLogo = { logo: '', source: 'https://www.southwest.com/', verified: false, reason: 'airline_logo_unverified:no_declared_icon' };
     }
     if (row.id === 612) {
-      override.logoUrl = 'https://www.chelseamarket.com/favicon.ico';
+      override.logoUrl = 'https://images.squarespace-cdn.com/content/v1/5c6c8783523958b58c320e1b/1576532909264-KOEYU2IN00JDOEU39E96/favicon.ico';
+      override.logoProvenance = { pageUrl: 'https://www.chelseamarket.com/', iconUrl: 'https://images.squarespace-cdn.com/content/v1/5c6c8783523958b58c320e1b/1576532909264-KOEYU2IN00JDOEU39E96/favicon.ico' };
     }
     if (row.id === 613) {
-      override.logoUrl = 'https://www.macys.com/favicon.ico';
+      override.logoCaptureReason = 'page_fetch_failed';
     }
     if (row.id === 614) {
-      override.logoUrl = 'https://store.moma.org/favicon.ico';
+      override.logoCaptureReason = 'page_fetch_failed';
     }
     if (row.id === 615) {
-      override.logoUrl = 'https://www.bergdorfgoodman.com/favicon.ico';
+      override.logoCaptureReason = 'page_fetch_failed';
     }
     if (row.id === 616) {
-      override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
+      override.logoUrl = 'https://m.media-amazon.com/images/S/assets.wholefoodsmarket.com/sales_flyer/img/favicon_196x196.png';
+      override.logoProvenance = { pageUrl: 'https://www.wholefoodsmarket.com/', iconUrl: 'https://m.media-amazon.com/images/S/assets.wholefoodsmarket.com/sales_flyer/img/favicon_196x196.png' };
     }
     thingOverrides[`place:${row.id}`] = override;
   }
@@ -439,7 +541,7 @@ function buildPayload() {
       start_time: row.time,
     };
   });
-  const shared = {
+  return {
     trip: {
       id: 99,
       title: 'Craig / Kim NYC June 2026',
@@ -465,9 +567,13 @@ function buildPayload() {
     thingOverrides,
     timesyncherIntake: true,
   };
+}
+
+function buildPayload() {
+  const shared = buildNycCraigKimDaybydaySharedDraft();
   const bindings = [];
-  const zabars = places.find((p) => p.id === 602);
-  const tour = places.find((p) => p.id === 604);
+  const zabars = shared.places.find((p) => p.id === 602);
+  const tour = shared.places.find((p) => p.id === 604);
   if (zabars) {
     bindings.push({
       id: 'nyc-bind-photo-day1',
@@ -502,11 +608,13 @@ function buildPayload() {
       publicUrl: VIDEO_URL,
     });
   }
-  const timelineIds = rows.filter((row) => !row.listOnly).map((row) => row.id);
+  const timelineIds = shared.places
+    .filter((place) => shared.assignments && Object.values(shared.assignments).some((rows) => rows.some((row) => row.place?.id === place.id)))
+    .map((place) => place.id);
   let withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
   const hotelDayNumbers = [1, 2, 3, 4, 5, 6, 7];
   withTimeline = assignPlaceToTripDays(withTimeline, 603, hotelDayNumbers);
-  const conflictDay = days.find((d) => d.day_number === NYC_CONFLICT_DAY);
+  const conflictDay = shared.days.find((d) => d.day_number === NYC_CONFLICT_DAY);
   if (conflictDay) {
     const dayKey = String(conflictDay.id);
     withTimeline = assignPlaceToTripDays(withTimeline, 606, [NYC_CONFLICT_DAY]);
@@ -523,7 +631,8 @@ function buildPayload() {
       };
     }
   }
-  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const served = finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  return syncServedFixtureLogos(served, withTimeline);
 }
 
 export function buildNycCraigKimDaybydayTrip() {
