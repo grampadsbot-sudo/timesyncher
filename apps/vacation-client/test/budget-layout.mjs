@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { budgetHardcodedHits } from '../../../scripts/shepherd-staging-smoke-map-lib.mjs';
-import { prepareItinerarySharedTrip } from '../src/lib/prepareServedTrip.mjs';
+import { prepareSharedTripForLiveApp } from '../../../src/vacation/shared-trip-live-tab-lists.mjs';
 import { finalizeServedSharedTripPayload } from '../../../src/vacation/shared-trip-served-page.mjs';
 import { applyCapturedLogos } from '../../../src/vacation/thing-logo-capture.mjs';
 import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from '../../../scripts/fixtures/nyc-pr225-shared-trip.mjs';
@@ -83,7 +83,7 @@ async function measureBudgetLogoInk(page) {
 export async function runVacationClientBudgetLayoutTests() {
   const { ensureBuiltClient, startPreviewServer } = await import('./shell-layout.mjs');
   await ensureBuiltClient();
-  const tripPayload = prepareItinerarySharedTrip(
+  const tripPayload = prepareSharedTripForLiveApp(
     finalizeServedSharedTripPayload(applyCapturedLogos(buildNycPr225SharedTrip())),
   );
 
