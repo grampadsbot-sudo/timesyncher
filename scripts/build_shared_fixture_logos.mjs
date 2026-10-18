@@ -87,7 +87,6 @@ function declaredIconFetch(fetchImpl, sleep) {
       const response = await request(url, options, 'page');
       if (!response.ok || !isPlaceWebsite(response.url)) return response;
       let html = await response.text();
-      // Only declared links from this place's page can authorize an image request.
       const manifests = [];
       for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
         const rel = attribute(tag, 'rel');
@@ -105,12 +104,10 @@ function declaredIconFetch(fetchImpl, sleep) {
             const href = safeUrl(typeof icon?.src === 'string' ? icon.src : '', answer.url);
             if (!href) continue;
             allowed.add(href);
-            // Feed manifest declarations through the existing product discovery verifier.
             html += `<link rel="icon" href="${href.replace(/&/g, '&amp;').replace(/"/g, '&#34;')}">`;
           }
         } catch { continue; }
       }
-      // Normalize href entities for the product parser, which does not decode them.
       html = html.replace(/<link\b[^>]*>/gi, (tag) => {
         const href = safeUrl(attribute(tag, 'href'), response.url);
         const iconRel = /(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(attribute(tag, 'rel'));

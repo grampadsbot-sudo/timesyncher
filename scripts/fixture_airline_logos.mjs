@@ -48,10 +48,6 @@ function attributes(tag) {
   return values;
 }
 
-/** Resolve only icons declared by the airline's official HTML or linked manifest.
- * source is the declaring document; verified=false and a reason flag every blank.
- * fetchImpl/sleepImpl are injectable so tests never require the network.
- */
 export async function resolveAirlineLogo(input, {
   fetchImpl = globalThis.fetch,
   sleepImpl = sleep,
@@ -100,7 +96,6 @@ export async function resolveAirlineLogo(input, {
   let html;
   try { html = await page.response.text(); }
   catch { return blank('page_body_failed', page.url); }
-  // Ignore inert examples and commented markup; never invent a favicon path.
   html = html.replace(/<!--[\s\S]*?-->|<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
   const baseTag = html.match(/<base\b(?:[^>"']|"[^"]*"|'[^']*')*>/i);
   const base = (baseTag && webUrl(attributes(baseTag[0]).href, page.url)) || page.url;

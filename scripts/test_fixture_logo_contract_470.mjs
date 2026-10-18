@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { buildFixture } from './build_shared_fixture_logos.mjs';
 
-// Contract tests only: do not import/copy the separately owned airline resolver.
 const snapshot = JSON.parse(await readFile(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'));
 const pending = { todo: 'waits on #470 builder integration' };
 const text = (value) => String(value ?? '').trim();
@@ -12,9 +11,6 @@ const url = (value) => { try { const u = new URL(value); return /^https?:$/.test
 const airlineHosts = { southwest: 'southwest.com', jetblue: 'jetblue.com', delta: 'delta.com', american: 'aa.com' };
 const onHost = (host, root) => host === root || host.endsWith(`.${root}`);
 
-// Offline, fail-closed suffix vocabulary for this NYC fixture and policy samples.
-// Unknown suffixes require adding a reviewed suffix before accepting a same-site logo.
-// Longest match handles multi-label/private suffixes; never assume last two labels.
 const suffixes = ['com', 'org', 'net', 'edu', 'gov', 'test', 'example', 'co.uk', 'org.uk', 'com.au', 'github.io'];
 function registrable(value) {
   const host = url(value)?.hostname.toLowerCase().replace(/\.$/, '');
@@ -34,8 +30,6 @@ function contexts(row) {
   return [row, row.metadata, row.sourceRecord, row.metadata?.sourceRecord].filter(Boolean);
 }
 function declaration(row, logo, website) {
-  // pageUrl/iconUrl is the existing place-capture schema; source/logo/verified
-  // is the airline resolver schema. Search results alone are not declarations.
   for (const context of contexts(row)) {
     for (const p of [context.logoProvenance, context.airlineLogo, context]) {
       if (!p || text(p.iconUrl ?? p.logo) !== logo) continue;
@@ -89,7 +83,6 @@ function flightViolations(row, website) {
   return failures;
 }
 function rows(shared) {
-  // Check each layer independently; an override cannot hide a stale source logo.
   const output = [];
   for (const place of shared.places || []) {
     const override = shared.thingOverrides?.[`place:${place.id}`] || {};
@@ -174,5 +167,3 @@ test('#468 builder output gives every flight its verified airline logo or flagge
   assert.equal(output.places.filter((p) => /flight/i.test(p.category_name)).length, 7, 'include selected and list-only flights');
   assertRows(output, true);
 });
-// Remove pending from each integration assertion when its builder/fixture fix lands.
-// TODO bodies execute now: failures remain visible and do not make node:test exit 1.
