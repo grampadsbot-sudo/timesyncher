@@ -5,7 +5,6 @@ import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-sha
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
-import { patchHeaderBrandLogoCentre } from './trek-header-brand-patch.mjs';
 import { TIMELINE_ICON_ALIGN_FN, TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH, injectTimelineIconAlignFn } from './trek-timeline-icon-align-patches.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
@@ -170,7 +169,6 @@ export function patchThingLogoChipAlignment(source = '') {
   } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
     throw new Error('trek bundle dc() logo chip patch did not apply');
   }
-  js = patchHeaderBrandLogoCentre(js);
   if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
