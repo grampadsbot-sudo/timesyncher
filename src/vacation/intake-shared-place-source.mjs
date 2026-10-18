@@ -48,7 +48,8 @@ export function logoFieldsForSharedPlace(place, priorOverride = {}) {
     source: place.source,
     ...(pageUrl ? { url: pageUrl, website: pageUrl } : {}),
   };
-  const logoUrl = resolveThingLogoUrl(place, presentationOverride);
+  const logoUrl = resolveThingLogoUrl(place, presentationOverride)
+    || textField(place.image_url || place.logoUrl || priorOverride.logoUrl);
   const extra = { ...(logoUrl ? { logoUrl } : {}) };
   if (!logoUrl) {
     const reason = logoCaptureMissReason(place, presentationOverride);

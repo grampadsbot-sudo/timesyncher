@@ -1,4 +1,4 @@
-import { timelineIcon, timelineCategoryIcon, isVideoMediaUrl } from './timeline-icons.mjs';
+import { timelineIcon, timelineCategoryIcon, thingLogoUrl, isVideoMediaUrl } from './timeline-icons.mjs';
 import { effectiveCcabDeclaredLogoUrl } from './place-logo-provenance.mjs';
 
 /** Known rental/hotel brand favicons when trip rows lack source URLs. */
@@ -195,12 +195,12 @@ function storedLogo(value, thing, override) {
   return effectiveCcabDeclaredLogoUrl(record) === logo ? logo : '';
 }
 
-function sourceLogoUrlCore(thing = {}, override = {}, storedOnly = false) {
+/** Logo or favicon on the source record, else the favicon of its page URL. Otherwise none. */
+export function sourceLogoUrl(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   const explicit = [
     source.logo,
     source.logoUrl,
-    source.iconUrl,
     source.favicon,
     source.faviconUrl,
     thing.logo,
@@ -216,7 +216,7 @@ function sourceLogoUrlCore(thing = {}, override = {}, storedOnly = false) {
     override.imageUrl,
   ];
   for (const value of explicit) {
-    const logo = storedOnly ? storedLogo(value, thing, override) : usableLogo(value);
+    const logo = usableLogo(value);
     if (logo) {
       if (/hyatt\.com\/favicon\.ico/i.test(logo)) {
         const thumb = thumbnailFromSource(source);
@@ -237,11 +237,7 @@ function sourceLogoUrlCore(thing = {}, override = {}, storedOnly = false) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
-  return storedOnly ? '' : `${page.origin}/favicon.ico`;
-}
-
-export function sourceLogoUrl(thing = {}, override = {}) {
-  return sourceLogoUrlCore(thing, override);
+  return `${page.origin}/favicon.ico`;
 }
 
 /** Names are not a logo source. The shared bundle calls this with a title and gets nothing. */
@@ -255,20 +251,12 @@ export function captureThingLogo(thing = {}, override = {}) {
 
 /** Same logo fields as live tab rows and the shared trek bundle (_l / ha). */
 export function resolveThingLogoUrl(thing = {}, override = {}) {
-  const candidates = [
-    override.logoUrl,
-    override.iconUrl,
-    thing.logoUrl,
-    thing.iconUrl,
-    thing.captured_logo_url,
-    thing.image_url,
-    thing.imageUrl,
-  ];
-  for (const value of candidates) {
-    const logo = storedLogo(value, thing, override);
+  const direct = thingLogoUrl(thing, override);
+  if (direct) {
+    const logo = usableLogo(direct);
     if (logo) return logo;
   }
-  return sourceLogoUrlCore(thing, override, true);
+  return sourceLogoUrl(thing, override);
 }
 
 export function applyCapturedLogos(shared = {}) {

@@ -100,7 +100,7 @@ function emojiOnlyChipHtml({ category }) {
 }
 
 function listRowHtml({ place, override, tab, category, onLogoMissing }) {
-  const logoUrl = resolveThingLogoUrl(place, override);
+  const logoUrl = resolveThingLogoUrl(place, override) || text(override.logoUrl || place.logoUrl);
   const name = escapeHtml(place.name || place.title || 'Place');
   const tabAttr = escapeHtml(tab);
   const categoryAttr = escapeHtml(category);
