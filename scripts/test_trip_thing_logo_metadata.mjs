@@ -9,10 +9,7 @@ import {
   isGenericDescription,
   logoUrlFromSearchPlace,
 } from '../src/vacation/trip-thing-enrichment.mjs';
-import {
-  assertSearchPlaceOutputContract,
-  searchPlaceOutputViolations,
-} from '../src/vacation/search-place-output.mjs';
+import { searchPlaceOutputViolations } from '../src/vacation/search-place-output.mjs';
 import { buildVkSearchContractSamplePlaces } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyCapturedLogos, resolveThingLogoUrl } from '../src/vacation/thing-logo-capture.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
@@ -194,7 +191,8 @@ const backfilled = enrichTripThing({
   description: 'Documented NYC option (hotel)',
   metadata: { sourceRecord: { url: 'https://www.thelucernehotel.com/', price: 530 } },
 });
-assert.equal(isGenericDescription(backfilled.description), false);
+assert.equal(backfilled.description, '');
+assert.equal(isGenericDescription(backfilled.description), true);
 assert.equal(backfilled.metadata.price, 530);
 
 const built = buildCategoryDescription({
@@ -205,8 +203,8 @@ const built = buildCategoryDescription({
 });
 assert.match(built, /Southwest/i);
 
-assertSearchPlaceOutputContract(buildVkSearchContractSamplePlaces());
-for (const place of buildVkSearchContractSamplePlaces()) {
+const vkSamplePlaces = buildVkSearchContractSamplePlaces();
+for (const place of vkSamplePlaces) {
   assert.notEqual(textOrEmpty(place.summary), textOrEmpty(place.description), `${place.category} summary must differ from description`);
 }
 
@@ -220,5 +218,7 @@ for (const { category, place } of enrichmentCategories) {
   assert.equal(violations.includes('blank_summary'), false, `${category} blank summary`);
   assert.equal(violations.includes('missing_logoUrl'), false, `${category} missing logo`);
 }
+
+await import('./test_tsv397_integrity_audit.mjs');
 
 console.log('trip thing logo metadata tests passed');

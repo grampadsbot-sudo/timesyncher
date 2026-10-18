@@ -1,4 +1,5 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function text(value) {
@@ -114,7 +115,6 @@ function explicitLogo(place = {}, override = {}, source = null) {
   );
 }
 
-/** Map catalog row fields the TREK Oe list reads via ha() / rr() / bi() / J() / uc(). */
 export function applyLiveAppListRowFields(shared = {}) {
   const next = {
     ...shared,
@@ -180,6 +180,22 @@ export function applyLiveAppListRowFields(shared = {}) {
         : { name: 'Flight', icon: '✈️' };
       override.category = 'flight';
       copyIfBlank(override, 'fareDirection', source?.fareDirection, source?.tripType, source?.pricingType);
+      const flightBlob = firstPresent(
+        source?.summary,
+        source?.description,
+        place.description,
+        place.notes,
+      );
+      let flightFields = flightFieldsFromBlob(flightBlob, '');
+      if (!flightFields.departureTime) {
+        flightFields = {
+          ...flightFields,
+          ...flightFieldsFromBlob(firstPresent(place.name, place.title), ''),
+        };
+      }
+      copyIfBlank(override, 'departureTime', source?.departureTime, source?.departTime, flightFields.departureTime);
+      copyIfBlank(override, 'arrivalTime', source?.arrivalTime, source?.arriveTime, flightFields.arrivalTime);
+      copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
     } else if (category === 'car') {
       override.category = 'car';
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);
@@ -208,7 +224,6 @@ export function applyLiveAppListRowFields(shared = {}) {
   return next;
 }
 
-/** Drive TREK Ds()/Is() + Ji()/jr() day rows from explicit timeline picks (ha().timeline, dayIds). */
 export function applyLiveAppTimelineSelections(shared = {}, selectedPlaceIds = []) {
   const selected = new Set((selectedPlaceIds || []).map((id) => String(id)));
   const next = {

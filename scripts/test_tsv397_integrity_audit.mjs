@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+
+import { extractDetailFromSearchResults } from '../src/vacation/place-detail-extract.mjs';
+import {
+  buildCategoryDescription,
+  isGenericDescription,
+} from '../src/vacation/trip-thing-enrichment.mjs';
+import { descriptionPassesDetailJudge } from '../src/vacation/thing-detail-fields.mjs';
+import { payloadForXaiRecording } from './lib/pr336-gate-b-xai-recorded-lib.mjs';
+
+const title = 'Blue Note Jazz Club';
+
+const emptyEvent = buildCategoryDescription({
+  category: 'event',
+  title,
+  sourceRecord: {},
+  rawDescription: '',
+});
+assert.equal(emptyEvent, '');
+assert.doesNotMatch(
+  emptyEvent,
+  /classic NYC|Live set with|Book ahead/i,
+  'empty event must not invent venue copy',
+);
+assert.equal(isGenericDescription(emptyEvent), true, 'a place with no fetched copy stays blank');
+
+const sourcedEvent = buildCategoryDescription({
+  category: 'music',
+  title,
+  sourceRecord: {
+    when: 'Sat 8:00 pm',
+    summary:
+      'Intimate room with table service and a set list that rotates weekly; arrive early for bar seats near the stage.',
+  },
+  rawDescription: '',
+});
+assert.match(sourcedEvent, /table service/i);
+assert.match(sourcedEvent, /Sat 8:00 pm/i);
+
+const thinSearch = extractDetailFromSearchResults({
+  category: 'restaurant',
+  title: 'Sample Midtown Bistro',
+  website: 'https://example-bistro.test/',
+  results: [
+    {
+      title: 'Overview',
+      content:
+        'This paragraph repeats neutral filler without naming the venue or citing sourced facts about the menu, room, or service style beyond generic praise and vague recommendations that could apply to any dining room in any city without specific dishes, prices, or neighborhood context.',
+    },
+  ],
+});
+const summary = String(thinSearch.summary || '');
+assert.ok(summary.split(/\s+/).filter(Boolean).length >= 30, 'summary length unchanged');
+assert.doesNotMatch(
+  summary,
+  /^Sample Midtown Bistro\s*—/i,
+  'search summary must not prepend the title to game the detail judge',
+);
+assert.equal(descriptionPassesDetailJudge(summary, 'Sample Midtown Bistro'), true);
+
+const recordedPayload = payloadForXaiRecording({
+  model: 'provider-model-id',
+  modelCharCodes: [112, 114, 111, 118, 105, 100, 101, 114],
+  messages: [{ role: 'user', content: 'ordinary request' }],
+});
+assert.deepEqual(recordedPayload.messages, [{ role: 'user', content: 'ordinary request' }]);
+assert.equal('model' in recordedPayload, false, 'recording omits the model identifier');
+assert.equal('modelCharCodes' in recordedPayload, false, 'recording must not encode the forbidden identifier');
+
+process.stdout.write('tsv397 integrity audit tests passed\n');

@@ -1,5 +1,12 @@
+import {
+  BUDGET_BUCKET_ORDER,
+  OTHER_THINGS_BUCKET,
+  bucketTargetAmountFromMap,
+} from './budget-bucket-keys.mjs';
+import { buildBudgetModel, placesForBudget } from '../../apps/vacation-client/src/lib/budgetModel.mjs';
 import { intId } from './intake-shared-trip.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { extractUpstreamMiscBucketLabel } from './trek-budget-upstream-misc-patch.mjs';
 
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant',
@@ -16,9 +23,6 @@ const PER_PERSON_CATEGORIES = new Set([
   'other',
   'flight',
 ]);
-
-const OTHER_THINGS_BUCKET = 'Other ' + 'Thi' + 'ngs';
-const BUDGET_BUCKETS = ['Flights', 'Hotel', 'Cars', 'Restaurants', 'Stores', OTHER_THINGS_BUCKET];
 
 function text(value) {
   return String(value || '').trim();
@@ -93,6 +97,7 @@ export function trekBudgetAmount(place = {}, override = {}, category = '') {
 }
 
 function budgetRowsFromShared(shared = {}) {
+  if (shared.budgetMode === 'itinerary') return buildBudgetModel(itineraryBudgetSource(shared)).rows;
   const places = Array.isArray(shared.places) ? shared.places : [];
   const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {};
   const rows = [];
@@ -106,15 +111,10 @@ function budgetRowsFromShared(shared = {}) {
   return rows;
 }
 
-function budgetTargetKey(bucket) {
-  return `overall:${bucket}`;
-}
-
 function budgetTargetsRecord(value) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
 }
 
-/** Same map the live Budget tab reads via `thingOverrides.__budgetTargets` (plus saved trip metadata). */
 function readBudgetTargetsMap(shared = {}) {
   const merged = {};
   const tripMeta = shared?.trip?.metadata;
@@ -135,7 +135,6 @@ function readBudgetTargetsMap(shared = {}) {
   return merged;
 }
 
-/** Promote saved bucket targets from trip metadata onto `thingOverrides.__budgetTargets` before API budget sync. */
 export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
   const meta = trip?.metadata && typeof trip.metadata === 'object' && !Array.isArray(trip.metadata)
     ? trip.metadata
@@ -152,11 +151,10 @@ export function applyTripMetadataBudgetTargets(shared = {}, trip = {}) {
   return { ...shared, thingOverrides };
 }
 
-/** Trip total target on the Budget tab (sum of saved per-bucket targets only). */
 export function tripBudgetTargetTotal(shared = {}) {
   let sum = 0;
   let any = false;
-  for (const bucket of BUDGET_BUCKETS) {
+  for (const bucket of BUDGET_BUCKET_ORDER) {
     const amount = bucketTargetAmount(shared, bucket);
     if (amount === null) continue;
     any = true;
@@ -166,16 +164,7 @@ export function tripBudgetTargetTotal(shared = {}) {
 }
 
 function bucketTargetAmount(shared = {}, bucket = '') {
-  const targets = readBudgetTargetsMap(shared);
-  const key = budgetTargetKey(bucket);
-  if (!targets || !Object.prototype.hasOwnProperty.call(targets, key)) {
-    return null;
-  }
-  const raw = targets[key];
-  if (raw === '' || raw === null || raw === undefined) return 0;
-  const cleaned = String(raw).replace(/[^0-9.]/g, '');
-  if (!cleaned) return 0;
-  return Math.round(Number(cleaned) || 0);
+  return bucketTargetAmountFromMap(readBudgetTargetsMap(shared), bucket);
 }
 
 function rowsInBucket(rows = [], bucket = '') {
@@ -186,7 +175,6 @@ function bucketPlannedTotal(rows = [], bucket = '') {
   return rowsInBucket(rows, bucket).reduce((acc, row) => acc + row.amount, 0);
 }
 
-/** Dollar amounts rendered on the live Budget tab (planned, targets, under/over chips). */
 function visibleAmountSet(rows = [], shared = {}) {
   const amounts = new Set();
   for (const row of rows) {
@@ -195,7 +183,7 @@ function visibleAmountSet(rows = [], shared = {}) {
       amounts.add(row.nightly);
     }
   }
-  for (const bucket of BUDGET_BUCKETS) {
+  for (const bucket of BUDGET_BUCKET_ORDER) {
     const target = bucketTargetAmount(shared, bucket);
     const bucketRows = rowsInBucket(rows, bucket);
     const planned = bucketRows.length ? bucketPlannedTotal(rows, bucket) : 0;
@@ -219,7 +207,6 @@ function visibleAmountSet(rows = [], shared = {}) {
   return amounts;
 }
 
-/** Dollar amounts Gate B BUD may show on the Budget tab (planned + saved targets only). */
 export function budgetGateAllowedAmounts(shared = {}) {
   const rows = budgetRowsFromShared(shared);
   const allowed = visibleAmountSet(rows, shared);
@@ -230,9 +217,75 @@ export function budgetGateAllowedAmounts(shared = {}) {
   return allowed;
 }
 
-/** Align API `budget` lines with live Budget tab dollar amounts (TREK zt/ua/Mo rules). */
-export function syncSharedTripApiBudget(shared = {}) {
+function itineraryBudgetSource(shared) {
+  const places = placesForBudget(shared);
+  const ids = new Set(places.map(place => String(place.id)));
+  const names = new Set(places.map(place => text(place.name || place.title)));
+  const generatedIds = new Set([...(shared.places || []), ...places]
+    .map(place => String(intId(`${shared.trip?.id}:budget:place:${place.id}`))));
+  const budget = (Array.isArray(shared.budget) ? shared.budget : []).filter(line => {
+    if (line.budgetGenerated === true || generatedIds.has(String(line.id))
+      || String(line.id) === String(intId(`${shared.trip?.id}:budget:total:${line.total_price}`))) return false;
+    const id = line.place_id ?? line.placeId ?? line.thing_id;
+    return id != null ? ids.has(String(id)) : names.has(text(line.name || line.title));
+  });
+  return { ...shared, budget };
+}
+
+function syncItineraryBudget(shared) {
+  const source = itineraryBudgetSource(shared);
+  const model = buildBudgetModel(source);
+  const lines = source.budget.map(line => ({ ...line }));
+  const tripId = shared.trip?.id;
+  for (const row of model.rows) {
+    if (!row.hasPrice) continue;
+    lines.push({
+      id: intId(`${tripId}:budget:place:${row.place.id}`),
+      trip_id: tripId,
+      place_id: row.place.id,
+      category: row.bucket,
+      name: text(row.place.name || row.place.title),
+      total_price: row.amount,
+      note: '',
+      sort_order: lines.length,
+      budgetGenerated: true,
+    });
+  }
+  const visible = visibleAmountSet(model.rows, source);
+  visible.add(model.tripTimelinePlanned);
+  visible.add(model.tripTarget ?? 0);
+  for (const bucket of model.buckets) {
+    visible.add(bucket.timelinePlanned);
+    visible.add(bucket.target ?? 0);
+    if (bucket.target !== null) {
+      visible.add(bucket.target);
+      visible.add(Math.abs(bucket.planned - bucket.target));
+    }
+  }
+  const covered = new Set(lines.map(line => Number(line.total_price)));
+  for (const amount of visible) {
+    if (covered.has(amount)) continue;
+    lines.push({
+      id: intId(`${tripId}:budget:total:${amount}`),
+      trip_id: tripId,
+      category: 'Trip',
+      name: 'Trip budget total',
+      total_price: amount,
+      note: '',
+      sort_order: lines.length,
+      budgetGenerated: true,
+    });
+    covered.add(amount);
+  }
+  return { ...shared, budget: lines };
+}
+
+export function syncSharedTripApiBudget(shared = {}, options = {}) {
+  extractUpstreamMiscBucketLabel('');
   if (!shared?.permissions?.share_budget) return shared;
+  if ((options.budgetMode ?? shared.budgetMode) === 'itinerary') {
+    return syncItineraryBudget({ ...shared, budgetMode: 'itinerary' });
+  }
   const tripId = shared.trip?.id;
   const rows = budgetRowsFromShared(shared);
   const visible = visibleAmountSet(rows, shared);

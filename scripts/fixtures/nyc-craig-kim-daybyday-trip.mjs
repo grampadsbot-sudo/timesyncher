@@ -7,10 +7,6 @@ import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
-import {
-  NYC_VK_ISSUE_429_LIST_ROWS,
-  resolveNycCcabKey,
-} from './nyc-vk-list-tab-rows.mjs';
 
 const PR336_SEARCH_SNAPSHOT = JSON.parse(
   readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
@@ -18,27 +14,65 @@ const PR336_SEARCH_SNAPSHOT = JSON.parse(
 
 export const NYC_DAYBYDAY_SLUG = '8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y';
 export const NYC_CONFLICT_DAY = 3;
-/** Live TREK reads one-line copy via ha(place).summary → rr(place). */
+
+export const VK_SEARCH_SNAPSHOT_COPY_ROW_IDS = Object.freeze(
+  Array.from({ length: 11 }, (_, index) => 601 + index),
+);
+const VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET = new Set(VK_SEARCH_SNAPSHOT_COPY_ROW_IDS);
+
 export const STORED_SUMMARY_FIELD = 'thingOverrides[place:<placeId>].summary';
 const MEDIA_PREFIX = '/ts-thing-media/nyc-craig-kim-june-2026';
 const VIDEO_URL = 'https://example.com/nyc-day1-walk.mp4';
 
+const SUMMARIES = {
+  601: 'Nonstop afternoon arrival; lands with time to reach the hotel before dinner.',
+  602: 'UWS grocery stop for picnic supplies and breakfast basics.',
+  603: 'UWS base for the week; strong Lincoln Center access on the subway.',
+  604: 'Ferry and grounds; keep tickets on phone and arrive early for security.',
+  605: 'Browse the rare room if time allows after the harbor tour.',
+  606: 'Overlap window A: matinee tickets already held.',
+  607: 'Overlap window B: friend meetup at the same hour.',
+  610: 'Classic Italian; reserve the earliest table you can get.',
+  611: 'Evening set at the Village club; arrive early for will-call pickup.',
+  612: 'Chelsea Market lunch stop between Midtown and the Village.',
+  613: 'Herald Square shopping block if you want a practical retail run.',
+  614: 'Design-store browse near MoMA when the weather is rough.',
+  615: 'Fifth Avenue luxury browse; good rainy-day option near the hotel zone.',
+  616: 'Columbus Circle groceries before the late flight home.',
+  635: 'Nonstop evening departure; allow extra time for JFK security.',
+  630: 'One-stop Southwest option; lowest outbound fare in the search set.',
+  631: 'Later Southwest via Dallas; cheaper if you can accept a long travel day.',
+  632: 'Early Southwest via Houston; useful if you want a morning departure from LAS.',
+  633: 'Southwest via Denver; mid-morning LAS departure with one connection.',
+  634: 'Southwest via STL; slowest option but sometimes the only seats left.',
+};
+
 const NYC_COORDS = {
-  601: { lat: 40.6413, lng: -73.7781 },
-  602: { lat: 40.7886, lng: -73.9767 },
-  603: { lat: 40.7454, lng: -73.9933 },
+  601: { lat: 36.084, lng: -115.1537 },
+  602: { lat: 40.7847, lng: -73.9794 },
+  603: { lat: 40.7828, lng: -73.9813 },
   604: { lat: 40.6892, lng: -74.0445 },
-  605: { lat: 40.7373, lng: -73.9903 },
+  605: { lat: 40.7333, lng: -73.9909 },
   606: { lat: 40.758, lng: -73.9855 },
   607: { lat: 40.7536, lng: -73.9832 },
-  608: { lat: 40.7549, lng: -73.984 },
-  609: { lat: 40.7527, lng: -73.9772 },
-  610: { lat: 40.726, lng: -73.9997 },
-  611: { lat: 40.7725, lng: -73.9838 },
+  609: { lat: 40.6413, lng: -73.7781 },
+  610: { lat: 40.727915, lng: -74.007235 },
+  611: { lat: 40.728, lng: -73.9965 },
+  612: { lat: 40.7424, lng: -74.006 },
+  613: { lat: 40.7508, lng: -73.9896 },
+  614: { lat: 40.7616, lng: -73.9776 },
+  615: { lat: 40.7635, lng: -73.9743 },
+  616: { lat: 40.7686, lng: -73.9822 },
+  630: { lat: 36.084, lng: -115.1537 },
+  631: { lat: 36.084, lng: -115.1537 },
+  632: { lat: 36.084, lng: -115.1537 },
+  633: { lat: 36.084, lng: -115.1537 },
+  634: { lat: 36.084, lng: -115.1537 },
+  635: { lat: 40.6413, lng: -73.7781 },
 };
 
 export function listStoredSummaries() {
-  const out = {};
+  const out = { ...SUMMARIES };
   for (const [id, search] of Object.entries(PR336_SEARCH_SNAPSHOT)) {
     if (search?.summary) out[id] = search.summary;
   }
@@ -51,12 +85,152 @@ export function expectedSummariesOnDay(dayNumber) {
     2: [604, 605],
     3: [606, 607],
   };
-  return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || '');
+  return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || SUMMARIES[id] || '');
+}
+
+function provenanceBlockedFieldSet(record = {}) {
+  const blocked = Array.isArray(record.provenanceBlocked) ? record.provenanceBlocked : [];
+  if (!text(record.provenanceBlocker)) return new Set();
+  return new Set(blocked.map((field) => text(field, 80)).filter(Boolean));
+}
+
+function applyProvenanceBlockedClears(record, place, override) {
+  const blocked = provenanceBlockedFieldSet(record);
+  if (!blocked.size) return;
+  override.provenanceBlocker = text(record.provenanceBlocker);
+  override.provenanceBlocked = [...blocked];
+  if (blocked.has('price')) delete override.price;
+  if (blocked.has('logoUrl')) {
+    delete override.logoUrl;
+    delete place.logoUrl;
+  }
+  if (blocked.has('website')) {
+    place.website = '';
+    delete override.website;
+  }
+  if (blocked.has('lat') || blocked.has('lng')) {
+    place.lat = null;
+    place.lng = null;
+    override.lat = null;
+    override.lng = null;
+  }
+  for (const ratingKey of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'xaiRatingsFetched',
+  ]) {
+    if (blocked.has(ratingKey)) delete override[ratingKey];
+  }
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating', 'Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (blocked.has(field)) delete override[field];
+    }
+  }
+}
+
+function applyVkSearchSnapshotContractFields(search, place, override) {
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
+  if (search.price != null) override.price = search.price;
+  if (search.logoUrl) {
+    override.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  if (search.url) {
+    place.website = search.url;
+    override.website = search.url;
+  }
+  if (search.address && text(search.address)) {
+    place.address = search.address;
+    override.address = search.address;
+  }
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
+    'rentalCompany',
+    'vehicleClass',
+    'carType',
+    'pickupLocation',
+    'returnLocation',
+    'pickupHours',
+    'dropoffHours',
+    'startTime',
+    'endTime',
+    'totalPrice',
+    'reputationNote',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  for (const key of ['pickupHours', 'dropoffHours', 'pickupLocation', 'returnLocation']) {
+    if (record[key]) place[key] = record[key];
+  }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
+    }
+  }
+  applyProvenanceBlockedClears(record, place, override);
+}
+
+function applyVkSearchSnapshotCopyFields(search, place, override) {
+  const title = text(search.title);
+  if (title) place.name = title;
+  if (search.description) {
+    place.description = search.description;
+    override.longDetails = search.description;
+  }
+  if (search.summary) override.summary = search.summary;
+  applyVkSearchSnapshotContractFields(search, place, override);
 }
 
 function applyPr336SearchFields(row, place, override) {
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (!search) return;
+  if (VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
+    applyVkSearchSnapshotCopyFields(search, place, override);
+    return;
+  }
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
   if (search.description) {
     place.description = search.description;
     override.longDetails = search.description;
@@ -75,9 +249,42 @@ function applyPr336SearchFields(row, place, override) {
     place.address = search.address;
     override.address = search.address;
   }
-  if (row.id === 609) {
-    override.rentalCompany = 'Priceline opaque';
-    override.vehicleClass = 'Toyota Corolla or similar';
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
+    'ratingCount',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
+    }
   }
 }
 
@@ -105,40 +312,33 @@ function buildPayload() {
   const assignments = Object.fromEntries(days.map((day) => [String(day.id), []]));
   const thingOverrides = {};
   const rows = [
-    { day: 1, time: '10:30', name: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31', cat: 'flight', id: 601 },
+    { day: 1, time: '12:37', name: 'American Airlines LAS → JFK', cat: 'flight', id: 601 },
     { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, photo: true },
-    { day: 1, time: '16:00', name: 'Motto by Hilton New York City Times Square', cat: 'hotel', id: 603 },
+    { day: 1, time: '16:00', name: 'Hotel Belleclaire Central Park', cat: 'hotel', id: 603 },
     { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
-    { day: 1, time: '20:30', name: 'Jazz at Lincoln Center', cat: 'activity', id: 611 },
+    { day: 1, time: '20:30', name: 'Blue Note Jazz Club', cat: 'activity', id: 611 },
     { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
     { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
     { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
     { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
+    { day: 4, time: '12:30', name: 'Chelsea Market', cat: 'store', id: 612 },
+    { day: 5, time: '11:00', name: "Macy's Herald Square", cat: 'store', id: 613 },
+    { day: 6, time: '14:00', name: 'MoMA Design Store - 53rd Street', cat: 'store', id: 614 },
+    { day: 7, time: '11:00', name: 'Bergdorf Goodman', cat: 'store', id: 615 },
+    { day: 8, time: '10:00', name: 'Whole Foods Market Columbus Circle', cat: 'store', id: 616 },
+    { day: 8, time: '18:00', name: 'American Airlines JFK → LAS', cat: 'flight', id: 635 },
     { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-    { day: 1, time: '11:00', name: 'Priceline opaque Toyota Corolla', cat: 'car', id: 609, listOnly: true },
+    { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
+    { day: 1, time: '07:25', name: 'Southwest LAS → LGA 07:25–16:35', cat: 'flight', id: 630, listOnly: true },
+    { day: 1, time: '11:30', name: 'Southwest LAS → LGA 11:30–22:25', cat: 'flight', id: 631, listOnly: true },
+    { day: 1, time: '05:05', name: 'Southwest LAS → LGA 05:05–15:45', cat: 'flight', id: 632, listOnly: true },
+    { day: 1, time: '06:30', name: 'Southwest LAS → LGA 06:30–16:55', cat: 'flight', id: 633, listOnly: true },
+    { day: 1, time: '06:50', name: 'Southwest LAS → LGA 06:50–18:55', cat: 'flight', id: 634, listOnly: true },
   ];
-  const rowIdentity = (row) => `${row.ccabKey || resolveNycCcabKey(row.name)}\0${row.name}`;
-  const seenRowIdentities = new Set(rows.map(rowIdentity));
-  let nextListId = 612;
-  for (const listRow of NYC_VK_ISSUE_429_LIST_ROWS) {
-    const identity = `${listRow.ccabKey}\0${listRow.name}`;
-    if (seenRowIdentities.has(identity)) continue;
-    seenRowIdentities.add(identity);
-    rows.push({
-      day: 1,
-      time: '11:00',
-      name: listRow.name,
-      cat: listRow.cat,
-      id: nextListId,
-      ccabKey: listRow.ccabKey,
-      listOnly: true,
-    });
-    nextListId += 1;
-  }
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];
-    const coords = NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 };
+    const coords = row.id === 608 ? { lat: null, lng: null } : (NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 });
     const place = {
       id: row.id,
       trip_id: 99,
@@ -170,18 +370,70 @@ function buildPayload() {
     const override = {
       timeline: !row.listOnly,
       category: row.cat,
+      summary: SUMMARIES[row.id] || '',
     };
     applyPr336SearchFields(row, place, override);
+    if (row.id === 603) {
+      override.stayDays = 7;
+      override.checkInDate = '2026-06-23';
+      override.checkOutDate = '2026-06-30';
+      override.checkInTime = '16:00';
+      override.checkOutTime = '11:00';
+    }
+    if (row.id === 611) {
+      override.category = 'music';
+    }
+    if (row.id === 630) {
+      override.price = 164;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 631) {
+      override.price = 194;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 632) {
+      override.price = 239;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 633) {
+      override.price = 239;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 634) {
+      override.price = 249;
+      override.logoUrl = 'https://www.southwest.com/favicon.ico';
+      override.airline = 'Southwest';
+    }
+    if (row.id === 612) {
+      override.logoUrl = 'https://www.chelseamarket.com/favicon.ico';
+    }
+    if (row.id === 613) {
+      override.logoUrl = 'https://www.macys.com/favicon.ico';
+    }
+    if (row.id === 614) {
+      override.logoUrl = 'https://store.moma.org/favicon.ico';
+    }
+    if (row.id === 615) {
+      override.logoUrl = 'https://www.bergdorfgoodman.com/favicon.ico';
+    }
+    if (row.id === 616) {
+      override.logoUrl = 'https://www.wholefoodsmarket.com/favicon.ico';
+    }
     thingOverrides[`place:${row.id}`] = override;
   }
   const reservations = rows.map((row) => {
     const day = days.find((d) => d.day_number === row.day);
+    const place = places.find((p) => p.id === row.id);
     return {
       id: 800 + row.id,
       trip_id: 99,
       day_id: day.id,
       place_id: row.id,
-      title: row.name,
+      title: place?.name || row.name,
       status: 'candidate',
       type: row.cat === 'flight' ? 'flight' : row.cat === 'hotel' ? 'hotel' : 'activity',
       start_time: row.time,
@@ -252,6 +504,8 @@ function buildPayload() {
   }
   const timelineIds = rows.filter((row) => !row.listOnly).map((row) => row.id);
   let withTimeline = applyLiveAppTimelineSelections(shared, timelineIds);
+  const hotelDayNumbers = [1, 2, 3, 4, 5, 6, 7];
+  withTimeline = assignPlaceToTripDays(withTimeline, 603, hotelDayNumbers);
   const conflictDay = days.find((d) => d.day_number === NYC_CONFLICT_DAY);
   if (conflictDay) {
     const dayKey = String(conflictDay.id);

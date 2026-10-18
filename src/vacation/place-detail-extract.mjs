@@ -130,9 +130,6 @@ function buildSummaryFromResults({
       .filter((row) => wordCount(row) >= 25);
     summary = text([summary, ...reviewBits.slice(0, 2)].filter(Boolean).join(' '), 500);
   }
-  if (!descriptionPassesDetailJudge(summary, title) && wordCount(summary) >= 30) {
-    summary = text(`${title} — ${summary}`, 500);
-  }
   const reviewUrls = new Set(
     [1, 2, 3, 4]
       .map((n) => publicUrl(reviews[`review${n}Url`]))
@@ -195,7 +192,7 @@ function extractHappyHourFromBlob(blob = '') {
   return fields;
 }
 
-function flightFieldsFromBlob(blob = '', title = '') {
+export function flightFieldsFromBlob(blob = '', title = '') {
   const fields = {};
   const airline = blob.match(/\b(JetBlue|Southwest|United|Delta|American|Alaska|Spirit|Frontier)\b/i);
   if (airline) fields.airline = airline[1];

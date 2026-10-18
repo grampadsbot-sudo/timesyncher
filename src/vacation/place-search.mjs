@@ -17,6 +17,7 @@ import { searchTavily } from './poi-search.mjs';
 import { attachPlaceRelevance } from './place-search-relevance.mjs';
 import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
+import { enrichSearchPlacesWithGrokRatings } from './xai-grok-place-ratings.mjs';
 import { sourceRecordFor, sourceRefFor } from './place-search-record.mjs';
 import { noteToTripThing, placeToTripThing } from './place-search-trip-thing.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
@@ -679,6 +680,11 @@ export function noteToResearchCandidate(note, destination = '') {
 }
 export async function fillTripIntake(options) {
   const search = await searchPlaces(options);
+  const grokRatings = await enrichSearchPlacesWithGrokRatings(search.places || [], {
+    env: options?.env,
+    destination: search.destination,
+  });
+  if (Array.isArray(grokRatings.places)) search.places = grokRatings.places;
   const notes = Array.isArray(search.notes) ? search.notes : [];
   return {
     search,

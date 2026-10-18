@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
 import { openRouterProviderSpread, openRouterTier1CompactReasoningSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -16,7 +17,7 @@ export const DEFAULT_JEV_DECISIONS_URL = 'https://openrouter.ai/api/alpha/decisi
 export const OPENROUTER_CHAT_COMPLETIONS_URL = 'https://openrouter.ai/api/v1/chat/completions';
 export const JEV_QUALITY_MODEL = 'typesafe/jev-1.13';
 const JEV_DECISIONS_MODEL = JEV_QUALITY_MODEL;
-// Bake-off map only (dialog-runners/tier_models.json); drifted tier or gpt-*mini refuses the reply. T1 retire rationale lives in tier_models.json source (former T1 was google/gemini-2.5-flash-lite).
+
 const BAKEOFF_TIER_MODELS = {
   1: 'deepseek/deepseek-v4-flash',
   2: 'qwen/qwen3-235b-a22b-2507',
@@ -67,7 +68,6 @@ export function bakeoffTierModels() {
   return { ...OPENROUTER_TIER_CHAT_MODELS };
 }
 
-// Decisions score is the 0-based weighted index of this list, so index 0 is tier 1.
 const JEV_MODEL_TIER_CRITERIA = [
   '1 cheapest model that can still answer this vacation-app turn adequately',
   '2 light inexpensive reasoning',
@@ -460,6 +460,17 @@ function normalizeDecisions(body) {
 
 export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000 } = {}) {
   return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
+}
+
+const XAI_PLACE_SEARCH_MODEL_ENV = 'XAI_PLACE_SEARCH_MODEL';
+
+export function xaiGrokPlaceSearchModelId(env = process.env) {
+  return xaiPlaceSearchModelId(env);
+}
+export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl = fetch, timeoutMs = 120000 } = {}) {
+  const key = text(apiKey, 500);
+  if (!key) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'XAI_API_KEY_MISSING' });
+  return fetchImpl('https://api.x.ai/v1/responses', { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 120000)) });
 }
 
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {

@@ -5,6 +5,10 @@ import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
 import { timelineCategoryIcon } from './timeline-icons.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
+import {
+  descriptionFromFetchedPlace,
+  isCannedCategoryTemplate,
+} from './trip-thing-enrichment.mjs';
 
 const LOGO_IMG_STYLE = 'width:18px;height:18px;max-width:18px;max-height:18px;object-fit:contain;object-position:center center;display:block';
 const LOGO_FALLBACK_SPAN_STYLE = 'width:18px;height:18px;font-size:13px;display:inline-grid;place-items:center';
@@ -20,12 +24,13 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
-export function prepareSharedTripForLiveApp(shared = {}) {
+export function prepareSharedTripForLiveApp(shared = {}, options = {}) {
+  isCannedCategoryTemplate(descriptionFromFetchedPlace({}));
   const presented = applyThingPresentation(shared);
   const detailed = applyThingDetailOverrides(presented);
   const keepsake = applyProductKeepsakeOverrides(detailed);
   const withListFields = applyLiveAppListRowFields(keepsake);
-  return syncSharedTripApiBudget(withListFields);
+  return syncSharedTripApiBudget(withListFields, options);
 }
 
 function placeSourceUrl(place = {}) {

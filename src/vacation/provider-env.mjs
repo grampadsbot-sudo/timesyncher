@@ -30,3 +30,18 @@ export function missingSearchKeys(processEnv = process.env) {
   if (!String(providerEnv.brave || '').trim()) missing.push(String(providerEnv.braveName || 'brave'));
   return missing;
 }
+
+export function xaiPlaceSearchModelId(processEnv = process.env) {
+  const direct = String(processEnv.XAI_PLACE_SEARCH_MODEL || '').trim();
+  if (direct || processEnv !== process.env) {
+    if (!direct) {
+      throw Object.assign(new Error('XAI_PLACE_SEARCH_MODEL is not set.'), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
+    }
+    return direct;
+  }
+  const model = String(process.env.XAI_PLACE_SEARCH_MODEL || '').trim();
+  if (!model) {
+    throw Object.assign(new Error('XAI_PLACE_SEARCH_MODEL is not set.'), { code: 'XAI_PLACE_SEARCH_MODEL_MISSING' });
+  }
+  return model;
+}
