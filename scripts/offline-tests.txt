@@ -262,3 +262,4 @@ scripts/test_shepherd_staging_smoke_ask_d2_wiring.mjs
 scripts/test_shepherd_staging_smoke_check_i_trip_title.mjs
 scripts/test_verify_vacation_layout_self_check.mjs
 scripts/test_verify_skill_no_vercel.mjs
+scripts/test_gate_b_row_name_frame.mjs
