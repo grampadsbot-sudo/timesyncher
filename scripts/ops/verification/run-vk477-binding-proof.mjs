@@ -5,19 +5,28 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { buildVkHeadCaptureFixture } from './build-vk-head-capture-fixture.mjs';
-import { bindingVerdict } from './vk-capture-payload-binding.mjs';
-import { verifyReviewedCollectorPins } from './vk-gateb-collector-pin.mjs';
+import {
+  bindingVerdict,
+  buildHeadCaptureFixture,
+} from './vk477-dispatch-binding.mjs';
+import {
+  verifyCaptureCollectorPin,
+  verifyReviewedStepBPins,
+} from './vk-gateb-collector-pin.mjs';
+import { bindingProofShouldFail } from './vk477-proof-exit.mjs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const jobRoot = process.env.VK477_JOB_ROOT
   || '/home/ubishere9995/tsv-dispatch/vk-477-harness-20261018-job';
+const nycShared = process.env.VK_NYC_SHARED_FIXTURE
+  || '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
 const outDir = path.join(jobRoot, 'binding-proof');
 mkdirSync(outDir, { recursive: true });
 
 const setup = spawnSync(process.execPath, ['scripts/ops/verification/setup-reviewed-collector-job.mjs'], {
   cwd: root,
   encoding: 'utf8',
+  env: { ...process.env, VK477_JOB_ROOT: jobRoot },
 });
 if (setup.status !== 0) {
   process.stderr.write(setup.stderr || setup.stdout || 'collector job setup failed\n');
@@ -35,17 +44,21 @@ function gitHead() {
 }
 
 const snapshotPath = path.join(root, 'scripts/fixtures/pr336-vk-search-places.snapshot.json');
-const staticBase = new URL('./fixtures/vk-capture-static-base.stub.json', import.meta.url);
 const boundFixture = path.join(outDir, 'head-capture-bound.json');
 const manifestPath = path.join(outDir, 'capture-manifest.json');
+const collectorRoot = path.join(jobRoot, 'reviewed-collector-ec4d40de');
+const pinsPath = path.join(collectorRoot, 'ruling99-step-b-pin.json');
+const pinBundle = JSON.parse(readFileSync(pinsPath, 'utf8'));
+const patchedCapturePath = path.join(jobRoot, 'capture-patched', 'capture.mjs');
 
-buildVkHeadCaptureFixture(fileURLToPath(staticBase), snapshotPath, boundFixture);
+buildHeadCaptureFixture(nycShared, snapshotPath, boundFixture);
 
 const snapshotSha256 = sha256File(snapshotPath);
+const nycSharedSha256 = sha256File(nycShared);
 const fixtureSha256 = sha256File(boundFixture);
 const repoHeadSha = gitHead();
 
-const staticVerdict = bindingVerdict(snapshotPath, fileURLToPath(staticBase));
+const staticVerdict = bindingVerdict(snapshotPath, nycShared);
 const boundVerdict = bindingVerdict(snapshotPath, boundFixture);
 
 const contractRun = spawnSync(process.execPath, ['scripts/vk_contract_check_local.mjs'], {
@@ -54,11 +67,16 @@ const contractRun = spawnSync(process.execPath, ['scripts/vk_contract_check_loca
 });
 const contractOk = contractRun.status === 0;
 
-const collectorRoot = process.env.VK_GATEB_COLLECTOR_ROOT
-  || path.join(jobRoot, 'reviewed-collector-ec4d40de');
-const collector = verifyReviewedCollectorPins({ collectorRoot });
-const stalePinRoot = process.env.VK_STALE_COLLECTOR_ROOT || '/home/ubishere9995/tsv-gateb-pin-ec4d40de';
-const staleCollector = verifyReviewedCollectorPins({ collectorRoot: stalePinRoot });
+const collector = verifyReviewedStepBPins({ pinsPath, collectorRoot });
+const captureCollector = verifyCaptureCollectorPin({
+  patchedCapturePath,
+  expectedSha256: pinBundle.capture_collector_sha256,
+});
+const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || '/home/ubishere9995/tsv-gateb';
+const wrongRuntimeCollector = verifyReviewedStepBPins({
+  pinsPath,
+  collectorRoot: wrongRuntimeRoot,
+});
 
 writeFileSync(
   manifestPath,
@@ -66,11 +84,14 @@ writeFileSync(
     repoHeadSha,
     snapshotPath,
     snapshotSha256,
+    nycShared,
+    nycSharedSha256,
     fixture: boundFixture,
     fixtureSha256,
     data_snapshot: snapshotPath,
     data_snapshot_sha256: snapshotSha256,
     fixture_sha256: fixtureSha256,
+    note: 'manifest records fixture binding inputs only; no browser capture consumed',
   }, null, 2)}\n`,
   'utf8',
 );
@@ -78,23 +99,31 @@ writeFileSync(
 const payload = {
   repoHeadSha,
   snapshotSha256,
+  nycSharedSha256,
   fixtureSha256,
-  staticBaseVerdict: staticVerdict,
+  staticVerdict,
   boundFixtureVerdict: boundVerdict,
   vkContractCheckOk: contractOk,
+  vkContractCheckExitCode: contractRun.status,
   collector,
-  staleCollectorRejected: !staleCollector.ok,
+  captureCollector,
+  wrongRuntimeCollector,
+  wrongRuntimeRejected: !wrongRuntimeCollector.ok,
   manifestPath,
   boundFixture,
+  nycShared,
+  noBrowserCapture: true,
 };
 
 writeFileSync(path.join(outDir, 'binding-proof.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 process.stdout.write(`${JSON.stringify(payload)}\n`);
 
-const fail =
-  boundVerdict.overall !== 'PASS'
-  || staticVerdict.overall === 'PASS'
-  || !contractOk
-  || !collector.ok
-  || !staleCollector.ok;
+const fail = bindingProofShouldFail({
+  boundVerdict,
+  staticVerdict,
+  contractOk,
+  collector,
+  wrongRuntimeCollector,
+  captureCollector,
+});
 process.exit(fail ? 1 : 0);

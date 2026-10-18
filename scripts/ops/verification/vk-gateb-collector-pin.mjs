@@ -1,27 +1,28 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-
-const defaultPinsUrl = new URL('./reviewed-ec4d40de-runtime-input-pins.json', import.meta.url);
 
 function sha256File(filePath) {
   const body = readFileSync(filePath);
   return createHash('sha256').update(body).digest('hex');
 }
 
-export function verifyReviewedCollectorPins(options = {}) {
-  const pinsUrl = options.pinsUrl || defaultPinsUrl;
-  const collectorRoot = options.collectorRoot || process.env.VK_GATEB_COLLECTOR_ROOT || '';
-  const pins = JSON.parse(readFileSync(pinsUrl, 'utf8'));
+export function verifyReviewedStepBPins(options = {}) {
+  const collectorRoot = options.collectorRoot || '';
+  const pinsPath = options.pinsPath;
+  if (!pinsPath) {
+    return {
+      ok: false,
+      faults: ['DATA-CONTRACT: step-b pin bundle path missing'],
+      observed: {},
+    };
+  }
+  const pin = JSON.parse(readFileSync(pinsPath, 'utf8'));
+  const files = pin.files || {};
   const faults = [];
   const observed = {};
-  for (const [rel, expected] of Object.entries(pins)) {
-    const resolved = collectorRoot ? path.resolve(collectorRoot, rel) : null;
-    if (!resolved) {
-      faults.push(`DATA-CONTRACT: collector root unset for pin ${rel}`);
-      continue;
-    }
+  for (const [rel, expected] of Object.entries(files)) {
+    const resolved = path.resolve(collectorRoot, rel);
     let actual;
     try {
       actual = sha256File(resolved);
@@ -39,9 +40,39 @@ export function verifyReviewedCollectorPins(options = {}) {
   return {
     ok: faults.length === 0,
     checkerCommit: 'ec4d40de',
-    pinsPath: fileURLToPath(pinsUrl),
+    pinsPath,
     collectorRoot: collectorRoot || null,
+    bundleSha256: pin.bundle_sha256 || null,
     observed,
     faults,
   };
+}
+
+export function verifyCaptureCollectorPin(options = {}) {
+  const patchedCapturePath = options.patchedCapturePath;
+  const expected = options.expectedSha256;
+  if (!patchedCapturePath || !expected) {
+    return {
+      ok: false,
+      observed: null,
+      expected: expected || null,
+      faults: ['DATA-CONTRACT: capture collector pin inputs missing'],
+    };
+  }
+  let observed;
+  try {
+    observed = sha256File(patchedCapturePath);
+  } catch {
+    return {
+      ok: false,
+      observed: null,
+      expected,
+      faults: ['DATA-CONTRACT: patched capture collector missing'],
+    };
+  }
+  const ok = observed === expected;
+  const faults = ok
+    ? []
+    : [`DATA-CONTRACT: capture collector sha256 mismatch reviewed=${expected.slice(0, 12)} runtime=${observed.slice(0, 12)}`];
+  return { ok, observed, expected, faults };
 }
