@@ -39,23 +39,24 @@
     "sourceRecord": {
       "category": "store",
       "description": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price).",
-      "summary": "Iconic UWS specialty market and prepared-foods stop;",
+      "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
       "price": 20,
       "website": "https://www.zabars.com/",
       "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png",
       "lat": 40.7847,
       "lng": -73.9794,
       "address": "2245 Broadway, New York, NY 10024",
-      "source": "brave",
-      "url": "https://www.zabars.com/",
-      "longDetails": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price).",
       "logoProvenance": {
         "pageUrl": "https://www.zabars.com/",
         "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
-      }
+      },
+      "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics.",
+      "source": "brave",
+      "url": "https://www.zabars.com/",
+      "longDetails": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price)."
     },
     "description": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price).",
-    "summary": "Iconic UWS specialty market and prepared-foods stop;",
+    "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
     "price": 20,
     "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
   },
@@ -326,10 +327,14 @@
       "summary": "Neighborhood: Upper West Side;",
       "price": 508,
       "website": "https://www.arthousehotelnyc.com/",
-      "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
+      "logoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png",
       "lat": null,
       "lng": null,
       "address": "Upper West Side, New York, NY",
+      "logoProvenance": {
+        "pageUrl": "https://www.arthousehotelnyc.com/",
+        "iconUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png"
+      },
       "source": "brave",
       "url": "https://www.arthousehotelnyc.com/",
       "longDetails": "Neighborhood: Upper West Side; Rating: 7.9 (2,366 Booking.com reviews); Price: $508/night; sale $3,557/week for 2 adults; Bar/restaurant; okay rating; UWS fit; Status: candidate, not booked."
@@ -337,7 +342,7 @@
     "description": "Neighborhood: Upper West Side; Rating: 7.9 (2,366 Booking.com reviews); Price: $508/night; sale $3,557/week for 2 adults; Bar/restaurant; okay rating; UWS fit; Status: candidate, not booked.",
     "summary": "Neighborhood: Upper West Side;",
     "price": 508,
-    "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico"
+    "logoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png"
   },
   "613": {
     "source": "brave",

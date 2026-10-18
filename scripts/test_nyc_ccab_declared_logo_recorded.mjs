@@ -34,6 +34,13 @@ assert.equal(
   OLD_ARTHOUSE_GUESS,
 );
 
+const unitedKey = 'Flight option: United LAS-EWR 2026-06-23 07:00-15:00';
+const united = ENRICHMENT[unitedKey];
+assert.ok(united, 'United LAS-EWR ccab row required for flight-logo boundary');
+assert.match(String(united.logoUrl || ''), /united\.com\/favicon\.ico$/i);
+assert.equal(united.logoProvenance, undefined);
+assert.equal(effectiveCcabDeclaredLogoUrl(united), '');
+
 for (const fileName of listCcabLogoRecordings()) {
   const discovered = await discoverCcabLogoFromRecording(fileName);
   const row = ENRICHMENT[discovered.ccabKey];
