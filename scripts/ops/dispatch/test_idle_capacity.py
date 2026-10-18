@@ -15,8 +15,11 @@ SLUG = 'bot-admin/requests/piece-469'
 INBOX = 'bot-admin/inbox/time-syncher/piece-469'
 
 
-def item(n, body='', labels=(), state='open'):
-    return dict(number=n, body=body, labels=[{'name': x} for x in labels],
+def item(n, body='', labels=(), state='open', vk=True):
+    labs = list(labels)
+    if vk and 'project:tsv' not in labs:
+        labs = ['project:tsv'] + labs
+    return dict(number=n, body=body, labels=[{'name': x} for x in labs],
                 created_at=OLD, updated_at=OLD, state=state)
 
 
@@ -28,7 +31,10 @@ class GH:
     def pages(self, path):
         if path.endswith('/comments'):
             return self.comments.get(int(path.split('/')[-2]), [])
-        if '/pulls?' in path: return []
+        if '/pulls?' in path:
+            return [i for i in self.items.values() if i['state'] == 'open' and i.get('pull_request')]
+        if 'labels=project:tsv' in path:
+            return [i for i in self.items.values() if i['state'] == 'open' and any(l['name'] == 'project:tsv' for l in i.get('labels', []))]
         return [i for i in self.items.values() if i['state'] == 'open']
     def req(self, method, path, data=None):
         if method != 'GET':
@@ -218,9 +224,20 @@ class Capacity(unittest.TestCase):
         gh=GH([item(400), item(469, 'blocked-by #470', ['hold:files']), item(470, state='closed')],
               {400:[dr('dr eggbot: rescoping into #469')]})
         state={'rescope_misses':{}, 'idle_ring_at': NOW-3600}; before=copy.deepcopy(state)
-        self.cycle(gh, self.available(), state=state, dry=True)
+        with patch('builtins.print') as output:
+            self.cycle(gh, self.available(), state=state, dry=True)
         self.assertEqual(state, before); self.assertEqual(gh.writes, [])
         self.bell.assert_not_called(); self.put.assert_not_called(); self.score.assert_not_called()
+        text=' '.join(str(a) for a in output.call_args_list)
+        self.assertIn('DRY PLAN meters', text)
+        self.assertIn('DRY would remove #469', text)
+    def test_non_vk_pr_stale_hold_gets_no_github_writes(self):
+        pr=item(500,'blocked-by #470',['hold:stale'],vk=False)
+        pr['pull_request']={}
+        gh=GH([pr, item(470, state='closed')])
+        result=self.cycle(gh, self.available(), dry=True)
+        self.assertEqual(gh.writes, [])
+        self.assertNotIn(500, result.get('idle', {}))
 
 
 class Readers(unittest.TestCase):
@@ -256,15 +273,13 @@ class Readers(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{},clear=True), patch.object(c,'run',side_effect=OSError):
             result=c.read_meters(NOW+c.FRESH+1,root,reader=lambda _:source)
         self.assertTrue(all(m['stale'] and m['available'] for m in result.values()))
-    def test_cursor_auto_meter_cmd_is_ignored_craig_local_only(self):
-        # Craig 2026-10-17 8:43 PM PT: no automatic Cursor meter feed (TSV_CURSOR_METER_CMD removed).
+    def test_tsv_lane_meter_cmd_env_has_no_effect(self):
         with tempfile.TemporaryDirectory() as root:
             os.mkdir(root+'/meters')
             with open(root+'/meters/cursor.json','w') as out:
                 json.dump(dict(cursor_models_pct=55,other_models_pct=41,as_of=c.utc(NOW),method='craig'),out)
-            with patch.dict(os.environ,{'TSV_CURSOR_METER_CMD':'["cursor-meter"]'},clear=True), patch.object(c,'run',side_effect=[json.dumps({'primary':{'usedPercent':10,'resetsAt':NOW+3600}})]) as reader:
+            with patch.dict(os.environ,{'TSV_CURSOR_MODELS_METER_CMD':'["cursor-meter"]'},clear=True), patch.object(c,'run',side_effect=[json.dumps({'primary':{'usedPercent':10,'resetsAt':NOW+3600}})]) as reader:
                 readings=c.read_meters(NOW,root,reader=lambda _: '{}')
-            # Auto Cursor CMD must not be invoked; only codex-quota (or similar) may call run.
             self.assertTrue(all('cursor-meter' not in str(a) for a in reader.call_args_list))
             self.assertEqual(readings['cursor_models']['pct_used'],55)
             self.assertEqual(readings['other_models']['pct_used'],41)
@@ -326,7 +341,34 @@ class Main(unittest.TestCase):
             w.main()
         for writer in [save,log,ring,managing,put,feed]: writer.assert_not_called()
         self.assertEqual(gh.writes,[])
-        self.assertIn('idle ring',str(output.call_args_list))
+        text=str(output.call_args_list)
+        self.assertIn('DRY PLAN', text)
+        self.assertIn('idle ring', text)
+    def test_stuck_stop_skips_live_alarm_and_writes(self):
+        real_exists=os.path.exists
+        with patch.object(w.os.path,'exists',side_effect=lambda p: True if p == w.D + '/STUCK_STOP' else real_exists(p)), patch.object(w,'GH') as gh, patch.object(w,'find') as find, patch.object(w,'load_json',return_value={}), patch.object(w,'save_json') as save, patch.object(w,'logline') as log, patch.object(w,'ring_grok') as ring, patch.object(w.idle_capacity,'cycle') as cycle, patch.object(w.sys,'argv',['watcher']):
+            w.main()
+        log.assert_called_once()
+        self.assertIn('STUCK_STOP', log.call_args.args[0])
+        find.assert_not_called(); cycle.assert_not_called(); save.assert_not_called(); ring.assert_not_called(); gh.assert_not_called()
+    def test_dry_run_path_hermetic_under_30s(self):
+        gh=GH([item(469)])
+        state={}
+        import signal
+        def alarm(signum, frame):
+            raise TimeoutError('dry-run exceeded 30s')
+        signal.signal(signal.SIGALRM, alarm)
+        signal.alarm(30)
+        try:
+            with patch('builtins.print') as output:
+                c.cycle(gh, state, NOW, True, Mock(), meters=meters(29), workers=[], brain=Brain(), stops=[])
+            text=' '.join(str(a) for a in output.call_args_list)
+            self.assertIn('DRY PLAN meters', text)
+            self.assertIn('DRY PLAN idle', text)
+            self.assertEqual(gh.writes, [])
+            self.assertEqual(state, {})
+        finally:
+            signal.alarm(0)
     def test_exception_in_main_does_not_escape_or_write_dry_log(self):
         with patch.object(w,'load_json',return_value={}), patch.object(w,'GH',side_effect=OSError('fake')),patch.object(w,'logline') as log,patch.object(w.sys,'argv',['watcher','--dry-run']),patch('builtins.print') as output:
             w.main()

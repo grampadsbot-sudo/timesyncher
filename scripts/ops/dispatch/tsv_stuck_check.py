@@ -1,11 +1,4 @@
-"""2026-10-17 idle-capacity ruling: idle_capacity.cycle audits all open VK work
-before the legacy ladder below. Only live jobs or named, valid holds silence it;
-quota unknown/stale fails open. First idle ring goes directly to dr eggbot,
-then every 30 minutes. Stops are reported, never used to hide idle capacity.
-The legacy ladder remains for tracker rows outside that audit. Dry runs only
-print; no logs, state, notifications, GBrain puts, or GitHub writes.
-
-Zero-AI 'is anything stuck' check (dr eggbot, 2026-10-14, Craig OK 6:20 AM PT). Called at the end of every
+"""Zero-AI 'is anything stuck' check (dr eggbot, 2026-10-14, Craig OK 6:20 AM PT). Called at the end of every
 tsv_dispatch.py run (10-min cron). No model calls. Craig sees each ring as one line in his existing Telegram PR feed (tell_craig, same as tsv_notify.py); FYI only.
 STUCK rules (repo grampadsbot-sudo/timesyncher):
   A. open PR: head unchanged AND issue updated_at (comments/labels) older than 60 min, not labelled done/awaiting-craig-review
@@ -25,7 +18,7 @@ Stuck ladder (bot-admin/requests/eggbot-stuck-escalation-ladder-20261015-0823, C
 Same item still stuck after 3 h -> also one OpenClaw doorbell ring (kind vk-stuck, same webhook as escalation_bell.py).
 Telegram feed lines go out on EVERY run while stuck (no dedup). Claude Code Tincan bell also rings every run while stuck (Craig 6:25 AM PT); dr eggbot OpenClaw doorbell 60 min after first detection, then at most hourly (Craig 6:28 AM PT) (state stuck-check-state.json). Silent when nothing stuck.
 Report grouping (Craig 2026-10-14): one entry per job, joining a PR with its explicit owning issue; dependency mentions do not join jobs. Valid named future-phase pairs remain visible as PARKED and do not ring action bells. Tracker objects and launch/merge guards remain unchanged.
-One log line per run: logs/stuck-YYYYMMDD.log.  Usage: python3 tsv_stuck_check.py [--dry-run]   Stop files are listed in the idle-capacity alarm"""
+One log line per run: logs/stuck-YYYYMMDD.log.  Usage: python3 tsv_stuck_check.py [--dry-run]   Stop: touch STUCK_STOP"""
 import datetime as dt, hashlib, json, os, re, subprocess, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tsv_common import GH, REPO, D, PT, load_json, save_json, scrub, tell_craig
@@ -58,29 +51,48 @@ def ci_fail_since(gh, sha):
     except Exception: return None, []
     bad = [r for r in runs if r.get("conclusion") in ("failure", "timed_out", "startup_failure") and r.get("completed_at")]
     return (min(iso(r["completed_at"]) for r in bad), sorted({r["name"] for r in bad})) if bad else (None, [])
-def find(gh, st, now):
+def find(gh, st, now, dry=False):
     """v2 (Craig 6:35 AM PT): no 60-min wait. One item per PR/issue; flagged at once if it has a flag label, failing CI,
     or no head/comment/label change since the previous run (>= 10 min). Age = time since the oldest condition began."""
     INFO.clear()
     items = []
-    # v2.1 (Craig 6:38 AM PT): ALL open non-draft PRs regardless of age (no 7-day window), listed in full however many.
-    # v2.3 (Craig 8:17 AM PT): drafts stay listed as PARKED; only merged/closed PRs leave the list.
-    prs = gh.pages("/repos/%s/pulls?state=open" % REPO)
+    if dry:
+        vk = gh.pages("/repos/%s/issues?state=open&labels=project:tsv" % REPO)
+        prs = [i for i in vk if isinstance(i, dict) and i.get("pull_request")]
+        issues = [i for i in vk if isinstance(i, dict) and "pull_request" not in i]
+    else:
+        prs = gh.pages("/repos/%s/pulls?state=open" % REPO)
+        issues = None
     heads = st.setdefault("heads", {})
     for p in prs:
-        n = p["number"]; labs = {l["name"] for l in p["labels"]}; sha = p["head"]["sha"]
+        n = p["number"]; labs = {l["name"] for l in p["labels"]}
+        sha = (p.get("head") or {}).get("sha")
+        if not sha and dry:
+            try:
+                full = gh.req("GET", "/repos/%s/pulls/%d" % (REPO, n))
+                sha = full["head"]["sha"]
+                p["head"] = full["head"]
+            except Exception:
+                sha = heads.get(str(n), {}).get("sha") or "0" * 40
+                p["head"] = {"sha": sha}
+        elif not sha:
+            sha = (p.get("head") or {}).get("sha") or "0" * 40
+        elif dry and "head" not in p:
+            p["head"] = {"sha": sha}
         if labs & DONE: continue
         h = heads.get(str(n))
         if not h or h["sha"] != sha:
-            try: t0 = iso(gh.req("GET", "/repos/%s/commits/%s" % (REPO, sha))["commit"]["committer"]["date"])
-            except Exception: t0 = now
+            if dry: t0 = iso(p["updated_at"])
+            else:
+                try: t0 = iso(gh.req("GET", "/repos/%s/commits/%s" % (REPO, sha))["commit"]["committer"]["date"])
+                except Exception: t0 = now
             h = heads[str(n)] = {"sha": sha, "since": t0}
         upd = iso(p["updated_at"]); last_t = max(h["since"], upd)
         last = ("head push %s" % hm(h["since"])) if h["since"] >= upd else ("comment/label change %s" % hm(upd))
         conds = []   # (since, text)
         if p.get("draft"):
             pk = st.setdefault("parked", {}).get(str(n))
-            if not pk or pk.get("upd") != p["updated_at"]:   # cached until the PR changes (keeps the run fast)
+            if not dry and (not pk or pk.get("upd") != p["updated_at"]):
                 ev = [e for e in gh.pages("/repos/%s/issues/%d/events" % (REPO, n)) if e.get("event") == "convert_to_draft"]
                 ds = iso(ev[-1]["created_at"]) if ev else iso(p["created_at"])
                 try:
@@ -89,14 +101,20 @@ def find(gh, st, now):
                     why = re.sub(r"\s+", " ", cm[-1]["body"])[:140] if cm else ""
                 except Exception: why = ""
                 pk = st["parked"][str(n)] = {"upd": p["updated_at"], "ds": ds, "why": why}
+            elif not pk:
+                pk = st.setdefault("parked", {})[str(n)] = {"upd": p["updated_at"], "ds": iso(p["created_at"]), "why": ""}
             ds, why = pk["ds"], pk["why"]
             conds.append((ds, "PARKED (draft) since %s%s" % (hm(ds), ("; last comment: " + why) if why else "")))
         flags = sorted(l for l in labs if is_flag(l))
         if flags:
-            since = label_since(gh, n, set(flags))
-            for l in flags: conds.append((since.get(l, upd), l))
-        cf, names = ci_fail_since(gh, sha)
-        if cf: conds.append((cf, "CI failing (%s)" % ",".join(names[:3])))
+            if dry:
+                for l in flags: conds.append((upd, l))
+            else:
+                since = label_since(gh, n, set(flags))
+                for l in flags: conds.append((since.get(l, upd), l))
+        if not dry:
+            cf, names = ci_fail_since(gh, sha)
+            if cf: conds.append((cf, "CI failing (%s)" % ",".join(names[:3])))
         if now - last_t >= IDLE_S and not p.get("draft"): conds.append((last_t, "no change since last run"))
         if not conds: continue
         start = min(c[0] for c in conds)
@@ -109,8 +127,8 @@ def find(gh, st, now):
             txt = "%s %s" % (p.get("title") or "", p.get("body") or "")
             if re.search(r"#%d\b" % n, txt) or re.search(r"(^|\D)%d(\D|$)" % n, p["head"]["ref"]): return p["number"]
         return None
-    # v2.4 (Craig 8:21 AM PT): ALL open project:tsv issues that are status:ready OR carry a flag label (superset of the morning check)
-    issues = gh.pages("/repos/%s/issues?state=open&labels=project:tsv" % REPO)
+    if issues is None:
+        issues = gh.pages("/repos/%s/issues?state=open&labels=project:tsv" % REPO)
     for i in issues:
         if "pull_request" in i: continue
         n = i["number"]; labs = {l["name"] for l in i["labels"]}
@@ -119,17 +137,22 @@ def find(gh, st, now):
         upd = iso(i["updated_at"]); conds = []
         flags = sorted(l for l in labs if is_flag(l))
         if flags:
-            since = label_since(gh, n, set(flags))
-            for l in flags: conds.append((since.get(l, upd), l))
+            if dry:
+                for l in flags: conds.append((upd, l))
+            else:
+                since = label_since(gh, n, set(flags))
+                for l in flags: conds.append((since.get(l, upd), l))
             wk = st.setdefault("waits", {}).get(str(n))
-            if not wk or wk.get("upd") != i["updated_at"]:
+            if not dry and (not wk or wk.get("upd") != i["updated_at"]):
                 try:
                     cm = [c for c in gh.pages("/repos/%s/issues/%d/comments" % (REPO, n))
                           if (c.get("user") or {}).get("type") != "Bot" and not (c.get("body") or "").startswith("[vc]")]
                     w = re.sub(r"\s+", " ", cm[-1]["body"])[:140] if cm else ""
                 except Exception: w = ""
                 wk = st["waits"][str(n)] = {"upd": i["updated_at"], "w": w}
-            if wk["w"]: conds.append((now, "waits on: " + wk["w"]))
+            elif not wk:
+                wk = st.setdefault("waits", {})[str(n)] = {"upd": i["updated_at"], "w": ""}
+            if wk.get("w"): conds.append((now, "waits on: " + wk["w"]))
         if "status:ready" not in labs: lp = None; ready = False
         else: lp = linked_pr(n); ready = True
         if lp:
@@ -226,13 +249,14 @@ def executable_brief(body):
     return bool(re.search(r"done[- ]means|acceptance|scope:", text) and
                 re.search(r"report|test|do.not.touch|verify", text))
 
-def hold_status(gh, n, now, head_since=0, sha=None, memory=None):
+def hold_status(gh, n, now, head_since=0, sha=None, memory=None, dry=False):
     """Return HELD/GRACE reason or None; unknown lookups never establish a hold.
 
     Explicit body blockers are snapshotted on first observation. A subsequent head
     or label change invalidates that body hold until its text changes. Dr holds
     also compare event times to the post; CI/comments do not release them.
     """
+    if dry: return None
     memory = memory if memory is not None else {}
     item = gh.req("GET", "/repos/%s/issues/%d" % (REPO, n))
     cs = gh.pages("/repos/%s/issues/%d/comments" % (REPO, n))
@@ -321,15 +345,14 @@ def ring_openclaw(n, key, reason, dry, maxlen=300):
     except Exception as e: return type(e).__name__
 def main():
     dry = "--dry-run" in sys.argv
+    if os.path.exists(D + "/STUCK_STOP") and not dry: logline("STUCK_STOP present; skipped"); return
     try:
         REQUESTS.clear()
         st = load_json(STATE, {}); now = time.time(); gh = GH()
-        items = find(gh, st, now)
+        items = find(gh, st, now, dry)
         capacity = idle_capacity.cycle(gh, st, now, dry, ring_grok)
         seen = st.setdefault("items", {}); rang = []; esc = []; tg = []; scores = []; due = []; escalation_due = []
         for key, n, reason in items:
-            # The evidence-only audit supersedes legacy comment/grace holds for
-            # every inspected tracker object. Preserve grouping for the report.
             members = INFO[key].get("members", [key])
             if n in capacity['covered'] or any(int(m[2:]) in capacity['covered'] for m in members):
                 if n in capacity.get('holds', {}): INFO[key]['held'] = capacity['holds'][n]
@@ -340,9 +363,13 @@ def main():
             if INFO[key].get("parked_job") or now - s["last_ring"] < RING_EVERY: continue
             hs = st.get("heads", {}).get(str(n), {}) if key.startswith("pr") else {}
             try:
-                dr_t, state_t, active = answer_state(gh, n, now, hs.get("since", 0), hs.get("sha"))
-                if state_t > s.get("state_t", 0): s["stall"] = 0; s["state_t"] = state_t   # any state change restarts the ladder
-                held = hold_status(gh, n, now, hs.get("since", 0), hs.get("sha"), s)
+                if dry:
+                    dr_t, state_t, active = 0, 0, False
+                    held = hold_status(gh, n, now, hs.get("since", 0), hs.get("sha"), s, dry=True)
+                else:
+                    dr_t, state_t, active = answer_state(gh, n, now, hs.get("since", 0), hs.get("sha"))
+                    if state_t > s.get("state_t", 0): s["stall"] = 0; s["state_t"] = state_t
+                    held = hold_status(gh, n, now, hs.get("since", 0), hs.get("sha"), s)
                 if held: INFO[key]["held"] = held
                 action, stall, escalate = ladder_action(held, active, s.get("stall", 0))
                 s["stall"] = stall

@@ -1,13 +1,3 @@
-"""Evidence-only capacity/dispatch audit. No models, launches, or tracker mutations.
-
-Read-only CLI overrides are JSON argv arrays in TSV_<LANE>_METER_CMD and
-TSV_CURSOR_AGENTS_CMD. Meter cache: meters/<lane>.json; Cursor uses
-cursor_models_pct/other_models_pct/as_of. Combined GBrain feed is JSON in a
-fenced block, {"lanes": {name: {"pct_used": n, "as_of": ISO, "reset": ...}}}.
-Evidence cache: worker-heartbeats.json, {"workers": [{"item": N,
-"heartbeat": ISO, "kind": "heartbeat"}]}; Cursor CLI returns {"agents":
-[{"item": N, "status": "RUNNING"}]}. No receipt/comment establishes liveness.
-"""
 import base64
 import datetime as dt
 import glob
@@ -31,6 +21,8 @@ HEARTBEAT = 30 * 60
 RESCOPE = 15 * 60
 RERING = 30 * 60
 GBRAIN = os.path.expanduser('~/.local/bin/gbrain')
+DISCOVER_PAGES = 10
+DRY_DISCOVER_PAGES = 2
 
 
 def stamp(value):
@@ -44,14 +36,13 @@ def utc(now):
     return dt.datetime.fromtimestamp(now, dt.timezone.utc).isoformat()
 
 
-def run(argv):
-    result = subprocess.run(argv, capture_output=True, text=True, timeout=45)
+def run(argv, timeout=45):
+    result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     if result.returncode: raise OSError('reader rc%d' % result.returncode)
     return result.stdout
 
 
 def json_text(text):
-    """JSON object, optionally fenced in a GBrain markdown page."""
     match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text)
     return json.loads(match.group(1) if match else text)
 
@@ -68,7 +59,6 @@ def command(env):
 
 
 def normalize(raw, now, hard_stop):
-    """All windows must have room; one exhausted window stops the lane."""
     try:
         windows = raw.get('windows') or [raw]
         pct = max(float(w['pct_used']) for w in windows)
@@ -83,7 +73,7 @@ def normalize(raw, now, hard_stop):
                     reset='unknown', stale=True, available=True)
 
 
-def read_meters(now, root=D, reader=read_page):
+def read_meters(now, root=D, reader=read_page, dry=False):
     try: cached = json_text(reader(METERS_SLUG)).get('lanes', {})
     except Exception: cached = {}
     readings = {}
@@ -91,29 +81,18 @@ def read_meters(now, root=D, reader=read_page):
         candidates = [cached.get(lane, {})]
         try: candidates.append(file_json(root + '/meters/' + lane + '.json'))
         except Exception: pass
-        env = 'TSV_' + lane.upper() + '_METER_CMD'
         try:
-            if env in os.environ:
-                output = run(command(env))
-                try: live = json_text(output)
-                except ValueError:
-                    windows = [dict(pct_used=float(x), reset=output, as_of=utc(now)) for x in re.findall(r'(\d+(?:\.\d+)?)%', output)]
-                    if not windows: raise ValueError('no meter windows')
-                    live = dict(windows=windows, as_of=utc(now))
-                live.setdefault('as_of', utc(now)); candidates.append(live)
-            elif lane == 'codex':
-                raw = json_text(run([sys.executable, root + '/bin/codex-quota.py']))
+            if lane == 'codex' and not dry:
+                raw = json_text(run([sys.executable, root + '/bin/codex-quota.py'], timeout=20))
                 windows = [dict(pct_used=w['usedPercent'], reset=w.get('resetsAt', 'unknown'), as_of=utc(now))
                            for w in raw.values() if isinstance(w, dict) and 'usedPercent' in w]
                 if windows: candidates.append(dict(windows=windows, as_of=utc(now)))
-            # ~/bin/claude-usage invokes Haiku. Never call it in this zero-AI watcher.
-        except Exception: candidates.append(dict(as_of=utc(now), stale=True))   # failed live read is unknown
+        except Exception: candidates.append(dict(as_of=utc(now), stale=True))
         if lane in ('cursor_models', 'other_models'):
             try:
                 raw = file_json(root + '/meters/cursor.json')
                 candidates.append(dict(pct_used=raw[lane + '_pct'], as_of=raw['as_of'], reset=raw.get('reset', 'monthly')))
             except Exception: pass
-        # Select newest source observation, never stamp cached data with this run's time.
         def observed(raw):
             try: return stamp(raw['as_of'])
             except Exception: return float('-inf')
@@ -123,9 +102,11 @@ def read_meters(now, root=D, reader=read_page):
 
 
 def publish_meters(readings, now):
-    # Disabled Craig 2026-10-17 8:43 PM PT: no automatic Cursor/SuperGrok/Grok Bot meter feed.
-    # Cursor comes only from Craig readings in bot-admin/meters/lanes-latest (method craig).
     return None
+
+
+def project_tsv(item):
+    return any((x.get('name') if isinstance(x, dict) else x) == 'project:tsv' for x in item.get('labels', []))
 
 
 def mentions(text, n):
@@ -133,30 +114,30 @@ def mentions(text, n):
 
 
 def cursor_agents(root=D):
-    """Account-wide GETs only. Local launch state maps IDs; it never proves life."""
     from tsv_common import read_secret
     key = read_secret(os.path.expanduser('~/.config/tsv-cursor/api-key'))
     auth = 'Basic ' + base64.b64encode((key + ':').encode()).decode()
     def get(path):
         request = urllib.request.Request('https://api.cursor.com' + path,
                                          headers={'Authorization': auth, 'User-Agent': 'tsv-stuck-check'})
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=15) as response:
             return json.load(response)
     try: state = file_json(root + '/cursor-state.json').get('issues', {})
     except Exception: state = {}
     mapping = {v.get('agent'): int(n) for n, v in state.items() if v.get('agent')}
-    workers = []; cursor = None; seen = set()
-    while True:
+    workers = []; cursor = None; seen = set(); pages = 0
+    while pages < 5:
         page = get('/v1/agents?limit=100&includeArchived=false' + ('&cursor=' + quote(cursor, safe='') if cursor else ''))
+        pages += 1
         for agent in page.get('items', []):
             if agent.get('status', '').upper() != 'ACTIVE': continue
-            aid = agent['id']; run = {}
+            aid = agent['id']; run_info = {}
             if agent.get('latestRunId'):
-                run = get('/v1/agents/%s/runs/%s' % (quote(aid, safe=''), quote(agent['latestRunId'], safe='')))
-                if run.get('status', '').upper() not in ('RUNNING', 'CREATING'): continue
+                run_info = get('/v1/agents/%s/runs/%s' % (quote(aid, safe=''), quote(agent['latestRunId'], safe='')))
+                if run_info.get('status', '').upper() not in ('RUNNING', 'CREATING'): continue
             numbers = {mapping[aid]} if aid in mapping else set()
             numbers.update(int(x) for x in re.findall(r'#(\d+)\b', agent.get('name') or ''))
-            for branch in (run.get('git') or {}).get('branches') or []:
+            for branch in (run_info.get('git') or {}).get('branches') or []:
                 numbers.update(int(x) for x in re.findall(r'/pull/(\d+)\b', branch.get('prUrl') or ''))
             workers.extend(dict(kind='cursor', item=n) for n in numbers)
         cursor = page.get('nextCursor')
@@ -165,45 +146,44 @@ def cursor_agents(root=D):
     return workers
 
 
-def read_workers(now, root=D):
-    """Collect live /proc processes, active systemd units, account agents, heartbeats."""
+def read_workers(now, root=D, dry=False):
     workers = []
-    for path in glob.glob('/proc/[0-9]*/cmdline'):
-        try:
-            with open(path, 'rb') as source: cmd = source.read().decode(errors='replace').replace('\0', ' ')
-            if not re.search(r'(?:^|[ /])(?:codex|claude|grok)(?:[ /.-]|$)', cmd, re.I): continue
-            if os.path.basename(os.path.dirname(path)) == str(os.getpid()): continue
-            try: cwd = os.readlink(os.path.dirname(path) + '/cwd')
-            except OSError: cwd = ''
-            workers.append(dict(kind='process', text=cmd + ' ' + cwd))
-        except OSError: pass
-    for scope in ([], ['--user']):
-        try:
-            units = run(['systemctl', *scope, 'list-units', '--state=running', '--no-legend', '--plain'])
-            names = [line.split()[0] for line in units.splitlines() if line.split()]
-            if names:
-                detail = run(['systemctl', *scope, 'show', *names, '-p', 'Id', '-p', 'ExecStart', '-p', 'WorkingDirectory'])
-                for block in detail.split('\n\n'):
-                    fields = dict(re.findall(r'^(Id|ExecStart|WorkingDirectory)=(.*)$', block, re.M))
-                    executable = fields.get('ExecStart', '')
-                    # systemctl's structured value includes PID and timestamps;
-                    # only argv is command-line evidence.
-                    if 'argv[]=' in executable:
-                        executable = ' '.join(re.findall(r'argv\[\]=(.*?);', executable))
-                    workers.append(dict(kind='unit', text=' '.join([fields.get('Id', ''), executable, fields.get('WorkingDirectory', '')])))
-        except Exception: pass
+    if not dry:
+        for path in glob.glob('/proc/[0-9]*/cmdline'):
+            try:
+                with open(path, 'rb') as source: cmd = source.read().decode(errors='replace').replace('\0', ' ')
+                if not re.search(r'(?:^|[ /])(?:codex|claude|grok)(?:[ /.-]|$)', cmd, re.I): continue
+                if os.path.basename(os.path.dirname(path)) == str(os.getpid()): continue
+                try: cwd = os.readlink(os.path.dirname(path) + '/cwd')
+                except OSError: cwd = ''
+                workers.append(dict(kind='process', text=cmd + ' ' + cwd))
+            except OSError: pass
+        for scope in ([], ['--user']):
+            try:
+                units = run(['systemctl', *scope, 'list-units', '--state=running', '--no-legend', '--plain'], timeout=20)
+                names = [line.split()[0] for line in units.splitlines() if line.split()]
+                if names:
+                    detail = run(['systemctl', *scope, 'show', *names, '-p', 'Id', '-p', 'ExecStart', '-p', 'WorkingDirectory'], timeout=20)
+                    for block in detail.split('\n\n'):
+                        fields = dict(re.findall(r'^(Id|ExecStart|WorkingDirectory)=(.*)$', block, re.M))
+                        executable = fields.get('ExecStart', '')
+                        if 'argv[]=' in executable:
+                            executable = ' '.join(re.findall(r'argv\[\]=(.*?);', executable))
+                        workers.append(dict(kind='unit', text=' '.join([fields.get('Id', ''), executable, fields.get('WorkingDirectory', '')])))
+            except Exception: pass
     try:
         for worker in file_json(root + '/worker-heartbeats.json')['workers']:
             if 0 <= now - stamp(worker['heartbeat']) <= HEARTBEAT:
                 workers.append(dict(kind='heartbeat', item=int(worker['item']), heartbeat=worker['heartbeat']))
     except Exception: pass
-    try:
-        if 'TSV_CURSOR_AGENTS_CMD' in os.environ:
-            for agent in json_text(run(command('TSV_CURSOR_AGENTS_CMD')))['agents']:
-                if agent.get('status', '').lower() in ('running', 'active'):
-                    workers.append(dict(kind='cursor', item=int(agent['item'])))
-        else: workers.extend(cursor_agents(root))
-    except Exception: pass
+    if not dry:
+        try:
+            if 'TSV_CURSOR_AGENTS_CMD' in os.environ:
+                for agent in json_text(run(command('TSV_CURSOR_AGENTS_CMD')))['agents']:
+                    if agent.get('status', '').lower() in ('running', 'active'):
+                        workers.append(dict(kind='cursor', item=int(agent['item'])))
+            else: workers.extend(cursor_agents(root))
+        except Exception: pass
     return workers
 
 
@@ -212,21 +192,21 @@ def running(n, workers):
 
 
 class Brain:
-    """Keyword discovery is deterministic; page contents are always re-read this run."""
     def __init__(self): self.pages = {}; self.searched = set()
     def get(self, slug):
         if slug not in self.pages: self.pages[slug] = read_page(slug)
         return self.pages[slug]
-    def discover(self, n):
-        if n in self.searched: return
+    def discover(self, n, dry=False):
+        if dry or n in self.searched: return
         self.searched.add(n)
-        offset = 0
-        while True:
-            text = run([GBRAIN, 'search', '"#%d"' % n, '--match', 'keyword', '--snippet-chars', '0', '--limit', '100', '--offset', str(offset)])
+        offset = 0; pages = 0; cap = DRY_DISCOVER_PAGES if dry else DISCOVER_PAGES
+        while pages < cap:
+            text = run([GBRAIN, 'search', '"#%d"' % n, '--match', 'keyword', '--snippet-chars', '0', '--limit', '100', '--offset', str(offset)], timeout=25)
             slugs = set(re.findall(r'bot-admin/(?:requests|inbox/time-syncher)/[a-zA-Z0-9_-]+', text))
             for slug in slugs:
                 try: self.get(slug)
                 except Exception: pass
+            pages += 1
             if len(slugs) < 100: break
             offset += 100
 
@@ -243,7 +223,6 @@ def references(text, n):
 
 
 def dependency(text):
-    # A bare ordering statement or "Dependency: #N" supplies no reason to serialize.
     return bool(re.search(r'\b(?:shared|same) files?\s*[:\w./`]|\b(?:needed result|needs? (?:the )?(?:result|output)|requires? (?:the )?(?:result|output))\b', text, re.I))
 
 
@@ -268,8 +247,7 @@ def dr_post(comment):
         comment.get('body') or '', re.I))
 
 
-def assess_hold(item, latest, gh, brain, workers):
-    """(valid reason, labels to remove, reason). Pending decisions require what + who."""
+def assess_hold(item, latest, gh, brain, workers, dry=False):
     n = item['number']; body = item.get('body') or ''
     text = body + '\n' + latest
     labels = [x['name'] for x in item.get('labels', []) if x['name'].startswith('hold:') or x['name'] in ('needs-dr-eggbot', 'status:stuck')]
@@ -277,7 +255,6 @@ def assess_hold(item, latest, gh, brain, workers):
     pending = re.search(r'(?:pending[- ]decision|decision needed)\s*:\s*(\S[^\n]*)', text, re.I)
     decider = re.search(r'(?:decider|who decides|decides[- ]by|decision owner)\s*:\s*(\S[^\n]*)', text, re.I)
     natural_decision = re.search(r'\b(?:awaiting|pending|waiting for)\s+(Craig|dr eggbot|managing dr|chief dr|claude-code)\s+(?:to\s+)?(?:decide|approve|choose)\s+(\S[^\n]*)', text, re.I)
-    # A later dr ruling must explicitly record the decision, not merely mention it.
     decision_line = r'(?:^|\n)\s*(?:(?:dr eggbot|managing dr|chief dr|claude-code)[^\n:]*:\s*)?decision(?:\s+(?:recorded|resolved|made))?\s*:\s*\S'
     decided = bool(re.search(decision_line, latest, re.I) or
                    re.search(r'\b(?:Craig|dr eggbot|managing dr|chief dr)\s+decided\s*:\s*\S', latest, re.I))
@@ -292,8 +269,6 @@ def assess_hold(item, latest, gh, brain, workers):
             elif blocker.get('state') == 'open': open_refs.append(ref)
         except Exception: pass
     written = text + '\n' + '\n'.join(b for s, b in brain.pages.items() if s.startswith('bot-admin/requests/') and re.search(r'#%d\b' % n, b))
-    # Rescoping replaces the old blocker with dispatched pieces. A request page
-    # alone cannot keep the dependent quiet while those jobs are idle.
     rescoped = False; rescoped_pieces = set()
     for ref in sorted(refs):
         try:
@@ -305,7 +280,9 @@ def assess_hold(item, latest, gh, brain, workers):
                     pieces.update(rescope_refs(comment['body']))
             if not pieces: continue
             rescoped = True; rescoped_pieces.update(pieces)
-            for piece in pieces: brain.discover(piece)
+            for piece in pieces:
+                try: brain.discover(piece, dry)
+                except Exception: pass
             requests = [(slug, body) for slug, body in brain.pages.items() if slug.startswith('bot-admin/requests/')]
             all_dispatched = all(dispatch(piece, {}, brain, workers) for piece in pieces)
             live = [(slug, piece) for slug, body in requests for piece in pieces
@@ -324,7 +301,6 @@ def assess_hold(item, latest, gh, brain, workers):
         return None, labels, 'blocker(s) closed/merged: ' + ', '.join('#%d' % ref for ref in closed_refs)
     if (refs or slugs) and not dependency(written): return None, [], 'UNRESOLVED: serialization has no written dependency'
     for ref in open_refs:
-        # An open blocker remains visible to the audit, even if its dependent is held.
         return 'HELD on #%d' % ref, [], ''
     for slug in slugs:
         try:
@@ -336,7 +312,6 @@ def assess_hold(item, latest, gh, brain, workers):
 
 
 def rescope_refs(text):
-    """References only in the split/ruling clause, not incidental earlier history."""
     result = set()
     for line in re.split(r'[\n!?]|\.(?=\s|$)', text):
         match = re.search(r'\b(?:rescop(?:ed|ing)|split(?:\s+work)?(?:\s+into)?|split into)\b', line, re.I)
@@ -348,20 +323,17 @@ def rescope_refs(text):
     return result
 
 
-def audit(gh, now, brain, workers):
-    """Read every open VK item and rescope ruling. Return data and planned removals."""
-    issues = gh.pages('/repos/%s/issues?state=open&labels=project:tsv' % REPO)
-    prs = gh.pages('/repos/%s/pulls?state=open' % REPO)
-    # Unreadable inventories leave legacy rows visible; never invent tracker items.
-    if not isinstance(issues, list) or not isinstance(prs, list): return dict(idle={}, removals=[], misses=[], covered=set())
-    items = {i['number']: i for i in issues + prs if isinstance(i, dict) and 'number' in i}
+def audit(gh, now, brain, workers, dry=False):
+    vk = gh.pages('/repos/%s/issues?state=open&labels=project:tsv' % REPO)
+    if not isinstance(vk, list): return dict(idle={}, removals=[], misses=[], covered=set(), items={})
+    items = {i['number']: i for i in vk if isinstance(i, dict) and 'number' in i and project_tsv(i)}
     comments = {}; rulings = []
     errors = []; pending = list(items); inspected = set()
     while pending:
         n = pending.pop(0)
         if n in inspected: continue
         inspected.add(n); item = items[n]
-        cs = gh.pages('/repos/%s/issues/%d/comments' % (REPO, n))
+        cs = [] if dry else gh.pages('/repos/%s/issues/%d/comments' % (REPO, n))
         drs = [c for c in cs if dr_post(c)]
         drs.sort(key=lambda c: stamp(c['created_at']))
         comments[n] = drs[-1]['body'] if drs else ''
@@ -370,6 +342,7 @@ def audit(gh, now, brain, workers):
         parents = {int(x) for x in re.findall(r'\brescoped from\s+#(\d+)', combined, re.I)}
         for ref in refs | parents:
             if ref in items: continue
+            if dry: continue
             try:
                 blocker = gh.req('GET', '/repos/%s/issues/%d' % (REPO, ref))
                 if blocker.get('state') == 'open' or ref in parents:
@@ -378,7 +351,7 @@ def audit(gh, now, brain, workers):
         for c in drs + [dict(body=item.get('body') or '', created_at=item.get('updated_at', utc(now)))]:
             refs = rescope_refs(c['body']) - {n}
             if refs: rulings.append((n, c, refs))
-        try: brain.discover(n)
+        try: brain.discover(n, dry)
         except Exception: errors.append('GBrain lookup unavailable #%d' % n)
     idle = {}; removals = []; misses = []; holds = {}
     for parent, ruling, refs in rulings:
@@ -388,7 +361,7 @@ def audit(gh, now, brain, workers):
                     child = gh.req('GET', '/repos/%s/issues/%d' % (REPO, n))
                     if child.get('state') != 'open': continue
                     items[n] = child
-                brain.discover(n)
+                brain.discover(n, dry)
             except Exception: errors.append('rescope lookup unavailable #%d' % n)
             if n not in items: continue
             if now - stamp(ruling['created_at']) >= RESCOPE and not dispatch(n, items[n], brain, workers):
@@ -401,11 +374,12 @@ def audit(gh, now, brain, workers):
                 misses.append((owner, n, parent, ruling['created_at']))
     for n, item in items.items():
         if item.get('state') == 'closed': continue
-        valid, labels, reason = assess_hold(item, comments.get(n, ''), gh, brain, workers)
+        if not project_tsv(item): continue
+        valid, labels, reason = assess_hold(item, comments.get(n, ''), gh, brain, workers, dry=dry)
         if valid: holds[n] = valid
         if labels: removals.append((n, labels, reason))
         if not valid and not running(n, workers): idle.setdefault(n, reason)
-    return dict(idle=idle, removals=removals, misses=misses, covered=set(items), errors=errors, holds=holds)
+    return dict(idle=idle, removals=removals, misses=misses, covered=set(items), errors=errors, holds=holds, items=items)
 
 
 def stop_files(root=D):
@@ -419,18 +393,56 @@ def stop_files(root=D):
     return result
 
 
+def format_dry_plan(meters, result, stops):
+    lines = ['DRY PLAN lanes: ' + ', '.join(sorted(LANES))]
+    lines.append('DRY PLAN meters: ' + '; '.join(
+        '%s pct=%s stale=%s available=%s' % (name, m['pct_used'], m['stale'], m['available']) for name, m in sorted(meters.items())))
+    if result.get('idle'):
+        lines.append('DRY PLAN idle: ' + '; '.join('#%d %s' % pair for pair in sorted(result['idle'].items())))
+    else:
+        lines.append('DRY PLAN idle: none')
+    available = {name: reading for name, reading in meters.items() if reading['available']}
+    if result.get('idle') and available:
+        ring = '[ubuntu idle-capacity] dr eggbot: ' + '; '.join('#%d %s' % pair for pair in sorted(result['idle'].items()))
+        ring += ' | quota: ' + '; '.join('%s %s%% used reset=%s as-of=%s%s' % (
+            name, m['pct_used'] if m['pct_used'] is not None else 'unknown', m['reset'], m['as_of'],
+            ' meter stale' if m['stale'] else '') for name, m in available.items())
+        ring += ' | stop files: ' + ('; '.join(stops) or 'none')
+        lines.append('DRY PLAN ring: ' + ring)
+    for n, labels, reason in result.get('removals', []):
+        lines.append('DRY would remove #%d %s: %s' % (n, ','.join(labels), reason))
+        lines.append('DRY would comment #%d Hold cleared: %s.' % (n, re.sub(r'\s+', ' ', reason)))
+    for owner, n, parent, posted in result.get('misses', []):
+        lines.append('DRY would score miss %s #%d (rescope #%d)' % (owner, n, parent))
+    for err in result.get('errors', []):
+        lines.append('DRY note: ' + err)
+    lines.append('DRY PLAN stops: ' + ('; '.join(stops) if stops else 'none'))
+    return lines
+
+
 def cycle(gh, state, now, dry, ring, meters=None, brain=None, workers=None, stops=None):
-    """Run once. State is persisted only by the caller, and never on a dry run."""
-    meters = read_meters(now) if meters is None else meters
+    meters = read_meters(now, dry=dry) if meters is None else meters
     brain = Brain() if brain is None else brain
-    workers = read_workers(now) if workers is None else workers
-    result = audit(gh, now, brain, workers)
+    workers = read_workers(now, dry=dry) if workers is None else workers
+    stop_list = stop_files() if stops is None else stops
+    result = audit(gh, now, brain, workers, dry=dry)
     notes = list(result.get('errors', []))
+    items = result.get('items', {})
     for n, labels, reason in result['removals']:
+        item = items.get(n)
+        if not item or not project_tsv(item):
+            continue
         notes.append('%sremove #%d %s: %s' % ('would ' if dry else '', n, ','.join(labels), reason))
         if not dry:
             try:
-                for label in labels: gh.req('DELETE', '/repos/%s/issues/%d/labels/%s' % (REPO, n, quote(label, safe='')))
+                if not project_tsv(gh.req('GET', '/repos/%s/issues/%d' % (REPO, n))):
+                    notes.append('hold cleanup skipped #%d: not project:tsv' % n)
+                    continue
+                for label in labels:
+                    gh.req('DELETE', '/repos/%s/issues/%d/labels/%s' % (REPO, n, quote(label, safe='')))
+                if not project_tsv(gh.req('GET', '/repos/%s/issues/%d' % (REPO, n))):
+                    notes.append('hold cleanup skipped #%d: not project:tsv' % n)
+                    continue
                 gh.req('POST', '/repos/%s/issues/%d/comments' % (REPO, n), {'body': 'Hold cleared: ' + re.sub(r'\s+', ' ', reason) + '.'})
             except Exception: notes.append('hold cleanup write failed #%d' % n)
     for owner, n, parent, posted in result['misses']:
@@ -447,16 +459,15 @@ def cycle(gh, state, now, dry, ring, meters=None, brain=None, workers=None, stop
         if 'idle_ring_at' not in state or now - state['idle_ring_at'] >= RERING:
             message = '[ubuntu idle-capacity] dr eggbot: ' + '; '.join('#%d %s' % pair for pair in sorted(result['idle'].items()))
             message += ' | quota: ' + '; '.join('%s %s%% used reset=%s as-of=%s%s' % (name, m['pct_used'] if m['pct_used'] is not None else 'unknown', m['reset'], m['as_of'], ' meter stale' if m['stale'] else '') for name, m in available.items())
-            message += ' | stop files: ' + ('; '.join(stop_files() if stops is None else stops) or 'none')
+            message += ' | stop files: ' + ('; '.join(stop_list) or 'none')
             notes.append('idle ring: ' + message)
-            # A dry run never even calls the transport.
             if not dry:
                 response = ring(message, False)
                 if response == 'ok': state['idle_ring_at'] = now
                 else: notes.append('idle ring failed: ' + str(response))
     elif not dry:
         state.pop('idle_ring_at', None)
-    if not dry:
-        pass  # no auto meter publish (Craig 2026-10-17 8:43 PM PT)
+    if dry:
+        for line in format_dry_plan(meters, result, stop_list): print(line)
     result['notes'] = notes
     return result
