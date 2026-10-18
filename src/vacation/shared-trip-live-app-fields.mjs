@@ -99,22 +99,6 @@ function pickLongDetails(place = {}, override = {}, source = null) {
   );
 }
 
-function explicitLogo(place = {}, override = {}, source = null) {
-  return firstPresent(
-    override.logoUrl,
-    override.iconUrl,
-    place.logoUrl,
-    place.iconUrl,
-    place.image_url,
-    source?.logoUrl,
-    source?.logo,
-    source?.iconUrl,
-    source?.favicon,
-    source?.faviconUrl,
-  );
-}
-
-/** Map catalog row fields the TREK Oe list reads via ha() / rr() / bi() / J() / uc(). */
 export function applyLiveAppListRowFields(shared = {}) {
   const next = {
     ...shared,
@@ -134,10 +118,16 @@ export function applyLiveAppListRowFields(shared = {}) {
     );
     const category = productThingCategory(place, override);
 
-    const logoUrl = resolveThingLogoUrl(place, override) || explicitLogo(place, override, source);
+    const logoUrl = resolveThingLogoUrl(place, override);
     if (logoUrl) {
       override.logoUrl = logoUrl;
-      if (!text(place.logoUrl)) place.logoUrl = logoUrl;
+      place.logoUrl = logoUrl;
+    } else {
+      delete override.logoUrl;
+      delete override.iconUrl;
+      delete place.logoUrl;
+      delete place.iconUrl;
+      delete place.captured_logo_url;
     }
 
     const price = priceFromRecords(place, override, source);

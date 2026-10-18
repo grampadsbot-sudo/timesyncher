@@ -204,7 +204,7 @@ async function respondSharedTripGet(req, res, shareToken) {
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
       const upstream = await readUpstreamSharedResponse(shareToken, req);
       if (upstream.status === 200 && sharedPayloadHasPlaces(upstream.json)) {
-        return sendUpstreamSharedResponse(res, upstream);
+        return sendJson(res, 200, finalizeServedSharedTripPayload(upstream.json));
       }
       return sendUpstreamSharedResponse(res, upstream);
     }
