@@ -1,3 +1,6 @@
+export const CME_TRANSPORT_FLIGHT_SIGNAL =
+  '/\\bflight\\b|flight option/.test(c)||/\\b[A-Z]{3}\\s*(?:→|->|-)\\s*[A-Z]{3}\\b/.test(String((e==null?void 0:e.name)||"")+" "+String((e==null?void 0:e.title)||""))';
+
 function flightLikeLabel(record = {}) {
   const text = [record.name, record.title, record.description, record.whenLabel]
     .map((value) => String(value || '').trim())
@@ -6,7 +9,7 @@ function flightLikeLabel(record = {}) {
   if (!text) return false;
   if (/^flight\b/i.test(text) || /\bflight option\b/i.test(text)) return true;
   if (/\bflight\b/i.test(text)) return true;
-  return /\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(text);
+  return /\b[A-Z]{3}\s*(?:→|->|-)\s*[A-Z]{3}\b/.test(text);
 }
 
 function flightFields(record = {}) {

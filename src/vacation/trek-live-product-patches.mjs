@@ -5,6 +5,7 @@ import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-sha
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
+import { CME_TRANSPORT_FLIGHT_SIGNAL } from './intake-transport-kind.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -64,10 +65,10 @@ const THING_LOGO_CHIP_DC_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=P
 
 const CME_CAR_TYPE_NEEDLE = 'i==="flight"?"✈️":i==="transport"?"🚕"';
 
-const CME_CAR_TYPE_PATCH = 'i==="flight"?"✈️":i==="car"?"🚗":i==="transport"?(/\\bflight\\b|flight option|\\b[a-z]{3}\\s*(?:→|->|to|-)\\s*[a-z]{3}\\b/.test(c)?"✈️":"🚕")';
+const CME_CAR_TYPE_PATCH = `i==="flight"?"✈️":i==="car"?"🚗":i==="transport"?(${CME_TRANSPORT_FLIGHT_SIGNAL}?"✈️":"🚕")`;
 
 const CME_TRANSPORT_FLIGHT_NEEDLE = 'i==="transport"?"🚕"';
-const CME_TRANSPORT_FLIGHT_PATCH = 'i==="transport"?(/\\bflight\\b|flight option|\\b[a-z]{3}\\s*(?:→|->|to|-)\\s*[a-z]{3}\\b/.test(c)?"✈️":"🚕")';
+const CME_TRANSPORT_FLIGHT_PATCH = `i==="transport"?(${CME_TRANSPORT_FLIGHT_SIGNAL}?"✈️":"🚕")`;
 const CME_CAR_HEURISTIC_NEEDLE = '?"🎭":/flight|airport|jetblue|southwest|united|delta|american|las|jfk|lga|ewr/.test(c)?"✈️":/store|shop|shopping|grocery|market|whole foods|pharmacy/.test(c)?';
 
 const CME_CAR_HEURISTIC_PATCH = '?"🎭":/\\bcar\\b|rental|hertz|avis|enterprise|budget rent|alamo/.test(c)?"🚗":/flight|airport|jetblue|southwest|united|delta|american|las|jfk|lga|ewr/.test(c)?"✈️":/store|shop|shopping|grocery|market|whole foods|pharmacy/.test(c)?';

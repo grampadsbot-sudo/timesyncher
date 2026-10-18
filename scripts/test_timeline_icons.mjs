@@ -5,6 +5,7 @@ import {
   thingLogoUrl,
   timelineIcon,
 } from '../src/vacation/timeline-icons.mjs';
+import { CME_TRANSPORT_FLIGHT_SIGNAL, transportKind } from '../src/vacation/intake-transport-kind.mjs';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -74,6 +75,38 @@ assert(
     category: 'transport',
   }).icon === '✈️',
   'flight option on transport category uses airplane',
+);
+for (const name of [
+  'Car to the museum',
+  'Uber to JFK',
+  'One-way shuttle',
+  'Two-way transfer',
+]) {
+  assert(
+    timelineIcon({ name, category_name: 'Transport', category: 'transport' }).icon === '🚕',
+    `ground transport stays taxi: ${name}`,
+  );
+  assert(transportKind({ name, category_name: 'Transport', category: 'transport' }) !== 'flight', `not flight kind: ${name}`);
+}
+assert(
+  timelineIcon({ name: 'Shuttle LAS-LGA', category_name: 'Transport', category: 'transport' }).icon === '✈️',
+  'IATA route without flight word uses airplane on transport',
+);
+assert(
+  (() => {
+    const c = 'transport shuttle';
+    const e = { name: 'Flight option: Southwest LAS-LGA 2026-06-23', title: '' };
+    return new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(c, e);
+  })(),
+  'bundle transport flight signal matches flight option row',
+);
+assert(
+  (() => {
+    const c = 'car to the museum transport';
+    const e = { name: 'Car to the museum', title: '' };
+    return !new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(c, e);
+  })(),
+  'bundle transport flight signal rejects car to the museum',
 );
 assert(
   timelineIcon({ name: 'JetBlue LAS-JFK 2026-06-23 07:22-15:31', airline: 'JetBlue' }).icon === '✈️',
