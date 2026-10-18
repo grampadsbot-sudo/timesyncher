@@ -27,11 +27,19 @@ digest. Changed inputs need new judgments; old Haiku caches are not accepted.
 An old pending file is an audit record; a valid receipt supersedes it. Read the
 collector's not_judged count to determine what remains pending.
 
-Deploy from this branch's committed files to ~/tsv-gateb with backups while
-holding ~/tsv-dispatch/.run.lock. Record the commit in GBrain. The unchanged
-restore-check.mjs is imported here so the runtime source is in git; it requires
-the existing pngjs and pixelmatch dependencies. Production receipts, captures,
-credentials, node_modules, and generated test output must not be committed.
+The authoritative checker is ~/tsv-gateb/restore_check.py and its adjacent
+restore-check.mjs. This mirror contains no scorer or geometry selftest. The
+collector and checker integration test load that installed Python checker;
+TSV_GATEB_ROOT can select another explicit installation. A missing installation
+raises an error. No bundled checker is used as a fallback. Rulings 42, 43 and 48
+in GBrain bot-admin/messages/time-syncher/decisions-log supersede the removed
+header, timeline-icon and time-alignment checks.
 
-Verification: `python3 -m unittest test_managing_dr_judge.py` and
-`python3 selftest-logo-budget.py` (with the existing Node dependencies).
+Host publication owns installation. Preserve the current checker and its
+geometry tests when publishing these description-judgment support files.
+Production receipts, captures, credentials, node_modules, and generated test
+output stay outside the repository.
+
+Verification: `python3 -m unittest test_managing_dr_judge.py`. The integration
+case requires the current installed checker; it runs with mocked screen and
+structure checks and temporary receipts, without a capture or Gate B round.

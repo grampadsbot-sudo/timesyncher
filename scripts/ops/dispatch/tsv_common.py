@@ -4,7 +4,8 @@ Process page: GBrain bot-admin/process/tsv-issue-intake-when-grok-away."""
 import datetime as dt, json, os, re, subprocess, time, urllib.request, urllib.error, fcntl
 from zoneinfo import ZoneInfo
 
-D = "/home/ubishere9995/tsv-dispatch"
+os.umask(0o002)
+D = os.environ.get("TSV_DISPATCH_ROOT", os.path.dirname(os.path.abspath(__file__)))
 REPO = "grampadsbot-sudo/timesyncher"
 BASE = "cursor/jev-quality-r20-1128"
 GH_TOKEN_FILE = "/home/ubishere9995/.config/tsv-gateb/gh-token"
@@ -37,10 +38,14 @@ def scrub(x):
 def pt_now(): return dt.datetime.now(PT).strftime("%-I:%M %p PT")
 def pt_stamp(): return dt.datetime.now(PT).strftime("%Y-%m-%d %-I:%M %p PT")
 
+def logs_dir():
+    return os.environ.get("TSV_DISPATCH_LOGS", D + "/logs")
+
 class Log:
     def __init__(self, name):
-        os.makedirs(D + "/logs", exist_ok=True)
-        self.f = open("%s/logs/%s-%s.log" % (D, name, time.strftime("%Y%m%d")), "a")
+        ld = logs_dir()
+        os.makedirs(ld, exist_ok=True)
+        self.f = open("%s/%s-%s.log" % (ld, name, time.strftime("%Y%m%d")), "a")
     def __call__(self, msg):
         line = "[%s | %s] %s" % (dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), pt_now(), scrub(msg))
         self.f.write(line + "\n"); self.f.flush()
@@ -72,13 +77,13 @@ class FileLock:
 class GH:
     def __init__(self, token=None):
         self.tok = token or read_secret(GH_TOKEN_FILE, sudo_user="ubishere9995")
-    def req(self, method, path, data=None, ok404=False, raw=False, accept="application/vnd.github+json"):
+    def req(self, method, path, data=None, ok404=False, raw=False, accept="application/vnd.github+json", timeout=60):
         url = path if path.startswith("http") else "https://api.github.com" + path
         r = urllib.request.Request(url, method=method, data=None if data is None else json.dumps(data).encode(),
             headers={"Authorization": "Bearer " + self.tok, "Accept": accept, "User-Agent": "tsv-independence",
                      "X-GitHub-Api-Version": "2022-11-28"})
         try:
-            with urllib.request.urlopen(r, timeout=60) as resp:
+            with urllib.request.urlopen(r, timeout=timeout) as resp:
                 b = resp.read()
                 if raw: return b
                 return json.loads(b) if b else {}
@@ -123,16 +128,39 @@ def shq(x):
     import shlex
     return shlex.quote(str(x))
 
+class TellCraigResult:
+    OK = "ok"
+    BLOCKED = "blocked"
+    FAILED = "failed"
+
+    def __init__(self, status, reason=""):
+        self.status = status
+        self.reason = reason or ""
+
+    def __bool__(self):
+        return self.status == self.OK
+
+
 def tell_craig(text, tag, dry=False, log=print):
     """ONE Telegram message to Craig via the iMac's ~/bin/imac-tell-craig.sh --no-note: mechanical `openclaw message send`,
     NO model turn (the old context-note turn is what made sends take >45 s). The text travels on ssh STDIN, so quotes,
-    parentheses and newlines need no shell quoting. LAN first, Tailscale fallback, one retry. Returns True on RESULT ok."""
-    if dry: log("DRY would tell Craig: %s" % text); return True
+    parentheses and newlines need no shell quoting. LAN first, Tailscale fallback, one retry. Truthy only on RESULT ok."""
+    if dry:
+        log("DRY would tell Craig: %s" % text)
+        return TellCraigResult(TellCraigResult.OK)
+    try:
+        import craig_guard as cg
+        ok, reason = cg.guard_before_send(text, tag, dry=False, log=log)
+        if not ok:
+            return TellCraigResult(TellCraigResult.BLOCKED, reason)
+    except Exception as e:
+        log("craig-guard error %s; blocked send" % type(e).__name__)
+        return TellCraigResult(TellCraigResult.BLOCKED, "guard error")
     tag = re.sub(r"[^A-Za-z0-9._-]", "-", tag)[:80]
-    rc, out = imac('~/bin/imac-tell-craig.sh --no-note --tag %s "$(cat)"' % tag, timeout=100, stdin=text)   # openclaw CLI send takes ~25 s
+    rc, out = imac('~/bin/imac-tell-craig.sh --no-note --tag %s "$(cat)"' % tag, timeout=100, stdin=text)
     ok = rc == 0 and "RESULT ok" in out
     log("tell Craig %s rc=%s %s" % ("ok" if ok else "FAILED", rc, (out.strip().splitlines() or [""])[-1][:200]))
-    return ok
+    return TellCraigResult(TellCraigResult.OK if ok else TellCraigResult.FAILED)
 
 class Alerts:
     """Per-problem cooldown + one recovery message. state: {problem: {"since","last_sent","text","sent"}}"""

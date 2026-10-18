@@ -2,7 +2,9 @@
 import argparse
 import json
 from pathlib import Path
-import restore_check as rc
+from runtime_checker import load_checker
+
+rc = load_checker()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("capture")

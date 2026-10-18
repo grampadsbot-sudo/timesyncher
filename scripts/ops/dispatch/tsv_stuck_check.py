@@ -410,6 +410,16 @@ def main():
             rang.append("telegram:%s" % ("dry" if dry else ok))
         live = {k for k, _, _ in items}
         for k in [k for k in seen if k not in live]: seen.pop(k)
+        try:
+            import blocked_by_fix as bbf
+            scores.extend(bbf.tick(gh, None, now, dry, logline))
+        except Exception as e:
+            scores.append("blocked-by-fix error %s" % type(e).__name__)
+        try:
+            import dispatcher_lane_pass as lp
+            lp.pass_once(gh, now, dry, log=logline)
+        except Exception as e:
+            scores.append("lane-pass error %s" % type(e).__name__)
         if not dry: save_json(STATE, st)
         parked_count = sum(bool(INFO[k].get("parked_job")) for k, _, _ in items)
         line = "%s jobs=%d stuck=%d parked=%d [%s] rang=[%s] escalated=[%s] %s" % ("DRY" if dry else "LIVE", len(items), len(items) - parked_count, parked_count,

@@ -92,6 +92,8 @@ def main():
     msg = "\n\n".join([
         "VK morning check (%s)" % now.strftime("%Y-%m-%d"),
         morning_line(),
+        *(["#451 ops PR (Grok Build --pr wrapper, already live) is green and ready to merge"]
+          if now.date().isoformat() == "2026-10-17" else []),
         section("1. Stuck / kickback / idle 24h+", rows),
         section("2. On hold", hold_rows),
         section("3. Open but superseded, to close", sup_rows),

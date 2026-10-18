@@ -1,5 +1,10 @@
-import calendar, subprocess, time, unittest
+import calendar, os, subprocess, sys, time, unittest
 from unittest.mock import patch
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests"))
+import dispatch_root
+dispatch_root.insert_path()
+
 import dr_scorecard as sc
 import tsv_stuck_check as watcher
 

@@ -1,7 +1,14 @@
 """Behavioral regressions for chief-dr rulings 85+89; no network or notifications."""
 import copy
+import os
+import sys
 import unittest
 from unittest.mock import patch
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests"))
+import dispatch_root
+dispatch_root.insert_path()
+
 import tsv_stuck_check as w
 
 NOW = w.iso('2026-10-16T20:00:00Z')

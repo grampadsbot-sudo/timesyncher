@@ -552,6 +552,119 @@ def assess_hold(item, latest, gh, brain, workers, dry=False):
     return None, [], 'UNRESOLVED: no valid named hold'
 
 
+HOLD_MAX_S = 2 * 3600
+DR_HOLD = re.compile(r"^\s*(?:dr eggbot|managing dr|claude-code|chief dr|ruling\s*\d+|diagnosis update)\b", re.I)
+
+
+def _hold_label_names(item):
+    return [x["name"] for x in item.get("labels", []) if x["name"].startswith("hold:")]
+
+
+def _label_since(gh, n, labels, dry, item=None):
+    if dry:
+        if item is not None:
+            return {l: stamp(item.get("updated_at")) for l in labels}
+        cached = getattr(gh, "items", None)
+        if cached is not None:
+            it = cached.get(n)
+            if it:
+                return {l: stamp(it.get("updated_at")) for l in labels}
+        return {}
+    out = {}
+    for e in gh.pages("/repos/%s/issues/%d/events" % (REPO, n)):
+        if e.get("event") == "labeled" and e.get("label", {}).get("name") in labels:
+            out[e["label"]["name"]] = stamp(e["created_at"])
+    return out
+
+
+def _dr_comments_after(gh, n, since):
+    rows = []
+    for c in gh.pages("/repos/%s/issues/%d/comments" % (REPO, n)):
+        if stamp(c["created_at"]) <= since:
+            continue
+        if dr_post(c) or DR_HOLD.match(c.get("body") or ""):
+            rows.append(c)
+    return rows
+
+
+def _hold_renewed(gh, n, hold_since, body, latest):
+    if not re.search(r"\bblocked[- ]by\b", hold_text(body, latest), re.I):
+        return False
+    return any(re.search(r"\bblocked[- ]by\b", c.get("body") or "", re.I) for c in _dr_comments_after(gh, n, hold_since))
+
+
+def _ref_is_open(ref, open_map, gh, pass_state):
+    if open_map is not None:
+        if ref in open_map:
+            return open_map[ref].get("state", "open") == "open"
+        closed = (pass_state or {}).get("closed_issues") or {}
+        if closed.get(str(ref)) == "closed":
+            return False
+        if pass_state is not None:
+            pass_state.setdefault("closed_issues", {})[str(ref)] = "closed"
+        return False
+    try:
+        state = gh.req("GET", "/repos/%s/issues/%d" % (REPO, ref)).get("state")
+    except Exception:
+        return False
+    if state == "closed" and pass_state is not None:
+        pass_state.setdefault("closed_issues", {})[str(ref)] = "closed"
+    return state == "open"
+
+
+def extra_hold_removals(gh, item, latest, now, dry=False, workers=None, open_map=None, pass_state=None):
+    workers = workers or []
+    labels = _hold_label_names(item)
+    if not labels:
+        return []
+    n = item["number"]
+    body = item.get("body") or ""
+    since = _label_since(gh, n, set(labels), dry, item=item)
+    out = []
+    for lab in labels:
+        hold_since = since.get(lab, stamp(item.get("updated_at", utc(now))))
+        hold_src = hold_text(body, latest)
+        text = (body or "") + "\n" + (latest or "")
+        refs, slugs = references(hold_src, n)
+        has_bb = bool(re.search(r"\bblocked[- ]by\b", text, re.I))
+        if not has_bb:
+            if re.search(r"\bwaits[- ]on\s*:", text, re.I) or re.search(r"pending[- ]decision", text, re.I):
+                continue
+            if not refs and not slugs:
+                out.append((lab, "no named open blocker"))
+            continue
+        open_refs = []
+        for ref in sorted(refs):
+            if _ref_is_open(ref, open_map, gh, pass_state):
+                open_refs.append(ref)
+        if refs and not open_refs and not slugs:
+            pieces = set()
+            for ref in refs:
+                try:
+                    if open_map is not None and ref not in open_map:
+                        blocker = {"body": ""}
+                    else:
+                        blocker = gh.req("GET", "/repos/%s/issues/%d" % (REPO, ref))
+                    pieces.update(rescope_refs(blocker.get("body") or ""))
+                    if open_map is None or ref in open_map:
+                        for c in gh.pages("/repos/%s/issues/%d/comments" % (REPO, ref)):
+                            if dr_post(c):
+                                pieces.update(rescope_refs(c.get("body") or ""))
+                except Exception:
+                    pass
+            if pieces and any(running(p, workers) for p in pieces):
+                continue
+            out.append((lab, "blocker closed or merged"))
+            continue
+        if open_refs and now - hold_since < HOLD_MAX_S:
+            continue
+        if open_refs and _hold_renewed(gh, n, hold_since, body, latest or ""):
+            continue
+        if open_refs:
+            out.append((lab, "hold older than 2h without dr renewal"))
+    return out
+
+
 def rescope_refs(text):
     result = set()
     for line in re.split(r'[\n!?]|\.(?=\s|$)', text):
@@ -574,7 +687,7 @@ def audit(gh, now, brain, workers, dry=False):
         n = pending.pop(0)
         if n in inspected: continue
         inspected.add(n); item = items[n]
-        cs = [] if dry else gh.pages('/repos/%s/issues/%d/comments' % (REPO, n))
+        cs = gh.pages('/repos/%s/issues/%d/comments' % (REPO, n))
         drs = [c for c in cs if dr_post(c)]
         drs.sort(key=lambda c: stamp(c['created_at']))
         comments[n] = drs[-1]['body'] if drs else ''
@@ -619,6 +732,12 @@ def audit(gh, now, brain, workers, dry=False):
         valid, labels, reason = assess_hold(item, comments.get(n, ''), gh, brain, workers, dry=dry)
         if valid: holds[n] = valid
         if labels: removals.append((n, labels, reason))
+        already = {lab for n0, labs, _ in removals if n0 == n for lab in labs}
+        for lab, why in extra_hold_removals(gh, item, comments.get(n, ''), now, dry=dry, workers=workers):
+            if lab in already:
+                continue
+            already.add(lab)
+            removals.append((n, [lab], why))
         if not valid and not running(n, workers): idle.setdefault(n, reason)
     return dict(idle=idle, removals=removals, misses=misses, covered=set(items), errors=errors, holds=holds, items=items)
 

@@ -1,5 +1,12 @@
+import os
+import sys
 import unittest
 from unittest.mock import patch
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests"))
+import dispatch_root
+dispatch_root.insert_path()
+
 from work_groups import consolidate
 
 def pr(n, issue=None, labels=(), draft=False, body=""):

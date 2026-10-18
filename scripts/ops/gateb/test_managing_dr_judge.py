@@ -68,7 +68,8 @@ class Tests(unittest.TestCase):
         self.assertFalse((self.j.root / "pending").exists())
 
     def test_gate_missing_judgment_is_harness_no_verdict(self):
-        import restore_check as rc
+        from runtime_checker import load_checker
+        rc = load_checker()
         from managing_dr_judge import ManagingDrJudgmentPending
         def check(*args):
             self.j.judge(*self.args)
