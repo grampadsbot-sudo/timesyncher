@@ -1,5 +1,6 @@
 import { intId } from './intake-shared-trip.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+import { liveBudgetPlacesFromShared } from './shared-budget-itinerary-membership.mjs';
 
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant',
@@ -93,7 +94,7 @@ export function trekBudgetAmount(place = {}, override = {}, category = '') {
 }
 
 function budgetRowsFromShared(shared = {}) {
-  const places = Array.isArray(shared.places) ? shared.places : [];
+  const places = liveBudgetPlacesFromShared(shared);
   const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {};
   const rows = [];
   for (const place of places) {
