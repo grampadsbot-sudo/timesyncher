@@ -1,5 +1,5 @@
 import type { SharedTripPayload } from '../types/sharedTrip';
-import { prepareServedSharedTrip } from '../lib/prepareServedTrip.mjs';
+import { prepareItinerarySharedTrip } from '../lib/prepareServedTrip.mjs';
 
 export function shareTokenFromLocation(): string {
   const params = new URLSearchParams(window.location.search);
@@ -57,5 +57,5 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
   if (!data || !Array.isArray(data.places)) {
     throw new Error('Invalid trip payload from API');
   }
-  return prepareServedSharedTrip(data) as SharedTripPayload;
+  return prepareItinerarySharedTrip(data) as SharedTripPayload;
 }

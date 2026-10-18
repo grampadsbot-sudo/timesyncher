@@ -20,12 +20,12 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
-export function prepareSharedTripForLiveApp(shared = {}) {
+export function prepareSharedTripForLiveApp(shared = {}, options = {}) {
   const presented = applyThingPresentation(shared);
   const detailed = applyThingDetailOverrides(presented);
   const keepsake = applyProductKeepsakeOverrides(detailed);
   const withListFields = applyLiveAppListRowFields(keepsake);
-  return syncSharedTripApiBudget(withListFields);
+  return syncSharedTripApiBudget(withListFields, options);
 }
 
 function placeSourceUrl(place = {}) {
