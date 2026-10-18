@@ -174,7 +174,11 @@
     "summary": "Neighborhood: Times Square; Rating: 3.9 (~917); Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
     "price": 188,
     "website": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
-    "logoUrl": "https://www.hilton.com/favicon.ico",
+    "logoUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg",
+    "logoProvenance": {
+      "pageUrl": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+      "iconUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg"
+    },
     "lat": null,
     "lng": null,
     "address": "Times Square, New York, NY"
@@ -498,7 +502,11 @@
     "summary": "Classic NYC bookstore with rare-room browsing and gift totes;",
     "price": 25,
     "website": "https://www.strandbooks.com/",
-    "logoUrl": "https://www.strandbooks.com/favicon.ico",
+    "logoUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png",
+    "logoProvenance": {
+      "pageUrl": "https://www.strandbooks.com/",
+      "iconUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png"
+    },
     "lat": 40.7333,
     "lng": -73.9909,
     "address": "828 Broadway, New York, NY 10003",

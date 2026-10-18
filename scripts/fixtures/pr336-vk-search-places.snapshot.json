@@ -47,6 +47,10 @@
       "lng": -73.9794,
       "address": "2245 Broadway, New York, NY 10024",
       "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics.",
+      "logoProvenance": {
+        "pageUrl": "https://www.zabars.com/",
+        "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
+      },
       "googleRating": "4.5",
       "googleReviewCount": "6665",
       "yelpRating": "3.9",
@@ -95,11 +99,7 @@
       "review4Url": null,
       "source": "brave",
       "url": "https://www.zabars.com/",
-      "longDetails": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
-      "logoProvenance": {
-        "pageUrl": "https://www.zabars.com/",
-        "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
-      }
+      "longDetails": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate."
     },
     "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
     "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
@@ -121,7 +121,11 @@
       "summary": "Times Square base with eco-certified rooms and strong transit access.",
       "price": 188,
       "website": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
-      "logoUrl": "https://www.hilton.com/favicon.ico",
+      "logoUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg",
+      "logoProvenance": {
+        "pageUrl": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+        "iconUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg"
+      },
       "lat": 40.759399,
       "lng": -73.983457,
       "address": "150 A West 48th Street, New York, NY 10036",
@@ -185,7 +189,7 @@
     "description": "Booking.com lists Motto by Hilton New York City Times Square around 3.9/5 (~917 reviews). Neighborhood: Times Square; Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
     "summary": "Times Square base with eco-certified rooms and strong transit access.",
     "price": 188,
-    "logoUrl": "https://www.hilton.com/favicon.ico"
+    "logoUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg"
   },
   "604": {
     "source": "brave",
@@ -201,6 +205,10 @@
       "itineraryNote": "Ferry and grounds; keep tickets on phone and arrive early for security.",
       "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
       "price": 26,
+      "logoProvenance": {
+        "pageUrl": "https://statuecitycruises.com/",
+        "iconUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
+      },
       "lat": 40.6892,
       "lng": -74.0445,
       "address": "Castle Clinton, Battery Park, New York, NY 10004",
@@ -259,19 +267,13 @@
         "https://statuecitycruises.com/tickets/new-york-general-admission"
       ],
       "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
-      "logoUrl": "https://statuecitycruises.com/favicon.ico",
-      "logoSearchEvidence": {
-        "query": "Statue of Liberty walking tour New York official website",
-        "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
-        "logoUrl": "https://statuecitycruises.com/favicon.ico",
-        "provider": "tavily"
-      }
+      "logoUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
     },
     "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
     "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
     "price": 26,
     "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
-    "logoUrl": "https://statuecitycruises.com/favicon.ico"
+    "logoUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
   },
   "605": {
     "source": "brave",
@@ -288,7 +290,11 @@
       "summary": "Browse the rare room if time allows after the harbor tour.",
       "price": 22,
       "website": "https://www.strandbooks.com/",
-      "logoUrl": "https://www.strandbooks.com/favicon.ico",
+      "logoUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png",
+      "logoProvenance": {
+        "pageUrl": "https://www.strandbooks.com/",
+        "iconUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png"
+      },
       "lat": 40.7333,
       "lng": -73.9909,
       "address": "828 Broadway, New York, NY 10003",
@@ -350,7 +356,7 @@
     "description": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate.",
     "summary": "Browse the rare room if time allows after the harbor tour.",
     "price": 22,
-    "logoUrl": "https://www.strandbooks.com/favicon.ico"
+    "logoUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png"
   },
   "606": {
     "source": "brave",
