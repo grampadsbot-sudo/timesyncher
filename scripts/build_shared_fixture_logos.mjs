@@ -29,21 +29,98 @@ function attribute(tag, name) {
   return match ? match[1] ?? match[2] ?? match[3] ?? '' : '';
 }
 
-function declaredIconFetch(fetchImpl) {
+const browserUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const decodeHref = (value) => value.replace(/&amp;/gi, '&').replace(/&#(?:x([0-9a-f]+)|(\d+));/gi,
+  (_, hex, dec) => String.fromCodePoint(parseInt(hex || dec, hex ? 16 : 10)));
+
+function declaredIconFetch(fetchImpl, sleep) {
   const allowed = new Set();
-  return async (url, options) => {
-    if (options?.headers?.accept === 'image/*' && !allowed.has(String(url))) throw new Error('undeclared_icon_rejected');
-    const response = await fetchImpl(url, options);
-    if (options?.headers?.accept !== 'text/html') return response;
-    const html = await response.text();
-    for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
-      if (!/(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(attribute(tag, 'rel'))) continue;
-      const href = attribute(tag, 'href');
-      if (!href) continue;
-      try { allowed.add(new URL(href, response.url || url).href); } catch { continue; }
-    }
-    return { ok: response.ok, status: response.status, url: response.url, text: async () => html };
+  const cache = new Map();
+  const checks = [];
+  const safeUrl = (href, base) => {
+    try {
+      const url = new URL(decodeHref(href), base);
+      if (!href || !isPlaceWebsite(url.href) || url.username || url.password
+        || /(^|\.)(gstatic\.com|vacation-staging\.timesyncher\.com)$/.test(url.hostname)) return '';
+      return url.href;
+    } catch { return ''; }
   };
+  const request = (url, options, kind) => {
+    const key = `${options.headers.accept} ${url}`;
+    if (!cache.has(key)) cache.set(key, (async () => {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const headers = { ...options.headers, ...(attempt ? { 'user-agent': browserUserAgent } : {}) };
+        let response;
+        try { response = await fetchImpl(url, { ...options, headers }); }
+        catch (error) {
+          checks.push({ url: String(url), kind, attempt: attempt + 1, status: null, type: '', reason: text(error.cause?.code || error.code || error.message) });
+          throw error;
+        }
+        const type = response.headers?.get?.('content-type') || '';
+        checks.push({ url: String(url), finalUrl: response.url || String(url), kind, attempt: attempt + 1,
+          status: response.status, type });
+        if (attempt === 0 && [403, 429].includes(response.status)) {
+          const retryAfter = response.headers?.get?.('retry-after');
+          const seconds = retryAfter && /^\d+$/.test(retryAfter) ? Number(retryAfter)
+            : retryAfter ? (Date.parse(retryAfter) - Date.now()) / 1000 : 1;
+          await response.body?.cancel?.();
+          await sleep(Math.max(1000, Math.min(5000, (Number.isFinite(seconds) ? seconds : 1) * 1000)));
+          continue;
+        }
+        const body = kind === 'icon' ? '' : await response.text();
+        if (kind === 'icon') await response.body?.cancel?.();
+        return { ok: response.status === 200, status: response.status, url: response.url || String(url),
+          headers: new Headers({ 'content-type': type }), text: async () => body };
+      }
+    })());
+    return cache.get(key);
+  };
+  const pages = new Map();
+  const fetch = async (url, options) => {
+    if (options?.headers?.accept === 'image/*') {
+      if (!allowed.has(String(url))) throw new Error('undeclared_icon_rejected');
+      const response = await request(url, options, 'icon');
+      return { ...response, ok: response.ok && Boolean(safeUrl(response.url, url)) };
+    }
+    if (!pages.has(String(url))) pages.set(String(url), (async () => {
+      const response = await request(url, options, 'page');
+      if (!response.ok || !isPlaceWebsite(response.url)) return response;
+      let html = await response.text();
+      // Only declared links from this place's page can authorize an image request.
+      const manifests = [];
+      for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
+        const rel = attribute(tag, 'rel');
+        const href = safeUrl(attribute(tag, 'href'), response.url);
+        if (!href) continue;
+        if (/(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(rel)) allowed.add(href);
+        if (/(^|\s)manifest(\s|$)/i.test(rel)) manifests.push(href);
+      }
+      for (const manifest of new Set(manifests)) {
+        try {
+          const answer = await request(manifest, { headers: { accept: 'application/manifest+json, application/json' } }, 'manifest');
+          if (!answer.ok || !safeUrl(answer.url, manifest)) continue;
+          const data = JSON.parse(await answer.text());
+          for (const icon of Array.isArray(data?.icons) ? data.icons : []) {
+            const href = safeUrl(typeof icon?.src === 'string' ? icon.src : '', answer.url);
+            if (!href) continue;
+            allowed.add(href);
+            // Feed manifest declarations through the existing product discovery verifier.
+            html += `<link rel="icon" href="${href.replace(/&/g, '&amp;').replace(/"/g, '&#34;')}">`;
+          }
+        } catch { continue; }
+      }
+      // Normalize href entities for the product parser, which does not decode them.
+      html = html.replace(/<link\b[^>]*>/gi, (tag) => {
+        const href = safeUrl(attribute(tag, 'href'), response.url);
+        const iconRel = /(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(attribute(tag, 'rel'));
+        return iconRel && href && allowed.has(href) ? `<link rel="icon" href="${href}" sizes="${attribute(tag, 'sizes').replace(/[^0-9xa-z ]/gi, '')}">` : '';
+      });
+      return { ...response, text: async () => html };
+    })());
+    return pages.get(String(url));
+  };
+  return { fetch, checks };
 }
 
 const dnsFailures = new Set(['ENOTFOUND', 'EAI_AGAIN', 'EAI_NONAME', 'EAI_FAIL']);
@@ -81,15 +158,17 @@ function fixtureStore(rows) {
   return { db, audit };
 }
 
-export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImpl = globalThis.fetch }) {
+export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImpl = globalThis.fetch, sleep = pause, categories = null }) {
   assertShared(fixture);
   assertShared(staging);
   if (!sourceUrl || !asOf || !Number.isFinite(Date.parse(asOf))) throw new Error('sourceUrl and valid asOf are required');
   const output = structuredClone(fixture);
+  const discovery = declaredIconFetch(fetchImpl, sleep);
   const matches = [];
   const rows = [];
   const sameTrip = text(fixture.trip.id) === text(staging.trip.id);
   for (const place of output.places) {
+    if (categories && !categories.includes(category(place))) continue;
     const override = output.thingOverrides?.[`place:${place.id}`] || {};
     const candidates = sameTrip
       ? staging.places.filter((candidate) => text(candidate.id) === text(place.id))
@@ -100,7 +179,7 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
       : key(matched) !== key(place) ? 'stable_id_identity_conflict'
         : !text(matched.website) ? 'matched_website_empty'
           : !isPlaceWebsite(text(matched.website)) ? 'matched_website_not_own_site' : '';
-    const unresolvable = !unmatched && !logoUrl && await hostUnresolvable(text(matched.website), fetchImpl);
+    const unresolvable = !unmatched && !logoUrl && await hostUnresolvable(text(matched.website), discovery.fetch);
     const reason = unresolvable ? 'website_host_unresolvable' : unmatched;
     const website = reason ? '' : text(matched.website);
     const entry = {
@@ -120,16 +199,15 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
     matches.push(entry);
   }
   const store = fixtureStore(rows);
-  const discoverFetch = declaredIconFetch(fetchImpl);
   const args = {
     db: store.db, tripId: text(output.trip.id), thingIds: rows.map((row) => row.id),
-    actor: 'shared-fixture-builder', fetchImpl: discoverFetch, now: () => asOf,
+    actor: 'shared-fixture-builder', fetchImpl: discovery.fetch, now: () => asOf,
   };
   const dryRun = await reenrichTripLogos(args);
   const applied = await reenrichTripLogos({ ...args, apply: true });
-  for (let index = 0; index < output.places.length; index += 1) {
-    const place = output.places[index];
+  for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
+    const place = output.places.find((place) => text(place.id) === row.id);
     const result = applied.report[index];
     if (encode(dryRun.report[index]) !== encode(result)) throw new Error(`Discovery changed between dry run and apply for ${place.id}`);
     if (result.outcome === 'skipped_has_logo') continue;
@@ -139,7 +217,7 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
     const overrides = output.thingOverrides ||= {};
     overrides[`place:${place.id}`] = { ...(overrides[`place:${place.id}`] || {}), ...row.metadata };
   }
-  return { fixture: output, matches, dryRun, applied, audit: store.audit };
+  return { fixture: output, matches, dryRun, applied, audit: store.audit, logoChecks: discovery.checks };
 }
 
 export function recordedFetch({ records = [], replay = false, fetchImpl = globalThis.fetch } = {}) {
@@ -149,7 +227,7 @@ export function recordedFetch({ records = [], replay = false, fetchImpl = global
     records,
     missing,
     fetch: async (url, options = {}) => {
-      const requestKey = `${options.headers?.accept || ''} ${url}`;
+      const requestKey = `${options.headers?.accept || ''} ${url}${options.headers?.['user-agent'] ? ' [browser-retry]' : ''}`;
       let record = byKey.get(requestKey);
       if (!record) {
         if (replay) {
@@ -194,11 +272,11 @@ async function main() {
   const transport = recordedFetch({ records: archive.records, replay: Boolean(args.replay) });
   const response = await transport.fetch(source.href, { headers: { accept: 'application/json' } });
   if (!response.ok) throw new Error(`Staging shared GET failed HTTP ${response.status}`);
-  const result = await buildFixture({ fixture: JSON.parse(input), staging: await response.json(), sourceUrl: source.href, asOf: args['as-of'], fetchImpl: transport.fetch });
+  const result = await buildFixture({ fixture: JSON.parse(input), staging: await response.json(), sourceUrl: source.href, asOf: args['as-of'], fetchImpl: transport.fetch, categories: args.categories ? args.categories.split(',') : null });
   if (transport.missing.length) throw new Error(`Incomplete replay: ${transport.missing.join(', ')}`);
   const bytes = encode(result.fixture);
   const evidence = { sourceUrl: source.href, asOf: args['as-of'], inputHash: digest(input), outputHash: digest(bytes),
-    matches: result.matches, dryRun: result.dryRun, applied: result.applied, audit: result.audit, archive };
+    matches: result.matches, dryRun: result.dryRun, applied: result.applied, audit: result.audit, logoChecks: result.logoChecks, archive };
   await writeFile(args.audit, encode(evidence), { flag: 'wx' });
   await writeFile(outputPath, bytes, { flag: 'wx' });
   console.log(encode({ inputHash: evidence.inputHash, outputHash: evidence.outputHash, places: result.matches.length,

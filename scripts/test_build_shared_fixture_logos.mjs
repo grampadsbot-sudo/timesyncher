@@ -170,3 +170,121 @@ test('CLI replay writes a sibling deterministically and refuses incomplete evide
     await assert.rejects(readFile(join(dir, 'incomplete.json')), { code: 'ENOENT' });
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+const response = (url, status, type, body = '') => ({ status, ok: status >= 200 && status < 300, url,
+  headers: new Headers({ 'content-type': type }), text: async () => body });
+
+test('declared manifest icons resolve relative to redirected manifest, with bad candidates rejected', async () => {
+  const manifest = 'https://venue.example/app.webmanifest';
+  const manifestBase = 'https://cdn.example/app/manifest.json';
+  const image = 'https://cdn.example/app/icon.png';
+  const calls = [];
+  const result = await run({ fetchImpl: async (url) => {
+    calls.push(url);
+    if (url === site) return response(site, 200, 'text/html', '<link rel="manifest" href="/app.webmanifest">');
+    if (url === manifest) return response(manifestBase, 200, 'application/manifest+json', JSON.stringify({ icons: [
+      { src: 'https://www.gstatic.com/favicon.png' }, { src: 'data:image/png,no' }, {}, { src: 'icon.png' },
+    ] }));
+    assert.equal(url, image);
+    return response(image, 200, 'image/png');
+  } });
+  assert.equal(result.fixture.places[0].logoUrl, image);
+  assert.deepEqual(calls, [site, manifest, image]);
+  assert.equal(result.logoChecks.at(-1).type, 'image/png');
+});
+
+test('page, manifest and icon 403/429 each receive exactly one browser retry after bounded backoff', async () => {
+  for (const kind of ['page', 'manifest', 'icon']) for (const status of [403, 429]) {
+    const counts = new Map();
+    const waits = [];
+    const target = kind === 'page' ? site : kind === 'manifest' ? `${site}app.json` : logo;
+    const result = await run({ sleep: async (ms) => { waits.push(ms); }, fetchImpl: async (url, options) => {
+      const count = (counts.get(url) || 0) + 1; counts.set(url, count);
+      if (url === target && count === 1) {
+        const answer = response(url, status, 'text/html');
+        answer.headers.set('retry-after', '2');
+        return answer;
+      }
+      if (url === target) assert.match(options.headers['user-agent'], /Mozilla\/5\.0/);
+      if (url === site) return response(site, 200, 'text/html', kind === 'manifest'
+        ? '<link rel="manifest" href="/app.json">' : '<link rel="shortcut icon" href="/declared.png">');
+      if (url === `${site}app.json`) return response(url, 200, 'application/json', JSON.stringify({ icons: [{ src: '/declared.png' }] }));
+      assert.equal(url, logo); return response(logo, 200, 'image/png');
+    } });
+    assert.equal(result.fixture.places[0].logoUrl, logo);
+    assert.deepEqual(waits, [2000]);
+    assert.equal(counts.get(target), 2);
+    assert.equal(result.logoChecks.filter((check) => check.url === target).length, 2);
+  }
+});
+
+test('persistent forbidden and rate-limited pages stay blank and flagged after one retry', async () => {
+  for (const status of [403, 429]) {
+    let calls = 0;
+    const result = await run({ sleep: async () => {}, fetchImpl: async () => {
+      calls += 1; return response(site, status, 'text/html');
+    } });
+    assert.equal(calls, 2);
+    assert.equal(result.fixture.places[0].logoUrl, '');
+    assert.equal(result.fixture.places[0].logoCaptureReason, `page_http_${status}`);
+    assert.ok(result.fixture.thingOverrides['place:1'].missingFields.includes('logo'));
+  }
+});
+
+test('only HTTP 200 image content fills; malformed manifests and failed icons stay audited and blank', async () => {
+  for (const [status, type] of [[201, 'image/png'], [204, 'image/png'], [200, 'text/html'], [403, 'image/png'], [429, 'image/png']]) {
+    const result = await run({ sleep: async () => {}, fetchImpl: async (url) => url === site
+      ? response(site, 200, 'text/html', '<link rel="icon" href="/declared.png"><link rel="manifest" href="/broken.json">')
+      : url.endsWith('broken.json') ? response(url, 200, 'application/json', 'invalid json') : response(url, status, type) });
+    assert.equal(result.fixture.places[0].logoUrl, '');
+    assert.equal(result.fixture.places[0].logoCaptureReason, 'no_icon_answered_with_image');
+    assert.equal(result.logoChecks.at(-1).status, status);
+    assert.equal(result.logoChecks.at(-1).type, type);
+  }
+});
+
+test('apple-touch icons with encoded query strings work; declared favicon is allowed', async () => {
+  for (const [rel, href, expected] of [['apple-touch-icon', '/apple.png?a=1&amp;b=2', `${site}apple.png?a=1&b=2`],
+    ['shortcut icon', '/favicon.ico', `${site}favicon.ico`]]) {
+    const result = await run({ fetchImpl: async (url) => url === site
+      ? response(site, 200, 'text/html', `<link href="${href}" rel="${rel}">`)
+      : (assert.equal(url, expected), response(url, 200, 'image/x-icon')) });
+    assert.equal(result.fixture.places[0].logoUrl, expected);
+  }
+});
+
+test('retry recording replays transient responses and identical audit without network', async () => {
+  let calls = 0;
+  const recording = recordedFetch({ fetchImpl: async (url, options) => {
+    if (url === logo && ++calls === 1) return response(url, 429, 'text/html');
+    return http(url, options);
+  } });
+  const first = await run({ fetchImpl: recording.fetch, sleep: async () => {} });
+  const replay = recordedFetch({ records: structuredClone(recording.records), replay: true });
+  const second = await run({ fetchImpl: replay.fetch, sleep: async () => {} });
+  assert.equal(encode(first), encode(second));
+  assert.equal(calls, 2);
+});
+
+test('category-scoped rebuild preserves excluded transport rows and their overrides byte for byte', async () => {
+  const input = shared(1, [place(1), { ...place(2, 'Flight option', 'Transport'), custom: 'keep' }]);
+  input.thingOverrides['place:2'] = { custom: 'keep' };
+  const result = await run({ fixture: input, categories: ['restaurant'] });
+  assert.deepEqual(result.fixture.places[1], input.places[1]);
+  assert.deepEqual(result.fixture.thingOverrides['place:2'], input.thingOverrides['place:2']);
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.fixture.places[0].logoUrl, logo);
+});
+
+test('manifest failure does not hide a valid declared HTML icon; banned provider declarations never fetch', async () => {
+  const result = await run({ sleep: async () => {}, fetchImpl: async (url) => {
+    if (url === site) return response(site, 200, 'text/html', '<link rel="manifest" href="/app.json">'
+      + '<link rel="icon" href="https://www.google.com/faviconV2?domain=venue.example">'
+      + '<link rel="icon" href="https://vacation-staging.timesyncher.com/logo.png">'
+      + '<link rel="apple-touch-icon" href="/declared.png">');
+    if (url === `${site}app.json`) return response(url, 403, 'text/html');
+    assert.equal(url, logo); return response(url, 200, 'image/png');
+  } });
+  assert.equal(result.fixture.places[0].logoUrl, logo);
+  assert.equal(result.logoChecks.filter((check) => check.kind === 'manifest').length, 2);
+});
