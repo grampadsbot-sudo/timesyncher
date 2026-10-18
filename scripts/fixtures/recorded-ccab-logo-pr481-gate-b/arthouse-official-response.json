@@ -22,7 +22,7 @@
     "Connection": "close",
     "Strict-Transport-Security": "max-age=63072000 ; includeSubDomains ; preload"
   },
-  "sha256": "2cc0c418a8385b304393c5e460fab999d91bdbb61bb7e55857cdc9715511ffcd",
+  "sha256": "1311a09ffffe8eb7b54839f6bdb3697ff4b4a21bffd249028ae97ae3450451e7",
   "fetchedAt": "2026-10-18T08:57:52.901803+00:00",
-  "bytes": 95816
+  "bytes": 248
 }
