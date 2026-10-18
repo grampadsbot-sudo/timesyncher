@@ -5,6 +5,7 @@ import json
 import math
 import os
 import re
+import socket
 import subprocess
 import sys
 from urllib.parse import quote
@@ -23,6 +24,10 @@ RERING = 30 * 60
 GBRAIN = os.path.expanduser('~/.local/bin/gbrain')
 DISCOVER_PAGES = 10
 DRY_DISCOVER_PAGES = 2
+WORKER_CMD = re.compile(r'(?:^|[ /])(?:codex|claude|grok|cursor-agent)(?:[ /.-]|$)', re.I)
+INSPECTOR_CMD = re.compile(r'(?:tsv_stuck_check|idle_capacity)', re.I)
+CURSOR_ACTIVE_RUN = frozenset({'RUNNING', 'CREATING'})
+CLOUD_ACTIVE = frozenset({'running', 'active', 'creating'})
 
 
 def stamp(value):
@@ -58,6 +63,126 @@ def command(env):
     return value
 
 
+def lane_jobs_path(root):
+    return root + '/lane-worker-jobs.json'
+
+
+def load_lane_jobs(root):
+    try: raw = file_json(lane_jobs_path(root))
+    except Exception: return {}
+    if not isinstance(raw, dict): return {}
+    jobs = {}
+    for tag, meta in raw.items():
+        if not isinstance(meta, dict): continue
+        try: item = int(meta['item'])
+        except Exception: continue
+        entry = dict(item=item)
+        if 'pr' in meta:
+            try: entry['pr'] = int(meta['pr'])
+            except Exception: pass
+        worktree = meta.get('worktree')
+        if isinstance(worktree, str) and worktree: entry['worktree'] = worktree
+        jobs[str(tag)] = entry
+    return jobs
+
+
+def bind_worktree(jobs, cwd):
+    if not cwd: return None
+    for meta in jobs.values():
+        worktree = meta.get('worktree')
+        if not worktree: continue
+        if cwd == worktree or cwd.startswith(worktree.rstrip('/') + '/'):
+            return meta
+    return None
+
+
+def lane_slots_dir(root):
+    return os.environ.get('VK_LANES', root + '/lanes') + '/slots'
+
+
+def parse_slot_fields(path):
+    fields = {}
+    try:
+        with open(path) as source:
+            for line in source:
+                if '=' not in line: continue
+                key, value = line.strip().split('=', 1)
+                fields[key] = value
+    except OSError: return None
+    return fields if fields.get('tag') and fields.get('pid') else None
+
+
+def live_pid(pid):
+    try: os.kill(int(pid), 0); return True
+    except Exception: return False
+
+
+def lane_slot_workers(root, jobs):
+    host = socket.gethostname(); workers = []
+    for path in glob.glob(lane_slots_dir(root) + '/*.slot'):
+        fields = parse_slot_fields(path)
+        if not fields: continue
+        if fields.get('host', host) != host: continue
+        if not live_pid(fields['pid']): continue
+        tag = fields['tag']; meta = jobs.get(tag)
+        if not meta: continue
+        workers.append(dict(kind='lane', tag=tag, item=meta['item'], pr=meta.get('pr'), worktree=meta.get('worktree')))
+    return workers
+
+
+def meter_rows_from_page(text):
+    match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text or '')
+    body = match.group(1) if match else (text or '')
+    rows = []
+    for line in body.splitlines():
+        line = line.strip()
+        if not line: continue
+        try:
+            row = json.loads(line)
+            if isinstance(row, dict) and row.get('lane'): rows.append(row)
+        except Exception: pass
+    if rows: return rows
+    try:
+        parsed = json.loads(body)
+        if isinstance(parsed, dict) and parsed.get('lane'): return [parsed]
+    except Exception: pass
+    return []
+
+
+def legacy_lanes_map(text):
+    try:
+        parsed = json_text(text)
+        lanes = parsed.get('lanes') if isinstance(parsed, dict) else None
+        return lanes if isinstance(lanes, dict) else {}
+    except Exception: return {}
+
+
+def lane_readings_from_rows(rows):
+    readings = {}
+    for row in rows:
+        if not isinstance(row, dict): continue
+        lane = row.get('lane'); as_of = row.get('as_of', 'unknown')
+        if lane in ('claude-pro', 'chatgpt-plus-codex'):
+            key = 'claude' if lane == 'claude-pro' else 'codex'
+            windows = []
+            if row.get('pct_5h') is not None:
+                windows.append(dict(pct_used=row['pct_5h'], reset=row.get('reset_5h', 'unknown'), as_of=as_of))
+            if row.get('pct_week') is not None:
+                windows.append(dict(pct_used=row['pct_week'], reset=row.get('reset_week', 'unknown'), as_of=as_of))
+            if windows: readings[key] = dict(windows=windows, as_of=as_of)
+        elif lane == 'cursor':
+            for bar in row.get('bars') or []:
+                if not isinstance(bar, dict) or bar.get('pct') is None: continue
+                label = str(bar.get('label', '')).lower()
+                if 'other' in label: readings['other_models'] = dict(pct_used=bar['pct'], reset=bar.get('reset', 'monthly'), as_of=as_of)
+                elif 'cursor' in label: readings['cursor_models'] = dict(pct_used=bar['pct'], reset=bar.get('reset', 'monthly'), as_of=as_of)
+        elif lane == 'supergrok' and row.get('pct_week') is not None:
+            readings['supergrok'] = dict(pct_used=row['pct_week'], reset=row.get('reset_week', 'unknown'), as_of=as_of)
+        elif lane == 'grokbot' and row.get('pct_week') is not None:
+            readings['grok_build'] = dict(pct_used=row['pct_week'], reset=row.get('reset_week', 'unknown'), as_of=as_of)
+    return readings
+
+
 def normalize(raw, now, hard_stop):
     try:
         windows = raw.get('windows') or [raw]
@@ -74,8 +199,15 @@ def normalize(raw, now, hard_stop):
 
 
 def read_meters(now, root=D, reader=read_page, dry=False):
-    try: cached = json_text(reader(METERS_SLUG)).get('lanes', {})
-    except Exception: cached = {}
+    page = ''
+    try: page = reader(METERS_SLUG)
+    except Exception: pass
+    cached = legacy_lanes_map(page)
+    cached.update(lane_readings_from_rows(meter_rows_from_page(page)))
+    try:
+        with open(root + '/meters/lanes-latest.json') as source:
+            cached.update(lane_readings_from_rows(meter_rows_from_page(source.read())))
+    except Exception: pass
     readings = {}
     for lane, stop in LANES.items():
         candidates = [cached.get(lane, {})]
@@ -87,7 +219,9 @@ def read_meters(now, root=D, reader=read_page, dry=False):
                 windows = [dict(pct_used=w['usedPercent'], reset=w.get('resetsAt', 'unknown'), as_of=utc(now))
                            for w in raw.values() if isinstance(w, dict) and 'usedPercent' in w]
                 if windows: candidates.append(dict(windows=windows, as_of=utc(now)))
-        except Exception: candidates.append(dict(as_of=utc(now), stale=True))
+        except Exception:
+            if not any(isinstance(w, dict) and (w.get('windows') or w.get('pct_used') is not None) for w in candidates):
+                candidates.append(dict(as_of=utc(now), stale=True))
         if lane in ('cursor_models', 'other_models'):
             try:
                 raw = file_json(root + '/meters/cursor.json')
@@ -122,9 +256,15 @@ def cursor_agents(root=D):
                                          headers={'Authorization': auth, 'User-Agent': 'tsv-stuck-check'})
         with urllib.request.urlopen(request, timeout=15) as response:
             return json.load(response)
-    try: state = file_json(root + '/cursor-state.json').get('issues', {})
-    except Exception: state = {}
-    mapping = {v.get('agent'): int(n) for n, v in state.items() if v.get('agent')}
+    try: issues = file_json(root + '/cursor-state.json').get('issues', {})
+    except Exception: issues = {}
+    mapping = {}
+    for n, meta in issues.items():
+        if not isinstance(meta, dict) or not meta.get('agent'): continue
+        if str(meta.get('status', '')).lower() == 'finished': continue
+        if str(meta.get('last_status', '')).upper() == 'FINISHED': continue
+        try: mapping[meta['agent']] = int(n)
+        except Exception: pass
     workers = []; cursor = None; seen = set(); pages = 0
     while pages < 5:
         page = get('/v1/agents?limit=100&includeArchived=false' + ('&cursor=' + quote(cursor, safe='') if cursor else ''))
@@ -134,8 +274,9 @@ def cursor_agents(root=D):
             aid = agent['id']; run_info = {}
             if agent.get('latestRunId'):
                 run_info = get('/v1/agents/%s/runs/%s' % (quote(aid, safe=''), quote(agent['latestRunId'], safe='')))
-                if run_info.get('status', '').upper() not in ('RUNNING', 'CREATING'): continue
-            numbers = {mapping[aid]} if aid in mapping else set()
+                if run_info.get('status', '').upper() not in CURSOR_ACTIVE_RUN: continue
+            numbers = set()
+            if aid in mapping: numbers.add(mapping[aid])
             numbers.update(int(x) for x in re.findall(r'#(\d+)\b', agent.get('name') or ''))
             for branch in (run_info.get('git') or {}).get('branches') or []:
                 numbers.update(int(x) for x in re.findall(r'/pull/(\d+)\b', branch.get('prUrl') or ''))
@@ -147,16 +288,24 @@ def cursor_agents(root=D):
 
 
 def read_workers(now, root=D, dry=False):
-    workers = []
+    workers = []; jobs = load_lane_jobs(root)
     if not dry:
+        workers.extend(lane_slot_workers(root, jobs))
         for path in glob.glob('/proc/[0-9]*/cmdline'):
             try:
                 with open(path, 'rb') as source: cmd = source.read().decode(errors='replace').replace('\0', ' ')
-                if not re.search(r'(?:^|[ /])(?:codex|claude|grok)(?:[ /.-]|$)', cmd, re.I): continue
+                if not WORKER_CMD.search(cmd): continue
+                if INSPECTOR_CMD.search(cmd): continue
                 if os.path.basename(os.path.dirname(path)) == str(os.getpid()): continue
                 try: cwd = os.readlink(os.path.dirname(path) + '/cwd')
                 except OSError: cwd = ''
-                workers.append(dict(kind='process', text=cmd + ' ' + cwd))
+                bound = bind_worktree(jobs, cwd)
+                if 'cursor-agent' in cmd and bound:
+                    entry = dict(kind='process', item=bound['item'], worktree=bound.get('worktree'))
+                    if bound.get('pr') is not None: entry['pr'] = bound['pr']
+                    workers.append(entry)
+                elif 'cursor-agent' not in cmd:
+                    workers.append(dict(kind='process', text=cmd + ' ' + cwd))
             except OSError: pass
         for scope in ([], ['--user']):
             try:
@@ -180,15 +329,17 @@ def read_workers(now, root=D, dry=False):
         try:
             if 'TSV_CURSOR_AGENTS_CMD' in os.environ:
                 for agent in json_text(run(command('TSV_CURSOR_AGENTS_CMD')))['agents']:
-                    if agent.get('status', '').lower() in ('running', 'active'):
-                        workers.append(dict(kind='cursor', item=int(agent['item'])))
+                    if agent.get('status', '').lower() not in CLOUD_ACTIVE: continue
+                    try: workers.append(dict(kind='cursor', item=int(agent['item'])))
+                    except Exception: pass
             else: workers.extend(cursor_agents(root))
         except Exception: pass
     return workers
 
 
 def running(n, workers):
-    return any(w.get('item') == n or (w.get('kind') in ('process', 'unit') and mentions(w.get('text', ''), n)) for w in workers)
+    return any(w.get('item') == n or w.get('pr') == n or
+               (w.get('kind') in ('process', 'unit') and mentions(w.get('text', ''), n)) for w in workers)
 
 
 class Brain:
