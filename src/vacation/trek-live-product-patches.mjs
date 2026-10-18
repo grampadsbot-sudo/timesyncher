@@ -1,10 +1,11 @@
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
-import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
+import { patchSharedLayoutOverflow, patchSharedTabRowOverflow, patchTimelineIconColumnAlign } from './trek-shared-layout-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
+import { patchHeaderBrandLogoCentre } from './trek-header-brand-patch.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -165,6 +166,7 @@ export function patchThingLogoChipAlignment(source = '') {
   } else if (!js.includes('"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re')) {
     throw new Error('trek bundle dc() logo chip patch did not apply');
   }
+  js = patchHeaderBrandLogoCentre(js);
   if (!js.includes('display:"inline-grid",placeItems:"center"') && !js.includes('data-ts-category-tab-icon":"1"')) {
     throw new Error('category tab icon centering patch did not apply');
   }
@@ -319,7 +321,7 @@ const BUDGET_ICON_PATCH = 'Hl=di=>di==="Trip total"?"💵":di==="Flights"?"✈�
 const BUDGET_EMPTY_NEEDLE = 'return!Xi&&!go&&!fr.length?null:';
 const BUDGET_EMPTY_PATCH = 'return!fr.length?null:';
 const TIMELINE_ICON_NEEDLE = 'n.jsx("div",{style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{style:{fontSize:ua.isConflict?14:17,lineHeight:1,transform:"translateY(0.5px)"},children:sr})})';
-const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:ua.isConflict?0:3.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:ua.isConflict?18:22,height:ua.isConflict?18:22},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,display:"block"}})})})';
+const TIMELINE_ICON_PATCH = 'n.jsx("div",{"data-ts-timeline-icon":"1","data-ts-category-tab-icon":"1","aria-hidden":"true",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,marginTop:2.5,display:"flex",alignItems:"center",justifyContent:"center",boxSizing:"border-box"},children:Xr?n.jsx("img",{"data-logo-src":Xr,src:Xr,alt:"",loading:"lazy",style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,objectFit:"contain",display:"block",filter:"drop-shadow(0 1px 1px rgba(15,23,42,0.12))"}}):n.jsx("span",{"data-ts-tab-emoji":"1",style:{display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,width:ua.isConflict?18:22,height:ua.isConflict?18:22},children:n.jsx("canvas",{width:32,height:32,ref:function(el){tsPaintTabEmoji(el,sr)},style:{width:ua.isConflict?18:22,height:ua.isConflict?18:22,display:"block"}})})})';
 const TIMELINE_TITLE_NEEDLE = 'n.jsx("button",{onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PATCH = 'n.jsx("button",{"data-ts-timeline-title":"1",onClick:()=>Ne(Qt(ua.item)),style:{border:0,padding:0,background:"transparent",cursor:"pointer",fontSize:13,fontWeight:600,lineHeight:1.15,color:"#111827",textDecoration:"underline",textDecorationColor:"#cbd5e1",textUnderlineOffset:3,textAlign:"left"},children:Pn})';
 const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10}:{paddingTop:1}';
@@ -401,6 +403,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes(BUDGET_ICON_NEEDLE)) js = js.replace(BUDGET_ICON_NEEDLE, BUDGET_ICON_PATCH);
   js = patchBudgetSavedTargetsOnly(js, { served });
   if (js.includes(TIMELINE_ICON_NEEDLE)) js = js.replace(TIMELINE_ICON_NEEDLE, TIMELINE_ICON_PATCH);
+  js = patchTimelineIconColumnAlign(js, { served });
   if (js.includes(TIMELINE_TITLE_NEEDLE)) js = js.replace(TIMELINE_TITLE_NEEDLE, TIMELINE_TITLE_PATCH);
   if (js.includes(TIMELINE_TITLE_PAD_NEEDLE)) js = js.replace(TIMELINE_TITLE_PAD_NEEDLE, TIMELINE_TITLE_PAD_PATCH);
   if (js.includes(CONFLICT_LABEL_NEEDLE)) js = js.replace(CONFLICT_LABEL_NEEDLE, CONFLICT_LABEL_PATCH);

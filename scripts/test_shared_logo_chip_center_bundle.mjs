@@ -20,6 +20,8 @@ assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return 
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);
 assert.match(rendered, /data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center/);
 assert.doesNotMatch(rendered, /translateY\(-0\.5px\)/);
+assert.match(rendered, /data-ts-header-brand":"1"/);
+assert.match(rendered, /gridTemplateColumns:"1fr auto 1fr"/);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G,size:Re=28})=>{noop}'),

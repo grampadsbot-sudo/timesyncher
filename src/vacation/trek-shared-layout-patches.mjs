@@ -8,6 +8,18 @@ const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom
 const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2,flexWrap:"wrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box"},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
+const TIMELINE_ICON_COL_NEEDLE = 'display:"flex",flexDirection:"column",alignItems:"center"},children:[n.jsx("div",{"data-ts-timeline-icon":"1"';
+const TIMELINE_ICON_COL_PATCH = 'display:"flex",flexDirection:"column",alignItems:"flex-start"},children:[n.jsx("div",{"data-ts-timeline-icon":"1"';
+
+export function patchTimelineIconColumnAlign(source = '', options = {}) {
+  const served = options.served === true;
+  let js = String(source || '');
+  if (js.includes(TIMELINE_ICON_COL_NEEDLE)) js = js.replace(TIMELINE_ICON_COL_NEEDLE, TIMELINE_ICON_COL_PATCH);
+  else if (served && js.includes('flexDirection:"column",alignItems:"center"},children:[n.jsx("div",{"data-ts-timeline-icon":"1"')) {
+    throw new Error('timeline icon column align patch did not apply');
+  }
+  return js;
+}
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
