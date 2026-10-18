@@ -76,6 +76,7 @@ scripts/test_vacation_pricing.mjs
 scripts/test_mint_checkout_coupons.mjs
 scripts/test_f13_n1_hardcode_delete.mjs
 scripts/test_evidence_secrets.mjs
+scripts/test_resolve_evidence_base_ref.mjs
 scripts/test_eval_jev_cards.mjs
 scripts/test_first_pass_minimums.mjs
 scripts/test_live_transcript_dialog_pdf.mjs
