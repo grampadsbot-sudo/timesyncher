@@ -1,4 +1,3 @@
-import { fetchPageIconUrl, isPlaceWebsite } from './page-icon-discovery.mjs';
 import { logoCaptureMissReason, resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
 function textField(value) {
@@ -57,33 +56,4 @@ export function logoFieldsForSharedPlace(place, priorOverride = {}) {
     if (reason) extra.logoCaptureReason = reason;
   }
   return extra;
-}
-
-export async function applyDiscoveredPageIcon(thing, { fetchImpl = globalThis.fetch } = {}) {
-  if (!thing || typeof thing !== 'object') return thing;
-  const metadata = { ...(thing.metadata || {}) };
-  const source = { ...(metadata.sourceRecord || {}) };
-  const pageUrl = source.website || source['contact:website'] || metadata.website || thing.website;
-  const captured = source.logoProvenance;
-  if (captured?.pageUrl && captured.iconUrl && metadata.logoUrl === captured.iconUrl && source.logoUrl === captured.iconUrl) return thing;
-  const result = pageUrl && isPlaceWebsite(pageUrl)
-    ? await fetchPageIconUrl(pageUrl, { fetchImpl })
-    : { reason: 'no_verified_place_website' };
-  delete metadata.logoUrl;
-  delete source.logoUrl;
-  delete source.logoProvenance;
-  if (result.logoUrl) {
-    metadata.logoUrl = result.logoUrl;
-    source.logoUrl = result.logoUrl;
-    source.website = result.pageUrl;
-    source.logoProvenance = { pageUrl: result.pageUrl, iconUrl: result.logoUrl };
-    delete metadata.logoCaptureReason;
-    delete source.logoCaptureReason;
-  } else {
-    metadata.logoCaptureReason = result.reason;
-    source.logoCaptureReason = result.reason;
-  }
-  metadata.sourceRecord = source;
-  thing.metadata = metadata;
-  return thing;
 }
