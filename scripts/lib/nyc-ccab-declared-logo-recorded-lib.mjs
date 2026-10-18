@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 import { applyDiscoveredPageIcon } from '../../src/vacation/intake-shared-place-source.mjs';
 
-const RECORDED_DIR = fileURLToPath(new URL('../fixtures/recorded-ccab-logo-pr481-gate-b', import.meta.url));
+const DEFAULT_RECORDED_DIR = fileURLToPath(new URL('../fixtures/recorded-ccab-logo-pr481-gate-b', import.meta.url));
+function recordedDir(rootDir) {
+  return rootDir ? String(rootDir) : DEFAULT_RECORDED_DIR;
+}
 const text = (value) => String(value ?? '').trim();
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -54,27 +57,35 @@ export function effectiveCcabDeclaredLogoUrl(record = {}) {
   return logo;
 }
 
-export function listCcabLogoRecordings() {
-  return readdirSync(RECORDED_DIR)
+export function listCcabLogoRecordings(options = {}) {
+  return readdirSync(recordedDir(options.rootDir))
     .filter((name) => name.endsWith('.json') && !name.includes('-response'))
     .sort();
 }
 
-function readCcabLogoRecording(fileName) {
-  const manifest = JSON.parse(readFileSync(join(RECORDED_DIR, fileName), 'utf8'));
-  const pageMeta = JSON.parse(readFileSync(join(RECORDED_DIR, manifest.pageResponseFile), 'utf8'));
-  const iconMeta = JSON.parse(readFileSync(join(RECORDED_DIR, manifest.iconResponseFile), 'utf8'));
-  const pageBody = readFileSync(join(RECORDED_DIR, manifest.pageBodyFile));
+function readCcabLogoRecording(fileName, options = {}) {
+  const root = recordedDir(options.rootDir);
+  const manifest = JSON.parse(readFileSync(join(root, fileName), 'utf8'));
+  const pageMeta = JSON.parse(readFileSync(join(root, manifest.pageResponseFile), 'utf8'));
+  const iconMeta = JSON.parse(readFileSync(join(root, manifest.iconResponseFile), 'utf8'));
+  const pageBody = readFileSync(join(root, manifest.pageBodyFile));
+  const iconBodyFile = text(manifest.iconBodyFile);
+  if (!iconBodyFile) throw new Error(`missing iconBodyFile for ${manifest.ccabKey}`);
+  const iconBody = readFileSync(join(root, iconBodyFile));
   if (digest(pageBody) !== text(manifest.expectedPageSha256)) {
     throw new Error(`page body sha mismatch for ${manifest.ccabKey}`);
   }
-  if (text(iconMeta.sha256) !== text(manifest.expectedIconSha256)) {
+  const iconSha = digest(iconBody);
+  if (iconSha !== text(manifest.expectedIconSha256)) {
+    throw new Error(`icon body sha mismatch for ${manifest.ccabKey}`);
+  }
+  if (text(iconMeta.sha256) !== iconSha) {
     throw new Error(`icon response sha mismatch for ${manifest.ccabKey}`);
   }
-  return { manifest, pageMeta, iconMeta, pageBody };
+  return { manifest, pageMeta, iconMeta, pageBody, iconBody };
 }
 
-function recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody }) {
+function recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody, iconBody }) {
   const records = [
     {
       key: `text/html ${pageMeta.requestedUrl}`,
@@ -88,7 +99,7 @@ function recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody }) {
       status: iconMeta.status,
       url: iconMeta.finalUrl || iconMeta.requestedUrl,
       type: iconMeta.contentType || 'image/png',
-      body: '',
+      body: iconBody,
     },
   ];
   const byKey = new Map(records.map((row) => [row.key, row]));
@@ -101,15 +112,19 @@ function recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody }) {
       status: record.status,
       url: record.url,
       headers: new Headers({ 'content-type': record.type }),
-      text: async () => record.body,
+      text: async () => (Buffer.isBuffer(record.body) ? record.body.toString('utf8') : String(record.body || '')),
+      arrayBuffer: async () => {
+        const bytes = Buffer.isBuffer(record.body) ? record.body : Buffer.from(String(record.body || ''), 'utf8');
+        return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      },
       body: { cancel: async () => {} },
     };
   };
 }
 
-export async function discoverCcabLogoFromRecording(fileName) {
-  const { manifest, pageMeta, iconMeta, pageBody } = readCcabLogoRecording(fileName);
-  const fetchImpl = recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody });
+export async function discoverCcabLogoFromRecording(fileName, options = {}) {
+  const { manifest, pageMeta, iconMeta, pageBody, iconBody } = readCcabLogoRecording(fileName, options);
+  const fetchImpl = recordedFetchForCcabLogo({ pageMeta, iconMeta, pageBody, iconBody });
   const thing = {
     website: manifest.website,
     metadata: { sourceRecord: { website: manifest.website } },
@@ -129,6 +144,6 @@ export async function discoverCcabLogoFromRecording(fileName) {
     logoUrl,
     logoProvenance: provenance,
     pageSha256: digest(pageBody),
-    iconSha256: text(iconMeta.sha256),
+    iconSha256: digest(iconBody),
   };
 }

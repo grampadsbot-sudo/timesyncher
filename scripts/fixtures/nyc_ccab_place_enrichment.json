@@ -405,11 +405,15 @@
     "summary": "Iconic UWS specialty market and prepared-foods stop;",
     "price": 33,
     "website": "https://www.zabars.com/",
-    "logoUrl": "https://www.zabars.com/favicon.ico",
+    "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png",
     "lat": 40.7847,
     "lng": -73.9794,
     "address": "2245 Broadway, New York, NY 10024",
-    "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics."
+    "itineraryNote": "UWS grocery stop for picnic supplies and breakfast basics.",
+    "logoProvenance": {
+      "pageUrl": "https://www.zabars.com/",
+      "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
+    }
   },
   "Tiffany & Co. The Landmark": {
     "category": "store",

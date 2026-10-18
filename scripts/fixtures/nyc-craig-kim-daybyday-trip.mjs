@@ -143,6 +143,10 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
     ? search.sourceRecord
     : {};
   if (search.price != null) override.price = search.price;
+  if (record && Object.keys(record).length) {
+    place.sourceRecord = { ...record };
+    override.sourceRecord = { ...record };
+  }
   if (search.logoUrl) {
     override.logoUrl = search.logoUrl;
     place.logoUrl = search.logoUrl;

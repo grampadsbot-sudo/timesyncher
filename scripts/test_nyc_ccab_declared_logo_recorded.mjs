@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -39,5 +41,46 @@ for (const fileName of listCcabLogoRecordings()) {
   assert.equal(row.logoUrl, discovered.logoUrl);
   assert.deepEqual(row.logoProvenance, discovered.logoProvenance);
 }
+
+const RECORDED_DIR = fileURLToPath(new URL('./fixtures/recorded-ccab-logo-pr481-gate-b', import.meta.url));
+const tamperDir = mkdtempSync(join(tmpdir(), 'ccab-logo-tamper-'));
+const tamperManifest = JSON.parse(readFileSync(join(RECORDED_DIR, '2026-10-18T094200Z-zabars.json'), 'utf8'));
+writeFileSync(join(tamperDir, '2026-10-18T094200Z-zabars.json'), JSON.stringify(tamperManifest));
+for (const file of [
+  tamperManifest.pageBodyFile,
+  tamperManifest.pageResponseFile,
+  tamperManifest.iconBodyFile,
+  tamperManifest.iconResponseFile,
+]) {
+  writeFileSync(join(tamperDir, file), readFileSync(join(RECORDED_DIR, file)));
+}
+const iconPath = join(tamperDir, tamperManifest.iconBodyFile);
+const iconBytes = readFileSync(iconPath);
+iconBytes[0] ^= 0xff;
+writeFileSync(iconPath, iconBytes);
+await assert.rejects(
+  () => discoverCcabLogoFromRecording('2026-10-18T094200Z-zabars.json', { rootDir: tamperDir }),
+  /icon body sha mismatch/,
+  'tampered icon bytes must fail before discovery',
+);
+const tamperHtmlDir = mkdtempSync(join(tmpdir(), 'ccab-logo-tamper-html-'));
+writeFileSync(join(tamperHtmlDir, '2026-10-18T094200Z-zabars.json'), JSON.stringify(tamperManifest));
+for (const file of [
+  tamperManifest.pageBodyFile,
+  tamperManifest.pageResponseFile,
+  tamperManifest.iconBodyFile,
+  tamperManifest.iconResponseFile,
+]) {
+  writeFileSync(join(tamperHtmlDir, file), readFileSync(join(RECORDED_DIR, file)));
+}
+const pagePath = join(tamperHtmlDir, tamperManifest.pageBodyFile);
+const pageBytes = readFileSync(pagePath);
+pageBytes[0] ^= 0xff;
+writeFileSync(pagePath, pageBytes);
+await assert.rejects(
+  () => discoverCcabLogoFromRecording('2026-10-18T094200Z-zabars.json', { rootDir: tamperHtmlDir }),
+  /page body sha mismatch/,
+  'tampered page html must fail before discovery',
+);
 
 console.log('nyc ccab declared logo recorded tests passed');

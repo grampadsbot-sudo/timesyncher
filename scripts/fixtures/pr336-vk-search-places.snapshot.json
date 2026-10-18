@@ -42,7 +42,7 @@
       "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
       "price": 18,
       "website": "https://www.zabars.com/",
-      "logoUrl": "https://www.zabars.com/favicon.ico",
+      "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png",
       "lat": 40.7847,
       "lng": -73.9794,
       "address": "2245 Broadway, New York, NY 10024",
@@ -95,12 +95,16 @@
       "review4Url": null,
       "source": "brave",
       "url": "https://www.zabars.com/",
-      "longDetails": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate."
+      "longDetails": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
+      "logoProvenance": {
+        "pageUrl": "https://www.zabars.com/",
+        "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
+      }
     },
     "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
     "summary": "UWS grocery stop for picnic supplies and breakfast basics.",
     "price": 18,
-    "logoUrl": "https://www.zabars.com/favicon.ico"
+    "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
   },
   "603": {
     "source": "brave",
