@@ -357,6 +357,64 @@ test('category scope without flight leaves flight rows untouched; airline eviden
   assert.equal(encode(first), encode(second));
 });
 
+const deep = 'https://venue.example/stores/fifth/';
+const brand = 'https://venue.example/structured/brand_logo.png?v=2';
+const ldLogo = (logo, type = 'Organization') => `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': type, url: site, logo })}</script>`;
+const runDeep = (fetchImpl) => run({ staging: shared(99, [{ ...place(601), website: deep }]), sleep: async () => {}, fetchImpl });
+
+test('page without declared icons takes the root document schema.org logo; favicon guess never fetched', async () => {
+  const calls = [];
+  const result = await runDeep(async (url, options) => {
+    calls.push(`${options.headers.accept} ${url}`);
+    if (url === deep) return response(deep, 200, 'text/html', `<link rel="stylesheet" href="/icons.css">${ldLogo('https://other.example/photo.jpg', 'Store').replace('"logo"', '"image"')}`);
+    if (url === site) return response(site, 200, 'text/html', ldLogo({ '@type': 'ImageObject', url: '/structured/brand_logo.png?v=2' }));
+    assert.equal(url, brand);
+    return response(brand, 200, 'image/png');
+  });
+  assert.equal(result.fixture.places[0].logoUrl, brand);
+  assert.equal(result.fixture.thingOverrides['place:1'].logoUrl, brand);
+  assert.deepEqual(calls, [`text/html ${deep}`, `text/html ${site}`, `image/* ${brand}`]);
+});
+
+test('page schema.org logo and root declared icons are used only when the page declares no icon', async () => {
+  const own = await runDeep(async (url) => {
+    if (url === deep) return response(deep, 200, 'text/html', ldLogo(brand));
+    assert.equal(url, brand); return response(url, 200, 'image/png');
+  });
+  assert.equal(own.fixture.places[0].logoUrl, brand);
+  const rootIcon = await runDeep(async (url) => {
+    if (url === deep) return response(deep, 200, 'text/html', '<html>no icon</html>');
+    if (url === site) return response(site, 200, 'text/html', `<link rel="apple-touch-icon" href="/declared.png">${ldLogo(brand)}`);
+    assert.equal(url, logo); return response(url, 200, 'image/png');
+  });
+  assert.equal(rootIcon.fixture.places[0].logoUrl, logo);
+  const declared = [];
+  const linked = await runDeep(async (url) => {
+    declared.push(url);
+    if (url === deep) return response(deep, 200, 'text/html', `<link rel="icon" href="/declared.png">${ldLogo(brand)}`);
+    assert.equal(url, logo); return response(url, 200, 'image/png');
+  });
+  assert.equal(linked.fixture.places[0].logoUrl, logo);
+  assert.deepEqual(declared, [deep, logo]);
+});
+
+test('root fallback rejects failed, cross-origin and banned-provider declarations without guessing', async () => {
+  for (const [rootAnswer, reason] of [
+    [async () => { throw new Error('root down'); }, 'no_icon_answered_with_image'],
+    [async () => response(site, 403, 'text/html', ldLogo(brand)), 'no_icon_answered_with_image'],
+    [async () => response('https://parent.example/', 200, 'text/html', ldLogo('https://parent.example/logo.png')), 'no_icon_answered_with_image'],
+    [async () => response(site, 200, 'text/html', ldLogo('https://www.gstatic.com/logo.png') + ldLogo('https://www.google.com/s2/favicons?domain=venue.example')), 'no_icon_answered_with_image'],
+  ]) {
+    const result = await runDeep(async (url, options) => {
+      if (url === deep) return response(deep, 200, 'text/html', '<html>no icon</html>');
+      if (url === site) return rootAnswer();
+      assert.fail(`fetched ${options.headers.accept} ${url}`);
+    });
+    assert.equal(result.fixture.places[0].logoUrl, '');
+    assert.equal(result.fixture.places[0].logoCaptureReason, reason);
+  }
+});
+
 test('manifest failure does not hide a valid declared HTML icon; banned provider declarations never fetch', async () => {
   const result = await run({ sleep: async () => {}, fetchImpl: async (url) => {
     if (url === site) return response(site, 200, 'text/html', '<link rel="manifest" href="/app.json">'

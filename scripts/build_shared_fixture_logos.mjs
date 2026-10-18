@@ -127,23 +127,36 @@ function declaredIconFetch(fetchImpl, sleep) {
     })());
     return cache.get(key);
   };
-  const pages = new Map();
-  const fetch = async (url, options) => {
-    if (options?.headers?.accept === 'image/*') {
-      if (!allowed.has(String(url))) throw new Error('undeclared_icon_rejected');
-      const response = await request(url, options, 'icon');
-      return { ...response, ok: response.ok && Boolean(safeUrl(response.url, url)) };
+  const structuredLogos = (html, base) => {
+    const found = [];
+    const walk = (node) => {
+      if (Array.isArray(node)) { node.forEach(walk); return; }
+      if (!node || typeof node !== 'object') return;
+      for (const logo of [node.logo].flat()) {
+        const href = safeUrl(typeof logo === 'string' ? logo : typeof logo?.url === 'string' ? logo.url : '', base);
+        if (href) found.push(href);
+      }
+      Object.values(node).forEach(walk);
+    };
+    for (const [, body] of html.matchAll(/<script\b[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      try { walk(JSON.parse(body)); } catch { continue; }
     }
-    if (!pages.has(String(url))) pages.set(String(url), (async () => {
+    return [...new Set(found)];
+  };
+  const pages = new Map();
+  const page = (url, options, nested) => {
+    const key = `${nested ? 'root' : 'page'} ${url}`;
+    if (!pages.has(key)) pages.set(key, (async () => {
       const response = await request(url, options, 'page');
       if (!response.ok || !isPlaceWebsite(response.url)) return response;
       let html = await response.text();
       const manifests = [];
+      let declared = 0;
       for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
         const rel = attribute(tag, 'rel');
         const href = safeUrl(attribute(tag, 'href'), response.url);
         if (!href) continue;
-        if (/(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(rel)) allowed.add(href);
+        if (/(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/i.test(rel)) { allowed.add(href); declared += 1; }
         if (/(^|\s)manifest(\s|$)/i.test(rel)) manifests.push(href);
       }
       for (const manifest of new Set(manifests)) {
@@ -155,9 +168,19 @@ function declaredIconFetch(fetchImpl, sleep) {
             const href = safeUrl(typeof icon?.src === 'string' ? icon.src : '', answer.url);
             if (!href) continue;
             allowed.add(href);
+            declared += 1;
             html += `<link rel="icon" href="${href.replace(/&/g, '&amp;').replace(/"/g, '&#34;')}">`;
           }
         } catch { continue; }
+      }
+      if (!declared) {
+        let fallback = structuredLogos(html, response.url);
+        const root = new URL('/', response.url);
+        if (!fallback.length && !nested && root.href !== response.url) fallback = await rootIcons(root, options);
+        for (const href of fallback) {
+          allowed.add(href);
+          html += `<link rel="icon" href="${href.replace(/&/g, '&amp;').replace(/"/g, '&#34;')}">`;
+        }
       }
       html = html.replace(/<link\b[^>]*>/gi, (tag) => {
         const href = safeUrl(attribute(tag, 'href'), response.url);
@@ -166,7 +189,22 @@ function declaredIconFetch(fetchImpl, sleep) {
       });
       return { ...response, text: async () => html };
     })());
-    return pages.get(String(url));
+    return pages.get(key);
+  };
+  const rootIcons = async (root, options) => {
+    try {
+      const answer = await page(root.href, options, true);
+      if (!answer.ok || !isPlaceWebsite(answer.url) || new URL(answer.url).origin !== root.origin) return [];
+      return ((await answer.text()).match(/<link\b[^>]*>/gi) || []).map((tag) => attribute(tag, 'href')).filter((href) => allowed.has(href));
+    } catch { return []; }
+  };
+  const fetch = async (url, options) => {
+    if (options?.headers?.accept === 'image/*') {
+      if (!allowed.has(String(url))) throw new Error('undeclared_icon_rejected');
+      const response = await request(url, options, 'icon');
+      return { ...response, ok: response.ok && Boolean(safeUrl(response.url, url)) };
+    }
+    return page(String(url), options, false);
   };
   return { fetch, checks };
 }
