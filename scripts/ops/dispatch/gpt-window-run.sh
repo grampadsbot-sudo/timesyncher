@@ -1,13 +1,6 @@
 #!/bin/bash
-# gpt-window-run.sh: GPT/Codex counterpart of r102c-run.sh (Craig 2026-10-17 1:46 PM PT).
-# Checks the Codex meter before each session and stops when it is not allowed; resumes the SAME
-# codex session for up to MAX_SESSIONS two-hour sessions; the brief preamble makes the model push
-# as soon as the branch beats base and after every improving round (never force-push), push its
-# best work before quota runs out, then write the receipt and the DONE file.
-# Usage: gpt-window-run.sh <job-dir> <tag> <brief-file> <workdir> <effort> [extra-writable-dir ...]
-# Env: RESUME_SID (continue an existing codex session), MAX_SESSIONS (6), SESSION_SECS (7200), QUOTA_STOP_PCT (95)
 set -u
-[ $# -ge 5 ] || { echo "usage: $0 <job-dir> <tag> <brief-file> <workdir> <effort> [extra-dir...]" >&2; exit 2; }
+[ "$#" -ge 5 ] || { echo "usage: $0 <job-dir> <tag> <brief-file> <workdir> <effort> [extra-dir...]" >&2; exit 2; }
 D=$1; TAG=$2; BRIEF=$3; WD=$4; EFFORT=$5; shift 5
 MODEL=gpt-6.1-sol
 case "$EFFORT" in low|medium|high|xhigh) ;; *) echo "effort must be low|medium|high|xhigh" >&2; exit 2;; esac

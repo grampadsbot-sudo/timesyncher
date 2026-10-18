@@ -1,21 +1,14 @@
 #!/bin/bash
-# vk-lane-run.sh: one VK job on one lane, gated by the lane switch file (dr eggbot 2026-10-17, Craig 8:28/8:31/8:34 PM PT).
-# Usage: vk-lane-run.sh <lane> <job-dir> <tag> <brief-file> <worktree> [effort]
-#   lanes: codex-ubuntu claude-ubuntu cursor-ubuntu (this host). Mac lanes use the Mac copy.
-# Gates (all must pass, else exit 3 and log the refusal): lane enabled; lane slots < lane max_jobs;
-#   meter-group slots < group max_jobs; machine slots < machine cap; meter has room.
-# Each job runs in its own git worktree. Workers never push: the host publishes after DONE.
-# Env: VK_LANES (default ~/tsv-dispatch/lanes), DRY_RUN=1 (gates only).
 set -u
-[ $# -ge 5 ] || { echo "usage: $0 <lane> <job-dir> <tag> <brief> <worktree> [effort]" >&2; exit 2; }
+[ "$#" -ge 5 ] || { echo "usage: $0 <lane> <job-dir> <tag> <brief> <worktree> [effort]" >&2; exit 2; }
 LANE=$1; D=$2; TAG=$3; BRIEF=$4; WD=$5; EFFORT=${6:-medium}
 L=${VK_LANES:-$HOME/tsv-dispatch/lanes}; CFG=$L/lanes.json; SL=$L/slots; mkdir -p "$SL" "$D"
 export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:$HOME/bin:$PATH"
 unset OPENAI_API_KEY OPENAI_BASE_URL OPENROUTER_API_KEY ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL
-export npm_config_cache=$HOME/.npm npm_config_prefer_offline=true   # one shared npm store for every worktree
+export npm_config_cache=$HOME/.npm npm_config_prefer_offline=true
 LOG=$L/lane-run.log; ts() { TZ=America/Los_Angeles date '+%F %T %Z'; }
 [ -d "$WD/.git" ] || [ -f "$WD/.git" ] || { echo "$(ts) REFUSE $LANE $TAG: $WD is not a git worktree" | tee -a "$LOG"; exit 3; }
-meter() {  # prints "ok <detail>" or "no <detail>"
+meter() {
   case $1 in
     gpt) q=$(python3 -I "$HOME/tsv-dispatch/bin/codex-quota.py" 2>&1); python3 -I -c 'import json,sys
 c=json.load(open(sys.argv[2]))["meters"]["gpt"]
@@ -33,10 +26,9 @@ print(("ok" if p<c["stop_pct_5h"] and s<c["stop_pct_week"] and st=="allowed" els
     *) echo "no unknown meter";;
   esac
 }
-# gate check under a lock so two launches can't take the same slot
 exec 9>"$L/.gate.lock"; flock 9
 for f in "$SL"/*.slot; do [ -e "$f" ] || continue; pid=$(sed -n 's/^pid=//p' "$f"); host=$(sed -n 's/^host=//p' "$f")
-  [ "$host" = "$(hostname)" ] && ! kill -0 "$pid" 2>/dev/null && rm -f "$f"; done   # reap dead local slots
+  [ "$host" = "$(hostname)" ] && ! kill -0 "$pid" 2>/dev/null && rm -f "$f"; done
 G=$(python3 -I - "$CFG" "$SL" "$LANE" <<'PY'
 import json,sys,glob
 cfg,sl,lane=json.load(open(sys.argv[1])),sys.argv[2],sys.argv[3]
@@ -67,7 +59,7 @@ if [ "${VK_HOST_PUBLICATION_ONLY:-0}" = 1 ]; then
   PRE="Lane rules: $LANE, model $MODEL only; no other model, OpenRouter or paid fallback. HOST PUBLICATION ONLY. Edit source/test files only inside $WD and $D; do not stage, commit, push, merge, rebase or write Git metadata. Read-only Git metadata is expected and is not a source-write failure. All Git mutations belong to the outer host. Do not change sandbox roots or privileges. Preserve all scope, gate, quota and ownership limits. Run applicable source tests and pre-DONE checks; report uncommitted changes to the host in the named receipt and write result <outcome> <actual starting HEAD> to $D/$TAG-DONE. A failed SOURCE write stops work with an exact-path blocked receipt."
 fi
 cd "$WD" || exit 1
-run_lane() {  # $1 = brief file
+run_lane() {
 case $LANE in
   codex-ubuntu) "$HOME/tsv-dispatch/gpt-window-run.sh" "$D" "$TAG" "$1" "$WD" "$EFFORT"; rc=$? ;;
   claude-ubuntu)
@@ -89,7 +81,6 @@ esac
 }
 GATE="$HOME/tsv-dispatch/bin/vk-pre-done-gate.sh"
 run_lane "$BRIEF"
-# pre-DONE gate (dr eggbot ruling 2026-10-17 8:53 PM PT): DONE stands only if the repo no-comment and offline-tests checks pass; otherwise the failure goes back to the lane, at most 2 fix rounds
 gr=0
 while [ -f "$D/$TAG-DONE" ]; do
   GOUT=$("$GATE" "$WD" 2>&1) && { echo "$(ts) GATE-PASS $LANE $TAG" | tee -a "$LOG"; break; }
