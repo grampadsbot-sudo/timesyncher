@@ -66,6 +66,19 @@ assert(timelineIcon(placeB).icon === '🍽️', 'a second restaurant uses the re
 assert(timelineIcon(placeC).icon === '🛍️', 'a store uses the store icon');
 assert(timelineIcon(outbound).icon === '🚕', 'transport category stays transport');
 assert(timelineIcon(inbound).icon === '🚕', 'return transport stays transport');
+assert(
+  timelineIcon({
+    name: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
+    category_name: 'Transport',
+    category_icon: '🚌',
+    category: 'transport',
+  }).icon === '✈️',
+  'flight option on transport category uses airplane',
+);
+assert(
+  timelineIcon({ name: 'JetBlue LAS-JFK 2026-06-23 07:22-15:31', airline: 'JetBlue' }).icon === '✈️',
+  'flight with missing category still uses airplane',
+);
 assert(timelineIcon({ name: 'Thursday departure', category_name: 'Flight' }).icon === '✈️', 'flight category uses airplane');
 assert(timelineIcon(lodging, { category: 'hotel' }).icon === '🧳', 'Hotel override uses lodging icon');
 assert(timelineIcon(attraction, { category: 'other' }).icon === '🏛️', 'other override does not beat Attraction');
