@@ -49,10 +49,14 @@
     "summary": "Neighborhood: Upper West Side; Rating: 7.9 (2,366 Booking.com reviews); Price: $508/night; sale $3,557/week for 2 adults; Bar/restaurant; okay rating; UWS fit; Status: candidate, not booked.",
     "price": 508,
     "website": "https://www.arthousehotelnyc.com/",
-    "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
+    "logoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "logoProvenance": {
+      "pageUrl": "https://www.arthousehotelnyc.com/",
+      "iconUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png"
+    }
   },
   "The Empire Hotel New York": {
     "category": "hotel",
@@ -544,7 +548,10 @@
     "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
     "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
     "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
-    "missingFields": ["ratings", "reviews"],
+    "missingFields": [
+      "ratings",
+      "reviews"
+    ],
     "reviewThemes": [
       "No company-specific JFK counter reputation before booking",
       "Supplier brand hidden until checkout",
