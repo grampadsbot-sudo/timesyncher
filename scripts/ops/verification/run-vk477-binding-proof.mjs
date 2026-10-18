@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -17,9 +18,9 @@ import { bindingProofShouldFail } from './vk477-proof-exit.mjs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const jobRoot = process.env.VK477_JOB_ROOT
-  || '/home/ubishere9995/tsv-dispatch/vk-477-harness-20261018-job';
+  || mkdtempSync(path.join(tmpdir(), 'vk477-proof-'));
 const nycShared = process.env.VK_NYC_SHARED_FIXTURE
-  || '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
+  || path.join(root, 'scripts/fixtures/vk477/nyc-shared.json');
 const outDir = path.join(jobRoot, 'binding-proof');
 mkdirSync(outDir, { recursive: true });
 
@@ -71,7 +72,7 @@ const runtimePins = JSON.parse(
   readFileSync(path.join(collectorRoot, 'ruling99-runtime-input-pins.json'), 'utf8'),
 );
 const baseCapturePath = process.env.VK_CAPTURE_SOURCE
-  || '/home/ubishere9995/tsv-dispatch/capture/capture.mjs';
+  || path.join(root, 'scripts/fixtures/vk477/capture.mjs.txt');
 
 const collector = verifyReviewedStepBPins({ pinsPath, collectorRoot });
 const captureCollector = verifyCaptureCollectorPin({
@@ -82,7 +83,12 @@ const captureCollector = verifyCaptureCollectorPin({
   expectedPatchSha256: pinBundle.capture_patch_sha256,
   expectedBaseCaptureSha256: runtimePins['../capture/capture.mjs'],
 });
-const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || '/home/ubishere9995/tsv-gateb';
+const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || path.join(jobRoot, 'unreviewed-collector');
+if (!process.env.VK_WRONG_RUNTIME_GATEB_ROOT) {
+  cpSync(collectorRoot, wrongRuntimeRoot, { recursive: true });
+  const changedChecker = path.join(wrongRuntimeRoot, 'restore_check.py');
+  writeFileSync(changedChecker, `${readFileSync(changedChecker, 'utf8')}\n`);
+}
 const wrongRuntimeCollector = verifyReviewedStepBPins({
   pinsPath,
   collectorRoot: wrongRuntimeRoot,

@@ -1,27 +1,24 @@
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const defaultDispatchRoot = '/home/ubishere9995/tsv-dispatch';
-
-function dispatchRoot() {
-  return process.env.VK_DISPATCH_ROOT || defaultDispatchRoot;
-}
+const fixtureLib = fileURLToPath(new URL('../../lib/', import.meta.url));
 
 function runPython(payload) {
   const code = `
 import json, sys
-sys.path.insert(0, ${JSON.stringify(dispatchRoot())})
+sys.path.insert(0, ${JSON.stringify(fixtureLib)})
 payload = json.loads(sys.stdin.read())
-import build_head_fixture, tsv_dispatch
+import vk477_head_fixture
 if payload['op'] == 'build':
-    out = build_head_fixture.build(payload['base'], payload['snapshot'], payload['out'])
+    out = vk477_head_fixture.build(payload['base'], payload['snapshot'], payload['out'])
     print(json.dumps({'out': out}))
 elif payload['op'] == 'faults':
-    faults = tsv_dispatch._capture_payload_faults(payload['snapshot'], payload['fixture'])
+    faults = vk477_head_fixture._capture_payload_faults(payload['snapshot'], payload['fixture'])
     print(json.dumps({'faults': faults}))
 else:
     raise SystemExit('unknown op')
 `;
-  const r = spawnSync('python3', ['-c', code], {
+  const r = spawnSync('python3', ['-I', '-B', '-c', code], {
     input: JSON.stringify(payload),
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,

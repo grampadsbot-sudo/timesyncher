@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +23,7 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url));
 const snapshotPath = join(root, 'scripts/fixtures/pr336-vk-search-places.snapshot.json');
 const nycShared = process.env.VK_NYC_SHARED_FIXTURE
-  || '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
+  || join(root, 'scripts/fixtures/vk477/nyc-shared.json');
 
 const staticFaults = capturePayloadFaults(snapshotPath, nycShared);
 assert.ok(staticFaults.some((line) => line.includes('missing snapshot rows: 601')));
@@ -46,7 +46,7 @@ const contract = spawnSync(process.execPath, ['scripts/vk_contract_check_local.m
 assert.equal(contract.status, 0, contract.stdout + contract.stderr);
 
 const jobRoot = process.env.VK477_JOB_ROOT
-  || '/home/ubishere9995/tsv-dispatch/vk-477-harness-20261018-job';
+  || join(tmp, 'collector-job');
 const setup = spawnSync(process.execPath, ['scripts/ops/verification/setup-reviewed-collector-job.mjs'], {
   cwd: root,
   encoding: 'utf8',
@@ -64,7 +64,7 @@ const pinPass = verifyReviewedStepBPins({ pinsPath, collectorRoot });
 assert.equal(pinPass.ok, true, pinPass.faults.join('; '));
 
 const baseCapturePath = process.env.VK_CAPTURE_SOURCE
-  || '/home/ubishere9995/tsv-dispatch/capture/capture.mjs';
+  || join(root, 'scripts/fixtures/vk477/capture.mjs.txt');
 const patchedCapturePath = join(jobRoot, 'capture-patched', 'capture.mjs');
 const capturePin = verifyCaptureCollectorPin({
   collectorRoot,
@@ -101,7 +101,12 @@ const wrongBasePin = verifyCaptureCollectorPin({
 });
 assert.equal(wrongBasePin.ok, false);
 
-const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || '/home/ubishere9995/tsv-gateb';
+const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || join(tmp, 'unreviewed-collector');
+if (!process.env.VK_WRONG_RUNTIME_GATEB_ROOT) {
+  cpSync(collectorRoot, wrongRuntimeRoot, { recursive: true });
+  const changedChecker = join(wrongRuntimeRoot, 'restore_check.py');
+  writeFileSync(changedChecker, `${readFileSync(changedChecker, 'utf8')}\n`);
+}
 const wrongRuntime = verifyReviewedStepBPins({ pinsPath, collectorRoot: wrongRuntimeRoot });
 assert.equal(wrongRuntime.ok, false, 'wrong runtime ~/tsv-gateb must not pass step-b checker pins');
 

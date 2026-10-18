@@ -2,19 +2,28 @@
 import { createHash } from 'node:crypto';
 import {
   copyFileSync,
+  mkdtempSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
 } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 const jobRoot = process.env.VK477_JOB_ROOT
-  || '/home/ubishere9995/tsv-dispatch/vk-477-harness-20261018-job';
-const ec4dSource = process.env.VK_EC4D_REVIEWED_SOURCE
-  || '/home/ubishere9995/tsv-dispatch/vk-336-rebuild-a-20261017-job/host-publish-gateb/checker-ec4d40de';
+  || mkdtempSync(path.join(tmpdir(), 'vk477-collector-'));
+const ec4dSource = process.env.VK_EC4D_REVIEWED_SOURCE;
+const reviewedFiles = JSON.parse(readFileSync(
+  new URL('../../fixtures/vk477/reviewed-collector-ec4d40de.json', import.meta.url), 'utf8',
+));
 const captureSource = process.env.VK_CAPTURE_SOURCE
-  || '/home/ubishere9995/tsv-dispatch/capture/capture.mjs';
+  || fileURLToPath(new URL('../../fixtures/vk477/capture.mjs.txt', import.meta.url));
+
+function reviewedFile(rel) {
+  return ec4dSource ? readFileSync(path.join(ec4dSource, rel)) : reviewedFiles[rel];
+}
 
 const collectorDir = path.join(jobRoot, 'reviewed-collector-ec4d40de');
 const pinsPath = path.join(collectorDir, 'ruling99-step-b-pin.json');
@@ -25,19 +34,19 @@ const patchedCapturePath = path.join(patchedCaptureDir, 'capture.mjs');
 mkdirSync(collectorDir, { recursive: true });
 mkdirSync(patchedCaptureDir, { recursive: true });
 
-const pinBundle = JSON.parse(readFileSync(path.join(ec4dSource, 'ruling99-step-b-pin.json'), 'utf8'));
+const pinBundle = JSON.parse(reviewedFile('ruling99-step-b-pin.json'));
 for (const rel of Object.keys(pinBundle.files || {})) {
   const dest = path.join(collectorDir, rel);
   mkdirSync(path.dirname(dest), { recursive: true });
-  copyFileSync(path.join(ec4dSource, rel), dest);
+  writeFileSync(dest, reviewedFile(rel));
 }
-copyFileSync(path.join(ec4dSource, 'ruling99-step-b-pin.json'), pinsPath);
-copyFileSync(path.join(ec4dSource, 'ruling99-runtime-input-pins.json'), path.join(collectorDir, 'ruling99-runtime-input-pins.json'));
-copyFileSync(path.join(ec4dSource, 'capture-name-line.patch'), patchPath);
+writeFileSync(pinsPath, reviewedFile('ruling99-step-b-pin.json'));
+writeFileSync(path.join(collectorDir, 'ruling99-runtime-input-pins.json'), reviewedFile('ruling99-runtime-input-pins.json'));
+writeFileSync(patchPath, reviewedFile('capture-name-line.patch'));
 mkdirSync(path.join(collectorDir, 'lib'), { recursive: true });
-copyFileSync(
-  path.join(ec4dSource, 'lib/capture-name-line.mjs'),
+writeFileSync(
   path.join(collectorDir, 'lib/capture-name-line.mjs'),
+  reviewedFile('lib/capture-name-line.mjs'),
 );
 
 const captureWork = path.join(patchedCaptureDir, 'work');
@@ -66,7 +75,7 @@ for (const [rel, expected] of Object.entries(pinBundle.files)) {
 }
 
 const runtimePins = JSON.parse(
-  readFileSync(path.join(ec4dSource, 'ruling99-runtime-input-pins.json'), 'utf8'),
+  reviewedFile('ruling99-runtime-input-pins.json'),
 );
 const captureObserved = sha256File(patchedCapturePath);
 const helperObserved = sha256File(path.join(collectorDir, 'lib/capture-name-line.mjs'));
