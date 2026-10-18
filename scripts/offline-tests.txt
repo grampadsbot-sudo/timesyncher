@@ -273,3 +273,5 @@ scripts/test_shared_logo_rendered_geometry.mjs
 scripts/test_shared_logo_name_frame_contract.mjs
 scripts/test_logo_reenrichment.mjs
 scripts/test_build_shared_fixture_logos.mjs
+scripts/test_fixture_airline_logos.mjs
+scripts/test_fixture_logo_contract_470.mjs
