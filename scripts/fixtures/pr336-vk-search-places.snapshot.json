@@ -42,18 +42,22 @@
       "summary": "Iconic UWS specialty market and prepared-foods stop;",
       "price": 20,
       "website": "https://www.zabars.com/",
-      "logoUrl": "https://www.zabars.com/favicon.ico",
+      "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png",
       "lat": 40.7847,
       "lng": -73.9794,
       "address": "2245 Broadway, New York, NY 10024",
       "source": "brave",
       "url": "https://www.zabars.com/",
-      "longDetails": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price)."
+      "longDetails": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price).",
+      "logoProvenance": {
+        "pageUrl": "https://www.zabars.com/",
+        "iconUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
+      }
     },
     "description": "Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $20 typical spend floor from ccab card (not a fixed menu price).",
     "summary": "Iconic UWS specialty market and prepared-foods stop;",
     "price": 20,
-    "logoUrl": "https://www.zabars.com/favicon.ico"
+    "logoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
   },
   "603": {
     "source": "brave",

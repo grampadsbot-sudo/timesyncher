@@ -1,0 +1,11 @@
+{
+  "ccabKey": "Zabar's",
+  "website": "https://www.zabars.com/",
+  "pageResponseFile": "zabars-official-response.json",
+  "pageBodyFile": "zabars-official.html",
+  "iconResponseFile": "zabars-declared-icon-response.json",
+  "iconBodyFile": "zabars-declared-icon.png",
+  "expectedPageSha256": "20856f754c083a59a8fbb857f5e3834518f28ba4abca8b93f0bc86768230ed56",
+  "expectedIconSha256": "84e2ebd6f3d03ce845d555c9823a23d1b14c434995b1df4eccefbeafb8c615a4",
+  "expectedLogoUrl": "https://www.zabars.com/on/demandware.static/Sites-Zabars-Site/-/default/dwa8d69b42/images/favicons/favicon-196x196.png"
+}
