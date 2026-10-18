@@ -70,7 +70,11 @@
       "summary": "Neighborhood: Times Square;",
       "price": 188,
       "website": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
-      "logoUrl": "https://www.hilton.com/favicon.ico",
+      "logoUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg",
+      "logoProvenance": {
+        "pageUrl": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
+        "iconUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg"
+      },
       "lat": null,
       "lng": null,
       "address": "Times Square, New York, NY",
@@ -81,35 +85,39 @@
     "description": "Neighborhood: Times Square; Rating: 3.9 (~917); Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
     "summary": "Neighborhood: Times Square;",
     "price": 188,
-    "logoUrl": "https://www.hilton.com/favicon.ico"
+    "logoUrl": "https://www.hilton.com/modules/assets/svgs/logos/QQ.svg"
   },
   "604": {
     "source": "brave",
     "title": "Statue of Liberty walking tour",
     "category": "activity",
-    "lat": 40.7424,
-    "lng": -74.006,
-    "address": "75 9th Ave, New York, NY 10011",
-    "url": "https://www.chelseamarket.com/",
-    "externalId": "Chelsea Market",
+    "lat": 40.6892,
+    "lng": -74.0445,
+    "address": "Castle Clinton, Battery Park, New York, NY 10004",
+    "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+    "externalId": "Statue of Liberty walking tour",
     "sourceRecord": {
-      "category": "store",
-      "description": "Indoor market with food vendors, specialty shops, gifts, and casual browsing. Works well with High Line/Chelsea/Meatpacking plans; can be crowded but useful in bad weather. Price: $22 typical spend floor from ccab card (not a fixed menu price).",
-      "summary": "Indoor market with food vendors, specialty shops, gifts, and casual browsing.",
-      "price": 22,
-      "website": "https://www.chelseamarket.com/",
-      "logoUrl": "https://www.chelseamarket.com/favicon.ico",
-      "lat": 40.7424,
-      "lng": -74.006,
-      "address": "75 9th Ave, New York, NY 10011",
+      "category": "event",
+      "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+      "summary": "Official ferry tickets from Battery Park include Liberty and Ellis islands; arrive early for security.",
+      "price": 26,
+      "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+      "logoUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png",
+      "logoProvenance": {
+        "pageUrl": "https://statuecitycruises.com/",
+        "iconUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
+      },
+      "lat": 40.6892,
+      "lng": -74.0445,
+      "address": "Castle Clinton, Battery Park, New York, NY 10004",
       "source": "brave",
-      "url": "https://www.chelseamarket.com/",
-      "longDetails": "Indoor market with food vendors, specialty shops, gifts, and casual browsing. Works well with High Line/Chelsea/Meatpacking plans; can be crowded but useful in bad weather. Price: $22 typical spend floor from ccab card (not a fixed menu price)."
+      "url": "https://statuecitycruises.com/tickets/new-york-general-admission",
+      "longDetails": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding."
     },
-    "description": "Indoor market with food vendors, specialty shops, gifts, and casual browsing. Works well with High Line/Chelsea/Meatpacking plans; can be crowded but useful in bad weather. Price: $22 typical spend floor from ccab card (not a fixed menu price).",
-    "summary": "Indoor market with food vendors, specialty shops, gifts, and casual browsing.",
-    "price": 22,
-    "logoUrl": "https://www.chelseamarket.com/favicon.ico"
+    "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+    "summary": "Official ferry tickets from Battery Park include Liberty and Ellis islands; arrive early for security.",
+    "price": 26,
+    "logoUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
   },
   "605": {
     "source": "brave",
@@ -126,7 +134,11 @@
       "summary": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character.",
       "price": 18,
       "website": "https://www.strandbooks.com/",
-      "logoUrl": "https://www.strandbooks.com/favicon.ico",
+      "logoUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png",
+      "logoProvenance": {
+        "pageUrl": "https://www.strandbooks.com/",
+        "iconUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png"
+      },
       "lat": 40.7333,
       "lng": -73.9909,
       "address": "828 Broadway, New York, NY 10003",
@@ -137,7 +149,7 @@
     "description": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Best if the itinerary reaches Union Square/Village rather than as a special uptown trip. Price: $18 typical spend floor from ccab card (not a fixed menu price).",
     "summary": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character.",
     "price": 18,
-    "logoUrl": "https://www.strandbooks.com/favicon.ico"
+    "logoUrl": "https://www.strandbooks.com/media/logo/stores/1/strand-logo-exact.png"
   },
   "606": {
     "source": "brave",

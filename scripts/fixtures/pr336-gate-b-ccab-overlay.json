@@ -1,0 +1,17 @@
+{
+  "Statue of Liberty walking tour": {
+    "category": "event",
+    "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+    "summary": "Official ferry tickets from Battery Park include Liberty and Ellis islands; arrive early for security.",
+    "price": 26,
+    "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+    "logoUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png",
+    "logoProvenance": {
+      "pageUrl": "https://statuecitycruises.com/",
+      "iconUrl": "https://statuecitycruises.com/mobify/bundle/1387/static/footer/footer-Statue.png"
+    },
+    "lat": 40.6892,
+    "lng": -74.0445,
+    "address": "Castle Clinton, Battery Park, New York, NY 10004"
+  }
+}

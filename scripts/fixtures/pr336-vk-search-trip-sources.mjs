@@ -4,9 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
 import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
-const ENRICHMENT = JSON.parse(
+const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
+const OVERLAY_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-ccab-overlay.json', import.meta.url), 'utf8'),
+);
+const ENRICHMENT = { ...BASE_ENRICHMENT, ...OVERLAY_ENRICHMENT };
 
 /** Gate B timeline rows → documented NYC ccab search record keys. */
 /** PR336 VK search test trip (fixture family for Gate B NYC day-by-day rows). */
@@ -16,7 +20,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   601: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
   602: "Zabar's",
   603: 'Motto by Hilton New York City Times Square',
-  604: 'Chelsea Market',
+  604: 'Statue of Liberty walking tour',
   605: 'Strand Book Store',
   606: 'Whole Foods Market Columbus Circle',
   607: 'Whole Foods Market Upper West Side',
