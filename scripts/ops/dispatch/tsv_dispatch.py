@@ -318,3 +318,20 @@ def archive_paths_cover_import(repo_root: Path, head_sha: str, archive_paths: It
     needed = set(budget_archive_paths(repo_root, head_sha))
     provided = set(archive_paths)
     return needed.issubset(provided)
+
+
+from pregate_one import (  # noqa: E402
+    SKIPPED_BACKEND_ONLY,
+    apply_gateb_commit_status,
+    compare_log_fields,
+    compare_result_out,
+    gateb_commit_state,
+    log_compare_result,
+    pregate_one_finalize_verdict,
+)
+
+from gateb_exemption import (  # noqa: E402
+    changed_paths_eligible_for_exemption,
+    data_contract_lines_equal,
+    gateb_exempt_commit_description,
+)
