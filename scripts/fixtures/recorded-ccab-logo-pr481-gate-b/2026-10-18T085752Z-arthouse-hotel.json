@@ -5,7 +5,7 @@
   "pageBodyFile": "arthouse-official.html",
   "iconResponseFile": "arthouse-declared-icon-response.json",
   "iconBodyFile": "arthouse-declared-icon.png",
-  "expectedPageSha256": "2cc0c418a8385b304393c5e460fab999d91bdbb61bb7e55857cdc9715511ffcd",
+  "expectedPageSha256": "1311a09ffffe8eb7b54839f6bdb3697ff4b4a21bffd249028ae97ae3450451e7",
   "expectedIconSha256": "a04b2160e7ffd6a5d8157aab74302dcf6c63eac7cb7623cd18cd2e54508c2112",
   "expectedLogoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png"
 }
