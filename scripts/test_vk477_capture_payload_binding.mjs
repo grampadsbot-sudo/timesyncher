@@ -57,14 +57,49 @@ assert.equal(setup.status, 0, setup.stderr);
 const collectorRoot = join(jobRoot, 'reviewed-collector-ec4d40de');
 const pinsPath = join(collectorRoot, 'ruling99-step-b-pin.json');
 const pinBundle = JSON.parse(readFileSync(pinsPath, 'utf8'));
+const runtimePins = JSON.parse(
+  readFileSync(join(collectorRoot, 'ruling99-runtime-input-pins.json'), 'utf8'),
+);
 const pinPass = verifyReviewedStepBPins({ pinsPath, collectorRoot });
 assert.equal(pinPass.ok, true, pinPass.faults.join('; '));
 
+const baseCapturePath = process.env.VK_CAPTURE_SOURCE
+  || '/home/ubishere9995/tsv-dispatch/capture/capture.mjs';
 const patchedCapturePath = join(jobRoot, 'capture-patched', 'capture.mjs');
 const capturePin = verifyCaptureCollectorPin({
+  collectorRoot,
   patchedCapturePath,
-  expectedSha256: pinBundle.capture_collector_sha256,
+  baseCapturePath,
+  expectedHelperSha256: pinBundle.capture_collector_sha256,
+  expectedPatchSha256: pinBundle.capture_patch_sha256,
+  expectedBaseCaptureSha256: runtimePins['../capture/capture.mjs'],
 });
+assert.equal(capturePin.ok, true, capturePin.faults.join('; '));
+assert.notEqual(
+  capturePin.observed.patchedCaptureSha256,
+  pinBundle.capture_collector_sha256,
+  'whole patched capture must not equal helper pin',
+);
+
+const wrongHelperPin = verifyCaptureCollectorPin({
+  collectorRoot,
+  patchedCapturePath,
+  baseCapturePath,
+  expectedHelperSha256: '0'.repeat(64),
+  expectedPatchSha256: pinBundle.capture_patch_sha256,
+  expectedBaseCaptureSha256: runtimePins['../capture/capture.mjs'],
+});
+assert.equal(wrongHelperPin.ok, false);
+
+const wrongBasePin = verifyCaptureCollectorPin({
+  collectorRoot,
+  patchedCapturePath,
+  baseCapturePath,
+  expectedHelperSha256: pinBundle.capture_collector_sha256,
+  expectedPatchSha256: pinBundle.capture_patch_sha256,
+  expectedBaseCaptureSha256: 'f'.repeat(64),
+});
+assert.equal(wrongBasePin.ok, false);
 
 const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || '/home/ubishere9995/tsv-gateb';
 const wrongRuntime = verifyReviewedStepBPins({ pinsPath, collectorRoot: wrongRuntimeRoot });
@@ -87,8 +122,4 @@ assert.equal(bindingProofShouldFail(badWrongRuntime), true);
 assert.equal(legacyBindingProofWouldFail(goodState), true);
 assert.equal(legacyBindingProofWouldFail(badWrongRuntime), false);
 
-if (!capturePin.ok) {
-  console.log(`vk477 capture payload binding tests passed (capture collector BLOCKED: ${capturePin.faults.join('; ')})`);
-} else {
-  console.log('vk477 capture payload binding tests passed');
-}
+console.log('vk477 capture payload binding tests passed');

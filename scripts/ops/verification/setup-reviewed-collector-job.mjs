@@ -32,7 +32,13 @@ for (const rel of Object.keys(pinBundle.files || {})) {
   copyFileSync(path.join(ec4dSource, rel), dest);
 }
 copyFileSync(path.join(ec4dSource, 'ruling99-step-b-pin.json'), pinsPath);
+copyFileSync(path.join(ec4dSource, 'ruling99-runtime-input-pins.json'), path.join(collectorDir, 'ruling99-runtime-input-pins.json'));
 copyFileSync(path.join(ec4dSource, 'capture-name-line.patch'), patchPath);
+mkdirSync(path.join(collectorDir, 'lib'), { recursive: true });
+copyFileSync(
+  path.join(ec4dSource, 'lib/capture-name-line.mjs'),
+  path.join(collectorDir, 'lib/capture-name-line.mjs'),
+);
 
 const captureWork = path.join(patchedCaptureDir, 'work');
 mkdirSync(captureWork, { recursive: true });
@@ -59,14 +65,24 @@ for (const [rel, expected] of Object.entries(pinBundle.files)) {
   }
 }
 
+const runtimePins = JSON.parse(
+  readFileSync(path.join(ec4dSource, 'ruling99-runtime-input-pins.json'), 'utf8'),
+);
 const captureObserved = sha256File(patchedCapturePath);
+const helperObserved = sha256File(path.join(collectorDir, 'lib/capture-name-line.mjs'));
+const patchObserved = sha256File(patchPath);
+const baseCaptureObserved = sha256File(captureSource);
 const payload = {
   collectorDir,
   pinsPath,
   patchedCapturePath,
-  captureObserved,
-  captureExpected: pinBundle.capture_collector_sha256,
-  capturePatchSha256: pinBundle.capture_patch_sha256,
+  helperObserved,
+  helperExpected: pinBundle.capture_collector_sha256,
+  patchObserved,
+  patchExpected: pinBundle.capture_patch_sha256,
+  baseCaptureObserved,
+  baseCaptureExpected: runtimePins['../capture/capture.mjs'],
+  patchedCaptureObserved: captureObserved,
   observed,
 };
 writeFileSync(

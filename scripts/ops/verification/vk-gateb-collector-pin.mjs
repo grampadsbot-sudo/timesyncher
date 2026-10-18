@@ -1,10 +1,47 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 function sha256File(filePath) {
   const body = readFileSync(filePath);
   return createHash('sha256').update(body).digest('hex');
+}
+
+function sha256Text(text) {
+  return createHash('sha256').update(text).digest('hex');
+}
+
+function normalizeCollectorFunctionSource(source) {
+  return source.split('\n').map((line) => line.trim()).filter(Boolean).join('\n');
+}
+
+function extractCaptureNameTextFunction(captureBody) {
+  const match = captureBody.match(/function captureNameText\(nameEl\)\s*\{[\s\S]*?\n\s{6}\}/);
+  return match ? match[0] : null;
+}
+
+function applyCaptureNameLinePatch(baseCapturePath, patchPath) {
+  const work = mkdtempSync(path.join(tmpdir(), 'vk477-patch-'));
+  try {
+    writeFileSync(path.join(work, 'capture.mjs'), readFileSync(baseCapturePath));
+    const patchRun = spawnSync('patch', ['-p1'], {
+      cwd: work,
+      input: readFileSync(patchPath),
+      encoding: 'buffer',
+    });
+    if (patchRun.status !== 0) {
+      return {
+        ok: false,
+        fault: `DATA-CONTRACT: capture-name-line.patch apply failed: ${(patchRun.stderr || '').toString().slice(-120)}`,
+      };
+    }
+    const patchedBody = readFileSync(path.join(work, 'capture.mjs'), 'utf8');
+    return { ok: true, patchedBody, patchedSha256: sha256Text(patchedBody) };
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
 }
 
 export function verifyReviewedStepBPins(options = {}) {
@@ -49,30 +86,150 @@ export function verifyReviewedStepBPins(options = {}) {
 }
 
 export function verifyCaptureCollectorPin(options = {}) {
+  const collectorRoot = options.collectorRoot || '';
+  const helperPath = options.helperPath || path.join(collectorRoot, 'lib/capture-name-line.mjs');
+  const patchPath = options.patchPath || path.join(collectorRoot, 'capture-name-line.patch');
+  const baseCapturePath = options.baseCapturePath;
   const patchedCapturePath = options.patchedCapturePath;
-  const expected = options.expectedSha256;
-  if (!patchedCapturePath || !expected) {
+  const expectedHelperSha256 = options.expectedHelperSha256 || options.expectedSha256;
+  const expectedPatchSha256 = options.expectedPatchSha256;
+  const expectedBaseCaptureSha256 = options.expectedBaseCaptureSha256;
+
+  const faults = [];
+  const observed = {
+    helperSha256: null,
+    patchSha256: null,
+    baseCaptureSha256: null,
+    patchedCaptureSha256: null,
+    injectedFunctionSha256: null,
+  };
+
+  if (!expectedHelperSha256 || !expectedPatchSha256 || !expectedBaseCaptureSha256) {
     return {
       ok: false,
-      observed: null,
-      expected: expected || null,
+      observed,
+      expected: {
+        helperSha256: expectedHelperSha256 || null,
+        patchSha256: expectedPatchSha256 || null,
+        baseCaptureSha256: expectedBaseCaptureSha256 || null,
+      },
       faults: ['DATA-CONTRACT: capture collector pin inputs missing'],
     };
   }
-  let observed;
+
+  let helperSha256;
   try {
-    observed = sha256File(patchedCapturePath);
+    helperSha256 = sha256File(helperPath);
+    observed.helperSha256 = helperSha256;
   } catch {
     return {
       ok: false,
-      observed: null,
-      expected,
-      faults: ['DATA-CONTRACT: patched capture collector missing'],
+      observed,
+      expected: {
+        helperSha256: expectedHelperSha256,
+        patchSha256: expectedPatchSha256,
+        baseCaptureSha256: expectedBaseCaptureSha256,
+      },
+      faults: ['DATA-CONTRACT: reviewed capture-name-line helper missing'],
     };
   }
-  const ok = observed === expected;
-  const faults = ok
-    ? []
-    : [`DATA-CONTRACT: capture collector sha256 mismatch reviewed=${expected.slice(0, 12)} runtime=${observed.slice(0, 12)}`];
-  return { ok, observed, expected, faults };
+  if (helperSha256 !== expectedHelperSha256) {
+    faults.push(
+      `DATA-CONTRACT: capture helper sha256 mismatch reviewed=${expectedHelperSha256.slice(0, 12)} runtime=${helperSha256.slice(0, 12)}`,
+    );
+  }
+
+  let patchSha256;
+  try {
+    patchSha256 = sha256File(patchPath);
+    observed.patchSha256 = patchSha256;
+  } catch {
+    faults.push('DATA-CONTRACT: capture-name-line.patch missing');
+  }
+  if (patchSha256 && patchSha256 !== expectedPatchSha256) {
+    faults.push(
+      `DATA-CONTRACT: capture patch sha256 mismatch reviewed=${expectedPatchSha256.slice(0, 12)} runtime=${patchSha256.slice(0, 12)}`,
+    );
+  }
+
+  let baseCaptureSha256;
+  try {
+    baseCaptureSha256 = sha256File(baseCapturePath);
+    observed.baseCaptureSha256 = baseCaptureSha256;
+  } catch {
+    faults.push('DATA-CONTRACT: canonical base capture.mjs missing');
+  }
+  if (baseCaptureSha256 && baseCaptureSha256 !== expectedBaseCaptureSha256) {
+    faults.push(
+      `DATA-CONTRACT: base capture sha256 mismatch reviewed=${expectedBaseCaptureSha256.slice(0, 12)} runtime=${baseCaptureSha256.slice(0, 12)}`,
+    );
+  }
+
+  if (!patchSha256 || !baseCaptureSha256 || faults.length > 0) {
+    return {
+      ok: false,
+      observed,
+      expected: {
+        helperSha256: expectedHelperSha256,
+        patchSha256: expectedPatchSha256,
+        baseCaptureSha256: expectedBaseCaptureSha256,
+      },
+      faults,
+    };
+  }
+
+  const applied = applyCaptureNameLinePatch(baseCapturePath, patchPath);
+  if (!applied.ok) {
+    faults.push(applied.fault);
+    return {
+      ok: false,
+      observed,
+      expected: {
+        helperSha256: expectedHelperSha256,
+        patchSha256: expectedPatchSha256,
+        baseCaptureSha256: expectedBaseCaptureSha256,
+      },
+      faults,
+    };
+  }
+
+  const injected = extractCaptureNameTextFunction(applied.patchedBody);
+  if (!injected) {
+    faults.push('DATA-CONTRACT: patched capture missing captureNameText function');
+  } else {
+    const helperBody = readFileSync(helperPath, 'utf8');
+    const injectedNorm = normalizeCollectorFunctionSource(injected);
+    const helperNorm = normalizeCollectorFunctionSource(helperBody);
+    observed.injectedFunctionSha256 = sha256Text(injectedNorm);
+    if (injectedNorm !== helperNorm) {
+      faults.push('DATA-CONTRACT: patched captureNameText does not match reviewed helper');
+    }
+  }
+
+  if (patchedCapturePath) {
+    try {
+      observed.patchedCaptureSha256 = sha256File(patchedCapturePath);
+      if (observed.patchedCaptureSha256 !== applied.patchedSha256) {
+        faults.push(
+          `DATA-CONTRACT: job patched capture output mismatch reapplied=${applied.patchedSha256.slice(0, 12)} recorded=${observed.patchedCaptureSha256.slice(0, 12)}`,
+        );
+      }
+      if (observed.patchedCaptureSha256 === expectedHelperSha256) {
+        faults.push('DATA-CONTRACT: whole patched capture must not match helper pin');
+      }
+    } catch {
+      faults.push('DATA-CONTRACT: job patched capture output missing');
+    }
+  }
+
+  return {
+    ok: faults.length === 0,
+    observed,
+    expected: {
+      helperSha256: expectedHelperSha256,
+      patchSha256: expectedPatchSha256,
+      baseCaptureSha256: expectedBaseCaptureSha256,
+    },
+    faults,
+  };
 }

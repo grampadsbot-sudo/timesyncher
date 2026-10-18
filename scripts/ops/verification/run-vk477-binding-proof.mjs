@@ -67,10 +67,20 @@ const contractRun = spawnSync(process.execPath, ['scripts/vk_contract_check_loca
 });
 const contractOk = contractRun.status === 0;
 
+const runtimePins = JSON.parse(
+  readFileSync(path.join(collectorRoot, 'ruling99-runtime-input-pins.json'), 'utf8'),
+);
+const baseCapturePath = process.env.VK_CAPTURE_SOURCE
+  || '/home/ubishere9995/tsv-dispatch/capture/capture.mjs';
+
 const collector = verifyReviewedStepBPins({ pinsPath, collectorRoot });
 const captureCollector = verifyCaptureCollectorPin({
+  collectorRoot,
   patchedCapturePath,
-  expectedSha256: pinBundle.capture_collector_sha256,
+  baseCapturePath,
+  expectedHelperSha256: pinBundle.capture_collector_sha256,
+  expectedPatchSha256: pinBundle.capture_patch_sha256,
+  expectedBaseCaptureSha256: runtimePins['../capture/capture.mjs'],
 });
 const wrongRuntimeRoot = process.env.VK_WRONG_RUNTIME_GATEB_ROOT || '/home/ubishere9995/tsv-gateb';
 const wrongRuntimeCollector = verifyReviewedStepBPins({
