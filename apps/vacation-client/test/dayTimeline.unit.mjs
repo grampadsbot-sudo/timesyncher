@@ -5,6 +5,10 @@ import { fileURLToPath } from 'node:url';
 import {
   buildDayTimeline,
   dayChipLabel,
+  dayItineraryHeading,
+  flightTimelineTitle,
+  formatClockMinutes,
+  placeCoords,
   estimateTravelMinutes,
   mapPlacesForTimeline,
   parseClockToMinutes,
@@ -243,5 +247,68 @@ assert.equal(
   true,
   'PR336 onDay wrongly matched day_number 2 to dayIds [2]',
 );
+
+assert.equal(dayItineraryHeading({ day_number: 1, title: 'Arrival' }), 'Day 1 · Arrival');
+assert.equal(dayItineraryHeading({ day_number: 1, title: 'Day 1 · Arrival' }), 'Day 1 · Arrival');
+assert.equal(dayItineraryHeading({ day_number: 10 }), 'Day 10');
+
+const stagingFlightTrip = {
+  days: [{ id: 410, day_number: 1 }, { id: 411, day_number: 2 }],
+  places: [{ id: 990, name: 'Flight option: Southwest LAS-LGA 05:05-15:45', category_name: 'Flight' }],
+  thingOverrides: { 'place:990': { category: 'flight', timeline: true, dayIds: [410] } },
+};
+assert.equal(flightTimelineTitle(stagingFlightTrip.places[0], stagingFlightTrip), 'Southwest LAS → LGA');
+const stagingRows = buildDayTimeline(stagingFlightTrip, stagingFlightTrip.days[0]);
+assert.deepEqual(stagingRows.map((row) => row.title), [
+  'Travel to airport', 'Southwest LAS → LGA', 'Travel from airport',
+]);
+const transfers = stagingRows.filter((row) => row.kind === 'travel');
+assert.deepEqual(transfers.map((row) => [
+  row.startLabel, formatClockMinutes(row.startMin + row.durationMin), row.durationMin,
+]), [
+  ['3:35 am', '5:05 am', 90],
+  ['3:45 pm', '5:15 pm', 90],
+], 'approved staging Day 1 Southwest transfer times');
+assert.ok(transfers.every((row) => row.travelMinutes === 90));
+assert.deepEqual(buildDayTimeline(stagingFlightTrip, stagingFlightTrip.days[1]), [],
+  'transfers follow the same explicit flight-day membership');
+const flightHotelTrip = {
+  ...stagingFlightTrip,
+  places: [...stagingFlightTrip.places, { id: 993, name: 'Arrival hotel', category_name: 'Hotel' }],
+  thingOverrides: {
+    ...stagingFlightTrip.thingOverrides,
+    'place:993': { category: 'hotel', timeline: true, dayIds: [410], checkInTime: '16:00' },
+  },
+};
+assert.equal(buildDayTimeline(flightHotelTrip, flightHotelTrip.days[0])
+  .find((row) => row.kind === 'hotel-event')?.conflictWith, 'Travel from airport',
+  'staging airport transfer overlap marks the hotel check-in conflict');
+const noFlightTimes = {
+  ...stagingFlightTrip,
+  places: [{ id: 990, name: 'Southwest LAS-LGA', category_name: 'Flight' }],
+};
+assert.equal(buildDayTimeline(noFlightTimes, noFlightTimes.days[0]).length, 1,
+  'no transfer is synthesized without both flight times');
+
+for (const missing of [null, undefined, '', '  ', false, true, [], {}]) {
+  assert.equal(placeCoords({ id: 991, lat: missing, lng: missing }, {}), null,
+    `missing coordinates cannot coerce to zero: ${String(missing)}`);
+  assert.deepEqual(mapPlacesForTimeline({}, [{ kind: 'thing', place: { id: 991, lat: missing, lng: missing } }]), []);
+}
+assert.deepEqual(placeCoords({ id: 991, lat: 0, lng: '0' }, {}), { lat: 0, lng: 0 },
+  'real equator and prime meridian coordinates are valid');
+assert.deepEqual(placeCoords({ id: 991, lat: null, lng: '' }, {
+  thingOverrides: { 'place:991': { sourceRecord: { latitude: '41.25', longitude: '-72.5' } } },
+}), { lat: 41.25, lng: -72.5 }, 'missing top-level coordinates fall through to a source');
+assert.deepEqual(placeCoords({ id: 991, metadata: { sourceRecord: { lat: 41.25, lng: -72.5 } } }, {}),
+  { lat: 41.25, lng: -72.5 });
+for (const coords of [{ lat: Infinity, lng: 1 }, { lat: 91, lng: 1 }, { lat: 1, lng: -181 }]) {
+  assert.equal(placeCoords({ id: 991, ...coords }, {}), null);
+}
+const sourcedMarker = { id: 992, category_name: 'Restaurant', sourceRecord: { lat: '41.25', lng: '-72.5' } };
+assert.deepEqual(mapPlacesForTimeline({}, [
+  { kind: 'thing', place: sourcedMarker }, { kind: 'thing', place: sourcedMarker },
+  { kind: 'travel', place: sourcedMarker },
+]).map((place) => [place.id, place.lat, place.lng]), [[992, 41.25, -72.5]]);
 
 console.log('vacation-client day timeline unit checks passed');

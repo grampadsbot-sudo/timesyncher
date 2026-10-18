@@ -2,6 +2,8 @@ import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
   carSubtitle,
+  catalogRowDisplayName,
+  eventListPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
   formatUsd,
@@ -9,7 +11,6 @@ import {
   hotelPriceDisplay,
   logoUrlForPlace,
   numericPrice,
-  placeName,
   rowSummary,
   tabCategoryKey,
 } from '../lib/listTabModel.mjs';
@@ -79,7 +80,7 @@ export function ListRow({
   timelineDisabled = false,
   onTimelineChange,
 }: Props) {
-  const name = placeName(place);
+  const name = catalogRowDisplayName(place, trip);
   const summary = rowSummary(place, trip);
   const category = tabCategoryKey(place, trip);
   const note = tab === 'hotels' ? hotelFirstRowNote(place, trip, isFirstHotel) : '';
@@ -88,9 +89,14 @@ export function ListRow({
     const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
-      <li className="tsv-row tsv-row-flight" data-ts-list-row="1">
+      <li
+        className="tsv-row tsv-row-flight"
+        data-ts-list-row="1"
+        data-list-row="1"
+        data-description-missing={summary ? undefined : '1'}
+      >
         <div className="tsv-row-car-grid">
-          <button type="button" className="tsv-row-main tsv-row-flight-main" onClick={() => onOpen(place)}>
+          <button type="button" className="tsv-row-main tsv-row-flight-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
             <LogoChip place={place} trip={trip} />
             <span className="tsv-row-name" data-ts-list-row-name="1">
               {name}
@@ -110,7 +116,7 @@ export function ListRow({
                 {arrive}
               </span>
             ) : null}
-            {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+            {summary ? <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">{summary}</span> : null}
           </button>
           {showTimelineToggle ? (
             <TimelineToggle
@@ -129,9 +135,14 @@ export function ListRow({
     const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
-      <li className="tsv-row tsv-row-car" data-ts-list-row="1">
+      <li
+        className="tsv-row tsv-row-car"
+        data-ts-list-row="1"
+        data-list-row="1"
+        data-description-missing={summary ? undefined : '1'}
+      >
         <div className="tsv-row-car-grid">
-          <button type="button" className="tsv-row-car-main" onClick={() => onOpen(place)}>
+          <button type="button" className="tsv-row-car-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
             <span className="tsv-row-car-head">
               <LogoChip place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
@@ -140,7 +151,7 @@ export function ListRow({
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
             {price ? <span className="tsv-row-price">{price}</span> : null}
-            {summary ? <span className="tsv-row-desc tsv-row-car-desc">{summary}</span> : null}
+            {summary ? <span className="tsv-row-desc tsv-row-car-desc" data-list-summary="1" data-summary-src="thing">{summary}</span> : null}
           </button>
           {showTimelineToggle ? (
             <TimelineToggle
@@ -158,23 +169,34 @@ export function ListRow({
   const numeric = numericPrice(place, trip);
   const currency = trip.trip?.currency || 'USD';
   const price =
-    tab === 'hotels' || category === 'hotel'
-      ? hotelPriceDisplay(place, trip)
-      : numeric == null
-        ? ''
-        : formatUsd(numeric, currency);
+    tab === 'events'
+      ? eventListPriceDisplay(place, trip)
+      : tab === 'hotels' || category === 'hotel'
+        ? hotelPriceDisplay(place, trip)
+        : numeric == null || numeric <= 0
+          ? ''
+          : formatUsd(numeric, currency);
 
   return (
-    <li className="tsv-row" data-ts-list-row="1">
+    <li
+      className="tsv-row"
+      data-ts-list-row="1"
+      data-list-row="1"
+      data-description-missing={summary ? undefined : '1'}
+    >
       <div className="tsv-row-car-grid">
-        <button type="button" className="tsv-row-main" onClick={() => onOpen(place)}>
+        <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
           <LogoChip place={place} trip={trip} />
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}
           </span>
-          {price ? <span className="tsv-row-price">{price}</span> : null}
+          {price ? (
+            <span className="tsv-row-price" data-ts-event-price={tab === 'events' ? '1' : undefined}>
+              {price}
+            </span>
+          ) : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
-          {summary ? <span className="tsv-row-desc">{summary}</span> : null}
+          {summary ? <span className="tsv-row-desc" data-list-summary="1" data-summary-src="thing">{summary}</span> : null}
         </button>
         {showTimelineToggle && (tab === 'hotels' || category === 'hotel') ? (
           <TimelineToggle

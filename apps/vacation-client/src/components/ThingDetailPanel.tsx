@@ -78,7 +78,11 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
             </button>
           </div>
         </header>
-        <div className="tsv-detail-body">
+        <div
+          className="tsv-detail-body"
+          data-description-missing={model.descriptionMissing ? '1' : undefined}
+          data-reviews-missing={model.reviewsMissing ? '1' : undefined}
+        >
           {model.priceLabel ? (
             <p className="tsv-detail-price" data-ts-detail-field="price">
               <strong>Price:</strong> {model.priceLabel}

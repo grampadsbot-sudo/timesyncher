@@ -2,6 +2,8 @@ import type { SharedDay, SharedPlace, SharedTripPayload } from '../types/sharedT
 
 export function sortedDays(trip: SharedTripPayload): SharedDay[];
 export function dayChipLabel(day: SharedDay): string;
+export function flightTimelineTitle(place: SharedPlace, trip: SharedTripPayload): string;
+export function dayItineraryHeading(day: SharedDay): string;
 export function parseDurationMinutes(raw: unknown): number | null;
 export function parseClockToMinutes(clock: string): number | null;
 export function formatClockMinutes(totalMinutes: number): string;
@@ -28,6 +30,10 @@ export type TimelineEntry = {
 };
 
 export function buildDayTimeline(trip: SharedTripPayload, day: SharedDay): TimelineEntry[];
+export function placeCoords(
+  place: SharedPlace,
+  trip: SharedTripPayload,
+): { lat: number; lng: number } | null;
 export function mapPlacesForTimeline(
   trip: SharedTripPayload,
   entries: TimelineEntry[],

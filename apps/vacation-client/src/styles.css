@@ -30,6 +30,20 @@ body {
   overflow-x: hidden;
 }
 
+.tsv-shell:has(.tsv-day-screen) {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.tsv-shell:has(.tsv-day-screen) .tsv-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .tsv-header {
   display: flex;
   align-items: center;
@@ -931,7 +945,30 @@ button.tsv-timeline-link {
   font-weight: 800;
 }
 
+.tsv-day-screen {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tsv-day-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tsv-day-screen .tsv-timeline-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 .tsv-day-map {
+  flex: 0 0 auto;
   margin-top: 16px;
 }
 

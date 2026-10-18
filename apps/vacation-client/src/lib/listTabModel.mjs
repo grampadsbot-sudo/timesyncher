@@ -1,8 +1,7 @@
+import { isDisplayNameFragment, opaqueCarNeedsBlank } from './listTabSummaries.mjs';
 
 
-export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
-
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
 
 function text(value) {
   return String(value ?? '').trim();
@@ -74,6 +73,7 @@ function humanizeTypeKey(raw) {
 }
 
 export function tabCategoryKey(place, trip) {
+  if (/^Flight option:/i.test(placeName(place))) return 'flight';
   const override = overrideFor(trip, place);
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
@@ -104,6 +104,14 @@ export function placesForCategoryTab(trip, tab) {
 
 export function placeName(place) {
   return text(place.name || place.title || 'Untitled');
+}
+
+export function catalogRowDisplayName(place, trip) {
+  const raw = placeName(place);
+  if (tabCategoryKey(place, trip) === 'flight' || /^Flight option:/i.test(raw)) {
+    return text(raw.replace(/^\s*Flight option:\s*/i, '')) || raw;
+  }
+  return raw;
 }
 
 function neighborhood(place, override, source) {
@@ -218,12 +226,36 @@ export function filterPlaces(places, trip, tab, filters = {}) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return (
+  const direct =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
+    parsePrice(place.total_price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
-  );
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.ticketPrice) ??
+    parsePrice(source.ticketsFrom);
+  if (direct != null) return direct;
+  const hay = [
+    override.details,
+    override.summary,
+    source.description,
+    source.summary,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean)
+    .join(' ');
+  if (!hay) return null;
+  const ticket = hay.match(/(?:tickets?\s+from|price:|from)\s*(?:about\s*)?\$\s*([\d,]+(?:\.\d+)?)/i);
+  if (ticket) return parsePrice(ticket[1]);
+  const priced = hay.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return priced ? parsePrice(priced[1]) : null;
+}
+
+export function eventListPriceDisplay(place, trip) {
+  const price = numericPrice(place, trip);
+  if (price == null || price <= 0) return '';
+  return `$${price}`;
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
@@ -300,29 +332,27 @@ export function carPriceDisplay(place, trip) {
 }
 
 export function carSubtitle(place, trip) {
+  if (opaqueCarNeedsBlank(place, trip)) return '';
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    override.carType ||
-      override.vehicleClass ||
-      source.carType ||
-      source.vehicleClass ||
-      override.rentalCompany ||
-      source.rentalCompany,
-  );
+  const name = placeName(place);
+  const parts = [
+    override.carType,
+    override.vehicleClass,
+    source.carType,
+    source.vehicleClass,
+    override.rentalCompany,
+    source.rentalCompany,
+  ];
+  for (const part of parts) {
+    const row = text(part);
+    if (!row || isDisplayNameFragment(row, name)) continue;
+    return row;
+  }
+  return '';
 }
 
-export function rowSummary(place, trip) {
-  const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
-  return text(
-    override.summary ||
-      override.longDetails ||
-      override.details ||
-      source.summary ||
-      place.description,
-  );
-}
+export { isDisplayNameFragment, opaqueCarNeedsBlank, rowSummary } from './listTabSummaries.mjs';
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);

@@ -60,3 +60,11 @@ Under/Over chip compares planned vs target.
 ## Not in Keepsakes Config
 
 Budget is a live shared-tab feature, not a Keepsakes → Admin/Config toggle.
+
+## React preview model — #336 piece A
+
+The preview `vacation-app-next.html` uses `apps/vacation-client/src/lib/budgetModel.mjs`. Ruling 116 (renumbered from dispatch 114) applies Craig's 2026-10-15 11:52 AM PT rule: Budget contains only itinerary Things, grouped by category. It deduplicates Things from day timeline entries, saved day assignments (`dayIds`), and nested day assignment rows. Catalog-only Things are absent. A trip with no itinerary uses the existing empty state; a Timeline flag by itself does not assign a catalog Thing to a day. Cars remain excluded, including assigned cars. Synthetic travel, wake, sleep and checkout rows do not create Budget Things.
+
+A matching imported budget line can supply an existing itinerary Thing's missing parsed price. Matching uses a Thing id when present, otherwise the stored name/title; an imported total is already a total and is not multiplied again. Parsed Thing prices take precedence. Null, blank or invalid imported amounts leave **Add price**. An unmatched imported line never creates a row, category or Thing. Existing targets and price multipliers remain in use; there are no new removal controls.
+
+Coverage: `test/budget.unit.mjs`, including `unmatchedBudgetLineAddsNoRow`, catalog-only exclusion, empty itinerary, partial assignment identity, matching amount/price precedence and car exclusion. This source/client port does not switch the served TREK entry or certify live parity.

@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { formatClockMinutes } from '../lib/dayTimelineModel.mjs';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
 type TimelineMedia = {
@@ -29,6 +31,8 @@ type TimelineEntry = {
   conflictWith?: string;
   fare?: string;
   media?: TimelineMedia[];
+  category?: string;
+  startMin?: number | null;
 };
 
 type Props = {
@@ -104,6 +108,29 @@ function TimelineMediaThumb({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    if (!expanded) return;
+    const position = () => {
+      const button = buttonRef.current;
+      const popup = popupRef.current;
+      if (!button || !popup) return;
+      const rect = button.getBoundingClientRect();
+      const box = popup.getBoundingClientRect();
+      const left = Math.max(8, Math.min(rect.right - box.width, window.innerWidth - box.width - 8));
+      const top = Math.max(8, Math.min(rect.top - box.height - 16, window.innerHeight - box.height - 16));
+      popup.style.left = `${left}px`;
+      popup.style.top = `${top}px`;
+    };
+    position();
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    return () => {
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+    };
+  }, [expanded]);
   const primary = media.find((row) => mediaUrl(row)) || media[0];
   const url = primary ? mediaUrl(primary) : '';
   if (!url) return null;
@@ -112,6 +139,7 @@ function TimelineMediaThumb({
     <div className="tsv-timeline-media-wrap">
       <button
         type="button"
+        ref={buttonRef}
         className="tsv-timeline-media-thumb"
         aria-expanded={expanded}
         aria-label="Show photo"
@@ -124,8 +152,15 @@ function TimelineMediaThumb({
         ) : null}
         <img src={url} alt="" loading="lazy" />
       </button>
-      {expanded ? (
-        <div data-ts-pic-popup="1" className="tsv-timeline-pic-popup" role="dialog" aria-label="Photo">
+      {expanded ? createPortal(
+        <div
+          ref={popupRef}
+          data-ts-pic-popup="1"
+          className="tsv-timeline-pic-popup"
+          role="dialog"
+          aria-label="Photo"
+          style={{ position: 'fixed', right: 'auto', bottom: 'auto', maxWidth: 'calc(100vw - 16px)' }}
+        >
           <span className="tsv-timeline-pic-popup-tip" data-ts-pic-popup-tip="1" aria-hidden="true" />
           <div className="tsv-timeline-pic-popup-body">
             {video ? (
@@ -134,7 +169,8 @@ function TimelineMediaThumb({
               <img src={url} alt="" className="tsv-timeline-pic-popup-media" />
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
@@ -152,10 +188,13 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
         const place = entry.place;
+        const category = place ? tabCategoryKey(place, trip) : entry.category;
         const showSummary =
           !isTravel &&
           !summarySuppressedKind(entry.kind) &&
           entry.kind === 'thing' &&
+          category !== 'flight' &&
+          !/^Travel (to|from)\b/i.test(entry.title) &&
           entry.summary;
         const media = entry.media?.length ? entry.media : [];
         return (
@@ -165,11 +204,14 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
             data-ts-timeline-row="1"
           >
             <div className="tsv-timeline-time-col">
-              {!isTravel && entry.startLabel ? (
+              {entry.startLabel ? (
                 <span className="tsv-timeline-time">{entry.startLabel}</span>
               ) : null}
-              {entry.kind === 'flight' && entry.endLabel ? (
-                <span className="tsv-timeline-time tsv-timeline-time--arrive">{entry.endLabel}</span>
+              {(entry.kind === 'flight' || isTravel) &&
+              (entry.endLabel || (entry.startMin != null && entry.durationMin != null)) ? (
+                <span className="tsv-timeline-time tsv-timeline-time--arrive">
+                  {entry.endLabel || formatClockMinutes((entry.startMin ?? 0) + (entry.durationMin ?? 0))}
+                </span>
               ) : null}
               {entry.durationMin != null ? (
                 <span className="tsv-timeline-duration">
@@ -216,7 +258,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 </p>
               ) : null}
               {showSummary ? (
-                <p className="tsv-timeline-summary" data-row-summary="1">
+                <p className="tsv-timeline-summary" data-row-summary="1" data-summary-stored="1" data-summary-src="thing">
                   {entry.summary}
                 </p>
               ) : null}

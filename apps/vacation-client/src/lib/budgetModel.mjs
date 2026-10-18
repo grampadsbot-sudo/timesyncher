@@ -1,15 +1,14 @@
 
 
 import {
-  LIST_TAB_IDS,
   formatUsd,
   placeName,
-  placesForCategoryTab,
+  catalogRowDisplayName,
   tabCategoryKey,
 } from './listTabModel.mjs';
 
 export { formatUsd };
-import { resolvePlace } from './dayTimelineModel.mjs';
+import { buildDayTimeline, resolvePlace, sortedDays } from './dayTimelineModel.mjs';
 import {
   BUDGET_BUCKET_ORDER,
   OTHER_THINGS_BUCKET,
@@ -116,10 +115,18 @@ export function budgetBucketForPlace(place, trip) {
 
 export function budgetLineAmount(place, trip) {
   const category = tabCategoryKey(place, trip);
-  const override = overrideFor(trip, place);
   const priceStr = priceText(place, trip);
-  const { nightly, numbers } = parsePriceNumbers(priceStr);
-  if (nightly === null) return { amount: 0, hasPrice: false, nightly: null };
+  const { nightly } = parsePriceNumbers(priceStr);
+  if (nightly === null) {
+    const matched = budgetLineForPlace(place, trip);
+    const raw = matched?.total_price ?? matched?.amount ?? matched?.total;
+    const amount = (typeof raw === 'number' || (typeof raw === 'string' && raw.trim()))
+      ? Number(raw) : NaN;
+    if (Number.isFinite(amount) && amount >= 0) {
+      return { amount: Math.round(amount), hasPrice: true, nightly: null };
+    }
+    return { amount: 0, hasPrice: false, nightly: null };
+  }
   const hasPrice = /\$?\d/.test(priceStr);
   let amount = nightly;
   const lower = priceStr.toLowerCase();
@@ -168,26 +175,42 @@ export function tripBudgetTargetTotal(trip) {
   return any ? sum : null;
 }
 
+function budgetLineForPlace(place, trip) {
+  const lines = Array.isArray(trip?.budget) ? trip.budget : [];
+  const identified = lines.find((line) => {
+    const id = line?.place_id ?? line?.placeId ?? line?.thing_id;
+    return id != null && String(id) === String(place.id);
+  });
+  if (identified) return identified;
+  const name = placeName(place);
+  return lines.find((line) => {
+    const id = line?.place_id ?? line?.placeId ?? line?.thing_id;
+    return id == null && text(line?.name || line?.title) === name;
+  }) || null;
+}
+
 export function placesForBudget(trip) {
   const seen = new Map();
-  for (const tab of LIST_TAB_IDS) {
-    for (const place of placesForCategoryTab(trip, tab)) {
-      rememberBudgetPlace(seen, place);
+  const remember = (place) => {
+    const canonical = canonicalBudgetPlace(trip, place);
+    if (canonical && tabCategoryKey(canonical, trip) !== 'car') rememberBudgetPlace(seen, canonical);
+  };
+  const excluded = new Set([
+    'travel', 'travel-to-thing', 'transport', 'hotel-wake', 'hotel-sleep',
+    'hotel-checkout', 'car-pickup', 'car-dropoff',
+  ]);
+  for (const day of sortedDays(trip)) {
+    for (const entry of buildDayTimeline(trip, day)) {
+      if (entry.place && !excluded.has(entry.kind)) remember(entry.place);
     }
   }
   for (const place of trip?.places || []) {
-    const override = overrideFor(trip, place);
-    const dayIds = override.dayIds;
-    if (Array.isArray(dayIds) && dayIds.length) {
-      rememberBudgetPlace(seen, place);
-    }
+    const dayIds = overrideFor(trip, place).dayIds;
+    if (Array.isArray(dayIds) && dayIds.length) remember(place);
   }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
-    for (const row of rows) {
-      const place = resolvePlace(row, trip);
-      rememberBudgetPlace(seen, place);
-    }
+    for (const row of rows) remember(resolvePlace(row, trip));
   }
   return [...seen.values()];
 }
@@ -223,7 +246,7 @@ export function buildBudgetModel(trip) {
     return {
       place,
       bucket,
-      name: placeName(place),
+      name: catalogRowDisplayName(place, trip),
       ...pricing,
     };
   });
@@ -284,7 +307,7 @@ export function budgetCompletenessChecks(trip) {
     const id = String(row.place.id);
     const catalog = canonicalBudgetPlace(trip, id);
     if (!catalog) continue;
-    const expectedName = placeName(catalog);
+    const expectedName = catalogRowDisplayName(catalog, trip);
     const expectedBucket = budgetBucketForPlace(catalog, trip);
     const expectedPricing = budgetLineAmount(catalog, trip);
     push(`row_identity_${id}`, row.name === expectedName);

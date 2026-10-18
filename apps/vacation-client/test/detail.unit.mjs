@@ -149,4 +149,29 @@ assert.ok(flightRows.some((row) => row.key === 'airline'));
 assert.equal(detailReviews(flightTrip.thingOverrides['place:2'], 'flight').length, 0);
 assert.equal(buildDetailViewModel(flightTrip.places[0], flightTrip).priceLabel, '$248 one-way');
 
+assert.equal(sparseModel.descriptionMissing, true);
+assert.equal(sparseModel.reviewsMissing, true);
+assert.equal(restaurantModel.descriptionMissing, false);
+assert.equal(restaurantModel.reviewsMissing, false);
+assert.equal(buildDetailViewModel(flightTrip.places[0], flightTrip).reviewsMissing, false,
+  'review requirements do not apply to flights');
+const fetchedDetailTrip = { thingOverrides: { 'place:1': {
+  category: 'restaurant', websiteFlavour: 'The wood-fired oven faces an open kitchen.',
+  reviewThemes: { praise: ['Diners praise the seasonal flatbreads'], complaints: ['Service slows on weekends'] },
+  googleRating: '4.5', googleReviewCount: '1,200',
+} } };
+const fetchedDetail = buildDetailViewModel(sparseTrip.places[0], fetchedDetailTrip);
+assert.equal(fetchedDetail.summary,
+  'The wood-fired oven faces an open kitchen. Diners praise the seasonal flatbreads. Service slows on weekends.');
+assert.equal(fetchedDetail.descriptionMissing, false, 'sourced short text is not padded');
+assert.equal(fetchedDetail.reviewsMissing, false, 'a sourced average and count can provide review data');
+assert.equal(buildDetailViewModel(sparseTrip.places[0], { thingOverrides: { 'place:1': {
+  category: 'restaurant', googleRating: '4.5',
+} } }).reviewsMissing, true, 'a rating without a count remains incomplete');
+assert.deepEqual(detailRatingLines({ otherRatingSites: [{ rating: '4.7' }] }),
+  [{ id: 'third', text: 'Other ratings: 4.7' }], 'an absent review count cannot become zero');
+assert.equal(detailSummary(sparseTrip.places[0], { thingOverrides: { 'place:1': {
+  longDetails: 'Book ahead on weekends; arrive early for will-call or bar seating. Compare ticket tiers and fees on the official listing before committing to a date and an arrival time for your evening.',
+} } }), '', 'category sales copy is not a sourced description');
+
 console.log('vacation-client detail unit checks passed');

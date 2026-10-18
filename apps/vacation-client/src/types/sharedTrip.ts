@@ -23,6 +23,13 @@ export type SharedDay = {
 };
 
 export type BudgetLine = {
+  id?: number | string;
+  place_id?: number | string;
+  placeId?: number | string;
+  thing_id?: number | string;
+  title?: string;
+  amount?: number;
+  total?: number;
   category?: string;
   name?: string;
   total_price?: number;

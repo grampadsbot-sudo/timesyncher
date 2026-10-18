@@ -4,6 +4,7 @@ import { DayTimeline } from '../components/DayTimeline';
 import {
   buildDayTimeline,
   dayChipLabel,
+  dayItineraryHeading,
   mapPlacesForTimeline,
   shiftDayIndex,
   sortedDays,
@@ -111,8 +112,8 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         aria-labelledby={`tsv-day-tab-${activeDay.id}`}
         tabIndex={-1}
       >
-        <h3 className="tsv-day-title">
-          {dayChipLabel(activeDay)}
+        <h3 className="tsv-day-title" data-ts-day-heading="1">
+          {dayItineraryHeading(activeDay)}
           {activeDay.date ? (
             <span className="tsv-muted"> · {formatDayDate(activeDay.date)}</span>
           ) : null}
@@ -138,7 +139,7 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         </div>
       </article>
 
-      <DayMap places={mapPlaces} />
+      <DayMap places={mapPlaces} trip={trip} />
     </section>
   );
 }

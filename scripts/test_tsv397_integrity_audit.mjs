@@ -17,13 +17,13 @@ const emptyEvent = buildCategoryDescription({
   sourceRecord: {},
   rawDescription: '',
 });
+assert.equal(emptyEvent, '');
 assert.doesNotMatch(
   emptyEvent,
-  /classic NYC|Live set with/i,
-  'event fallback must not invent NYC venue copy',
+  /classic NYC|Live set with|Book ahead/i,
+  'empty event must not invent venue copy',
 );
-assert.ok(emptyEvent.includes(title), 'event fallback names the thing');
-assert.equal(isGenericDescription(emptyEvent), false, 'structured fallback is not generic placeholder');
+assert.equal(isGenericDescription(emptyEvent), true, 'a place with no fetched copy stays blank');
 
 const sourcedEvent = buildCategoryDescription({
   category: 'music',

@@ -1,6 +1,10 @@
 
 
 import {
+  descriptionFromFetchedPlace,
+  isCannedCategoryTemplate,
+} from '../../../../src/vacation/trip-thing-enrichment.mjs';
+import {
   carPriceDisplay,
   flightPriceDisplay,
   flightSchedule,
@@ -138,6 +142,16 @@ function formatCoordinates(coords) {
   return `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
 }
 
+function hasFetchedAverageAndCount(override = {}) {
+  const pairs = [
+    [override.googleRating, override.googleReviewCount],
+    [override.yelpRating, override.yelpReviewCount],
+    [override.thirdPartyRating, override.thirdPartyReviewCount],
+  ];
+  return pairs.some(([rating, count]) =>
+    Number(text(rating)) > 0 && Number(text(count).replace(/,/g, '')) > 0);
+}
+
 function xaiRepresentativeReviews(override) {
   if (override.xaiRatingsFetched === true) return true;
   const nested = override.sourceRecord;
@@ -201,6 +215,12 @@ export function detailHeaderLabel(categoryLabel, source) {
 export function detailSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
+  const fetched = descriptionFromFetchedPlace({
+    websiteFlavour: text(override.websiteFlavour || source.websiteFlavour),
+    reviewThemes: override.reviewThemes || source.reviewThemes,
+    xaiRatingsFetched: override.xaiRatingsFetched ?? source.xaiRatingsFetched,
+  });
+  if (fetched) return fetched;
   const name = placeName(place);
   const candidate = text(
     override.summary ||
@@ -209,6 +229,7 @@ export function detailSummary(place, trip) {
       source.summary ||
       place.description,
   );
+  if (!candidate || isCannedCategoryTemplate(candidate)) return '';
   if (wordCount(candidate) < 30) return '';
   if (!descriptionPassesDetailJudge(candidate, name)) return '';
   return candidate;
@@ -236,6 +257,26 @@ export function detailPriceLabel(place, trip, category) {
   return level;
 }
 
+function otherRatingsLine(override, { googleRating, yelpRating }) {
+  const sites = Array.isArray(override.otherRatingSites) ? override.otherRatingSites : [];
+  const parts = [];
+  for (const row of sites.slice(0, 3)) {
+    const rating = text(row?.rating ?? row?.average);
+    const countRaw = text(row?.reviewCount).replace(/,/g, '');
+    if (!rating || !/\d/.test(rating)) continue;
+    const countNum = Number(countRaw);
+    parts.push(countRaw && Number.isFinite(countNum) ? `${rating} (${countNum.toLocaleString('en-US')})` : rating);
+  }
+  if (parts.length) return `Other ratings: ${parts.join(' · ')}`;
+  const explicitThird = text(override.thirdPartyRating);
+  const fallbackRating = text(override.rating);
+  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
+  if (!thirdRating) return '';
+  const thirdCount = text(override.thirdPartyReviewCount || override.count);
+  const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
+  return `Other ratings: ${value}`;
+}
+
 export function detailRatingLines(override) {
   const lines = [];
   const googleRating = text(override.googleRating);
@@ -254,16 +295,9 @@ export function detailRatingLines(override) {
       text: yelpCount ? `${yelpRating} on Yelp (${yelpCount} reviews)` : `${yelpRating} on Yelp`,
     });
   }
-  const explicitThird = text(override.thirdPartyRating);
-  const fallbackRating = text(override.rating);
-  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
-  const thirdCount = text(override.thirdPartyReviewCount || override.count);
-  if (thirdRating) {
-    const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
-    lines.push({
-      id: 'third',
-      text: `Other ratings: ${value}`,
-    });
+  const otherLine = otherRatingsLine(override, { googleRating, yelpRating });
+  if (otherLine) {
+    lines.push({ id: 'third', text: otherLine });
   }
   return lines;
 }
@@ -404,6 +438,7 @@ export function buildDetailViewModel(place, trip) {
       place.source,
   );
   const categoryLabel = detailCategoryLabel(category);
+  const summary = detailSummary(place, trip);
   return {
     name,
     category,
@@ -412,7 +447,12 @@ export function buildDetailViewModel(place, trip) {
     source: source,
     logoUrl,
     showLogo: Boolean(logoUrl),
-    summary: detailSummary(place, trip),
+    summary,
+    descriptionMissing: !summary,
+    reviewsMissing:
+      !['flight', 'car'].includes(text(category).toLowerCase())
+      && detailReviews(override, category).length === 0
+      && !hasFetchedAverageAndCount(override),
     itineraryNote: detailItineraryNote(place, trip),
     happyHourDetails: detailHappyHour(override),
     priceLabel: detailPriceLabel(place, trip, category),

@@ -1,6 +1,5 @@
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
-export const LIST_TAB_IDS: readonly string[];
 export const DEFAULT_SORT: { key: string; dir: 'asc' | 'desc' };
 
 export function parsePrice(value: unknown): number | null;
@@ -43,3 +42,8 @@ export function hotelFirstRowNote(
   isFirstHotel: boolean,
 ): string;
 export function sortIndicator(activeKey: string, activeDir: string, key: string): string;
+
+export function catalogRowDisplayName(place: SharedPlace, trip: SharedTripPayload): string;
+export function eventListPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
+export function isDisplayNameFragment(value: unknown, name: unknown): boolean;
+export function opaqueCarNeedsBlank(place: SharedPlace, trip: SharedTripPayload): boolean;

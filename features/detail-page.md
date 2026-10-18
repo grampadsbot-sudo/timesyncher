@@ -23,3 +23,9 @@ Shared fields (live TREK `index-BKun7ofk.js`, 2026-09-10 — do not invent extra
 Timeline rows use **Open thing details**. Edit-state copy: see `collaborators.md`.
 
 Type-specific fields: `happy-hour.md`, `hotel-stay-fields.md`, `flight-fields.md`, `car-fields.md`, `ratings-reviews.md`, `tags-chips.md`.
+
+## React preview detail data — #336 piece A
+
+The existing preview detail panel prefers fetched `websiteFlavour` and review themes, then qualifying stored descriptions. It rejects canned category copy and does not pad missing text. Its body exposes `data-description-missing="1"` when no usable description is present and `data-reviews-missing="1"` when a non-flight/non-car Thing has neither complete review text nor a sourced rating average with a positive count. Flight/car review requirements remain excluded.
+
+Other rating sites display their stored ratings and counts. A missing count stays absent; it is not converted to zero. Source URLs, itinerary notes and the existing detail fields remain available. `test/detail.unit.mjs` covers sourced short descriptions, missing flags, rating/count requirements and canned-copy rejection. The preview source changes do not publish a served detail-panel change.
