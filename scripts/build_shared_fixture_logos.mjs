@@ -7,6 +7,7 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { searchProductCategoryFromPlace } from '../src/vacation/xai-grok-place-ratings-helpers.mjs';
 import { isPlaceWebsite } from '../src/vacation/page-icon-discovery.mjs';
 import { reenrichTripLogos } from '../src/vacation/logo-reenrichment.mjs';
+import { AIRLINE_SITES, resolveAirlineLogo } from './fixture_airline_logos.mjs';
 
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 export const encode = (value) => `${JSON.stringify(value, null, 2)}\n`;
@@ -155,6 +156,22 @@ function fixtureStore(rows) {
   return { db, audit };
 }
 
+function airlineOf(place, override) {
+  const said = `${override.airline || ''} ${place.name || ''} ${override.title || ''}`;
+  const name = Object.keys(AIRLINE_SITES).find((airline) => new RegExp(`\\b${airline}\\b`, 'i').test(said));
+  return name || text(place.website || override.website);
+}
+
+async function applyAirlineLogo(place, overrides, fetchImpl, sleep) {
+  const override = overrides[`place:${place.id}`] || {};
+  const airline = airlineOf(place, override);
+  const result = await resolveAirlineLogo(airline, { fetchImpl, sleepImpl: sleep });
+  const fields = { logoUrl: result.logo, logoCaptureReason: result.reason, airlineLogo: result };
+  Object.assign(place, fields);
+  overrides[`place:${place.id}`] = { ...override, ...fields };
+  return { id: place.id, name: place.name, airline, ...result };
+}
+
 export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImpl = globalThis.fetch, sleep = pause, categories = null }) {
   assertShared(fixture);
   assertShared(staging);
@@ -164,8 +181,10 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
   const matches = [];
   const rows = [];
   const sameTrip = text(fixture.trip.id) === text(staging.trip.id);
+  const flights = [];
   for (const place of output.places) {
     if (categories && !categories.includes(category(place))) continue;
+    if (category(place) === 'flight') { flights.push(place); continue; }
     const override = output.thingOverrides?.[`place:${place.id}`] || {};
     const candidates = sameTrip
       ? staging.places.filter((candidate) => text(candidate.id) === text(place.id))
@@ -200,8 +219,8 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
     db: store.db, tripId: text(output.trip.id), thingIds: rows.map((row) => row.id),
     actor: 'shared-fixture-builder', fetchImpl: discovery.fetch, now: () => asOf,
   };
-  const dryRun = await reenrichTripLogos(args);
-  const applied = await reenrichTripLogos({ ...args, apply: true });
+  const dryRun = rows.length ? await reenrichTripLogos(args) : { dryRun: true, report: [] };
+  const applied = rows.length ? await reenrichTripLogos({ ...args, apply: true }) : { dryRun: false, report: [] };
   for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
     const place = output.places.find((place) => text(place.id) === row.id);
@@ -214,7 +233,9 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
     const overrides = output.thingOverrides ||= {};
     overrides[`place:${place.id}`] = { ...(overrides[`place:${place.id}`] || {}), ...row.metadata };
   }
-  return { fixture: output, matches, dryRun, applied, audit: store.audit, logoChecks: discovery.checks };
+  const airlineLogos = [];
+  for (const place of flights) airlineLogos.push(await applyAirlineLogo(place, output.thingOverrides ||= {}, fetchImpl, sleep));
+  return { fixture: output, matches, dryRun, applied, audit: store.audit, logoChecks: discovery.checks, airlineLogos };
 }
 
 export function recordedFetch({ records = [], replay = false, fetchImpl = globalThis.fetch } = {}) {
@@ -273,7 +294,7 @@ async function main() {
   if (transport.missing.length) throw new Error(`Incomplete replay: ${transport.missing.join(', ')}`);
   const bytes = encode(result.fixture);
   const evidence = { sourceUrl: source.href, asOf: args['as-of'], inputHash: digest(input), outputHash: digest(bytes),
-    matches: result.matches, dryRun: result.dryRun, applied: result.applied, audit: result.audit, logoChecks: result.logoChecks, archive };
+    matches: result.matches, dryRun: result.dryRun, applied: result.applied, audit: result.audit, logoChecks: result.logoChecks, airlineLogos: result.airlineLogos, archive };
   await writeFile(args.audit, encode(evidence), { flag: 'wx' });
   await writeFile(outputPath, bytes, { flag: 'wx' });
   console.log(encode({ inputHash: evidence.inputHash, outputHash: evidence.outputHash, places: result.matches.length,

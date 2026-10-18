@@ -162,7 +162,7 @@ test('NYC full fixture has no guessed logos in places and Thing overrides', pend
 test('#468 builder output has no guessed logos in any row/Thing field', pending, async () => {
   assertRows(await rebuild(await nycFixture()));
 });
-test('#468 builder output gives every flight its verified airline logo or flagged blank', pending, async () => {
+test('#468 builder output gives every flight its verified airline logo or flagged blank', async () => {
   const output = await rebuild(await nycFixture());
   assert.equal(output.places.filter((p) => /flight/i.test(p.category_name)).length, 7, 'include selected and list-only flights');
   assertRows(output, true);

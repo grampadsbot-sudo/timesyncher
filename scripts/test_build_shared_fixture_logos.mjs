@@ -276,6 +276,79 @@ test('category-scoped rebuild preserves excluded transport rows and their overri
   assert.equal(result.fixture.places[0].logoUrl, logo);
 });
 
+const flight = (id, name, extra = {}) => ({ id, name, category_name: 'Flight', website: '', logoUrl: 'https://www.southwest.com/favicon.ico', ...extra });
+const airlineSite = (url, accept, html = '<link rel="icon" href="/assets/swa.png">') => url === 'https://www.southwest.com/'
+  ? response(url, 200, 'text/html', html)
+  : (assert.equal(accept, 'image/*'), response(url, 200, 'image/png'));
+
+test('flight rows take the airline own-site declared icon, replacing a favicon guess on row and override', async () => {
+  const input = shared(1, [place(1), flight(2, 'Southwest LAS → LGA')]);
+  input.thingOverrides['place:2'] = { logoUrl: 'https://www.southwest.com/favicon.ico', airline: 'Southwest', price: 164 };
+  const calls = [];
+  const result = await run({ fixture: input, staging: structuredClone(input), fetchImpl: async (url, options) => {
+    calls.push(String(url));
+    return url === site || url === logo ? http(url, options) : airlineSite(url, options.headers.accept);
+  } });
+  const expected = { logo: 'https://www.southwest.com/assets/swa.png', source: 'https://www.southwest.com/', verified: true, reason: '' };
+  assert.equal(result.fixture.places[1].logoUrl, expected.logo);
+  assert.deepEqual(result.fixture.places[1].airlineLogo, expected);
+  assert.deepEqual(result.fixture.thingOverrides['place:2'], { airline: 'Southwest', price: 164, logoUrl: expected.logo, logoCaptureReason: '', airlineLogo: expected });
+  assert.deepEqual(result.airlineLogos, [{ id: 2, name: 'Southwest LAS → LGA', airline: 'Southwest', ...expected }]);
+  assert.ok(!calls.includes('https://www.southwest.com/favicon.ico'));
+  assert.deepEqual(result.matches.map((row) => row.id), [1]);
+  assert.equal(result.fixture.places[1].websiteCapture, undefined);
+});
+
+test('flight blanks carry airline_logo_unverified reasons; unknown carriers and failed sites never keep a guess', async () => {
+  for (const [row, fetchImpl, reason] of [
+    [flight(2, 'Southwest LAS → LGA'), async () => { throw new Error('offline'); }, 'airline_logo_unverified:page_fetch_failed:offline'],
+    [flight(2, 'Southwest LAS → LGA'), async (url, o) => airlineSite(url, o.headers.accept, '<html>no icon</html>'), 'airline_logo_unverified:no_declared_icon'],
+    [flight(2, 'Mystery Air JFK → LAS'), async () => assert.fail('unknown carrier fetched'), 'airline_logo_unverified:unknown_airline'],
+  ]) {
+    const input = shared(1, [row]);
+    const result = await run({ fixture: input, staging: structuredClone(input), fetchImpl, sleep: async () => {} });
+    assert.equal(result.fixture.places[0].logoUrl, '');
+    assert.equal(result.fixture.places[0].logoCaptureReason, reason);
+    assert.equal(result.fixture.places[0].airlineLogo.verified, false);
+    assert.equal(result.fixture.thingOverrides['place:2'].logoUrl, '');
+    assert.equal(result.fixture.thingOverrides['place:2'].logoCaptureReason, reason);
+  }
+});
+
+test('airline comes from override, title or own-site website; place rows are byte-identical with or without flights', async () => {
+  const seen = [];
+  const fetchImpl = async (url, options) => { seen.push(String(url)); return url === site || url === logo ? http(url, options) : response(url, 404, 'text/html'); };
+  const input = shared(1, [place(1), flight(2, 'Red-eye', { website: 'https://www.jetblue.com/booking/flights?from=LAS' }),
+    flight(3, 'American Airlines JFK → LAS'), flight(4, 'Option 4')]);
+  input.thingOverrides['place:4'] = { airline: 'Delta' };
+  const result = await run({ fixture: input, staging: structuredClone(input), fetchImpl });
+  assert.deepEqual(result.airlineLogos.map((row) => [row.airline, row.source, row.reason]), [
+    ['https://www.jetblue.com/booking/flights?from=LAS', 'https://www.jetblue.com/', 'airline_logo_unverified:page_http_404'],
+    ['American', 'https://www.aa.com/', 'airline_logo_unverified:page_http_404'],
+    ['Delta', 'https://www.delta.com/', 'airline_logo_unverified:page_http_404'],
+  ]);
+  const placeOnly = await run({ fixture: shared(1, [place(1)]), staging: shared(1, [place(1)]), fetchImpl: http });
+  assert.equal(encode(result.fixture.places[0]), encode(placeOnly.fixture.places[0]));
+  assert.equal(encode(result.fixture.thingOverrides['place:1']), encode(placeOnly.fixture.thingOverrides['place:1']));
+  assert.equal(encode(result.audit), encode(placeOnly.audit));
+  assert.equal(encode(result.matches), encode(placeOnly.matches));
+});
+
+test('category scope without flight leaves flight rows untouched; airline evidence replays offline', async () => {
+  const input = shared(1, [place(1), flight(2, 'Southwest LAS → LGA')]);
+  input.thingOverrides['place:2'] = { custom: 'keep' };
+  const scoped = await run({ fixture: input, staging: structuredClone(input), categories: ['restaurant'] });
+  assert.deepEqual(scoped.fixture.places[1], input.places[1]);
+  assert.deepEqual(scoped.fixture.thingOverrides['place:2'], input.thingOverrides['place:2']);
+  assert.deepEqual(scoped.airlineLogos, []);
+  const recording = recordedFetch({ fetchImpl: async (url, options) => url === site || url === logo ? http(url, options) : airlineSite(url, options.headers.accept) });
+  const first = await run({ fixture: input, staging: structuredClone(input), fetchImpl: recording.fetch });
+  const replay = recordedFetch({ records: structuredClone(recording.records), replay: true, fetchImpl: () => assert.fail('offline replay fetched network') });
+  const second = await run({ fixture: input, staging: structuredClone(input), fetchImpl: replay.fetch });
+  assert.equal(first.fixture.places[1].logoUrl, 'https://www.southwest.com/assets/swa.png');
+  assert.equal(encode(first), encode(second));
+});
+
 test('manifest failure does not hide a valid declared HTML icon; banned provider declarations never fetch', async () => {
   const result = await run({ sleep: async () => {}, fetchImpl: async (url) => {
     if (url === site) return response(site, 200, 'text/html', '<link rel="manifest" href="/app.json">'
