@@ -8,12 +8,16 @@ import re
 import socket
 import subprocess
 import sys
+import tomllib
 from urllib.parse import quote
 import urllib.request
 from zoneinfo import ZoneInfo
 
 from tsv_common import D, REPO
 from dr_scorecard import read_page, record_miss
+
+with open(os.path.join(os.path.dirname(__file__), 'meter_lanes.toml'), 'rb') as source:
+    METER_LANES = tomllib.load(source)
 
 LANES = {'claude': 100, 'codex': 90, 'cursor_models': 100,
          'other_models': 100, 'supergrok': 100, 'grok_build': 100}
@@ -213,8 +217,8 @@ def lane_readings_from_rows(rows):
     for row in rows:
         if not isinstance(row, dict): continue
         lane = row.get('lane'); as_of = row.get('as_of', 'unknown')
-        if lane in ('claude-pro', 'chatgpt-plus-codex'):
-            key = 'claude' if lane == 'claude-pro' else 'codex'
+        if lane in (METER_LANES['claude'], METER_LANES['codex']):
+            key = 'claude' if lane == METER_LANES['claude'] else 'codex'
             windows = []
             if row.get('pct_5h') is not None:
                 windows.append(dict(pct_used=row['pct_5h'], reset=row.get('reset_5h', 'unknown'), as_of=as_of))

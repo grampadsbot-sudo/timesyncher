@@ -77,9 +77,7 @@ class Miss(unittest.TestCase):
         self.assertEqual(fake.puts[0][0][-1], "--force")
         self.assertIn("Total: -2 (since 2026-10-14)", text)
         self.assertIn("- 2026-10-14 11:30 PT | PR #336 | -2 | logged-only ring", text)
-        # the event lands inside claude-code's section, before dr-eggbot's heading
         self.assertLess(text.index("logged-only ring"), text.index("## dr-eggbot"))
-        # dr-eggbot untouched
         self.assertIn("Total: -4 (since 2026-10-14)", text)
 
     def test_unknown_owner_gets_its_own_section(self):

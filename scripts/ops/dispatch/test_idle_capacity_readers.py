@@ -10,8 +10,8 @@ from test_idle_capacity import NOW, c
 
 class Readers(unittest.TestCase):
     def test_canonical_jsonl_meter_claude100_codex5_32(self):
-        rows=[dict(lane='claude-pro',pct_5h=100,pct_week=26,reset_5h='a',reset_week='b',as_of=c.utc(NOW)),
-              dict(lane='chatgpt-plus-codex',pct_5h=5,pct_week=32,reset_5h='a',reset_week='b',as_of=c.utc(NOW))]
+        rows=[dict(lane=c.METER_LANES['claude'],pct_5h=100,pct_week=26,reset_5h='a',reset_week='b',as_of=c.utc(NOW)),
+              dict(lane=c.METER_LANES['codex'],pct_5h=5,pct_week=32,reset_5h='a',reset_week='b',as_of=c.utc(NOW))]
         source='```json\n'+'\n'.join(json.dumps(r) for r in rows)+'\n```'
         with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{},clear=True), patch.object(c,'run',side_effect=OSError):
             readings=c.read_meters(NOW,root,reader=lambda _:source)
@@ -20,7 +20,7 @@ class Readers(unittest.TestCase):
         self.assertEqual(readings['codex']['pct_used'],32)
         self.assertTrue(readings['codex']['available'])
     def test_real_canonical_meter_row_pt_as_of_claude100_not_available(self):
-        row=dict(lane='claude-pro',pct_5h=100.0,pct_week=26.0,reset_5h='2026-10-18 02:59 PDT',
+        row=dict(lane=c.METER_LANES['claude'],pct_5h=100.0,pct_week=26.0,reset_5h='2026-10-18 02:59 PDT',
                  reset_week='2026-10-24 11:59 PDT',as_of='2026-10-18 01:39 PDT')
         now=c.stamp('2026-10-18 03:00 PDT')
         source='```json\n'+json.dumps(row)+'\n```'
@@ -33,7 +33,7 @@ class Readers(unittest.TestCase):
     def test_stamp_pt_ambiguous_fails_closed(self):
         self.assertRaises(ValueError,c.stamp,'2020-11-01 01:30 PT')
     def test_malformed_meter_rows_fail_closed(self):
-        source='```json\n{"lane":"claude-pro","pct_5h":10\n{bad\n```'
+        source='```json\n{"lane":'+json.dumps(c.METER_LANES['claude'])+',"pct_5h":10\n{bad\n```'
         with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{},clear=True), patch.object(c,'run',side_effect=OSError):
             readings=c.read_meters(NOW,root,reader=lambda _:source)
         self.assertTrue(all(m['stale'] and m['available'] for m in readings.values()))

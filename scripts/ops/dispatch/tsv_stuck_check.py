@@ -32,7 +32,7 @@ def is_hold(l): return l.startswith("hold:") or l in ("needs-dr-eggbot", "status
 def iso(s): return dt.datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc).timestamp()
 def mins(s): return int(s // 60)
 def hm(t): return dt.datetime.fromtimestamp(t, PT).strftime("%-m/%-d %-I:%M %p PT")
-INFO = {}   # key -> {kind, age, why, last, labels, sha} for the Telegram copy-paste lines
+INFO = {}
 def logline(m):
     os.makedirs(D + "/logs", exist_ok=True)
     open("%s/logs/stuck-%s.log" % (D, time.strftime("%Y%m%d")), "a").write(
@@ -89,7 +89,7 @@ def find(gh, st, now, dry=False):
             h = heads[str(n)] = {"sha": sha, "since": t0}
         upd = iso(p["updated_at"]); last_t = max(h["since"], upd)
         last = ("head push %s" % hm(h["since"])) if h["since"] >= upd else ("comment/label change %s" % hm(upd))
-        conds = []   # (since, text)
+        conds = []
         if p.get("draft"):
             pk = st.setdefault("parked", {}).get(str(n))
             if not dry and (not pk or pk.get("upd") != p["updated_at"]):
@@ -157,7 +157,7 @@ def find(gh, st, now, dry=False):
         else: lp = linked_pr(n); ready = True
         if lp:
             pi = INFO.get("pr%d" % lp)
-            if not flags and not pi: continue        # its PR is moving: issue not stuck
+            if not flags and not pi: continue
             if not flags: conds.append((now - pi["age"], "handled by PR #%d, which is stuck" % lp))
         elif ready and now - upd >= IDLE_S: conds.append((upd, "no change since last run (ready, no PR yet)"))
         if not conds: continue
@@ -195,7 +195,7 @@ def ring_grok(msg, dry):
         return "ok" if r.returncode == 0 else "rc%d" % r.returncode
     except Exception as e: return type(e).__name__
 ACTION_EVENTS = {"labeled", "unlabeled", "closed", "reopened", "merged", "ready_for_review", "convert_to_draft"}
-DR_RE = re.compile(r"^\s*(dr eggbot|managing dr|claude-code|chief dr|hold restamp[^\n]*dr eggbot|ruling\s*\d+)\b", re.I)   # dr posts: "dr eggbot (chief dr ...)", "managing dr (claude-code) ..."
+DR_RE = re.compile(r"^\s*(dr eggbot|managing dr|claude-code|chief dr|hold restamp[^\n]*dr eggbot|ruling\s*\d+)\b", re.I)
 AGENT_ACTIVE_S = 90 * 60
 def head_line(c):
     b = (c.get("body") or "").strip()
@@ -214,7 +214,7 @@ def answer_state(gh, n, now, head_since, sha):
     last_start = max(starts, default=0)
     agent_active = last_start > max(ends, default=0) and now - last_start < AGENT_ACTIVE_S
     return dr_t, state_t, agent_active
-ASSESS = {}   # running-assessment text, read at most once per run and only when a miss needs an owner
+ASSESS = {}
 def timestamp(value):
     value = dt.datetime.fromisoformat(str(value).strip("'\"").replace("Z", "+00:00"))
     if value.tzinfo is None: raise ValueError("timezone required")
@@ -274,7 +274,6 @@ def hold_status(gh, n, now, head_since=0, sha=None, memory=None, dry=False):
     if any(0 <= now - t < QUIET_S for t in briefs): return "GRACE executable dr brief/claim <60m"
     label_t = max((iso(e["created_at"]) for e in events if e.get("event") in {"labeled", "unlabeled"}), default=0)
     snapshot = {"refs": named_refs(body, n), "sha": sha, "labels": labels}
-    # JSON turns tuples into lists; store a stable string for comparisons.
     snapshot = json.dumps(snapshot, sort_keys=True)
     refs_text = hashlib.sha256(body.encode()).hexdigest()
     previous = memory.get("body_hold")
@@ -359,7 +358,7 @@ def main():
                 continue
             s = seen.setdefault(key, {"first": now, "last_ring": 0, "escalated": 0})
             labs = INFO[key]["labels"].split(",")
-            if INFO[key].get("draft") or "hold:tracking-only" in labs or any(l.startswith("parked:") for l in labs): INFO[key]["parked_job"] = True   # listed, never rings
+            if INFO[key].get("draft") or "hold:tracking-only" in labs or any(l.startswith("parked:") for l in labs): INFO[key]["parked_job"] = True
             if INFO[key].get("parked_job") or now - s["last_ring"] < RING_EVERY: continue
             hs = st.get("heads", {}).get(str(n), {}) if key.startswith("pr") else {}
             try:
@@ -375,7 +374,7 @@ def main():
                 s["stall"] = stall
             except Exception as e:
                 scores.append("%s ladder error %s" % (key, type(e).__name__))
-                action, escalate, dr_t, state_t = "ring", False, 0, 0   # fail open: a silent item still rings
+                action, escalate, dr_t, state_t = "ring", False, 0, 0
             if action == "quiet":
                 rang.append("%s:quiet(%s)" % (key, held)); continue
             if s["last_ring"] and action != "agent":
@@ -385,10 +384,9 @@ def main():
                 except Exception as e: scores.append("%s score error %s" % (key, type(e).__name__))
             due.append((key, n))
             if not dry: s["last_ring"] = now
-            if escalate and now - s.get("esc_at", 0) >= ESC_EVERY:   # rung 2: dr eggbot steps in, at most hourly per item
+            if escalate and now - s.get("esc_at", 0) >= ESC_EVERY:
                 escalation_due.append(key)
                 if not dry: s["esc_at"] = now
-        # One Tincan message per cycle, including all due rows and escalation flags.
         if due:
             message = "[ubuntu stuck-check] " + " || ".join(short(k, n) for k, n in due)
             message += ". Please unstick or say why it waits."
@@ -397,7 +395,6 @@ def main():
             res = (ring_grok if escalation_due else ring_claude)(message, dry)
             rang.append("bundle(%d):%s" % (len(due), res))
         tg = [short(k, n) for k, n, _ in items]
-        # dr eggbot OpenClaw doorbell (Craig 6:39 AM PT): ONE ring per run listing every item stuck >= 60 min, at most once per hour total
         if not dry: write_list_page(items, now)
         old = [(k, n) for k, n, _ in items if (k, n) in due and INFO[k]["age"] >= ESC_S and not INFO[k].get("draft") and not INFO[k].get("parked_job")]
         if old and now - st.get("esc_last", 0) >= ESC_EVERY:

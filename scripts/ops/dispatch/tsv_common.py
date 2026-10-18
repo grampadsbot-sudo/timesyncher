@@ -10,7 +10,7 @@ REPO = "grampadsbot-sudo/timesyncher"
 BASE = "cursor/jev-quality-r20-1128"
 GH_TOKEN_FILE = "/home/ubishere9995/.config/tsv-gateb/gh-token"
 PT = ZoneInfo("America/Los_Angeles")
-IMAC_HOSTS = ["192.168.1.18", "100.76.12.8"]   # iMac: home LAN first, Tailscale fallback (same as tsv_dispatch.py)
+IMAC_HOSTS = ["192.168.1.18", "100.76.12.8"]
 READY_LABELS = ["project:tsv", "executor:cursor", "status:ready"]
 _SECRETS = []
 
@@ -170,7 +170,7 @@ class Alerts:
     def problem(self, key, text, already_sent_at=None):
         now = time.time(); rec = self.st.get(key) or {"since": now, "last_sent": 0, "sent": False}
         rec["text"] = text
-        if already_sent_at and already_sent_at > rec.get("last_sent", 0):   # another script already alerted on this
+        if already_sent_at and already_sent_at > rec.get("last_sent", 0):
             rec["last_sent"] = already_sent_at; rec["sent"] = True
         if now - rec.get("last_sent", 0) >= self.cool:
             if tell_craig(text, "%s-%s-%d" % (self.label, key, now), self.dry, self.log):
@@ -182,12 +182,11 @@ class Alerts:
         rec = self.st.pop(key, None)
         if rec and rec.get("sent"):
             if not tell_craig(text, "%s-%s-recovered-%d" % (self.label, key, time.time()), self.dry, self.log):
-                self.st[key] = rec   # retry the recovery note next run
+                self.st[key] = rec
     def save(self):
         if not self.dry: save_json(self.path, self.st)
 
-# ------------------------------------------------------------------ screenshot attachments (no gist scope on the token)
-ATTACH_BRANCH = "cursor/tsv-attachments"   # cursor/* => Vercel git deploys disabled by vercel.json; never merged, no PR
+ATTACH_BRANCH = "cursor/tsv-attachments"
 def commit_images(g, files, prefix, log=print):
     """Commit image files [(name, bytes)] to ATTACH_BRANCH under tsv-attachments/<prefix>/ via the contents API.
     Returns [(name, raw_url, blob_url)]. The repo is public, so raw URLs render inline in issues."""

@@ -63,13 +63,10 @@ def main():
         held = sorted(l for l in labels if l.startswith("hold:"))
         created = dt.datetime.fromisoformat(i["created_at"].replace("Z", "+00:00"))
         age = age_txt((utc - created).total_seconds())
-        # Sections 2 and 3 always list these, whatever else the item carries
         if held: hold_rows.append("#%d %s (%s; age %s; waits: %s)" % (i["number"], i["title"][:70], ",".join(held), age, hold_wait(g, i["number"])))
         if "superseded" in labels: sup_rows.append("#%d %s (age %s; close it)" % (i["number"], i["title"][:70], age))
         if labels & SKIP: continue
-        # Section 1 excludes hold:* and superseded items; closed issues are already excluded by state=open
         if "superseded" in labels or held: continue
-        # Craig 3:24 PM PT: the Gate B re-review loop and its needs-dr-eggbot stops are dr eggbot's, not Craig's (nightly log only)
         if "needs-dr-eggbot" in labels: continue
         if (RR.get(str(i["number"])) or {}).get("active") and not (labels & {"status:stuck"}): continue
         is_pr = "pull_request" in i
@@ -99,7 +96,7 @@ def main():
         section("3. Open but superseded, to close", sup_rows),
     ]) + "\nhttps://github.com/%s/issues?q=is%%3Aopen+label%%3Aproject%%3Atsv+sort%%3Aupdated-asc" % REPO
     log("summary stuck=%d hold=%d superseded=%d" % (len(rows), len(hold_rows), len(sup_rows)))
-    if tell_craig(msg, "tsv-stuck-%s" % now.strftime("%Y%m%d"), DRY, log) and not DRY:   # failed send retries at the 2nd cron slot
+    if tell_craig(msg, "tsv-stuck-%s" % now.strftime("%Y%m%d"), DRY, log) and not DRY:
         st["last_day"] = now.date().isoformat(); st["last_count"] = len(rows); save_json(STATE, st)
 
 if __name__ == "__main__":

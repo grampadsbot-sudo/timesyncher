@@ -8,8 +8,6 @@ def owner_issues(pr, issue_numbers):
     match = re.search(r"\(#(\d+)\)\s*$", title)
     if match:
         result.add(int(match.group(1)))
-    # A dependency, incidental comment, branch number, or numbered manager ask
-    # does not establish ownership. Only explicit closing language does.
     for match in re.finditer(r"^\s*(?:[-*]\s*)?(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s+(?:issue\s+)?#(\d+)\b", pr.get("body") or "", re.I | re.M):
         result.add(int(match.group(1)))
     return result & issue_numbers
@@ -39,8 +37,6 @@ def consolidate(items, info, prs, issues):
     for n, p in prs.items():
         for issue in owner_issues(p, set(issues)):
             join("pr%d" % n, "is%d" % issue)
-    # Future-phase parking uses the explicit related-draft record and the
-    # matching named parked label on both tracker objects.
     for n, issue in issues.items():
         labels = {x["name"] for x in issue.get("labels") or [] if x["name"].startswith("parked:")}
         if not labels:

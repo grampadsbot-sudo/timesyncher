@@ -34,7 +34,6 @@ class ManagingDrJudgmentPending(RuntimeError):
 
 class ManagingDrJudge:
     def __init__(self, cache_path=ROOT, cap=60, offline=False, usage=True):
-        # cache_path names a receipt directory, never the old Haiku cache.
         self.root = Path(cache_path)
         self.cap, self.offline = cap, offline
         self.calls = self.hits = self.skipped = 0
@@ -43,8 +42,6 @@ class ManagingDrJudge:
         self.pending_keys = set()
 
     def bind_capture(self, cand_dir):
-        # Bind to the actual captured text/geometry and fixture digest. Do not
-        # export the manifest (it can contain a shared-trip access token).
         path = Path(cand_dir)
         regions = (path / "capture-regions.json").read_bytes()
         try:
