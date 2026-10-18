@@ -63,6 +63,13 @@ function applyPr336SearchFields(row, place, override) {
   }
   if (search.summary) override.summary = search.summary;
   if (search.price != null) override.price = search.price;
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
+  if (record && Object.keys(record).length) {
+    place.sourceRecord = { ...record };
+    override.sourceRecord = { ...record };
+  }
   if (search.logoUrl) {
     override.logoUrl = search.logoUrl;
     place.logoUrl = search.logoUrl;

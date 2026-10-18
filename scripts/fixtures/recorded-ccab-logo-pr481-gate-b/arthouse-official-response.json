@@ -1,0 +1,28 @@
+{
+  "requestedUrl": "https://www.arthousehotelnyc.com/",
+  "finalUrl": "https://www.arthousehotelnyc.com/",
+  "status": 200,
+  "headers": {
+    "Content-Type": "text/html; charset=UTF-8",
+    "Last-Modified": "Fri, 09 Oct 2026 19:10:16 GMT",
+    "ETag": "W/\"33f9f304b9f49b802756f86adac9a171\"",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "no-referrer-when-downgrade",
+    "X-Glxd-Source-Region": "us-west-1",
+    "Cache-Control": "public, s-maxage=31536000, max-age=1200",
+    "X-Amz-Cf-Pop": "LAX54-P8",
+    "X-Amz-Cf-Id": "gWY2h4mAmHlYtekG8ACS8lUesS8MgjmaXw37dbBxupaghYVC8su3sg==",
+    "Server": "GLXD-AKA",
+    "Vary": "Accept-Encoding",
+    "Date": "Sun, 18 Oct 2026 08:57:52 GMT",
+    "Alt-Svc": "h3=\":443\"; ma=93600,h3-29=\":443\"; ma=93600",
+    "Transfer-Encoding": "chunked",
+    "Connection": "close",
+    "Strict-Transport-Security": "max-age=63072000 ; includeSubDomains ; preload"
+  },
+  "sha256": "2cc0c418a8385b304393c5e460fab999d91bdbb61bb7e55857cdc9715511ffcd",
+  "fetchedAt": "2026-10-18T08:57:52.901803+00:00",
+  "bytes": 95816
+}
