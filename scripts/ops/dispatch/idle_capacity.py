@@ -10,6 +10,7 @@ import subprocess
 import sys
 from urllib.parse import quote
 import urllib.request
+from zoneinfo import ZoneInfo
 
 from tsv_common import D, REPO
 from dr_scorecard import read_page, record_miss
@@ -28,11 +29,30 @@ WORKER_CMD = re.compile(r'(?:^|[ /])(?:codex|claude|grok|cursor-agent)(?:[ /.-]|
 INSPECTOR_CMD = re.compile(r'(?:tsv_stuck_check|idle_capacity)', re.I)
 CURSOR_ACTIVE_RUN = frozenset({'RUNNING', 'CREATING'})
 CLOUD_ACTIVE = frozenset({'running', 'active', 'creating'})
+PT = ZoneInfo('America/Los_Angeles')
+PT_STAMP = re.compile(r'^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})(?::\d{2})? (PDT|PST|PT)$')
+LANE_RUN = re.compile(r'vk-lane-run\.sh', re.I)
 
 
 def stamp(value):
     if isinstance(value, (int, float)): return float(value)
-    date = dt.datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    text = str(value).strip()
+    match = PT_STAMP.match(text)
+    if match:
+        date_s, time_s, abbrev = match.groups()
+        naive = dt.datetime.strptime('%s %s' % (date_s, time_s), '%Y-%m-%d %H:%M')
+        if abbrev == 'PT':
+            matches = []
+            for fold in (0, 1):
+                try: matches.append(naive.replace(tzinfo=PT, fold=fold))
+                except Exception: pass
+            if len(matches) != 1: raise ValueError('ambiguous pt')
+            return matches[0].timestamp()
+        offset = dt.timedelta(hours=-7 if abbrev == 'PDT' else -8)
+        aware = naive.replace(tzinfo=dt.timezone(offset))
+        if aware.astimezone(PT).strftime('%Z') != abbrev: raise ValueError('abbrev mismatch')
+        return aware.timestamp()
+    date = dt.datetime.fromisoformat(text.replace('Z', '+00:00'))
     if date.tzinfo is None: raise ValueError('timezone required')
     return date.timestamp()
 
@@ -117,15 +137,46 @@ def live_pid(pid):
     except Exception: return False
 
 
+def proc_cmdline(pid):
+    try:
+        with open('/proc/%s/cmdline' % int(pid), 'rb') as source:
+            return source.read().decode(errors='replace').replace('\0', ' ')
+    except OSError: return ''
+
+
+def cursor_issue_stale(meta):
+    if not isinstance(meta, dict): return True
+    if str(meta.get('status', '')).lower() == 'finished': return True
+    if str(meta.get('last_status', '')).upper() == 'FINISHED': return True
+    return False
+
+
+def slot_pid_binds(fields, meta):
+    cmd = proc_cmdline(fields['pid'])
+    if not cmd: return False
+    tag, lane = fields.get('tag', ''), fields.get('lane', '')
+    if not tag or not lane: return False
+    worktree = meta.get('worktree')
+    if LANE_RUN.search(cmd):
+        if tag not in cmd or lane not in cmd: return False
+        return not worktree or worktree in cmd
+    if 'cursor-agent' in cmd:
+        if not worktree: return False
+        try: cwd = os.readlink('/proc/%s/cwd' % int(fields['pid']))
+        except OSError: return False
+        return cwd == worktree or cwd.startswith(worktree.rstrip('/') + '/')
+    return False
+
+
 def lane_slot_workers(root, jobs):
     host = socket.gethostname(); workers = []
     for path in glob.glob(lane_slots_dir(root) + '/*.slot'):
         fields = parse_slot_fields(path)
         if not fields: continue
-        if fields.get('host', host) != host: continue
+        if fields.get('host') != host: continue
         if not live_pid(fields['pid']): continue
         tag = fields['tag']; meta = jobs.get(tag)
-        if not meta: continue
+        if not meta or not slot_pid_binds(fields, meta): continue
         workers.append(dict(kind='lane', tag=tag, item=meta['item'], pr=meta.get('pr'), worktree=meta.get('worktree')))
     return workers
 
@@ -276,7 +327,11 @@ def cursor_agents(root=D):
                 run_info = get('/v1/agents/%s/runs/%s' % (quote(aid, safe=''), quote(agent['latestRunId'], safe='')))
                 if run_info.get('status', '').upper() not in CURSOR_ACTIVE_RUN: continue
             numbers = set()
-            if aid in mapping: numbers.add(mapping[aid])
+            if aid in mapping:
+                mapped = mapping[aid]
+                meta = issues.get(str(mapped)) or issues.get(mapped)
+                if not cursor_issue_stale(meta):
+                    numbers.add(mapped)
             numbers.update(int(x) for x in re.findall(r'#(\d+)\b', agent.get('name') or ''))
             for branch in (run_info.get('git') or {}).get('branches') or []:
                 numbers.update(int(x) for x in re.findall(r'/pull/(\d+)\b', branch.get('prUrl') or ''))
