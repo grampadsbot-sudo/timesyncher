@@ -126,6 +126,8 @@ class Stuck(unittest.TestCase):
         def pages(self, path, key=None): return self.c if path.endswith("/comments") else self.e
 
     def setUp(self):
+        self.addCleanup(watcher.INFO.clear)
+        self.addCleanup(watcher.ASSESS.clear)
         watcher.INFO.clear(); watcher.INFO["pr336"] = {"who": "VK PR #336"}
         watcher.ASSESS.clear(); watcher.ASSESS["text"] = "- PR #336 Owner: claude-code\n"
         self.since = ts(2026, 10, 14, 17, 0)

@@ -64,7 +64,7 @@ class Tests(unittest.TestCase):
         rows,info=self.run_group([pr(207,labels=["parked:photos-videos"],draft=True)],
              [issue(393,["parked:photos-videos"],"Related draft: #207.")],
              [("PR",207,5000,"parked:photos-videos"),("issue",393,5000,"hold:after-blockers")])
-        with patch.dict(watcher.INFO,info,clear=True), patch.object(watcher,"find",return_value=rows), patch.object(watcher,"GH"), patch.object(watcher,"load_json",return_value={}), patch.object(watcher,"logline"), patch.object(watcher,"ring_claude") as bell, patch.object(watcher,"ring_openclaw") as escalation, patch.object(watcher,"tell_craig") as report, patch.object(watcher.sys,"argv",["watcher","--dry-run"]), patch("builtins.print"):
+        with patch.object(watcher.idle_capacity, "cycle", return_value={"covered": set(), "notes": []}), patch.dict(watcher.INFO,info,clear=True), patch.object(watcher,"find",return_value=rows), patch.object(watcher,"GH"), patch.object(watcher,"load_json",return_value={}), patch.object(watcher,"logline"), patch.object(watcher,"ring_claude") as bell, patch.object(watcher,"ring_openclaw") as escalation, patch.object(watcher,"tell_craig") as report, patch.object(watcher.sys,"argv",["watcher","--dry-run"]), patch("builtins.print"):
             watcher.main()
             bell.assert_not_called();escalation.assert_not_called()
             self.assertIn("VK PR #207 / issue #393 | PARKED",report.call_args.args[0])

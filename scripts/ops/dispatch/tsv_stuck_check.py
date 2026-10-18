@@ -1,4 +1,11 @@
-"""Zero-AI 'is anything stuck' check (dr eggbot, 2026-10-14, Craig OK 6:20 AM PT). Called at the end of every
+"""2026-10-17 idle-capacity ruling: idle_capacity.cycle audits all open VK work
+before the legacy ladder below. Only live jobs or named, valid holds silence it;
+quota unknown/stale fails open. First idle ring goes directly to dr eggbot,
+then every 30 minutes. Stops are reported, never used to hide idle capacity.
+The legacy ladder remains for tracker rows outside that audit. Dry runs only
+print; no logs, state, notifications, GBrain puts, or GitHub writes.
+
+Zero-AI 'is anything stuck' check (dr eggbot, 2026-10-14, Craig OK 6:20 AM PT). Called at the end of every
 tsv_dispatch.py run (10-min cron). No model calls. Craig sees each ring as one line in his existing Telegram PR feed (tell_craig, same as tsv_notify.py); FYI only.
 STUCK rules (repo grampadsbot-sudo/timesyncher):
   A. open PR: head unchanged AND issue updated_at (comments/labels) older than 60 min, not labelled done/awaiting-craig-review
@@ -18,12 +25,13 @@ Stuck ladder (bot-admin/requests/eggbot-stuck-escalation-ladder-20261015-0823, C
 Same item still stuck after 3 h -> also one OpenClaw doorbell ring (kind vk-stuck, same webhook as escalation_bell.py).
 Telegram feed lines go out on EVERY run while stuck (no dedup). Claude Code Tincan bell also rings every run while stuck (Craig 6:25 AM PT); dr eggbot OpenClaw doorbell 60 min after first detection, then at most hourly (Craig 6:28 AM PT) (state stuck-check-state.json). Silent when nothing stuck.
 Report grouping (Craig 2026-10-14): one entry per job, joining a PR with its explicit owning issue; dependency mentions do not join jobs. Valid named future-phase pairs remain visible as PARKED and do not ring action bells. Tracker objects and launch/merge guards remain unchanged.
-One log line per run: logs/stuck-YYYYMMDD.log.  Usage: python3 tsv_stuck_check.py [--dry-run]   Stop: touch STUCK_STOP"""
+One log line per run: logs/stuck-YYYYMMDD.log.  Usage: python3 tsv_stuck_check.py [--dry-run]   Stop files are listed in the idle-capacity alarm"""
 import datetime as dt, hashlib, json, os, re, subprocess, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tsv_common import GH, REPO, D, PT, load_json, save_json, scrub, tell_craig
 from work_groups import consolidate
 from dr_scorecard import ASSESS_SLUG, owner_of, read_page, record_miss
+import idle_capacity
 STATE = D + "/stuck-check-state.json"; SEC = D + "/.drEgg-doorbell.json"
 QUIET_S = 60 * 60; HOLD_S = 60 * 60; MERGE_S = 4 * 3600; READY_S = 60 * 60; ESC_S = 60 * 60; ESC_EVERY = 60 * 60; RING_EVERY = 0; SCOPE_S = 7 * 86400; IDLE_S = 10 * 60
 DONE = {"done", "awaiting-craig-review"}
@@ -313,13 +321,19 @@ def ring_openclaw(n, key, reason, dry, maxlen=300):
     except Exception as e: return type(e).__name__
 def main():
     dry = "--dry-run" in sys.argv
-    if os.path.exists(D + "/STUCK_STOP") and not dry: logline("STUCK_STOP present; skipped"); return
     try:
         REQUESTS.clear()
         st = load_json(STATE, {}); now = time.time(); gh = GH()
         items = find(gh, st, now)
+        capacity = idle_capacity.cycle(gh, st, now, dry, ring_grok)
         seen = st.setdefault("items", {}); rang = []; esc = []; tg = []; scores = []; due = []; escalation_due = []
         for key, n, reason in items:
+            # The evidence-only audit supersedes legacy comment/grace holds for
+            # every inspected tracker object. Preserve grouping for the report.
+            members = INFO[key].get("members", [key])
+            if n in capacity['covered'] or any(int(m[2:]) in capacity['covered'] for m in members):
+                if n in capacity.get('holds', {}): INFO[key]['held'] = capacity['holds'][n]
+                continue
             s = seen.setdefault(key, {"first": now, "last_ring": 0, "escalated": 0})
             labs = INFO[key]["labels"].split(",")
             if INFO[key].get("draft") or "hold:tracking-only" in labs or any(l.startswith("parked:") for l in labs): INFO[key]["parked_job"] = True   # listed, never rings
@@ -373,9 +387,14 @@ def main():
         parked_count = sum(bool(INFO[k].get("parked_job")) for k, _, _ in items)
         line = "%s jobs=%d stuck=%d parked=%d [%s] rang=[%s] escalated=[%s] %s" % ("DRY" if dry else "LIVE", len(items), len(items) - parked_count, parked_count,
                "; ".join(r for _, _, r in items), ", ".join(rang), ", ".join(esc), "; ".join(scores))
-        logline(line)
+        line += " capacity=[" + "; ".join(capacity["notes"]) + "]"
+        if not dry: logline(line)
         if dry: print(line); print("TELEGRAM would post:\nVK stuck list %s\n" % dt.datetime.now(PT).strftime("%-I:%M %p PT") + "\n".join(tg))
     except Exception as e:
-        logline("error %s: %s" % (type(e).__name__, str(e)[:200]))
+        line = "error %s: %s" % (type(e).__name__, str(e)[:200])
+        if dry: print(line)
+        else:
+            try: logline(line)
+            except Exception: print(scrub(line))
 if __name__ == "__main__":
     main()
