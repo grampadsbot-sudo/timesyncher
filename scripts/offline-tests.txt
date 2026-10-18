@@ -145,6 +145,7 @@ scripts/test_vacation_collaborator_accept_e2e.mjs
 scripts/test_collaborator_no_commerce_offers.mjs
 scripts/test_eula_collaborator_name.mjs
 scripts/test_post_purchase_eula_open_app.mjs
+scripts/test_pregate_one_harness.mjs
 scripts/test_purchase_launch_routes.mjs
 scripts/test_purchase_email_slug.mjs
 scripts/test_purchase_email_app_link.mjs
