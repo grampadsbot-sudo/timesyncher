@@ -54,9 +54,62 @@ export function expectedSummariesOnDay(dayNumber) {
   return (idsByDay[dayNumber] || []).map((id) => PR336_SEARCH_SNAPSHOT[String(id)]?.summary || '');
 }
 
+function provenanceBlockedFieldSet(record = {}) {
+  const blocked = Array.isArray(record.provenanceBlocked) ? record.provenanceBlocked : [];
+  if (!text(record.provenanceBlocker)) return new Set();
+  return new Set(blocked.map((field) => text(field, 80)).filter(Boolean));
+}
+
+function applyProvenanceBlockedClears(record, place, override) {
+  const blocked = provenanceBlockedFieldSet(record);
+  if (!blocked.size) return;
+  override.provenanceBlocker = text(record.provenanceBlocker);
+  override.provenanceBlocked = [...blocked];
+  if (blocked.has('price')) delete override.price;
+  if (blocked.has('logoUrl')) {
+    delete override.logoUrl;
+    delete place.logoUrl;
+  }
+  if (blocked.has('website')) {
+    place.website = '';
+    delete override.website;
+  }
+  if (blocked.has('lat') || blocked.has('lng')) {
+    place.lat = null;
+    place.lng = null;
+    override.lat = null;
+    override.lng = null;
+  }
+  for (const ratingKey of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'xaiRatingsFetched',
+  ]) {
+    if (blocked.has(ratingKey)) delete override[ratingKey];
+  }
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating', 'Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (blocked.has(field)) delete override[field];
+    }
+  }
+}
+
 function applyPr336SearchFields(row, place, override) {
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (!search) return;
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
   if (search.description) {
     place.description = search.description;
     override.longDetails = search.description;
@@ -75,9 +128,59 @@ function applyPr336SearchFields(row, place, override) {
     place.address = search.address;
     override.address = search.address;
   }
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
+    'rentalCompany',
+    'vehicleClass',
+    'carType',
+    'pickupLocation',
+    'returnLocation',
+    'pickupHours',
+    'dropoffHours',
+    'startTime',
+    'endTime',
+    'totalPrice',
+    'reputationNote',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
+    }
+  }
+  applyProvenanceBlockedClears(record, place, override);
   if (row.id === 609) {
-    override.rentalCompany = 'Priceline opaque';
-    override.vehicleClass = 'Toyota Corolla or similar';
+    override.rentalCompany = override.rentalCompany || 'Priceline opaque';
+    override.vehicleClass = override.vehicleClass || 'Standard sedan';
   }
 }
 
@@ -138,7 +241,9 @@ function buildPayload() {
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];
-    const coords = NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 };
+    const coords = row.id === 608
+      ? { lat: null, lng: null }
+      : (NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 });
     const place = {
       id: row.id,
       trip_id: 99,

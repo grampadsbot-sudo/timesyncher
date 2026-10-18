@@ -1,0 +1,176 @@
+{
+  "Statue of Liberty walking tour": {
+    "category": "event",
+    "summary": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+    "itineraryNote": "Ferry and grounds; keep tickets on phone and arrive early for security.",
+    "description": "Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours. Adults: $26.00 (fees included per statuecitycruises.com and NPS fee page). Allow airport-style screening at Castle Clinton and arrive early for timed ferry boarding.",
+    "price": 26,
+    "website": "https://statuecitycruises.com/tickets/new-york-general-admission",
+    "lat": 40.6892,
+    "lng": -74.0445,
+    "address": "Castle Clinton, Battery Park, New York, NY 10004"
+  },
+  "Carbone": {
+    "category": "restaurant",
+    "summary": "Classic Italian; reserve the earliest table you can get.",
+    "itineraryNote": "Classic Italian; reserve the earliest table you can get.",
+    "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+    "price": 48,
+    "website": "https://carbonenewyork.com/",
+    "logoUrl": "https://carbonenewyork.com/favicon.ico",
+    "lat": 40.726,
+    "lng": -73.9997,
+    "address": "181 Thompson Street, New York, NY 10012",
+    "googleRating": "4.4",
+    "googleReviewCount": "2100"
+  },
+  "Jazz at Lincoln Center": {
+    "category": "event",
+    "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+    "itineraryNote": "Evening set at Lincoln Center; book covers early for will-call pickup.",
+    "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
+    "price": 35,
+    "website": "https://jazz.org/dizzys/",
+    "lat": 40.7725,
+    "lng": -73.9838,
+    "address": "Broadway at 60th Street, New York, NY 10019",
+    "googleRating": "4.6",
+    "googleReviewCount": "1200"
+  },
+  "Afternoon matinee show": {
+    "category": "event",
+    "summary": "Overlap window A: matinee tickets already held.",
+    "itineraryNote": "Overlap window A: matinee tickets already held.",
+    "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
+    "price": 78,
+    "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+    "lat": 40.758,
+    "lng": -73.9855,
+    "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
+    "thirdPartyRating": "4.5",
+    "thirdPartyReviewCount": "8500",
+    "thirdPartySource": "Tripadvisor"
+  },
+  "Friend meetup at Bryant Park": {
+    "category": "event",
+    "summary": "Overlap window B: friend meetup at the same hour.",
+    "itineraryNote": "Overlap window B: friend meetup at the same hour.",
+    "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
+    "price": 20,
+    "website": "https://bryantpark.org/",
+    "lat": 40.7536,
+    "lng": -73.9832,
+    "address": "Bryant Park, New York, NY 10018",
+    "googleRating": "4.7",
+    "googleReviewCount": "42000"
+  },
+  "Midtown sample hotel": {
+    "category": "hotel",
+    "summary": "List-only row until ccab names a real Midtown property.",
+    "itineraryNote": "List-only row until ccab names a real Midtown property.",
+    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row.",
+    "provenanceBlocker": "no ccab capture matches this list-only Midtown hotel row; identity, logo, rating, price, and website stay blocked",
+    "provenanceBlocked": [
+      "price",
+      "logoUrl",
+      "googleRating",
+      "yelpRating",
+      "thirdPartyRating",
+      "review1",
+      "review2",
+      "review3",
+      "review4",
+      "website",
+      "lat",
+      "lng"
+    ]
+  },
+  "Zabar's": {
+    "price": 18,
+    "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",
+    "summary": "UWS specialty market; grab picnic supplies before a long day out.",
+    "googleRating": "4.5",
+    "googleReviewCount": "6200"
+  },
+  "Strand Book Store": {
+    "price": 22,
+    "description": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate.",
+    "summary": "Classic NYC bookstore; browse miles of shelves and rare finds.",
+    "googleRating": "4.8",
+    "googleReviewCount": "14263"
+  },
+  "Motto by Hilton New York City Times Square": {
+    "lat": 40.759399,
+    "lng": -73.983457,
+    "address": "150 A West 48th Street, New York, NY 10036",
+    "thirdPartyRating": "3.9",
+    "thirdPartyReviewCount": "917",
+    "thirdPartySource": "Booking.com",
+    "description": "Booking.com lists Motto by Hilton New York City Times Square around 3.9/5 (~917 reviews). Neighborhood: Times Square; Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
+    "summary": "Times Square base with eco-certified rooms and strong transit access."
+  },
+  "Hotel Belleclaire Central Park": {
+    "thirdPartyRating": "8.4",
+    "thirdPartyReviewCount": "4906",
+    "thirdPartySource": "Booking.com"
+  },
+  "Arthouse Hotel": {
+    "thirdPartyRating": "7.9",
+    "thirdPartyReviewCount": "2366",
+    "thirdPartySource": "Booking.com"
+  },
+  "Park Central Hotel New York": {
+    "thirdPartyRating": "3.8",
+    "thirdPartyReviewCount": "7600",
+    "thirdPartySource": "Google"
+  },
+  "The Empire Hotel New York": {
+    "thirdPartyRating": "6.8",
+    "thirdPartyReviewCount": "3898",
+    "thirdPartySource": "Booking.com"
+  },
+  "Juice Generation Upper West Side": {
+    "lat": 40.777833,
+    "lng": -73.979363,
+    "summary": "UWS juice bar for a quick celery-ginger stop near Lincoln Center.",
+    "description": "Nominatim/OSM pin at 117 West 72nd Street (bot-admin/receipts/claude-manager-nyc-fixture-coords-20261009-1720). Fresh-pressed juices and smoothies; verify celery-specific menu before ordering. Price: $12 typical spend floor from ccab card (not a fixed menu price).",
+    "missingFields": ["ratings", "reviews"],
+    "provenanceBlocker": "no xAI Grok ratings recording on file for this ccab store row",
+    "provenanceBlocked": ["googleRating", "yelpRating", "thirdPartyRating", "review1", "review2", "review3", "review4"]
+  },
+  "Juice Generation Columbus Circle": {
+    "lat": 40.7670634,
+    "lng": -73.9828593,
+    "summary": "Columbus Circle juice stop between Lincoln Center and Midtown errands.",
+    "description": "Nominatim/OSM pin at 979 8th Avenue (Juice Generation node 2708222217). Cold-pressed juices near Columbus Circle; verify celery-specific menu before ordering. Price: $12 typical spend floor from ccab card (not a fixed menu price).",
+    "missingFields": ["ratings", "reviews"],
+    "provenanceBlocker": "no xAI Grok ratings recording on file for this ccab store row",
+    "provenanceBlocked": ["googleRating", "yelpRating", "thirdPartyRating", "review1", "review2", "review3", "review4"]
+  },
+  "Amelie Bistro & Wine Bar": {
+    "missingFields": ["ratings", "reviews"],
+    "provenanceBlocker": "no xAI Grok ratings recording on file for this list-only restaurant row",
+    "provenanceBlocked": ["googleRating", "yelpRating", "thirdPartyRating", "review1", "review2", "review3", "review4"]
+  },
+  "Priceline opaque JFK — Standard sedan": {
+    "category": "car",
+    "price": 306,
+    "totalPrice": 306,
+    "rentalCompany": "Priceline opaque",
+    "vehicleClass": "Standard sedan",
+    "carType": "Standard sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "pickupHours": "Counter hours are not shown before booking; Priceline hides the supplier until checkout.",
+    "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
+    "missingFields": ["ratings", "reviews"],
+    "reviewThemes": [
+      "No company-specific JFK counter reputation before booking",
+      "Supplier brand hidden until checkout",
+      "Choose only if savings outweigh counter uncertainty"
+    ],
+    "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty."
+  }
+}
