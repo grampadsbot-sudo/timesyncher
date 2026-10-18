@@ -10,7 +10,7 @@ export function tsNormalizeThingLogo(event){
   function edge(x,y){var i=(y*canvas.width+x)*4,key=[data[i],data[i+1],data[i+2],data[i+3]].join(",");colors.set(key,(colors.get(key)||0)+1)}
   for(var x=0;x<canvas.width;x++){edge(x,0);edge(x,canvas.height-1)}
   for(var y=0;y<canvas.height;y++){edge(0,y);edge(canvas.width-1,y)}
-  var background=[].slice.call(colors).sort(function(a,b){return b[1]-a[1]})[0][0].split(",").map(Number);
+  var background=Array.from(colors.entries()).sort(function(a,b){return b[1]-a[1]})[0][0].split(",").map(Number);
   var left=canvas.width,right=-1,top=canvas.height,bottom=-1;
   for(var y=0;y<canvas.height;y++)for(var x=0;x<canvas.width;x++){
     var i=(y*canvas.width+x)*4;
