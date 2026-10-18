@@ -92,6 +92,21 @@ assert(
   timelineIcon({ name: 'Shuttle LAS-LGA', category_name: 'Transport', category: 'transport' }).icon === '✈️',
   'IATA route without flight word uses airplane on transport',
 );
+for (const name of ['AAA to BBB', 'LAS to LGA']) {
+  assert(transportKind({ title: name, category: 'transport' }) === 'flight', `IATA route joined by to is flight kind: ${name}`);
+  assert(
+    timelineIcon({ name, category_name: 'Transport', category: 'transport' }).icon === '✈️',
+    `IATA route joined by to uses airplane: ${name}`,
+  );
+  assert(
+    new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(`${name.toLowerCase()} transport`, { name, title: '' }),
+    `bundle transport flight signal matches IATA route joined by to: ${name}`,
+  );
+}
+assert(
+  !new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)('uber to jfk transport', { name: 'Uber to JFK', title: '' }),
+  'bundle transport flight signal rejects Uber to JFK',
+);
 assert(
   (() => {
     const c = 'transport shuttle';
