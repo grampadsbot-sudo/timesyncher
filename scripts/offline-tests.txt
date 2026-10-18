@@ -275,3 +275,4 @@ scripts/test_logo_reenrichment.mjs
 scripts/test_build_shared_fixture_logos.mjs
 scripts/test_fixture_airline_logos.mjs
 scripts/test_fixture_logo_contract_470.mjs
+scripts/test_dryrun_463_logo_rules.mjs

@@ -104,8 +104,6 @@ export async function dryRun463LogoRules(shared, {
   }
   const staging = structuredClone(shared);
   const fixture = fixtureWithoutLogos(shared);
-  // Cross-trip id so place websites on staging do not conflict with
-  // website_host_unresolvable blanking (same-trip mode rejects website clears).
   fixture.trip = { ...fixture.trip, id: `dryrun-fixture-${text(staging.trip.id)}` };
   const built = await buildFixture({
     fixture,
