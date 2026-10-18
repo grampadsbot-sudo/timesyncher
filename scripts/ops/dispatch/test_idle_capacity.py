@@ -98,6 +98,22 @@ class Capacity(unittest.TestCase):
         self.assertIn('would remove #469', ' '.join(result['notes']))
         self.assertEqual(gh.writes, [])
         self.bell.assert_not_called(); self.put.assert_not_called(); self.score.assert_not_called()
+    def test_g_history_blockers_do_not_clear_dr_diagnosis_waits_on(self):
+        body = ('conflicting after blockers #318-#322 and quality gate #323 merged\n'
+                'waits-on: pending dr ruling 116\n'
+                'bot-admin/requests/eggbot-vk-336-rebuild-a-20261017-2115')
+        gh = GH([item(335, body, ['hold:dr-diagnosis']),
+                 item(318, state='closed'), item(322, state='closed'), item(323, state='closed')])
+        result = self.cycle(gh, self.available(), dry=True)
+        self.assertEqual(result['removals'], [])
+        self.assertNotIn(335, {n for n, _, _ in result['removals']})
+        self.assertEqual(gh.writes, [])
+        self.bell.assert_not_called()
+    def test_h_explicit_blocked_by_merged_still_plans_removal(self):
+        gh = GH([item(335, 'blocked-by #318\nwaits-on: pending dr ruling', ['hold:dr-diagnosis']),
+                 item(318, state='closed')])
+        result = self.cycle(gh, self.available(), dry=True)
+        self.assertEqual(result['removals'][0][:2], (335, ['hold:dr-diagnosis']))
     def test_e_waits_on_running_request_quiet(self):
         gh = GH([item(469, 'waits-on: '+SLUG+'\nDependency: needs the output of #470', ['hold:worker']), item(470)])
         brain = Brain({SLUG: 'Scope: #470. Acceptance: tests.'})

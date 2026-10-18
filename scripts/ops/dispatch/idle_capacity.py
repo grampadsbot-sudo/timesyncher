@@ -211,14 +211,43 @@ class Brain:
             offset += 100
 
 
+def hold_line(line):
+    return bool(re.search(r'\b(?:blocked[- ]by|waits[- ]on|HELD(?:\s+on)?)\b', line, re.I))
+
+
+def hold_text(body, latest):
+    seen = set(); lines = []
+    for block in (body or '', latest or ''):
+        for line in block.splitlines():
+            if hold_line(line) and line not in seen:
+                seen.add(line); lines.append(line)
+    return '\n'.join(lines)
+
+
+def issue_refs_in_tail(tail):
+    issues = set()
+    for a, b in re.findall(r'#(\d+)\s*[-–]\s*#(\d+)', tail):
+        if 0 <= int(b) - int(a) < 100: issues.update(range(int(a), int(b) + 1))
+    issues.update(int(x) for x in re.findall(r'#(\d+)\b', tail))
+    return issues
+
+
 def references(text, n):
     issues, slugs = set(), set()
-    for line in re.split(r'[\n!?]|\.(?=\s|$)', text):
-        match = re.search(r'\b(?:blocked[- ]by|waits[- ]on|HELD(?:\s+on)?|blocker)\s*:?\s*', line, re.I)
-        if not match: continue
-        tail = line[match.end():]
-        issues.update(int(x) for x in re.findall(r'#(\d+)\b', tail))
-        slugs.update(re.findall(r'bot-admin/requests/[\w-]+', tail))
+    for line in (text or '').splitlines():
+        if not hold_line(line): continue
+        blocked = re.search(r'\bblocked[- ]by\s*:?\s*', line, re.I)
+        waits = re.search(r'\bwaits[- ]on\s*:\s*', line, re.I)
+        held = re.search(r'\bHELD(?:\s+on)?\s+', line, re.I)
+        if blocked:
+            issues.update(issue_refs_in_tail(line[blocked.end():]))
+        elif waits:
+            tail = line[waits.end():]
+            slugs.update(re.findall(r'bot-admin/requests/[\w-]+', tail))
+            head = tail.strip().split(None, 1)[0] if tail.strip() else ''
+            if re.match(r'^#\d+$', head): issues.add(int(head[1:]))
+        elif held:
+            issues.update(issue_refs_in_tail(line[held.end():]))
     return issues - {n}, slugs
 
 
@@ -251,7 +280,13 @@ def assess_hold(item, latest, gh, brain, workers, dry=False):
     n = item['number']; body = item.get('body') or ''
     text = body + '\n' + latest
     labels = [x['name'] for x in item.get('labels', []) if x['name'].startswith('hold:') or x['name'] in ('needs-dr-eggbot', 'status:stuck')]
-    refs, slugs = references(text, n)
+    hold_source = hold_text(body, latest)
+    refs, slugs = references(hold_source, n)
+    if not refs and not slugs and hold_source:
+        for line in hold_source.splitlines():
+            waits = re.search(r'\bwaits[- ]on\s*:\s*(\S.+)', line, re.I)
+            if waits and waits.group(1).strip():
+                return 'HELD waits-on: ' + waits.group(1).strip(), [], ''
     pending = re.search(r'(?:pending[- ]decision|decision needed)\s*:\s*(\S[^\n]*)', text, re.I)
     decider = re.search(r'(?:decider|who decides|decides[- ]by|decision owner)\s*:\s*(\S[^\n]*)', text, re.I)
     natural_decision = re.search(r'\b(?:awaiting|pending|waiting for)\s+(Craig|dr eggbot|managing dr|chief dr|claude-code)\s+(?:to\s+)?(?:decide|approve|choose)\s+(\S[^\n]*)', text, re.I)
@@ -338,7 +373,7 @@ def audit(gh, now, brain, workers, dry=False):
         drs.sort(key=lambda c: stamp(c['created_at']))
         comments[n] = drs[-1]['body'] if drs else ''
         combined = (item.get('body') or '') + '\n' + comments[n]
-        refs, _ = references(combined, n)
+        refs, _ = references(hold_text(item.get('body') or '', comments[n]), n)
         parents = {int(x) for x in re.findall(r'\brescoped from\s+#(\d+)', combined, re.I)}
         for ref in refs | parents:
             if ref in items: continue
