@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { applySharedLiveTabBundlePatches } from '../src/vacation/trek-live-product-patches.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const patchSource = await readFile(`${root}/src/vacation/trek-live-product-patches.mjs`, 'utf8');
+const patchSource = await readFile(`${root}/src/vacation/trek-timeline-live-row-patches.mjs`, 'utf8');
 assert.match(patchSource, /CONFLICT_LABEL_PATCH = '[^']*minWidth:0,flex:"1 1 0"/);
 assert.doesNotMatch(patchSource, /CONFLICT_LABEL_PATCH = '[^']*whiteSpace:"nowrap"/);
 assert.doesNotMatch(patchSource, /CONFLICT_LABEL_PATCH = '[^']*textOverflow:"ellipsis"/);
