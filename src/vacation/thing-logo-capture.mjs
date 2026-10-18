@@ -1,4 +1,5 @@
-import { timelineIcon, timelineCategoryIcon, thingLogoUrl } from './timeline-icons.mjs';
+import { timelineIcon, timelineCategoryIcon, isVideoMediaUrl } from './timeline-icons.mjs';
+import { effectiveCcabDeclaredLogoUrl } from './place-logo-provenance.mjs';
 
 export const NAMED_THING_LOGOS = {
   hertz: 'https://www.hertz.com/favicon.ico',
@@ -55,6 +56,23 @@ function sourceRecord(thing = {}, override = {}) {
   const fromThing = thing.source && typeof thing.source === 'object' ? thing.source : {};
   const fromOverride = override.source && typeof override.source === 'object' ? override.source : {};
   return { ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
+}
+
+function thingWebsite(thing = {}, override = {}, source = {}) {
+  return text(
+    source.website
+    || source.url
+    || thing.website
+    || thing.url
+    || thing.source_url
+    || override.website
+    || override.url,
+  );
+}
+
+function admitsBookingProviderFavicon(source = {}) {
+  const kind = text(source.source).toLowerCase().replace(/[\s_]+/g, '-');
+  return kind === 'customer' || kind === 'customer-stated';
 }
 
 function thumbnailFromSource(source = {}) {
@@ -118,7 +136,7 @@ export function logoCaptureMissReason(thing = {}, override = {}) {
     override.imageUrl,
   ];
   for (const value of explicit) {
-    const logo = usableLogo(value);
+    const logo = storedLogo(value, thing, override);
     if (logo) return '';
   }
   const page = text(
@@ -153,11 +171,34 @@ function usableLogo(value) {
   return '';
 }
 
-export function sourceLogoUrl(thing = {}, override = {}) {
+function provenanceRecord(thing, override, source, logo) {
+  return { ...source, logoUrl: logo, website: thingWebsite(thing, override, source) };
+}
+
+function storedLogo(value, thing, override) {
+  const logo = usableLogo(value);
+  if (!logo || isVideoMediaUrl(logo)) return '';
+  const source = sourceRecord(thing, override);
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (usableLogo(named) === logo) return logo;
+  const record = provenanceRecord(thing, override, source, logo);
+  const parsed = httpUrl(logo);
+  if (!parsed || !/\/favicon\.ico$/i.test(parsed.pathname)) {
+    return effectiveCcabDeclaredLogoUrl(record) || '';
+  }
+  const fromSource = [source.logo, source.logoUrl, source.iconUrl, source.favicon, source.faviconUrl]
+    .some((candidate) => usableLogo(candidate) === logo);
+  if (!fromSource) return '';
+  if (admitsBookingProviderFavicon(source)) return logo;
+  return effectiveCcabDeclaredLogoUrl(record) === logo ? logo : '';
+}
+
+function sourceLogoUrlCore(thing = {}, override = {}, storedOnly = false) {
   const source = sourceRecord(thing, override);
   const explicit = [
     source.logo,
     source.logoUrl,
+    source.iconUrl,
     source.favicon,
     source.faviconUrl,
     thing.logo,
@@ -173,7 +214,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     override.imageUrl,
   ];
   for (const value of explicit) {
-    const logo = usableLogo(value);
+    const logo = storedOnly ? storedLogo(value, thing, override) : usableLogo(value);
     if (logo) {
       if (/hyatt\.com\/favicon\.ico/i.test(logo)) {
         const thumb = thumbnailFromSource(source);
@@ -194,7 +235,11 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
-  return `${page.origin}/favicon.ico`;
+  return storedOnly ? '' : `${page.origin}/favicon.ico`;
+}
+
+export function sourceLogoUrl(thing = {}, override = {}) {
+  return sourceLogoUrlCore(thing, override);
 }
 
 export function logoLookupRuntimeSource() {
@@ -206,12 +251,20 @@ export function captureThingLogo(thing = {}, override = {}) {
 }
 
 export function resolveThingLogoUrl(thing = {}, override = {}) {
-  const direct = thingLogoUrl(thing, override);
-  if (direct) {
-    const logo = usableLogo(direct);
+  const candidates = [
+    override.logoUrl,
+    override.iconUrl,
+    thing.logoUrl,
+    thing.iconUrl,
+    thing.captured_logo_url,
+    thing.image_url,
+    thing.imageUrl,
+  ];
+  for (const value of candidates) {
+    const logo = storedLogo(value, thing, override);
     if (logo) return logo;
   }
-  return sourceLogoUrl(thing, override);
+  return sourceLogoUrlCore(thing, override, true);
 }
 
 export function applyCapturedLogos(shared = {}) {
