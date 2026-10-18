@@ -46,6 +46,17 @@ function declaredIconFetch(fetchImpl) {
   };
 }
 
+const dnsFailures = new Set(['ENOTFOUND', 'EAI_AGAIN', 'EAI_NONAME', 'EAI_FAIL']);
+
+async function hostUnresolvable(url, fetchImpl) {
+  try {
+    await fetchImpl(url, { headers: { accept: 'text/html' } });
+    return false;
+  } catch (error) {
+    return dnsFailures.has(text(error?.cause?.code || error?.code || error?.message));
+  }
+}
+
 function fixtureStore(rows) {
   const audit = [];
   const db = async (parts, ...values) => {
@@ -84,10 +95,13 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
       ? staging.places.filter((candidate) => text(candidate.id) === text(place.id))
       : staging.places.filter((candidate) => key(candidate) === key(place));
     const matched = candidates.length === 1 ? candidates[0] : null;
-    const reason = candidates.length > 1 ? 'ambiguous_name_category' : !matched ? 'no_exact_match'
+    const logoUrl = text(place.logoUrl || place.image_url || override.logoUrl || override.sourceRecord?.logoUrl);
+    const unmatched = candidates.length > 1 ? 'ambiguous_name_category' : !matched ? 'no_exact_match'
       : key(matched) !== key(place) ? 'stable_id_identity_conflict'
         : !text(matched.website) ? 'matched_website_empty'
           : !isPlaceWebsite(text(matched.website)) ? 'matched_website_not_own_site' : '';
+    const unresolvable = !unmatched && !logoUrl && await hostUnresolvable(text(matched.website), fetchImpl);
+    const reason = unresolvable ? 'website_host_unresolvable' : unmatched;
     const website = reason ? '' : text(matched.website);
     const entry = {
       id: place.id, name: place.name, category: category(place),
@@ -95,13 +109,13 @@ export async function buildFixture({ fixture, staging, sourceUrl, asOf, fetchImp
       stagingId: matched?.id ?? null, candidateIds: candidates.map((candidate) => candidate.id),
       provider: 'staging_shared_website', sourceUrl, website, reason,
     };
-    if (!text(place.website)) place.website = website;
+    if (!text(place.website)) place.website = unresolvable ? null : website;
     else if (place.website !== website) throw new Error(`Existing website conflicts for place ${place.id}`);
-    place.websiteCapture = entry;
-    const logoUrl = text(place.logoUrl || place.image_url || override.logoUrl || override.sourceRecord?.logoUrl);
+    if (unresolvable) delete place.websiteCapture;
+    else place.websiteCapture = entry;
     rows.push({
       id: text(place.id), trip_id: text(output.trip.id), title: place.name,
-      metadata: { ...(logoUrl ? { logoUrl } : {}), sourceRecord: { website } },
+      metadata: { ...(logoUrl ? { logoUrl } : {}), ...(unresolvable ? {} : { sourceRecord: { website } }) },
     });
     matches.push(entry);
   }

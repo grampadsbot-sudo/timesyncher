@@ -62,6 +62,24 @@ test('ambiguous, unmatched, wrong category and provider-site matches remain blan
   }
 });
 
+test('website host that does not resolve is blanked as website_host_unresolvable with no capture or override; other fetch errors keep the website', async () => {
+  const dns = Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo ENOTFOUND'), { code: 'ENOTFOUND' }) });
+  const calls = [];
+  const dead = await run({ fetchImpl: async (url, options) => { calls.push([url, options.headers.accept]); throw dns; } });
+  assert.deepEqual(calls, [[site, 'text/html']]);
+  assert.equal(dead.matches[0].reason, 'website_host_unresolvable');
+  assert.equal(dead.matches[0].website, '');
+  assert.equal(dead.fixture.places[0].website, null);
+  assert.equal(dead.fixture.places[0].websiteCapture, undefined);
+  assert.equal(dead.fixture.thingOverrides['place:1'].sourceRecord, undefined);
+  assert.equal(dead.fixture.places[0].logoUrl, '');
+  assert.equal(dead.fixture.places[0].logoCaptureReason, 'no_verified_place_website');
+  const timedOut = await run({ fetchImpl: async () => { throw new Error('The operation was aborted due to timeout'); } });
+  assert.equal(timedOut.matches[0].reason, '');
+  assert.equal(timedOut.fixture.places[0].website, site);
+  assert.equal(timedOut.fixture.places[0].logoCaptureReason, 'page_fetch_failed');
+});
+
 test('same-trip stable ids reject identity collision; independent trip ids match names and categories', async () => {
   const collision = await run({ staging: shared(1, [{ ...place(1, 'Other'), website: site }]), fetchImpl: () => assert.fail('identity collision fetched') });
   assert.equal(collision.matches[0].reason, 'stable_id_identity_conflict');
