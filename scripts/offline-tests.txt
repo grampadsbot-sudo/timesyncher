@@ -271,3 +271,4 @@ scripts/test_build_shared_fixture_logos.mjs
 scripts/test_fixture_airline_logos.mjs
 scripts/test_gate_b_row_name_frame.mjs
 scripts/test_logo_reenrichment.mjs
+scripts/test_saved_place_icon_boundary.mjs

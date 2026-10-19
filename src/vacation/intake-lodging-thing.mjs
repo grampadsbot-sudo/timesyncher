@@ -1,3 +1,4 @@
+import { applyDiscoveredPageIcon } from './intake-shared-place-source.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { placeToTripThing, PlaceSearchError } from './place-search.mjs';
@@ -391,10 +392,11 @@ export async function persistIntakeLodgingThings(db, tripId, requestId, lodgingT
     if (have.has(titleKey)) continue;
     let inserted = null;
     if (priorRow?.id && emptyCustomerStatedLodging(priorRow)) {
+      await applyDiscoveredPageIcon(outcome.thing, { fetchImpl });
       inserted = await upgradeLodgingThingInPlace(db, tripId, priorRow.id, requestId, outcome.thing, env);
     } else {
       await dropCustomerStatedLodging(db, tripId, title);
-      inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing });
+      inserted = await insertTripThing(db, { tripId, requestId, thing: outcome.thing, env, fetchImpl });
     }
     if (inserted) {
       if (outcome.lookup && inserted.id) {
