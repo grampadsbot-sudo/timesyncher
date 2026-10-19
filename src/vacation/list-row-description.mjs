@@ -69,7 +69,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
 
 export function listRowDescriptionBundleSnippet() {
   return [
-    'function tsListRowDescription(G){',
+    'tsListRowDescription=function(G){',
     'const row=ha(G),cat=String(It(G)||"").toLowerCase(),hook=rr(G)||"";',
     'const parts=[],push=(label,val)=>{const s=String(val||"").replace(/\\s+/g," ").trim();if(s)parts.push(label?label+": "+s:s);};',
     'const money=v=>{if(v==null||v==="")return"";if(typeof v==="number"&&isFinite(v))return"$"+v;',
@@ -89,6 +89,6 @@ export function listRowDescriptionBundleSnippet() {
     'row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):""].filter(Boolean).join("; ");',
     'push("Reputation",rep||row.hotelNote);',
     'return parts.join(" · ")||hook;}',
-    'return hook;}',
+    'return hook;},',
   ].join('');
 }

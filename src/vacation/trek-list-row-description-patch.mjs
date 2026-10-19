@@ -8,7 +8,7 @@ const OE_ROW_SUMMARY_SUBSTANCE = 'Rn=Bs(tsListRowDescription(G))';
 export function patchListRowDescription(source = '') {
   let js = String(source || '');
   const snippet = listRowDescriptionBundleSnippet();
-  if (!js.includes('function tsListRowDescription(G)')) {
+  if (!js.includes('tsListRowDescription=function(G){')) {
     const anchor = js.indexOf(LIST_ROW_DESC_ANCHOR);
     if (anchor < 0) {
       throw new Error('trek bundle missing Oe() anchor for list row description patch');

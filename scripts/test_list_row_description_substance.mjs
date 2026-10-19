@@ -56,7 +56,7 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/upstr
   maxBuffer: 25 * 1024 * 1024,
 }).toString('utf8');
 const bundle = renderServedTrekBundle(raw);
-assert.match(bundle, /function tsListRowDescription\(G\)/);
+assert.match(bundle, /tsListRowDescription=function\(G\)/);
 assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\)/);
 
