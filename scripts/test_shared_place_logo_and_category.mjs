@@ -46,8 +46,8 @@ assert.equal(override.category, 'car');
 assert.equal(productThingCategory(place, override), 'car');
 
 const logoUrl = override.logoUrl || place.logoUrl;
-assert.equal(logoUrl, 'https://rentals.example/favicon.ico');
-assert.equal(sourceLogoUrl({ sourceRecord: { url: website } }), logoUrl);
+assert.equal(logoUrl, undefined);
+assert.equal(sourceLogoUrl({ sourceRecord: { url: website } }), 'https://rentals.example/favicon.ico');
 
 const productized = applyProductKeepsakeOverrides(shared);
 const productPlace = productized.places[0];

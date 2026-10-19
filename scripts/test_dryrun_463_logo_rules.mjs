@@ -8,6 +8,9 @@ import {
   probeLogoUrl,
   summarizeDryRunRows,
 } from './dryrun_463_logo_rules.mjs';
+import { applyCapturedLogos } from '../src/vacation/thing-logo-capture.mjs';
+import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
+import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 
 const sourceUrl = 'https://vacation-staging.timesyncher.com/api/shared/offline-463-test';
 const asOf = '2026-10-17T22:45:00-07:00';
@@ -126,4 +129,44 @@ test('dryRun463LogoRules applies builder discovery with website_host_unresolvabl
   assert.equal(live.change, 'would-fix');
   assert.equal(currentLogoUrl(trip, trip.places[1]), 'https://venue.example/favicon.ico');
   assert.equal(live.currentLogoProbe.error, 'http_404');
+});
+
+test('applyCapturedLogos and served finalize drop cross-domain favicon guesses', () => {
+  const captured = applyCapturedLogos(sharedTripFromIntake({
+    trip: { id: '463-serve-trip', title: 'Serve filter', destination: 'NYC', start_date: '2026-10-01', end_date: '2026-10-03' },
+    things: [thingRecordFromTripRow({
+      id: 801,
+      category: 'restaurant',
+      title: 'Mystery venue',
+      description: '',
+      metadata: {
+        logoUrl: 'https://guessed.example/favicon.ico',
+        sourceRecord: { website: 'https://venue.example/', url: 'https://venue.example/' },
+      },
+      location: { lat: 40.7, lng: -74.0 },
+      source: 'brave',
+    })],
+  }));
+  const place = captured.places[0];
+  const override = captured.thingOverrides[`place:${place.id}`];
+  assert.equal(place.logoUrl, undefined);
+  assert.equal(override.logoUrl, undefined);
+  const served = finalizeServedSharedTripPayload({
+    places: [{
+      id: 802,
+      name: 'Carbone',
+      category_name: 'Restaurant',
+      logoUrl: 'https://juicegeneration.com/favicon.ico',
+      website: 'https://carbonenewyork.com/',
+    }],
+    thingOverrides: {
+      'place:802': {
+        logoUrl: 'https://juicegeneration.com/favicon.ico',
+        website: 'https://carbonenewyork.com/',
+        url: 'https://carbonenewyork.com/',
+      },
+    },
+  });
+  assert.equal(served.places[0].logoUrl, undefined);
+  assert.equal(served.thingOverrides['place:802'].logoUrl, undefined);
 });

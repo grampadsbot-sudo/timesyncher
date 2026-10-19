@@ -319,13 +319,15 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    const logoUrl = resolveThingLogoUrl(place, override);
     if (logoUrl) {
       override.logoUrl = logoUrl;
-    } else if (!text(override.logoUrl)) {
-      override.logoUrl = '';
+      delete override.logoCaptureReason;
+    } else {
+      delete override.logoUrl;
       const reason = logoCaptureMissReason(place, override);
       if (reason) override.logoCaptureReason = reason;
+      else delete override.logoCaptureReason;
     }
     override.icon = resolved.icon;
     if (resolved.isFlight) override.icon = '✈️';
@@ -334,11 +336,13 @@ export function applyCapturedLogos(shared = {}) {
     }
     next.thingOverrides[key] = override;
     if (!place.image_url || isBoundStoryMediaUrl(place.image_url)) {
-      place.logoUrl = logoUrl;
+      if (logoUrl) place.logoUrl = logoUrl;
+      else delete place.logoUrl;
     } else {
       place.logoUrl = place.image_url;
     }
-    place.captured_logo_url = logoUrl;
+    if (logoUrl) place.captured_logo_url = logoUrl;
+    else delete place.captured_logo_url;
   }
   return next;
 }

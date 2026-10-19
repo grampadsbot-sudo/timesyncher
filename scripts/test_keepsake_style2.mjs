@@ -92,7 +92,7 @@ assert.equal(sourceLogoUrl({ website: 'https://cafe.example/menu' }), 'https://c
 assert.equal(sourceLogoUrl({ name: 'Sample place J' }), '');
 
 const logos = applyCapturedLogos(shared);
-assert.equal(logos.thingOverrides['place:8872'].logoUrl, '');
+assert.equal(logos.thingOverrides['place:8872'].logoUrl, undefined);
 assert.equal(logos.thingOverrides['place:8872'].icon, '🍽️');
 assert.ok(!isAirplaneGlyph(logos.thingOverrides['place:8876'].icon));
 assert.equal(timelineIcon(shared.places[3], shared.thingOverrides['place:8871']).isFlight, false);
