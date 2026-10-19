@@ -274,3 +274,6 @@ scripts/test_saved_place_icon_boundary.mjs
 scripts/test_shared_logo_rendered_geometry.mjs
 scripts/test_shared_logo_name_frame_contract.mjs
 scripts/test_logo_reenrichment.mjs
+scripts/test_logo_reasonable_acceptance.mjs
+scripts/test_build_shared_fixture_logos.mjs
+scripts/test_reasonable_logo.mjs
