@@ -2,7 +2,16 @@
   "requestedUrl": "https://www.zabars.com/",
   "finalUrl": "https://www.zabars.com/",
   "status": 200,
-  "sha256": "20856f754c083a59a8fbb857f5e3834518f28ba4abca8b93f0bc86768230ed56",
+  "sha256": "0ed7bfb81df686d7905bd3c4113eb12843434f5aaf40c95535d6809dba57a7ee",
   "fetchedAt": "2026-10-18T09:42:00.000000+00:00",
-  "bytes": 235131
+  "bytes": 1000,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "redactions": [
+      {
+        "kind": "RECAPTCHA-SITE-KEY",
+        "placeholder": "[REDACTED-RECAPTCHA-SITE-KEY]"
+      }
+    ]
+  }
 }
