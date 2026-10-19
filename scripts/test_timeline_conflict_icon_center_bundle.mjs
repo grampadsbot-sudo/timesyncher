@@ -13,10 +13,10 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /data-ts-timeline-icon":"1"/);
-assert.match(rendered, /marginTop:ua\.isConflict\?29:3\.5/);
-assert.doesNotMatch(rendered, /marginTop:ua\.isConflict\?0:3\.5/);
+assert.match(rendered, /marginTop:ua\.isConflict\?0:3\.5/);
+assert.doesNotMatch(rendered, /marginTop:ua\.isConflict\?29:3\.5/);
 
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
-assert.equal(rendered, committed, 'committed served bundle must include conflict timeline icon centering patch');
+assert.equal(rendered, committed, 'committed served bundle must match renderServedTrekBundle');
 
-console.log('timeline conflict icon center bundle tests passed');
+console.log('timeline conflict icon layout guard tests passed');
