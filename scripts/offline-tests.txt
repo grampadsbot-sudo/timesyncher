@@ -86,6 +86,7 @@ scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_pregate_one_harness.mjs
 scripts/test_poi_search.mjs
 scripts/test_screenshot_journey_pdf.mjs
+scripts/test_timeline_conflict_icon_center_bundle.mjs
 scripts/test_timeline_icons.mjs
 scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
