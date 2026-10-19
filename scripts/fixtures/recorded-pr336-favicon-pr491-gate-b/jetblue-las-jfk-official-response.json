@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+  "finalUrl": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+  "status": 406,
+  "sha256": "6f671c7011c4c410362cb760c5d78443b21481e5788aef1927db38081b8c06d9",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 129,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 0
+  }
+}

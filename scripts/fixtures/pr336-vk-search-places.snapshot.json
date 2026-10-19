@@ -14,18 +14,17 @@
       "summary": "Airline: JetBlue;",
       "price": 252,
       "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
-      "logoUrl": "https://www.jetblue.com/favicon.ico",
       "lat": null,
       "lng": null,
       "address": "Flight options / Bookings tab",
       "source": "brave",
       "url": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
-      "longDetails": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked."
+      "longDetails": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
+      "logoCaptureReason": "page_http_406"
     },
     "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
     "summary": "Airline: JetBlue;",
-    "price": 252,
-    "logoUrl": "https://www.jetblue.com/favicon.ico"
+    "price": 252
   },
   "602": {
     "source": "brave",
@@ -425,19 +424,17 @@
         "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
       ],
       "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-      "logoUrl": "https://www.tdf.org/favicon.ico",
-      "logoSearchEvidence": {
-        "query": "Afternoon matinee show New York official website",
-        "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-        "logoUrl": "https://www.tdf.org/favicon.ico",
-        "provider": "tavily"
+      "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png",
+      "logoProvenance": {
+        "pageUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+        "iconUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png"
       }
     },
     "description": "TKTS Times Square sells same-day and next-day matinee Broadway tickets at 20–50% off list, with the final price including an $8 per-ticket service charge (tdf.org/tkts). Example board pricing shows midweek matinees around $78 after discount; Price: $78 per person matinee ticket planning estimate before fees at the booth.",
     "summary": "Overlap window A: matinee tickets already held.",
     "price": 78,
     "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-    "logoUrl": "https://www.tdf.org/favicon.ico"
+    "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png"
   },
   "607": {
     "source": "brave",
@@ -508,19 +505,17 @@
         "https://bryantpark.org/"
       ],
       "url": "https://bryantpark.org/",
-      "logoUrl": "https://bryantpark.org/favicon.ico",
-      "logoSearchEvidence": {
-        "query": "Friend meetup at Bryant Park New York official website",
-        "website": "https://bryantpark.org/",
-        "logoUrl": "https://bryantpark.org/favicon.ico",
-        "provider": "tavily"
+      "logoUrl": "https://bryantpark.org/favicon.png",
+      "logoProvenance": {
+        "pageUrl": "https://bryantpark.org/",
+        "iconUrl": "https://bryantpark.org/favicon.png"
       }
     },
     "description": "Google lists Bryant Park around 4.7/5 with tens of thousands of ratings. Open-lawn meetup in Bryant Park during the Day 3 overlap window; no ticket is required for the park itself. Optional lunch at Bryant Park Grill nearby lists a chicken Caesar at $19.50 on the public menu; Price: $20 per person social lunch estimate if you eat before the meetup.",
     "summary": "Overlap window B: friend meetup at the same hour.",
     "price": 20,
     "url": "https://bryantpark.org/",
-    "logoUrl": "https://bryantpark.org/favicon.ico"
+    "logoUrl": "https://bryantpark.org/favicon.png"
   },
   "608": {
     "source": "brave",
@@ -593,7 +588,7 @@
       ],
       "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty.",
       "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
-      "logoUrl": "https://www.priceline.com/favicon.ico",
+      "logoUrl": "https://www.priceline.com/rental-car-deals/_v/15869R/app/favicon/favicon-192x192.png",
       "lat": null,
       "lng": null,
       "address": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
@@ -605,12 +600,16 @@
       },
       "source": "brave",
       "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
-      "longDetails": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies."
+      "longDetails": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+      "logoProvenance": {
+        "pageUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+        "iconUrl": "https://www.priceline.com/rental-car-deals/_v/15869R/app/favicon/favicon-192x192.png"
+      }
     },
     "description": "Cheapest JFK option, but the supplier is hidden. Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. Use it only if price matters more than knowing the counter experience before booking. Price/source: Live source $44/day, $306 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation. JFK pickup/counter: Priceline hides the supplier until booking, so you lose the ability to judge the JFK counter before paying. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing. Car + NYC tradeoff: Standard sedan is a good NYC compromise: more trunk than Corolla, easier to park than an SUV. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier. Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty. Booking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
     "summary": "Cheapest JFK option, but the supplier is hidden.",
     "price": 306,
-    "logoUrl": "https://www.priceline.com/favicon.ico"
+    "logoUrl": "https://www.priceline.com/rental-car-deals/_v/15869R/app/favicon/favicon-192x192.png"
   },
   "610": {
     "source": "brave",
@@ -628,7 +627,7 @@
       "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
       "price": 48,
       "website": "https://carbonenewyork.com/",
-      "logoUrl": "https://carbonenewyork.com/favicon.ico",
+      "logoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png",
       "lat": 40.726,
       "lng": -73.9997,
       "address": "181 Thompson Street, New York, NY 10012",
@@ -681,12 +680,16 @@
       "review4Url": null,
       "source": "brave",
       "url": "https://carbonenewyork.com/",
-      "longDetails": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks."
+      "longDetails": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
+      "logoProvenance": {
+        "pageUrl": "https://carbonenewyork.com/",
+        "iconUrl": "https://carbonenewyork.com/assets/favicons/carbone.png"
+      }
     },
     "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
     "summary": "Classic Italian; reserve the earliest table you can get.",
     "price": 48,
-    "logoUrl": "https://carbonenewyork.com/favicon.ico"
+    "logoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png"
   },
   "611": {
     "source": "brave",
@@ -756,18 +759,16 @@
         "https://jazz.org/dizzys/"
       ],
       "url": "https://jazz.org/dizzys/",
-      "logoUrl": "https://jazz.org/favicon.ico",
-      "logoSearchEvidence": {
-        "query": "Jazz at Lincoln Center New York official website",
-        "website": "https://jazz.org/dizzys/",
-        "logoUrl": "https://jazz.org/favicon.ico",
-        "provider": "tavily"
+      "logoUrl": "https://jazz.org/wp-content/uploads/2023/10/cropped-apple-touch-icon-180x180-1-192x192.png",
+      "logoProvenance": {
+        "pageUrl": "https://jazz.org/dizzys/",
+        "iconUrl": "https://jazz.org/wp-content/uploads/2023/10/cropped-apple-touch-icon-180x180-1-192x192.png"
       }
     },
     "description": "Google shows Jazz at Lincoln Center/Dizzy's Club around 4.6/5. Dizzy's Club hosts nightly sets with Central Park views (jazz.org/dizzys). Ticket covers run about $20–$65+ depending on the act; Price: $35 per person cover planning estimate plus a $25 per person food-and-beverage minimum billed at the end of the set per jazz.org ticketing terms.",
     "summary": "Evening set at Lincoln Center; book covers early for will-call pickup.",
     "price": 35,
     "url": "https://jazz.org/dizzys/",
-    "logoUrl": "https://jazz.org/favicon.ico"
+    "logoUrl": "https://jazz.org/wp-content/uploads/2023/10/cropped-apple-touch-icon-180x180-1-192x192.png"
   }
 }

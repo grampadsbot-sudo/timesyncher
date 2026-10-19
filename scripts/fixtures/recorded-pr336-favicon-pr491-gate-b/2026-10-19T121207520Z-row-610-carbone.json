@@ -1,0 +1,16 @@
+{
+  "rowId": 610,
+  "website": "https://carbonenewyork.com/",
+  "pageResponseFile": "carbone-official-response.json",
+  "pageBodyFile": "carbone-official.html",
+  "iconResponseFile": "carbone-declared-icon-response.json",
+  "iconBodyFile": "carbone-declared-icon.png",
+  "expectedPageSha256": "cb7fa2287731580d648d7eaab57fdca70b0b91d3f0f6a1d2c34a25b0042e8d8f",
+  "expectedIconSha256": "2046b3ffa481bc0b173783bba9847ea83e300c775300983d71a00d4e95bad190",
+  "expectedLogoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png",
+  "expectBound": true,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "cb7fa2287731580d648d7eaab57fdca70b0b91d3f0f6a1d2c34a25b0042e8d8f"
+  }
+}

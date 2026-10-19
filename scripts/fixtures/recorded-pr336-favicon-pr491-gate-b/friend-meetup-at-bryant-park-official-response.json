@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://bryantpark.org/",
+  "finalUrl": "https://bryantpark.org/",
+  "status": 200,
+  "sha256": "484727273fd8c8e62133d5d2c0183387d45cc854154383bbc5b98922d742317d",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 182,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 1
+  }
+}

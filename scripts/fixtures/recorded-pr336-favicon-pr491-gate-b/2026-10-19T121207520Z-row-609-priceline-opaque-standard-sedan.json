@@ -1,0 +1,16 @@
+{
+  "rowId": 609,
+  "website": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+  "pageResponseFile": "priceline-opaque-standard-sedan-official-response.json",
+  "pageBodyFile": "priceline-opaque-standard-sedan-official.html",
+  "iconResponseFile": "priceline-opaque-standard-sedan-declared-icon-response.json",
+  "iconBodyFile": "priceline-opaque-standard-sedan-declared-icon.png",
+  "expectedPageSha256": "098a0e05fbd3a5756b6a6eb01506df80d6f3a5d0e511e27c1ac72729d54ede70",
+  "expectedIconSha256": "b8df8613f853e3865d5ff58d7779b76f70b7f5fe32b2b5acd609e0b661359837",
+  "expectedLogoUrl": "https://www.priceline.com/rental-car-deals/_v/15869R/app/favicon/favicon-192x192.png",
+  "expectBound": true,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "098a0e05fbd3a5756b6a6eb01506df80d6f3a5d0e511e27c1ac72729d54ede70"
+  }
+}

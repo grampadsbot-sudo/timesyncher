@@ -1,0 +1,16 @@
+{
+  "rowId": 606,
+  "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+  "pageResponseFile": "afternoon-matinee-show-official-response.json",
+  "pageBodyFile": "afternoon-matinee-show-official.html",
+  "iconResponseFile": "afternoon-matinee-show-declared-icon-response.json",
+  "iconBodyFile": "afternoon-matinee-show-declared-icon.png",
+  "expectedPageSha256": "f2d5e04625cd36e0ecc6571b16971f0f1fd66a090d53997e49ede70f3b2e5b0e",
+  "expectedIconSha256": "f587178c28b09896e30e6ec3810358ee2f0ea97539124f8df651af0e138425ab",
+  "expectedLogoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png",
+  "expectBound": true,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "f2d5e04625cd36e0ecc6571b16971f0f1fd66a090d53997e49ede70f3b2e5b0e"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "rowId": 611,
+  "website": "https://jazz.org/dizzys/",
+  "pageResponseFile": "jazz-at-lincoln-center-official-response.json",
+  "pageBodyFile": "jazz-at-lincoln-center-official.html",
+  "iconResponseFile": "jazz-at-lincoln-center-declared-icon-response.json",
+  "iconBodyFile": "jazz-at-lincoln-center-declared-icon.png",
+  "expectedPageSha256": "9f31aee0188c586eb8d55456d633e2d72732a465dc4f149cdbf683586ae0eee9",
+  "expectedIconSha256": "932acb1ddef27d298c5ae18b93d28eb86b4b78608bc0a9b6907989cc86a8711c",
+  "expectedLogoUrl": "https://jazz.org/wp-content/uploads/2023/10/cropped-apple-touch-icon-180x180-1-192x192.png",
+  "expectBound": true,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "9f31aee0188c586eb8d55456d633e2d72732a465dc4f149cdbf683586ae0eee9"
+  }
+}

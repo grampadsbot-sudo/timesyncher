@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://jazz.org/dizzys/",
+  "finalUrl": "https://jazz.org/dizzys/",
+  "status": 200,
+  "sha256": "9f31aee0188c586eb8d55456d633e2d72732a465dc4f149cdbf683586ae0eee9",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 534,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 3
+  }
+}

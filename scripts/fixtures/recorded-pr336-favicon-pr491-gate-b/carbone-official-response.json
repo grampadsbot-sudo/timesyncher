@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://carbonenewyork.com/",
+  "finalUrl": "https://carbonenewyork.com/",
+  "status": 200,
+  "sha256": "cb7fa2287731580d648d7eaab57fdca70b0b91d3f0f6a1d2c34a25b0042e8d8f",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 180,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 1
+  }
+}

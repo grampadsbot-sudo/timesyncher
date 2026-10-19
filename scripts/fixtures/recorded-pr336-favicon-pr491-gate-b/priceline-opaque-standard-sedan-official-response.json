@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+  "finalUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+  "status": 200,
+  "sha256": "098a0e05fbd3a5756b6a6eb01506df80d6f3a5d0e511e27c1ac72729d54ede70",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 963,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 7
+  }
+}

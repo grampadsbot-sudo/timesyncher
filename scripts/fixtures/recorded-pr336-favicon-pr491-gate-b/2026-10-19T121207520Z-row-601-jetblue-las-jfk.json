@@ -1,0 +1,17 @@
+{
+  "rowId": 601,
+  "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+  "pageResponseFile": "jetblue-las-jfk-official-response.json",
+  "pageBodyFile": "jetblue-las-jfk-official.html",
+  "iconResponseFile": "jetblue-las-jfk-declared-icon-response.json",
+  "iconBodyFile": "",
+  "expectedPageSha256": "6f671c7011c4c410362cb760c5d78443b21481e5788aef1927db38081b8c06d9",
+  "expectedIconSha256": "",
+  "expectedLogoUrl": "",
+  "expectBound": false,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "6f671c7011c4c410362cb760c5d78443b21481e5788aef1927db38081b8c06d9"
+  },
+  "expectedCaptureReason": "page_http_406"
+}

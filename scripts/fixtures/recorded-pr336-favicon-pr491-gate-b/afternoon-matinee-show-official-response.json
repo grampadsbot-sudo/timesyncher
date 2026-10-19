@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+  "finalUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+  "status": 200,
+  "sha256": "f2d5e04625cd36e0ecc6571b16971f0f1fd66a090d53997e49ede70f3b2e5b0e",
+  "fetchedAt": "2026-10-19T12:12:07.520Z",
+  "bytes": 606,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 4
+  }
+}
