@@ -153,7 +153,95 @@ function usableLogo(value) {
   return '';
 }
 
+const REGISTRABLE_SUFFIXES = [
+  'co.uk', 'org.uk', 'com.au', 'github.io',
+  'com', 'org', 'net', 'edu', 'gov', 'nyc', 'test', 'example',
+];
+
+function registrableDomain(value = '') {
+  const parsed = httpUrl(value);
+  if (!parsed) return '';
+  const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+  const suffix = REGISTRABLE_SUFFIXES.filter((row) => host.endsWith(`.${row}`))
+    .sort((a, b) => b.length - a.length)[0];
+  if (!suffix) return '';
+  return host.split('.').slice(-(suffix.split('.').length + 1)).join('.');
+}
+
+function isHostFaviconGuessUrl(value = '') {
+  const parsed = httpUrl(value);
+  if (!parsed) return false;
+  return /\/favicon\.ico(\?|#|$)/i.test(parsed.pathname);
+}
+
+function logoOnBrandSite(logoUrl, thing = {}, override = {}) {
+  const page = httpUrl(pageUrlForLogo(thing, override));
+  const logo = httpUrl(logoUrl);
+  if (!page || !logo) return false;
+  const pageRoot = registrableDomain(page.href);
+  const logoRoot = registrableDomain(logo.href);
+  return Boolean(pageRoot && logoRoot && pageRoot === logoRoot);
+}
+
+function officialLogoFromSourceRecord(thing = {}, override = {}) {
+  const source = sourceRecord(thing, override);
+  for (const value of [source.logo, source.logoUrl, source.favicon, source.faviconUrl]) {
+    const logo = usableLogo(value);
+    if (logo && logoOnBrandSite(logo, thing, override)) return logo;
+  }
+  const provenance = source.logoProvenance;
+  if (provenance && typeof provenance === 'object') {
+    const icon = usableLogo(provenance.iconUrl);
+    if (icon && logoOnBrandSite(icon, thing, override)) return icon;
+  }
+  return '';
+}
+
+function persistedLogoCandidates(thing = {}, override = {}) {
+  return [
+    override.logoUrl,
+    thing.logoUrl,
+    thing.captured_logo_url,
+    override.iconUrl,
+    thing.iconUrl,
+    thing.image_url,
+    thing.imageUrl,
+    override.image_url,
+    override.imageUrl,
+  ];
+}
+
+function persistedLogoUrl(thing = {}, override = {}) {
+  for (const value of persistedLogoCandidates(thing, override)) {
+    const logo = usableLogo(value);
+    if (logo) return logo;
+  }
+  return '';
+}
+
+function crossDomainFaviconGuess(url, thing = {}, override = {}) {
+  if (!isHostFaviconGuessUrl(url)) return false;
+  return !logoOnBrandSite(url, thing, override);
+}
+
+function finalizeSourceLogoUrl(thing = {}, override = {}, page) {
+  const persisted = persistedLogoUrl(thing, override);
+  if (persisted && crossDomainFaviconGuess(persisted, thing, override)) {
+    return persisted;
+  }
+  if (!page) return persisted || '';
+  const named = brandLogoFromName(thing.name || thing.title || override.title);
+  if (named) return named;
+  if (/\.hyatt\.com$/i.test(page.hostname)) {
+    const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
+    if (hyattIcon) return hyattIcon;
+  }
+  return `${page.origin}/favicon.ico`;
+}
+
 export function sourceLogoUrl(thing = {}, override = {}) {
+  const official = officialLogoFromSourceRecord(thing, override);
+  if (official) return official;
   const source = sourceRecord(thing, override);
   const explicit = [
     source.logo,
@@ -166,6 +254,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     override.logoUrl,
     override.iconUrl,
     thing.logoUrl,
+    thing.captured_logo_url,
     thing.iconUrl,
     thing.image_url,
     thing.imageUrl,
@@ -187,14 +276,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
   const thumb = thumbnailFromSource(source);
   if (thumb) return thumb;
   const page = httpUrl(pageUrlForLogo(thing, override));
-  if (!page) return '';
-  const named = brandLogoFromName(thing.name || thing.title || override.title);
-  if (named) return named;
-  if (/\.hyatt\.com$/i.test(page.hostname)) {
-    const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
-    if (hyattIcon) return hyattIcon;
-  }
-  return `${page.origin}/favicon.ico`;
+  return finalizeSourceLogoUrl(thing, override, page);
 }
 
 export function logoLookupRuntimeSource() {
@@ -206,6 +288,8 @@ export function captureThingLogo(thing = {}, override = {}) {
 }
 
 export function resolveThingLogoUrl(thing = {}, override = {}) {
+  const official = officialLogoFromSourceRecord(thing, override);
+  if (official) return official;
   const direct = thingLogoUrl(thing, override);
   if (direct) {
     const logo = usableLogo(direct);
@@ -226,9 +310,10 @@ export function applyCapturedLogos(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
     const resolved = timelineIcon(place, override);
-    const logoUrl = captureThingLogo(place, override);
+    const logoUrl = captureThingLogo(place, override) || persistedLogoUrl(place, override);
     if (logoUrl) {
       override.logoUrl = logoUrl;
+      delete override.logoCaptureReason;
     } else if (!text(override.logoUrl)) {
       override.logoUrl = '';
       const reason = logoCaptureMissReason(place, override);
@@ -240,12 +325,15 @@ export function applyCapturedLogos(shared = {}) {
       override.icon = timelineCategoryIcon(resolved.type);
     }
     next.thingOverrides[key] = override;
+    const placeLogo = logoUrl || persistedLogoUrl(place, override);
     if (!place.image_url || isBoundStoryMediaUrl(place.image_url)) {
-      place.logoUrl = logoUrl;
+      if (placeLogo) place.logoUrl = placeLogo;
+      else delete place.logoUrl;
     } else {
       place.logoUrl = place.image_url;
     }
-    place.captured_logo_url = logoUrl;
+    if (placeLogo) place.captured_logo_url = placeLogo;
+    else delete place.captured_logo_url;
   }
   return next;
 }
