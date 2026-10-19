@@ -155,8 +155,77 @@ function usableLogo(value) {
   return '';
 }
 
-/** Logo or favicon on the source record, else the favicon of its page URL. Otherwise none. */
-export function sourceLogoUrl(thing = {}, override = {}) {
+const REGISTRABLE_SUFFIXES = [
+  'co.uk', 'org.uk', 'com.au', 'github.io',
+  'com', 'org', 'net', 'edu', 'gov', 'nyc', 'test', 'example',
+];
+
+function registrableDomain(value = '') {
+  const parsed = httpUrl(value);
+  if (!parsed) return '';
+  const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+  const suffix = REGISTRABLE_SUFFIXES.filter((row) => host.endsWith(`.${row}`))
+    .sort((a, b) => b.length - a.length)[0];
+  if (!suffix) return '';
+  return host.split('.').slice(-(suffix.split('.').length + 1)).join('.');
+}
+
+function isHostFaviconGuessUrl(value = '') {
+  const parsed = httpUrl(value);
+  if (!parsed) return false;
+  return /\/favicon\.ico(\?|#|$)/i.test(parsed.pathname);
+}
+
+function explicitSourceLogoValues(source = {}) {
+  return [
+    source.logo,
+    source.logoUrl,
+    source.favicon,
+    source.faviconUrl,
+  ].map(text).filter(Boolean);
+}
+
+function logoMatchesExplicitSource(url, thing = {}, override = {}) {
+  const normalized = usableLogo(url);
+  if (!normalized) return false;
+  const source = sourceRecord(thing, override);
+  return explicitSourceLogoValues(source).some((row) => usableLogo(row) === normalized);
+}
+
+function logoMatchesKnownBrand(url, thing = {}, override = {}) {
+  const normalized = usableLogo(url);
+  if (!normalized) return false;
+  const brand = brandLogoFromName(thing.name || thing.title || override.title);
+  return Boolean(brand && usableLogo(brand) === normalized);
+}
+
+function logoMatchesOwnSiteBrand(url, thing = {}, override = {}) {
+  if (!isHostFaviconGuessUrl(url)) return false;
+  const page = httpUrl(pageUrlForLogo(thing, override));
+  const logo = httpUrl(url);
+  if (!page || !logo) return false;
+  const pageRoot = registrableDomain(page.href);
+  const logoRoot = registrableDomain(logo.href);
+  return Boolean(pageRoot && logoRoot && pageRoot === logoRoot);
+}
+
+function isRejectedStoredFaviconGuess(url, thing = {}, override = {}) {
+  if (!isHostFaviconGuessUrl(url)) return false;
+  if (logoMatchesExplicitSource(url, thing, override)) return false;
+  if (logoMatchesKnownBrand(url, thing, override)) return false;
+  if (logoMatchesOwnSiteBrand(url, thing, override)) return false;
+  return true;
+}
+
+function acceptStoredLogoCandidate(value, thing, override) {
+  const logo = usableLogo(value);
+  if (!logo) return '';
+  if (isRejectedStoredFaviconGuess(logo, thing, override)) return '';
+  return logo;
+}
+
+function sourceLogoUrlCore(thing = {}, override = {}, options = {}) {
+  const allowPageFaviconFallback = options.allowPageFaviconFallback !== false;
   const source = sourceRecord(thing, override);
   const explicit = [
     source.logo,
@@ -166,17 +235,17 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     thing.logo,
     thing.favicon,
     thing.faviconUrl,
-    override.logoUrl,
     override.iconUrl,
-    thing.logoUrl,
     thing.iconUrl,
     thing.image_url,
     thing.imageUrl,
     override.image_url,
     override.imageUrl,
+    override.logoUrl,
+    thing.logoUrl,
   ];
   for (const value of explicit) {
-    const logo = usableLogo(value);
+    const logo = acceptStoredLogoCandidate(value, thing, override);
     if (logo) {
       if (/hyatt\.com\/favicon\.ico/i.test(logo)) {
         const thumb = thumbnailFromSource(source);
@@ -197,7 +266,13 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     const hyattIcon = usableLogo(NAMED_THING_LOGOS.hyatt);
     if (hyattIcon) return hyattIcon;
   }
+  if (!allowPageFaviconFallback) return '';
   return `${page.origin}/favicon.ico`;
+}
+
+/** Logo or favicon on the source record, else the favicon of its page URL. Otherwise none. */
+export function sourceLogoUrl(thing = {}, override = {}) {
+  return sourceLogoUrlCore(thing, override, { allowPageFaviconFallback: true });
 }
 
 /** Names are not a logo source. The shared bundle calls this with a title and gets nothing. */
@@ -213,10 +288,23 @@ export function captureThingLogo(thing = {}, override = {}) {
 export function resolveThingLogoUrl(thing = {}, override = {}) {
   const direct = thingLogoUrl(thing, override);
   if (direct) {
-    const logo = usableLogo(direct);
+    const logo = acceptStoredLogoCandidate(direct, thing, override);
     if (logo) return logo;
   }
-  return sourceLogoUrl(thing, override);
+  const candidates = [
+    override.logoUrl,
+    override.iconUrl,
+    thing.logoUrl,
+    thing.iconUrl,
+    thing.captured_logo_url,
+    thing.image_url,
+    thing.imageUrl,
+  ].map(text).filter(Boolean);
+  for (const raw of candidates) {
+    const logo = acceptStoredLogoCandidate(raw, thing, override);
+    if (logo) return logo;
+  }
+  return sourceLogoUrlCore(thing, override, { allowPageFaviconFallback: false });
 }
 
 export function applyCapturedLogos(shared = {}) {

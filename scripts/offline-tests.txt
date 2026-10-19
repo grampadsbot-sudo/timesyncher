@@ -137,6 +137,7 @@ scripts/test_collaborator_getapp_trip_site_url.mjs
 scripts/test_collaborator_trip_chat_visibility.mjs
 scripts/test_collaborator_web_access_redirect.mjs
 scripts/test_shared_place_logo_and_category.mjs
+scripts/test_sourced_hotel_logo_481.mjs
 scripts/test_shared_tab_list_summary.mjs
 scripts/test_shared_trip_live_tab_logos.mjs
 scripts/test_gate_b_live_tab_logo_rows.mjs
