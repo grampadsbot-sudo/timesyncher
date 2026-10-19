@@ -713,6 +713,19 @@ assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /js\.stripe\.com
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /eula-page/);
 assert.doesNotMatch(`${bundleRun.stdout}\n${bundleRun.stderr}`, /kept\.js/);
 
+const recordedCaptureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hardcode-recorded-capture-'));
+writeTree(recordedCaptureDir, {
+  'scripts/fixtures/recorded-ccab-logo-pr481-gate-b/capture.html': '<script src="/on/demandware.static/Sites-Zabars-Site/js/main.js"></script>\n',
+  'public/served-evasion.html': '<script src="/assets/missing-evasion.js"></script>\n',
+  'vacation-app.html': '<script src="/assets/missing-app.js"></script>\n',
+}, []);
+const recordedCaptureRun = runGuard(recordedCaptureDir);
+const recordedCaptureOut = `${recordedCaptureRun.stdout}\n${recordedCaptureRun.stderr}`;
+assert.equal(recordedCaptureRun.status, 1, recordedCaptureOut);
+assert.doesNotMatch(recordedCaptureOut, /recorded-ccab-logo-pr481-gate-b/);
+assertHit(recordedCaptureRun.stderr, 'FAIL', 'SERVED-BUNDLE', 'public/served-evasion.html', '/assets/missing-evasion.js is not in the repo and the build does not produce it');
+assertHit(recordedCaptureRun.stderr, 'FAIL', 'SERVED-BUNDLE', 'vacation-app.html', '/assets/missing-app.js is not in the repo and the build does not produce it');
+
 const SERVED_BUNDLE = 'public/assets/index-BKun7ofk.js';
 const UPSTREAM_BUNDLE = 'public/assets/upstream/index-BKun7ofk.js';
 const TRAVEL_HOST = /travel\.timesyncher\.com/;
@@ -739,6 +752,7 @@ function sharedBundleSources(cwd) {
   for (const file of html) {
     const normalized = file.split(path.sep).join('/');
     if (normalized.startsWith('scripts/fixtures/hardcoded-content/')) continue;
+    if (normalized.startsWith('scripts/fixtures/recorded-')) continue;
     files.push(normalized);
   }
   return [...new Set(files)];
