@@ -8,7 +8,11 @@ const CARS_TAB_PANEL_NEEDLE = 'q==="cars"&&n.jsxs("div",{style:{display:"flex",f
 const CARS_TAB_PANEL_PATCH = 'q==="cars"&&n.jsxs("div",{"data-shared-live-tab":"cars",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"cars"})';
 
 const OE_ROW_SUMMARY_NEEDLE = 'n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details",style:{marginTop:6,border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:Pn?"#475569":"#9ca3af",fontSize:11,fontWeight:700,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Pn||"Open details for summary"})';
-const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null';
+const OE_ROW_SUMMARY_PATCH = '';
+const OE_ROW_SUMMARY_BELOW_DIV_NEEDLE = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,';
+const OE_ROW_SUMMARY_BELOW_DIV_PATCH = '';
+const OE_LIST_ROW_SR_NEEDLE = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
+const OE_LIST_ROW_SR_PATCH = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0,1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"},children:[n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,flex:"0 1 auto",maxWidth:"42%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),Pn?n.jsx("span",{"data-list-summary":"1","data-summary-src":"thing",style:{flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569",lineHeight:1.4},children:Pn}):null]})]})';
 
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
@@ -61,7 +65,16 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(CARS_TAB_PANEL_NEEDLE)) js = js.replace(CARS_TAB_PANEL_NEEDLE, CARS_TAB_PANEL_PATCH);
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) {
     js = js.replaceAll(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
-  } else if (!js.includes('"data-list-summary":"1","data-summary-src":"thing"')) {
+  }
+  if (js.includes(OE_ROW_SUMMARY_BELOW_DIV_NEEDLE)) {
+    js = js.replaceAll(OE_ROW_SUMMARY_BELOW_DIV_NEEDLE, OE_ROW_SUMMARY_BELOW_DIV_PATCH);
+  }
+  if (js.includes(OE_LIST_ROW_SR_NEEDLE)) {
+    js = js.replace(OE_LIST_ROW_SR_NEEDLE, OE_LIST_ROW_SR_PATCH);
+  } else if (!js.includes('flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569"')) {
+    throw new Error('shared trip Oe() inline row summary patch did not apply');
+  }
+  if (!js.includes('"data-list-summary":"1","data-summary-src":"thing"')) {
     throw new Error('shared trip Oe() row summary patch did not apply');
   }
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
