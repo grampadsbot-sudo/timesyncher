@@ -8,15 +8,29 @@ const CARS_TAB_PANEL_NEEDLE = 'q==="cars"&&n.jsxs("div",{style:{display:"flex",f
 const CARS_TAB_PANEL_PATCH = 'q==="cars"&&n.jsxs("div",{"data-shared-live-tab":"cars",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"cars"})';
 
 const OE_ROW_SUMMARY_NEEDLE = 'n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details",style:{marginTop:6,border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:Pn?"#475569":"#9ca3af",fontSize:11,fontWeight:700,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Pn||"Open details for summary"})';
-const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null';
+const OE_ROW_SUMMARY_PATCH = 'null';
 
-const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
-const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
+const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
+const OE_ROW_TITLE_SPAN_NEEDLE_LEGACY = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
+const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
 
-const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
+const OE_INLINE_ROW_DESC = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{fontSize:11,fontWeight:700,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null';
+
+const OE_SR_GRID_NEEDLE = 'gridTemplateColumns:"28px minmax(0, 1fr)"';
+const OE_SR_GRID_PATCH = 'gridTemplateColumns:"28px minmax(0,auto) minmax(0,1fr)"';
+
+const OE_SR_DESC_NEEDLE = '"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})]})';
+const OE_SR_DESC_NEEDLE_LEGACY = '"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
+const OE_SR_DESC_PATCH = `"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})}),${OE_INLINE_ROW_DESC}]})`;
+const OE_SR_DESC_PATCH_LEGACY = `"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn}),${OE_INLINE_ROW_DESC}]})`;
+
+const OE_ROW_SUMMARY_STANDALONE_NEEDLE = '}),Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,';
+const OE_ROW_SUMMARY_STANDALONE_PATCH = '}),';
+
+const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,auto) auto auto",gap:6,width:"auto",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
 
 function patchCarBeGrid(js = '') {
-  if (js.includes('be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%"')) {
+  if (js.includes('be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,auto) auto auto",gap:6,width:"auto",minWidth:0,maxWidth:"100%"')) {
     return js;
   }
   const start = js.indexOf('be=({item:G})=>');
@@ -30,7 +44,7 @@ function patchCarBeGrid(js = '') {
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
-const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,auto) auto",gap:8,width:"auto",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
 
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
@@ -41,7 +55,7 @@ export function patchSharedTripOeListRows(source = '') {
   js = patchCarBeGrid(js);
   if (js.includes(OE_HOTEL_JE_TITLE_NEEDLE)) {
     js = js.replace(OE_HOTEL_JE_TITLE_NEEDLE, OE_HOTEL_JE_TITLE_PATCH);
-  } else if (!js.includes('je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')) {
+  } else if (!js.includes('je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,auto) auto",gap:8,width:"auto",minWidth:0,maxWidth:"100%"')) {
     throw new Error('shared trip Oe() hotel header patch did not apply');
   }
   if (js.includes(WR_SORT_ROW_NEEDLE)) {
@@ -66,6 +80,25 @@ export function patchSharedTripOeListRows(source = '') {
   }
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
+  } else if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE_LEGACY)) {
+    js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE_LEGACY, OE_ROW_TITLE_SPAN_PATCH);
+  }
+  if (js.includes(OE_SR_GRID_NEEDLE)) {
+    js = js.replace(OE_SR_GRID_NEEDLE, OE_SR_GRID_PATCH);
+  } else if (!js.includes(OE_SR_GRID_PATCH)) {
+    throw new Error('shared trip Oe() sr row grid patch did not apply');
+  }
+  if (js.includes(OE_SR_DESC_NEEDLE)) {
+    js = js.replace(OE_SR_DESC_NEEDLE, OE_SR_DESC_PATCH);
+  } else if (js.includes(OE_SR_DESC_NEEDLE_LEGACY)) {
+    js = js.replace(OE_SR_DESC_NEEDLE_LEGACY, OE_SR_DESC_PATCH_LEGACY);
+  } else if (!js.includes('"data-list-summary":"1","data-summary-src":"thing",style:{fontSize:11,fontWeight:700,minWidth:0')) {
+    throw new Error('shared trip Oe() inline row description patch did not apply');
+  }
+  if (js.includes(OE_ROW_SUMMARY_STANDALONE_NEEDLE)) {
+    js = js.replaceAll(OE_ROW_SUMMARY_STANDALONE_NEEDLE, OE_ROW_SUMMARY_STANDALONE_PATCH);
+  } else if (js.includes('marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4},children:Pn}):null,')) {
+    throw new Error('shared trip Oe() standalone row summary removal did not apply');
   }
   return js;
 }
