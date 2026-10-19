@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'scripts' / 'ops' / 'dispatch'))
 
 import pregate_one  # noqa: E402
+import tsv_dispatch  # noqa: E402
 
 
 class PregateOneHarnessTests(unittest.TestCase):
@@ -42,6 +43,37 @@ class PregateOneHarnessTests(unittest.TestCase):
             description='backend-only',
         )
         self.assertEqual(state, 'success')
+        set_status.assert_called_once()
+        self.assertEqual(set_status.call_args.kwargs['state'], 'success')
+
+    def test_tsv_dispatch_pregate_one_without_out_key(self) -> None:
+        lines: list[str] = []
+        compare = {'overall': 'PASS', 'screens': 0, 'compared': 0}
+        state, run_dir = tsv_dispatch.pregate_one(
+            compare,
+            log=lines.append,
+            set_status=lambda **_kwargs: None,
+            default_run_dir='/tmp/gateb-run',
+        )
+        self.assertEqual(state, 'success')
+        self.assertEqual(run_dir, '/tmp/gateb-run')
+        self.assertEqual(len(lines), 1)
+
+    def test_tsv_dispatch_pregate_one_skipped_backend_only_success(self) -> None:
+        set_status = MagicMock()
+        compare = {
+            'overall': pregate_one.SKIPPED_BACKEND_ONLY,
+            'files': 0,
+            'why': 'PR touches no UI/render files',
+        }
+        state, run_dir = tsv_dispatch.pregate_one(
+            compare,
+            log=lambda _msg: None,
+            set_status=set_status,
+            default_run_dir='',
+        )
+        self.assertEqual(state, 'success')
+        self.assertEqual(run_dir, '')
         set_status.assert_called_once()
         self.assertEqual(set_status.call_args.kwargs['state'], 'success')
 
