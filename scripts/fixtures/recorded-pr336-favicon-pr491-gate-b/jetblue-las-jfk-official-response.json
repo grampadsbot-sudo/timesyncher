@@ -1,0 +1,12 @@
+{
+  "requestedUrl": "https://www.jetblue.com/",
+  "finalUrl": "https://www.jetblue.com/",
+  "status": 200,
+  "sha256": "3744ff9c517bcd6f341bb4724edc6b96de28d2dfa785d308dd3fc17b98940212",
+  "fetchedAt": "2026-10-19T15:11:07.322Z",
+  "bytes": 227,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "iconLinkCount": 1
+  }
+}
