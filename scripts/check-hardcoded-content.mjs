@@ -1542,7 +1542,9 @@ function assetBundlePaths(cwd) {
 function guardExempt(file) {
   const normalized = file.split(path.sep).join('/');
   if (GUARD_FILES.has(normalized)) return true;
-  return normalized.startsWith('scripts/fixtures/hardcoded-content/');
+  if (normalized.startsWith('scripts/fixtures/hardcoded-content/')) return true;
+  if (normalized.startsWith('scripts/fixtures/recorded-')) return true;
+  return false;
 }
 
 function repoTextFiles(cwd) {

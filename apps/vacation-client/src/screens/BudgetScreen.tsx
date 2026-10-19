@@ -26,7 +26,7 @@ function TargetReadout({
       <span className="tsv-budget-planned">{formatUsd(planned, currency)}</span>
       <span className="tsv-budget-target-sep"> / </span>
       <span className="tsv-budget-target-input" aria-label={ariaLabel}>
-        {formatUsd(target ?? 0, currency)}
+        {target === null ? '' : formatUsd(target, currency)}
       </span>
     </span>
   );
