@@ -1,11 +1,36 @@
+const IATA_ROUTE = String.raw`\b[A-Z]{3}(?:\s*(?:→|->|-)\s*|\s+to\s+)[A-Z]{3}\b`;
+
+export const CME_TRANSPORT_FLIGHT_SIGNAL =
+  `/\\bflight\\b|flight option/.test(c)||/${IATA_ROUTE}/.test(String((e==null?void 0:e.name)||"")+" "+String((e==null?void 0:e.title)||""))`;
+
 function flightLikeLabel(record = {}) {
   const text = [record.name, record.title, record.description, record.whenLabel]
     .map((value) => String(value || '').trim())
     .filter(Boolean)
     .join(' ');
   if (!text) return false;
+  if (/^flight\b/i.test(text) || /\bflight option\b/i.test(text)) return true;
   if (/\bflight\b/i.test(text)) return true;
-  return /\b[A-Z]{3}\s*(?:→|->|to|-)\s*[A-Z]{3}\b/.test(text);
+  return new RegExp(IATA_ROUTE).test(text);
+}
+
+function flightFields(record = {}) {
+  const meta = record.metadata && typeof record.metadata === 'object' ? record.metadata : {};
+  const sourceRecord = record.sourceRecord && typeof record.sourceRecord === 'object' ? record.sourceRecord : {};
+  const candidates = [
+    record.airline,
+    record.airlineName,
+    record.flightNumber,
+    record.flight_number,
+    sourceRecord.airline,
+    sourceRecord.airlineName,
+    sourceRecord.flightNumber,
+    sourceRecord.flight_number,
+    meta.airline,
+    meta.flightNumber,
+    meta.flight_number,
+  ];
+  return candidates.some((value) => String(value || '').trim());
 }
 
 export function transportKind(record = {}) {
@@ -28,7 +53,8 @@ export function transportKind(record = {}) {
     }
   }
   if (tokens.has('flight')) return 'flight';
+  if (flightFields(record)) return 'flight';
+  if (flightLikeLabel(record)) return 'flight';
   if (tokens.has('car') || tokens.has('rental')) return 'car';
-  if (flightLikeLabel(record) && (tokens.has('transport') || tokens.has('transfer'))) return 'flight';
   return '';
 }

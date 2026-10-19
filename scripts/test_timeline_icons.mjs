@@ -5,6 +5,7 @@ import {
   thingLogoUrl,
   timelineIcon,
 } from '../src/vacation/timeline-icons.mjs';
+import { CME_TRANSPORT_FLIGHT_SIGNAL, transportKind } from '../src/vacation/intake-transport-kind.mjs';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -66,6 +67,66 @@ assert(timelineIcon(placeB).icon === '🍽️', 'a second restaurant uses the re
 assert(timelineIcon(placeC).icon === '🛍️', 'a store uses the store icon');
 assert(timelineIcon(outbound).icon === '🚕', 'transport category stays transport');
 assert(timelineIcon(inbound).icon === '🚕', 'return transport stays transport');
+assert(
+  timelineIcon({
+    name: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
+    category_name: 'Transport',
+    category_icon: '🚌',
+    category: 'transport',
+  }).icon === '✈️',
+  'flight option on transport category uses airplane',
+);
+for (const name of [
+  'Car to the museum',
+  'Uber to JFK',
+  'One-way shuttle',
+  'Two-way transfer',
+]) {
+  assert(
+    timelineIcon({ name, category_name: 'Transport', category: 'transport' }).icon === '🚕',
+    `ground transport stays taxi: ${name}`,
+  );
+  assert(transportKind({ name, category_name: 'Transport', category: 'transport' }) !== 'flight', `not flight kind: ${name}`);
+}
+assert(
+  timelineIcon({ name: 'Shuttle LAS-LGA', category_name: 'Transport', category: 'transport' }).icon === '✈️',
+  'IATA route without flight word uses airplane on transport',
+);
+for (const name of ['AAA to BBB', 'LAS to LGA']) {
+  assert(transportKind({ title: name, category: 'transport' }) === 'flight', `IATA route joined by to is flight kind: ${name}`);
+  assert(
+    timelineIcon({ name, category_name: 'Transport', category: 'transport' }).icon === '✈️',
+    `IATA route joined by to uses airplane: ${name}`,
+  );
+  assert(
+    new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(`${name.toLowerCase()} transport`, { name, title: '' }),
+    `bundle transport flight signal matches IATA route joined by to: ${name}`,
+  );
+}
+assert(
+  !new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)('uber to jfk transport', { name: 'Uber to JFK', title: '' }),
+  'bundle transport flight signal rejects Uber to JFK',
+);
+assert(
+  (() => {
+    const c = 'transport shuttle';
+    const e = { name: 'Flight option: Southwest LAS-LGA 2026-06-23', title: '' };
+    return new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(c, e);
+  })(),
+  'bundle transport flight signal matches flight option row',
+);
+assert(
+  (() => {
+    const c = 'car to the museum transport';
+    const e = { name: 'Car to the museum', title: '' };
+    return !new Function('c', 'e', `return ${CME_TRANSPORT_FLIGHT_SIGNAL}`)(c, e);
+  })(),
+  'bundle transport flight signal rejects car to the museum',
+);
+assert(
+  timelineIcon({ name: 'JetBlue LAS-JFK 2026-06-23 07:22-15:31', airline: 'JetBlue' }).icon === '✈️',
+  'flight with missing category still uses airplane',
+);
 assert(timelineIcon({ name: 'Thursday departure', category_name: 'Flight' }).icon === '✈️', 'flight category uses airplane');
 assert(timelineIcon(lodging, { category: 'hotel' }).icon === '🧳', 'Hotel override uses lodging icon');
 assert(timelineIcon(attraction, { category: 'other' }).icon === '🏛️', 'other override does not beat Attraction');
