@@ -5,8 +5,17 @@ const OE_ROW_SUMMARY_LEGACY = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_RR_ONLY = 'Rn=Bs(rr(G))';
 const OE_ROW_SUMMARY_SUBSTANCE = 'Rn=Bs(tsListRowDescription(G))';
 
+function bundleHasLiveTabListRows(js = '') {
+  return js.includes(LIST_ROW_DESC_ANCHOR)
+    || js.includes('tsListRowDescription=function(G){')
+    || js.includes(OE_ROW_SUMMARY_LEGACY)
+    || js.includes(OE_ROW_SUMMARY_RR_ONLY)
+    || js.includes(OE_ROW_SUMMARY_SUBSTANCE);
+}
+
 export function patchListRowDescription(source = '') {
   let js = String(source || '');
+  if (!bundleHasLiveTabListRows(js)) return js;
   const snippet = listRowDescriptionBundleSnippet();
   if (!js.includes('tsListRowDescription=function(G){')) {
     const anchor = js.indexOf(LIST_ROW_DESC_ANCHOR);
