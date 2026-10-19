@@ -1,3 +1,4 @@
+import { applyDiscoveredPageIcon } from './intake-shared-place-source.mjs';
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { placeToTripThing, queriesFromWantedThings, searchPlaces } from './place-search.mjs';
@@ -96,7 +97,8 @@ function pickSearchPlace(search, title) {
   return places[0];
 }
 
-export async function upgradeTripThingInPlace(db, tripId, rowId, requestId, thing = {}, env = process.env) {
+export async function upgradeTripThingInPlace(db, tripId, rowId, requestId, thing = {}, env = process.env, fetchImpl = globalThis.fetch) {
+  await applyDiscoveredPageIcon(thing, { fetchImpl });
   const item = tripThingRow(thing);
   if (!item || !rowId) return null;
   await db`
@@ -256,9 +258,9 @@ export async function persistChatIntakePlaceThing(db, {
       },
     };
     if (existing?.id) {
-      return upgradeTripThingInPlace(db, tripId, existing.id, requestId, merged, env);
+      return upgradeTripThingInPlace(db, tripId, existing.id, requestId, merged, env, fetchImpl);
     }
-    return insertTripThing(db, { tripId, requestId, thing: merged, env });
+    return insertTripThing(db, { tripId, requestId, thing: merged, env, fetchImpl });
   }
   const unresolved = unresolvedChatIntakePlaceThing({
     title: name,
@@ -268,9 +270,9 @@ export async function persistChatIntakePlaceThing(db, {
     startsAt: startsAt || existing?.starts_at || null,
   });
   if (existing?.id) {
-    return upgradeTripThingInPlace(db, tripId, existing.id, requestId, unresolved, env);
+    return upgradeTripThingInPlace(db, tripId, existing.id, requestId, unresolved, env, fetchImpl);
   }
-  return insertTripThing(db, { tripId, requestId, thing: unresolved, env });
+  return insertTripThing(db, { tripId, requestId, thing: unresolved, env, fetchImpl });
 }
 
 export function unresolvedThingsFromPlaceClassification(classification = {}) {
