@@ -23,6 +23,10 @@ type Props = {
 
 type SortKey = 'name' | 'price';
 
+function defaultSortKey(tab: Props['tab']): SortKey {
+  return tab === 'flights' || tab === 'hotels' || tab === 'cars' ? 'price' : 'name';
+}
+
 export function CategoryTabScreen({
   trip,
   tab,
@@ -35,7 +39,7 @@ export function CategoryTabScreen({
   const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
   const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
 
-  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortKey, setSortKey] = useState<SortKey>(() => defaultSortKey(tab));
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');

@@ -82,13 +82,24 @@ export function ListRow({
   const name = placeName(place);
   const summary = rowSummary(place, trip);
   const category = tabCategoryKey(place, trip);
+  const logo = logoUrlForPlace(place, trip);
   const note = tab === 'hotels' ? hotelFirstRowNote(place, trip, isFirstHotel) : '';
+  const rowDataset = {
+    'data-has-logo': logo ? '1' : '0',
+    ...(logo ? { 'data-logo-src': logo } : {}),
+    'data-thing-category': category,
+  };
 
   if (tab === 'flights' || category === 'flight') {
     const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
-      <li className="tsv-row tsv-row-flight" data-ts-list-row="1" data-list-row="1">
+      <li
+        className="tsv-row tsv-row-flight"
+        data-ts-list-row="1"
+        data-list-row="1"
+        {...rowDataset}
+      >
         <div className="tsv-row-car-grid">
           <button
             type="button"
@@ -134,7 +145,7 @@ export function ListRow({
     const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
-      <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1">
+      <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1" {...rowDataset}>
         <div className="tsv-row-car-grid">
           <button
             type="button"
@@ -175,7 +186,7 @@ export function ListRow({
         : formatUsd(numeric, currency);
 
   return (
-    <li className="tsv-row" data-ts-list-row="1" data-list-row="1">
+    <li className="tsv-row" data-ts-list-row="1" data-list-row="1" {...rowDataset}>
       <div className="tsv-row-car-grid">
         <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
           <LogoChip place={place} trip={trip} />

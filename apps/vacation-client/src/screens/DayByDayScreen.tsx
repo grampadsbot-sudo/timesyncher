@@ -111,6 +111,7 @@ export function DayByDayScreen({ trip, onOpen }: Props) {
         aria-labelledby={`tsv-day-tab-${activeDay.id}`}
         tabIndex={-1}
       >
+        <p className="tsv-day-heading-marker">{dayChipLabel(activeDay)}</p>
         <h3 className="tsv-day-title">
           {dayChipLabel(activeDay)}
           {activeDay.date ? (

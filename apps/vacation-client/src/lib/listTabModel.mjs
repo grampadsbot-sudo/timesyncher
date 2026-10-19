@@ -1,4 +1,6 @@
-
+import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { detailSummary } from './detailModel.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -313,22 +315,28 @@ export function carSubtitle(place, trip) {
 }
 
 export function rowSummary(place, trip) {
+  const judged = detailSummary(place, trip);
+  if (judged) return judged;
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
+  const candidate = text(
     override.summary ||
       override.longDetails ||
       override.details ||
       source.summary ||
+      source.longDetails ||
       place.description,
   );
+  if (!candidate || isGenericDescription(candidate)) return '';
+  return candidate;
 }
 
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   return text(
-    override.logoUrl ||
+    resolveThingLogoUrl(place, override) ||
+      override.logoUrl ||
       override.iconUrl ||
       place.logoUrl ||
       place.captured_logo_url ||
