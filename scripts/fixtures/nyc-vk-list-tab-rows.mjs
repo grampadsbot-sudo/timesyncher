@@ -17,7 +17,6 @@ export const NYC_VK_ISSUE_429_LIST_ROWS = [
   { name: 'Hotel Lucerne', cat: 'hotel', ccabKey: 'Hotel Lucerne' },
   { name: 'Hyatt Grand Central New York', cat: 'hotel', ccabKey: 'Hyatt Grand Central New York' },
   { name: 'Hyatt House New York/Chelsea', cat: 'hotel', ccabKey: 'Hyatt House New York/Chelsea' },
-  { name: 'Midtown sample hotel', cat: 'hotel', ccabKey: 'Midtown sample hotel' },
   { name: 'Motto by Hilton New York City Times Square', cat: 'hotel', ccabKey: 'Motto by Hilton New York City Times Square' },
   { name: 'New York Marriott Downtown', cat: 'hotel', ccabKey: 'New York Marriott Downtown' },
   { name: 'New York Marriott Marquis', cat: 'hotel', ccabKey: 'New York Marriott Marquis' },
