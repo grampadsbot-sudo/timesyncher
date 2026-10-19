@@ -58,6 +58,14 @@ assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
+assert.match(
+  bundle,
+  /flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569"/,
+);
+assert.doesNotMatch(
+  bundle,
+  /marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4\},children:Pn\}\):null,/,
+);
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
 assert.deepEqual([...named].sort((a, b) => compareColumnRows(a, b, 'name', 'asc')).map((row) => row.name), ['East', 'North', 'south']);
