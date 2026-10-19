@@ -198,6 +198,14 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
     } else if (category === 'car') {
       override.category = 'car';
+      copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup_location, place.address);
+      copyIfBlank(override, 'returnLocation', source?.returnLocation, source?.return_location, source?.dropoffLocation);
+      copyIfBlank(override, 'pickupHours', source?.pickupHours, source?.pickup_hours);
+      copyIfBlank(override, 'dropoffHours', source?.dropoffHours, source?.dropoff_hours, source?.returnHours);
+      copyIfBlank(override, 'reputationNote', source?.reputationNote, source?.reputation_note);
+      if (Array.isArray(source?.reviewThemes) && !Array.isArray(override.reviewThemes)) {
+        override.reviewThemes = source.reviewThemes;
+      }
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);
       copyIfBlank(override, 'duration', source?.duration, source?.rentalDuration);
       copyIfBlank(override, 'endTime', source?.endTime, source?.returnTime, source?.dropoffTime);
@@ -210,6 +218,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'checkOutDate', source?.checkOutDate, source?.check_out_date);
       copyIfBlank(override, 'checkInTime', source?.checkInTime, source?.check_in_time);
       copyIfBlank(override, 'checkOutTime', source?.checkOutTime, source?.check_out_time);
+      copyIfBlank(override, 'hotelNote', source?.hotelNote, source?.hotel_note);
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
       }
