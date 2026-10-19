@@ -60,12 +60,17 @@ assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 1
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
 assert.match(
   bundle,
-  /flex:"1 1 0",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11,fontWeight:700,color:"#475569"/,
+  /tsRowInlineDesc=typeof window>"u"\|\|!\(window\.matchMedia&&window\.matchMedia\("\(max-width:640px\)"\)\.matches\)/,
 );
-assert.doesNotMatch(
+assert.match(
   bundle,
-  /marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4\},children:Pn\}\):null,/,
+  /tsRowInlineDesc\?n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"\}/,
 );
+assert.match(
+  bundle,
+  /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
+);
+assert.doesNotMatch(bundle, /maxWidth:"42%"/);
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
 assert.deepEqual([...named].sort((a, b) => compareColumnRows(a, b, 'name', 'asc')).map((row) => row.name), ['East', 'North', 'south']);
