@@ -10,7 +10,7 @@ import tarfile
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 BUDGET_DRIVER_REL = 'scripts/gateb_head_budget_lines.mjs'
 BUDGET_MODULE_REL = 'src/vacation/shared-trip-api-budget.mjs'
@@ -335,3 +335,55 @@ from gateb_exemption import (  # noqa: E402
     data_contract_lines_equal,
     gateb_exempt_commit_description,
 )
+
+
+def pregate_one_compare_run_dir(
+    compare: Mapping[str, Any] | None,
+    *,
+    default: str = '',
+) -> str:
+    base = compare if isinstance(compare, dict) else {}
+    nested = compare_result_out(compare)
+    for candidate in (base.get('out'), nested.get('out'), default):
+        if isinstance(candidate, str) and candidate:
+            return candidate
+    return default
+
+
+def _pregate_one_resolved_verdict(
+    compare: Mapping[str, Any] | None,
+    verdict: str | None,
+) -> str | None:
+    if verdict is not None:
+        return verdict
+    if not isinstance(compare, dict):
+        return None
+    direct = compare.get('verdict')
+    if direct:
+        return str(direct)
+    overall = compare.get('overall')
+    if overall:
+        return str(overall)
+    return None
+
+
+def pregate_one(
+    compare: Mapping[str, Any] | None,
+    *,
+    log: Callable[[str], None],
+    set_status: Callable[..., Any],
+    verdict: str | None = None,
+    default_run_dir: str = '',
+    description: str = '',
+    **status_kwargs: Any,
+) -> tuple[str, str]:
+    resolved = _pregate_one_resolved_verdict(compare, verdict)
+    state = pregate_one_finalize_verdict(
+        resolved,
+        compare,
+        log=log,
+        set_status=set_status,
+        description=description,
+        **status_kwargs,
+    )
+    return state, pregate_one_compare_run_dir(compare, default=default_run_dir)
