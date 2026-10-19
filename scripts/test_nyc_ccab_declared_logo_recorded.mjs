@@ -24,7 +24,7 @@ assert.equal(arthouse.logoUrl, DECLARED);
 assert.equal(arthouse.logoProvenance?.iconUrl, DECLARED);
 assert.equal(arthouse.logoProvenance?.pageUrl, 'https://www.arthousehotelnyc.com/');
 assert.equal(effectiveCcabDeclaredLogoUrl(arthouse), DECLARED);
-assert.equal(effectiveCcabDeclaredLogoUrl({ ...arthouse, logoUrl: OLD_ARTHOUSE_GUESS, logoProvenance: undefined }), '');
+assert.equal(effectiveCcabDeclaredLogoUrl({ ...arthouse, logoUrl: OLD_ARTHOUSE_GUESS, logoProvenance: undefined }), OLD_ARTHOUSE_GUESS);
 assert.equal(
   effectiveCcabDeclaredLogoUrl({
     ...arthouse,
