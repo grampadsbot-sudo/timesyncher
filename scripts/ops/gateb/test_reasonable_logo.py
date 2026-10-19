@@ -1,8 +1,10 @@
 import importlib.util
-import os
 import sys
 from pathlib import Path
 import unittest
+
+
+HERE = Path(__file__).resolve().parent
 
 
 def module(name, path):
@@ -16,8 +18,8 @@ def module(name, path):
 class ReasonableLogo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.contract = module('logo_contract', Path(os.environ.get('TSV_DISPATCH_ROOT', '/home/ubishere9995/tsv-dispatch')) / 'vk_contract_check.py')
-        cls.gate = module('logo_gate', Path(os.environ.get('TSV_GATEB_ROOT', '/home/ubishere9995/tsv-gateb')) / 'restore_check.py')
+        cls.contract = module('logo_contract', HERE / 'vk_contract_check.py')
+        cls.gate = module('logo_gate', HERE / 'restore_check.py')
 
     def test_contract_accepts_brand_domain_without_provenance(self):
         row = dict(category='flight', name='JetBlue', summary='JetBlue nonstop', description='Nonstop flight from Las Vegas to New York.', price=250, logoUrl='https://www.jetblue.com/favicon.ico')
