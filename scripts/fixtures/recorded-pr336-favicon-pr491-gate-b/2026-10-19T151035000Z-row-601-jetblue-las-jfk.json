@@ -1,0 +1,24 @@
+{
+  "rowId": 601,
+  "website": "https://www.jetblue.com/",
+  "pageResponseFile": "jetblue-las-jfk-official-response.json",
+  "pageBodyFile": "jetblue-las-jfk-official.html",
+  "iconResponseFile": "jetblue-las-jfk-declared-icon-response.json",
+  "iconBodyFile": "jetblue-las-jfk-declared-icon.ico",
+  "expectedPageSha256": "3744ff9c517bcd6f341bb4724edc6b96de28d2dfa785d308dd3fc17b98940212",
+  "expectedIconSha256": "e6d0a79c7f62fb3f407993e51840717fb380a44fd247a7ac9950667d0b1b9062",
+  "expectedLogoUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico",
+  "expectBound": true,
+  "pageBodyProvenance": {
+    "storedForm": "icon-declaration-only",
+    "sha256": "3744ff9c517bcd6f341bb4724edc6b96de28d2dfa785d308dd3fc17b98940212"
+  },
+  "identityProvenance": {
+    "carrier": "JetBlue",
+    "ccabKey": "Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31",
+    "bookingWebsite": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
+    "bookingFetchStatus": 406,
+    "declaringPageUrl": "https://www.jetblue.com/",
+    "evidenceSummary": "CCAB sourceRecord and externalId declare Airline: JetBlue for LAS-JFK; homepage icon declaration used because booking deep-link returns HTTP 406."
+  }
+}

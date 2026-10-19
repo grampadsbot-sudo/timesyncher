@@ -14,7 +14,17 @@
       "summary": "Airline: JetBlue;",
       "price": 252,
       "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
-      "logoUrl": "https://www.jetblue.com/favicon.ico",
+      "logoUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico",
+      "logoProvenance": {
+        "pageUrl": "https://www.jetblue.com/",
+        "iconUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico"
+      },
+      "identityProvenance": {
+        "approvedDisplayTitle": "JetBlue LAS → JFK",
+        "ccabKey": "Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31",
+        "evidenceUrl": "https://www.jetblue.com/",
+        "reason": "CCAB sourceRecord declares Airline: JetBlue for LAS-JFK; booking deep-link returns HTTP 406 to fixture fetch; carrier logo from jetblue.com homepage link rel=icon on the same registrable domain."
+      },
       "lat": null,
       "lng": null,
       "address": "Flight options / Bookings tab",
@@ -25,7 +35,7 @@
     "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
     "summary": "Airline: JetBlue;",
     "price": 252,
-    "logoUrl": "https://www.jetblue.com/favicon.ico"
+    "logoUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico"
   },
   "602": {
     "source": "brave",

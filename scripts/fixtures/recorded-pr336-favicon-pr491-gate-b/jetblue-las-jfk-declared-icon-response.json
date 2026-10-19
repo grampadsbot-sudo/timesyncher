@@ -1,0 +1,10 @@
+{
+  "requestedUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico",
+  "finalUrl": "https://www.jetblue.com/favicon.ico?favicon.2k4h8gfg1omer.ico",
+  "status": 200,
+  "contentType": "image/x-icon",
+  "sha256": "e6d0a79c7f62fb3f407993e51840717fb380a44fd247a7ac9950667d0b1b9062",
+  "bytes": 32988,
+  "fetchedAt": "2026-10-19T15:11:07.322Z",
+  "declaration": "<link rel=\"icon\" href=\"/favicon.ico?favicon.2k4h8gfg1omer.ico\" sizes=\"64x64\" type=\"image/x-icon\"/>"
+}
