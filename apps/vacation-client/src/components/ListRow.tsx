@@ -10,7 +10,7 @@ import {
   logoUrlForPlace,
   numericPrice,
   placeName,
-  rowSummary,
+  rowDescription,
   tabCategoryKey,
 } from '../lib/listTabModel.mjs';
 import { overrideFor } from '../lib/placeHelpers';
@@ -80,7 +80,7 @@ export function ListRow({
   onTimelineChange,
 }: Props) {
   const name = placeName(place);
-  const summary = rowSummary(place, trip);
+  const summary = rowDescription(place, trip);
   const category = tabCategoryKey(place, trip);
   const logo = logoUrlForPlace(place, trip);
   const note = tab === 'hotels' ? hotelFirstRowNote(place, trip, isFirstHotel) : '';

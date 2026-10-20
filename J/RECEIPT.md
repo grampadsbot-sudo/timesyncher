@@ -1,47 +1,59 @@
-# PR #543 — vkfill-543-20261020150726
+# PR #543 — source handoff for host review
 
-Outcome: blocked-ci on exact starting HEAD `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`; no product source changes. Source changes for host review: none. This receipt is uncommitted. Model: gpt-6.1-sol only.
+Outcome: source-ready, uncommitted, based on actual starting HEAD `477ea3026eece17dd255889341addf87dbf1d49a`. This is a source handoff, not PR acceptance or auto-merge eligibility. Model: gpt-6.1-sol only. No sub-agents, other models, OpenRouter, paid fallback, Git metadata mutation, external messages, PR mutation, merge or deployment.
 
-## Verified identity and authority
+The worker verified the requested HEAD and an initially clean worktree. Live GitHub read-only GET confirms open PR543, branch `vkfill/335-p3a-wiring-202610190827`, base `migrate/trek-source` at `218a3b39991328c5da4e75601f186065eacbdf45`, no labels. Snapshots: `pr-current.json`, `pr-comments.json`, `pr-reviews.json`, `check-runs.json` in this job directory.
 
-- Actual starting HEAD matches the brief: `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`. Initial worktree status was clean.
-- Live GitHub GET `/repos/grampadsbot-sudo/timesyncher/pulls/543` confirms the same head, branch `vkfill/335-p3a-wiring-202610190827`, base `migrate/trek-source` at `218a3b39991328c5da4e75601f186065eacbdf45`, open/non-draft/mergeable, no labels. Snapshot: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/pr-543-current.json`.
-- GBrain access checked successfully with `gbrain get bot-admin/lanes/vk-pr-handoff/pr-543`, plus `bot-admin/messages/time-syncher/decisions-log`. The handoff's latest scoped action is CI + Gate B on the already-applied finalization fix, with any further app round requiring a named lost feature.
-- Read live current comments, reviews, check runs, workflow runs and commit statuses via unauthenticated GitHub GET; no credentials were accessed. Snapshots are in this job directory.
-- Existing fix `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` finalizes client shared-trip payloads and removes the single-line time padding. It is already in starting HEAD. No new parity/logo diagnosis on this head was found in the fetched comments/checks or handoff.
+Authority: current user dispatch authorizes the repair while preserving all guards and inherited budgets. GBrain `bot-admin/lanes/vk-pr-handoff/pr-543` and [PR comment6303720948](https://github.com/grampadsbot-sudo/timesyncher/pull/543#issuecomment-6303720948) narrow the repair to list long-description selection/flight truncation while preserving itinerary summaries. The diagnostic's detail-only recommendation was rejected; it was not implemented. Read GBrain `bot-admin/messages/time-syncher/decisions-log`, `skills/vk-thing-data-contract/skill`, engineer process, verification, keepsake QA, visual gate, canonical UI spec and the repo's listed keepsake SoTs. Copies are in this job directory. Direct `gbrain get` succeeds. Published-skill `get_skill vk-thing-data-contract` returned skill_not_found; its suggested catalog route was empty, then the canonical page route supplied the full contract. No access blocker is claimed.
 
-## Exact CI blocker
+Existing Feature Map coverage: `features/README.md:82` → `features/itinerary-surfaces.md`, plus the stored Details field in `features/detail-page.md`. Governing summary/list field split: GBrain `skills/vk-thing-data-contract/skill`, rows4–5; no new screen or control.
 
-Run [39505732127](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39505732127), job [unit-tests / 118914049695](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39505732127/job/118914049695), step 9 `Vacation client quality gates`, failed on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`.
+## Root cause and bounded change
 
-First substantive error, reproduced locally:
+At starting HEAD477ea302 and current-base218a3b39, the client list model prefers `override.summary` over `longDetails`. The starting head also tries `detailSummary` first, which follows the same short-field precedence. Flights then pass through the short-line picker. Earlier finalization commit97d98747842c1a6e794bb21e5bf2a8ca2c3cd542 correctly restores shared-trip finalization/logos/airport legs, but does not repair this inherited field-selection behavior. Base/head source snapshots and the earlier diagnostic receipt were read; finalization is retained.
 
-```text
-src/api/loadSharedTrip.ts(1,49): error TS7016: Could not find a declaration file for module '../../../../src/vacation/shared-trip-served-page.mjs'.
-```
+`rowSummary` is shared by Day-by-Day, place helpers and keepsakes. Changing it globally would alter those surfaces. This patch adds `rowDescription` for category list rows and binds only `ListRow` to it. It selects stored longDetails/details and source/place narrative fields, retains the existing generic-description rejection, and does not substitute short summaries or shorten flight narratives. Missing/poor narrative data remains data debt.
 
-GitHub annotation says the imported module implicitly has an `any` type; the step exited 2. `npm run typecheck --prefix apps/vacation-client` also exited 2 with this exact error. Evidence: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/ci-annotations.json` and `ci-jobs.json`. Earlier same-head run `39505724581` also failed unit-tests; neither run was restarted.
+Uncommitted source/test files:
 
-The repo AGENTS.md lean rule and GBrain `skills/tsv-engineer-pr-process/skill`, step 9, require reporting the run/job/step/first error and waiting for one targeted fix steer. Exact loaded skill copy: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/tsv-engineer-pr-process-SKILL.md:145`. The current brief names parity/logo/timing work, not this newly observed TypeScript declaration failure. Required next action: managing-dr targeted steer for the TS7016 declaration/type boundary at `apps/vacation-client/src/api/loadSharedTrip.ts:1`; then host publication and normal exact-head CI/Gate B. No guessed source repair, CI retrigger or new Gate B round performed.
+- `apps/vacation-client/src/lib/listTabModel.mjs`: list-only narrative selector.
+- `apps/vacation-client/src/lib/listTabModel.d.mts`: matching typed declaration.
+- `apps/vacation-client/src/components/ListRow.tsx`: renders the list narrative.
+- `apps/vacation-client/test/listRows.unit.mjs`: arbitrary split-field regressions across all six categories; full flight narrative; source/place/details fallback; summary-only absence; timeline summary preservation.
 
-Separate live commit statuses for workspace, timesyncher and timesyncher-vacation-staging report deployment rate limits (`api-deployments-free-per-day`). These statuses are recorded in `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/status.json`; no deployment retry attempted. Exact-head Gate B acceptance was not verified in this worker. GBrain handoff still reports historical failure on `b40fd34`, not a current-head PASS. No merge-eligibility or completion claim.
+Source patch: `source.patch`, SHA256 `4c52bb7c0220b7f19e759575a2d8651c502863810f51e622ac95053587689044`, against starting HEAD477ea3026eece17dd255889341addf87dbf1d49a. No new test file, dependency manifest, CSS, detail panel, fixture, baseline, checker, threshold, allowlist, workflow or deploy-config change. No source write failed.
 
-## Local verification on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`
+## Reproduction and saved-input evidence
 
-Existing dependencies installed from unchanged lockfiles with `npm ci --ignore-scripts --no-audit --no-fund` at root and `apps/vacation-client`; npm cache/logs were kept inside the job directory. Before installation, no-comment and logo checks could not start because dependencies were absent; installation resolved these local setup errors.
+Pinned input: `/home/ubishere9995/tsv-dispatch/fixture-nyc/heads/477ea3026eece17dd255889341addf87dbf1d49a.json`, SHA256 `57e40796c4b6f1935e25776f4bba3b037b4a70e3b097f8729de06195811df262`; read only.
 
-| Command | Result on starting HEAD |
+Before repair on477ea302: the list-path assertion fails because Zabar's renders the9-word summary instead of its37-word stored narrative (`description-repro-before.log`). The saved input has exactly11 bound longDetails rows. After the patch, all11 select their exact stored narrative; all11 summaries and all8 days' serialized timeline entries remain identical (`description-before.json`, `description-replay.json`). Examples: JetBlue6→31 words; Zabar's9→37; Carbone9→45. This proves selection, not description quality.
+
+The rendered-app replay serves the unchanged pinned JSON through the existing preview server and normal client finalization. At390 and1280, it finds all11 exact name-plus-description pairs across all six list tabs, with zero horizontal overflow and no page exceptions. Evidence: `saved-input-browser-replay.mjs`, `saved-input-browser-replay-corrected.log`, `saved-input-browser-replay.json`, `screens/saved-input/`. The first job-local attempt matched duplicate hotel names incorrectly; its log is retained as `saved-input-browser-replay.log`. The corrected identity check still requires every one of the11 exact stored narratives at both widths. No product change followed either verification invocation correction.
+
+Local screenshots are UNBASELINED. The repo has no `baselines/manifest.json`; NYC images are historical references, not approved baselines. `comparison.html` pairs the saved477ea302 candidate reference with the uncommitted-source screenshots. Visual spot-checks show the expanded flight narrative on phone and long Carbone text in the desktop row. Local screenshots also show square emoji glyphs and logo-load differences from the saved reference; no pixel-parity or visual acceptance claim is made. Full client-suite artifacts are in `screens/client-suite/`. Its generated tracked detail screenshots were copied to the job and restored byte-for-byte from starting HEAD; final source diff contains no image changes.
+
+## Local verification on477ea302 plus the source.patch above
+
+| Command | Result and evidence |
 | --- | --- |
-| `node scripts/check-no-comments.mjs` | exit 0; 805 files scanned |
-| `node scripts/test_offline_manifest.mjs` | exit 0; 273 offline, 17 online |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 257 report, 0 fail; see `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/code-ratchet.log` |
-| `node scripts/test_shared_trip_live_tab_logos.mjs` | exit 0 |
-| `npm run typecheck --prefix apps/vacation-client` | exit 2; exact CI TS7016 reproduced |
+| `node apps/vacation-client/test/listRows.unit.mjs` | exit0; arbitrary split-field and itinerary regressions |
+| `npm run typecheck --prefix apps/vacation-client` | exit0 |
+| `npm run lint --prefix apps/vacation-client` | exit0 |
+| `CHROME_PATH=/home/ubishere9995/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome npm test --prefix apps/vacation-client` | exit0; every unit and shell/list/day/budget/detail/keepsake browser suite; `client-tests-corrected.log` |
+| `npm run test:keepsake-style2` | exit0; `keepsake-style2.log` |
+| `npm run build` | exit0; root build and bundled vacation-client; `build.log` |
+| `node scripts/check-no-comments.mjs` | exit0;805 files; `no-comments.log` |
+| `node scripts/test_offline_manifest.mjs` | exit0;273 offline/17 online; `offline-manifest.log` |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | exit0;257 existing reports/0 failures; `code-ratchet.log`; origin/base resolves218a3b39 |
+| `git diff --check` | exit0 |
 
-No screen/layout source changed, so no new screenshot capture, keepsake QA, or pstack run. Local gates are not CI or Gate B acceptance.
+The first aggregate client-test invocation used artifact-root environment variables. Those accidentally forced a browser path inside the runner's negative browser-availability test, causing a local harness assertion. Correcting the command environment resolved it; the second invocation ran all tests without skips or test/check changes. Both logs are retained. No CI was restarted. Dependencies came from unchanged lockfiles via npm ci with scripts disabled and cache in the job directory.
 
-## Host review
+## Acceptance and host action
 
-Only `J/RECEIPT.md` changed, uncommitted; a copy is in `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/RECEIPT.md`. No source/test edits, fixture/baseline changes, gate/threshold changes, dependency manifest changes, Git metadata mutations, external messages or PR updates. Git publication belongs to the outer host. Do not publish another receipt-only commit as a product fix or retry CI on this worker's behalf; first obtain the targeted TS7016 steer required by the process.
+Existing exact-head CI success is only for starting477ea302: [run39506986361](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39506986361), unit-tests job118918266882 and secrets job118918266436. It does not certify this uncommitted patch.
 
-Proposed PR status update for the host: shared-trip finalization fix is present, but unit-tests on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b` fail TypeScript TS7016 at `loadSharedTrip.ts:1`; exact-head Gate B acceptance remains unverified. Local no-comments, offline-manifest, current-base ratchet and logo regression checks succeeded on the same starting SHA. No product changes in this round.
+No new Gate B run, counter reset, cap extension, qualitative judgment or Craig review was requested. GBrain `bot-admin/lanes/vk-pr-handoff/pr-543` records inherited2GateB failures/0CI failures and the protected-vercel/new-look guards. Those remain in force. The11 newly selected long narratives need the normal managing-dr qualitative judgment; old belowbar receipts for short text are not promoted to acceptance. Stored data gaps and internal notes were not invented away or patched in fixtures.
+
+Host next action: review the four-file uncommitted patch and `PR-DESCRIPTION.md`, then publish only through the authorized host path if its guards permit. The normal host/dispatcher owns exact-new-head CI, guarded Gate B all32 screens, any fresh input judgments, and all publication. Until those complete, this PR has no merge-eligibility or completion verdict from this worker. Do not bypass protectedvercel.json, new-look approval, data/harness holds or quota requirements.

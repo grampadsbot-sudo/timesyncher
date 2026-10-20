@@ -405,6 +405,21 @@ export function rowSummary(place, trip) {
   return picked || raw;
 }
 
+export function rowDescription(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const raw = [
+    override.longDetails,
+    override.details,
+    place.longDetails,
+    source.longDetails,
+    source.details,
+    source.description,
+    place.description,
+  ].map(text).find(Boolean) || '';
+  return isGenericDescription(raw) ? '' : raw;
+}
+
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
