@@ -47,6 +47,55 @@ const loadSharedTrip = await readFile(
   'utf8',
 );
 assert.match(loadSharedTrip, /\/api\/shared\/\$\{encodeURIComponent\(slug\)\}\//);
+assert.match(loadSharedTrip, /finalizeServedSharedTripPayload/);
+assert.match(loadSharedTrip, /normalizeServedSharedTripPayload/);
+
+const { finalizeServedSharedTripPayload } = await import(
+  '../src/vacation/shared-trip-served-page.mjs',
+);
+const { buildDayTimeline, sortedDays } = await import(
+  '../apps/vacation-client/src/lib/dayTimelineModel.mjs',
+);
+const rawGateBShapeDay = {
+  places: [
+    {
+      id: 1,
+      name: 'Amelie Bistro & Wine Bar',
+      category_name: 'Restaurant',
+      description: 'Documented NYC option (restaurant)',
+    },
+    {
+      id: 17,
+      name: 'Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45',
+      category_name: 'Flight',
+    },
+  ],
+  days: [{ id: 1, day_number: 1, date: '2026-06-23' }],
+  assignments: {
+    1: [{ place_id: 1, day_id: 1 }, { place_id: 17, day_id: 1 }],
+  },
+  thingOverrides: {
+    'place:1': { timeline: true, dayIds: [1] },
+    'place:17': { sourceRecord: { website: 'https://www.southwest.com/' } },
+  },
+};
+const unpreparedRows = buildDayTimeline(rawGateBShapeDay, rawGateBShapeDay.days[0]);
+assert.equal(
+  unpreparedRows.some((row) => row.title === 'Travel to airport'),
+  false,
+  'raw API JSON must not show airport legs before client finalization',
+);
+const prepared = finalizeServedSharedTripPayload(rawGateBShapeDay);
+const preparedDay = sortedDays(prepared)[0];
+const preparedRows = buildDayTimeline(prepared, preparedDay);
+assert.ok(
+  preparedRows.some((row) => row.title === 'Travel to airport'),
+  'client finalization must add airport transfer legs',
+);
+assert.ok(
+  preparedRows.some((row) => /^Flight option: Southwest LAS-LGA/i.test(row.title || '')),
+  'client finalization must keep timeline flight rows',
+);
 
 function mockRes() {
   return {

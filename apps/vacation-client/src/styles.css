@@ -771,11 +771,6 @@ body {
   padding-top: 0;
 }
 
-.tsv-timeline-row--single-time .tsv-timeline-time-col,
-.tsv-timeline-row--single-time .tsv-timeline-main {
-  padding-top: 1px;
-}
-
 .tsv-timeline-head--single-time {
   align-items: baseline;
 }
@@ -784,7 +779,6 @@ body {
   font-weight: 700;
   color: #111827;
   text-align: right;
-  padding-top: 1px;
 }
 
 .tsv-timeline-time-line {
