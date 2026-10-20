@@ -8,6 +8,10 @@ const DAY_PILL_ROW_NEEDLE = 'display:"flex",gap:6,overflowX:"auto",paddingBottom
 const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:2,flexWrap:"wrap",maxWidth:"100%",minWidth:0,boxSizing:"border-box"},children:Qa.map';
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
+const DAY_TIMELINE_TIME_NEEDLE = 'n.jsxs("div",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?"#b91c1c":ua.time?"#111827":"#9ca3af",textAlign:"right",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):';
+const DAY_TIMELINE_TIME_SINGLE_LINE = 'ua.time&&!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:"#111827",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:Yo(ua.time)}):';
+const DAY_TIMELINE_TITLE_WRAP_NEEDLE = '}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(';
+const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:ua.time&&!ua.endTime?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
@@ -40,6 +44,16 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   if (js.includes(DAY_TIMELINE_GRID_NEEDLE)) js = js.replace(DAY_TIMELINE_GRID_NEEDLE, DAY_TIMELINE_GRID_PATCH);
   else if (served && js.includes('gridTemplateColumns:"74px 22px 1fr"')) {
     throw new Error('shared day timeline grid overflow patch did not apply');
+  }
+  if (js.includes(DAY_TIMELINE_TIME_NEEDLE)) {
+    js = js.replace(DAY_TIMELINE_TIME_NEEDLE, DAY_TIMELINE_TIME_SINGLE_LINE + DAY_TIMELINE_TIME_NEEDLE);
+  } else if (served && !js.includes(DAY_TIMELINE_TIME_SINGLE_LINE)) {
+    throw new Error('day timeline single-line time patch did not apply');
+  }
+  if (js.includes(DAY_TIMELINE_TITLE_WRAP_NEEDLE)) {
+    js = js.replace(DAY_TIMELINE_TITLE_WRAP_NEEDLE, DAY_TIMELINE_TITLE_WRAP_BASELINE);
+  } else if (served && !js.includes(DAY_TIMELINE_TITLE_WRAP_BASELINE)) {
+    throw new Error('day timeline title baseline patch did not apply');
   }
   return js;
 }
