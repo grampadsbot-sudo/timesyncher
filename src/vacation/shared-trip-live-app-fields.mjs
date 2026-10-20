@@ -219,6 +219,27 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'checkInTime', source?.checkInTime, source?.check_in_time);
       copyIfBlank(override, 'checkOutTime', source?.checkOutTime, source?.check_out_time);
       copyIfBlank(override, 'hotelNote', source?.hotelNote, source?.hotel_note);
+      copyIfBlank(
+        override,
+        'address',
+        source?.address,
+        place.address,
+        place.metadata?.address,
+      );
+      copyIfBlank(
+        override,
+        'neighborhood',
+        source?.neighborhood,
+        place.neighborhood,
+        place.metadata?.neighborhood,
+      );
+      copyIfBlank(override, 'googleRating', source?.googleRating, source?.google_rating);
+      copyIfBlank(override, 'googleReviewCount', source?.googleReviewCount, source?.google_review_count);
+      copyIfBlank(override, 'yelpRating', source?.yelpRating, source?.yelp_rating);
+      copyIfBlank(override, 'yelpReviewCount', source?.yelpReviewCount, source?.yelp_review_count);
+      copyIfBlank(override, 'thirdPartyRating', source?.thirdPartyRating, source?.third_party_rating);
+      copyIfBlank(override, 'thirdPartyReviewCount', source?.thirdPartyReviewCount, source?.third_party_review_count);
+      copyIfBlank(override, 'thirdPartySource', source?.thirdPartySource, source?.third_party_source);
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
       }

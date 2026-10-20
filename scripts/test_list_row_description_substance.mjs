@@ -10,6 +10,7 @@ const carText = composeListRowDescription({
   category: 'car',
   summary: 'Cheapest JFK option, but the supplier is hidden.',
   fields: {
+    carType: 'Standard sedan',
     pickupLocation: 'JFK Airport rental car facility / Federal Circle, Jamaica, NY',
     returnLocation: 'JFK Airport rental car facility / Federal Circle, Jamaica, NY',
     pickupHours: 'Counter hours are not shown before booking; Priceline hides the supplier until checkout.',
@@ -18,6 +19,7 @@ const carText = composeListRowDescription({
     reputationNote: 'Review summary: no company-specific JFK confidence because the counter is unknown.',
   },
 });
+assert.match(carText, /Class:/i);
 assert.match(carText, /Pickup:/i);
 assert.match(carText, /Drop-off:/i);
 assert.match(carText, /Pickup hours:/i);
