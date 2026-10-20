@@ -1,18 +1,18 @@
-# PR #543 — vkfill-543-20261020144727 (verify tip, await CI + Gate B)
+# PR #543 — vkfill-543-20261020145726 (verify tip, await CI + Gate B)
 
 ## Outcome
 
-Start commit matched brief: `f94985b180b6c6b81cee5161ab8b9e172da6295d`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. Local pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20, head `8b622381`).
+Start commit matched brief: `27c8bb4786a8afaad5783e3e007badc165b4de34`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. After `npm ci` (root + `apps/vacation-client`), pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20/2026).
 
 ## SHAs
 
 | | SHA |
 |---|---|
-| Start (this brief) | `f94985b180b6c6b81cee5161ab8b9e172da6295d` |
+| Start (this brief) | `27c8bb4786a8afaad5783e3e007badc165b4de34` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
 | Lane tip (after receipt commit) | _(see DONE line)_ |
 
-## Commands (lane `vkfill-543-20261020144727`)
+## Commands (lane `vkfill-543-20261020145726`)
 
 | Command | Exit |
 |---------|------|
