@@ -387,3 +387,121 @@ def pregate_one(
         **status_kwargs,
     )
     return state, pregate_one_compare_run_dir(compare, default=default_run_dir)
+def _load_json_file(path):
+    with open(path) as fh: return json.load(fh)
+
+def _row_id(v):
+    for k in ("id", "placeId", "rowId"):
+        if v.get(k) is not None: return str(v.get(k))
+    return ""
+
+def _capture_rows(fixture_obj):
+    if isinstance(fixture_obj, dict):
+        if isinstance(fixture_obj.get("places"), list):
+            return {str(p.get("id")): p for p in fixture_obj.get("places") if isinstance(p, dict) and p.get("id") is not None}
+        for k in ("searchPlaces", "things", "rows"):
+            if isinstance(fixture_obj.get(k), dict): return {str(rid): p for rid, p in fixture_obj[k].items() if isinstance(p, dict)}
+            if isinstance(fixture_obj.get(k), list): return {_row_id(p): p for p in fixture_obj[k] if isinstance(p, dict) and _row_id(p)}
+    return {}
+
+def _data_text(v): return re.sub(r"\s+", " ", str(v or "")).strip()
+
+def _blank(v):
+    return v is None or v == "" or v == [] or v == {}
+
+def _effective_capture_row(fixture_obj, rid, row):
+    merged = dict(row) if isinstance(row, dict) else {}
+    top = fixture_obj.get("thingOverrides") if isinstance(fixture_obj, dict) else None
+    hit = top.get("place:" + str(rid)) if isinstance(top, dict) else None
+    if isinstance(hit, dict):
+        merged.update(hit)
+    return merged
+
+def _review_texts(p):
+    if not isinstance(p, dict): return []
+    src = p.get("sourceRecord") if isinstance(p.get("sourceRecord"), dict) else {}
+    vals = []
+    for obj in (p, src):
+        for k in ("review1", "review2", "review3", "review4"):
+            vals.append(_data_text(obj.get(k)).lower())
+        reviews = obj.get("reviews")
+        if isinstance(reviews, list):
+            for x in reviews:
+                if isinstance(x, dict): vals.append(_data_text(x.get("text") or x.get("review") or x.get("body")).lower())
+                else: vals.append(_data_text(x).lower())
+    return sorted(v for v in vals if v)
+
+def _logo_text(p):
+    if not isinstance(p, dict): return ""
+    src = p.get("sourceRecord") if isinstance(p.get("sourceRecord"), dict) else {}
+    return _data_text(p.get("logoUrl") or src.get("logoUrl") or src.get("logo") or src.get("faviconUrl"))
+
+def _price_num(v):
+    if v in (None, ""): return None
+    try: return float(str(v).replace("$", "").replace(",", ""))
+    except ValueError: return None
+
+def _capture_row_faults(rid, src, dst):
+    faults = []
+    src_name = _data_text(src.get("title") or src.get("name"))
+    dst_name = _data_text(dst.get("title") or dst.get("name"))
+    if src_name and dst_name.lower() != src_name.lower():
+        faults.append("DATA-CONTRACT: captured row %s identity mismatch snapshot=%r capture=%r" % (rid, src_name, dst_name))
+    for field in ("summary", "description"):
+        src_v = _data_text(src.get(field))
+        dst_v = _data_text(dst.get(field))
+        if src_v and dst_v.lower() != src_v.lower():
+            faults.append("DATA-CONTRACT: captured row %s %s mismatch" % (rid, field))
+    src_logo, dst_logo = _logo_text(src), _logo_text(dst)
+    if src_logo and dst_logo.lower() != src_logo.lower():
+        faults.append("DATA-CONTRACT: captured row %s logo mismatch" % rid)
+    src_price = _price_num(src.get("price"))
+    if src_price is None and isinstance(src.get("sourceRecord"), dict):
+        src_price = _price_num(src["sourceRecord"].get("price"))
+    if src_price is not None:
+        dst_price = _price_num(dst.get("price"))
+        if dst_price is None and isinstance(dst.get("sourceRecord"), dict):
+            dst_price = _price_num(dst["sourceRecord"].get("price"))
+        if dst_price != src_price:
+            faults.append("DATA-CONTRACT: captured row %s price mismatch snapshot=%r capture=%r" % (rid, src_price, dst_price))
+    if src.get("lat") not in (None, "") and src.get("lng") not in (None, ""):
+        try:
+            if abs(float(src.get("lat")) - float(dst.get("lat"))) > 1e-4 or abs(float(src.get("lng")) - float(dst.get("lng"))) > 1e-4:
+                faults.append("DATA-CONTRACT: captured row %s coordinates mismatch" % rid)
+        except (TypeError, ValueError):
+            faults.append("DATA-CONTRACT: captured row %s coordinates missing" % rid)
+    src_reviews, dst_reviews = _review_texts(src), _review_texts(dst)
+    if src_reviews and src_reviews != dst_reviews:
+        faults.append("DATA-CONTRACT: captured row %s reviews mismatch" % rid)
+    return faults
+
+def _capture_payload_faults(snapshot_path, fixture_path):
+    snap = _load_json_file(snapshot_path)
+    if not isinstance(snap, dict) or not snap:
+        return ["DATA-CONTRACT: data snapshot is empty or not an object"]
+    fixture = _load_json_file(fixture_path)
+    captured = _capture_rows(fixture)
+    if not captured:
+        return ["DATA-CONTRACT: captured fixture has no row payload to bind to the snapshot"]
+    missing = sorted(str(k) for k in snap if str(k) not in captured)
+    if missing:
+        return ["DATA-CONTRACT: captured fixture missing snapshot rows: %s" % ", ".join(missing[:12])]
+    faults = []
+    for rid, src in snap.items():
+        if not isinstance(src, dict):
+            faults.append("DATA-CONTRACT: snapshot row %s is not an object" % rid); continue
+        dst = _effective_capture_row(fixture, rid, captured.get(str(rid)) or {})
+        top = fixture.get("thingOverrides") if isinstance(fixture, dict) else None
+        key = "place:" + str(rid)
+        if not isinstance(top, dict) or not isinstance(top.get(key), dict):
+            faults.append("DATA-CONTRACT: captured row %s missing or invalid canonical override" % rid)
+        if isinstance(top, dict) and str(rid) in top:
+            faults.append("DATA-CONTRACT: captured row %s obsolete bare override alias" % rid)
+        faults.extend(_capture_row_faults(rid, src, dst))
+        raw = captured[str(rid)]
+        raw_expected = {k: v for k, v in src.items() if k in raw and not _blank(raw[k])}
+        if not _blank(raw.get("name")):
+            raw_expected["title"] = src.get("title") or src.get("name")
+        faults.extend(_capture_row_faults(rid, raw_expected, raw))
+        if len(faults) >= 12: break
+    return faults

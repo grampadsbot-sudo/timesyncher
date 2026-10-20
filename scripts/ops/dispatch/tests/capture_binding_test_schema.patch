@@ -1,0 +1,20 @@
+--- a/tests/test_tsv_guard.py
++++ b/tests/test_tsv_guard.py
+@@ -438,7 +438,7 @@
+         self.fixture = os.path.join(self.tmp, "nyc-shared.json")
+         self.snapshot = os.path.join(self.tmp, "snapshot.json")
+         row = {"id": "601", "name": "Fixture Store", "category": "store", "summary": "x", "description": "y", "price": 1, "logoUrl": "https://x/logo.png"}
+-        with open(self.fixture, "w") as fh: json.dump({"places": [row]}, fh)
++        with open(self.fixture, "w") as fh: json.dump({"places": [row], "thingOverrides": {"place:601": {}}}, fh)
+         with open(self.snapshot, "w") as fh: json.dump({"601": {"title": "Fixture Store", "category": "store", "summary": "x", "description": "y", "price": 1, "logoUrl": "https://x/logo.png"}}, fh)
+ 
+     def run_capture(self, manifest=True, contract_rc=0, contract_out='{"ok": true}', compare=True, fixture=None):
+@@ -556,7 +556,7 @@
+     def test_thing_overrides_fill_blank_summary(self):
+         with open(self.fixture) as fh: doc = json.load(fh)
+         place = doc["places"][0]
+-        doc["thingOverrides"] = {"601": {"summary": place["summary"], "description": place["description"], "logoUrl": place["logoUrl"]}}
++        doc["thingOverrides"] = {"place:601": {"summary": place["summary"], "description": place["description"], "logoUrl": place["logoUrl"]}}
+         place["summary"] = ""; place["description"] = ""; place["logoUrl"] = ""
+         with open(self.fixture, "w") as fh: json.dump(doc, fh)
+         calls, fake_run = self.run_capture(compare=False)
