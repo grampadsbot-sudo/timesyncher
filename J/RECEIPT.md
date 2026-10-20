@@ -33,3 +33,29 @@ Removed bundle patches (`trip-thing-enrichment.mjs`, `trek-thing-detail-fields-p
 | `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
 
 **Final sha:** `6cfd23e964500a6f358ff5e69daa7b853707985e`
+
+---
+
+# VK PR #572 receipt (cursor-ubuntu vkfill-572-20261020112731)
+
+**Start sha:** `37da3afa0ffe23957b1432e3c5bee647be9e759a` (matched HEAD; source-only fix from prior round, no code edits this round)
+
+## Outcome
+
+Ready for host publish on `vkfill/571-20261020082718`. PR diff vs `origin/migrate/trek-source` is five files only (`listTabModel.mjs`, `listTabModel.d.mts`, `listRows.unit.mjs`, `J/*`); no bundle or `public/assets` patches.
+
+## Commands (exit codes)
+
+| Command | Exit |
+| --- | --- |
+| `apps/vacation-client/npm ci` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
+| `apps/vacation-client/npm run typecheck` | 0 |
+| `apps/vacation-client/npm run lint` | 0 |
+| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
+
+**Tip sha:** `37da3afa0ffe23957b1432e3c5bee647be9e759a` (after receipt commit: see `git rev-parse HEAD`)
