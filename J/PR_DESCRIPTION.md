@@ -23,7 +23,7 @@ node scripts/rebake_served_trek_bundle.mjs
 
 All exited 0 on the lane worker at tip `217aeb55406b6c41a9f14470dc55e78b8e52a1aa`.
 
-CI: `unit-tests` + `secrets` success on head `5d126dfb` — https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39460012479 (rebake fixed prior `62b226c4` `test_served_trek_bundle.mjs` failure).
+CI: `unit-tests` + `secrets` success on PR head `4f2c17c` — https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39461921661 (rebake `217aeb55` fixed prior `62b226c4` `test_served_trek_bundle.mjs` failure).
 
 ## Left alone (scope)
 
