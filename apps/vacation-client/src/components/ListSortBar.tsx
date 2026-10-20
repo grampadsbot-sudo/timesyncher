@@ -11,7 +11,7 @@ type Props = {
 const SORT_KEYS: Array<'name' | 'price'> = ['name', 'price'];
 
 export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
-  const activeIndex = SORT_KEYS.indexOf(sortKey);
+  const activeIndex = SORT_KEYS.findIndex((key) => key === sortKey);
 
   return (
     <div
