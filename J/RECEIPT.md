@@ -1,7 +1,7 @@
 # PR #543 lane vkfill-543-20261020102730 (cursor-ubuntu)
 
 ## Tip
-`fd297d1cda4446fea840d6aa50cd2683f8846fa5` (detached HEAD in worktree `vkfill-543-20261020102730`; host publish moves `vkfill/335-p3a-wiring-202610190827`).
+`e96dee09899df57163da015454653a57a6f80eca` (detached HEAD in worktree `vkfill-543-20261020102730`; host publish moves `vkfill/335-p3a-wiring-202610190827`).
 
 ## Change this round
 - **CI typecheck:** `ListSortBar` `SortKey` now includes `catalog` so it matches `CategoryTabScreen` default sort for stores/restaurants/events (fixes GitHub Actions `unit-tests` failure on `0bddde18`, run [39464758319](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39464758319): `SortKey` not assignable).
