@@ -8,6 +8,7 @@ import {
   enrichTripThing,
   isGenericDescription,
   logoUrlFromSearchPlace,
+  pickListRowSummaryText,
 } from '../src/vacation/trip-thing-enrichment.mjs';
 import { searchPlaceOutputViolations } from '../src/vacation/search-place-output.mjs';
 import { buildVkSearchContractSamplePlaces } from './fixtures/pr336-vk-search-trip-sources.mjs';
@@ -218,6 +219,12 @@ const clauseFlight = enrichSearchPlace({
   },
 });
 assert.equal(clauseFlight.summary, 'Airline: Example Air; Route: AAA-BBB; Stops: nonstop;');
+
+const longFlightListSummary = pickListRowSummaryText(
+  'American Airlines nonstop LAS to JFK on Day 1 afternoon arrival; lands with time to reach the UWS hotel before dinner. Fixture lists $257 one-way fare per traveler for planning math only, not a verified live quote.',
+);
+assert.ok(longFlightListSummary.split(/\s+/).filter(Boolean).length >= 6, longFlightListSummary);
+assert.equal(isGenericDescription(longFlightListSummary), false, 'long flight summary list row line');
 
 const sentenceSummary = enrichSearchPlace({
   source: 'brave',
