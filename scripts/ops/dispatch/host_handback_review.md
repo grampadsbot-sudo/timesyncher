@@ -102,6 +102,14 @@ current section/row owners, stale/future/missing/ambiguous refusals and traceabl
 unresolved review source. Offline schema regressions alone do not meet that check.
 `HOST-HANDBACK-LIVE-DRYRUN` and installation remain NOT RUN by this worker.
 
+## Host-recorded event producer (source only, #569)
+
+`host_handback_events.py` plus `host_handback_events.md` define an explicit version-1
+producer/reader for **new** `HOST_HANDOFF.json` records (head, receipt path+hash, GH
+actor id, comment id, body digest, `pending`/`reviewed`). Legacy `at`/`message`/
+`receipt_exists` files are refused. The collector and alarm are unchanged in this round;
+wiring that reader into `CanonicalCollector` is follow-on host work.
+
 ## Outer-host proof command
 
 Run this only on the independent supervisor's outer host, as the ordinary authorized
