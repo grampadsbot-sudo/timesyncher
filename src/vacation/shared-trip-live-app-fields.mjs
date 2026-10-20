@@ -1,4 +1,17 @@
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+
+const EXPERIENCE_CATEGORIES = new Set([
+  'activity',
+  'event',
+  'attraction',
+  'music',
+  'tour',
+  'sightseeing',
+  'theatre',
+  'tickets',
+  'family_event',
+  'other',
+]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
@@ -249,6 +262,27 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'thirdPartySource', source?.thirdPartySource, source?.third_party_source);
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
+      }
+    } else if (EXPERIENCE_CATEGORIES.has(category)) {
+      if (category) override.category = category;
+      copyIfBlank(override, 'startTime', source?.startTime, source?.start_time, place.place_time);
+      copyIfBlank(override, 'duration', source?.duration);
+      copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note);
+      copyIfBlank(override, 'description', source?.description, place.description);
+      copyIfBlank(override, 'websiteFlavour', source?.websiteFlavour);
+      copyIfBlank(override, 'worthNote', source?.worthNote, source?.worth_note);
+      copyIfBlank(
+        override,
+        'address',
+        source?.address,
+        place.address,
+        place.metadata?.address,
+      );
+      copyIfBlank(override, 'thirdPartyRating', source?.thirdPartyRating, source?.third_party_rating);
+      copyIfBlank(override, 'thirdPartyReviewCount', source?.thirdPartyReviewCount, source?.third_party_review_count);
+      copyIfBlank(override, 'thirdPartySource', source?.thirdPartySource, source?.third_party_source);
+      if (source?.reviewThemes && !override.reviewThemes) {
+        override.reviewThemes = source.reviewThemes;
       }
     }
 

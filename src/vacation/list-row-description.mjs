@@ -25,6 +25,23 @@ function reputationFromThemes(themes) {
   return themes.map((row) => text(row, 200)).filter(Boolean).join('; ');
 }
 
+const EXPERIENCE_CATEGORIES = new Set([
+  'activity',
+  'event',
+  'attraction',
+  'music',
+  'tour',
+  'sightseeing',
+  'theatre',
+  'tickets',
+  'family_event',
+  'other',
+]);
+
+function isExperienceCategory(category = '') {
+  return EXPERIENCE_CATEGORIES.has(text(category, 40).toLowerCase());
+}
+
 function hotelReputation(row = {}) {
   const bits = [];
   if (text(row.googleRating)) {
@@ -84,6 +101,32 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     return parts.join(' · ') || hook;
   }
 
+  if (isExperienceCategory(cat)) {
+    const note = text(fields.itineraryNote || fields.itinerary_note, 280);
+    if (hook) parts.push(hook);
+    else if (note) parts.push(note);
+    push('When', fields.startTime || fields.place_time || fields.start_time);
+    push('Duration', fields.duration);
+    const joined = () => parts.join(' · ');
+    const what = text(fields.longDetails || fields.description || fields.details, 500);
+    if (what && !joined().includes(what.slice(0, Math.min(40, what.length)))) parts.push(what);
+    const flavour = text(fields.websiteFlavour, 500);
+    if (flavour && !joined().includes(flavour.slice(0, Math.min(40, flavour.length)))) parts.push(flavour);
+    push('Where', fields.address || fields.location);
+    const price = formatMoney(fields.price);
+    if (hasPriceDigits(price)) push('Price estimate', price);
+    const praise = reputationFromThemes(
+      fields.reviewThemes && typeof fields.reviewThemes === 'object' && !Array.isArray(fields.reviewThemes)
+        ? fields.reviewThemes.praise
+        : fields.reviewThemes,
+    );
+    const rating = fields.thirdPartyRating
+      ? `${text(fields.thirdPartySource, 40) || 'Rating'} ${fields.thirdPartyRating}${text(fields.thirdPartyReviewCount) ? ` (${fields.thirdPartyReviewCount})` : ''}`
+      : '';
+    push('Why go', text(fields.worthNote, 500) || praise || rating);
+    return parts.join(' · ') || hook || note;
+  }
+
   return hook;
 }
 
@@ -120,6 +163,22 @@ export function listRowDescriptionBundleSnippet() {
     'const note=String(row.hotelNote||row.hotel_note||"").replace(/\\s+/g," ").trim();push("Reputation",rep||(note&&note!==hook?note:""));',
     'if(row.reviewThemes&&typeof row.reviewThemes==="object"){for(const [key,label] of [["praise","Common praise"],["complaints","Common complaints"]]){const themes=row.reviewThemes[key];if(Array.isArray(themes))push(label,themes.map(t=>String(t||"").trim()).filter(Boolean).join("; "));}}',
     'return parts.join(" · ")||hook;}',
+    'const experience=new Set(["activity","event","attraction","music","tour","sightseeing","theatre","tickets","family_event","other"]);',
+    'if(experience.has(cat)){const note=String(row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();',
+    'if(hook)parts.push(hook);else if(note)parts.push(note);',
+    'const when=String(row.startTime||row.start_time||(G&&G.place_time?G.place_time:"")||"").replace(/\\s+/g," ").trim();',
+    'push("When",when);push("Duration",row.duration);',
+    'const joined=()=>parts.join(" · ");',
+    'const what=String(row.longDetails||row.description||row.details||"").replace(/\\s+/g," ").trim();',
+    'if(what&&!joined().includes(what.slice(0,Math.min(40,what.length))))parts.push(what);',
+    'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
+    'if(flavour&&!joined().includes(flavour.slice(0,Math.min(40,flavour.length))))parts.push(flavour);',
+    'push("Where",row.address||row.location);',
+    'const expPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(expPrice))push("Price estimate",expPrice);',
+    'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
+    'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
+    'push("Why go",row.worthNote||praise||expRep);',
+    'return parts.join(" · ")||hook||note;}',
     'return hook;},',
   ].join('');
 }

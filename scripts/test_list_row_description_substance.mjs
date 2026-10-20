@@ -9,7 +9,7 @@ import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-ser
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
-const TEMPLATE_TEXT = /\bDocumented\b.*\boption\b|\b(Price|When):\s|\bBook ahead\b/i;
+const TEMPLATE_TEXT = /\bDocumented\b.*\boption\b|\bPrice:\s*(?:\/night\b)?\s*(?:·|$)|\bBook ahead\b/i;
 
 const carText = composeListRowDescription({
   category: 'car',
@@ -68,6 +68,28 @@ const listOnlyHotel = composeListRowDescription({
 });
 assert.doesNotMatch(listOnlyHotel, /\bPrice:\s*(?:\/night\b)?\s*(?:·|$)/);
 
+const tourText = composeListRowDescription({
+  category: 'activity',
+  summary: 'Ferry and grounds; keep tickets on phone and arrive early for security.',
+  fields: {
+    startTime: '11:00',
+    longDetails:
+      'Statue City Cruises general admission from Battery Park includes round-trip ferry, Liberty and Ellis islands, museums, and audio tours.',
+    address: 'Castle Clinton, Battery Park, New York, NY 10004',
+    price: 26,
+    thirdPartyRating: '4.9',
+    thirdPartyReviewCount: '9034',
+    reviewThemes: { praise: ['knowledgeable and engaging guides who share rich Statue and Ellis history'] },
+  },
+});
+assert.match(tourText, /When:\s*11:00/i);
+assert.match(tourText, /round-trip ferry/i);
+assert.match(tourText, /Castle Clinton/i);
+assert.match(tourText, /Price estimate:\s*\$26/i);
+assert.match(tourText, /Why go:/i);
+assert.match(tourText, /engaging guides/i);
+assert.doesNotMatch(tourText, TEMPLATE_TEXT);
+
 const payload = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
 const carOverride = payload.thingOverrides['place:609'] || {};
 const hotelOverride = payload.thingOverrides['place:603'] || {};
@@ -109,8 +131,13 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
   for (const fact of [hotelOverride.address, '$188/night', 'Google 3.9', 'fitness center', 'free Wi-Fi', 'friendly and helpful staff', 'small/compact rooms']) {
     assert.ok(hotel.includes(fact), `hotel description missing ${fact}`);
   }
+  const tour = renderedDescription(js, payload, 604);
+  for (const fact of ['When: 11:00', 'round-trip ferry', 'Castle Clinton', 'Price estimate: $26', 'engaging guides']) {
+    assert.ok(tour.includes(fact), `activity description missing ${fact}`);
+  }
   assert.doesNotMatch(car, TEMPLATE_TEXT);
   assert.doesNotMatch(hotel, TEMPLATE_TEXT);
+  assert.doesNotMatch(tour, TEMPLATE_TEXT);
   const blockedHotel = renderedDescription(js, payload, 608);
   assert.doesNotMatch(blockedHotel, /Price:|\$|Google|Yelp|Booking\.com/);
 }
