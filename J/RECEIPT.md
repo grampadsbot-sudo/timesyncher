@@ -11,7 +11,7 @@ Merge commit integrating `origin/migrate/trek-source` into the PR branch to clea
 | Start (brief) | `e2f3f1665bed31f63ffdc3db1b82f1f849517d79` |
 | Pre-merge HEAD | `e2f3f1665bed31f63ffdc3db1b82f1f849517d79` |
 | Merged base tip | `906687ec` (Merge pull request #573) |
-| Final HEAD | _(filled after merge commit)_ |
+| Final HEAD | `16314049106cbe007b242f15833312e333e48652` |
 
 ## Conflicts resolved
 
@@ -27,15 +27,18 @@ All other paths merged cleanly from `origin/migrate/trek-source` (capture/dispat
 |---------|------|
 | `git fetch origin migrate/trek-source` | 0 |
 | `git merge origin/migrate/trek-source` | 1 (conflict `J/RECEIPT.md`) |
-| Conflict fix + `git add J/RECEIPT.md` | — |
-| Merge commit | _(pending)_ |
-| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | _(pending)_ |
-| `npm run typecheck` (apps/vacation-client) | _(pending)_ |
-| `node scripts/check-no-comments.mjs` | _(pending)_ |
-| `node scripts/test_offline_manifest.mjs` | _(pending)_ |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | _(pending)_ |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | _(pending)_ |
-| CI-equivalent unit tests | _(pending)_ |
+| Conflict fix + merge commit | 0 → `16314049` |
+| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
+| `npm ci` (root) | 0 |
+| `npm ci` (apps/vacation-client) | 0 |
+| `npm run typecheck` (apps/vacation-client) | 0 |
+| `npm run lint` (apps/vacation-client) | 0 |
+| `CHROME_PATH=…/chrome-linux64/chrome npm run test` (apps/vacation-client) | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node scripts/run-offline-tests.mjs` (CI parity PATH: no `gbrain`, job venv `python3`, bundled `pdftotext` + `LD_LIBRARY_PATH`, `google-chrome` → Playwright chromium) | 1 — `scripts/test_purchase_email_app_link.mjs` chrome headless timeout (~45s); same repro outside full suite. Vacation-client suite and gates above green on `16314049`. |
 
 ## Authority
 
