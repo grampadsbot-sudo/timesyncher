@@ -1,36 +1,47 @@
-# PR #543 — vkfill-543-20261020145726 (verify tip, await CI + Gate B)
+# PR #543 — vkfill-543-20261020150726
 
-## Outcome
+Outcome: blocked-ci on exact starting HEAD `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`; no product source changes. Source changes for host review: none. This receipt is uncommitted. Model: gpt-6.1-sol only.
 
-Start commit matched brief: `27c8bb4786a8afaad5783e3e007badc165b4de34`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. After `npm ci` (root + `apps/vacation-client`), pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20/2026).
+## Verified identity and authority
 
-## SHAs
+- Actual starting HEAD matches the brief: `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`. Initial worktree status was clean.
+- Live GitHub GET `/repos/grampadsbot-sudo/timesyncher/pulls/543` confirms the same head, branch `vkfill/335-p3a-wiring-202610190827`, base `migrate/trek-source` at `218a3b39991328c5da4e75601f186065eacbdf45`, open/non-draft/mergeable, no labels. Snapshot: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/pr-543-current.json`.
+- GBrain access checked successfully with `gbrain get bot-admin/lanes/vk-pr-handoff/pr-543`, plus `bot-admin/messages/time-syncher/decisions-log`. The handoff's latest scoped action is CI + Gate B on the already-applied finalization fix, with any further app round requiring a named lost feature.
+- Read live current comments, reviews, check runs, workflow runs and commit statuses via unauthenticated GitHub GET; no credentials were accessed. Snapshots are in this job directory.
+- Existing fix `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` finalizes client shared-trip payloads and removes the single-line time padding. It is already in starting HEAD. No new parity/logo diagnosis on this head was found in the fetched comments/checks or handoff.
 
-| | SHA |
-|---|---|
-| Start (this brief) | `27c8bb4786a8afaad5783e3e007badc165b4de34` |
-| Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
-| Lane tip (after receipt commit) | _(see DONE line)_ |
+## Exact CI blocker
 
-## Commands (lane `vkfill-543-20261020145726`)
+Run [39505732127](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39505732127), job [unit-tests / 118914049695](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39505732127/job/118914049695), step 9 `Vacation client quality gates`, failed on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`.
 
-| Command | Exit |
-|---------|------|
-| `npm ci` (root) + `npm ci` (`apps/vacation-client`) | 0 |
-| `CHROME_PATH=/snap/bin/chromium node scripts/test_shared_trip_boot_fetch.mjs` | 0 |
-| `node scripts/test_shared_trip_live_tab_logos.mjs` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+First substantive error, reproduced locally:
 
-## PR description (for host `gh pr edit 543`)
+```text
+src/api/loadSharedTrip.ts(1,49): error TS7016: Could not find a declaration file for module '../../../../src/vacation/shared-trip-served-page.mjs'.
+```
 
-**Summary:** P3a serves vacation-client on shared-trip routes. Gate B capture serves raw NYC head JSON without server handler finalization; the client calls `finalizeServedSharedTripPayload` on load so Day-by-Day airport legs, flight rows, and list logos match staging parity. Removed stray single-line timeline `padding-top` that put times ~3.5px above name baselines.
+GitHub annotation says the imported module implicitly has an `any` type; the step exited 2. `npm run typecheck --prefix apps/vacation-client` also exited 2 with this exact error. Evidence: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/ci-annotations.json` and `ci-jobs.json`. Earlier same-head run `39505724581` also failed unit-tests; neither run was restarted.
 
-**Verification:** `CHROME_PATH=/snap/bin/chromium node scripts/test_shared_trip_boot_fetch.mjs` (pass); `node scripts/test_shared_trip_live_tab_logos.mjs` (pass); pre-DONE gates above (pass) on published tip.
+The repo AGENTS.md lean rule and GBrain `skills/tsv-engineer-pr-process/skill`, step 9, require reporting the run/job/step/first error and waiting for one targeted fix steer. Exact loaded skill copy: `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/tsv-engineer-pr-process-SKILL.md:145`. The current brief names parity/logo/timing work, not this newly observed TypeScript declaration failure. Required next action: managing-dr targeted steer for the TS7016 declaration/type boundary at `apps/vacation-client/src/api/loadSharedTrip.ts:1`; then host publication and normal exact-head CI/Gate B. No guessed source repair, CI retrigger or new Gate B round performed.
 
-**Left alone:** Fixtures, baselines, Gate B/capture scripts, `offline-tests.txt`, workflows, deploy config, merge/push from lane (host publishes after DONE). Managing-dr description judgments and Ubuntu Gate B structure run are pipeline-owned.
+Separate live commit statuses for workspace, timesyncher and timesyncher-vacation-staging report deployment rate limits (`api-deployments-free-per-day`). These statuses are recorded in `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/status.json`; no deployment retry attempted. Exact-head Gate B acceptance was not verified in this worker. GBrain handoff still reports historical failure on `b40fd34`, not a current-head PASS. No merge-eligibility or completion claim.
 
-## Left alone
+## Local verification on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b`
 
-Chief-dr parity/logo rows from pre-finalize heads are addressed in `97d98747`; acceptance is Ubuntu Gate B on current PR head only. Known base gaps per handoff: description quality, row layout, timeline icons centred. Untracked `evidence/tsv-335-shared-served/` not committed (lane dirt).
+Existing dependencies installed from unchanged lockfiles with `npm ci --ignore-scripts --no-audit --no-fund` at root and `apps/vacation-client`; npm cache/logs were kept inside the job directory. Before installation, no-comment and logo checks could not start because dependencies were absent; installation resolved these local setup errors.
+
+| Command | Result on starting HEAD |
+| --- | --- |
+| `node scripts/check-no-comments.mjs` | exit 0; 805 files scanned |
+| `node scripts/test_offline_manifest.mjs` | exit 0; 273 offline, 17 online |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 257 report, 0 fail; see `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/code-ratchet.log` |
+| `node scripts/test_shared_trip_live_tab_logos.mjs` | exit 0 |
+| `npm run typecheck --prefix apps/vacation-client` | exit 2; exact CI TS7016 reproduced |
+
+No screen/layout source changed, so no new screenshot capture, keepsake QA, or pstack run. Local gates are not CI or Gate B acceptance.
+
+## Host review
+
+Only `J/RECEIPT.md` changed, uncommitted; a copy is in `/home/ubishere9995/tsv-work/vkfill-543-20261020150726-job/RECEIPT.md`. No source/test edits, fixture/baseline changes, gate/threshold changes, dependency manifest changes, Git metadata mutations, external messages or PR updates. Git publication belongs to the outer host. Do not publish another receipt-only commit as a product fix or retry CI on this worker's behalf; first obtain the targeted TS7016 steer required by the process.
+
+Proposed PR status update for the host: shared-trip finalization fix is present, but unit-tests on `013f8891bbb79e0d3a555b7c994a13aedfd0f80b` fail TypeScript TS7016 at `loadSharedTrip.ts:1`; exact-head Gate B acceptance remains unverified. Local no-comments, offline-manifest, current-base ratchet and logo regression checks succeeded on the same starting SHA. No product changes in this round.
