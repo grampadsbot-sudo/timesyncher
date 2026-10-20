@@ -44,14 +44,26 @@ unsupported and raise an error. Edited events and newer comments without authent
 resolution proof also stop the scan. Collection and canonical rereads must remain
 within 60 seconds; concurrent assessment/receipt/object changes stop the scan.
 
+## Guarded Craig look-send reader
+
+`HostReaders.guarded_craig` authenticates the original dispatcher `look_request`
+contract: `state.json` `look[N]` is written only after `rc=0`, `RESULT ok`, and
+delivered `media` equals the chosen image count. The reader requires that record on
+the exact current full head, consistent `sent_at`/`sent_ms`/`tag`/`media`, and
+exactly one matching `logs/dispatch-YYYYMMDD.log` line with `rc=0`,
+`RESULT ok`, `in_history=yes`, and the same `media` count at the original event
+time. A missing look entry for the current head returns `False`; malformed state,
+missing log proof, failed delivery, or ambiguous matches raise `EvidenceError`.
+GBrain narrative, `needs-craig` alone, and assessment prose are not proof.
+
 ## Evidence still required
 
 The six supplied runtime modules do **not** identify the authenticated original
-pending-acceptance event reader/schema or the guarded Craig receipt reader/path.
-The default host reader deliberately raises `EvidenceError` for those boundaries.
-No phrase-only acceptance, label-only Craig proof, new fabricated canonical record,
-or guessed source actor was substituted. Host must supply/review those actual readers
-before the complete current-object dry-run can meet the acceptance criterion.
+pending-acceptance event reader/schema. The default host reader still raises
+`EvidenceError` for that boundary. No phrase-only acceptance, label-only Craig proof,
+new fabricated canonical record, or guessed source actor was substituted. Host must
+supply/review that actual reader before the complete current-object dry-run can meet
+the acceptance criterion.
 The earlier diagnosis that 12:14:33 UTC was the newest canonical section was a parser
 error: it skipped `Current manager pass`. The canonical read on October 20 at about
 17:34 UTC starts with a 09:59 PT section and a per-row owner table. That section is

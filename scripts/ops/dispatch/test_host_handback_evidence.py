@@ -9,7 +9,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceError,
-                                    HostReaders, current_section, last_action, ownership)
+                                    HostReaders, authenticate_guarded_look_send,
+                                    current_section, last_action, ownership)
 from host_handback_review import classify
 from test_host_handback_review import NOW, iso, issue, receipt
 
@@ -332,8 +333,10 @@ class HostFileBoundaries(unittest.TestCase):
             self.reader.running({566})
 
     def test_missing_craig_reader_refuses(self):
-        with self.assertRaisesRegex(EvidenceError, 'not supplied'):
-            self.reader.guarded_craig(issue(), {})
+        item = issue()
+        item['head'] = {'sha': SHA}
+        with self.assertRaisesRegex(EvidenceError, 'dispatch state not found'):
+            self.reader.guarded_craig(item, {})
 
     def test_plain_receipt_prose_does_not_authenticate_file(self):
         with self.assertRaisesRegex(EvidenceError, 'path not found'):
@@ -349,6 +352,71 @@ class HostFileBoundaries(unittest.TestCase):
             self.assertEqual(self.reader.receipt(canonical + ' ' + digest, 566, SHA), body)
             with self.assertRaisesRegex(EvidenceError, 'current head'):
                 self.reader.receipt(canonical + ' ' + digest, 566, 'b' * 40)
+
+
+class GuardedCraigLookSend(unittest.TestCase):
+    LOOK_SHA = '98e7e1247076d1a3a6b187787274dd04493f1e31'
+    SENT_AT = 1792489024.8769073
+    SENT_MS = 1792489024876
+    LOG_LINE = ('[2026-10-20T09:37:04Z | 2:37 AM PT] PR #560 look request sent via iMac rc=0 RESULT ok '
+                'session=synthetic-offline in_history=yes media=6')
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        (self.root / 'logs').mkdir()
+
+    def write_look(self, n=560, sha=None, media=6, sent_at=None, sent_ms=None, tag=None, extra=None):
+        record = {'sent_at': sent_at if sent_at is not None else self.SENT_AT,
+                  'sent_ms': sent_ms if sent_ms is not None else self.SENT_MS,
+                  'sha': sha if sha is not None else self.LOOK_SHA,
+                  'tag': tag or ('tsv-look-pr%d-202610200933' % n),
+                  'media': media}
+        if extra:
+            record.update(extra)
+        (self.root / 'state.json').write_text(json.dumps({'look': {str(n): record}}))
+        (self.root / 'logs' / 'dispatch-20261020.log').write_text(self.LOG_LINE + '\n')
+
+    def test_authenticated_original_format_succeeds(self):
+        self.write_look()
+        self.assertTrue(authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA))
+
+    def test_wrong_head_refuses(self):
+        self.write_look()
+        self.assertFalse(authenticate_guarded_look_send(self.root, 560, 'b' * 40))
+
+    def test_mismatched_media_refuses(self):
+        self.write_look(media=5)
+        with self.assertRaisesRegex(EvidenceError, 'log event'):
+            authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA)
+
+    def test_failed_send_line_refuses(self):
+        self.write_look()
+        (self.root / 'logs' / 'dispatch-20261020.log').write_text(
+            self.LOG_LINE.replace('rc=0 RESULT ok', 'rc=1 RESULT fail') + '\n')
+        with self.assertRaisesRegex(EvidenceError, 'log event'):
+            authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA)
+
+    def test_missing_original_state_returns_false(self):
+        (self.root / 'state.json').write_text(json.dumps({'look': {}}))
+        self.assertFalse(authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA))
+
+    def test_missing_dispatch_state_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'dispatch state not found'):
+            authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA)
+
+    def test_missing_log_refuses(self):
+        self.write_look()
+        (self.root / 'logs' / 'dispatch-20261020.log').unlink()
+        with self.assertRaisesRegex(EvidenceError, 'dispatch log missing'):
+            authenticate_guarded_look_send(self.root, 560, self.LOOK_SHA)
+
+    def test_host_reader_wraps_authentication(self):
+        self.write_look()
+        reader = HostReaders(self.root)
+        item = {'number': 560, 'head': {'sha': self.LOOK_SHA}}
+        self.assertTrue(reader.guarded_craig(item, {}))
 
 
 if __name__ == '__main__':
