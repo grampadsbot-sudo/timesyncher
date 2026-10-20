@@ -201,7 +201,7 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                 className={`tsv-timeline-head${singleLineTime ? ' tsv-timeline-head--single-time' : ''}`}
               >
                 <TimelineIcon entry={entry} trip={trip} />
-                {isTravel || !place ? (
+                {!place ? (
                   <span className="tsv-timeline-title" data-ts-timeline-title="1">
                     {entry.title}
                   </span>
