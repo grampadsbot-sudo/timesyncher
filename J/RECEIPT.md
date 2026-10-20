@@ -10,7 +10,7 @@ Gate B on `b40fd347` rendered the dispatch NYC head fixture without `finalizeSer
 |---|---|
 | Start (this brief) | `8b62238142980638fe008a18460c7b238c450f91` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
-| Final HEAD | `f1e01275911679cb5560e148d0e4a5db48499368` |
+| Final HEAD | `4635afa99ba95ed7a58ae19bc5dab826b12bcddd` |
 
 ## Changes
 
