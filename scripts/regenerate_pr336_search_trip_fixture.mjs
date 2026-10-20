@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   assertGateBRowProvenance,
+  assertPr336GateBSnapshotWriteAllowed,
   buildPr336VkSearchPlacesByRowId,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 import { applyPr336GateBEventLogosFromRecorded } from './lib/pr336-gate-b-event-logo-recorded-lib.mjs';
@@ -24,6 +25,7 @@ const GATE_B_ROWS = [
 
 let placesById = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, placesById);
+assertPr336GateBSnapshotWriteAllowed(placesById, GATE_B_ROWS);
 
 const eventLogoBinding = await applyPr336GateBEventLogosFromRecorded(placesById);
 placesById = eventLogoBinding.placesById;

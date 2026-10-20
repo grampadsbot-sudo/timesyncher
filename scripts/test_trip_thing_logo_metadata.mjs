@@ -205,7 +205,29 @@ assert.match(built, /Southwest/i);
 const vkSamplePlaces = buildVkSearchContractSamplePlaces();
 for (const place of vkSamplePlaces) {
   assert.notEqual(textOrEmpty(place.summary), textOrEmpty(place.description), `${place.category} summary must differ from description`);
+  assert.ok(textOrEmpty(place.summary).split(' ').length >= 6, `${place.category} summary must say more than a label: ${place.summary}`);
 }
+
+const clauseFlight = enrichSearchPlace({
+  source: 'brave',
+  category: 'flight',
+  title: 'Example Air AAA → BBB',
+  sourceRecord: {
+    description: 'Airline: Example Air; Route: AAA-BBB; Stops: nonstop; Outbound: 08:00-12:00; Price: $200 Basic.',
+    summary: 'Airline: Example Air; Route: AAA-BBB; Stops: nonstop; Outbound: 08:00-12:00; Price: $200 Basic.',
+  },
+});
+assert.equal(clauseFlight.summary, 'Airline: Example Air; Route: AAA-BBB; Stops: nonstop;');
+
+const sentenceSummary = enrichSearchPlace({
+  source: 'brave',
+  category: 'restaurant',
+  title: 'Example bistro',
+  sourceRecord: {
+    description: 'Neighborhood bistro with a short wine list and late seating. Book ahead on weekends.',
+  },
+});
+assert.equal(sentenceSummary.summary, 'Neighborhood bistro with a short wine list and late seating.');
 
 function textOrEmpty(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
