@@ -1,18 +1,18 @@
-# PR #543 — vkfill-543-20261020141731 (verify tip, await CI + Gate B)
+# PR #543 — vkfill-543-20261020142727 (verify tip, await CI + Gate B)
 
 ## Outcome
 
-Start commit matched brief: `879c5ef01b514e4af86c674dfc5c1c617163f119`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. Local pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543`.
+Start commit matched brief: `04c17c184c21a9f03582351a4b81f723c0a4c906`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. Local pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20, head `8b622381`).
 
 ## SHAs
 
 | | SHA |
 |---|---|
-| Start (this brief) | `879c5ef01b514e4af86c674dfc5c1c617163f119` |
+| Start (this brief) | `04c17c184c21a9f03582351a4b81f723c0a4c906` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
 | Lane tip (after receipt commit) | _(see DONE line)_ |
 
-## Commands (lane `vkfill-543-20261020141731`)
+## Commands (lane `vkfill-543-20261020142727`)
 
 | Command | Exit |
 |---------|------|
@@ -22,8 +22,8 @@ Start commit matched brief: `879c5ef01b514e4af86c674dfc5c1c617163f119`. Product 
 | `npm run build` (root + `apps/vacation-client`) | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
 ## PR description (for host `gh pr edit 543`)
 
@@ -35,4 +35,4 @@ Start commit matched brief: `879c5ef01b514e4af86c674dfc5c1c617163f119`. Product 
 
 ## Left alone
 
-Chief-dr parity/logo rows from pre-finalize heads are addressed in `97d98747`; acceptance is Ubuntu Gate B on current PR head only. Known base gaps per handoff: description quality, row layout, timeline icons centred. `apps/vacation-client` `npm run typecheck` still reports TS7016 on the cross-package `.mjs` import (pre-existing with `97d98747`; Vite production build passes).
+Chief-dr parity/logo rows from pre-finalize heads are addressed in `97d98747`; acceptance is Ubuntu Gate B on current PR head only. Known base gaps per handoff: description quality, row layout, timeline icons centred. `gh pr view 543` blocked in lane sandbox (permissions); CI/Gate B status is dispatcher-owned.
