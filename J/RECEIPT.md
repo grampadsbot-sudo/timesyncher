@@ -58,4 +58,4 @@ Ready for host publish on `vkfill/571-20261020082718`. PR diff vs `origin/migrat
 | `apps/vacation-client/npm run lint` | 0 |
 | `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
 
-**Tip sha:** `37da3afa0ffe23957b1432e3c5bee647be9e759a` (after receipt commit: see `git rev-parse HEAD`)
+**Tip sha:** `d0fb4eda9b2b0ca3030536e5e93c1b4280885da7`
