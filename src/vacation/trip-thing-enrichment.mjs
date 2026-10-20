@@ -301,20 +301,6 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
-export function pickListRowSummaryText(value = '') {
-  const s = text(value, 4000);
-  if (!s) return '';
-  const words = s.split(/\s+/).filter(Boolean);
-  if (words.length <= 20) return s;
-  if (/^Documented .+ option/i.test(s)) return s;
-  const line = shortLineFromSourceText(s);
-  return wordCount(line) >= SHORT_LINE_MIN_WORDS ? line : '';
-}
-
-export function listRowSummaryPickBundleExpr() {
-  return '(t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;const cs=s.match(/[^.!?;]+[.!?;]/gy);if(cs){let line="";for(const cl of cs){const next=(line?line+" ":"")+cl.trim();if(line&&next.length>120)break;line=next;if(line.split(" ").filter(Boolean).length>=6)break;}const out=line.trim().slice(0,120);if(out.split(" ").filter(Boolean).length>=6)return out;}return""})';
-}
-
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
