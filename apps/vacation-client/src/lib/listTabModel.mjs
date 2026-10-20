@@ -1,10 +1,9 @@
 import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { detailSummary } from './detailModel.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
 
 function text(value) {
   return String(value ?? '').trim();
@@ -76,6 +75,7 @@ function humanizeTypeKey(raw) {
 }
 
 export function tabCategoryKey(place, trip) {
+  if (/^Flight option:/i.test(placeName(place))) return 'flight';
   const override = overrideFor(trip, place);
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
@@ -220,15 +220,39 @@ export function filterPlaces(places, trip, tab, filters = {}) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return (
+  const direct =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
+    parsePrice(place.total_price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
-  );
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.ticketPrice) ??
+    parsePrice(source.ticketsFrom);
+  if (direct != null) return direct;
+  const hay = [
+    override.details,
+    override.summary,
+    source.description,
+    source.summary,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean)
+    .join(' ');
+  if (!hay) return null;
+  const ticket = hay.match(/(?:tickets?\s+from|price:|from)\s*(?:about\s*)?\$\s*([\d,]+(?:\.\d+)?)/i);
+  if (ticket) return parsePrice(ticket[1]);
+  const priced = hay.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return priced ? parsePrice(priced[1]) : null;
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
+  if (sort?.key === 'catalog') {
+    const order = new Map((trip?.places || []).map((place, index) => [String(place.id), index]));
+    return [...places].sort(
+      (a, b) => (order.get(String(a.id)) ?? 0) - (order.get(String(b.id)) ?? 0),
+    );
+  }
   const key = sort?.key === 'price' ? 'price' : 'name';
   const dir = sort?.dir === 'desc' ? 'desc' : 'asc';
   const sign = dir === 'asc' ? 1 : -1;
@@ -335,12 +359,12 @@ export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   return text(
-    resolveThingLogoUrl(place, override) ||
-      override.logoUrl ||
+    override.logoUrl ||
       override.iconUrl ||
       place.logoUrl ||
       place.captured_logo_url ||
-      source.logoUrl,
+      source.logoUrl ||
+      source.iconUrl,
   );
 }
 

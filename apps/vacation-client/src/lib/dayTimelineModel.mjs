@@ -1,3 +1,6 @@
+import { airportTransferLegs } from './airportTransferLegs.mjs';
+import { flightTimelineTitle } from './dayTimelinePresentation.mjs';
+export { mapPlacesForTimeline } from './dayTimelineMap.mjs';
 import {
   flightPriceDisplay,
   flightSchedule,
@@ -359,13 +362,17 @@ function pushFlightRows(entries, trip, day, dayId) {
     const id = String(place.id);
     if (seen.has(id) || !override.timeline || tabCategoryKey(place, trip) !== 'flight') return;
     seen.add(id);
-    const { depart, arrive } = flightSchedule(place, trip);
+    const plan = airportTransferLegs(place, trip, parseClockToMinutes, formatClockMinutes);
+    const schedule = flightSchedule(place, trip);
+    const depart = plan?.depart || schedule.depart;
+    const arrive = plan?.arrive || schedule.arrive;
+    if (plan) entries.push(plan.to);
     entries.push({
       kind: 'flight',
       id: `flight-${place.id}`,
       place,
-      title: placeName(place),
-      startMin: parseClockToMinutes(depart),
+      title: flightTimelineTitle(place, trip),
+      startMin: plan?.startMin ?? parseClockToMinutes(depart),
       startLabel: depart,
       endLabel: arrive,
       durationMin:
@@ -376,6 +383,7 @@ function pushFlightRows(entries, trip, day, dayId) {
       fare: flightPriceDisplay(place, trip),
       summary: rowSummary(place, trip),
     });
+    if (plan) entries.push(plan.from);
   };
   for (const row of trip.assignments?.[dayId] || []) {
     const place = resolvePlace(row, trip);
@@ -473,39 +481,6 @@ export function buildDayTimeline(trip, day) {
   const withTravel = insertTravelRows(entries, trip);
   markConflicts(withTravel);
   return withTravel;
-}
-
-function coordNumber(primary, fallback) {
-  if (typeof primary === 'number' && Number.isFinite(primary)) return primary;
-  if (primary === null || primary === undefined || primary === '') return null;
-  const parsed = Number(primary ?? fallback);
-  if (!Number.isFinite(parsed)) return null;
-  return parsed;
-}
-
-function placeCoords(place, trip) {
-  const override = overrideFor(trip, place);
-  const lat = coordNumber(place.lat, override.lat);
-  const lng = coordNumber(place.lng, override.lng);
-  if (lat == null || lng == null) return null;
-  return { lat, lng };
-}
-
-export function mapPlacesForTimeline(trip, entries) {
-  const seen = new Set();
-  const markers = [];
-  for (const entry of entries) {
-    if (entry.kind === 'travel' || !entry.place) continue;
-    const category = tabCategoryKey(entry.place, trip);
-    if (category === 'flight' || category === 'car') continue;
-    const coords = placeCoords(entry.place, trip);
-    if (!coords) continue;
-    const key = String(entry.place.id);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    markers.push({ ...entry.place, lat: coords.lat, lng: coords.lng });
-  }
-  return markers;
 }
 
 export function shiftDayIndex(trip, currentIndex, delta) {

@@ -771,6 +771,24 @@ body {
   padding-top: 0;
 }
 
+.tsv-timeline-row--single-time {
+  align-items: baseline;
+}
+
+.tsv-timeline-row--single-time .tsv-timeline-time-col,
+.tsv-timeline-row--single-time .tsv-timeline-main {
+  padding-top: 1px;
+}
+
+.tsv-timeline-head--single-time {
+  align-items: baseline;
+}
+
+.tsv-timeline-time--single {
+  align-self: baseline;
+  white-space: nowrap;
+}
+
 .tsv-timeline-time-col {
   display: flex;
   flex-direction: column;

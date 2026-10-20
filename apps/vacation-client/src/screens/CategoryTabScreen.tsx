@@ -21,10 +21,11 @@ type Props = {
   onTimelineChange: (place: SharedPlace, checked: boolean) => void;
 };
 
-type SortKey = 'name' | 'price';
+type SortKey = 'name' | 'price' | 'catalog';
 
 function defaultSortKey(tab: Props['tab']): SortKey {
-  return tab === 'flights' || tab === 'hotels' || tab === 'cars' ? 'price' : 'name';
+  if (tab === 'flights' || tab === 'hotels' || tab === 'cars') return 'price';
+  return 'catalog';
 }
 
 export function CategoryTabScreen({
