@@ -11,7 +11,7 @@ Merged `origin/migrate/trek-source` at `218a3b39` into the PR branch to clear Gi
 | Start | `e771f332269d6a0b01ef5526b273cee4e402cb1d` |
 | Merged base tip | `218a3b39` (Merge pull request #572) |
 | Merge commit | `a149e93e0303d460e7e939c941456e2c0fe0853c` |
-| Final HEAD | _(after fix commit)_ |
+| Final HEAD | `eef44029` |
 
 ## Conflicts resolved
 
