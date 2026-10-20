@@ -47,6 +47,13 @@ assert.match(hotelText, /\$188/);
 assert.match(hotelText, /Google 3\.9/);
 assert.match(hotelText, /Yelp 3\.3/);
 
+const listOnlyHotel = composeListRowDescription({
+  category: 'hotel',
+  summary: 'List-only row until ccab names a real Midtown property.',
+  fields: { address: 'New York, NY', price: '$' },
+});
+assert.doesNotMatch(listOnlyHotel, /\bPrice:\s*(?:\/night\b)?\s*(?:·|$)/);
+
 const payload = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
 const carOverride = payload.thingOverrides['place:609'] || {};
 const hotelOverride = payload.thingOverrides['place:603'] || {};
