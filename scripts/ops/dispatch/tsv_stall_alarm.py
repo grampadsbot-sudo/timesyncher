@@ -154,13 +154,15 @@ def claim_evidence(c):
     return ev
 
 
-def check_fix_claims(now, dry):
+def check_fix_claims(now, dry, excluded=()):
     """Craig 11:53 PM PT 10/19: every chief-dr fix writes a claim (what, PR, deadline <= 30 min). No live evidence by the deadline rings FIX FAILED."""
     import glob
     out = []
     for p in glob.glob(CLAIMS + "/*.json"):
         try: c = json.load(open(p))
         except Exception: out.append("FIX FAILED: unreadable fix claim %s" % p); continue
+        if c.get("pr") in excluded:
+            continue
         try:
             held = {l["name"] for l in GH().req("GET", "/repos/%s/issues/%d" % (REPO, c["pr"]))["labels"]}
         except Exception:
@@ -189,10 +191,33 @@ def check_fix_claims(now, dry):
     return out
 
 
-def main(dry=False):
+def main(dry=False, review_scan=None):
+    from host_handback_review import EvidenceError
+    if review_scan is None:
+        raise EvidenceError("canonical host ReviewScan required; generic retry refused")
     g = GH(); now = time.time()
-    st = json.load(open(ST)) if os.path.exists(ST) else {}
+    try:
+        if os.path.exists(ST):
+            with open(ST) as state_file:
+                st = json.load(state_file)
+        else:
+            st = {}
+        if not isinstance(st, dict) or not isinstance(st.get("host-review-sent", {}), dict):
+            raise ValueError("invalid review dedupe state")
+    except Exception as exc:
+        raise EvidenceError("shared alarm state unreadable: " + type(exc).__name__) from exc
     seen, stuck = {}, []
+    review_sent = dict(st.get("host-review-sent") or {})
+    review_decisions = {}
+    def review_owned(item):
+        collector = review_scan.read_evidence
+        if hasattr(collector, "current_objects"):
+            item, comments = collector.current_objects(item)
+        else:
+            comments = list(g.pages("/repos/%s/issues/%d/comments" % (REPO, item["number"])))
+        decision = review_scan.consider(item, comments, now, review_sent)
+        review_decisions[item["number"]] = decision
+        return item
     try:
         bases = {"migrate/trek-source"} | {b for b in json.load(open(D + "/allowed-bases.json"))} if os.path.exists(D + "/allowed-bases.json") else {"migrate/trek-source"}
     except Exception:
@@ -201,8 +226,17 @@ def main(dry=False):
         items, covered = [], set()
         prs = list(g.pages("/repos/%s/pulls?state=open" % REPO))
         covered = issue_pr_map(prs)
-        open_nums = {p["number"] for p in prs}
+        issues = list(g.pages("/repos/%s/issues?state=open&labels=project:tsv" % REPO))
+        prs = [review_owned(p) for p in prs if p["base"]["ref"] in bases]
+        issues = [review_owned(i) for i in issues
+                  if "pull_request" not in i and i["number"] not in covered]
+        if dry:
+            review_scan.flush(review_sent, None, dry=True)
+            return review_decisions
+        open_nums = {p["number"] for p in prs if p.get("state") == "open"}
         for p in prs:
+            if p.get("state") != "open" or review_decisions[p["number"]].handled:
+                continue
             for l in p["labels"]:
                 m = re.match(r"hold:after-(\d+)$", l["name"])
                 if m and int(m.group(1)) not in open_nums and not dry:
@@ -214,9 +248,13 @@ def main(dry=False):
                         log("pr%d hold:after-%s lifted (#%s closed); requeued" % (p["number"], m.group(1), m.group(1)))
         def parked(labs): return bool(labs & SKIP) or "hold" in labs or any(x.startswith(("hold:", "parked")) for x in labs)
         for p in prs:
+            if p.get("state") != "open" or review_decisions[p["number"]].handled:
+                continue
             if p["base"]["ref"] in bases and not parked({l["name"] for l in p["labels"]}):
                 items.append(("pr%d" % p["number"], fp_pr(g, p)))
-        for i in g.pages("/repos/%s/issues?state=open&labels=project:tsv" % REPO):
+        for i in issues:
+            if i.get("state") != "open" or review_decisions[i["number"]].handled:
+                continue
             labs = {l["name"] for l in i["labels"]}
             if "pull_request" in i: continue
             if i["number"] in covered:
@@ -227,8 +265,10 @@ def main(dry=False):
                 continue
             if parked(labs): continue
             items.append(("is%d" % i["number"], "issue #%d labels=%s updated=%s" % (i["number"], sorted(labs), i["updated_at"])))
-    except Exception as e:
-        items = None; stuck.append("stall alarm could not read GitHub: %s (fail closed)" % type(e).__name__)
+    except EvidenceError:
+        raise
+    except Exception as exc:
+        raise EvidenceError("complete host scan failed: " + type(exc).__name__) from exc
     for key, desc in items or []:
         h = hashlib.sha256(desc.encode()).hexdigest()[:16]
         prev = st.get(key) or {}
@@ -247,13 +287,22 @@ def main(dry=False):
             stuck.append("%s head unchanged %d min and NO round running (no lane process, no active cloud follow-up): %s" % (key, age // 60, desc[:250]))
             e["idle_rung"] = True; log("%s idle %d min, no running round -> ring" % (key, age // 60))
         seen[key] = e
-    stuck += check_fix_claims(now, dry)
+    import bell_gate
+    review_scan.flush(review_sent, bell_gate.ring)
+    seen["host-review-sent"] = review_sent
+    review_handled = {n for n, decision in review_decisions.items() if decision.handled}
+    stuck += check_fix_claims(now, dry, review_handled)
     for k, msg in launches_not_started(now):
+        match = re.search(r"vk(?:fill|clear)-(\d+)(?:[^0-9]|$)", k)
+        if match and int(match[1]) in review_handled:
+            continue
         if k in st: seen[k] = st[k]; continue
         seen[k] = {"at": now}; stuck.append(msg); log(msg)
     for k, v in st.items():
         if k.startswith("launch:") and now - v.get("at", now) < 86400: seen.setdefault(k, v)
-    if items is not None and not dry: json.dump(seen, open(ST, "w"), indent=1)
+    if items is not None and not dry:
+        with open(ST, "w") as state_file:
+            json.dump(seen, state_file, indent=1)
     if stuck:
         msg = "VK STALL (45 min no state change). Receipt " + SLUG + ": " + " | ".join(stuck)[:1500]
         print(msg)

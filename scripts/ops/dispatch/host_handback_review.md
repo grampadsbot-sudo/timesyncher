@@ -1,90 +1,89 @@
-# Host handback review source handoff (#567)
+# Host handback review source handoff (#567 / #569)
 
 Authority: `bot-admin/requests/eggbot-host-supervisor-gapratchet-549-562-20261020-0200`,
-item 10(c). Current policy must be read with `get_skill tsv-manager` and
-`get_skill tsv-routine-budget`, source `default`; no frozen skill-page substitution.
+item 10(c). Published policies were read using `gbrain skill tsv-manager --source default`
+and `gbrain skill tsv-routine-budget --source default`, not frozen skill pages.
+This is source for independent supervisor review; it is not live acceptance or installation.
 
-`host_handback_review.py` is a deterministic helper. It requests host review/acceptance
-through the existing `bell_gate.ring(..., "stuck_stall", ...)` managing-dr ladder,
-never a coder requeue, forced Gate B, action-budget reset or guard grant.
-Under-20-minute handbacks count as ownership; older handbacks become reviewer action
-requests. Guarded Craig waits, actual running prerequisites and recent management
-actions remain quiet. A plan is never running evidence. Existing holds remain holds.
+The existing `host_handback_review.py` classifier remains unchanged. The tracked
+`tsv_stall_alarm.py` now requires a `ReviewScan`, reads every relevant current object
+before remediation, excludes handled/closed objects from generic actions and scoped
+fix-claim/launch alarms, and keeps reviewer notifications in existing `bell_gate`.
+Dry mode returns the scan decisions before any legacy logging, fix, ring or state write.
+No adapter or any incomplete scan raises `EvidenceError` before generic fallback.
+Actual notifications still require the host's existing serialized state ownership;
+this handoff does not authorize installation or a notification-enabled invocation.
 
-**Not installed.** `tsv_stall_alarm.py` is the explicitly authorized first tracked
-source of the exact supplied 265-line runtime preimage, SHA256
-`59ea2c023e1cb20931810dac4873753fc4a00040d6ec176d80910847cf50de40`.
-It intentionally remains byte-identical here. Its generic fix behavior is not claimed
-repaired by merely tracking it. The proposed integration is in the job directory's
-`host-handback-integration.patch`, tested against precisely that preimage. Source
-lacks runtime `pr_issue_links`, `bell_gate` and the canonical action/process/receipt
-readers. No replacement readers or runtime libraries were guessed or vendored.
-This is the brief's authorized standalone-helper + job-local-patch fallback.
+`host_handback_evidence.py` reads the canonical shared assessment and its referenced
+GBrain receipts through the existing `dr_scorecard.read_page`. It authenticates the
+host GitHub login and numeric ID using `GET /user`; it does not infer source authority
+from a comment's signature or association. Each object and all its paginated comments
+are fetched twice and bound to the classifier's snapshot. The newest assessment
+section must be current (15 minutes), with one exact item row and an explicit owner.
+Only dated entries in the shared Action record supply action times, independent of
+head SHA; missing/unparseable action evidence is an error, not an empty budget.
 
-## Exact host integration hooks
+Scoped process checks read the existing `lane-worker-jobs.json`, lane slot files,
+`rereview-state.json` and `cursor-state.json`. Lane jobs need the actual PID, exact
+lane/tag argv, matching worktree, stable process start identity and current head.
+A boolean cloud flag or a stale Cursor entry cannot prove a running job. Unsupported
+active cloud evidence is an error. The collector never scans host processes globally,
+uses systemctl, calls a model, writes records or performs a privileged operation.
 
-1. Review source/helper, the supplied runtime preimage and the job-local integration
-   patch. Check the preimage hash before applying the patch to an **isolated review
-   checkout**, never directly to live runtime. Run the focused tests below.
-2. Supply a real canonical `read_evidence(item, comments, now) -> Evidence` adapter
-   and exact GitHub source login policy from host records. Neither an arbitrary
-   comment's `dr:` text nor GitHub `author_association` grants authority.
-   `handback_ids` must identify actual completed host-job handbacks for this current
-   object/head, still unresolved; `acceptance_pending` must match the actual host
-   acceptance record on this head. `acceptance_at` is its original event time;
-   incidental GitHub updates must not restart its 20-minute clock. Do not make
-   these proofs true by matching a phrase.
-3. Read current ownership and the rolling-hour action record from
-   `bot-admin/lanes/vk-running-assessment`. Its newest applicable section supersedes
-   older sections. Evidence binds to `snapshot_key(item, comments)`, a checkable
-   canonical reference, the named current owner, current item action identity, and
-   a collection time no older than 60 seconds. `last_action_at=None` means the
-   record was checked and has no action, never an unreadable record.
-4. Verify guarded Craig review against the exact current head. `running_items`
-   contains verified actual live item jobs only, with exact ownership and PID/job
-   identity; planned/active flags and named-but-idle blockers are insufficient.
-   The helper only follows explicit `blocked-by #N` / `waits-on #N` lines from exact
-   trusted source actors. Existing `issue_pr_map` keeps explicitly covered issues
-   out of standalone-issue remediation and preserves the owning PR's budget.
-5. Under the host's existing serialized alarm/state ownership, create a **new**
-   `ReviewScan(read_evidence, exact_source_logins)` for every pass. Invoke patched
-   `tsv_stall_alarm.main(dry=True, review_scan=scan)` for acceptance first. The
-   patch preflights objects before generic hold-release/fix paths, excludes every
-   handled object, and flushes review requests only after a complete scan. Missing
-   adapters/evidence fail closed, without a generic fix or fallback ring.
-6. For a later approved runtime pass, persist `host-review-sent` in the existing
-   alarm state under that same lock. Keep bell_gate's existing quota selection,
-   managing-dr-first routing, delivery bundling, caps and retry state. Do not replay
-   historical comments or bells. Reviewers must atomically claim the shared action
-   budget before actual review/acceptance; a notification is no action grant.
+A handback requires its exact GitHub permalink in a currently referenced canonical
+receipt, an authenticated host actor, and identical scoped receipt bytes. The strict
+file verifier accepts an explicit absolute RECEIPT.md path and matching SHA256 in
+that canonical receipt, bound to the item and full current head; it does not create
+or backfill those records. Existing receipt formats without these bindings are
+unsupported and raise an error. Edited events and newer comments without authenticated
+resolution proof also stop the scan. Collection and canonical rereads must remain
+within 60 seconds; concurrent assessment/receipt/object changes stop the scan.
 
-Host must independently review/test and prove the live dry-run against exact current
-objects, canonical records and receipts before any installation. A manifest is
-untrusted offline input, not a permission or live-evidence attestation. No autonomous
-installation, merge, deploy or real ring is part of this source handoff.
+## Evidence still required
 
-## Checks and offline command
+The six supplied runtime modules do **not** identify the authenticated original
+pending-acceptance event reader/schema or the guarded Craig receipt reader/path.
+The default host reader deliberately raises `EvidenceError` for those boundaries.
+No phrase-only acceptance, label-only Craig proof, new fabricated canonical record,
+or guessed source actor was substituted. Host must supply/review those actual readers
+before the complete current-object dry-run can meet the acceptance criterion.
+The supplied assessment snapshot's newest section is 2026-10-20 12:14:33 UTC; that
+snapshot is stale for a 17:00 UTC pass and cannot serve as current ownership proof.
 
-From the source root:
+## Outer-host proof command
+
+Run this only on the independent supervisor's outer host, as the ordinary authorized
+host user, after reviewing the source and providing the missing real readers:
 
 ```sh
-python3 -B -m unittest discover -s scripts/ops/dispatch -p test_host_handback_review.py -v
+python3 -B /home/ubishere9995/vk569-adapter-20261020-1000/source/scripts/ops/dispatch/host_handback_live_dryrun.py --runtime-root /home/ubishere9995/tsv-dispatch
 ```
 
-Job-local harness, after independently reviewing the patch builder and patch:
+This named `HOST-HANDBACK-LIVE-DRYRUN` loads the tracked alarm explicitly, imports
+existing runtime GH/link readers, and wraps GH to refuse writes. Missing collector,
+missing hook, no current objects or unsupported evidence fails the command. The
+command prints source hashes and decisions only; the independent supervisor decides
+acceptance. Do not run the ordinary alarm CLI or install anything as this proof.
+
+The source alarm started from an older runtime preimage. Its bounded hook is tracked
+without importing unrelated newer runtime changes. The job directory contains
+`current-runtime-hook.patch` and `runtime-patch-hashes.json`, reviewed against the
+supplied current alarm while preserving its additional ownership logic. That patch
+is for isolated supervisor review only; never overwrite live runtime from this repo.
+
+## Offline verification and classification
 
 ```sh
-python3 -B /home/ubishere9995/gpt-pass0453-watchdog/job/test_alarm_integration.py
+python3 -B -m unittest discover -s scripts/ops/dispatch -p 'test_host_handback*.py' -v
 ```
 
-Offline classification of a host-collected manifest, with the collection UTC epoch:
+All three Python suites are **offline behavioral regressions**, with synthetic objects,
+clocks and injected host readers: the original 24 classifier tests, the original 10
+integration cases now targeting the applied tracked hook plus additional integration
+boundaries, and collector/file/process boundary cases. No live host proof, app round,
+Gate B round, notification or GitHub write runs in these tests. The root offline
+manifest covers `scripts/test_*.mjs`; these Python suites are classified here.
 
-```sh
-python3 -B scripts/ops/dispatch/host_handback_review_offline.py /path/to/current-manifest.json --now COLLECTION_EPOCH
-```
-
-Manifest schema 1: `trusted_actors` (exact canonical GH logins), `sent` (optional
-persisted fingerprint map), `objects` (each has raw current `item`, `comments`, and
-all `Evidence` fields; sets serialized as integer arrays). Use exact source timestamps
-and snapshots; do not synthesize live objects or evidence to make an example pass.
-The offline command never reads GH, notifies, writes state or proves live readiness.
+`host_handback_review_offline.py` remains available for inspecting untrusted manifests.
+Its output is offline classification only and cannot substitute for the outer-host
+collector/proof command or authorize installation.
