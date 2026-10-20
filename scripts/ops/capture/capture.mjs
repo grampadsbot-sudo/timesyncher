@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { prepareTimelineReplay } from './timeline-replay.mjs';
-import { applyMergedTimeline, dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
+import { dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -383,7 +383,6 @@ try {
           }
           manifest.day_traversal.by_viewport[w] = { chips, days: dayRuns };
           const merged = mergeDayTimelines(dayRuns.map((d) => ({ timeline: (regions[d.shots[1]] && regions[d.shots[1]].struct && regions[d.shots[1]].struct.timeline) || [] })));
-          applyMergedTimeline(regions, w, merged);
           manifest.day_traversal.by_viewport[w].merged_timeline_titles = merged.map((t) => t.title);
         } else {
           const shots = await captureTabPair(page, w, `${name}-top.png`, `${name}.png`);
