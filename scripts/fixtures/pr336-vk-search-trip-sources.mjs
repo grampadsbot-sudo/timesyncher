@@ -139,7 +139,7 @@ export function rawSearchPlaceFromCcab({
       : recordCategory)
     || 'event';
   return {
-    source: 'brave',
+    source: 'fixture',
     title: text(title, 240),
     category: resolvedCategory,
     lat: ccabRecord.lat ?? null,
@@ -149,10 +149,22 @@ export function rawSearchPlaceFromCcab({
     externalId: text(ccabKey, 240),
     sourceRecord: {
       ...ccabRecord,
-      source: 'brave',
+      source: 'fixture',
+      ccabInputKind: 'stored_fixture_literal',
       url: text(ccabRecord.website, 500),
     },
   };
+}
+
+export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = []) {
+  const unverified = rows.filter((row) => {
+    const place = placesById[row.id];
+    return !place || place.source === 'fixture'
+      || place.sourceRecord?.ccabInputKind === 'stored_fixture_literal';
+  });
+  if (!rows.length || unverified.length) {
+    throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
+  }
 }
 
 export function buildGateBSearchPlaceForRow({ id, name, cat }) {
