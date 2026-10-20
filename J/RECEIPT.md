@@ -1,25 +1,24 @@
-# PR #543 — vkfill-543-20261020142727 (verify tip, await CI + Gate B)
+# PR #543 — vkfill-543-20261020143727 (verify tip, await CI + Gate B)
 
 ## Outcome
 
-Start commit matched brief: `04c17c184c21a9f03582351a4b81f723c0a4c906`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. Local pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20, head `8b622381`).
+Start commit matched brief: `6c2465ce18b9427ef816d728c0a801b5e28be5c1`. Product fix remains `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` (`finalizeServedSharedTripPayload` on shared-trip client load via `loadSharedTrip`; single-line timeline padding removed in `97d98747`). **No further product diff** this round. Local pre-DONE gates, `test_shared_trip_boot_fetch.mjs`, and `test_shared_trip_live_tab_logos.mjs` pass on lane tip (see SHAs). **Done for merge** = dispatcher CI green + Ubuntu Gate B structure on published head (not Cursor self-proof). Pipeline queues CI/Gate B per handoff `bot-admin/lanes/vk-pr-handoff/pr-543` (updated 1:22 PM PT 10/20, head `8b622381`).
 
 ## SHAs
 
 | | SHA |
 |---|---|
-| Start (this brief) | `04c17c184c21a9f03582351a4b81f723c0a4c906` |
+| Start (this brief) | `6c2465ce18b9427ef816d728c0a801b5e28be5c1` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
 | Lane tip (after receipt commit) | _(see DONE line)_ |
 
-## Commands (lane `vkfill-543-20261020142727`)
+## Commands (lane `vkfill-543-20261020143727`)
 
 | Command | Exit |
 |---------|------|
 | `npm ci` (root) + `npm ci` (`apps/vacation-client`) | 0 |
 | `CHROME_PATH=/snap/bin/chromium node scripts/test_shared_trip_boot_fetch.mjs` | 0 |
 | `node scripts/test_shared_trip_live_tab_logos.mjs` | 0 |
-| `npm run build` (root + `apps/vacation-client`) | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
