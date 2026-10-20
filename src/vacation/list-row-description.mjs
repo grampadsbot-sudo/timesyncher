@@ -54,8 +54,10 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Class', fields.carType || fields.vehicleClass);
     push('Pickup', fields.pickupLocation);
     push('Pickup hours', fields.pickupHours);
+    push('Pickup time', fields.pickupTime || fields.startTime);
     push('Drop-off', fields.returnLocation);
     push('Drop-off hours', fields.dropoffHours);
+    push('Drop-off time', fields.dropoffTime || fields.returnTime || fields.endTime);
     const price = formatMoney(fields.price);
     if (hasPriceDigits(price)) push('Price', `${price} total`);
     push('Reputation', text(fields.reputationNote, 500) || reputationFromThemes(fields.reviewThemes));
@@ -68,12 +70,17 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Check-out', fields.checkOutTime);
     push('Area', fields.neighborhood);
     push('Location', fields.address);
+    push('', fields.websiteFlavour);
+    push('Amenities', Array.isArray(fields.amenities) ? fields.amenities.join(', ') : fields.amenities);
+    push('Price level', fields.priceLevel);
     push('Note', fields.hotelNote);
     const price = formatMoney(fields.price);
     if (hasPriceDigits(price)) push('Price', `${price}/night`);
     const note = text(fields.hotelNote, 500);
     const reputation = hotelReputation(fields) || (note && note !== hook ? note : '');
     push('Reputation', reputation);
+    push('Common praise', reputationFromThemes(fields.reviewThemes?.praise));
+    push('Common complaints', reputationFromThemes(fields.reviewThemes?.complaints));
     return parts.join(' · ') || hook;
   }
 
@@ -95,19 +102,23 @@ export function listRowDescriptionBundleSnippet() {
     'if(cat==="car"){if(hook)parts.push(hook);',
     'push("Class",row.carType||row.vehicleClass);',
     'push("Pickup",row.pickupLocation||row.pickup_location);push("Pickup hours",row.pickupHours||row.pickup_hours);',
+    'push("Pickup time",row.pickupTime||row.startTime);',
     'push("Drop-off",row.returnLocation||row.return_location||row.dropoffLocation);push("Drop-off hours",row.dropoffHours||row.dropoff_hours||row.returnHours);',
-    'const carPrice=money(row.price??bi(G));if(hasPriceDigits(carPrice))push("Price",carPrice+" total");',
+    'push("Drop-off time",row.dropoffTime||row.returnTime||row.endTime);',
+    'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("Price",carPrice+" total");',
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
     'return parts.join(" · ")||hook;}',
     'if(cat==="hotel"){if(hook)parts.push(hook);',
     'push("Check-in",row.checkInTime||row.check_in_time);push("Check-out",row.checkOutTime||row.check_out_time);',
     'push("Area",row.neighborhood);push("Location",row.address);push("Note",row.hotelNote||row.hotel_note);',
+    'push("",row.websiteFlavour);push("Amenities",Array.isArray(row.amenities)?row.amenities.join(", "):row.amenities);push("Price level",row.priceLevel);',
     'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("Price",hotelPrice+"/night");',
     'const rep=[row.googleRating?"Google "+row.googleRating+(row.googleReviewCount?" ("+row.googleReviewCount+")":""):"",',
     'row.yelpRating?"Yelp "+row.yelpRating+(row.yelpReviewCount?" ("+row.yelpReviewCount+")":""):"",',
     'row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):""].filter(Boolean).join("; ");',
     'const note=String(row.hotelNote||row.hotel_note||"").replace(/\\s+/g," ").trim();push("Reputation",rep||(note&&note!==hook?note:""));',
+    'if(row.reviewThemes&&typeof row.reviewThemes==="object"){for(const [key,label] of [["praise","Common praise"],["complaints","Common complaints"]]){const themes=row.reviewThemes[key];if(Array.isArray(themes))push(label,themes.map(t=>String(t||"").trim()).filter(Boolean).join("; "));}}',
     'return parts.join(" · ")||hook;}',
     'return hook;},',
   ].join('');

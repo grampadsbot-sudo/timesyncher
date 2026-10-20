@@ -129,6 +129,7 @@ export function applyLiveAppListRowFields(shared = {}) {
     const source = sourceObject(
       override.sourceRecord,
       place.sourceRecord,
+      placeMetadata(place).sourceRecord,
       override.source,
       place.source,
     );
@@ -219,6 +220,12 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'checkInTime', source?.checkInTime, source?.check_in_time);
       copyIfBlank(override, 'checkOutTime', source?.checkOutTime, source?.check_out_time);
       copyIfBlank(override, 'hotelNote', source?.hotelNote, source?.hotel_note);
+      copyIfBlank(override, 'websiteFlavour', source?.websiteFlavour);
+      copyIfBlank(override, 'amenities', source?.amenities);
+      copyIfBlank(override, 'priceLevel', source?.priceLevel);
+      if (source?.reviewThemes && !override.reviewThemes) {
+        override.reviewThemes = source.reviewThemes;
+      }
       copyIfBlank(
         override,
         'address',
