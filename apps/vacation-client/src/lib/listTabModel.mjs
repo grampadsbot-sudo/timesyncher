@@ -338,12 +338,48 @@ export function carSubtitle(place, trip) {
   );
 }
 
-export function rowSummary(place, trip) {
-  const judged = detailSummary(place, trip);
-  if (judged) return judged;
+const FLIGHT_LIST_ROW_MIN_WORDS = 6;
+
+function wordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function clipText(value, max) {
+  const row = text(value);
+  if (!row || row.length <= max) return row;
+  return row.slice(0, max).trim();
+}
+
+function shortLineFromStoredSummary(value = '', max = 120) {
+  const row = text(value);
+  if (!row) return '';
+  const clauses = row.match(/[^.!?;]+[.!?;]/gy);
+  if (clauses) {
+    let line = '';
+    for (const clause of clauses) {
+      const next = clipText(`${line} ${clause}`, 4000);
+      if (line && next.length > max) break;
+      line = next;
+      if (wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS) break;
+    }
+    return clipText(line, max);
+  }
+  return clipText(row.split(/\s+/).slice(0, 10).join(' '), max);
+}
+
+export function pickFlightListRowSummaryText(value = '') {
+  const s = text(value);
+  if (!s) return '';
+  if (wordCount(s) <= 20) return s;
+  if (/^Documented .+ option/i.test(s)) return s;
+  const line = shortLineFromStoredSummary(s);
+  return wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS ? line : '';
+}
+
+function storedRowSummaryText(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  const candidate = text(
+  return text(
     override.summary ||
       override.longDetails ||
       override.details ||
@@ -351,8 +387,16 @@ export function rowSummary(place, trip) {
       source.longDetails ||
       place.description,
   );
-  if (!candidate || isGenericDescription(candidate)) return '';
-  return candidate;
+}
+
+export function rowSummary(place, trip) {
+  const judged = detailSummary(place, trip);
+  if (judged) return judged;
+  const raw = storedRowSummaryText(place, trip);
+  if (!raw || isGenericDescription(raw)) return '';
+  if (tabCategoryKey(place, trip) !== 'flight') return raw;
+  const picked = pickFlightListRowSummaryText(raw);
+  return picked || raw;
 }
 
 export function logoUrlForPlace(place, trip) {
