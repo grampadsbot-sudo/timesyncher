@@ -292,6 +292,30 @@ export function applyLiveAppListRowFields(shared = {}) {
       override.timeline = !!source.timeline;
     }
 
+    const meta = placeMetadata(place);
+    if (!text(place.externalId)) {
+      const externalId = firstPresent(override.externalId, meta.externalId);
+      if (externalId) place.externalId = externalId;
+    }
+    if (!text(override.externalId) && text(place.externalId)) {
+      override.externalId = place.externalId;
+    }
+    const metaSourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object'
+      ? meta.sourceRecord
+      : null;
+    if (metaSourceRecord) {
+      if (!place.sourceRecord || typeof place.sourceRecord !== 'object') {
+        place.sourceRecord = { ...metaSourceRecord };
+      }
+      const mergedSourceRecord = override.sourceRecord && typeof override.sourceRecord === 'object'
+        ? { ...metaSourceRecord, ...override.sourceRecord }
+        : { ...metaSourceRecord };
+      if (override.sourceRecord?.identityProvenance) {
+        mergedSourceRecord.identityProvenance = override.sourceRecord.identityProvenance;
+      }
+      override.sourceRecord = mergedSourceRecord;
+    }
+
     Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
 
     next.thingOverrides[key] = override;

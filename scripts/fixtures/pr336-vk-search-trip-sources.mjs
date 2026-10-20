@@ -53,33 +53,86 @@ function narrativeWordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
 }
 
-export function storedCcabRecordForTitle(title = '') {
-  const ccabKey = text(title, 240);
-  if (!ccabKey) return null;
-  const ccabRecord = ENRICHMENT[ccabKey];
+function enrichmentHit(ccabKey = '') {
+  const key = text(ccabKey, 240);
+  if (!key) return null;
+  const ccabRecord = ENRICHMENT[key];
   if (!ccabRecord || typeof ccabRecord !== 'object') return null;
-  return { ccabKey, ccabRecord };
+  return { ccabKey: key, ccabRecord };
 }
 
-export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') {
-  const hit = storedCcabRecordForTitle(title);
+export function storedCcabRecordForTitle(title = '') {
+  return enrichmentHit(title);
+}
+
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
+}
+
+function sourceRecordsForIdentity(place = {}, override = {}) {
+  const meta = placeMetadata(place);
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
+  return {
+    overrideRecord: override.sourceRecord && typeof override.sourceRecord === 'object' ? override.sourceRecord : null,
+    placeRecord: place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null,
+    metaRecord,
+    meta,
+  };
+}
+
+export function resolveStoredCcabKey(place = {}, override = {}) {
+  const { overrideRecord, placeRecord, metaRecord, meta } = sourceRecordsForIdentity(place, override);
+  const candidates = [
+    overrideRecord?.identityProvenance?.ccabKey,
+    overrideRecord?.ccabKey,
+    placeRecord?.identityProvenance?.ccabKey,
+    placeRecord?.ccabKey,
+    override.externalId,
+    place.externalId,
+    meta.externalId,
+    metaRecord?.identityProvenance?.ccabKey,
+    metaRecord?.ccabKey,
+    place.name,
+    place.title,
+    override.title,
+  ];
+  for (const candidate of candidates) {
+    const hit = enrichmentHit(candidate);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+export function storedCcabRecordForPlace(place = {}, override = {}) {
+  return resolveStoredCcabKey(place, override);
+}
+
+export function enrichListRowFromStoredCcab(place = {}, override = {}, categoryHint = '') {
+  const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return null;
-  const cat = text(categoryHint, 40).toLowerCase();
+  const cat = text(categoryHint || override.category || place.category_name, 40).toLowerCase();
   return enrichSearchPlace(rawSearchPlaceFromCcab({
-    title: hit.ccabKey,
+    title: text(place.name || place.title || hit.ccabKey, 240),
     category: cat || hit.ccabRecord.category,
     ccabKey: hit.ccabKey,
     ccabRecord: hit.ccabRecord,
   }));
 }
 
+export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') {
+  return enrichListRowFromStoredCcab({ name: title }, {}, categoryHint);
+}
+
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
-  const title = text(place.name || place.title, 240);
-  if (!title) return override;
+  const hit = storedCcabRecordForPlace(place, override);
+  if (!hit) return override;
   const existing = text(override.longDetails || override.details || override.description);
   if (narrativeWordCount(existing) >= 30) return override;
-  const enriched = enrichListRowFromStoredCcabTitle(
-    title,
+  const enriched = enrichListRowFromStoredCcab(
+    place,
+    override,
     override.category || place.category_name,
   );
   if (!enriched) return override;
