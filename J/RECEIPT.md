@@ -1,15 +1,16 @@
-# PR #543 — vkfill-543-20261020130722 (client finalize + timeline baseline)
+# PR #543 — vkfill-543-20261020132723 (client finalize + timeline baseline)
 
 ## Outcome
 
-Gate B on `b40fd347` rendered the dispatch NYC head fixture without `finalizeServedSharedTripPayload`, so Day-by-Day missed airport legs, timeline flights, and list logos that staging parity expects. The vacation-client now finalizes every shared-trip JSON load the same way `shared-trip-handler` does on the server.
+Gate B on `b40fd347` rendered the dispatch NYC head fixture without `finalizeServedSharedTripPayload`, so Day-by-Day missed airport legs, timeline flights, and list logos that staging parity expects. The vacation-client now finalizes every shared-trip JSON load the same way `shared-trip-handler` does on the server. Lane round `vkfill-543-20261020132723` re-ran pre-DONE gates and `test_shared_trip_boot_fetch.mjs` on tip `8b622381`; no further product diff (remote `vkfill/335-p3a-wiring-202610190827` already at that sha). **Done** for this lane = dispatcher CI + Ubuntu Gate B structure on `8b622381`.
 
 ## SHAs
 
 | | SHA |
 |---|---|
-| Start | `b40fd3477ff5c2e316d7995089f3ceb9ecc3cf89` |
-| Final HEAD | `a14586a4` |
+| Start (this brief) | `8b62238142980638fe008a18460c7b238c450f91` |
+| Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
+| Final HEAD | `8b62238142980638fe008a18460c7b238c450f91` |
 
 ## Changes
 
