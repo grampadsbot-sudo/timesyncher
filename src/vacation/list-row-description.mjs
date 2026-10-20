@@ -59,7 +59,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Drop-off hours', fields.dropoffHours);
     push('Drop-off time', fields.dropoffTime || fields.returnTime || fields.endTime);
     const price = formatMoney(fields.price);
-    if (hasPriceDigits(price)) push('Price', `${price} total`);
+    if (hasPriceDigits(price)) push('', `${price} total`);
     push('Reputation', text(fields.reputationNote, 500) || reputationFromThemes(fields.reviewThemes));
     return parts.join(' · ') || hook;
   }
@@ -75,7 +75,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Price level', fields.priceLevel);
     push('Note', fields.hotelNote);
     const price = formatMoney(fields.price);
-    if (hasPriceDigits(price)) push('Price', `${price}/night`);
+    if (hasPriceDigits(price)) push('', `${price}/night`);
     const note = text(fields.hotelNote, 500);
     const reputation = hotelReputation(fields) || (note && note !== hook ? note : '');
     push('Reputation', reputation);
@@ -105,7 +105,7 @@ export function listRowDescriptionBundleSnippet() {
     'push("Pickup time",row.pickupTime||row.startTime);',
     'push("Drop-off",row.returnLocation||row.return_location||row.dropoffLocation);push("Drop-off hours",row.dropoffHours||row.dropoff_hours||row.returnHours);',
     'push("Drop-off time",row.dropoffTime||row.returnTime||row.endTime);',
-    'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("Price",carPrice+" total");',
+    'const carPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(carPrice))push("",carPrice+" total");',
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
     'return parts.join(" · ")||hook;}',
@@ -113,7 +113,7 @@ export function listRowDescriptionBundleSnippet() {
     'push("Check-in",row.checkInTime||row.check_in_time);push("Check-out",row.checkOutTime||row.check_out_time);',
     'push("Area",row.neighborhood);push("Location",row.address);push("Note",row.hotelNote||row.hotel_note);',
     'push("",row.websiteFlavour);push("Amenities",Array.isArray(row.amenities)?row.amenities.join(", "):row.amenities);push("Price level",row.priceLevel);',
-    'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("Price",hotelPrice+"/night");',
+    'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("",hotelPrice+"/night");',
     'const rep=[row.googleRating?"Google "+row.googleRating+(row.googleReviewCount?" ("+row.googleReviewCount+")":""):"",',
     'row.yelpRating?"Yelp "+row.yelpRating+(row.yelpReviewCount?" ("+row.yelpReviewCount+")":""):"",',
     'row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):""].filter(Boolean).join("; ");',

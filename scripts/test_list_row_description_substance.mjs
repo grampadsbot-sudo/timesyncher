@@ -9,6 +9,8 @@ import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-ser
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 
+const TEMPLATE_TEXT = /\bDocumented\b.*\boption\b|\b(Price|When):\s|\bBook ahead\b/i;
+
 const carText = composeListRowDescription({
   category: 'car',
   summary: 'Cheapest JFK option, but the supplier is hidden.',
@@ -29,6 +31,8 @@ assert.match(carText, /Pickup hours:/i);
 assert.match(carText, /Drop-off hours:/i);
 assert.match(carText, /\$306/);
 assert.match(carText, /Reputation:/i);
+assert.match(carText, /\$306 total/);
+assert.doesNotMatch(carText, TEMPLATE_TEXT);
 
 const hotelText = composeListRowDescription({
   category: 'hotel',
@@ -54,6 +58,8 @@ assert.match(hotelText, /Yelp 3\.3/);
 assert.match(hotelText, /fitness center and free Wi-Fi/);
 assert.match(hotelText, /Common praise: helpful staff/);
 assert.match(hotelText, /Common complaints: small rooms/);
+assert.match(hotelText, /\$188\/night/);
+assert.doesNotMatch(hotelText, TEMPLATE_TEXT);
 
 const listOnlyHotel = composeListRowDescription({
   category: 'hotel',
@@ -103,8 +109,33 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
   for (const fact of [hotelOverride.address, '$188/night', 'Google 3.9', 'fitness center', 'free Wi-Fi', 'friendly and helpful staff', 'small/compact rooms']) {
     assert.ok(hotel.includes(fact), `hotel description missing ${fact}`);
   }
+  assert.doesNotMatch(car, TEMPLATE_TEXT);
+  assert.doesNotMatch(hotel, TEMPLATE_TEXT);
   const blockedHotel = renderedDescription(js, payload, 608);
   assert.doesNotMatch(blockedHotel, /Price:|\$|Google|Yelp|Booking\.com/);
+}
+
+const snapshot = JSON.parse(readFileSync(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'));
+const snapshotTrip = { places: [], thingOverrides: {} };
+for (const id of ['609', '603']) {
+  const row = snapshot[id];
+  snapshotTrip.places.push({ id: Number(id), name: row.title, category_name: row.category, price: row.price, address: row.address || null });
+  const { title, summary, description, price, sourceRecord } = row;
+  snapshotTrip.thingOverrides[`place:${id}`] = { title, summary, description, price, sourceRecord };
+}
+for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8')]) {
+  const car = renderedDescription(js, snapshotTrip, 609);
+  const carRecord = snapshot['609'].sourceRecord;
+  const carFacts = [carRecord.carType, carRecord.pickupLocation, carRecord.pickupHours, carRecord.dropoffHours, '$306 total', carRecord.reputationNote];
+  assert.deepEqual(carFacts.filter((fact) => !car.includes(fact)), []);
+  const hotel = renderedDescription(js, snapshotTrip, 603);
+  const hotelRecord = snapshot['603'].sourceRecord;
+  const hotelFacts = [hotelRecord.address, hotelRecord.websiteFlavour, '$188/night', `Google ${hotelRecord.googleRating}`, hotelRecord.reviewThemes.praise[0], hotelRecord.reviewThemes.complaints[0]];
+  assert.deepEqual(hotelFacts.filter((fact) => !hotel.includes(fact)), []);
+  for (const text of [car, hotel]) {
+    assert.doesNotMatch(text, TEMPLATE_TEXT);
+    assert.ok(text.split(/\s+/).length >= 30, `row description too thin: ${text}`);
+  }
 }
 
 const sourceOnly = applyLiveAppListRowFields({
