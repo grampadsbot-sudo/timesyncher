@@ -22,7 +22,17 @@ import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { sourceRecordFor, sourceRefFor } from './place-search-record.mjs';
 import { noteToTripThing, placeToTripThing } from './place-search-trip-thing.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
-import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
+import {
+  placeSearchReadJson,
+  PLACE_SEARCH_PROVIDER_READ_TIMEOUT_MS,
+  resolvePlaceSearchProviderReadTimeoutMs,
+} from './place-search-read-json.mjs';
+
+export {
+  placeSearchReadJson,
+  PLACE_SEARCH_PROVIDER_READ_TIMEOUT_MS,
+  resolvePlaceSearchProviderReadTimeoutMs,
+} from './place-search-read-json.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { overpassQuery, placesFromOsmPayload } from './place-search-osm.mjs';
@@ -183,48 +193,6 @@ function countSources(places) {
   return counts;
 }
 
-export async function placeSearchReadJson(fetchImpl, url, { headers, method, body, label }) {
-  if (isNominatimOpenStreetMapUrl(url)) {
-    throw new PlaceSearchError(
-      'Nominatim HTTP must use the nominatim gateway (throttle + cache)',
-      'nominatim_bypass',
-    );
-  }
-  let response;
-  try {
-    response = await fetchImpl(url, {
-      method: method || 'GET',
-      headers: {
-        accept: 'application/json',
-        'user-agent': 'TimeSyncherVacation/1.0',
-        ...(headers || {}),
-      },
-      body,
-    });
-  } catch (error) {
-    fail(`${label} request failed: ${error.message || error}`, 'source_failed');
-  }
-  if (!response?.ok) {
-    let detail = '';
-    try {
-      detail = typeof response.text === 'function' ? await response.text() : '';
-    } catch {
-      detail = '';
-    }
-    const httpStatus = Number(response?.status);
-    const message = `${label} failed: HTTP ${response?.status || 'no status'} ${String(detail).slice(0, 300)}`.trim();
-    const error = new PlaceSearchError(message, 'source_failed');
-    if (Number.isFinite(httpStatus)) error.httpStatus = httpStatus;
-    console.error(message);
-    throw error;
-  }
-  try {
-    return await response.json();
-  } catch (error) {
-    fail(`${label} returned invalid JSON: ${error.message || error}`, 'source_failed');
-  }
-}
-
 function presentNumber(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value.trim()))) return Number(value.trim());
@@ -261,13 +229,14 @@ function categoryNameField(name) {
   return categoryName ? { categoryName } : {};
 }
 
-async function queryOsm(fetchImpl, center, categoryFilter = null) {
+async function queryOsm(fetchImpl, center, categoryFilter = null, providerReadTimeoutMs = null) {
   const body = `data=${encodeURIComponent(overpassQuery(center, categoryFilter))}`;
   const payload = await placeSearchReadJson(fetchImpl, 'https://overpass-api.de/api/interpreter', {
     label: 'OpenStreetMap Overpass',
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body,
+    timeoutMs: providerReadTimeoutMs,
   });
   return placesFromOsmPayload(payload, center, { finite, metersInsideCategory, ratingFromRecord });
 }
@@ -283,6 +252,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
   locationText,
   compactLocality = '',
   namedPlaceLookup = false,
+  providerReadTimeoutMs = null,
 }, queries) {
   if (braveEndpoint(center) !== 'local') {
     const error = new Error('Brave place search requires coordinates');
@@ -316,6 +286,7 @@ export async function queryBravePlaceSearch(fetchImpl, env, {
         {
           label: 'Brave Place Search',
           headers: { 'X-Subscription-Token': String(env.brave).trim() },
+          timeoutMs: providerReadTimeoutMs,
         },
       );
       const braveRows = bravePlaceSearchRows(payload, endpoint);
@@ -498,6 +469,7 @@ export async function searchPlaces({
   loadPriorPlaces,
   onSearchSnapshot = null,
   searchProgressContext = null,
+  providerReadTimeoutMs: providerReadTimeoutMsOption = null,
 } = {}) {
   env = buildProviderEnv(env);
   const started = Date.now();
@@ -544,6 +516,7 @@ export async function searchPlaces({
     if (!targetKind) fail('Place search refused: classifier place targetKind missing.', 'missing_place_target_kind');
   }
   const osmCategoryFilter = [...new Set(placeQueries.map((item) => normalizePlaceSearchCategory(item?.category)).filter(Boolean))];
+  const providerReadTimeoutMs = resolvePlaceSearchProviderReadTimeoutMs(env, providerReadTimeoutMsOption);
   const emitSnapshot = async (partialPlaces, phase) => {
     if (typeof onSearchSnapshot !== 'function') return;
     await onSearchSnapshot(Array.isArray(partialPlaces) ? partialPlaces : [], {
@@ -572,8 +545,11 @@ export async function searchPlaces({
       readPriorPlaces,
       selectPriorPlaces,
       priorRowsFromInput,
-      queryOsm,
-      queryBrave: queryBravePlaceSearch,
+      queryOsm: (fetch, center, filter) => queryOsm(fetch, center, filter, providerReadTimeoutMs),
+      queryBrave: (fetch, envArg, ctx, placeQs) => queryBravePlaceSearch(fetch, envArg, {
+        ...ctx,
+        providerReadTimeoutMs,
+      }, placeQs),
       mergePlaces,
       attachRelevance,
       readJson: placeSearchReadJson,
