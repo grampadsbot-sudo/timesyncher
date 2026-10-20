@@ -30,6 +30,6 @@ Removed bundle patches (`trip-thing-enrichment.mjs`, `trek-thing-detail-fields-p
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 | `node scripts/run-offline-tests.mjs` | 1 (`scripts/test_live_transcript_dialog_pdf.mjs`: gbrain route `gbrain-cli-get_page` vs expected `bundled-get_page` on this host) |
-| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | (after merge commit) |
+| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
 
-**Final sha:** (written at commit)
+**Final sha:** `6cfd23e964500a6f358ff5e69daa7b853707985e`
