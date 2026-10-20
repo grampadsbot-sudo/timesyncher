@@ -389,11 +389,17 @@ function storedRowSummaryText(place, trip) {
   );
 }
 
-export function rowSummary(place, trip) {
+function rowSummaryRaw(place, trip) {
   const judged = detailSummary(place, trip);
   if (judged) return judged;
   const raw = storedRowSummaryText(place, trip);
   if (!raw || isGenericDescription(raw)) return '';
+  return raw;
+}
+
+export function rowSummary(place, trip) {
+  const raw = rowSummaryRaw(place, trip);
+  if (!raw) return '';
   if (tabCategoryKey(place, trip) !== 'flight') return raw;
   const picked = pickFlightListRowSummaryText(raw);
   return picked || raw;
