@@ -82,7 +82,8 @@ const tourText = composeListRowDescription({
     reviewThemes: { praise: ['knowledgeable and engaging guides who share rich Statue and Ellis history'] },
   },
 });
-assert.match(tourText, /When:\s*11:00/i);
+assert.match(tourText, /Start:\s*11:00/i);
+assert.doesNotMatch(tourText, /\bWhen:\s/i);
 assert.match(tourText, /round-trip ferry/i);
 assert.match(tourText, /Castle Clinton/i);
 assert.match(tourText, /Price estimate:\s*\$26/i);
@@ -132,7 +133,7 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
     assert.ok(hotel.includes(fact), `hotel description missing ${fact}`);
   }
   const tour = renderedDescription(js, payload, 604);
-  for (const fact of ['When: 11:00', 'round-trip ferry', 'Castle Clinton', 'Price estimate: $26', 'engaging guides']) {
+  for (const fact of ['Start: 11:00', 'round-trip ferry', 'Castle Clinton', 'Price estimate: $26', 'engaging guides']) {
     assert.ok(tour.includes(fact), `activity description missing ${fact}`);
   }
   assert.doesNotMatch(car, TEMPLATE_TEXT);
@@ -144,7 +145,7 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
 
 const snapshot = JSON.parse(readFileSync(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'));
 const snapshotTrip = { places: [], thingOverrides: {} };
-for (const id of ['609', '603']) {
+for (const id of ['609', '603', '601', '602', '605', '610']) {
   const row = snapshot[id];
   snapshotTrip.places.push({ id: Number(id), name: row.title, category_name: row.category, price: row.price, address: row.address || null });
   const { title, summary, description, price, sourceRecord } = row;
@@ -162,6 +163,26 @@ for (const js of [bundle, readFileSync(new URL('../public/assets/index-BKun7ofk.
   for (const text of [car, hotel]) {
     assert.doesNotMatch(text, TEMPLATE_TEXT);
     assert.ok(text.split(/\s+/).length >= 30, `row description too thin: ${text}`);
+  }
+  for (const id of [601, 602, 605, 610]) {
+    const row = snapshot[String(id)];
+    const description = renderedDescription(js, snapshotTrip, id);
+    assert.ok(description.includes(row.summary), `traveler note missing for ${row.title}`);
+    assert.ok(description.includes(row.sourceRecord.longDetails), `stored narrative missing for ${row.title}`);
+    if (row.sourceRecord.websiteFlavour) {
+      assert.ok(description.includes(row.sourceRecord.websiteFlavour));
+      for (const theme of row.sourceRecord.reviewThemes.praise) assert.ok(description.includes(theme));
+    }
+    assert.ok(description.split(/\s+/).length >= 30, `row description too thin: ${row.title}`);
+    assert.doesNotMatch(description, TEMPLATE_TEXT);
+    const composed = composeListRowDescription({ category: row.category, summary: row.summary, fields: row.sourceRecord });
+    assert.ok(composed.includes(row.sourceRecord.longDetails));
+    const overlapping = composeListRowDescription({
+      category: row.category,
+      summary: row.sourceRecord.longDetails.slice(0, 40),
+      fields: row.sourceRecord,
+    });
+    assert.ok(overlapping.includes(row.sourceRecord.longDetails));
   }
 }
 

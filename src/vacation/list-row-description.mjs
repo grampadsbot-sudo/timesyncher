@@ -101,17 +101,19 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     return parts.join(' · ') || hook;
   }
 
-  if (isExperienceCategory(cat)) {
+  if (isExperienceCategory(cat) || cat === 'restaurant' || cat === 'store' || cat === 'flight') {
     const note = text(fields.itineraryNote || fields.itinerary_note, 280);
     if (hook) parts.push(hook);
-    else if (note) parts.push(note);
-    push('When', fields.startTime || fields.place_time || fields.start_time);
-    push('Duration', fields.duration);
+    if (note && !parts.includes(note)) parts.push(note);
+    if (isExperienceCategory(cat)) {
+      push('Start', fields.startTime || fields.place_time || fields.start_time);
+      push('Duration', fields.duration);
+    }
     const joined = () => parts.join(' · ');
-    const what = text(fields.longDetails || fields.description || fields.details, 500);
-    if (what && !joined().includes(what.slice(0, Math.min(40, what.length)))) parts.push(what);
-    const flavour = text(fields.websiteFlavour, 500);
-    if (flavour && !joined().includes(flavour.slice(0, Math.min(40, flavour.length)))) parts.push(flavour);
+    const what = text(fields.longDetails || fields.details || fields.description, 4000);
+    if (what && !joined().includes(what)) parts.push(what);
+    const flavour = text(fields.websiteFlavour, 2000);
+    if (flavour && !joined().includes(flavour)) parts.push(flavour);
     push('Where', fields.address || fields.location);
     const price = formatMoney(fields.price);
     if (hasPriceDigits(price)) push('Price estimate', price);
@@ -164,15 +166,15 @@ export function listRowDescriptionBundleSnippet() {
     'if(row.reviewThemes&&typeof row.reviewThemes==="object"){for(const [key,label] of [["praise","Common praise"],["complaints","Common complaints"]]){const themes=row.reviewThemes[key];if(Array.isArray(themes))push(label,themes.map(t=>String(t||"").trim()).filter(Boolean).join("; "));}}',
     'return parts.join(" · ")||hook;}',
     'const experience=new Set(["activity","event","attraction","music","tour","sightseeing","theatre","tickets","family_event","other"]);',
-    'if(experience.has(cat)){const note=String(row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();',
-    'if(hook)parts.push(hook);else if(note)parts.push(note);',
+    'if(experience.has(cat)||cat==="restaurant"||cat==="store"||cat==="flight"){const note=String(row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();',
+    'if(hook)parts.push(hook);if(note&&!parts.includes(note))parts.push(note);',
     'const when=String(row.startTime||row.start_time||(G&&G.place_time?G.place_time:"")||"").replace(/\\s+/g," ").trim();',
-    'push("When",when);push("Duration",row.duration);',
+    'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);}',
     'const joined=()=>parts.join(" · ");',
-    'const what=String(row.longDetails||row.description||row.details||"").replace(/\\s+/g," ").trim();',
-    'if(what&&!joined().includes(what.slice(0,Math.min(40,what.length))))parts.push(what);',
+    'const what=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
+    'if(what&&!joined().includes(what))parts.push(what);',
     'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
-    'if(flavour&&!joined().includes(flavour.slice(0,Math.min(40,flavour.length))))parts.push(flavour);',
+    'if(flavour&&!joined().includes(flavour))parts.push(flavour);',
     'push("Where",row.address||row.location);',
     'const expPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(expPrice))push("Price estimate",expPrice);',
     'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
