@@ -7,7 +7,9 @@ import {
   flightPriceDisplay,
   flightSchedule,
   parsePrice,
+  pickFlightListRowSummaryText,
   placesForCategoryTab,
+  rowSummary,
   sortPlaces,
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
@@ -91,5 +93,39 @@ assert.equal(
   emptyStateMessage('stores', { categoryCount: 0, filterActive: false }),
   'No items in this category yet.',
 );
+
+const longFlightNarrative =
+  'American Airlines nonstop LAS to JFK on Day 1 afternoon arrival; lands with time to reach the UWS hotel before dinner. Fixture lists $257 one-way fare per traveler for planning math only, not a verified live quote.';
+const derivedFlightSummary = pickFlightListRowSummaryText(longFlightNarrative);
+assert.ok(wordCount(derivedFlightSummary) >= 6, derivedFlightSummary);
+assert.ok(derivedFlightSummary.length < longFlightNarrative.length);
+
+const flightRowTrip = applyLiveAppListRowFields({
+  places: [{ id: 90, name: 'JetBlue LAS → JFK', category_name: 'Flight' }],
+  thingOverrides: {
+    'place:90': {
+      category: 'flight',
+      price: 248,
+      fareDirection: 'one-way',
+      summary: longFlightNarrative,
+    },
+  },
+});
+const hotelRowTrip = applyLiveAppListRowFields({
+  places: [{ id: 91, name: 'Sample Hotel', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:91': {
+      category: 'hotel',
+      price: 400,
+      summary: longFlightNarrative,
+    },
+  },
+});
+assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
+assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
+
+function wordCount(value) {
+  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
+}
 
 console.log('vacation-client list row unit checks passed');

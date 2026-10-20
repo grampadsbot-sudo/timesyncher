@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { rowSummary } from '../../apps/vacation-client/src/lib/listTabModel.mjs';
+import { listRowSubstanceDescription } from '../../apps/vacation-client/src/lib/listTabModel.mjs';
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
 
 const MIN_SUMMARY_WORDS = 30;
@@ -19,7 +19,7 @@ function haFields(shared = {}, place = {}) {
 }
 
 export function renderedSummary(shared = {}, place = {}) {
-  return rowSummary(place, shared);
+  return listRowSubstanceDescription(place, shared);
 }
 
 export function renderedPrice(shared = {}, place = {}) {

@@ -57,7 +57,7 @@ function hotelReputation(row = {}) {
   return bits.join('; ');
 }
 
-export function composeListRowDescription({ category = '', summary = '', fields = {} } = {}) {
+export function composeListRowDescription({ category = '', summary = '', fields = {}, omitListPrice = false } = {}) {
   const cat = text(category, 40).toLowerCase();
   const hook = text(summary, 500);
   const parts = [];
@@ -76,7 +76,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Drop-off hours', fields.dropoffHours);
     push('Drop-off time', fields.dropoffTime || fields.returnTime || fields.endTime);
     const price = formatMoney(fields.price);
-    if (hasPriceDigits(price)) push('', `${price} total`);
+    if (!omitListPrice && hasPriceDigits(price)) push('', `${price} total`);
     push('Reputation', text(fields.reputationNote, 500) || reputationFromThemes(fields.reviewThemes));
     return parts.join(' · ') || hook;
   }
@@ -94,7 +94,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Price level', fields.priceLevel);
     push('Note', fields.hotelNote);
     const price = formatMoney(fields.price);
-    if (hasPriceDigits(price)) push('', `${price}/night`);
+    if (!omitListPrice && hasPriceDigits(price)) push('', `${price}/night`);
     const note = text(fields.hotelNote, 500);
     const reputation = hotelReputation(fields) || (note && note !== hook ? note : '');
     push('Reputation', reputation);
@@ -118,7 +118,7 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     if (flavour && !joined().includes(flavour)) parts.push(flavour);
     push('Where', fields.address || fields.location);
     const price = formatMoney(fields.price);
-    if (hasPriceDigits(price)) push('Price estimate', price);
+    if (!omitListPrice && hasPriceDigits(price)) push('Price estimate', price);
     const praise = reputationFromThemes(
       fields.reviewThemes && typeof fields.reviewThemes === 'object' && !Array.isArray(fields.reviewThemes)
         ? fields.reviewThemes.praise

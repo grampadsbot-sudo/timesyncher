@@ -315,7 +315,49 @@ export function carSubtitle(place, trip) {
   );
 }
 
-export function rowSummary(place, trip) {
+const FLIGHT_LIST_ROW_MIN_WORDS = 6;
+
+function wordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function clipText(value, max) {
+  const row = text(value);
+  if (!row || row.length <= max) return row;
+  return row.slice(0, max).trim();
+}
+
+function shortLineFromStoredSummary(value = '', max = 120) {
+  const row = text(value);
+  if (!row) return '';
+  const clauses = row.match(/[^.!?;]+[.!?;]/gy);
+  if (clauses) {
+    let line = '';
+    for (const clause of clauses) {
+      const next = clipText(`${line} ${clause}`, 4000);
+      if (line && next.length > max) break;
+      line = next;
+      if (wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS) break;
+    }
+    return clipText(line, max);
+  }
+  return clipText(row.split(/\s+/).slice(0, 10).join(' '), max);
+}
+
+export function pickFlightListRowSummaryText(value = '') {
+  const s = text(value);
+  if (!s) return '';
+  if (wordCount(s) <= 20) return s;
+  if (/^Documented .+ option/i.test(s)) return s;
+  const line = shortLineFromStoredSummary(s);
+  return wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS ? line : '';
+}
+
+export function listRowSubstanceDescription(
+  place,
+  trip,
+  { omitListPrice = false, clipFlight = false } = {},
+) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   const category = productThingCategory(place, override);
@@ -334,13 +376,23 @@ export function rowSummary(place, trip) {
       source.itineraryNote ||
       source.itinerary_note,
   );
-  return text(
+  const composed = text(
     composeListRowDescription({
       category,
       summary: hook,
       fields,
+      omitListPrice,
     }),
   );
+  if (clipFlight && tabCategoryKey(place, trip) === 'flight') {
+    const picked = pickFlightListRowSummaryText(composed);
+    return picked || composed;
+  }
+  return composed;
+}
+
+export function rowSummary(place, trip) {
+  return listRowSubstanceDescription(place, trip, { omitListPrice: true, clipFlight: true });
 }
 
 export function logoUrlForPlace(place, trip) {
