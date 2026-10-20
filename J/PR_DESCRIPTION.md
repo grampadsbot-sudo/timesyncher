@@ -4,7 +4,7 @@ Closes #536
 
 PR #532 merged logo re-enrichment (`src/vacation/logo-reenrichment.mjs`, `scripts/test_logo_reenrichment.mjs`) without the audit table migration from superseded PR #526. This adds the missing `db/migrations/009_trip_thing_logo_audit.sql` only, byte-identical to `dr/logo-operator-salvage-20261018`.
 
-## Checks run (head `32ea8269`, feat `0f80adda`)
+## Checks run (head `5f08ec2e`, feat `0f80adda`)
 
 | Command | Result |
 |---------|--------|
@@ -15,7 +15,7 @@ PR #532 merged logo re-enrichment (`src/vacation/logo-reenrichment.mjs`, `script
 | `node scripts/test_offline_manifest.mjs` | offline manifest ok (279 offline, 17 online) |
 | `BASE=dr/logo-snapshot-binding-20261018 node scripts/check-code-ratchet.mjs` | passed (255 report, 0 fail) |
 
-GitHub Actions: https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39463303099 — `unit-tests` and `secrets` success on `32ea8269`. Backend-only diff (no UI files). Vercel deployment statuses on this head are rate-limited (not a unit-test failure).
+GitHub Actions: https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39463303099 — `unit-tests` and `secrets` success on prior head `32ea8269`; run https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39464750194 on `5f08ec2e` pending at lane handoff. Backend-only diff (no UI files). Vercel deployment statuses on `5f08ec2e` are rate-limited (infra, not unit-tests).
 
 ## Left alone (scope)
 
