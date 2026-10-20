@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { prepareTimelineReplay } from './timeline-replay.mjs';
+import { applyMergedTimeline, dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -248,6 +249,51 @@ function watchTiles(page, w) {
     } catch (e) { void e; }
   });
 }
+async function discoverTripDayChips(page) {
+  return page.evaluate(() => {
+    const chips = [...document.querySelectorAll('button')].filter((b) => /^day\s+\d/i.test((b.innerText || '').trim()));
+    return chips.map((b) => {
+      const m = /day\s+(\d+)/i.exec(b.innerText);
+      return { n: m ? parseInt(m[1], 10) : 0, text: b.innerText.trim().slice(0, 32) };
+    }).filter((c) => c.n > 0).sort((a, b) => a.n - b.n);
+  });
+}
+async function activateTripDayChip(page, dayNum) {
+  const ok = await page.evaluate((want) => {
+    for (const b of document.querySelectorAll('button')) {
+      const t = (b.innerText || '').trim();
+      if (!/^day\s+\d/i.test(t)) continue;
+      const m = /day\s+(\d+)/i.exec(t);
+      if (m && parseInt(m[1], 10) === want) {
+        b.click();
+        return true;
+      }
+    }
+    return false;
+  }, dayNum);
+  if (!ok) throw new Error(`day chip not found: Day ${dayNum}`);
+  await page.waitForTimeout(900);
+  await page.evaluate(async () => { await document.fonts.ready; });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
+}
+async function captureTabPair(page, w, topShot, fullShot) {
+  await waitForMap(page, topShot.replace(/\.png$/, ''));
+  await recordTileShot(page, w, topShot);
+  await recordRegions(page, topShot, false);
+  await page.screenshot({ path: path.join(outdir, topShot), animations: 'disabled' });
+  const h = await page.addStyleTag({ content: FULLPAGE_CSS });
+  await page.waitForTimeout(300);
+  const fullStem = fullShot.replace(/\.png$/, '');
+  await waitForMap(page, fullStem);
+  await recordTileShot(page, w, fullShot);
+  await recordRegions(page, fullShot, true);
+  await page.screenshot({ path: path.join(outdir, fullShot), fullPage: true, animations: 'disabled' });
+  await h.evaluate((n) => n.remove());
+  await page.waitForTimeout(200);
+  return [topShot, fullShot];
+}
+
 async function recordTileShot(page, w, shot) {
   try {
 
@@ -305,6 +351,7 @@ try {
     await page.waitForTimeout(800);
     await page.evaluate(() => { for (const el of [document.scrollingElement, document.getElementById('root'), ...document.querySelectorAll('#root *')]) if (el && el.scrollTop) el.scrollTop = 0; });
     await page.addStyleTag({ content: STAMP_CSS });
+    manifest.day_traversal = manifest.day_traversal || { policy: 'trip-days-v1', by_viewport: {} };
     for (const [stem, labels] of TABS) {
       const name = `${stem}-${w}`;
       try {
@@ -317,21 +364,31 @@ try {
         await page.evaluate(async () => { await document.fonts.ready; });
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.waitForTimeout(400);
-        await waitForMap(page, `${name}-top`);
-
-        await recordTileShot(page, w, `${name}-top.png`);
-        await recordRegions(page, `${name}-top.png`, false);
-        await page.screenshot({ path: path.join(outdir, `${name}-top.png`), animations: 'disabled' });
-
-        const h = await page.addStyleTag({ content: FULLPAGE_CSS });
-        await page.waitForTimeout(300);
-        await waitForMap(page, name);
-        await recordTileShot(page, w, `${name}.png`);
-        await recordRegions(page, `${name}.png`, true);
-        await page.screenshot({ path: path.join(outdir, `${name}.png`), fullPage: true, animations: 'disabled' });
-        await h.evaluate((n) => n.remove());
-        await page.waitForTimeout(200);
-        manifest.shots.push(`${name}-top.png`, `${name}.png`);
+        if (stem === 'daybyday') {
+          const chips = await discoverTripDayChips(page);
+          const dayNums = chips.length ? chips.map((c) => c.n) : [1];
+          const dayRuns = [];
+          for (const dayNum of dayNums) {
+            if (chips.length) await activateTripDayChip(page, dayNum);
+            const [topShot, fullShot] = dayCaptureShotNames(dayNum, w);
+            const shots = await captureTabPair(page, w, topShot, fullShot);
+            manifest.shots.push(...shots);
+            const fullReg = regions[fullShot];
+            dayRuns.push({
+              day: dayNum,
+              chip: chips.find((c) => c.n === dayNum) || null,
+              shots,
+              timeline_titles: (fullReg && fullReg.struct && fullReg.struct.timeline || []).map((t) => t.title),
+            });
+          }
+          manifest.day_traversal.by_viewport[w] = { chips, days: dayRuns };
+          const merged = mergeDayTimelines(dayRuns.map((d) => ({ timeline: (regions[d.shots[1]] && regions[d.shots[1]].struct && regions[d.shots[1]].struct.timeline) || [] })));
+          applyMergedTimeline(regions, w, merged);
+          manifest.day_traversal.by_viewport[w].merged_timeline_titles = merged.map((t) => t.title);
+        } else {
+          const shots = await captureTabPair(page, w, `${name}-top.png`, `${name}.png`);
+          manifest.shots.push(...shots);
+        }
       } catch (e) { failed++; manifest.notes.push(`${name}: FAILED ${String(e.message || e).split('\n')[0]}`); }
     }
     await ctx.close();

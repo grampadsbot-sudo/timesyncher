@@ -83,6 +83,7 @@ scripts/test_live_transcript_dialog_pdf.mjs
 scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
 scripts/test_same_selection_capture.mjs
+scripts/test_capture_acquisition.mjs
 scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_pregate_one_harness.mjs
 scripts/test_poi_search.mjs
