@@ -87,6 +87,8 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Check-out', fields.checkOutTime);
     push('Area', fields.neighborhood);
     push('Location', fields.address);
+    const hotelDetail = text(fields.longDetails || fields.details || fields.description, 4000);
+    if (hotelDetail && !parts.join(' · ').includes(hotelDetail)) parts.push(hotelDetail);
     push('', fields.websiteFlavour);
     push('Amenities', Array.isArray(fields.amenities) ? fields.amenities.join(', ') : fields.amenities);
     push('Price level', fields.priceLevel);
@@ -156,7 +158,10 @@ export function listRowDescriptionBundleSnippet() {
     'return parts.join(" · ")||hook;}',
     'if(cat==="hotel"){if(hook)parts.push(hook);',
     'push("Check-in",row.checkInTime||row.check_in_time);push("Check-out",row.checkOutTime||row.check_out_time);',
-    'push("Area",row.neighborhood);push("Location",row.address);push("Note",row.hotelNote||row.hotel_note);',
+    'push("Area",row.neighborhood);push("Location",row.address);',
+    'const hotelDetail=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
+    'if(hotelDetail&&!parts.join(" · ").includes(hotelDetail))parts.push(hotelDetail);',
+    'push("Note",row.hotelNote||row.hotel_note);',
     'push("",row.websiteFlavour);push("Amenities",Array.isArray(row.amenities)?row.amenities.join(", "):row.amenities);push("Price level",row.priceLevel);',
     'const hotelPrice=money(row.price??(blocked.includes("price")?"":bi(G)));if(hasPriceDigits(hotelPrice))push("",hotelPrice+"/night");',
     'const rep=[row.googleRating?"Google "+row.googleRating+(row.googleReviewCount?" ("+row.googleReviewCount+")":""):"",',

@@ -1,4 +1,5 @@
-
+import { composeListRowDescription } from '../../../../src/vacation/list-row-description.mjs';
+import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -13,9 +14,11 @@ function overrideFor(trip, place) {
 }
 
 function sourceRecord(place, override) {
+  const meta = place.metadata && typeof place.metadata === 'object' ? place.metadata : {};
   return (
     override.sourceRecord ||
     place.sourceRecord ||
+    meta.sourceRecord ||
     (place.source && typeof place.source === 'object' ? place.source : null) ||
     {}
   );
@@ -315,12 +318,28 @@ export function carSubtitle(place, trip) {
 export function rowSummary(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
+  const category = productThingCategory(place, override);
+  const fields = {
+    ...source,
+    ...override,
+    address: override.address || place.address || source.address,
+    price: override.price ?? place.price ?? source.price,
+    startTime: override.startTime || source.startTime || place.place_time,
+    place_time: place.place_time,
+  };
+  const hook = text(
     override.summary ||
-      override.longDetails ||
-      override.details ||
       source.summary ||
-      place.description,
+      override.itineraryNote ||
+      source.itineraryNote ||
+      source.itinerary_note,
+  );
+  return text(
+    composeListRowDescription({
+      category,
+      summary: hook,
+      fields,
+    }),
   );
 }
 

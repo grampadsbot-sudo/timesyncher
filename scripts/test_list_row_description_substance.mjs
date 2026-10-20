@@ -7,7 +7,9 @@ import { productThingCategory } from '../src/vacation/keepsake-product-overrides
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
+import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
 
 const TEMPLATE_TEXT = /\bDocumented\b.*\boption\b|\bPrice:\s*(?:\/night\b)?\s*(?:·|$)|\bBook ahead\b/i;
 
@@ -64,9 +66,15 @@ assert.doesNotMatch(hotelText, TEMPLATE_TEXT);
 const listOnlyHotel = composeListRowDescription({
   category: 'hotel',
   summary: 'List-only row until ccab names a real Midtown property.',
-  fields: { address: 'New York, NY', price: '$' },
+  fields: {
+    address: 'New York, NY',
+    price: '$',
+    longDetails:
+      'Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound.',
+  },
 });
 assert.doesNotMatch(listOnlyHotel, /\bPrice:\s*(?:\/night\b)?\s*(?:·|$)/);
+assert.ok(listOnlyHotel.split(/\s+/).length >= 30, 'hotel list-only row should include stored longDetails');
 
 const tourText = composeListRowDescription({
   category: 'activity',
@@ -199,5 +207,12 @@ assert.match(sourceText, /Compact/);
 assert.match(sourceText, /09:00/);
 assert.match(sourceText, /18:00/);
 assert.match(sourceText, /\$145/);
+
+const gateTrip = buildGateBApprovedSharedTrip();
+for (const id of [604, 606, 608, 609, 611]) {
+  const place = gateTrip.places.find((row) => row.id === id);
+  const summary = rowSummary(place, gateTrip);
+  assert.ok(summary.split(/\s+/).length >= 30, `vacation-client row summary too thin for ${place.name}: ${summary}`);
+}
 
 console.log('list row description substance tests passed');
