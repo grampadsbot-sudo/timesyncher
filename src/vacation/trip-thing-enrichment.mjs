@@ -282,11 +282,22 @@ function sourcedLongDescription(place = {}, sourceRecord = {}) {
   );
 }
 
+const SHORT_LINE_MIN_WORDS = 6;
+
 function shortLineFromSourceText(value = '', max = 120) {
   const row = text(value, 4000);
   if (!row) return '';
-  const sentence = row.match(/^[^.!?;]+[.!?;]/);
-  if (sentence) return text(sentence[0], max);
+  const clauses = row.match(/[^.!?;]+[.!?;]/gy);
+  if (clauses) {
+    let line = '';
+    for (const clause of clauses) {
+      const next = text(`${line} ${clause}`, 4000);
+      if (line && next.length > max) break;
+      line = next;
+      if (line.split(' ').length >= SHORT_LINE_MIN_WORDS) break;
+    }
+    return text(line, max);
+  }
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
