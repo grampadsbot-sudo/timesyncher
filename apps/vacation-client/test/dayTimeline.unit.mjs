@@ -244,4 +244,39 @@ assert.equal(
   'PR336 onDay wrongly matched day_number 2 to dayIds [2]',
 );
 
+const southwestTrip = {
+  days: [{ id: 10, day_number: 1, title: 'Arrival' }],
+  places: [
+    {
+      id: 630,
+      name: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
+      category_name: 'Flight',
+      lat: 36.084,
+      lng: -115.1537,
+    },
+  ],
+  assignments: {
+    10: [
+      {
+        place_id: 630,
+        place: {
+          id: 630,
+          name: 'Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35',
+        },
+      },
+    ],
+  },
+  thingOverrides: {
+    'place:630': { timeline: true, category: 'flight', price: 164 },
+  },
+};
+const southwestRows = buildDayTimeline(southwestTrip, southwestTrip.days[0]);
+assert.ok(southwestRows.some((row) => row.title === 'Travel to airport'));
+assert.ok(southwestRows.some((row) => row.title === 'Travel from airport'));
+assert.ok(
+  southwestRows.some(
+    (row) => row.kind === 'flight' && /^Flight option: Southwest LAS-LGA/i.test(row.title),
+  ),
+);
+
 console.log('vacation-client day timeline unit checks passed');

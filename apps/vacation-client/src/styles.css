@@ -771,10 +771,6 @@ body {
   padding-top: 0;
 }
 
-.tsv-timeline-row--single-time {
-  align-items: baseline;
-}
-
 .tsv-timeline-row--single-time .tsv-timeline-time-col,
 .tsv-timeline-row--single-time .tsv-timeline-main {
   padding-top: 1px;
@@ -785,8 +781,33 @@ body {
 }
 
 .tsv-timeline-time--single {
-  align-self: baseline;
+  font-weight: 700;
+  color: #111827;
+  text-align: right;
+  padding-top: 1px;
+}
+
+.tsv-timeline-time-line {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15em;
+}
+
+.tsv-timeline-time-strut {
+  visibility: hidden;
+}
+
+.tsv-timeline-time-inline {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 11px;
+  font-weight: 700;
   white-space: nowrap;
+  color: #111827;
 }
 
 .tsv-timeline-time-col {

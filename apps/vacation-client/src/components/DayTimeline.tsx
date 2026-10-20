@@ -168,12 +168,18 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
           >
             <div className="tsv-timeline-time-col">
               {!isTravel && entry.startLabel ? (
-                <span
-                  className={`tsv-timeline-time${singleLineTime ? ' tsv-timeline-time--single' : ''}`}
-                  data-ts-timeline-time={singleLineTime ? '1' : undefined}
-                >
-                  {entry.startLabel}
-                </span>
+                singleLineTime ? (
+                  <div className="tsv-timeline-time tsv-timeline-time--single" data-ts-timeline-time="1">
+                    <span className="tsv-timeline-time-line" data-ts-timeline-time-line="1">
+                      <span className="tsv-timeline-time-strut" aria-hidden="true">
+                        &nbsp;
+                      </span>
+                      <span className="tsv-timeline-time-inline">{entry.startLabel}</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="tsv-timeline-time">{entry.startLabel}</span>
+                )
               ) : null}
               {entry.kind === 'flight' && entry.endLabel ? (
                 <span className="tsv-timeline-time tsv-timeline-time--arrive">{entry.endLabel}</span>
