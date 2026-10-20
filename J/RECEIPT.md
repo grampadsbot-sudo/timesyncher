@@ -9,7 +9,7 @@ Gate B on `b40fd347` rendered the dispatch NYC head fixture without `finalizeSer
 | | SHA |
 |---|---|
 | Start | `b40fd3477ff5c2e316d7995089f3ceb9ecc3cf89` |
-| Final HEAD | `97d98747` |
+| Final HEAD | `f0697159` |
 
 ## Changes
 
