@@ -2,13 +2,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
-import {
-  assertCcabSearchPlaceProvenance,
-  ccabImporterInputKind,
-  ccabSearchPlaceProvenanceViolations,
-  ccabSearchProviderCapture,
-  resolveCcabImporterSearchSource,
-} from '../lib/pr336-ccab-search-provenance.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -68,11 +61,8 @@ export function rawSearchPlaceFromCcab({
       ? 'car'
       : recordCategory)
     || 'event';
-  const searchSource = resolveCcabImporterSearchSource(ccabRecord);
-  const inputKind = ccabImporterInputKind(ccabRecord);
-  const capture = ccabSearchProviderCapture(ccabRecord);
   return {
-    source: searchSource,
+    source: 'fixture',
     title: text(title, 240),
     category: resolvedCategory,
     lat: ccabRecord.lat ?? null,
@@ -82,35 +72,23 @@ export function rawSearchPlaceFromCcab({
     externalId: text(ccabKey, 240),
     sourceRecord: {
       ...ccabRecord,
-      source: searchSource,
-      ccabInputKind: inputKind,
-      ...(capture ? { searchProviderCapture: capture } : {}),
+      source: 'fixture',
+      ccabInputKind: 'stored_fixture_literal',
       url: text(ccabRecord.website, 500),
     },
   };
 }
 
 export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = []) {
-  const failures = [];
-  for (const row of rows) {
-    const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[row.id];
-    const ccabRecord = ccabKey ? ENRICHMENT[ccabKey] : null;
+  const unverified = rows.filter((row) => {
     const place = placesById[row.id];
-    if (!ccabKey || !ccabRecord || !place) {
-      failures.push(`row ${row.id}: missing ccab key, enrichment, or built place`);
-      continue;
-    }
-    const violations = ccabSearchPlaceProvenanceViolations({ ccabKey, ccabRecord, place });
-    if (violations.length) {
-      failures.push(`row ${row.id} (${ccabKey}): ${violations.join(', ')}`);
-    }
-  }
-  if (failures.length) {
-    throw new Error(`pr336 gate-b snapshot write blocked: ${failures.join('; ')}`);
+    return !place || place.source === 'fixture'
+      || place.sourceRecord?.ccabInputKind === 'stored_fixture_literal';
+  });
+  if (!rows.length || unverified.length) {
+    throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
 }
-
-export { assertCcabSearchPlaceProvenance, ccabSearchPlaceProvenanceViolations };
 
 export function buildGateBSearchPlaceForRow({ id, name, cat }) {
   const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[id];
