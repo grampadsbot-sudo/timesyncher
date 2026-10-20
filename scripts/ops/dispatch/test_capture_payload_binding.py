@@ -80,7 +80,7 @@ class BindingTests(unittest.TestCase):
                 self.assertTrue(any(('identity' if field in ('title','name') else 'coordinates' if field=='lat' else field.replace('logoUrl','logo')) in x for x in self.faults(fx)), field)
         for field in ['name','description','price','lat']:
             fx=copy.deepcopy(self.fx); raw=next(p for p in fx['places'] if p['id']==603)
-            raw[field]=self.snap['609'].get('title' if field=='name' else ('lng' if field=='lat' else field))
+            raw[field]=self.snap['603']['lng'] if field=='lat' else self.snap['609'].get('title' if field=='name' else field)
             self.assertTrue(any(('identity' if field in ('title','name') else 'coordinates' if field=='lat' else field.replace('logoUrl','logo')) in x for x in self.faults(fx)), field)
 
     def test_collisions_and_missing_payload(self):

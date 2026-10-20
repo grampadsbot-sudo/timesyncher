@@ -499,7 +499,7 @@ def _capture_payload_faults(snapshot_path, fixture_path):
             faults.append("DATA-CONTRACT: captured row %s obsolete bare override alias" % rid)
         faults.extend(_capture_row_faults(rid, src, dst))
         raw = captured[str(rid)]
-        raw_expected = {k: v for k, v in src.items() if k in raw}
+        raw_expected = {k: v for k, v in src.items() if k in raw and not _blank(raw[k])}
         if not _blank(raw.get("name")):
             raw_expected["title"] = src.get("title") or src.get("name")
         faults.extend(_capture_row_faults(rid, raw_expected, raw))
