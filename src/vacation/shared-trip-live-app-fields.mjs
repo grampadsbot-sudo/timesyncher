@@ -1,3 +1,4 @@
+import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
 const EXPERIENCE_CATEGORIES = new Set([
@@ -269,6 +270,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'duration', source?.duration);
       copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note);
       copyIfBlank(override, 'description', source?.description, place.description);
+      copyIfBlank(override, 'longDetails', source?.longDetails, source?.description, place.description);
       copyIfBlank(override, 'websiteFlavour', source?.websiteFlavour);
       copyIfBlank(override, 'worthNote', source?.worthNote, source?.worth_note);
       copyIfBlank(
@@ -289,6 +291,8 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (override.timeline == null && source?.timeline != null) {
       override.timeline = !!source.timeline;
     }
+
+    Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
 
     next.thingOverrides[key] = override;
   }

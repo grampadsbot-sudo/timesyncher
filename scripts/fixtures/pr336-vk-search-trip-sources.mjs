@@ -49,6 +49,83 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function narrativeWordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+export function storedCcabRecordForTitle(title = '') {
+  const ccabKey = text(title, 240);
+  if (!ccabKey) return null;
+  const ccabRecord = ENRICHMENT[ccabKey];
+  if (!ccabRecord || typeof ccabRecord !== 'object') return null;
+  return { ccabKey, ccabRecord };
+}
+
+export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') {
+  const hit = storedCcabRecordForTitle(title);
+  if (!hit) return null;
+  const cat = text(categoryHint, 40).toLowerCase();
+  return enrichSearchPlace(rawSearchPlaceFromCcab({
+    title: hit.ccabKey,
+    category: cat || hit.ccabRecord.category,
+    ccabKey: hit.ccabKey,
+    ccabRecord: hit.ccabRecord,
+  }));
+}
+
+export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
+  const title = text(place.name || place.title, 240);
+  if (!title) return override;
+  const existing = text(override.longDetails || override.details || override.description);
+  if (narrativeWordCount(existing) >= 30) return override;
+  const enriched = enrichListRowFromStoredCcabTitle(
+    title,
+    override.category || place.category_name,
+  );
+  if (!enriched) return override;
+  const record = enriched.sourceRecord && typeof enriched.sourceRecord === 'object'
+    ? enriched.sourceRecord
+    : {};
+  const next = { ...override };
+  const details = text(
+    enriched.description ||
+      record.longDetails ||
+      record.description ||
+      record.summary,
+  );
+  if (details) {
+    next.longDetails = details;
+    if (!text(next.details)) next.details = details;
+    if (!text(next.description)) next.description = details;
+  }
+  for (const key of [
+    'summary',
+    'itineraryNote',
+    'websiteFlavour',
+    'address',
+    'googleRating',
+    'googleReviewCount',
+    'yelpRating',
+    'yelpReviewCount',
+    'thirdPartyRating',
+    'thirdPartyReviewCount',
+    'reviewThemes',
+    'website',
+  ]) {
+    if (record[key] != null && record[key] !== '' && (next[key] == null || next[key] === '')) {
+      next[key] = record[key];
+    }
+  }
+  if (next.price == null && enriched.price != null) next.price = enriched.price;
+  if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
+  if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
+    next.sourceRecord = { ...record };
+  } else {
+    next.sourceRecord = { ...record, ...next.sourceRecord };
+  }
+  return next;
+}
+
 export function rawSearchPlaceFromCcab({
   title,
   category,
