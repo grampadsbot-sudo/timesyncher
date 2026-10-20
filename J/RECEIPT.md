@@ -11,7 +11,8 @@ Merge commit integrating `origin/migrate/trek-source` into the PR branch to clea
 | Start (brief) | `e2f3f1665bed31f63ffdc3db1b82f1f849517d79` |
 | Pre-merge HEAD | `e2f3f1665bed31f63ffdc3db1b82f1f849517d79` |
 | Merged base tip | `906687ec` (Merge pull request #573) |
-| Final HEAD | `16314049106cbe007b242f15833312e333e48652` |
+| Merge commit | `16314049106cbe007b242f15833312e333e48652` |
+| Final HEAD | `02fbb5636f0b71178380a7ba9603a94e262c2543` |
 
 ## Conflicts resolved
 
