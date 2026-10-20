@@ -10,7 +10,7 @@ Start commit matched brief: `10ff490261a947e03bfd755779f929163c51155f`. Product 
 |---|---|
 | Start (this brief) | `10ff490261a947e03bfd755779f929163c51155f` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
-| Lane verify HEAD (after receipt) | `c200878ca69fa7a8e8d94c7c5004377300411233` |
+| Lane verify HEAD (after receipt) | `9675d001d5076175a0e2a95101cba30a52dd6663` |
 
 ## Commands (lane `vkfill-543-20261020134727`)
 
