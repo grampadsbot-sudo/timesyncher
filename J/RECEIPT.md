@@ -1,22 +1,25 @@
-# PR #543 lane vkfill-543 (cursor-ubuntu)
+# PR #543 lane vkfill-543-20261020100739 (cursor-ubuntu)
 
-## Change (on top of ac2bc4ec)
-Restored vacation-client shared-trip parity with staging TREK for Gate B structure failures diagnosed on head `31b0f587` (chief-dr brief 2026-10-20):
+## Tip
+`870e46967724635a755fbc3850c1c768ac845a31` (matches `origin/vkfill/335-p3a-wiring-202610190827` at lane start; no new commits this round).
 
-- Day-by-Day: airport transfer legs (`Travel to airport` / `Travel from airport`) and flight timeline titles (`airportTransferLegs.mjs`, `dayTimelinePresentation.mjs`); unit coverage for Southwest `Flight option:` row.
-- Lists: `logoUrlForPlace` on list rows (fixture/override logos), default price sort for flights/hotels/cars, catalog order for stores/restaurants/events.
-- Timeline: single-line time uses the same strut line-box as TREK ruling 48 (`data-ts-timeline-time` + `data-ts-timeline-time-line`) instead of grid-only baseline CSS.
+## Chief-dr Gate B gaps (head `31b0f587` vs staging `998235c`) — addressed on tip
+- **Day-by-Day parity:** airport transfer legs and `Flight option:` titles (`airportTransferLegs.mjs`, `dayTimelinePresentation.mjs`; unit test for Southwest LAS-LGA) in `ac2bc4ec`.
+- **List logos:** `logoUrlForPlace` on list + timeline rows (`ListRow.tsx`, `DayTimeline.tsx`, `listTabModel.mjs`) in `ac2bc4ec`.
+- **Hotels / stores order:** default price sort for flights/hotels/cars; catalog order for stores/restaurants/events (`CategoryTabScreen.tsx`, `listTabModel.mjs`) in `ac2bc4ec`.
+- **Timeline time baseline (ruling 48):** TREK strut line-box (`data-ts-timeline-time` / `data-ts-timeline-time-line`) in `870e4696`.
 
-## Checks (local)
-- `node apps/vacation-client/test/dayTimeline.unit.mjs` — pass
-- `node apps/vacation-client/test/listRows.unit.mjs` — pass
+## Checks (this lane, local)
+- `node apps/vacation-client/test/run-all.mjs` (unit; layout skipped — no `CHROME_PATH`)
 - `node scripts/check-no-comments.mjs` — pass
 - `node scripts/test_offline_manifest.mjs` — pass
-- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass
+- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (0 fail)
+- `node scripts/test_api_route_bundle.mjs` — pass
+- `node scripts/test_shared_trip_boot_fetch.mjs` — fails closed: Puppeteer cannot launch Chrome in this lane (no browser binary)
 
-## Not verified here
-- CI green on pushed PR head (host publish from this worktree)
-- Ubuntu Gate B structure 32/32 (required for done)
+## Not verified here (done means)
+- CI green on pushed PR head `870e4696`
+- Ubuntu Gate B structure 32/32 on that head
 
 ## Left alone (scope)
-- Fixtures, baselines, Gate B scripts, `vercel.json`, `vite.config.mjs`, `package.json` / lockfile
+- Fixtures, baselines, Gate B/capture scripts, `vercel.json`, `vite.config.mjs`, `package.json` / lockfile
