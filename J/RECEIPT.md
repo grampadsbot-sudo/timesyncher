@@ -10,7 +10,7 @@ Start commit matched brief: `2901b9eef643335afce898f186fd1ceff59c9061`. Product 
 |---|---|
 | Start (this brief) | `2901b9eef643335afce898f186fd1ceff59c9061` |
 | Fix commit | `97d98747842c1a6e794bb21e5bf2a8ca2c3cd542` |
-| Lane verify HEAD (after receipt) | _(tip after this commit)_ |
+| Lane verify HEAD (after receipt) | `d7025bf0c441d0d78aa395de624dfa2811cc1b3e` |
 
 ## Commands (lane `vkfill-543-20261020135731`)
 
