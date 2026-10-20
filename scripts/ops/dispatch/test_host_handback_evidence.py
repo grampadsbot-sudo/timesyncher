@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceError,
-                                    HostReaders, current_section, last_action)
+                                    HostReaders, current_section, last_action, ownership)
 from host_handback_review import classify
 from test_host_handback_review import NOW, iso, issue, receipt
 
@@ -25,6 +25,82 @@ def assessment(at=NOW, action=NOW-7200):
             'Source [[' + SLUG + ']].\nOwner active-dr, next review later.\n'
             '| job | evidence | next action |\n| #566 | current host handback | review |\n'
             '\n## Action record\n- ' + stamp + ' | active-dr | #566 exact management action\n')
+
+
+def manager_assessment(at=NOW):
+    """Synthetic values in the published Current manager pass/table format."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    stamp = datetime.fromtimestamp(at, ZoneInfo('America/Los_Angeles')).strftime('%Y-%m-%d %H:%M PT')
+    return ('## Current manager pass — ' + stamp + ' (synthetic reviewer)\n'
+            'This section supersedes earlier current-state tables; historical records remain below.\n'
+            '\n| job | owner | last action/evidence PT | next action/deadline PT |\n'
+            '|---|---|---|---|\n'
+            '| #801/#802 | synthetic reviewer | source review | next action: inspect receipt |\n'
+            '| #803 | other reviewer | evidence mentions #801 | next action: inspect source |\n')
+
+
+class CanonicalAssessmentSchema(unittest.TestCase):
+    def test_current_manager_heading_and_grouped_row_owners(self):
+        section = current_section(manager_assessment(), NOW)
+        self.assertEqual(ownership(section, 801), 'synthetic reviewer')
+        self.assertEqual(ownership(section, 802), 'synthetic reviewer')
+        self.assertEqual(ownership(section, 803), 'other reviewer')
+
+    def test_owner_column_overrides_unrelated_owner_prose(self):
+        section = manager_assessment() + '\nOwner historical reviewer, next review later.\n'
+        self.assertEqual(ownership(section, 801), 'synthetic reviewer')
+
+    def test_current_manager_precedes_legacy_section(self):
+        text = manager_assessment() + '\n' + assessment(NOW-3600)
+        self.assertTrue(current_section(text, NOW).startswith('## Current manager pass'))
+
+    def test_stale_manager_section_cannot_fall_back_to_fresh_legacy(self):
+        with self.assertRaisesRegex(EvidenceError, 'stale'):
+            current_section(manager_assessment(NOW-1000) + '\n' + assessment(), NOW)
+
+    def test_future_manager_section_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'future'):
+            current_section(manager_assessment(NOW+120), NOW)
+
+    def test_undated_manager_section_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'event time'):
+            current_section('## Current manager pass\n' + manager_assessment().split('\n', 1)[1], NOW)
+
+    def test_missing_current_section_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'not found'):
+            current_section('## Historical manager pass\n' + manager_assessment().split('\n', 1)[1], NOW)
+
+    def test_duplicate_item_rows_refuse_even_with_same_owner(self):
+        text = manager_assessment() + '| #801 | synthetic reviewer | duplicate | later |\n'
+        with self.assertRaisesRegex(EvidenceError, 'exact current assessment item row'):
+            ownership(text, 801)
+
+    def test_missing_row_and_partial_number_do_not_borrow_owner(self):
+        for number in (80, 804):
+            with self.assertRaisesRegex(EvidenceError, 'exact current assessment item row'):
+                ownership(manager_assessment(), number)
+
+    def test_missing_owner_does_not_fall_back_to_global_prose(self):
+        for owner in ('', 'unknown', '—', '?'):
+            text = manager_assessment().replace('| synthetic reviewer |', '| ' + owner + ' |')
+            with self.assertRaisesRegex(EvidenceError, 'explicit current canonical row owner'):
+                ownership(text + '\nOwner fallback reviewer, later.\n', 801)
+
+    def test_duplicate_owner_column_refuses(self):
+        text = manager_assessment().replace('| last action/evidence PT |', '| owner |')
+        with self.assertRaisesRegex(EvidenceError, 'unambiguous current canonical owner column'):
+            ownership(text, 801)
+
+    def test_malformed_owner_row_refuses(self):
+        text = manager_assessment().replace('| source review |', '| source | extra |')
+        with self.assertRaisesRegex(EvidenceError, 'unambiguous current canonical owner column'):
+            ownership(text, 801)
+
+    def test_legacy_unique_owner_remains_supported(self):
+        self.assertEqual(ownership(assessment(), 566), 'active-dr')
+        with self.assertRaisesRegex(EvidenceError, 'unambiguous current canonical owner'):
+            ownership(assessment() + '\nOwner different-dr, later.\n', 566)
 
 
 class CollectorBoundaries(unittest.TestCase):

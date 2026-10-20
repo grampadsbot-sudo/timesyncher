@@ -28,7 +28,7 @@ def current_section(text, now):
     sections = re.split(r'(?m)^(?=## )', text)
     for section in sections:
         header = section.splitlines()[0] if section else ''
-        if not re.search(r'Current pass|Managing-dr pass', header, re.I):
+        if not re.search(r'^## (?:Current (?:manager )?pass|Managing-dr pass)\b', header, re.I):
             continue
         utc = re.search(r'(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) UTC', header)
         pt = re.search(r'(\d{4}-\d\d-\d\d) (\d\d:\d\d) PT', header)
@@ -41,9 +41,27 @@ def current_section(text, now):
 
 
 def ownership(section, number):
-    rows = [line for line in section.splitlines() if line.startswith('|')
-            and re.search(r'#%d\b' % number, line.split('|')[1])]
+    rows = []
+    header = None
+    for line in section.splitlines():
+        if not line.startswith('|'):
+            header = None
+            continue
+        cells = [cell.strip() for cell in line.strip().strip('|').split('|')]
+        if cells[0].lower() == 'job':
+            header = [cell.lower() for cell in cells]
+            continue
+        if re.search(r'#%d\b' % number, cells[0]):
+            rows.append((header, cells))
     require(len(rows) == 1, 'exact current assessment item row required #%d' % number)
+    header, cells = rows[0]
+    if header and 'owner' in header:
+        require(header.count('owner') == 1 and len(cells) == len(header),
+                'unambiguous current canonical owner column required')
+        owner = cells[header.index('owner')]
+        require(owner and owner.lower() not in {'unknown', 'not found', 'n/a', '-', '—', '?'},
+                'explicit current canonical row owner required')
+        return owner
     owners = re.findall(r'\bOwner\s+([^,;\n.]+)', section)
     require(len(set(owners)) == 1, 'unambiguous current canonical owner required')
     return owners[0].strip()

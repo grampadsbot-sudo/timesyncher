@@ -20,6 +20,11 @@ host GitHub login and numeric ID using `GET /user`; it does not infer source aut
 from a comment's signature or association. Each object and all its paginated comments
 are fetched twice and bound to the classifier's snapshot. The newest assessment
 section must be current (15 minutes), with one exact item row and an explicit owner.
+The published `Current manager pass` heading is recognized alongside the existing
+`Current pass` and `Managing-dr pass` headings. A `job | owner | ...` table supplies
+each item's owner, including grouped `#N/#M` rows; mentions in evidence cells do
+not supply ownership. Missing, duplicate or malformed owner cells stop collection.
+Legacy tables without an owner column retain their unique explicit Owner prose rule.
 Only dated entries in the shared Action record supply action times, independent of
 head SHA; missing/unparseable action evidence is an error, not an empty budget.
 
@@ -47,8 +52,43 @@ The default host reader deliberately raises `EvidenceError` for those boundaries
 No phrase-only acceptance, label-only Craig proof, new fabricated canonical record,
 or guessed source actor was substituted. Host must supply/review those actual readers
 before the complete current-object dry-run can meet the acceptance criterion.
-The supplied assessment snapshot's newest section is 2026-10-20 12:14:33 UTC; that
-snapshot is stale for a 17:00 UTC pass and cannot serve as current ownership proof.
+The earlier diagnosis that 12:14:33 UTC was the newest canonical section was a parser
+error: it skipped `Current manager pass`. The canonical read on October 20 at about
+17:34 UTC starts with a 09:59 PT section and a per-row owner table. That section is
+also stale for this pass; recognizing its format does not refresh its event time.
+
+## Canonical schema inventory (#567 / #569 continuation)
+
+Published `get_skill tsv-manager` requires PR, owner, last action/time, next decision/
+deadline and source evidence in `bot-admin/lanes/vk-running-assessment`. It does not
+require a globally unique Owner sentence. The existing GBrain CLI/default route
+returned the actual table; independent host receipt
+`bot-admin/receipts/gpt-manager-pass-20261020-1031` also identifies the heading/owner
+parser fault. Only that demonstrated heading/table correction is implemented here.
+Regression values are synthetic; no canonical page content is a test fixture.
+
+| Actual source pointer | Observed format / remaining reader evidence |
+|---|---|
+| `bot-admin/lanes/vk-running-assessment`, `Current manager pass — 2026-10-20 09:59 PT` | `job`, `owner`, `last action/evidence PT`, `next action/deadline PT`; different owners per grouped row. No receipt wikilink in this current section. The collector's required receipt source therefore remains unavailable even if freshness were established. No historical link is borrowed. |
+| `bot-admin/receipts/gpt-manager-pass-20261020-1031` | Narrative source review, full publication SHA, abbreviated comment IDs and next host deadline. Page metadata says `trust_tier: agent_written`, `source_kind: mcp:put_page`. These are not an authenticated GH actor identity, a hash of worker receipt bytes or a machine event-resolution contract. |
+| [#567 handback comment 6296654317](https://github.com/grampadsbot-sudo/timesyncher/issues/567#issuecomment-6296654317) | Original created/updated time 17:11:24Z; short artifact-directory pointer, owner and review request. It is not the worker RECEIPT.md body and does not contain its byte hash. Public API actor is `grampadsbot-sudo`, numeric ID 259964401; host still must authenticate its identity through the existing reader. |
+| [#569 review comment 6297082727](https://github.com/grampadsbot-sudo/timesyncher/pull/569#issuecomment-6297082727) | Original created/updated time 17:33:10Z; independent live acceptance failed, source preparation continues, next review 11:10 PT. This is the traceable unresolved review source, not a new acceptance event. It does not match the classifier's standalone `host review required` grammar. No classifier expansion is included. |
+| `bot-admin/receipts/gpt-manager-pass-20261020-0453`; [#565 comment 6290584774](https://github.com/grampadsbot-sudo/timesyncher/pull/565#issuecomment-6290584774) | Narrative acceptance evidence and next decision, using abbreviated heads and artifact paths. The public PR is now closed/merged; its historical draft/body is not a current pending-acceptance event. An original authenticated pending event with an explicit current-head binding and resolution semantics is still not found. Body `updated_at` cannot substitute for that event. |
+| `bot-admin/receipts/gpt-manager-pass-20261020-0233`, #560 entry | Reports guarded relay at 09:37:04Z, rc0, in_history yes, media6, head98e7e124. This traces the review claim but does not supply the actual guarded send receipt path/schema or full-head/media/delivery binding. The supplied runtime `tsv_guard.py:escalate` stores only `escalated.at/why`; its escalation message is not screenshot review proof. `needs-craig` remains insufficient. |
+
+The receipt-file hash/full-head/comment-equality checks are stricter than these
+observed records. They remain refusal boundaries in this patch because receipt
+authentication is out of scope. Do not fabricate hashes, expand abbreviated heads
+from guesses, edit old comments/pages, or treat planned work as a live process to
+make the scan succeed. The smallest subsequent adapter work needs the host's actual
+authenticated event/receipt and guarded-send contracts, with explicit resolution
+semantics, before replacing those assumptions. Unsupported original acceptance,
+guarded review and remote running-job formats still raise `EvidenceError`.
+
+`CANONICAL-HANDBACK-SCHEMA` requires independent host verification of the actual
+current section/row owners, stale/future/missing/ambiguous refusals and traceable
+unresolved review source. Offline schema regressions alone do not meet that check.
+`HOST-HANDBACK-LIVE-DRYRUN` and installation remain NOT RUN by this worker.
 
 ## Outer-host proof command
 
