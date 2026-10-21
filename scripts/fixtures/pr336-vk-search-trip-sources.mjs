@@ -228,7 +228,7 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
   const failures = [];
   for (const row of rows) {
     const place = placesById[row.id];
-    const ccabKey = row.ccabKey || NYC_GATE_B_ROW_CCAB_KEYS[row.id] || resolveNycCcabKey(row.name);
+    const ccabKey = resolveNycCcabKey(row.ccabKey || NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.name);
     const alias = GATE_B_DISPLAY_TITLE_ALIASES[row.id];
     if (!place || !ccabKey) {
       failures.push(`row ${row.id}: missing place or ccab key`);
@@ -255,8 +255,12 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
           failures.push(`row ${row.id}: flight title ${title} missing route ${route.from}-${route.to}`);
         }
       }
-    } else if (!alias && !text(ccabKey).toLowerCase().includes(text(row.name).slice(0, 12).toLowerCase())
-      && !text(row.name).toLowerCase().includes(text(ccabKey).slice(0, 12).toLowerCase())) {
+    } else if (
+      !alias
+      && text(resolveNycCcabKey(row.name)) !== text(ccabKey)
+      && !text(ccabKey).toLowerCase().includes(text(row.name).slice(0, 12).toLowerCase())
+      && !text(row.name).toLowerCase().includes(text(ccabKey).slice(0, 12).toLowerCase())
+    ) {
       failures.push(`row ${row.id}: title ${row.name} does not match ccab key ${ccabKey}`);
     }
   }
