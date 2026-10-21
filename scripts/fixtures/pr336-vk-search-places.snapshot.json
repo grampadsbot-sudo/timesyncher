@@ -11,7 +11,7 @@
     "sourceRecord": {
       "category": "flight",
       "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
-      "summary": "Airline: JetBlue;",
+      "summary": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop;",
       "price": 252,
       "website": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1",
       "logoUrl": "https://www.jetblue.com/favicon.ico",
@@ -23,7 +23,7 @@
       "longDetails": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked."
     },
     "description": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.",
-    "summary": "Airline: JetBlue;",
+    "summary": "Airline: JetBlue; Route: LAS-JFK; Stops: nonstop;",
     "price": 252,
     "logoUrl": "https://www.jetblue.com/favicon.ico"
   },
