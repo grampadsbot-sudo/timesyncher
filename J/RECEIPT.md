@@ -1,23 +1,32 @@
-# VK PR #578 lane receipt (cursor-ubuntu vkfill-578-20261021075722)
+# VK PR #585 lane receipt (cursor-ubuntu vkfill-585-20261021105827)
 
-**Start sha:** `a132749f4d79f2d978c7b9eac24d3782af36f2ef`
+**Start sha:** `35c47439e9cbbd93b71a396d9710ab7d5b0e0d62`  
+**Tip sha:** `315f09597649d856dd72ab9d6f2da3475d30d522`
 
 ## Change
 
-Restored portable Gate B **normal caller** bindings dropped when the runtime-only patch landed: `pregate_run_capture`, `base_reference_capture`, deploy/postdeploy staging helpers, and `staging_gate_capture` now pass `render_head`, `TSV_SANCTIONED_REPLAY_PRODUCER_HEAD`, and fixture policy into `capture_and_compare` / `local_capture` / `staging_capture` (support spans + full patch + defs-only patch + manifest). Runtime install artifacts (`capture-replay-runtime.patch`, verify script) unchanged from `a132749f`.
+Completed host-started merge of `origin/migrate/trek-source` (`abf5f38c`) onto PR branch head `35c47439`: resolved `scripts/offline-tests.txt` by keeping PR budget-price tests and base `test_budget_timeline_only_rows.mjs`. Auto-merged `budgetModel.mjs` already combines timeline-only budget rows (#582) with required Flights/Hotel/Cars price completeness (#580). Adjusted PR-owned tests so mini trips use timeline assignments and NYC budget assertions match list-only car row 609 staying off the budget tab.
 
-## Commands (exit 0)
+## Commands (exit 0 unless noted)
 
-- `python3 scripts/test_capture_replay_binding.py` (15)
-- `python3 scripts/test_capture_replay_callers.py` (22)
-- `python3 scripts/ops/dispatch/test_same_selection_capture.py` (11)
+- `node scripts/test_budget_timeline_only_rows.mjs`
+- `node scripts/test_budget_required_price_completeness.mjs`
+- `node scripts/test_nyc_budget_search_fill_prices.mjs`
+- `node scripts/test_budget_checkout_harness.mjs`
 - `node scripts/test_capture_fixture_replay_harness.mjs`
+- `node scripts/test_check_hardcoded_content.mjs` / `node scripts/check-hardcoded-content.mjs`
+- `node scripts/test_served_trek_bundle.mjs`
+- `npm ci && npm run typecheck && npm run lint && npm test` (in `apps/vacation-client`, `CHROME_PATH=/usr/bin/chromium-browser`)
 - `node scripts/check-no-comments.mjs`
 - `node scripts/test_offline_manifest.mjs`
 - `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
 - `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
 
+## Lane note
+
+`node scripts/run-offline-tests.mjs` stops at `scripts/test_live_transcript_dialog_pdf.mjs` on this Ubuntu lane (`rules.via` is `gbrain-cli-get_page`, test expects `bundled-get_page`); not introduced by this merge. Budget and capture-replay scope tests above pass.
+
 ## Left alone (scope)
 
-- No runtime `tsv_dispatch.py` install on host (still NOT RUN per managing-dr acceptance).
-- No Gate B capture, baseline/workflow/ratchet config edits, or deploy.
+- No Gate B capture, baseline, workflow, or checker threshold edits.
+- No timeline/layout/logo UI changes.
