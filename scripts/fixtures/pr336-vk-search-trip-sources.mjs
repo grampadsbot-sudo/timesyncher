@@ -1,44 +1,69 @@
+import { readFileSync } from 'node:fs';
+
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
 import {
-  ENRICHMENT,
-  GATE_B_DISPLAY_TITLE_ALIASES,
-  GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
-  NYC_GATE_B_ROW_CCAB_KEYS,
-  NYC_PR336_SEARCH_TRIP_ID,
-  enrichListRowFromStoredCcab,
-  enrichListRowFromStoredCcabTitle,
-  mergeStoredCcabNarrativeIntoOverride,
+  createStoredCcabNarrativeMerge,
   rawSearchPlaceFromCcab,
-  resolveStoredCcabKey,
-  shouldMergeStoredCcabOnFixtureReplay,
-  storedCcabRecordForPlace,
-  storedCcabRecordForTitle,
 } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 
-export {
-  ENRICHMENT,
-  GATE_B_DISPLAY_TITLE_ALIASES,
-  GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
-  NYC_GATE_B_ROW_CCAB_KEYS,
-  NYC_PR336_SEARCH_TRIP_ID,
+const BASE_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
+);
+const OVERLAY_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-ccab-overlay.json', import.meta.url), 'utf8'),
+);
+const REVIEW_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
+);
+export const ENRICHMENT = { ...BASE_ENRICHMENT };
+for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
+  ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
+}
+for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
+  ENRICHMENT[key] = { ...(ENRICHMENT[key] || {}), ...patch };
+}
+
+export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
+
+export const GATE_B_DISPLAY_TITLE_ALIASES = {
+  609: {
+    title: 'Priceline opaque Standard sedan',
+    ccabKey: 'Priceline opaque JFK — Standard sedan',
+  },
+};
+
+export const NYC_GATE_B_ROW_CCAB_KEYS = {
+  601: 'Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31',
+  602: "Zabar's",
+  603: 'Motto by Hilton New York City Times Square',
+  604: 'Statue of Liberty walking tour',
+  605: 'Strand Book Store',
+  606: 'Afternoon matinee show',
+  607: 'Friend meetup at Bryant Park',
+  608: 'Midtown sample hotel',
+  609: 'Priceline opaque JFK — Standard sedan',
+  610: 'Carbone',
+  611: 'Jazz at Lincoln Center',
+};
+
+export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
+
+const pr336StoredCcabNarrative = createStoredCcabNarrativeMerge(ENRICHMENT, {
+  fixtureRowCcabKeys: NYC_GATE_B_ROW_CCAB_KEYS,
+});
+
+export const {
   enrichListRowFromStoredCcab,
   enrichListRowFromStoredCcabTitle,
   mergeStoredCcabNarrativeIntoOverride,
-  rawSearchPlaceFromCcab,
   resolveStoredCcabKey,
   shouldMergeStoredCcabOnFixtureReplay,
   storedCcabRecordForPlace,
   storedCcabRecordForTitle,
-};
+} = pr336StoredCcabNarrative;
 
 function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
-}
-
-function placeMetadata(place = {}) {
-  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
-    ? place.metadata
-    : {};
 }
 
 export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = []) {
@@ -50,6 +75,12 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   if (!rows.length || unverified.length) {
     throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
+}
+
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
 }
 
 export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
