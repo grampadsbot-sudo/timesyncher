@@ -489,13 +489,12 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  if (served) {
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
-    }
-    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
-      throw new Error('served shared Oe() rows missing Gate B list row markers');
-    }
+  if (served && (
+    !js.includes('data-shared-live-tab":"hotels"')
+    || !js.includes('data-shared-live-tab":"cars"')
+    || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')
+  )) {
+    throw new Error('served shared Hotels/Cars tab panels or Gate B list row markers missing');
   }
   return js;
 }
