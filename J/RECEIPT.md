@@ -2,29 +2,33 @@
 
 **Branch:** `vkfill/588-20261021125728`  
 **Start head:** `bf232ddddc5ca1472c275eeba273e0ea8e27027b`  
+**Tip head:** `55639cb5`  
 **Authority:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-590` + chief-dr dirty-head merge brief
 
 ## Base merge
 
-Host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab651dca078f2cd35f13f` into `bf232ddd`. Conflicts resolved in `J/` only; took base `public/assets/index-BKun7ofk.js` then rebaked; kept base `src/vacation/shared-trip-oe-list-row-patch.mjs` (`<strong>` default list-row title for Gate B `first_text`).
+Host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab651dca078f2cd35f13f` into `bf232ddd`. Conflicts resolved in `J/` only; took base `public/assets/index-BKun7ofk.js` then `node scripts/rebake_served_trek_bundle.mjs`; kept base `src/vacation/shared-trip-oe-list-row-patch.mjs` (`<strong>` default list-row title for Gate B `first_text`).
 
 ## Change (PR #588)
 
-CI `test_same_selection_capture.py` failed because head `5d9e2581` mutated served `places` on fixture replay.
-
-- `src/vacation/shared-trip-fixture-replay.mjs`: timeline selection normalization only; served payload keeps original `places` shape.
-- Reverted out-of-scope harness/fixture edits from `5d9e2581`; `scripts/ops/capture/timeline-replay.mjs` subprocess producer binding restored.
-- **Kept (app render path):** `apps/vacation-client/src/lib/listTabModel.mjs` `logoUrlForPlace` → `resolveThingLogoUrl` when no explicit URL.
+- `src/vacation/shared-trip-fixture-replay.mjs`: served `places` shape unchanged on replay (CI fix for `test_same_selection_capture.py`).
+- `apps/vacation-client/src/lib/listTabModel.mjs`: generic list logos at render time via `resolveThingLogoUrl`.
 
 ## Local verification
 
 | Command | Result |
 | --- | --- |
-| `python3 scripts/ops/dispatch/test_same_selection_capture.py` | (run at DONE) |
-| `cd apps/vacation-client && npm test` | (run at DONE) |
-| `node scripts/rebake_served_trek_bundle.mjs` | (run at DONE) |
-| offline-tests + pre-DONE gates | (run at DONE) |
+| `python3 scripts/ops/dispatch/test_same_selection_capture.py` | OK (11 tests) |
+| `cd apps/vacation-client && npm test` | OK (layout shell skipped without CHROME_PATH) |
+| `node scripts/rebake_served_trek_bundle.mjs` | OK |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | OK |
+| `node scripts/test_served_trek_bundle.mjs` | OK |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/run-offline-tests.mjs` | FAIL lane host: `test_live_transcript_dialog_pdf.mjs` expects `bundled-get_page` but `gbrain-cli` on PATH yields `gbrain-cli-get_page` (env, not PR diff) |
 
 ## Verdict
 
-Merge commit ready; host CI + Gate B on new tip decide eligibility. Tip sha recorded in DONE line.
+Base-merge commit `55639cb5` ready for host push; CI `unit-tests` + Gate B on tip are merge authority.
