@@ -1,5 +1,6 @@
 import { composeListRowDescription } from '../../../../src/vacation/list-row-description.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
+import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -321,6 +322,20 @@ function wordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
 }
 
+function storedListNarrativeFallback(place, override, source) {
+  const spare = text(
+    override.longDetails ||
+      override.details ||
+      override.description ||
+      source.longDetails ||
+      source.details ||
+      source.description ||
+      place.description,
+  );
+  if (wordCount(spare) < 6 || isGenericDescription(spare)) return '';
+  return spare;
+}
+
 function clipText(value, max) {
   const row = text(value);
   if (!row || row.length <= max) return row;
@@ -368,6 +383,13 @@ export function listRowSubstanceDescription(
     price: override.price ?? place.price ?? source.price,
     startTime: override.startTime || source.startTime || place.place_time,
     place_time: place.place_time,
+    description: override.description || source.description || place.description,
+    longDetails:
+      override.longDetails ||
+      override.details ||
+      source.longDetails ||
+      source.details ||
+      place.description,
   };
   const hook = text(
     override.summary ||
@@ -376,7 +398,7 @@ export function listRowSubstanceDescription(
       source.itineraryNote ||
       source.itinerary_note,
   );
-  const composed = text(
+  let composed = text(
     composeListRowDescription({
       category,
       summary: hook,
@@ -386,7 +408,11 @@ export function listRowSubstanceDescription(
   );
   if (clipFlight && tabCategoryKey(place, trip) === 'flight') {
     const picked = pickFlightListRowSummaryText(composed);
-    return picked || composed;
+    composed = text(picked || composed);
+  }
+  if (wordCount(composed) < 6 || isGenericDescription(composed)) {
+    const spare = storedListNarrativeFallback(place, override, source);
+    if (spare) return spare;
   }
   return composed;
 }
