@@ -40,7 +40,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   608: 'Midtown sample hotel',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Carbone',
-  611: 'Blue Note Jazz Club',
+  611: 'Jazz at Lincoln Center',
 };
 
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
@@ -59,6 +59,62 @@ function enrichmentHit(ccabKey = '') {
   const ccabRecord = ENRICHMENT[key];
   if (!ccabRecord || typeof ccabRecord !== 'object') return null;
   return { ccabKey: key, ccabRecord };
+}
+
+function websiteHost(url = '') {
+  const row = text(url, 500);
+  if (!row) return '';
+  try {
+    const parsed = new URL(row.includes('://') ? row : `https://${row}`);
+    return parsed.hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+const ENRICHMENT_BY_WEBSITE_HOST = (() => {
+  const map = new Map();
+  for (const [key, record] of Object.entries(ENRICHMENT)) {
+    const host = websiteHost(record?.website);
+    if (!host || map.has(host)) continue;
+    map.set(host, key);
+  }
+  return map;
+})();
+
+function websiteUrlsForIdentity(place = {}, override = {}) {
+  const capture = place.websiteCapture && typeof place.websiteCapture === 'object'
+    ? place.websiteCapture
+    : null;
+  return [
+    place.website,
+    override.website,
+    override.sourceRecord?.website,
+    override.sourceRecord?.url,
+    capture?.website,
+    place.sourceRecord?.website,
+    place.sourceRecord?.url,
+  ];
+}
+
+function enrichmentHitByWebsite(place = {}, override = {}) {
+  for (const url of websiteUrlsForIdentity(place, override)) {
+    const host = websiteHost(url);
+    if (!host) continue;
+    const key = ENRICHMENT_BY_WEBSITE_HOST.get(host);
+    if (key) return enrichmentHit(key);
+  }
+  return null;
+}
+
+function enrichmentHitByUniqueNamePrefix(name = '') {
+  const base = text(name, 240);
+  if (!base || (base.length < 8 && !/\s/.test(base))) return null;
+  const matches = Object.keys(ENRICHMENT).filter(
+    (key) => key === base || key.startsWith(`${base} `),
+  );
+  if (matches.length !== 1) return null;
+  return enrichmentHit(matches[0]);
 }
 
 export function storedCcabRecordForTitle(title = '') {
@@ -102,6 +158,10 @@ export function resolveStoredCcabKey(place = {}, override = {}) {
     const hit = enrichmentHit(candidate);
     if (hit) return hit;
   }
+  const websiteHit = enrichmentHitByWebsite(place, override);
+  if (websiteHit) return websiteHit;
+  const prefixHit = enrichmentHitByUniqueNamePrefix(place.name || place.title || override.title);
+  if (prefixHit) return prefixHit;
   return null;
 }
 
@@ -150,6 +210,12 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     next.longDetails = details;
     if (!text(next.details)) next.details = details;
     if (!text(next.description)) next.description = details;
+  }
+  if (hit.ccabKey && !text(next.externalId)) next.externalId = hit.ccabKey;
+  if (hit.ccabKey) {
+    const prior = next.sourceRecord && typeof next.sourceRecord === 'object' ? next.sourceRecord : {};
+    next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
+    if (!text(place.externalId)) place.externalId = hit.ccabKey;
   }
   for (const key of [
     'summary',

@@ -136,9 +136,37 @@ const rawFixture = buildNycCraigKimDaybydayTrip();
 const replayServed = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify(rawFixture))).served;
 const liveBlueNote = blueNoteDescriptionFields(liveServed);
 const replayBlueNote = blueNoteDescriptionFields(replayServed);
-assert.equal(replayBlueNote.externalId, 'Blue Note Jazz Club');
+assert.equal(replayBlueNote.externalId, 'Jazz at Lincoln Center');
 assert.equal(liveBlueNote.externalId, replayBlueNote.externalId);
 assert.equal(liveBlueNote.longDetails, replayBlueNote.longDetails);
 assert.ok(narrativeWordCount(liveBlueNote.longDetails) >= 30);
+
+const aliasServed = finalizeServedSharedTripPayload({
+  places: [{
+    id: 5,
+    name: 'Blue Note',
+    category_name: 'Activity',
+    place_time: '8:00 PM',
+    website: 'https://www.bluenote.net/',
+    price: 40,
+  }],
+  thingOverrides: {
+    'place:5': {
+      sourceRecord: {
+        website: 'https://www.bluenotejazz.com/',
+        logoUrl: 'https://www.bluenotejazz.com/favicon.ico',
+      },
+    },
+  },
+  days: [],
+  assignments: {},
+});
+const aliasOverride = aliasServed.thingOverrides['place:5'] || {};
+assert.equal(aliasServed.places[0].externalId, 'Blue Note Jazz Club');
+assert.ok(
+  narrativeWordCount(aliasOverride.longDetails || '') >= 30,
+  'Blue Note alias row should bind stored ccab narrative via website or unique name prefix',
+);
+assert.match(aliasOverride.longDetails || '', /Greenwich Village jazz/i);
 
 console.log('stored ccab canonical identity tests passed');
