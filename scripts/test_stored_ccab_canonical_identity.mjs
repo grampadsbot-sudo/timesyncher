@@ -6,9 +6,11 @@ import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixt
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 import {
   mergeStoredCcabNarrativeIntoOverride,
   resolveStoredCcabKey,
+  shouldMergeStoredCcabOnFixtureReplay,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
 function narrativeWordCount(value) {
@@ -92,17 +94,46 @@ const served = finalizeServedSharedTripPayload({
 const smokeOverride = served.thingOverrides['place:901'] || {};
 assert.match(smokeOverride.longDetails || '', /Upper West Side jazz room/i);
 
+assert.equal(resolveStoredCcabKey({ name: 'Smoke' }, {})?.ccabKey, 'Smoke Jazz & Supper Club');
+
 const smokeGap = finalizeServedSharedTripPayload({
-  places: [{ id: 902, name: 'Smoke', category_name: 'activity', price: 45 }],
+  places: [{
+    id: 902,
+    name: 'Smoke',
+    category_name: 'activity',
+    price: 45,
+    description: 'Documented NYC option (music)',
+  }],
   thingOverrides: { 'place:902': { startTime: '21:00', price: 45 } },
   days: [],
   assignments: {},
 });
+const gapPlace = smokeGap.places.find((place) => place.id === 902);
 const gapOverride = smokeGap.thingOverrides['place:902'] || {};
 assert.ok(
-  narrativeWordCount(gapOverride.longDetails || gapOverride.description || '') < 30,
-  'Smoke without canonical externalId stays thin until trek stores identity',
+  narrativeWordCount(gapOverride.longDetails || gapOverride.description || '') >= 30,
+  'unique short Smoke title should bind stored ccab narrative',
 );
+assert.ok(narrativeWordCount(rowSummary(gapPlace, smokeGap)) >= 6);
+
+const smokeReplay = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify({
+  places: [{
+    id: 49,
+    name: 'Smoke',
+    category_name: 'Activity',
+    description: 'Documented NYC option (music)',
+    price: 45,
+  }],
+  thingOverrides: {
+    'place:49': { timeline: false, startTime: '9:00 PM' },
+  },
+}))).served;
+const smokeReplayPlace = smokeReplay.places.find((place) => place.id === 49);
+assert.equal(
+  shouldMergeStoredCcabOnFixtureReplay(smokeReplayPlace, smokeReplay.thingOverrides['place:49']),
+  true,
+);
+assert.ok(narrativeWordCount(rowSummary(smokeReplayPlace, smokeReplay)) >= 30);
 
 const liveFields = applyLiveAppListRowFields({
   places: [{

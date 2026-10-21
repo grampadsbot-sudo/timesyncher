@@ -109,7 +109,7 @@ function enrichmentHitByWebsite(place = {}, override = {}) {
 
 function enrichmentHitByUniqueNamePrefix(name = '') {
   const base = text(name, 240);
-  if (!base || (base.length < 8 && !/\s/.test(base))) return null;
+  if (!base) return null;
   const matches = Object.keys(ENRICHMENT).filter(
     (key) => key === base || key.startsWith(`${base} `),
   );
@@ -210,6 +210,10 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     next.longDetails = details;
     if (!text(next.details)) next.details = details;
     if (!text(next.description)) next.description = details;
+    const placeDesc = text(place.description);
+    if (!placeDesc || narrativeWordCount(placeDesc) < 30) {
+      place.description = details;
+    }
   }
   if (hit.ccabKey && !text(next.externalId)) next.externalId = hit.ccabKey;
   if (hit.ccabKey) {
