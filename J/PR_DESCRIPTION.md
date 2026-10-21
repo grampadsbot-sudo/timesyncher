@@ -1,6 +1,8 @@
 ## Summary
 
-Gate B description judgments flagged **Blue Note Jazz Club** and **Smoke Jazz & Supper Club** as thin (start time + price only). This round binds stored ccab narratives through canonical `externalId` / `ccabKey`, runs Gate B fixture replay through `finalizeServedSharedTripPayload` (same path as live serve), and keeps **#572** flight list `pickFlightListRowSummaryText` / `listRowSubstanceDescription` behavior from **`origin/migrate/trek-source`**.
+Gate B capture replays `nyc-shared.json`, where place **5** (`Blue Note`) is a short title without `externalId`, so stored-ccab merge never ran. This round resolves ccab identity by **website host** and a safe **unique name prefix** (`Blue Note` → `Blue Note Jazz Club`), persists `externalId`/`ccabKey` on merge, and sets day-by-day row **611** to **`Jazz at Lincoln Center`** to match the pr336 snapshot. Prior work still finalizes fixture replay through `finalizeServedSharedTripPayload` and keeps **#572** flight list summary behavior.
+
+**Head:** `27037489` — `node scripts/test_stored_ccab_canonical_identity.mjs` and pre-DONE gates pass locally; Ubuntu Gate B not self-certified.
 
 ## Verification (local)
 
