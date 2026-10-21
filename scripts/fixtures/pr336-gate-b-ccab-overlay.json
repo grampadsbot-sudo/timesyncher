@@ -116,27 +116,6 @@
     "googleRating": "4.7",
     "googleReviewCount": "42000"
   },
-  "Midtown sample hotel": {
-    "category": "hotel",
-    "summary": "List-only row until ccab names a real Midtown property.",
-    "itineraryNote": "List-only row until ccab names a real Midtown property.",
-    "description": "Blocked: no ccab capture matches this list-only Midtown hotel row name, so brand, nightly price, logo, and fetched ratings stay unbound. Do not borrow another hotel identity on this row.",
-    "provenanceBlocker": "no ccab capture matches this list-only Midtown hotel row; identity, logo, rating, price, and website stay blocked",
-    "provenanceBlocked": [
-      "price",
-      "logoUrl",
-      "googleRating",
-      "yelpRating",
-      "thirdPartyRating",
-      "review1",
-      "review2",
-      "review3",
-      "review4",
-      "website",
-      "lat",
-      "lng"
-    ]
-  },
   "Zabar's": {
     "price": 18,
     "description": "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-foods stop; useful for breakfast supplies, picnic items, coffee, smoked fish, and take-home food gifts. Expect crowds at peak times. Price: $18 per person picnic-supplies planning estimate.",

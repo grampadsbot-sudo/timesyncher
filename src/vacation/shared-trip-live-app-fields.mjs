@@ -331,7 +331,10 @@ export function applyLiveAppListRowFields(shared = {}) {
       override.sourceRecord = mergedSourceRecord;
     }
 
-    Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
+    const mergedCcab = mergeStoredCcabNarrativeIntoOverride(place, override);
+    Object.assign(override, mergedCcab);
+    if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
+    if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
 
     next.thingOverrides[key] = override;
   }

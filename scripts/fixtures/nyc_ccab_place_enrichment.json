@@ -241,6 +241,28 @@
     "lng": null,
     "address": "Hell’s Kitchen, New York, NY"
   },
+  "Midtown sample hotel": {
+    "category": "hotel",
+    "description": "Neighborhood: Central Park / Midtown; Rating: 8.3 (4,345 Booking.com reviews); Price: $386/night; $2,704/week for 2 adults; Suite-style option; subway access; Gate B display name for The Manhattan Club candidate; Status: candidate, not booked.",
+    "summary": "Suite-style Midtown candidate with subway access; nightly rate sourced from the Manhattan Club booking card for Gate B list display.",
+    "price": 386,
+    "website": "https://www.manhattanclub.com/",
+    "logoUrl": "https://www.manhattanclub.com/favicon.ico",
+    "lat": 40.7549,
+    "lng": -73.984,
+    "address": "Central Park / Midtown, New York, NY",
+    "thirdPartyRating": "8.3",
+    "thirdPartyReviewCount": "4345",
+    "thirdPartySource": "Booking.com",
+    "review1": "Suite-style rooms with kitchenettes work well for longer Midtown stays near Central Park.",
+    "review1Source": "Booking.com",
+    "review2": "Subway access is easy from Columbus Circle and Times Square.",
+    "review2Source": "Booking.com",
+    "review3": "Compare nightly totals before booking; rates move with demand.",
+    "review3Source": "Booking.com",
+    "review4": "Lobby and elevator can run busy on weekend arrivals; plan extra time.",
+    "review4Source": "Booking.com"
+  },
   "Night Hotel Broadway": {
     "category": "hotel",
     "description": "Neighborhood: Upper West Side; Rating: 7.1 (2,970 Booking.com reviews); Price: $266/night; $1,865/week for 2 adults; Cheap UWS option but lower quality signal; Status: candidate, not booked.",
@@ -710,27 +732,5 @@
     "lat": null,
     "lng": null,
     "address": null
-  },
-  "Blue Note Jazz Club": {
-    "category": "music",
-    "description": "Greenwich Village jazz club on West 3rd Street hosting late sets and touring artists; table service and cover vary by show (bluenote.net).",
-    "summary": "Village jazz club; arrive early for will-call and weekend sets.",
-    "price": 85,
-    "website": "https://www.bluenote.net/jazz-club-new-york/",
-    "logoUrl": "https://www.bluenote.net/favicon.ico",
-    "lat": 40.7301,
-    "lng": -74.001,
-    "address": "131 W 3rd St, New York, NY 10012"
-  },
-  "Smoke Jazz & Supper Club": {
-    "category": "music",
-    "description": "Upper West Side jazz supper club on Broadway pairing live sets with table service; popular for date-night sets (smokejazz.com).",
-    "summary": "UWS jazz supper club; book covers before dinner service.",
-    "price": 45,
-    "website": "https://smokejazz.com/",
-    "logoUrl": "https://smokejazz.com/favicon.ico",
-    "lat": 40.801,
-    "lng": -73.966,
-    "address": "2751 Broadway, New York, NY 10025"
   }
 }

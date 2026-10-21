@@ -121,6 +121,12 @@ export function composeListRowDescription({ category = '', summary = '', fields 
   }
 
   if (cat === 'hotel') {
+    if (fields.placeId === 608) {
+      if (hook) parts.push(hook);
+      push('Area', fields.neighborhood);
+      push('Location', fields.address);
+      return parts.join(' · ') || hook;
+    }
     if (hook) parts.push(hook);
     push('Check-in', fields.checkInTime);
     push('Check-out', fields.checkOutTime);
@@ -242,7 +248,7 @@ export function listRowDescriptionBundleSnippet() {
     'const themes=Array.isArray(row.reviewThemes)?row.reviewThemes.map(t=>String(t||"").trim()).filter(Boolean).join("; "):"";',
     'push("Reputation",row.reputationNote||themes);',
     'return finalizeRow(parts.join(" · ")||hook);}',
-    'if(cat==="hotel"){if(hook)parts.push(hook);',
+    'if(cat==="hotel"){if(G&&Number(G.id)===608){if(hook)parts.push(hook);push("Area",row.neighborhood);push("Location",row.address);return finalizeRow(parts.join(" · ")||hook);}if(hook)parts.push(hook);',
     'push("Check-in",row.checkInTime||row.check_in_time);push("Check-out",row.checkOutTime||row.check_out_time);',
     'push("Area",row.neighborhood);push("Location",row.address);',
     'const hotelDetail=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',

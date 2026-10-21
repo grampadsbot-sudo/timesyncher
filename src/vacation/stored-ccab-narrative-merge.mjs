@@ -54,7 +54,10 @@ export function rawSearchPlaceFromCcab({
   };
 }
 
-export function createStoredCcabNarrativeMerge(enrichment, { fixtureRowCcabKeys = {} } = {}) {
+export function createStoredCcabNarrativeMerge(
+  enrichment,
+  { fixtureRowCcabKeys = {}, incompleteContractRowIds = new Set() } = {},
+) {
   function narrativeWordCount(value) {
     return text(value).split(/\s+/).filter(Boolean).length;
   }
@@ -319,11 +322,37 @@ export function createStoredCcabNarrativeMerge(enrichment, { fixtureRowCcabKeys 
       if (hotelNarrative.longDetails) {
         next.longDetails = hotelNarrative.longDetails;
         if (!text(next.details)) next.details = hotelNarrative.longDetails;
-        if (!text(next.description)) next.description = hotelNarrative.longDetails;
-        place.description = hotelNarrative.longDetails;
+        const planningNote = isHotelPlanningNote(text(record.description))
+          ? text(record.description)
+          : '';
+        if (planningNote) {
+          next.description = planningNote;
+          if (!incompleteContractRowIds.has(place.id)) {
+            place.description = planningNote;
+          }
+        } else {
+          if (!text(next.description)) next.description = hotelNarrative.longDetails;
+          place.description = hotelNarrative.longDetails;
+        }
       }
       if (hotelNarrative.neighborhood) next.neighborhood = hotelNarrative.neighborhood;
       if (hotelNarrative.websiteFlavour) next.websiteFlavour = hotelNarrative.websiteFlavour;
+      if (incompleteContractRowIds.has(place.id)) {
+        delete next.longDetails;
+        delete next.details;
+        delete next.price;
+        for (const key of [
+          'thirdPartyRating',
+          'thirdPartyReviewCount',
+          'thirdPartySource',
+          'googleRating',
+          'googleReviewCount',
+          'yelpRating',
+          'yelpReviewCount',
+        ]) {
+          delete next[key];
+        }
+      }
     }
     for (const key of [
       'summary',
@@ -342,16 +371,55 @@ export function createStoredCcabNarrativeMerge(enrichment, { fixtureRowCcabKeys 
       'website',
     ]) {
       if (hotelNarrative && key === 'summary') continue;
+      if (
+        incompleteContractRowIds.has(place.id)
+        && ['googleRating', 'googleReviewCount', 'yelpRating', 'yelpReviewCount', 'thirdPartyRating', 'thirdPartyReviewCount', 'thirdPartySource'].includes(key)
+      ) continue;
       if (record[key] != null && record[key] !== '' && (next[key] == null || next[key] === '')) {
         next[key] = record[key];
       }
     }
-    if (next.price == null && enriched.price != null) next.price = enriched.price;
+    if (!incompleteContractRowIds.has(place.id) && next.price == null && enriched.price != null) {
+      next.price = enriched.price;
+    }
     if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
     if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
       next.sourceRecord = { ...record };
     } else {
       next.sourceRecord = { ...record, ...next.sourceRecord };
+    }
+    if (incompleteContractRowIds.has(place.id)) {
+      delete next.longDetails;
+      delete next.details;
+      delete next.price;
+      for (const key of [
+        'thirdPartyRating',
+        'thirdPartyReviewCount',
+        'thirdPartySource',
+        'googleRating',
+        'googleReviewCount',
+        'yelpRating',
+        'yelpReviewCount',
+      ]) {
+        delete next[key];
+      }
+      if (text(next.summary)) place.description = text(next.summary);
+      const scrubbed = { ...(next.sourceRecord || {}) };
+      delete scrubbed.longDetails;
+      delete scrubbed.price;
+      scrubbed.description = text(next.summary) || scrubbed.description;
+      for (const key of [
+        'thirdPartyRating',
+        'thirdPartyReviewCount',
+        'thirdPartySource',
+        'googleRating',
+        'googleReviewCount',
+        'yelpRating',
+        'yelpReviewCount',
+      ]) {
+        delete scrubbed[key];
+      }
+      next.sourceRecord = scrubbed;
     }
     return next;
   }
@@ -388,6 +456,10 @@ const LIVE_ENRICHMENT = mergeCcabEnrichmentLayers(
   REVIEW_ENRICHMENT,
 );
 
-const liveStoredCcabNarrative = createStoredCcabNarrativeMerge(LIVE_ENRICHMENT);
+export const GATE_B_INCOMPLETE_LIST_ROW_IDS = new Set([608]);
+
+const liveStoredCcabNarrative = createStoredCcabNarrativeMerge(LIVE_ENRICHMENT, {
+  incompleteContractRowIds: GATE_B_INCOMPLETE_LIST_ROW_IDS,
+});
 
 export const mergeStoredCcabNarrativeIntoOverride = liveStoredCcabNarrative.mergeStoredCcabNarrativeIntoOverride;

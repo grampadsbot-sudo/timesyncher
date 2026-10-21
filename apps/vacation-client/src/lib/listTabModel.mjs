@@ -2,7 +2,10 @@ import {
   composeListRowDescription,
   finalizeListRowDisplayDescription,
 } from '../../../../src/vacation/list-row-description.mjs';
-import { mergeStoredCcabNarrativeIntoOverride } from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
+import {
+  GATE_B_INCOMPLETE_LIST_ROW_IDS,
+  mergeStoredCcabNarrativeIntoOverride,
+} from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
 import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 import {
@@ -384,12 +387,18 @@ export function listRowSubstanceDescription(
       source.details ||
       place.description,
   };
+  if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)) {
+    const listSummary = text(mergedOverride.summary || source.summary || place.summary);
+    fields.description = listSummary;
+    fields.longDetails = listSummary;
+    delete fields.price;
+  }
   const hook = listRowHook(mergedOverride, source);
   let composed = text(
     composeListRowDescription({
       category,
       summary: hook,
-      fields,
+      fields: { ...fields, placeId: place.id },
       omitListPrice,
     }),
   );

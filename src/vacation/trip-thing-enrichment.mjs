@@ -361,7 +361,15 @@ export function hotelStoredCcabListNarrative(title = '', ccabRecord = {}) {
   let summary = text(ccabRecord.websiteFlavour)
     ? shortLineFromSourceText(ccabRecord.websiteFlavour, 160)
     : shortLineFromSourceText(built, 160);
-  if (isHotelPlanningNote(text(ccabRecord.summary))) {
+  const recordSummary = text(ccabRecord.summary, 500);
+  if (
+    recordSummary
+    && !isHotelPlanningNote(recordSummary)
+    && recordSummary.split(/\s+/).filter(Boolean).length >= 8
+    && !isGenericDescription(recordSummary)
+  ) {
+    summary = recordSummary;
+  } else if (isHotelPlanningNote(recordSummary)) {
     summary = shortLineFromSourceText(built, 160) || summary;
   }
   return {
