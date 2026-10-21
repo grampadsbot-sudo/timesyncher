@@ -16,14 +16,18 @@ Round 1 fixture merge left list-only row 608 with `thingOverrides.place:608.pric
 
 ## Checks (local; host publish + CI authority)
 
-```bash
-cd apps/vacation-client && npm test
-# scripts/offline-tests.txt in order (PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser where needed)
-node scripts/check-no-comments.mjs
-node scripts/test_offline_manifest.mjs
-BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
-BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs
-```
+| Command | Exit |
+| --- | --- |
+| `cd apps/vacation-client && npm test` | 0 |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `scripts/offline-tests.txt` lines 1–44 (`PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | 0 |
+| `scripts/offline-tests.txt` lines 45–`test_live_transcript_dialog_pdf.mjs` | 0 through `test_eval_jev_cards.mjs`; **stop** at `test_live_transcript_dialog_pdf.mjs`: `rules.via` `gbrain-cli-get_page` vs `bundled-get_page` (host env; same as #581 receipt) |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+**Tip sha:** `765c2b4c` (merge `c87f074e`, row 608 + ratchet `78c6766f`, receipt `765c2b4c`).
 
 ## Left alone
 
