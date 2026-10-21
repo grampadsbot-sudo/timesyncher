@@ -77,9 +77,14 @@ assert.deepEqual(
 );
 
 const hasFlight = model.rows.some((row) => row.bucket === 'Flights');
-const hasCar = model.rows.some((row) => row.bucket === 'Cars');
+const hasHotel = model.rows.some((row) => row.bucket === 'Hotel');
 assert.equal(hasFlight, true, 'NYC test fixture must include at least one flight budget row');
-assert.equal(hasCar, true, 'NYC test fixture must include at least one car budget row');
+assert.equal(hasHotel, true, 'NYC test fixture must include at least one hotel budget row');
+assert.equal(
+  model.rows.some((row) => row.bucket === 'Cars'),
+  false,
+  'list-only car row 609 must not appear on the timeline-only budget tab',
+);
 
 const gateBudgetPrices = gateBBudgetPriceCompleteness(trip);
 assert.equal(gateBudgetPrices.pass, true);

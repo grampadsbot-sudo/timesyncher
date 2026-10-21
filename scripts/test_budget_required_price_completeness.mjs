@@ -5,9 +5,18 @@ import { budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budget
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
 
 function miniTrip(places, overrides = {}) {
+  const dayId = 50;
+  const assignments = {
+    [dayId]: places.map((place) => ({
+      place_id: place.id,
+      place: { id: place.id, name: place.name },
+    })),
+  };
   return {
     trip: { currency: 'USD' },
+    days: [{ id: dayId, day_number: 1 }],
     places,
+    assignments,
     thingOverrides: overrides,
   };
 }
