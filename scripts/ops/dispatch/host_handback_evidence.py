@@ -407,4 +407,4 @@ class CanonicalCollector:
             raise EvidenceError('canonical host evidence failed #%d: %s' % (item['number'], type(exc).__name__)) from exc
 
     def scan(self):
-        return ReviewScan(self, self.actors)
+        return ReviewScan(self, self.actors, clock=self.clock)

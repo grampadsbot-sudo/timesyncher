@@ -183,8 +183,9 @@ class ReviewScan:
     actual process/receipt proofs, returning Evidence or raising EvidenceError.
     Scan first, notify only after *all* objects/evidence were read successfully.
     """
-    def __init__(self, read_evidence, trusted_actors):
+    def __init__(self, read_evidence, trusted_actors, clock=None):
         self.read_evidence = read_evidence
+        self.clock = clock
         self.trusted_actors = frozenset(trusted_actors)
         self.pending = []
         self.failed = False
@@ -192,7 +193,7 @@ class ReviewScan:
     def consider(self, item, comments, now, sent):
         try:
             ev = self.read_evidence(item, comments, now)
-            decision = classify(item, comments, ev, now, self.trusted_actors, sent)
+            decision = classify(item, comments, ev, self.clock() if self.clock else now, self.trusted_actors, sent)
         except EvidenceError:
             self.failed = True
             raise

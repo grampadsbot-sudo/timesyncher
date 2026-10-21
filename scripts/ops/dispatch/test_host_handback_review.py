@@ -210,6 +210,17 @@ class HostHandbackReview(unittest.TestCase):
         self.assertEqual(manifest, before)
         self.bell.assert_not_called()
 
+    def test_scan_classifies_after_actual_collection_clock(self):
+        reader = Mock(return_value=evidence(self.item, self.comments, checked_at=NOW+1))
+        scan = ReviewScan(reader, ACTORS, clock=lambda: NOW+2)
+        self.assertEqual(scan.consider(self.item, self.comments, NOW, self.sent).state, 'DUE')
+
+    def test_scan_still_refuses_future_evidence_after_collection(self):
+        reader = Mock(return_value=evidence(self.item, self.comments, checked_at=NOW+3))
+        scan = ReviewScan(reader, ACTORS, clock=lambda: NOW+2)
+        with self.assertRaises(EvidenceError):
+            scan.consider(self.item, self.comments, NOW, self.sent)
+
     def test_future_timestamps_fail_closed(self):
         with self.assertRaises(EvidenceError):
             self.decide(last_action_at=NOW+1)
