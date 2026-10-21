@@ -286,6 +286,20 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   }
 }
 
+export function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) {
+  if (NYC_GATE_B_ROW_CCAB_KEYS[place.id]) return true;
+  if (enrichmentHitByWebsite(place, override)) return true;
+  const hit = resolveStoredCcabKey(place, override);
+  if (!hit) return false;
+  const displayName = text(place.name || place.title || override.title);
+  if (displayName && displayName !== hit.ccabKey) return true;
+  if (override.timeline === true) {
+    const cat = text(place.category || place.category_name, 40).toLowerCase();
+    if (cat !== 'hotel' && !cat.includes('hotel') && !cat.includes('lodging')) return true;
+  }
+  return false;
+}
+
 export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
   const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[placeId];
   if (!ccabKey) return override;

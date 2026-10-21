@@ -1,7 +1,11 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
-import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
+import {
+  bindPr336GateBCanonicalIdentity,
+  mergeStoredCcabNarrativeIntoOverride,
+  shouldMergeStoredCcabOnFixtureReplay,
+} from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
 
 export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 
@@ -25,11 +29,27 @@ function normalizeTimelineSelections(trip = {}) {
   };
 }
 
+function enrichFixtureReplayServedTrip(shared = {}) {
+  const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
+  const thingOverrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
+    ? { ...shared.thingOverrides }
+    : {};
+  for (const place of places) {
+    const key = `place:${place.id}`;
+    const override = { ...(thingOverrides[key] || {}) };
+    const withIdentity = bindPr336GateBCanonicalIdentity(place.id, place, override);
+    thingOverrides[key] = shouldMergeStoredCcabOnFixtureReplay(place, withIdentity)
+      ? mergeStoredCcabNarrativeIntoOverride(place, withIdentity)
+      : withIdentity;
+  }
+  return { ...shared, places, thingOverrides };
+}
+
 export function prepareFixtureReplaySharedTrip(bytes) {
   const source = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   const parsed = JSON.parse(source.toString('utf8'));
   const { trip, selectedPlaceKeys } = normalizeTimelineSelections(parsed);
-  const served = finalizeServedSharedTripPayload(trip);
+  const served = enrichFixtureReplayServedTrip(trip);
   const payload = Buffer.from(JSON.stringify(served));
   return {
     served,
