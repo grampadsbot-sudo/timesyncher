@@ -8,7 +8,7 @@ Base merge: `origin/migrate/trek-source` at **e3364ac5** (host merge into 4163fe
 
 ## Tip sha
 
-**(pending commit)**
+**eb232a48**
 
 ## Checks (local)
 
@@ -26,8 +26,10 @@ Base merge: `origin/migrate/trek-source` at **e3364ac5** (host merge into 4163fe
 
 ## Host-only offline stops
 
+- `apps/vacation-client` `npm test` — exit 1: `layout acceptance unavailable` (no CHROME_PATH / google-chrome).
+- `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` — Browser not found at `/usr/bin/google-chrome-stable`.
 - `scripts/test_live_transcript_dialog_pdf.mjs:651` — `rules.via` = `gbrain-cli-get_page` (CI uses bundled rules).
-- Map marker bounds offline test — no CHROME_PATH on this host.
+- `scripts/test_same_selection_capture.mjs` / `scripts/test_capture_fixture_replay_harness.mjs` — stale `capture-producer-roots` worktree registration under `~/tsv-dispatch/pr-src`.
 
 ## CI
 
