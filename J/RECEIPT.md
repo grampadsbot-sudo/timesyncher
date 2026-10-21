@@ -1,35 +1,35 @@
-# VK PR #572 receipt (cursor-ubuntu vkfill-572-20261020111949)
+# VK PR #581 receipt (cursor-ubuntu vkfill-581-20261021093733)
 
-**Start sha:** `5c48fd0f2a983b404baf7e3c6baaac5e80ade2b3`
+**Start sha:** `dab52f74ec017619a51b194339130adeef825fb9`  
+**Tip sha:** `6edf03eb` (local; host publishes after DONE)
 
-## Base merge
+## Handoff
 
-`git merge origin/migrate/trek-source` is blocked by lane permissions; merged with `git read-tree -m -u $(git merge-base HEAD origin/migrate/trek-source) HEAD origin/migrate/trek-source` then merge commit with `MERGE_HEAD=origin/migrate/trek-source`.
+GBrain `bot-admin/lanes/vk-pr-handoff/pr-581`: **not found** (`gbrain get` → page_not_found).
 
-**Conflict:** `J/RECEIPT.md` (both added) — kept this PR’s receipt path content; base had #562 close verdict text at the same path.
+## Product (#579)
 
-**Base files taken from `origin/migrate/trek-source`:** `SOURCE_MAP.md`, `scripts/lib/pr336-stored-narrative-lineage-lib.mjs`, `scripts/probe_pr336_stored_narrative_lineage.mjs`, `scripts/test_pr336_ccab_search_provenance.mjs`.
+Map marker patch: 30×30 shell, 26×26 `object-fit:contain` img (`dab52f74`). This lane adds **`data-ts-map-marker-logo` only** on day-by-day pins (drops `data-ts-logo-chip` on map markers so capture `ICON_SEL` does not score pins as list-row chips). Rebaked `public/assets/index-BKun7ofk.js`.
 
-## Fix (#571)
+## Blocker (Done means / Gate B)
 
-Removed bundle patches (`trip-thing-enrichment.mjs`, `trek-thing-detail-fields-patch.mjs`, rebaked `public/assets/index-*.js`, `scripts/test_trip_thing_logo_metadata.mjs` list-row test). Implemented flight-only `pickFlightListRowSummaryText` / `rowSummary` in `apps/vacation-client/src/lib/listTabModel.mjs`.
+Ubuntu Gate B structure mode still **cannot run** on this host: `~/tsv-gateb/restore-check-logo-centres.mjs` imports `./lib/row-name-frame.mjs` but **`/home/ubishere9995/tsv-gateb/lib/row-name-frame.mjs` is missing** (only `gate-b-shell-layout-checker.mjs` present under `lib/`). Lane scope bans editing Gate B / capture scripts and work is limited to this worktree — **cannot repair host `~/tsv-gateb/` here**. Reference copy exists on branch `dr/logo-good-enough-20261019` at `scripts/ops/gateb/lib/row-name-frame.mjs` for host publication sync.
+
+Until host restores that file, **32/32 Gate B and PR “done means” are blocked** despite the map-marker UI fix.
 
 ## Commands (exit codes)
 
 | Command | Exit |
 | --- | --- |
-| `git fetch origin migrate/trek-source` | 0 |
-| `git read-tree -m -u … HEAD origin/migrate/trek-source` | 0 |
-| `apps/vacation-client/npm ci` | 0 |
-| `apps/vacation-client/npm run typecheck` | 0 |
-| `apps/vacation-client/npm run lint` | 0 |
-| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
-| `apps/vacation-client/npm run test` | 1 (layout harness: no `CHROME_PATH`; unit tests through `listRows.unit.mjs` passed) |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/test_shared_tab_category_css_blast_radius.mjs` | 0 |
+| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-| `node scripts/run-offline-tests.mjs` | 1 (`scripts/test_live_transcript_dialog_pdf.mjs`: gbrain route `gbrain-cli-get_page` vs expected `bundled-get_page` on this host) |
-| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
-**Final sha:** `6cfd23e964500a6f358ff5e69daa7b853707985e`
+## Verdict
+
+**Blocked on host Gate B harness** (`row-name-frame.mjs` publication gap). Product commit ready for host push; managing dr must restore `~/tsv-gateb/lib/row-name-frame.mjs` (or equivalent sync) before Gate B / CI `gateb` can pass on this change.
