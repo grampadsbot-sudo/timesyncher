@@ -1,3 +1,36 @@
+# VK issue #601 receipt (cursor-ubuntu vkfill-601)
+
+**Start sha:** `e3364ac5b3d44795cd3b2d9c857e9c940a9f6790`  
+**Tip sha:** `05c2b245`
+
+## Problem
+
+Gate B structure on `migrate/trek-source` tip `446e1913` failed `logo not centred with name` on Events/Hotels/Stores list tabs (e.g. Apple Fifth Avenue, Bergdorf Goodman, Blue Note): logo ink bbox centre vs first name line centre off by 1 px (0.5 px tolerance). Upstream `Oe()` row used a 28px CSS grid with `alignItems:"center"`, which vertically centres the logo chip against the full title cell (including hotel price column), not the first name line Gate B measures.
+
+## Fix
+
+In `src/vacation/shared-trip-oe-list-row-patch.mjs`, replace the logo+name grid with a flex row: fixed 28×28 logo slot (`dc` at size 28) and a `data-ts-list-row-name` cell with `minHeight:28`, `lineHeight:1`, and flex vertical centring so the first `strong` line shares the same vertical axis as the chip. Rebake `public/assets/index-BKun7ofk.js`. Assert layout in `scripts/test_itinerary_fresh_daybyday_bundle.mjs`.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Product fix committed on `vkfill/601-20261021155744`; host publishes after DONE. CI green + Gate B on PR head close #601 (not self-certified).
+
+---
+
 # VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
