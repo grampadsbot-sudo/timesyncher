@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import { listRowSubstanceDescription } from '../../apps/vacation-client/src/lib/listTabModel.mjs';
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
 
 const MIN_SUMMARY_WORDS = 30;
@@ -18,16 +19,7 @@ function haFields(shared = {}, place = {}) {
 }
 
 export function renderedSummary(shared = {}, place = {}) {
-  const row = haFields(shared, place);
-  const override = shared.thingOverrides?.[`place:${place.id}`] || {};
-  return text(
-    override.summary ||
-      row.summary ||
-      override.longDetails ||
-      row.longDetails ||
-      override.details ||
-      place.description,
-  );
+  return listRowSubstanceDescription(place, shared);
 }
 
 export function renderedPrice(shared = {}, place = {}) {

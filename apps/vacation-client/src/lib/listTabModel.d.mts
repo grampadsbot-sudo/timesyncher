@@ -36,6 +36,11 @@ export function hotelPriceDisplay(place: SharedPlace, trip: SharedTripPayload): 
 export function carPriceDisplay(place: SharedPlace, trip: SharedTripPayload): string;
 export function carSubtitle(place: SharedPlace, trip: SharedTripPayload): string;
 export function pickFlightListRowSummaryText(value?: string): string;
+export function listRowSubstanceDescription(
+  place: SharedPlace,
+  trip: SharedTripPayload,
+  options?: { omitListPrice?: boolean; clipFlight?: boolean },
+): string;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(

@@ -6,6 +6,7 @@ import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
+import { patchListRowDescription } from './trek-list-row-description-patch.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -336,7 +337,7 @@ const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.ite
 const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
 
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
-const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
+const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(tsListRowDescription(G))';
 const OE_LIST_LOGO_WRAP_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_LIST_LOGO_WRAP_PATCH = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
@@ -420,8 +421,9 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('live media video QR thumb patch did not apply');
   }
   if (js.includes(OE_ROW_SUMMARY_NEEDLE)) js = js.replace(OE_ROW_SUMMARY_NEEDLE, OE_ROW_SUMMARY_PATCH);
-  else if (served && js.includes('Rn=Bs(rr(G)||Co(G)||Fl(G))')) {
-    throw new Error('live tab row summary must read stored rr() only');
+  js = patchListRowDescription(js);
+  if (served && !js.includes('Rn=Bs(tsListRowDescription(G))')) {
+    throw new Error('live tab row summary substance patch did not apply');
   }
   if (js.includes(OE_LIST_LOGO_WRAP_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
   else if (served && !js.includes('data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})')) {
@@ -487,13 +489,12 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
   js = patchSharedTripOeListRows(js);
-  if (served) {
-    if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
-      throw new Error('served shared Hotels/Cars tab panels missing data-shared-live-tab anchor');
-    }
-    if (!js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')) {
-      throw new Error('served shared Oe() rows missing Gate B list row markers');
-    }
+  if (served && (
+    !js.includes('data-shared-live-tab":"hotels"')
+    || !js.includes('data-shared-live-tab":"cars"')
+    || !js.includes('"data-list-row":"1","data-has-logo":tsRowHasLogo')
+  )) {
+    throw new Error('served shared Hotels/Cars tab panels or Gate B list row markers missing');
   }
   return js;
 }

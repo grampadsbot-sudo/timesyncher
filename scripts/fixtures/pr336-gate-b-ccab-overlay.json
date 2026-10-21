@@ -37,6 +37,58 @@
     "googleRating": "4.6",
     "googleReviewCount": "1200"
   },
+  "Blue Note Jazz Club": {
+    "category": "event",
+    "summary": "Evening set at the Village club; arrive early for will-call pickup.",
+    "itineraryNote": "Evening set at the Village club; arrive early for will-call pickup.",
+    "description": "Google lists Blue Note Jazz Club around 4.5/5. Greenwich Village jazz room on West 3rd Street hosts late sets and touring artists with table service (bluenote.net/jazz-club-new-york). Covers and food minimums vary by show; Price: $85 per person ticket planning estimate including a modest service fee placeholder before tax, tip, and drinks.",
+    "price": 85,
+    "website": "https://www.bluenote.net/jazz-club-new-york/",
+    "logoUrl": "https://www.bluenote.net/favicon.ico",
+    "lat": 40.7301,
+    "lng": -74.001,
+    "address": "131 W 3rd St, New York, NY 10012",
+    "googleRating": "4.5",
+    "googleReviewCount": "4200",
+    "websiteFlavour": "Intimate Village jazz club with nightly sets, table service, and a long-running calendar of touring artists; arrive early for will-call pickup on busy weekends.",
+    "reviewThemes": {
+      "praise": [
+        "world-class live jazz in an intimate room",
+        "strong sound and sightlines from most tables",
+        "classic Greenwich Village atmosphere"
+      ],
+      "complaints": [
+        "cover charges plus food and drink minimums",
+        "weekend sets sell out or run standing-room only"
+      ]
+    }
+  },
+  "Smoke Jazz & Supper Club": {
+    "category": "event",
+    "summary": "UWS jazz supper club; book covers before dinner service.",
+    "itineraryNote": "UWS jazz supper club; book covers before dinner service.",
+    "description": "Google lists Smoke Jazz & Supper Club around 4.6/5. Upper West Side jazz room on Broadway pairs live sets with supper-club service (smokejazz.com). Covers often run about $35–$50 depending on the act; Price: $45 per person cover planning estimate before food minimums on busy weekend sets.",
+    "price": 45,
+    "website": "https://smokejazz.com/",
+    "logoUrl": "https://smokejazz.com/favicon.ico",
+    "lat": 40.801,
+    "lng": -73.966,
+    "address": "2751 Broadway, New York, NY 10025",
+    "googleRating": "4.6",
+    "googleReviewCount": "1800",
+    "websiteFlavour": "Broadway supper club with nightly jazz, table service, and a date-night room feel; reserve early for popular late sets.",
+    "reviewThemes": {
+      "praise": [
+        "intimate live jazz with strong acoustics",
+        "supper-club menu alongside the set",
+        "comfortable UWS room for a late-night show"
+      ],
+      "complaints": [
+        "cover plus menu pricing adds up quickly",
+        "popular sets need advance reservations"
+      ]
+    }
+  },
   "Afternoon matinee show": {
     "category": "event",
     "summary": "Overlap window A: matinee tickets already held.",

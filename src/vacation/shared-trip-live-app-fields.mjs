@@ -1,4 +1,18 @@
+import { mergeStoredCcabNarrativeIntoOverride } from './stored-ccab-narrative-merge.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
+
+const EXPERIENCE_CATEGORIES = new Set([
+  'activity',
+  'event',
+  'attraction',
+  'music',
+  'tour',
+  'sightseeing',
+  'theatre',
+  'tickets',
+  'family_event',
+  'other',
+]);
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 
@@ -143,6 +157,7 @@ export function applyLiveAppListRowFields(shared = {}) {
     const source = sourceObject(
       override.sourceRecord,
       place.sourceRecord,
+      placeMetadata(place).sourceRecord,
       override.source,
       place.source,
     );
@@ -213,6 +228,14 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'duration', source?.duration, flightFields.duration);
     } else if (category === 'car') {
       override.category = 'car';
+      copyIfBlank(override, 'pickupLocation', source?.pickupLocation, source?.pickup_location, place.address);
+      copyIfBlank(override, 'returnLocation', source?.returnLocation, source?.return_location, source?.dropoffLocation);
+      copyIfBlank(override, 'pickupHours', source?.pickupHours, source?.pickup_hours);
+      copyIfBlank(override, 'dropoffHours', source?.dropoffHours, source?.dropoff_hours, source?.returnHours);
+      copyIfBlank(override, 'reputationNote', source?.reputationNote, source?.reputation_note);
+      if (Array.isArray(source?.reviewThemes) && !Array.isArray(override.reviewThemes)) {
+        override.reviewThemes = source.reviewThemes;
+      }
       copyIfBlank(override, 'startTime', source?.startTime, source?.pickupTime);
       copyIfBlank(override, 'duration', source?.duration, source?.rentalDuration);
       copyIfBlank(override, 'endTime', source?.endTime, source?.returnTime, source?.dropoffTime);
@@ -225,14 +248,93 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'checkOutDate', source?.checkOutDate, source?.check_out_date);
       copyIfBlank(override, 'checkInTime', source?.checkInTime, source?.check_in_time);
       copyIfBlank(override, 'checkOutTime', source?.checkOutTime, source?.check_out_time);
+      copyIfBlank(override, 'hotelNote', source?.hotelNote, source?.hotel_note);
+      copyIfBlank(override, 'websiteFlavour', source?.websiteFlavour);
+      copyIfBlank(override, 'amenities', source?.amenities);
+      copyIfBlank(override, 'priceLevel', source?.priceLevel);
+      if (source?.reviewThemes && !override.reviewThemes) {
+        override.reviewThemes = source.reviewThemes;
+      }
+      copyIfBlank(
+        override,
+        'address',
+        source?.address,
+        place.address,
+        place.metadata?.address,
+      );
+      copyIfBlank(
+        override,
+        'neighborhood',
+        source?.neighborhood,
+        place.neighborhood,
+        place.metadata?.neighborhood,
+      );
+      copyIfBlank(override, 'googleRating', source?.googleRating, source?.google_rating);
+      copyIfBlank(override, 'googleReviewCount', source?.googleReviewCount, source?.google_review_count);
+      copyIfBlank(override, 'yelpRating', source?.yelpRating, source?.yelp_rating);
+      copyIfBlank(override, 'yelpReviewCount', source?.yelpReviewCount, source?.yelp_review_count);
+      copyIfBlank(override, 'thirdPartyRating', source?.thirdPartyRating, source?.third_party_rating);
+      copyIfBlank(override, 'thirdPartyReviewCount', source?.thirdPartyReviewCount, source?.third_party_review_count);
+      copyIfBlank(override, 'thirdPartySource', source?.thirdPartySource, source?.third_party_source);
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
+      }
+    } else if (EXPERIENCE_CATEGORIES.has(category)) {
+      if (category) override.category = category;
+      copyIfBlank(override, 'startTime', source?.startTime, source?.start_time, place.place_time);
+      copyIfBlank(override, 'duration', source?.duration);
+      copyIfBlank(override, 'itineraryNote', source?.itineraryNote, source?.itinerary_note);
+      copyIfBlank(override, 'description', source?.description, place.description);
+      copyIfBlank(override, 'longDetails', source?.longDetails, source?.description, place.description);
+      copyIfBlank(override, 'websiteFlavour', source?.websiteFlavour);
+      copyIfBlank(override, 'worthNote', source?.worthNote, source?.worth_note);
+      copyIfBlank(
+        override,
+        'address',
+        source?.address,
+        place.address,
+        place.metadata?.address,
+      );
+      copyIfBlank(override, 'thirdPartyRating', source?.thirdPartyRating, source?.third_party_rating);
+      copyIfBlank(override, 'thirdPartyReviewCount', source?.thirdPartyReviewCount, source?.third_party_review_count);
+      copyIfBlank(override, 'thirdPartySource', source?.thirdPartySource, source?.third_party_source);
+      if (source?.reviewThemes && !override.reviewThemes) {
+        override.reviewThemes = source.reviewThemes;
       }
     }
 
     if (override.timeline == null && source?.timeline != null) {
       override.timeline = !!source.timeline;
     }
+
+    const meta = placeMetadata(place);
+    if (!text(place.externalId)) {
+      const externalId = firstPresent(override.externalId, meta.externalId);
+      if (externalId) place.externalId = externalId;
+    }
+    if (!text(override.externalId) && text(place.externalId)) {
+      override.externalId = place.externalId;
+    }
+    const metaSourceRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object'
+      ? meta.sourceRecord
+      : null;
+    if (metaSourceRecord) {
+      if (!place.sourceRecord || typeof place.sourceRecord !== 'object') {
+        place.sourceRecord = { ...metaSourceRecord };
+      }
+      const mergedSourceRecord = override.sourceRecord && typeof override.sourceRecord === 'object'
+        ? { ...metaSourceRecord, ...override.sourceRecord }
+        : { ...metaSourceRecord };
+      if (override.sourceRecord?.identityProvenance) {
+        mergedSourceRecord.identityProvenance = override.sourceRecord.identityProvenance;
+      }
+      override.sourceRecord = mergedSourceRecord;
+    }
+
+    const mergedCcab = mergeStoredCcabNarrativeIntoOverride(place, override);
+    Object.assign(override, mergedCcab);
+    if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'longDetails')) delete override.longDetails;
+    if (!Object.prototype.hasOwnProperty.call(mergedCcab, 'details')) delete override.details;
 
     next.thingOverrides[key] = override;
   }

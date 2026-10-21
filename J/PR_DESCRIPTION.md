@@ -1,17 +1,28 @@
-Closes #589
+Closes #546
 
 ## Summary
 
-- Gate B structure failed on Events (and similar) list rows because capture could not record `first_text` for logo-vs-name centering: the name sat as a bare text node inside `[data-ts-list-row-name]`, not in a `span`/`strong` leaf.
-- Patch `Oe()` so the default title branch wraps `ua` in `<strong>` (flight/car/hotel components unchanged). Rebake `public/assets/index-BKun7ofk.js`.
+Host base-merge of `migrate/trek-source` at `e3364ac5` (#598/#599/#600 on base) onto #549 list-row description substance (`stored-ccab-narrative-merge`, `composeListRowDescription` / `tsListRowDescription`). Rebaked `public/assets/index-BKun7ofk.js` from base upstream + product patches.
 
-## Checks
+## Changes (merge `244cb282`)
 
-- `node scripts/rebake_served_trek_bundle.mjs` — 0
-- `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` — 0
-- `node scripts/test_served_trek_bundle.mjs` — 0
-- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (bases `migrate/trek-source` and `codex/ruling95-consolidated-logo`) — 0
+- **`pr336-vk-search-trip-sources.mjs`**: kept PR stored-ccab exports + base `buildPr336GateBRegenerateRows` / `resolveNycCcabKey` / snapshot materialize.
+- **`trip-thing-enrichment.mjs` / `stored-ccab-narrative-merge.mjs`**: hotel ccab list summary from enrichment when substantive; row **608** incomplete-contract list rows omit planning-note/scrape text from live list UI (bundle + server).
+- **`shared-trip-live-app-fields.mjs`**: apply stored-ccab merge without leaving stale `longDetails` keys after delete.
+- **Tests**: merge conflict fixes (`64` ccab keys; pr225/snapshot binding); `scripts/test_shared_tab_list_summary.mjs` hotel summary pattern.
 
-## Left alone (scope)
+## Verification (local `244cb282`)
 
-- Capture/Gate B scripts, baselines, fixtures, and `scripts/offline-tests.txt` (no new test file; extended existing bundle test).
+```bash
+cd apps/vacation-client && npm test
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser # all lines in scripts/offline-tests.txt
+node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs
+BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
+BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs
+```
+
+All exit 0 locally. CI + Gate B on host-pushed head are authority for close.
+
+## Left alone
+
+Baselines, Gate B checker config, workflows, itinerary look (approved). No layout churn beyond merged base + #549 description paths.

@@ -1,4 +1,18 @@
-
+import {
+  composeListRowDescription,
+  finalizeListRowDisplayDescription,
+} from '../../../../src/vacation/list-row-description.mjs';
+import {
+  GATE_B_INCOMPLETE_LIST_ROW_IDS,
+  mergeStoredCcabNarrativeIntoOverride,
+} from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
+import {
+  hotelListRowUnboundNarrative,
+  isGenericDescription,
+  isListRowPipelineDiagnostic,
+} from '../../../../src/vacation/trip-thing-enrichment.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
@@ -13,9 +27,11 @@ function overrideFor(trip, place) {
 }
 
 function sourceRecord(place, override) {
+  const meta = place.metadata && typeof place.metadata === 'object' ? place.metadata : {};
   return (
     override.sourceRecord ||
     place.sourceRecord ||
+    meta.sourceRecord ||
     (place.source && typeof place.source === 'object' ? place.source : null) ||
     {}
   );
@@ -316,34 +332,107 @@ import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-li
 
 export { pickFlightListRowSummaryText };
 
-function storedRowSummaryText(place, trip) {
-  const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
-  return text(
-    override.summary ||
-      override.longDetails ||
+function wordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function storedListNarrativeFallback(place, override, source) {
+  const spare = text(
+    override.longDetails ||
       override.details ||
-      source.summary ||
+      override.description ||
+      source.longDetails ||
+      source.details ||
+      source.description ||
       place.description,
   );
+  if (isListRowPipelineDiagnostic(spare)) return '';
+  if (wordCount(spare) < 6 || isGenericDescription(spare)) return '';
+  return spare;
+}
+
+function listRowHook(override, source) {
+  const hook = text(
+    override.summary ||
+      source.summary ||
+      override.itineraryNote ||
+      source.itineraryNote ||
+      source.itinerary_note,
+  );
+  return isListRowPipelineDiagnostic(hook) ? '' : hook;
+}
+
+export function listRowSubstanceDescription(
+  place,
+  trip,
+  { omitListPrice = false, clipFlight = false } = {},
+) {
+  const mergedOverride = mergeStoredCcabNarrativeIntoOverride(place, {
+    ...(overrideFor(trip, place) || {}),
+  });
+  const source = sourceRecord(place, mergedOverride);
+  const category = productThingCategory(place, mergedOverride);
+  const fields = {
+    ...source,
+    ...mergedOverride,
+    address: mergedOverride.address || place.address || source.address,
+    price: mergedOverride.price ?? place.price ?? source.price,
+    startTime: mergedOverride.startTime || source.startTime || place.place_time,
+    place_time: place.place_time,
+    description: mergedOverride.description || source.description || place.description,
+    longDetails:
+      mergedOverride.longDetails ||
+      mergedOverride.details ||
+      source.longDetails ||
+      source.details ||
+      place.description,
+  };
+  if (GATE_B_INCOMPLETE_LIST_ROW_IDS.has(place.id)) {
+    const listSummary = text(mergedOverride.summary || source.summary || place.summary);
+    fields.description = listSummary;
+    fields.longDetails = listSummary;
+    delete fields.price;
+  }
+  const hook = listRowHook(mergedOverride, source);
+  let composed = text(
+    composeListRowDescription({
+      category,
+      summary: hook,
+      fields: { ...fields, placeId: place.id },
+      omitListPrice,
+    }),
+  );
+  if (clipFlight && tabCategoryKey(place, trip) === 'flight') {
+    const picked = pickFlightListRowSummaryText(composed);
+    composed = text(picked || composed);
+  }
+  let spare = storedListNarrativeFallback(place, mergedOverride, source);
+  if (
+    !spare
+    && category === 'hotel'
+    && text(mergedOverride.provenanceBlocker || source.provenanceBlocker)
+  ) {
+    spare = hotelListRowUnboundNarrative(place.name || place.title, fields.address);
+  }
+  return finalizeListRowDisplayDescription(composed, { spare });
 }
 
 export function rowSummary(place, trip) {
-  const raw = storedRowSummaryText(place, trip);
-  if (tabCategoryKey(place, trip) !== 'flight') return raw;
-  const picked = pickFlightListRowSummaryText(raw);
-  return picked || raw;
+  return listRowSubstanceDescription(place, trip, { omitListPrice: true, clipFlight: true });
 }
 
 export function logoUrlForPlace(place, trip) {
-  const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
+  const mergedOverride = mergeStoredCcabNarrativeIntoOverride(place, {
+    ...(overrideFor(trip, place) || {}),
+  });
+  const source = sourceRecord(place, mergedOverride);
   return text(
-    override.logoUrl ||
-      override.iconUrl ||
-      place.logoUrl ||
-      place.captured_logo_url ||
-      source.logoUrl,
+    resolveThingLogoUrl(place, mergedOverride)
+      || mergedOverride.logoUrl
+      || mergedOverride.iconUrl
+      || place.logoUrl
+      || place.captured_logo_url
+      || source.logoUrl,
   );
 }
 

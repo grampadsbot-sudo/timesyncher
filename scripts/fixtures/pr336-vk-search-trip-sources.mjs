@@ -1,11 +1,16 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import {
+  createStoredCcabNarrativeMerge,
+  rawSearchPlaceFromCcab,
+} from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 import {
   NYC_STAGING_CAPTURE_LIST_ROWS,
   resolveNycCcabKey,
 } from './nyc-vk-list-tab-rows.mjs';
+
+export { rawSearchPlaceFromCcab };
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -16,7 +21,7 @@ const OVERLAY_ENRICHMENT = JSON.parse(
 const REVIEW_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
 );
-const ENRICHMENT = { ...BASE_ENRICHMENT };
+export const ENRICHMENT = { ...BASE_ENRICHMENT };
 for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
 }
@@ -48,6 +53,21 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
 };
 
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
+
+const pr336StoredCcabNarrative = createStoredCcabNarrativeMerge(ENRICHMENT, {
+  fixtureRowCcabKeys: NYC_GATE_B_ROW_CCAB_KEYS,
+  incompleteContractRowIds: GATE_B_INCOMPLETE_CONTRACT_ROW_IDS,
+});
+
+export const {
+  enrichListRowFromStoredCcab,
+  enrichListRowFromStoredCcabTitle,
+  mergeStoredCcabNarrativeIntoOverride,
+  resolveStoredCcabKey,
+  shouldMergeStoredCcabOnFixtureReplay,
+  storedCcabRecordForPlace,
+  storedCcabRecordForTitle,
+} = pr336StoredCcabNarrative;
 
 export const PR336_GATE_B_TIMELINE_ROWS = [
   { day: 1, time: '10:30', name: 'JetBlue LAS → JFK', cat: 'flight', id: 601 },
@@ -91,36 +111,6 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-export function rawSearchPlaceFromCcab({
-  title,
-  category,
-  ccabKey,
-  ccabRecord = {},
-} = {}) {
-  const recordCategory = text(ccabRecord.category, 40).toLowerCase();
-  const resolvedCategory = category
-    || (recordCategory === 'flight' && /\bcar\b|rental|sedan|suv|corolla/i.test(`${title} ${ccabKey}`)
-      ? 'car'
-      : recordCategory)
-    || 'event';
-  return {
-    source: 'fixture',
-    title: text(title, 240),
-    category: resolvedCategory,
-    lat: ccabRecord.lat ?? null,
-    lng: ccabRecord.lng ?? null,
-    address: text(ccabRecord.address, 240),
-    url: text(ccabRecord.website, 500),
-    externalId: text(ccabKey, 240),
-    sourceRecord: {
-      ...ccabRecord,
-      source: 'fixture',
-      ccabInputKind: 'stored_fixture_literal',
-      url: text(ccabRecord.website, 500),
-    },
-  };
-}
-
 export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = []) {
   const unverified = rows.filter((row) => {
     const place = placesById[row.id];
@@ -130,6 +120,31 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   if (!rows.length || unverified.length) {
     throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
+}
+
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
+}
+
+export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
+  const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[placeId];
+  if (!ccabKey) return override;
+  place.externalId = ccabKey;
+  const meta = placeMetadata(place);
+  const priorRecord = {
+    ...(typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {}),
+    ...(typeof override.sourceRecord === 'object' ? override.sourceRecord : {}),
+  };
+  place.metadata = {
+    ...meta,
+    externalId: ccabKey,
+    sourceRecord: { ...priorRecord, ccabKey },
+  };
+  const next = { ...override, externalId: ccabKey };
+  next.sourceRecord = { ...priorRecord, ccabKey };
+  return next;
 }
 
 export function materializePr336GateBSnapshotPlace(place = {}) {

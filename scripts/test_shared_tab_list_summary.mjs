@@ -29,7 +29,7 @@ assert.match(String(carPlaces[0].name || ''), /Priceline opaque/i);
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.rentalCompany, 'Priceline opaque');
 assert.equal(payload.thingOverrides[`place:${flightPlaces[0].id}`]?.fareDirection, 'one-way');
 assert.equal(payload.thingOverrides[`place:${carPlaces[0].id}`]?.price, 172);
-assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /transit access/i);
+assert.match(String(payload.thingOverrides[`place:${hotelPlaces[0].id}`]?.summary || ''), /subway access|transit access|walkable neighborhood access/i);
 
 const flightId = flightPlaces[0].id;
 const hotelId = hotelPlaces[0].id;
@@ -52,7 +52,7 @@ assert.doesNotMatch(bundle, /data-ts-list-sort-header":"1"/);
 assert.match(bundle, /vi\(kn,"hotels"\)\.map\(\(G,Re\)=>Oe\(G,"hotel",Re===0\)\)/);
 assert.match(bundle, /vi\(bc,"cars"\)\.map\(G=>Oe\(G\)\)/);
 assert.doesNotMatch(bundle, /tsSharedLiveTabListMount/);
-assert.match(bundle, /Rn=Bs\(rr\(G\)\)/);
+assert.match(bundle, /Rn=Bs\(tsListRowDescription\(G\)\)/);
 assert.doesNotMatch(bundle, /Rn=Bs\(rr\(G\)\|\|Co\(G\)\|\|Fl\(G\)\)/);
 assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
