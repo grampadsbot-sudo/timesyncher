@@ -1,7 +1,7 @@
 import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { placeToTripThing, queriesFromWantedThings, searchPlaces } from './place-search.mjs';
-import { rowNeedsProductEnrichment } from './trip-thing-enrichment.mjs';
+import { rowNeedsProductEnrichment } from './trip-thing-enrich-row.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
