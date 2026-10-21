@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { finalizeServedSharedTripPayload } from '../../../src/vacation/shared-trip-served-page.mjs';
 import { applyCapturedLogos } from '../../../src/vacation/thing-logo-capture.mjs';
 import { buildNycPr225SharedTrip, NYC_PR225_SLUG } from '../../../scripts/fixtures/nyc-pr225-shared-trip.mjs';
+import { buildDayTimeline } from '../src/lib/dayTimelineModel.mjs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const require = createRequire(path.join(root, 'package.json'));
@@ -105,6 +106,29 @@ export async function runVacationClientDayLayoutTests() {
         document.body.scrollLeft = 0;
       });
       await new Promise((r) => setTimeout(r, 500));
+
+      const airportRows = buildDayTimeline(tripPayload, tripPayload.days[0]).filter(
+        (entry) => entry.kind === 'travel' && entry.place,
+      );
+      assert.equal(airportRows.length, 2);
+      for (const entry of airportRows) {
+        const control = await page.evaluateHandle((title) =>
+          [...document.querySelectorAll('button[data-ts-timeline-title="1"]')].find(
+            (button) => button.textContent.trim() === title,
+          ), entry.title);
+        const button = control.asElement();
+        assert.ok(button, `${entry.title} must open Thing details at ${width}px`);
+        await button.click();
+        await page.waitForSelector('[data-ts-detail-panel="1"]');
+        assert.equal(
+          await page.$eval('[data-ts-detail-name="1"]', (name) => name.textContent.trim()),
+          entry.place.name,
+        );
+        await page.keyboard.press('Escape');
+        await page.waitForSelector('[data-ts-detail-panel="1"]', { hidden: true });
+        await control.dispose();
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
 
       const measure = await page.evaluate(overflowProbe);
       if (measure.scrollWidth > measure.innerWidth) {

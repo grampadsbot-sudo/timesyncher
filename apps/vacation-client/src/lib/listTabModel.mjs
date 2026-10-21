@@ -1,8 +1,14 @@
-
+import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
+import {
+  googleS2FaviconUrl,
+  pageUrlForLogo,
+  resolveThingLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
+import { detailSummary } from './detailModel.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
 
-export const DEFAULT_SORT = { key: 'name', dir: 'asc' };
+export const DEFAULT_SORT = { key: 'price', dir: 'asc' };
 
 function text(value) {
   return String(value ?? '').trim();
@@ -74,6 +80,7 @@ function humanizeTypeKey(raw) {
 }
 
 export function tabCategoryKey(place, trip) {
+  if (/^Flight option:/i.test(placeName(place))) return 'flight';
   const override = overrideFor(trip, place);
   const raw = text(
     override.category || place.category?.name || place.category_name || place.category,
@@ -92,7 +99,28 @@ export function placesForCategoryTab(trip, tab) {
   if (tab === 'hotels') return places.filter((p) => tabCategoryKey(p, trip) === 'hotel');
   if (tab === 'cars') return places.filter((p) => tabCategoryKey(p, trip) === 'car');
   if (tab === 'restaurants') return places.filter((p) => tabCategoryKey(p, trip) === 'restaurant');
-  if (tab === 'stores') return places.filter((p) => tabCategoryKey(p, trip) === 'store');
+  if (tab === 'stores') {
+    const stores = places.filter((p) => tabCategoryKey(p, trip) === 'store');
+    const seen = new Map();
+    const rows = [];
+    for (const place of stores) {
+      const key = placeName(place).toLowerCase();
+      const prior = seen.get(key);
+      if (!prior) {
+        seen.set(key, place);
+        rows.push(place);
+        continue;
+      }
+      const priorPrice = numericPrice(prior, trip);
+      const nextPrice = numericPrice(place, trip);
+      if (nextPrice != null && (priorPrice == null || nextPrice < priorPrice)) {
+        const index = rows.indexOf(prior);
+        if (index >= 0) rows[index] = place;
+        seen.set(key, place);
+      }
+    }
+    return rows;
+  }
   if (tab === 'events') {
     return places.filter((p) => {
       const k = tabCategoryKey(p, trip);
@@ -218,15 +246,39 @@ export function filterPlaces(places, trip, tab, filters = {}) {
 export function numericPrice(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return (
+  const direct =
     parsePrice(override.price) ??
     parsePrice(place.price) ??
+    parsePrice(place.total_price) ??
     parsePrice(source.price) ??
-    parsePrice(source.totalPrice)
-  );
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.ticketPrice) ??
+    parsePrice(source.ticketsFrom);
+  if (direct != null) return direct;
+  const hay = [
+    override.details,
+    override.summary,
+    source.description,
+    source.summary,
+    place.description,
+  ]
+    .map((value) => text(value))
+    .filter(Boolean)
+    .join(' ');
+  if (!hay) return null;
+  const ticket = hay.match(/(?:tickets?\s+from|price:|from)\s*(?:about\s*)?\$\s*([\d,]+(?:\.\d+)?)/i);
+  if (ticket) return parsePrice(ticket[1]);
+  const priced = hay.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return priced ? parsePrice(priced[1]) : null;
 }
 
 export function sortPlaces(places, trip, sort = DEFAULT_SORT) {
+  if (sort?.key === 'catalog') {
+    const order = new Map((trip?.places || []).map((place, index) => [String(place.id), index]));
+    return [...places].sort(
+      (a, b) => (order.get(String(a.id)) ?? 0) - (order.get(String(b.id)) ?? 0),
+    );
+  }
   const key = sort?.key === 'price' ? 'price' : 'name';
   const dir = sort?.dir === 'desc' ? 'desc' : 'asc';
   const sign = dir === 'asc' ? 1 : -1;
@@ -358,27 +410,59 @@ function storedRowSummaryText(place, trip) {
       override.longDetails ||
       override.details ||
       source.summary ||
+      source.longDetails ||
       place.description,
   );
 }
 
-export function rowSummary(place, trip) {
+function rowSummaryRaw(place, trip) {
+  const judged = detailSummary(place, trip);
+  if (judged) return judged;
   const raw = storedRowSummaryText(place, trip);
+  if (!raw || isGenericDescription(raw)) return '';
+  return raw;
+}
+
+export function rowSummary(place, trip) {
+  const raw = rowSummaryRaw(place, trip);
+  if (!raw) return '';
   if (tabCategoryKey(place, trip) !== 'flight') return raw;
   const picked = pickFlightListRowSummaryText(raw);
   return picked || raw;
 }
 
+export function rowDescription(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const raw = [
+    override.longDetails,
+    override.details,
+    place.longDetails,
+    source.longDetails,
+    source.details,
+    source.description,
+    place.description,
+  ].map(text).find(Boolean) || '';
+  return isGenericDescription(raw) ? '' : raw;
+}
+
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    override.logoUrl ||
-      override.iconUrl ||
-      place.logoUrl ||
-      place.captured_logo_url ||
-      source.logoUrl,
-  );
+  const resolved = resolveThingLogoUrl(place, override);
+  if (resolved) return resolved;
+  const raw = text(override.logoUrl || override.iconUrl || place.logoUrl || place.iconUrl);
+  if (raw && !/^data:image\/svg\+xml/i.test(raw) && !(/\/ts-thing-media\//i.test(raw) && !/\/ts-thing-logos\//i.test(raw))) {
+    return raw;
+  }
+  const fromSource = text(source.logoUrl || source.iconUrl || source.logo || source.favicon || source.faviconUrl || place.captured_logo_url);
+  if (fromSource) return fromSource;
+  return googleS2FaviconUrl(pageUrlForLogo(place, override));
+}
+
+export function logoS2FallbackUrlForPlace(place, trip) {
+  const override = overrideFor(trip, place);
+  return googleS2FaviconUrl(pageUrlForLogo(place, override));
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

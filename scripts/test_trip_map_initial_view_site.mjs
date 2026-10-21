@@ -6,13 +6,19 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const bundlePath = path.join(root, 'public/assets/index-BKun7ofk.js');
 
-const [html, js] = await Promise.all([
+const [legacyShell, servedEntry, dayMapSource, js] = await Promise.all([
   readFile(path.join(root, 'shared-app.html'), 'utf8'),
+  readFile(path.join(root, 'vacation-app-next.html'), 'utf8'),
+  readFile(path.join(root, 'apps/vacation-client/src/components/DayMap.tsx'), 'utf8'),
   readFile(bundlePath, 'utf8'),
 ]);
 
-assert.match(html, /index-BKun7ofk\.js/);
-assert.match(html, /trek\.src\s*=\s*['"]\/assets\/index-BKun7ofk\.js['"]/);
+assert.doesNotMatch(legacyShell, /index-BKun7ofk\.js/);
+assert.doesNotMatch(legacyShell, /appendSharedTrekBundle/);
+assert.match(servedEntry, /apps\/vacation-client\/src\/main\.tsx/);
+assert.doesNotMatch(servedEntry, /index-BKun7ofk\.js/);
+assert.match(dayMapSource, /data-ts-day-map/);
+assert.match(dayMapSource, /MapContainer/);
 assert.match(js, /tsTripMapInitialView=/);
 assert.match(js, /tsMapIv=I\.useMemo\(\(\)=>tsTripMapInitialView\(\{places:z,trip:r\}\)/);
 assert.match(js, /data-map-center-unresolved/);

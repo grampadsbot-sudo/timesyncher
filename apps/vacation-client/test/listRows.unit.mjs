@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
 
 import { applyLiveAppListRowFields } from '../../../src/vacation/shared-trip-live-app-fields.mjs';
+import { buildDayTimeline } from '../src/lib/dayTimelineModel.mjs';
 import {
   emptyStateMessage,
   filterPlaces,
   flightPriceDisplay,
   flightSchedule,
+  logoS2FallbackUrlForPlace,
+  logoUrlForPlace,
   parsePrice,
   pickFlightListRowSummaryText,
   placesForCategoryTab,
+  rowDescription,
   rowSummary,
   sortPlaces,
   tabCategoryKey,
@@ -94,6 +98,87 @@ assert.equal(
   'No items in this category yet.',
 );
 
+const storeTrip = {
+  places: [
+    { id: 1, name: "Zabar's", category_name: 'Store' },
+    { id: 2, name: 'Strand Book Store', category_name: 'Store' },
+    { id: 3, name: "Zabar's", category_name: 'Store' },
+    { id: 4, name: 'Strand Book Store', category_name: 'Store' },
+  ],
+  thingOverrides: {
+    'place:1': { price: 40 },
+    'place:2': { price: 30 },
+    'place:3': { price: 25 },
+    'place:4': { price: 35 },
+  },
+};
+const storeRows = placesForCategoryTab(storeTrip, 'stores');
+assert.equal(storeRows.length, 2);
+const storePriceOrder = sortPlaces(storeRows, storeTrip, { key: 'price', dir: 'asc' });
+assert.equal(storePriceOrder[0].name, "Zabar's");
+assert.equal(storePriceOrder[1].name, 'Strand Book Store');
+
+const logoTrip = {
+  places: [{ id: 88, name: 'Village Vanguard', category_name: 'event', url: 'https://www.villagevanguard.com/' }],
+  thingOverrides: { 'place:88': { category: 'event' } },
+};
+assert.equal(
+  logoUrlForPlace(logoTrip.places[0], logoTrip),
+  'https://www.villagevanguard.com/favicon.ico',
+);
+
+const faviconOnlyHotel = {
+  places: [{ id: 701, name: 'Hyatt Grand Central New York', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:701': {
+      category: 'hotel',
+      website: 'https://www.hyatt.com/en-US/hotel/new-york/hyatt-grand-central-new-york/nychn',
+    },
+  },
+};
+assert.match(
+  logoUrlForPlace(faviconOnlyHotel.places[0], faviconOnlyHotel),
+  /^https:\/\/www\.hyatt\.com\/.*favicon\.ico$/,
+);
+
+const faviconOnlyEvent = {
+  places: [{ id: 702, name: 'Open-air bus tour candidates', category_name: 'event' }],
+  thingOverrides: {
+    'place:702': { category: 'event', url: 'https://www.bigbustours.com/en/new-york/new-york-bus-tours' },
+  },
+};
+assert.equal(
+  logoUrlForPlace(faviconOnlyEvent.places[0], faviconOnlyEvent),
+  'https://www.bigbustours.com/favicon.ico',
+);
+
+const faviconOnlyRestaurant = {
+  places: [{ id: 703, name: 'Rosa Mexicano - Lincoln Center', category_name: 'Restaurant' }],
+  thingOverrides: {
+    'place:703': {
+      category: 'restaurant',
+      website: 'https://www.rosamexicano.com/location/lincoln-center/',
+    },
+  },
+};
+assert.equal(
+  logoUrlForPlace(faviconOnlyRestaurant.places[0], faviconOnlyRestaurant),
+  'https://www.rosamexicano.com/favicon.ico',
+);
+
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyHotel.places[0], faviconOnlyHotel),
+  'https://www.google.com/s2/favicons?domain=hyatt.com&sz=64',
+);
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyEvent.places[0], faviconOnlyEvent),
+  'https://www.google.com/s2/favicons?domain=bigbustours.com&sz=64',
+);
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyRestaurant.places[0], faviconOnlyRestaurant),
+  'https://www.google.com/s2/favicons?domain=rosamexicano.com&sz=64',
+);
+
 const longFlightNarrative =
   'American Airlines nonstop LAS to JFK on Day 1 afternoon arrival; lands with time to reach the UWS hotel before dinner. Fixture lists $257 one-way fare per traveler for planning math only, not a verified live quote.';
 const derivedFlightSummary = pickFlightListRowSummaryText(longFlightNarrative);
@@ -123,6 +208,57 @@ const hotelRowTrip = applyLiveAppListRowFields({
 });
 assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
 assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
+
+const listDescription =
+  'Guests praise the quiet seating and helpful staff, while recent reviews mention longer waits at busy times. The official guide describes accessible entrances and a covered waiting area, with advance reservations recommended for weekend visits.';
+const itinerarySummary = 'Arrive early for quiet seating before the crowds.';
+for (const [index, category] of ['flight', 'hotel', 'car', 'restaurant', 'store', 'event'].entries()) {
+  const place = { id: 700 + index, name: `Harbor ${category}`, category_name: category };
+  const splitTrip = {
+    places: [place],
+    days: [{ id: 23, day_number: 1 }],
+    assignments: { 23: [{ place_id: place.id }] },
+    thingOverrides: {
+      [`place:${place.id}`]: {
+        category,
+        timeline: true,
+        dayIds: [23],
+        summary: itinerarySummary,
+        longDetails: listDescription,
+        details: 'Older stored details should yield to the current long description.',
+      },
+    },
+  };
+  assert.equal(rowDescription(place, splitTrip), listDescription, `${category} list keeps the full narrative`);
+  assert.equal(rowSummary(place, splitTrip), itinerarySummary, `${category} summary stays short`);
+  if (!['hotel', 'car'].includes(category)) {
+    const entry = buildDayTimeline(splitTrip, splitTrip.days[0]).find((row) => row.place?.id === place.id);
+    assert.equal(entry?.summary, itinerarySummary, `${category} itinerary keeps the short summary`);
+  }
+}
+
+const descriptionPlace = {
+  id: 811,
+  name: 'Cedar Landing',
+  description: listDescription,
+  category_name: 'event',
+};
+const descriptionTrip = { thingOverrides: { 'place:811': { summary: itinerarySummary } } };
+assert.equal(rowDescription(descriptionPlace, descriptionTrip), listDescription);
+assert.equal(rowDescription({ ...descriptionPlace, description: '' }, descriptionTrip), '');
+assert.equal(rowDescription({ ...descriptionPlace, description: '', longDetails: listDescription }, descriptionTrip), listDescription);
+assert.equal(rowDescription(descriptionPlace, {
+  thingOverrides: { 'place:811': { summary: itinerarySummary, details: longFlightNarrative } },
+}), longFlightNarrative);
+for (const field of ['longDetails', 'details', 'description']) {
+  const sourcePlace = { ...descriptionPlace, description: '', sourceRecord: { summary: itinerarySummary, [field]: listDescription } };
+  assert.equal(rowDescription(sourcePlace, descriptionTrip), listDescription, `source ${field} supplies the narrative`);
+  const sourceTrip = applyLiveAppListRowFields({ places: [sourcePlace], ...descriptionTrip });
+  assert.equal(rowDescription(sourceTrip.places[0], sourceTrip), listDescription);
+}
+assert.equal(rowDescription(descriptionPlace, {
+  thingOverrides: { 'place:811': { summary: itinerarySummary, longDetails: '   ', details: listDescription } },
+}), listDescription);
 
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;

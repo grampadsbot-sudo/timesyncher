@@ -21,7 +21,12 @@ type Props = {
   onTimelineChange: (place: SharedPlace, checked: boolean) => void;
 };
 
-type SortKey = 'name' | 'price';
+type SortKey = 'name' | 'price' | 'catalog';
+
+function defaultSortKey(tab: Props['tab']): SortKey {
+  if (tab === 'flights' || tab === 'hotels' || tab === 'cars' || tab === 'stores') return 'price';
+  return 'catalog';
+}
 
 export function CategoryTabScreen({
   trip,
@@ -35,7 +40,7 @@ export function CategoryTabScreen({
   const areaChips = useMemo(() => areaChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
   const typeChips = useMemo(() => typeChipsForTab(categoryPlaces, trip, tab), [categoryPlaces, trip, tab]);
 
-  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortKey, setSortKey] = useState<SortKey>(() => defaultSortKey(tab));
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedArea, setSelectedArea] = useState('All areas');
   const [selectedType, setSelectedType] = useState('All types');

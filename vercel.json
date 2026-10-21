@@ -27,11 +27,11 @@
     },
     {
       "src": "/shared/([^/]+)/journey(?:/)?",
-      "dest": "/shared-app.html"
+      "dest": "/vacation-app-next.html"
     },
     {
       "src": "/shared/([^/]+)/report/daily(?:\\.pdf)?(?:/)?",
-      "dest": "/shared-app.html"
+      "dest": "/vacation-app-next.html"
     },
     {
       "src": "/shared/([^/]+)/report/([^/?]+)",
@@ -43,7 +43,7 @@
     },
     {
       "src": "/shared(?:/.*)?",
-      "dest": "/shared-app.html"
+      "dest": "/vacation-app-next.html"
     },
     {
       "src": "/",
@@ -51,7 +51,7 @@
     },
     {
       "src": "/edit-access/?",
-      "dest": "/shared-app.html"
+      "dest": "/vacation-app-next.html"
     },
     {
       "src": "/api/vacation-web-access",

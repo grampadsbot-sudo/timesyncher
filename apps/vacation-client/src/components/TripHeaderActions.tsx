@@ -102,6 +102,8 @@ export function TripHeaderActions({
     if (!next && activeTab === key) onActiveTabHidden?.();
   }
 
+  const keepsakeOrderHref = `/api/keepsake-order?slug=${encodeURIComponent(shareToken)}`;
+
   return (
     <div className="tsv-header-actions" data-print-menu-root="1" ref={printMenuRef}>
       {editStatusLine ? (
@@ -109,6 +111,13 @@ export function TripHeaderActions({
           {editStatusLine}
         </span>
       ) : null}
+      <a
+        className="tsv-header-btn tsv-header-link"
+        href={keepsakeOrderHref}
+        aria-label="Order Keepsakes"
+      >
+        Keepsakes
+      </a>
       <div className="tsv-header-menu">
         <button
           type="button"

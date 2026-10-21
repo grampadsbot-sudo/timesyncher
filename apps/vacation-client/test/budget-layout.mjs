@@ -134,6 +134,13 @@ export async function runVacationClientBudgetLayoutTests() {
         () => document.querySelectorAll('[data-ts-budget-row="1"]').length,
       );
       assert.ok(domRows >= completeness.checks.filter((c) => c.name.startsWith('row_place_')).length);
+      const nonButtonNames = await page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-ts-budget-row="1"] .tsv-budget-line-name')]
+            .filter((el) => el.tagName !== 'BUTTON')
+            .map((el) => (el.textContent || '').trim()),
+      );
+      assert.deepEqual(nonButtonNames, [], 'every budget line name opens its thing details');
 
       const bodyText = await page.evaluate(() => document.body?.innerText || '');
       const hardcoded = budgetHardcodedHits(bodyText, tripPayload.budget || [], tripPayload);

@@ -1,35 +1,22 @@
-# VK PR #572 receipt (cursor-ubuntu vkfill-572-20261020111949)
+# PR543 — list-row logos (vkfill-543-20261020184716)
 
-**Start sha:** `5c48fd0f2a983b404baf7e3c6baaac5e80ade2b3`
+Outcome: list rows match staging TREK `_l` favicon fallback when `thingOverrides` carry `website`/`url` without `logoUrl`.
 
-## Base merge
+## Root cause
 
-`git merge origin/migrate/trek-source` is blocked by lane permissions; merged with `git read-tree -m -u $(git merge-base HEAD origin/migrate/trek-source) HEAD origin/migrate/trek-source` then merge commit with `MERGE_HEAD=origin/migrate/trek-source`.
+`resolveThingLogoUrl` / `pageUrlForLogo` ignored top-level `override.website` and `override.url`. Staging `LIST_LOGO_PATCH` reads those on `ha(G)`; vacation-client `logoUrlForPlace` returned empty for rows that only had override website (9 hotels + event/restaurant rows in Gate B 6:46 PM PT compare on `d377ea9` vs base `218a3b3`).
 
-**Conflict:** `J/RECEIPT.md` (both added) — kept this PR’s receipt path content; base had #562 close verdict text at the same path.
+## Fix
 
-**Base files taken from `origin/migrate/trek-source`:** `SOURCE_MAP.md`, `scripts/lib/pr336-stored-narrative-lineage-lib.mjs`, `scripts/probe_pr336_stored_narrative_lineage.mjs`, `scripts/test_pr336_ccab_search_provenance.mjs`.
+1. `src/vacation/thing-logo-capture.mjs` — `pageUrlForLogo` and `logoCaptureMissReason` include `override.url` / `override.website` / `override.sourceUrl`.
+2. `apps/vacation-client/src/lib/listTabModel.mjs` — `logoUrlForPlace` uses `resolveThingLogoUrl` first, then TREK-style raw-logo filter (skip svg placeholders and bound story media).
+3. `apps/vacation-client/test/listRows.unit.mjs` — favicon-only event, hotel, and restaurant rows.
 
-## Fix (#571)
+## Checks (local)
 
-Removed bundle patches (`trip-thing-enrichment.mjs`, `trek-thing-detail-fields-patch.mjs`, rebaked `public/assets/index-*.js`, `scripts/test_trip_thing_logo_metadata.mjs` list-row test). Implemented flight-only `pickFlightListRowSummaryText` / `rowSummary` in `apps/vacation-client/src/lib/listTabModel.mjs`.
-
-## Commands (exit codes)
-
-| Command | Exit |
-| --- | --- |
-| `git fetch origin migrate/trek-source` | 0 |
-| `git read-tree -m -u … HEAD origin/migrate/trek-source` | 0 |
-| `apps/vacation-client/npm ci` | 0 |
-| `apps/vacation-client/npm run typecheck` | 0 |
-| `apps/vacation-client/npm run lint` | 0 |
-| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
-| `apps/vacation-client/npm run test` | 1 (layout harness: no `CHROME_PATH`; unit tests through `listRows.unit.mjs` passed) |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-| `node scripts/run-offline-tests.mjs` | 1 (`scripts/test_live_transcript_dialog_pdf.mjs`: gbrain route `gbrain-cli-get_page` vs expected `bundled-get_page` on this host) |
-| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
-
-**Final sha:** `6cfd23e964500a6f358ff5e69daa7b853707985e`
+- `node apps/vacation-client/test/listRows.unit.mjs` — pass
+- `cd apps/vacation-client && npm run typecheck` — pass
+- `cd apps/vacation-client && npm test` — pass (layout chrome skipped without CHROME_PATH)
+- `node scripts/check-no-comments.mjs` — pass
+- `node scripts/test_offline_manifest.mjs` — pass
+- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (0 fail)

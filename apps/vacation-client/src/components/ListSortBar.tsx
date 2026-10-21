@@ -1,6 +1,6 @@
 import { sortIndicator } from '../lib/listTabModel.mjs';
 
-type SortKey = 'name' | 'price';
+type SortKey = 'name' | 'price' | 'catalog';
 
 type Props = {
   sortKey: SortKey;
@@ -8,10 +8,10 @@ type Props = {
   onSort: (key: SortKey) => void;
 };
 
-const SORT_KEYS: SortKey[] = ['name', 'price'];
+const SORT_KEYS: Array<'name' | 'price'> = ['name', 'price'];
 
 export function ListSortBar({ sortKey, sortDir, onSort }: Props) {
-  const activeIndex = SORT_KEYS.indexOf(sortKey);
+  const activeIndex = SORT_KEYS.findIndex((key) => key === sortKey);
 
   return (
     <div

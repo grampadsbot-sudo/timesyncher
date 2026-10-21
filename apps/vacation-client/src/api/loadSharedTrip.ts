@@ -1,4 +1,9 @@
+import { finalizeServedSharedTripPayload } from '../../../../src/vacation/shared-trip-served-page.mjs';
 import type { SharedTripPayload } from '../types/sharedTrip';
+
+export function normalizeServedSharedTripPayload(data: SharedTripPayload): SharedTripPayload {
+  return finalizeServedSharedTripPayload(data) as SharedTripPayload;
+}
 
 export function shareTokenFromLocation(): string {
   const params = new URLSearchParams(window.location.search);
@@ -56,5 +61,5 @@ export async function loadSharedTrip(token: string): Promise<SharedTripPayload> 
   if (!data || !Array.isArray(data.places)) {
     throw new Error('Invalid trip payload from API');
   }
-  return data;
+  return normalizeServedSharedTripPayload(data);
 }

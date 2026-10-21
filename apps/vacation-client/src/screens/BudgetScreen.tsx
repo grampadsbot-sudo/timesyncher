@@ -4,10 +4,11 @@ import {
   formatUsd,
   bucketIcon,
 } from '../lib/budgetModel.mjs';
-import type { SharedTripPayload } from '../types/sharedTrip';
+import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 
 type Props = {
   trip: SharedTripPayload;
+  onOpen: (place: SharedPlace) => void;
 };
 
 function TargetReadout({
@@ -32,7 +33,7 @@ function TargetReadout({
   );
 }
 
-export function BudgetScreen({ trip }: Props) {
+export function BudgetScreen({ trip, onOpen }: Props) {
   const model = buildBudgetModel(trip);
 
   if (model.isEmpty) {
@@ -106,7 +107,13 @@ export function BudgetScreen({ trip }: Props) {
                     trip={trip}
                     fallback={bucketIcon(bucket.label)}
                   />
-                  <span className="tsv-budget-line-name">{row.name}</span>
+                  <button
+                    type="button"
+                    className="tsv-budget-line-name"
+                    onClick={() => onOpen(row.place)}
+                  >
+                    {row.name}
+                  </button>
                   <span className="tsv-budget-line-amount">
                     {row.hasPrice ? formatUsd(row.amount, model.currency) : 'Add price'}
                   </span>

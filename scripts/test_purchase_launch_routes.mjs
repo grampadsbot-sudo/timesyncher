@@ -75,6 +75,7 @@ const htmlEntries = [
   'openclaw-admin.html',
   'itinerary.html',
   'vacation-app.html',
+  'vacation-app-next.html',
   'shared-app.html',
   'onboarding-eula.html',
 ];

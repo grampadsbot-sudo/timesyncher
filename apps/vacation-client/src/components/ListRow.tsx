@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import {
   carPriceDisplay,
@@ -7,13 +8,15 @@ import {
   formatUsd,
   hotelFirstRowNote,
   hotelPriceDisplay,
+  logoS2FallbackUrlForPlace,
   logoUrlForPlace,
   numericPrice,
   placeName,
-  rowSummary,
+  rowDescription,
   tabCategoryKey,
 } from '../lib/listTabModel.mjs';
 import { overrideFor } from '../lib/placeHelpers';
+import { PlaceLogoImg } from './PlaceLogoImg';
 
 type TabKind = 'flights' | 'hotels' | 'cars' | 'restaurants' | 'stores' | 'events';
 
@@ -30,13 +33,19 @@ type Props = {
 };
 
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
-  const logo = logoUrlForPlace(place, trip);
+  const logo = logoUrlForPlace(place, trip) || logoS2FallbackUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const [showFallback, setShowFallback] = useState(!logo);
   return (
     <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-logo" src={logo} alt="" />
+      {logo && !showFallback ? (
+        <PlaceLogoImg
+          place={place}
+          trip={trip}
+          className="tsv-logo"
+          onGiveUp={() => setShowFallback(true)}
+        />
       ) : (
         <span className="tsv-logo-fallback">{fallback}</span>
       )}
@@ -80,17 +89,33 @@ export function ListRow({
   onTimelineChange,
 }: Props) {
   const name = placeName(place);
-  const summary = rowSummary(place, trip);
+  const summary = rowDescription(place, trip);
   const category = tabCategoryKey(place, trip);
+  const logo = logoUrlForPlace(place, trip);
   const note = tab === 'hotels' ? hotelFirstRowNote(place, trip, isFirstHotel) : '';
+  const rowDataset = {
+    'data-has-logo': logo ? '1' : '0',
+    ...(logo ? { 'data-logo-src': logo } : {}),
+    'data-thing-category': category,
+  };
 
   if (tab === 'flights' || category === 'flight') {
     const price = flightPriceDisplay(place, trip);
     const { depart, arrive } = flightSchedule(place, trip);
     return (
-      <li className="tsv-row tsv-row-flight" data-ts-list-row="1">
+      <li
+        className="tsv-row tsv-row-flight"
+        data-ts-list-row="1"
+        data-list-row="1"
+        {...rowDataset}
+      >
         <div className="tsv-row-car-grid">
-          <button type="button" className="tsv-row-main tsv-row-flight-main" onClick={() => onOpen(place)}>
+          <button
+            type="button"
+            className="tsv-row-main tsv-row-flight-main"
+            aria-label="Open thing details"
+            onClick={() => onOpen(place)}
+          >
             <LogoChip place={place} trip={trip} />
             <span className="tsv-row-name" data-ts-list-row-name="1">
               {name}
@@ -129,9 +154,14 @@ export function ListRow({
     const price = carPriceDisplay(place, trip);
     const subtitle = carSubtitle(place, trip);
     return (
-      <li className="tsv-row tsv-row-car" data-ts-list-row="1">
+      <li className="tsv-row tsv-row-car" data-ts-list-row="1" data-list-row="1" {...rowDataset}>
         <div className="tsv-row-car-grid">
-          <button type="button" className="tsv-row-car-main" onClick={() => onOpen(place)}>
+          <button
+            type="button"
+            className="tsv-row-car-main"
+            aria-label="Open thing details"
+            onClick={() => onOpen(place)}
+          >
             <span className="tsv-row-car-head">
               <LogoChip place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
@@ -165,9 +195,9 @@ export function ListRow({
         : formatUsd(numeric, currency);
 
   return (
-    <li className="tsv-row" data-ts-list-row="1">
+    <li className="tsv-row" data-ts-list-row="1" data-list-row="1" {...rowDataset}>
       <div className="tsv-row-car-grid">
-        <button type="button" className="tsv-row-main" onClick={() => onOpen(place)}>
+        <button type="button" className="tsv-row-main" aria-label="Open thing details" onClick={() => onOpen(place)}>
           <LogoChip place={place} trip={trip} />
           <span className="tsv-row-name" data-ts-list-row-name="1">
             {name}

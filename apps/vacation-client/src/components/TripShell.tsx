@@ -37,19 +37,31 @@ export function TripShell({
   return (
     <div className="tsv-shell" data-trip-view-root="1">
       <header className="tsv-header">
-        <h1 className="tsv-title" title={title}>
-          {title}
-        </h1>
-        <TripHeaderActions
-          shareToken={shareToken}
-          trip={trip}
-          canEdit={canEdit}
-          editChecked={editChecked}
-          saveStatus={saveStatus}
-          activeTab={activeTab}
-          onSectionVisibilityChange={onSectionVisibilityChange}
-          onActiveTabHidden={onActiveTabHidden}
-        />
+        <div className="tsv-header-brand">
+          <img
+            className="tsv-header-logo"
+            src="/timesyncher-logo-gold.png"
+            alt=""
+            aria-hidden="true"
+            data-ts-header-logo="1"
+          />
+          <span className="tsv-header-brand-text">TimeSyncher Vacation</span>
+        </div>
+        <div className="tsv-header-bar">
+          <h1 className="tsv-title" title={title}>
+            {title}
+          </h1>
+          <TripHeaderActions
+            shareToken={shareToken}
+            trip={trip}
+            canEdit={canEdit}
+            editChecked={editChecked}
+            saveStatus={saveStatus}
+            activeTab={activeTab}
+            onSectionVisibilityChange={onSectionVisibilityChange}
+            onActiveTabHidden={onActiveTabHidden}
+          />
+        </div>
       </header>
       <TabNav active={activeTab} trip={trip} permissions={permissions} onChange={onTabChange} />
       <main className="tsv-main" aria-label={TAB_LABELS[activeTab]}>

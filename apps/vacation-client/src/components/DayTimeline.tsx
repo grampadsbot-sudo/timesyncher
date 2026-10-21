@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { logoS2FallbackUrlForPlace, logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { PlaceLogoImg } from './PlaceLogoImg';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
 type TimelineMedia = {
@@ -77,17 +78,36 @@ function TimelineIcon({
   }
   const place = entry.place;
   if (!place) return null;
-  const logo = logoUrlForPlace(place, trip);
+  return <TimelinePlaceLogo entry={entry} place={place} trip={trip} />;
+}
+
+function TimelinePlaceLogo({
+  entry,
+  place,
+  trip,
+}: {
+  entry: TimelineEntry;
+  place: SharedPlace;
+  trip: SharedTripPayload;
+}) {
+  const logo = logoUrlForPlace(place, trip) || logoS2FallbackUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const category = tabCategoryKey(place, trip);
   const fallback =
     entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
       ? '🧳'
       : String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const [showFallback, setShowFallback] = useState(!logo);
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+      {logo && !showFallback ? (
+        <PlaceLogoImg
+          place={place}
+          trip={trip}
+          className="tsv-timeline-logo"
+          loading="lazy"
+          onGiveUp={() => setShowFallback(true)}
+        />
       ) : (
         <span className="tsv-timeline-emoji">{fallback}</span>
       )}
@@ -151,6 +171,8 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
     <ol className="tsv-timeline-list">
       {entries.map((entry) => {
         const isTravel = entry.kind === 'travel';
+        const singleLineTime =
+          !isTravel && Boolean(entry.startLabel) && !entry.endLabel && !entry.conflictWith;
         const place = entry.place;
         const showSummary =
           !isTravel &&
@@ -161,12 +183,23 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
         return (
           <li
             key={entry.id}
-            className={`tsv-timeline-row${entry.conflictWith ? ' is-conflict' : ''}`}
+            className={`tsv-timeline-row${entry.conflictWith ? ' is-conflict' : ''}${singleLineTime ? ' tsv-timeline-row--single-time' : ''}`}
             data-ts-timeline-row="1"
           >
             <div className="tsv-timeline-time-col">
               {!isTravel && entry.startLabel ? (
-                <span className="tsv-timeline-time">{entry.startLabel}</span>
+                singleLineTime ? (
+                  <div className="tsv-timeline-time tsv-timeline-time--single" data-ts-timeline-time="1">
+                    <span className="tsv-timeline-time-line" data-ts-timeline-time-line="1">
+                      <span className="tsv-timeline-time-strut" aria-hidden="true">
+                        &nbsp;
+                      </span>
+                      <span className="tsv-timeline-time-inline">{entry.startLabel}</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="tsv-timeline-time">{entry.startLabel}</span>
+                )
               ) : null}
               {entry.kind === 'flight' && entry.endLabel ? (
                 <span className="tsv-timeline-time tsv-timeline-time--arrive">{entry.endLabel}</span>
@@ -184,9 +217,11 @@ export function DayTimeline({ trip, entries, onOpen }: Props) {
                   Conflict with {entry.conflictWith}
                 </div>
               ) : null}
-              <div className="tsv-timeline-head">
+              <div
+                className={`tsv-timeline-head${singleLineTime ? ' tsv-timeline-head--single-time' : ''}`}
+              >
                 <TimelineIcon entry={entry} trip={trip} />
-                {isTravel || !place ? (
+                {!place ? (
                   <span className="tsv-timeline-title" data-ts-timeline-title="1">
                     {entry.title}
                   </span>

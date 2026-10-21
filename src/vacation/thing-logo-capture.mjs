@@ -85,17 +85,47 @@ function brandLogoFromName(name = '') {
   return '';
 }
 
-function pageUrlForLogo(thing = {}, override = {}) {
+export function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
+  let metadata = {};
+  try {
+    metadata = typeof thing.metadata === 'string'
+      ? JSON.parse(thing.metadata || '{}')
+      : (thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {});
+  } catch {
+    metadata = {};
+  }
   return text(
-    source.url
+    override.url
+    || override.website
+    || override.sourceUrl
+    || thing.website
+    || metadata.officialUrl
+    || metadata.bookingUrl
+    || metadata.sourceUrl
+    || thing.location
+    || source.url
     || source.website
     || source.sourceUrl
     || thing.url
-    || thing.website
     || thing.sourceUrl
     || thing.source_url,
   );
+}
+
+function hostnameForS2Favicon(pageUrl = '') {
+  const parsed = httpUrl(pageUrl);
+  if (parsed) return parsed.hostname.replace(/^www\./, '');
+  try {
+    return new URL(String(pageUrl)).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+export function googleS2FaviconUrl(pageUrl = '') {
+  const host = hostnameForS2Favicon(pageUrl);
+  return host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : '';
 }
 
 export function logoCaptureMissReason(thing = {}, override = {}) {
@@ -121,10 +151,7 @@ export function logoCaptureMissReason(thing = {}, override = {}) {
     const logo = usableLogo(value);
     if (logo) return '';
   }
-  const page = text(
-    source.url || source.website || source.sourceUrl
-    || thing.url || thing.website || thing.sourceUrl || thing.source_url,
-  );
+  const page = pageUrlForLogo(thing, override);
   if (!page) return 'no_place_website';
   if (!httpUrl(page)) return 'no_usable_place_website';
   return 'no_logo_or_favicon';
