@@ -1,6 +1,6 @@
 # PR543 — list logos and stores tab (vkfill-543-20261020174727)
 
-Outcome: dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane `vkfill-543-20261020175727` re-verified pre-DONE gates at tip `f5ac19fc4fad76f30bab56490255245b2e5fc64d` (host publish). CI and Gate B on published head are for the host.
+Outcome: dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane `vkfill-543-20261020175727` re-verified pre-DONE gates at tip `368b0e7aacb7dc513d571a3acce0ddda3c80dfbe` (host publish). CI and Gate B on published head are for the host.
 
 ## Changes (02ef6a92)
 
