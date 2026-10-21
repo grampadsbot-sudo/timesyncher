@@ -17,7 +17,7 @@ GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-591`: page not found (fetch fai
 - `node scripts/test_shared_logo_chip_center_bundle.mjs` — pass
 - `node scripts/test_served_trek_bundle.mjs` — pass
 - `node scripts/rebake_served_trek_bundle.mjs`
-- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — run before DONE.
+- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass at `509fe745`.
 
 ## Out of scope / not run here
 - Full `node scripts/run-offline-tests.mjs` (CI).
