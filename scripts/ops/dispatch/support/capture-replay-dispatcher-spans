@@ -17,13 +17,11 @@ def capture_and_compare(out, base, api_origin, target, note, reference=None, no_
         return res, None
     cmd = [HOME + "/tsv-gateb/gateb_compare.sh", "--baselines", reference or BASELINES, "--candidates", out, "--note", note]
     if target and not DRY: cmd += ["--target", target]
-    # Compare's render_files list is narrower than STRICT_UI_RE. A strict-UI PR must be screen-checked.
-    # Without --force, compare exits SKIPPED_BACKEND_ONLY and the re-review loop sends a coder round.
     ui_paths = pr_file_paths(pr_files) if pr_files else None
     if ui_paths and ui_files(ui_paths): cmd += ["--force"]
     if data_snapshot and not (data_res and data_res.get("contract_ratchet")):
-        cmd += ["--data-snapshot", data_snapshot]   # VK data pre-check: a contract fail is exit 4 / DATA_FAULT (skipped when ratchet-OK vs merge-base)
-    if no_vision: cmd += ["--no-vision"]     # restore/new-look: model-free (v6 decides; a model never overrides a pixel fail)
+        cmd += ["--data-snapshot", data_snapshot]
+    if no_vision: cmd += ["--no-vision"]
     rc, o, e = run(cmd, timeout=900)
     try:
         res = json.loads(o.strip().splitlines()[-1])
@@ -40,7 +38,7 @@ def local_capture(sha, ref, out, fixture=None):
     try:
         time.sleep(1.5)
         env = dict(os.environ, TSV_CAPTURE_BASE="http://127.0.0.1:%d" % LOCAL_PORT, TSV_CAPTURE_API_ORIGIN=STAGING_ORIGIN)
-        if fixture: env["TSV_CAPTURE_FIXTURE"] = fixture   # capture.mjs pins the fixture path + sha256 in capture-manifest.json
+        if fixture: env["TSV_CAPTURE_FIXTURE"] = fixture
         if os.path.isdir(out): subprocess.run(["rm", "-rf", out])
         rc, o, e = run([CAPTURE_SCRIPT, out], env=env, timeout=900)
         return None if rc == 0 else "capture failed: %s" % (e or o).strip()[-200:]
@@ -60,3 +58,22 @@ def route_protected(pr, labels, bad):
     if not DRY:
         done[str(n)] = {"at": pt_now(), "sha": pr["head"]["sha"], "files": bad[:10]}; save_state()
     log("PR #%d routed to managing dr: %s (protected paths: %s)" % (n, PROTECTED_HOLD, ", ".join(bad[:4])))
+def _sanctioned_replay_producer_head():
+    raw = (os.environ.get("TSV_SANCTIONED_REPLAY_PRODUCER_HEAD") or "").strip().lower()
+    return raw if re.fullmatch(r"[0-9a-f]{40}", raw) else None
+def base_reference_capture(base_sha, staging, fixture=None):
+    out = "%s/gateb-cand/base-%s" % (D, base_sha[:7])
+    err = local_capture(base_sha, staging, out)
+    return out, err
+def pregate_run_capture(sha, n, out, base, api_origin, new_look, note, reference, bo, look, structure, snap, base_sha, files, cap_fixture):
+    res, err = capture_and_compare(out, base, api_origin, None if new_look else "%s#%d" % (REPO, n), note, reference, no_vision=bool(bo or look), structure=structure,
+                                   data_snapshot=snap, require_data_snapshot=structure, capture_fixture=cap_fixture,
+                                   merge_base_sha=base_sha, pr_files=files, pr_number=n)
+    return res, err
+def deploy_pre_staging_capture(last_sha):
+    return staging_capture("%s/gateb-cand/predeploy-%s" % (D, (last_sha or "none")[:7]))
+def postdeploy_staging_capture(tip):
+    return staging_capture("%s/gateb-cand/staging-%s" % (D, tip[:7]))
+def staging_gate_capture(sha, dpl):
+    out = "%s/gateb-cand/staging-%s" % (D, sha[:7])
+    return capture_and_compare(out, STAGING_ORIGIN, None, None, "Post-deploy Gate B on staging %s (%s), Ubuntu cron" % (dpl, sha[:7]))

@@ -26,6 +26,7 @@ from capture_replay_binding import (  # noqa: E402
 
 DISPATCHER_SPANS = os.path.join(SUPPORT, 'capture-replay-dispatcher-spans')
 PATCH = os.path.join(SUPPORT, 'capture-replay-dispatcher.patch')
+DEFS_ONLY_PATCH = os.path.join(SUPPORT, 'capture-replay-dispatcher-defs-only.patch')
 MANIFEST = os.path.join(SUPPORT, 'capture-replay-dispatcher-manifest.json')
 SHA256SUMS = os.path.join(SUPPORT, 'SHA256SUMS')
 CAPTURE_SCRIPT = os.path.join(REPO, 'scripts/ops/capture/capture-staging.sh')
@@ -84,12 +85,12 @@ def _sha256_path(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _apply_dispatcher_patch(spans_text: str) -> str:
+def _apply_dispatcher_patch(spans_text: str, patch_path: str = PATCH) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / 'capture-replay-dispatcher-spans'
         patch = Path(tmp) / 'dispatcher.patch'
         src.write_text(spans_text)
-        patch.write_text(Path(PATCH).read_text())
+        patch.write_text(Path(patch_path).read_text())
         proc = subprocess.run(
             ['patch', '-p0', str(src), '-i', str(patch)],
             capture_output=True,
@@ -120,6 +121,9 @@ def load_patched_dispatcher_functions(anchor, producer_sha, fixture_path, *names
 
     def fake_run(cmd, env=None, timeout=None):
         run_calls.append({'cmd': list(cmd), 'env': dict(env or {})})
+        if cmd and str(cmd[0]).endswith('gateb_compare.sh'):
+            payload = json.dumps({'overall': 'PASS', 'out': '/tmp/gateb-run', 'verdicts': {}})
+            return 0, payload + '\n', ''
         return 0, '', ''
 
     popen_calls = []
@@ -444,6 +448,99 @@ class CaptureReplayCallersTest(unittest.TestCase):
         out, err = ns['staging_capture'](ctx, pr, self.fixture, cand_dir=cand)
         self.assertIsNone(out)
         self.assertIn('binding missing or invalid', err)
+
+    def test_defs_only_patch_leaves_pregate_callsite_missing_heads(self):
+        patched_defs = _apply_dispatcher_patch(Path(DISPATCHER_SPANS).read_text(), DEFS_ONLY_PATCH)
+        module = ast.parse(patched_defs)
+        names = {
+            'pregate_run_capture', 'capture_and_compare', '_sanctioned_replay_producer_head', '_capture_replay_env',
+            'local_capture', 'staging_capture',
+        }
+        funcs = [n for n in module.body if isinstance(n, ast.FunctionDef) and n.name in names]
+        ns = load_patched_dispatcher_functions(self.anchor, self.producer_sha, self.fixture, 'capture_and_compare')
+        exec(compile(ast.Module(body=[n for n in funcs if n.name != 'capture_and_compare'], type_ignores=[]), 'tsv_dispatch.py', 'exec'), ns)
+        with mock.patch.dict(os.environ, {'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD': self.producer_sha}, clear=False):
+            res, err = ns['pregate_run_capture'](
+                CANDIDATE_RENDER, 576, '/tmp/pr-out', 'http://127.0.0.1:9', STAGING_ORIGIN, False, 'note', '/tmp/ref',
+                None, None, False, None, BASE_RENDER, [], self.fixture,
+            )
+        self.assertIsNone(res)
+        self.assertIn('render_head and replay_producer_head required', err)
+
+    def test_pregate_run_capture_binds_render_and_producer(self):
+        names = (
+            'pregate_run_capture', 'capture_and_compare', '_sanctioned_replay_producer_head', '_capture_replay_env',
+            'local_capture', 'staging_capture',
+        )
+        ns = load_patched_dispatcher_functions(self.anchor, self.producer_sha, self.fixture, *names)
+        with mock.patch.dict(os.environ, {'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD': self.producer_sha}, clear=False):
+            res, err = ns['pregate_run_capture'](
+                CANDIDATE_RENDER, 576, '/tmp/pr-out', 'http://127.0.0.1:9', STAGING_ORIGIN, False, 'note', '/tmp/ref',
+                None, None, True, None, BASE_RENDER, [], self.fixture,
+            )
+        self.assertIsNone(err)
+        self.assertEqual(res.get('overall'), 'SKIPPED')
+        self.assertEqual(len(ns['_run_calls']), 1)
+        call = ns['_run_calls'][0]
+        self.assertEqual(call['cmd'][:4], [CAPTURE_SCRIPT, '/tmp/pr-out', self.producer_sha, CANDIDATE_RENDER])
+        self.assertEqual(call['env']['TSV_CAPTURE_RENDER_HEAD_SHA'], CANDIDATE_RENDER)
+        self.assertEqual(call['env']['TSV_CAPTURE_PRODUCER_HEAD_SHA'], self.producer_sha)
+
+    def test_base_reference_capture_binds_fixture_and_producer(self):
+        names = ('base_reference_capture', 'local_capture', '_sanctioned_replay_producer_head', '_capture_replay_env', 'capture_and_compare', 'staging_capture')
+        ns = load_patched_dispatcher_functions(self.anchor, self.producer_sha, self.fixture, *names)
+        with mock.patch.dict(os.environ, {'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD': self.producer_sha}, clear=False):
+            out, err = ns['base_reference_capture'](BASE_RENDER, 'main', self.fixture)
+        self.assertIsNone(err)
+        self.assertTrue(out.endswith('base-%s' % BASE_RENDER[:7]))
+        capture_calls = [c for c in ns['_run_calls'] if c['cmd'] and c['cmd'][0] == CAPTURE_SCRIPT]
+        self.assertEqual(len(capture_calls), 1)
+        self.assertEqual(capture_calls[0]['cmd'][:4], [CAPTURE_SCRIPT, out, self.producer_sha, BASE_RENDER])
+        self.assertEqual(capture_calls[0]['env']['TSV_CAPTURE_FIXTURE'], self.fixture)
+
+    def test_deploy_pre_staging_capture_refuses_without_policy(self):
+        ns = load_patched_dispatcher_functions(
+            self.anchor, self.producer_sha, self.fixture,
+            'deploy_pre_staging_capture', 'staging_capture', '_sanctioned_replay_producer_head', '_capture_replay_env',
+            'capture_and_compare', 'local_capture',
+        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            out, err = ns['deploy_pre_staging_capture'](BASE_RENDER)
+        self.assertIsNone(out)
+        self.assertIn('refused', err)
+        self.assertEqual(ns['_run_calls'], [])
+
+    def test_postdeploy_staging_capture_binds_staging_render(self):
+        ns = load_patched_dispatcher_functions(
+            self.anchor, self.producer_sha, self.fixture,
+            'postdeploy_staging_capture', 'staging_capture', '_sanctioned_replay_producer_head', '_capture_replay_env',
+            'capture_and_compare', 'local_capture',
+        )
+        with mock.patch('capture_replay_binding.fetch_remote_build_sha', return_value=CANDIDATE_RENDER[:7]):
+            with mock.patch.dict(os.environ, {'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD': self.producer_sha}, clear=False):
+                out, err = ns['postdeploy_staging_capture'](CANDIDATE_RENDER)
+        self.assertIsNone(err)
+        self.assertEqual(len(ns['_run_calls']), 1)
+        call = ns['_run_calls'][0]
+        self.assertEqual(call['cmd'][:4], [CAPTURE_SCRIPT, os.path.abspath(out), self.producer_sha, CANDIDATE_RENDER])
+        self.assertEqual(call['env']['TSV_CAPTURE_BASE'], STAGING_ORIGIN)
+
+    def test_staging_gate_capture_binds_remote_compare(self):
+        ns = load_patched_dispatcher_functions(
+            self.anchor, self.producer_sha, self.fixture,
+            'staging_gate_capture', 'capture_and_compare', '_sanctioned_replay_producer_head', '_capture_replay_env',
+            'local_capture', 'staging_capture',
+        )
+        with mock.patch('capture_replay_binding.fetch_remote_build_sha', return_value=CANDIDATE_RENDER[:7]):
+            with mock.patch.dict(os.environ, {'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD': self.producer_sha}, clear=False):
+                res, err = ns['staging_gate_capture'](CANDIDATE_RENDER, 'dpl-test')
+        self.assertIsNone(err)
+        self.assertEqual(res.get('overall'), 'PASS')
+        capture_calls = [c for c in ns['_run_calls'] if c['cmd'] and c['cmd'][0] == CAPTURE_SCRIPT]
+        self.assertEqual(len(capture_calls), 1)
+        call = capture_calls[0]
+        self.assertEqual(call['env']['TSV_CAPTURE_BASE'], STAGING_ORIGIN)
+        self.assertEqual(call['cmd'][:4], [CAPTURE_SCRIPT, call['cmd'][1], self.producer_sha, CANDIDATE_RENDER])
 
 
 if __name__ == '__main__':
