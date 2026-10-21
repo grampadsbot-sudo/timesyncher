@@ -1,23 +1,23 @@
-# VK PR #578 lane receipt (cursor-ubuntu vkfill-578-20261021075722)
+# VK issue #584 receipt (cursor-ubuntu vkfill/584-20261021095726)
 
-**Start sha:** `a132749f4d79f2d978c7b9eac24d3782af36f2ef`
+**Start sha:** `adf7d28977781e1b58a44f34ea2c47c508fcf698`
 
-## Change
+## Fix
 
-Restored portable Gate B **normal caller** bindings dropped when the runtime-only patch landed: `pregate_run_capture`, `base_reference_capture`, deploy/postdeploy staging helpers, and `staging_gate_capture` now pass `render_head`, `TSV_SANCTIONED_REPLAY_PRODUCER_HEAD`, and fixture policy into `capture_and_compare` / `local_capture` / `staging_capture` (support spans + full patch + defs-only patch + manifest). Runtime install artifacts (`capture-replay-runtime.patch`, verify script) unchanged from `a132749f`.
+Gate B `generic descriptions` on flights: served `rr()` dropped stored summaries over 20 words, so the JetBlue row had no `data-list-summary` line and capture treated the fare grid as the only text.
 
-## Commands (exit 0)
+- `src/vacation/flight-list-row-summary.mjs` — shared clause picker (≥6 words) for long stored summaries
+- `src/vacation/trek-thing-detail-fields-patch.mjs` — bundle `rr()` uses that picker; upgrades prior broken `rr` patch in baked assets
+- `apps/vacation-client/src/lib/listTabModel.mjs` — import shared picker (vacation-client parity)
 
-- `python3 scripts/test_capture_replay_binding.py` (15)
-- `python3 scripts/test_capture_replay_callers.py` (22)
-- `python3 scripts/ops/dispatch/test_same_selection_capture.py` (11)
-- `node scripts/test_capture_fixture_replay_harness.mjs`
-- `node scripts/check-no-comments.mjs`
-- `node scripts/test_offline_manifest.mjs`
-- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
-- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
+## Commands (exit codes)
 
-## Left alone (scope)
+| Command | Exit |
+| --- | --- |
+| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | (pre-DONE) |
+| `node scripts/test_offline_manifest.mjs` | (pre-DONE) |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | (pre-DONE) |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | (pre-DONE) |
 
-- No runtime `tsv_dispatch.py` install on host (still NOT RUN per managing-dr acceptance).
-- No Gate B capture, baseline/workflow/ratchet config edits, or deploy.
+**Tip sha:** (filled after commit)
