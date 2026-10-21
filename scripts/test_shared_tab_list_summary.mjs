@@ -58,15 +58,13 @@ assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
+assert.doesNotMatch(bundle, /tsRowInlineDesc/);
+assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
 assert.match(
   bundle,
-  /tsRowInlineDesc=typeof window>"u"\|\|!\(window\.matchMedia&&window\.matchMedia\("\(max-width:640px\)"\)\.matches\)/,
+  /n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"\},children:\[n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,flex:"0 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
 );
-assert.match(
-  bundle,
-  /tsRowInlineDesc\?n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"\}/,
-);
-assert.match(
+assert.doesNotMatch(
   bundle,
   /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
 );
