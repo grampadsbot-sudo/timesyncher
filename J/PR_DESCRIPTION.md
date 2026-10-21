@@ -2,22 +2,27 @@ Closes #546
 
 ## Summary
 
-Merge current `migrate/trek-source` into #549 (budget #580, flight list-row summary #586, map-marker bounds #581, list-row name `<strong>` wrap #589), keep round 1 Gate B fixes (no generic `Documented NYC option` copy; logos after ccab replay), and fix CI on list-only fixture row **608** (no invented nightly price on `thingOverrides`).
+Host base-merge of `migrate/trek-source` at `e3364ac5` (#598/#599/#600 on base) onto #549 list-row description substance (`stored-ccab-narrative-merge`, `composeListRowDescription` / `tsListRowDescription`). Rebaked `public/assets/index-BKun7ofk.js` from base upstream + product patches.
 
-## Changes (round 2 on `da8e61d9`)
+## Changes (merge `244cb282`)
 
-- Completed host-started merge of `446e1913` (base `migrate/trek-source`); rebaked `public/assets/index-BKun7ofk.js`.
-- **`nyc-craig-kim-daybyday-trip.mjs`**: strip blocked list-only hotel row 608 `price` after `finalizeServedSharedTripPayload` so `scripts/test_vk_search_place_output_contract.mjs` matches base contract (timeline hotel prices unchanged).
+- **`pr336-vk-search-trip-sources.mjs`**: kept PR stored-ccab exports + base `buildPr336GateBRegenerateRows` / `resolveNycCcabKey` / snapshot materialize.
+- **`trip-thing-enrichment.mjs` / `stored-ccab-narrative-merge.mjs`**: hotel ccab list summary from enrichment when substantive; row **608** incomplete-contract list rows omit planning-note/scrape text from live list UI (bundle + server).
+- **`shared-trip-live-app-fields.mjs`**: apply stored-ccab merge without leaving stale `longDetails` keys after delete.
+- **Tests**: merge conflict fixes (`64` ccab keys; pr225/snapshot binding); `scripts/test_shared_tab_list_summary.mjs` hotel summary pattern.
 
-## Verification
+## Verification (local `244cb282`)
 
 ```bash
-node scripts/test_vk_search_place_output_contract.mjs
 cd apps/vacation-client && npm test
-# full scripts/offline-tests.txt order (CI parity)
-node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser # all lines in scripts/offline-tests.txt
+node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs
+BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
+BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs
 ```
+
+All exit 0 locally. CI + Gate B on host-pushed head are authority for close.
 
 ## Left alone
 
-Baselines, Gate B checker config, workflows, contract tests, NYC snapshot JSON.
+Baselines, Gate B checker config, workflows, itinerary look (approved). No layout churn beyond merged base + #549 description paths.

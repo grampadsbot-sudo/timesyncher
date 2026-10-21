@@ -21,6 +21,11 @@ Layout/look beyond start commit, baselines, Gate B config, workflows, timeline h
 
 | Command | Exit |
 | --- | --- |
-| (filled after pre-DONE gate) | |
+| `cd apps/vacation-client && npm test` | 0 |
+| `scripts/offline-tests.txt` (full manifest, `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-**Tip sha:** (pending commit)
+**Tip sha:** `244cb282`
