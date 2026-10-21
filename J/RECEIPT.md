@@ -1,7 +1,7 @@
 # VK PR #581 receipt (cursor-ubuntu vkfill-581-20261021093733)
 
 **Start sha:** `dab52f74ec017619a51b194339130adeef825fb9`  
-**Tip sha:** `6edf03eb` (local; host publishes after DONE)
+**Tip sha:** `ef7ace93` (local; host publishes after DONE)
 
 ## Handoff
 
