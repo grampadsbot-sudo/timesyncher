@@ -1,8 +1,10 @@
 # Host handback events (`host_handback_events.py`)
 
-Bounded producer/reader for **new** host-recorded handback events (#567 / #569). This
-module is source-only in this round: it is **not** wired into `host_handback_evidence.py`,
-`tsv_stall_alarm.py`, or live dispatch.
+Bounded producer/reader for **new** host-recorded handback events (#567 / #569).
+`host_handback_evidence.HostReaders` accepts an explicit `handback_event_root` or
+`handback_event_paths` map; when configured, `CanonicalCollector` authenticates host
+comments through `verify_event` instead of prose receipt parsing. Alarm runtime
+installation remains separate.
 
 ## Record schema (version 1)
 
@@ -31,11 +33,25 @@ Legacy `HOST_HANDOFF.json` shapes (`at` / `message` / `receipt_exists` only) are
   `updated_at`). Events older than 900 seconds fail closed; callers may narrow that window.
 - `verify_receipt_binding(record)` / `verify_comment_binding(record, comment)` — split checks.
 
+## Collector wiring (`host_handback_evidence.py`)
+
+Supply paths explicitly when constructing `HostReaders`:
+
+- `handback_event_paths={569: "/home/.../job/HOST_HANDOFF.json"}` — fixed path per item.
+- `handback_event_root="/home/.../job/events"` — uses `{root}/{item}.json` when that file exists.
+
+Paths are never parsed from GBrain receipt prose. Without a configured path, the
+collector keeps the legacy scoped-receipt byte check.
+
+Event `event_at` freshness uses the existing 900-second `verify_event` window at
+collection time. Classifier review timing (`REVIEW_S`, 20 minutes on comment time)
+is unchanged and separate.
+
 ## Unresolved (not implemented here)
 
-Transition from `pending` to `reviewed` and how that feeds `host_handback_review.classify`
-acceptance vs host-review events remain for a follow-on adapter. This slice only supplies
-explicit storage and fail-closed verification.
+Transition from `pending` to `reviewed` and how that feeds acceptance vs host-review
+classification for draft `ACCEPT_RE` items remain follow-on work. Pending acceptance
+still raises `EvidenceError` when no acceptance event reader is supplied.
 
 ## Example outer-host call
 

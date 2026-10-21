@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceError,
                                     HostReaders, authenticate_guarded_look_send,
                                     current_section, last_action, ownership)
+from host_handback_events import produce_event
 from host_handback_review import classify
 from test_host_handback_review import NOW, iso, issue, receipt
 
@@ -115,6 +116,7 @@ class CollectorBoundaries(unittest.TestCase):
         self.page = assessment()
         self.record = self.comments[0]['html_url'] + '\n' + SHA
         self.readers = Mock(spec=HostReaders)
+        self.readers.handback_event_path.return_value = None
         self.readers.page.side_effect = lambda slug: self.page if slug == ASSESSMENT else self.record
         self.readers.running.return_value = frozenset()
         self.readers.receipt.return_value = self.comments[0]['body']
@@ -352,6 +354,140 @@ class HostFileBoundaries(unittest.TestCase):
             self.assertEqual(self.reader.receipt(canonical + ' ' + digest, 566, SHA), body)
             with self.assertRaisesRegex(EvidenceError, 'current head'):
                 self.reader.receipt(canonical + ' ' + digest, 566, 'b' * 40)
+
+
+class CollectorHandbackEvents(unittest.TestCase):
+    COMMENT_BODY = 'receipt ready; host review required'
+    ACTOR_ID = 7
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self._scope_patch = patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p))
+        self._scope_patch.start()
+        self.addCleanup(self._scope_patch.stop)
+        self.receipt_body = '#566\n' + SHA + '\nhost review required\n'
+        self.receipt_path = self.root / 'tsv-work' / 'synthetic-job' / 'RECEIPT.md'
+        self.receipt_path.parent.mkdir(parents=True)
+        self.receipt_path.write_text(self.receipt_body)
+        self.receipt_sha = hashlib.sha256(self.receipt_body.encode()).hexdigest()
+        self.event_path = self.root / 'HOST_HANDOFF.json'
+        self.item = issue()
+        self.item['head'] = {'sha': SHA}
+        self.comments = [{
+            'id': 42,
+            'user': {'login': 'host-supervisor', 'id': self.ACTOR_ID},
+            'body': self.COMMENT_BODY,
+            'created_at': iso(NOW - 3600),
+            'updated_at': iso(NOW - 3600),
+            'html_url': 'https://example.test/issues/566#issuecomment-42',
+            'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/566',
+        }]
+        self.page = assessment()
+        self.readers = HostReaders(self.root, handback_event_paths={566: str(self.event_path)})
+        self.readers.page = Mock(side_effect=lambda slug: self.page if slug == ASSESSMENT else '')
+        self.readers.running = Mock(return_value=frozenset())
+        self.gh = Mock()
+        self.gh.req.return_value = {'id': self.ACTOR_ID, 'login': 'host-supervisor'}
+        self.collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', self.readers, clock=lambda: NOW)
+
+    def write_event(self, **changes):
+        defaults = {
+            'path': self.event_path,
+            'item': 566,
+            'head': SHA,
+            'event_at': NOW - 120,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'comment_id': 42,
+            'comment_body': self.COMMENT_BODY,
+            'now': NOW,
+        }
+        defaults.update(changes)
+        return produce_event(**defaults)
+
+    def evidence(self):
+        self.write_event()
+        return self.collector(self.item, self.comments, NOW)
+
+    def test_authenticated_new_event_routes_to_review(self):
+        ev = self.evidence()
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'DUE')
+        self.assertIn(42, ev.handback_ids)
+
+    def test_absent_event_file_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'event file not found'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_stale_event_record_refuses(self):
+        self.write_event(event_at=NOW - 901)
+        with self.assertRaisesRegex(EvidenceError, 'stale'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_wrong_current_head_refuses(self):
+        self.write_event()
+        self.item['head']['sha'] = 'b' * 40
+        with self.assertRaisesRegex(EvidenceError, 'current head'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_wrong_event_item_refuses(self):
+        self.write_event(item=574)
+        with self.assertRaisesRegex(EvidenceError, 'item mismatch'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_edited_comment_refuses(self):
+        self.write_event()
+        self.comments[0]['updated_at'] = iso(NOW)
+        with self.assertRaisesRegex(EvidenceError, 'edited host comment'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_tampered_receipt_bytes_refuse(self):
+        self.write_event()
+        self.receipt_path.write_text(self.receipt_body + '\ntamper')
+        with self.assertRaisesRegex(EvidenceError, 'receipt bytes'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_comment_id_mismatch_refuses(self):
+        self.write_event()
+        self.comments[0]['id'] = 43
+        with self.assertRaisesRegex(EvidenceError, 'comment id'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_missing_event_does_not_clear_without_host_review(self):
+        readers = HostReaders(self.root)
+        readers.page = self.readers.page
+        readers.running = self.readers.running
+        collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', readers, clock=lambda: NOW)
+        self.comments[0]['body'] = 'plan only; no host review trigger here'
+        ev = collector(self.item, self.comments, NOW)
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, collector.actors, {}).state, 'UNRELATED')
+
+    def test_event_root_resolves_per_item_file(self):
+        event_dir = self.root / 'events'
+        event_dir.mkdir()
+        per_item = event_dir / '566.json'
+        readers = HostReaders(self.root, handback_event_root=event_dir)
+        readers.page = self.readers.page
+        readers.running = self.readers.running
+        collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', readers, clock=lambda: NOW)
+        produce_event(
+            per_item,
+            item=566,
+            head=SHA,
+            event_at=NOW - 120,
+            state='pending',
+            receipt_path=str(self.receipt_path),
+            receipt_sha256=self.receipt_sha,
+            gh_actor_id=self.ACTOR_ID,
+            comment_id=42,
+            comment_body=self.COMMENT_BODY,
+            now=NOW,
+        )
+        ev = collector(self.item, self.comments, NOW)
+        self.assertIn(42, ev.handback_ids)
 
 
 class GuardedCraigLookSend(unittest.TestCase):

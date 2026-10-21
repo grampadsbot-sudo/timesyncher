@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from host_handback_events import EventError, load_event, verify_event
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -165,10 +166,40 @@ def last_action(text, number, now):
 
 
 class HostReaders:
-    """Outer-host only. All methods read; injected equivalents make tests offline."""
-    def __init__(self, root, proc_root='/proc'):
+    """Outer-host only. All methods read; injected equivalents make tests offline.
+
+    New host handback events use an explicitly supplied path map or event root.
+    Paths are never inferred from GBrain prose or receipt text.
+    """
+    def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None):
         self.root = Path(root)
         self.proc_root = Path(proc_root)
+        self.handback_event_root = Path(handback_event_root) if handback_event_root else None
+        self.handback_event_paths = dict(handback_event_paths or {})
+
+    def handback_event_path(self, number):
+        """Return an explicit on-disk event record path for this item, if configured."""
+        if number in self.handback_event_paths:
+            return Path(self.handback_event_paths[number])
+        if self.handback_event_root is not None:
+            candidate = self.handback_event_root / ('%d.json' % number)
+            if candidate.is_file():
+                return candidate
+        return None
+
+    def authenticate_handback_event(self, path, item, head, comment, now):
+        """Bind a version-1 HOST_HANDOFF record to live comment bytes and current head."""
+        require(head and HEAD_RE.fullmatch(head), 'host handback event requires exact current head')
+        try:
+            record = load_event(path)
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        require(record['item'] == item, 'host handback event item mismatch')
+        try:
+            verify_event(record, comment, head, now=now)
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        return record
 
     def page(self, slug):
         from dr_scorecard import read_page
@@ -310,14 +341,20 @@ class CanonicalCollector:
                 guarded = self.readers.guarded_craig(item, self.pages)
                 require(type(guarded) is bool, 'Craig guard must be authenticated boolean proof')
             handbacks = set()
+            event_path = self.readers.handback_event_path(n)
             for comment in comments:
                 if not HOST_RE.search(comment.get('body') or ''):
+                    continue
+                require(comment.get('user', {}).get('id') == self.actor['id']
+                        and comment['user'].get('login') in self.actors, 'host receipt GH actor mismatch')
+                if event_path is not None:
+                    require(event_path.is_file(), 'authenticated host handback event file not found')
+                    self.readers.authenticate_handback_event(event_path, n, head, comment, checked)
+                    handbacks.add(comment['id'])
                     continue
                 url = comment.get('html_url')
                 sources = [page for page in self.pages.values() if url and url in page]
                 require(sources, 'host-review comment lacks canonical host receipt reference')
-                require(comment.get('user', {}).get('id') == self.actor['id']
-                        and comment['user'].get('login') in self.actors, 'host receipt GH actor mismatch')
                 require(comment.get('created_at') == comment.get('updated_at'), 'edited host event requires new authenticated receipt')
                 require(any(comment['body'] == self.readers.receipt(page, n, head) for page in sources),
                         'host comment differs from authenticated scoped receipt bytes')
