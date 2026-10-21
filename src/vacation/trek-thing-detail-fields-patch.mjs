@@ -1,6 +1,10 @@
+import { STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from './flight-list-row-summary.mjs';
+
 const RR_NEEDLE = 'rr=G=>ha(G).summary??""';
 const RR_ITINERARY_CHAIN = 'rr=G=>ha(G).itineraryNote??ha(G).itinerary_note??ha(G).summary??""';
-const RR_LIST_PATCH = 'rr=G=>{const pick=t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;return""};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}';
+const RR_LIST_PATCH_BROKEN =
+  'rr=G=>{const pick=t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;return""};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}';
+const RR_LIST_PATCH = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
 
 const ZI_NEEDLE = 'zi=G=>It(G)==="restaurant"';
 const ZI_PATCH = 'zi=G=>{const c=It(G);return c==="restaurant"||c==="bar"}';
@@ -21,7 +25,8 @@ const HH_DETAILS_PATCH = '}),(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:Hn,
 
 export function patchThingDetailFields(source = '') {
   let js = String(source || '');
-  if (js.includes(RR_ITINERARY_CHAIN)) js = js.replace(RR_ITINERARY_CHAIN, RR_LIST_PATCH);
+  if (js.includes(RR_LIST_PATCH_BROKEN)) js = js.replace(RR_LIST_PATCH_BROKEN, RR_LIST_PATCH);
+  else if (js.includes(RR_ITINERARY_CHAIN)) js = js.replace(RR_ITINERARY_CHAIN, RR_LIST_PATCH);
   else if (js.includes(RR_NEEDLE)) js = js.replace(RR_NEEDLE, RR_LIST_PATCH);
   if (js.includes(ZI_NEEDLE)) js = js.replace(ZI_NEEDLE, ZI_PATCH);
   if (js.includes(FN_NEEDLE)) js = js.replace(FN_NEEDLE, FN_PATCH);

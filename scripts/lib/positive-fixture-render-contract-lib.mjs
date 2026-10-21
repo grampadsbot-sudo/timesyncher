@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 import { buildBudgetModel, formatUsd, placesForBudget } from '../../apps/vacation-client/src/lib/budgetModel.mjs';
+import { assignedPlaceIds } from '../../src/vacation/itinerary-minimums.mjs';
 import {
   placeName,
   placesForCategoryTab,
@@ -379,6 +380,18 @@ export async function runRenderedContract({
         await new Promise((r) => setTimeout(r, 450));
         const budgetDom = await scrapeBudgetInventory(page);
         const domIds = new Set(budgetDom.rows.map((row) => row.placeId).filter(Boolean));
+        const timelinePlaceCount = assignedPlaceIds(trip).size;
+        const domRowCount = budgetDom.rows.length;
+        if (domRowCount !== timelinePlaceCount) {
+          violations.push(
+            `budget row count ${domRowCount} !== timeline place count ${timelinePlaceCount} at ${width}px`,
+          );
+        }
+        if (domRowCount !== expectedBudgetIds.size) {
+          violations.push(
+            `budget DOM rows ${domRowCount} !== placesForBudget size ${expectedBudgetIds.size} at ${width}px`,
+          );
+        }
         for (const id of expectedBudgetIds) {
           if (!domIds.has(id)) {
             violations.push(`budget inventory missing place id ${id} at ${width}px`);

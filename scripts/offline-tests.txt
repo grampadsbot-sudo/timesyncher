@@ -5,6 +5,7 @@ scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_bind_thing_media_cache.mjs
 scripts/test_budget_checkout_harness.mjs
+scripts/test_budget_timeline_only_rows.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs
 scripts/test_chat_place_search_when.mjs
@@ -85,6 +86,7 @@ scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
 scripts/test_same_selection_capture.mjs
 scripts/test_capture_acquisition.mjs
+scripts/test_capture_fixture_replay_harness.mjs
 scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_pregate_one_harness.mjs
 scripts/test_poi_search.mjs

@@ -1,0 +1,18 @@
+{
+  "runtime_path": "runtime-dispatcher.py",
+  "runtime_dispatcher_sha256": "d2ff396cd200871b561a2cc9ceacc065557a1fd8db474b1df5f66e3556edf562",
+  "patched_runtime_sha256": "17272eacaa18b421ada0708369fc566878c98e96c55e32674c45d6054fdabb04",
+  "patched_function_sha256": {
+    "_capture_replay_env": "b6f0a9c15a5976b8c099e43e7bf20024ae19df11cfc97fa9f5170eba796358ee",
+    "_sanctioned_replay_producer_head": "92daab6308fac673fec128ed87bce6ba601be7c56f079a28822f7dc814b49d8e",
+    "capture_and_compare": "ad77c28ddc5799243215c8ae1c09c88342c6cfb9ab705112cd860482032bd681",
+    "local_capture": "5f5364368258faeae6e68bf5d87c866ca0dcbfadf1afb95ecdc9ba4a5346ee70",
+    "staging_capture": "3b72b96cc61dccd5ca927e105ff198a314509174856902c97f0ffb03af1f7077",
+    "fixture_base_screens": "48f0f00333fa84505a6b5c46b27d7dbf19001e66fbba680e1685e2d75af55d99",
+    "base_reference": "0fad786c521eec21d8ab2eee6979a5100a5d8a6fbee423319d21110bc28451ad",
+    "pregate_one": "66870aa4949932dc6d987cf80ada61b24edc1cb9f6052fce793bc25ac73436cd",
+    "deploy_step": "be8b74fe64eedc3f734b8577b696179cf37b6da0f43b755461042d9065e7639b",
+    "postdeploy_regressed": "8f7074b24ed17e3d13c3ea8177ed50aa964568cdcdee8707fe2ecbbf71920e0d",
+    "staging_gate": "79bcdc1c8c94cebea8c9ebde16a24f5c09fd7bb0f87244374f349a8910b818c7"
+  }
+}
