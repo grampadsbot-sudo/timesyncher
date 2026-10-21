@@ -1,34 +1,36 @@
-# vkfill-549 round 2 (merge 7bc66068 + row 608 CI)
+# vkfill-549 round 3 (dirty-head merge 446e1913)
 
-**Start sha:** `da8e61d95b5a739f082b9b2a9abe5452cea116fa`
+**Start sha:** `871968b943cf2f8831aa659a7badaf4da8276c7d`
 
-## Step 1 — finish host-started merge
+## Host-started base merge
 
-- Kept #549 `J/PR_DESCRIPTION.md` and `J/RECEIPT.md`.
-- Took base `public/assets/index-BKun7ofk.js`, ran `node scripts/rebake_served_trek_bundle.mjs`.
-- `git commit --no-edit` completes merge of `origin/migrate/trek-source` (`7bc66068`).
+- Kept #549 `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` (this file); noted base merge includes #589 `Oe()` default title `<strong>` wrap in `shared-trip-oe-list-row-patch.mjs`.
+- Took base `public/assets/index-BKun7ofk.js`, ran `node scripts/rebake_served_trek_bundle.mjs` (sha256 `fd3fbf97…`).
+- Resolved `scripts/test_itinerary_fresh_daybyday_bundle.mjs`: assert both `<strong>` wrap and `Rn=Bs(tsListRowDescription(G))` after rebake.
+- `git commit --no-edit` completes merge of `origin/migrate/trek-source` (`446e19137ebe9c6ee0dab651dca078f2cd35f13f`).
 
-## Step 2 — CI `test_vk_search_place_output_contract` (row 608 price)
+## Prior round (context)
 
-Round 1 fixture merge left list-only row 608 with `thingOverrides.place:608.price` after `finalizeServedSharedTripPayload` (ccab list-row merge). Base keeps row 608 price blocked on the override.
-
-- **`scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`**: after finalize, delete `price` on place 608 and `thingOverrides['place:608']` only.
+Round 2 on `da8e61d9`: row 608 `price` strip on list-only hotel; merge `7bc66068`.
 
 ## Checks (local; host publish + CI authority)
 
 | Command | Exit |
 | --- | --- |
-| `cd apps/vacation-client && npm test` | 0 |
+| `CHROME_PATH=/usr/bin/chromium-browser cd apps/vacation-client && npm test` | 0 |
+| `scripts/offline-tests.txt` lines 1–85 (`PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | 0 |
+| `scripts/offline-tests.txt` line 86 `test_live_transcript_dialog_pdf.mjs` | **1** — `rules.via` `gbrain-cli-get_page` vs `bundled-get_page` (lane has `~/.local/bin/gbrain`; CI has no CLI). With `PATH` sans gbrain: `pdftotext` missing (`layout.status` null). Host/CI env; not changed in this round. |
+| `scripts/offline-tests.txt` lines 87–162 | 0 |
+| `scripts/offline-tests.txt` lines 163–end (`PATH` with job-dir `google-chrome` → chromium shim) | 0 |
 | `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
-| `scripts/offline-tests.txt` lines 1–44 (`PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | 0 |
-| `scripts/offline-tests.txt` lines 45–`test_live_transcript_dialog_pdf.mjs` | 0 through `test_eval_jev_cards.mjs`; **stop** at `test_live_transcript_dialog_pdf.mjs`: `rules.via` `gbrain-cli-get_page` vs `bundled-get_page` (host env; same as #581 receipt) |
+| `node scripts/test_list_row_description_substance.mjs` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-**Tip sha:** `765c2b4c` (merge `c87f074e`, row 608 + ratchet `78c6766f`, receipt `765c2b4c`).
+**Tip sha:** (after merge commit)
 
 ## Left alone
 
-Tests/checkers, baselines, Gate B config, workflows, timeline hotel prices from #580.
+Tests/checkers (except conflict resolution in bundle test), baselines, Gate B config, workflows, timeline hotel prices from #580, evidence PNGs from local layout runs (not staged).
