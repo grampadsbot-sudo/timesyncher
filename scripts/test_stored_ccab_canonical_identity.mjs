@@ -2,7 +2,10 @@
 import assert from 'node:assert/strict';
 import { composeListRowDescription } from '../src/vacation/list-row-description.mjs';
 import { applyLiveAppListRowFields } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
+import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
 import {
   mergeStoredCcabNarrativeIntoOverride,
   resolveStoredCcabKey,
@@ -119,5 +122,23 @@ const composed = composeListRowDescription({
   fields: liveFields.thingOverrides['place:903'],
 });
 assert.match(composed, /bluenote\.net/i);
+
+function blueNoteDescriptionFields(trip = {}) {
+  const override = trip.thingOverrides?.['place:611'] || {};
+  return {
+    longDetails: String(override.longDetails || override.description || '').trim(),
+    externalId: trip.places?.find((place) => place.id === 611)?.externalId || '',
+  };
+}
+
+const liveServed = buildGateBApprovedSharedTrip();
+const rawFixture = buildNycCraigKimDaybydayTrip();
+const replayServed = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify(rawFixture))).served;
+const liveBlueNote = blueNoteDescriptionFields(liveServed);
+const replayBlueNote = blueNoteDescriptionFields(replayServed);
+assert.equal(replayBlueNote.externalId, 'Blue Note Jazz Club');
+assert.equal(liveBlueNote.externalId, replayBlueNote.externalId);
+assert.equal(liveBlueNote.longDetails, replayBlueNote.longDetails);
+assert.ok(narrativeWordCount(liveBlueNote.longDetails) >= 30);
 
 console.log('stored ccab canonical identity tests passed');

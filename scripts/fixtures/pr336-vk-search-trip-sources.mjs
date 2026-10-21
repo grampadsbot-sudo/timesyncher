@@ -40,7 +40,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   608: 'Midtown sample hotel',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Carbone',
-  611: 'Jazz at Lincoln Center',
+  611: 'Blue Note Jazz Club',
 };
 
 export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
@@ -218,6 +218,25 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   if (!rows.length || unverified.length) {
     throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
+}
+
+export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
+  const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[placeId];
+  if (!ccabKey) return override;
+  place.externalId = ccabKey;
+  const meta = placeMetadata(place);
+  const priorRecord = {
+    ...(typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {}),
+    ...(typeof override.sourceRecord === 'object' ? override.sourceRecord : {}),
+  };
+  place.metadata = {
+    ...meta,
+    externalId: ccabKey,
+    sourceRecord: { ...priorRecord, ccabKey },
+  };
+  const next = { ...override, externalId: ccabKey };
+  next.sourceRecord = { ...priorRecord, ccabKey };
+  return next;
 }
 
 export function buildGateBSearchPlaceForRow({ id, name, cat }) {
