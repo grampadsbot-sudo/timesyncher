@@ -9,7 +9,8 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from host_handback_events import EventError, load_event, verify_event
+from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
+                                  load_event, verify_event, verify_observation)
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -188,8 +189,8 @@ class HostReaders:
             return self.handback_event_root / ('%d.json' % number)
         return None
 
-    def authenticate_handback_event(self, path, item, head, comment, now):
-        """Bind a version-1 HOST_HANDOFF record to live comment bytes and current head."""
+    def authenticate_handback_event(self, path, item, head, comment, now, observed_at=None):
+        """Bind a HOST_HANDOFF record to live comment bytes and current head."""
         require(head and HEAD_RE.fullmatch(head), 'host handback event requires exact current head')
         try:
             record = load_event(path)
@@ -199,7 +200,13 @@ class HostReaders:
         require(record['state'] == 'pending',
                 'unsupported reviewed host handback resolution; explicit acceptance contract required')
         try:
-            verify_event(record, comment, head, now=now)
+            if record['version'] == EVENT_VERSION_REGISTERED:
+                require(observed_at is not None, 'host handback observation time missing')
+                verify_observation(record, comment, head, observed_at, now=now)
+            elif record['version'] == EVENT_VERSION:
+                verify_event(record, comment, head, now=now)
+            else:
+                raise EventError('unsupported host handback event version')
         except EventError as exc:
             raise EvidenceError(str(exc)) from exc
         return record
@@ -320,6 +327,7 @@ class CanonicalCollector:
 
     def __call__(self, item, comments, now):
         try:
+            snapshot_at = self.clock()
             checked = self.clock()
             require(0 <= checked - self.started <= 60, 'complete canonical scan exceeded freshness window')
             require(abs(checked - now) <= 60, 'alarm clock disagrees with collector clock')
@@ -361,7 +369,8 @@ class CanonicalCollector:
                         'bound host handback comment lacks host review trigger')
                 require(comment.get('user', {}).get('id') == self.actor['id']
                         and comment['user'].get('login') in self.actors, 'host receipt GH actor mismatch')
-                self.readers.authenticate_handback_event(event_path, n, head, comment, checked)
+                self.readers.authenticate_handback_event(
+                    event_path, n, head, comment, checked, observed_at=snapshot_at)
                 handbacks.add(bound_id)
             else:
                 for comment in comments:

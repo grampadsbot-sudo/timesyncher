@@ -24,14 +24,32 @@ installation remains separate.
 Legacy `HOST_HANDOFF.json` shapes (`at` / `message` / `receipt_exists` only) are
 **refused**. No backfill or silent upgrade.
 
+## Record schema (version 2)
+
+Same fields as version 1 plus:
+
+| Field | Meaning |
+|---|---|
+| `version` | Always `2` |
+| `registered_at` | Unix timestamp when the host registered the event (immutable) |
+
+Registration must occur within 900 seconds of congruent `event_at` / comment time at
+produce time only. Version 2 events cannot be registered for historical comments after
+the fact.
+
 ## API
 
-- `produce_event(path, ...)` — validate bindings, refuse overwrite, atomic JSON write.
+- `produce_event(path, ..., schema_version=1|2)` — validate bindings, refuse overwrite, atomic JSON write.
+  Version 2 requires `registered_at` (defaults to `now`) and refuses historical registration.
 - `load_event(path)` — parse and structural-check; refuse legacy.
-- `verify_event(record, comment, current_head, now=...)` — re-read receipt bytes and
+- `verify_event(record, comment, current_head, now=...)` — version **1 only**. Re-read receipt bytes and
   match comment issue URL/item, id, actor id, body digest, head, and timestamps (`created_at` must equal
   `updated_at`). `event_at` and comment `created_at` must agree within 60 seconds (timezone-aware timestamp parsing;
   malformed timestamps fail closed). Events older than 900 seconds fail closed; callers may narrow that window.
+- `verify_observation(record, comment, current_head, observed_at, now=...)` — version **2 only**. Same live
+  binding checks as `verify_event`, but `event_at` is not subject to the 900-second collection-age limit.
+  `registered_at` must have been within 900 seconds of `event_at` at record time (immutable invariant).
+  `observed_at` must be a fresh collector snapshot timestamp within 900 seconds of `now`.
   Only `state: pending` records authenticate through the collector; `reviewed` raises an explicit error.
 - `verify_receipt_binding(record)` / `verify_comment_binding(record, comment)` — split checks.
 
@@ -47,12 +65,10 @@ collector keeps the legacy scoped-receipt byte check. When configured, only the
 GitHub comment whose id matches the event record is authenticated; other historical
 `host review required` comments are ignored.
 
-Event `event_at` freshness uses the existing 900-second `verify_event` window at
-collection time. Classifier review timing (`REVIEW_S`, 20 minutes on comment time)
-is unchanged and separate. Because `event_at` and comment `created_at` are bound
-within 60 seconds, a comment old enough for `DUE` (20 minutes) implies `event_at`
-is also beyond the 900-second authentication window. Overdue host-review routing
-via authenticated NEW events therefore remains blocked without weakening either threshold.
+Version 1 event `event_at` freshness uses the 900-second `verify_event` window at
+collection time. Version 2 uses `verify_observation` with a fresh snapshot timestamp;
+`event_at` remains the review-age clock for `REVIEW_S` (20 minutes) without rewrite.
+Classifier review timing is unchanged and separate.
 
 ## Unresolved (not implemented here)
 

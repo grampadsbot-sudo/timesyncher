@@ -8,12 +8,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 from host_handback_events import (
+    EVENT_VERSION_REGISTERED,
     EventError,
     digest_comment_body,
     is_legacy_record,
     load_event,
     produce_event,
     verify_event,
+    verify_observation,
     verify_receipt_binding,
 )
 
@@ -181,6 +183,55 @@ class HostHandbackEvents(unittest.TestCase):
     def test_digest_is_stable(self):
         self.assertEqual(digest_comment_body(self.comment_body),
                          hashlib.sha256(self.comment_body.encode()).hexdigest())
+
+    def test_v2_producer_records_registered_at(self):
+        record = self.write_event(schema_version=EVENT_VERSION_REGISTERED, registered_at=NOW - 30,
+                                  event_at=NOW - 120)
+        self.assertEqual(record['version'], EVENT_VERSION_REGISTERED)
+        self.assertEqual(record['registered_at'], NOW - 30)
+
+    def test_v2_verify_event_refuses_version_mismatch(self):
+        record = self.write_event(schema_version=EVENT_VERSION_REGISTERED, registered_at=NOW - 30,
+                                  event_at=NOW - 120)
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            with self.assertRaisesRegex(EventError, 'verify_observation'):
+                verify_event(record, self.comment(), HEAD, now=NOW)
+
+    def test_v2_observation_ignores_event_age(self):
+        record = {
+            'version': EVENT_VERSION_REGISTERED,
+            'item': 569,
+            'head': HEAD,
+            'event_at': NOW - 1200,
+            'registered_at': NOW - 1200,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': ACTOR,
+            'comment_id': COMMENT_ID,
+            'comment_body_sha256': hashlib.sha256(self.comment_body.encode()).hexdigest(),
+        }
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            verify_observation(record, self.comment(at=NOW - 1200), HEAD, NOW - 1, now=NOW)
+
+
+
+    def test_v2_registration_at_900_allowed_but_901_refused(self):
+        record = self.write_event(schema_version=EVENT_VERSION_REGISTERED,
+                                  event_at=NOW - 900, registered_at=NOW)
+        self.assertEqual(record['event_at'], NOW - 900)
+        self.event_path.unlink()
+        with self.assertRaisesRegex(EventError, 'registration outside|historical'):
+            self.write_event(schema_version=EVENT_VERSION_REGISTERED,
+                             event_at=NOW - 901, registered_at=NOW - 1)
+
+    def test_v2_future_registration_refused_on_observation(self):
+        record = self.write_event(schema_version=EVENT_VERSION_REGISTERED,
+                                  event_at=NOW - 120, registered_at=NOW - 1)
+        record['registered_at'] = NOW + 61
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            with self.assertRaisesRegex(EventError, 'registration timestamp is in the future'):
+                verify_observation(record, self.comment(), HEAD, NOW, now=NOW)
 
 
 if __name__ == '__main__':

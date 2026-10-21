@@ -11,8 +11,9 @@ from unittest.mock import Mock, patch
 from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceError,
                                     HostReaders, authenticate_guarded_look_send,
                                     current_section, last_action, ownership)
-from host_handback_events import produce_event
-from host_handback_review import classify
+from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
+                                  produce_event, verify_observation)
+from host_handback_review import REVIEW_S, classify
 from test_host_handback_review import NOW, iso, issue, receipt
 
 SLUG = 'bot-admin/receipts/synthetic-host-review'
@@ -407,9 +408,27 @@ class CollectorHandbackEvents(unittest.TestCase):
             'comment_id': 42,
             'comment_body': self.COMMENT_BODY,
             'now': NOW,
+            'schema_version': EVENT_VERSION,
         }
         defaults.update(changes)
         return produce_event(**defaults)
+
+    def write_v2_record(self, event_at, registered_at):
+        record = {
+            'version': EVENT_VERSION_REGISTERED,
+            'item': 566,
+            'head': SHA,
+            'event_at': event_at,
+            'registered_at': registered_at,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'comment_id': 42,
+            'comment_body_sha256': hashlib.sha256(self.COMMENT_BODY.encode()).hexdigest(),
+        }
+        self.event_path.write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+        return record
 
     def evidence(self):
         self.write_event()
@@ -535,13 +554,62 @@ class CollectorHandbackEvents(unittest.TestCase):
         ev = self.collector(self.item, self.comments, NOW)
         self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'OWNED')
 
-    def test_overdue_event_at_twenty_minutes_refuses_before_classifier(self):
+    def test_overdue_v1_event_at_twenty_minutes_refuses_before_classifier(self):
         self.event_at = NOW - 1200
         self.comments[0]['created_at'] = iso(self.event_at)
         self.comments[0]['updated_at'] = iso(self.event_at)
         self.write_event(event_at=self.event_at)
         with self.assertRaisesRegex(EvidenceError, 'stale'):
             self.collector(self.item, self.comments, NOW)
+
+    def test_v2_review_age_boundaries_via_full_collector(self):
+        for age, expected in ((899, 'OWNED'), (901, 'OWNED'), (1199, 'OWNED'),
+                              (REVIEW_S, 'DUE'), (REVIEW_S + 1, 'DUE')):
+            self.event_at = NOW - age
+            self.comments[0]['created_at'] = iso(self.event_at)
+            self.comments[0]['updated_at'] = iso(self.event_at)
+            self.write_v2_record(self.event_at, self.event_at + 1)
+            ev = self.collector(self.item, self.comments, NOW)
+            state = classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state
+            self.assertEqual(state, expected, 'event age %d seconds' % age)
+            self.assertEqual(ev.handback_ids, frozenset({42}))
+
+    def test_v2_stale_observation_refuses(self):
+        self.event_at = NOW - 600
+        self.comments[0]['created_at'] = iso(self.event_at)
+        self.comments[0]['updated_at'] = iso(self.event_at)
+        self.write_v2_record(self.event_at, self.event_at + 1)
+        clock_times = [NOW - 901, NOW, NOW, NOW]
+        idx = 0
+
+        def stepped_clock():
+            nonlocal idx
+            value = clock_times[min(idx, len(clock_times) - 1)]
+            idx += 1
+            return value
+
+        self.collector.clock = stepped_clock
+        with self.assertRaisesRegex(EvidenceError, 'observation is stale'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_v2_forged_late_registration_refuses(self):
+        self.event_at = NOW - 1200
+        self.comments[0]['created_at'] = iso(self.event_at)
+        self.comments[0]['updated_at'] = iso(self.event_at)
+        self.write_v2_record(self.event_at, NOW)
+        with self.assertRaisesRegex(EvidenceError, 'registration outside comment window'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_v2_producer_refuses_historical_registration(self):
+        with self.assertRaisesRegex(EventError, 'historical host handback registration'):
+            self.write_event(event_at=NOW - 1000, schema_version=EVENT_VERSION_REGISTERED,
+                             registered_at=NOW - 940, now=NOW)
+
+    def test_v2_produce_roundtrip_observation(self):
+        record = self.write_event(schema_version=EVENT_VERSION_REGISTERED, registered_at=NOW - 60,
+                                  event_at=NOW - 120)
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            verify_observation(record, self.comments[0], SHA, NOW - 1, now=NOW)
 
 
 class GuardedCraigLookSend(unittest.TestCase):

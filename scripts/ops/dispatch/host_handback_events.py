@@ -17,16 +17,21 @@ import time
 from pathlib import Path
 
 EVENT_VERSION = 1
+EVENT_VERSION_REGISTERED = 2
+SUPPORTED_VERSIONS = frozenset({EVENT_VERSION, EVENT_VERSION_REGISTERED})
 HEAD_RE = re.compile(r'^[0-9a-f]{40}$')
 SHA256_RE = re.compile(r'^[0-9a-f]{64}$')
 STATES = frozenset({'pending', 'reviewed'})
+REGISTRATION_S = 900
+OBSERVATION_S = 900
 RECEIPT_SCOPE = re.compile(
     r'^/home/ubishere9995/(?:tsv-work|gpt-[^/]+)/.+RECEIPT\.md$')
 LEGACY_KEYS = frozenset({'at', 'message', 'receipt_exists'})
-REQUIRED_KEYS = frozenset({
+REQUIRED_KEYS_V1 = frozenset({
     'version', 'item', 'head', 'event_at', 'state', 'receipt_path', 'receipt_sha256',
     'gh_actor_id', 'comment_id', 'comment_body_sha256',
 })
+REQUIRED_KEYS_V2 = REQUIRED_KEYS_V1 | frozenset({'registered_at'})
 
 
 class EventError(ValueError):
@@ -78,14 +83,15 @@ def read_receipt_bytes(path):
         raise EventError('receipt file unreadable') from exc
 
 
-def normalize_record(data):
+def _validate_common_fields(data, required_keys):
     _require(isinstance(data, dict), 'host handback event must be an object')
     _require(not is_legacy_record(data), 'legacy host handoff record unsupported')
-    extra = set(data) - REQUIRED_KEYS
-    missing = REQUIRED_KEYS - set(data)
+    extra = set(data) - required_keys
+    missing = required_keys - set(data)
     _require(not extra, 'host handback event has unknown fields')
     _require(not missing, 'host handback event missing required fields')
-    _require(data['version'] == EVENT_VERSION, 'unsupported host handback event version')
+    version = data['version']
+    _require(version in SUPPORTED_VERSIONS, 'unsupported host handback event version')
     item = data['item']
     _require(isinstance(item, int) and item > 0, 'item must be a positive integer')
     head = data['head']
@@ -106,7 +112,27 @@ def normalize_record(data):
     body_sha = data['comment_body_sha256']
     _require(isinstance(body_sha, str) and SHA256_RE.fullmatch(body_sha),
              'comment_body_sha256 invalid')
+    if version == EVENT_VERSION_REGISTERED:
+        registered_at = data['registered_at']
+        _require(isinstance(registered_at, (int, float)) and registered_at > 0,
+                 'registered_at invalid')
     return dict(data)
+
+
+def normalize_record(data):
+    version = data.get('version') if isinstance(data, dict) else None
+    if version == EVENT_VERSION_REGISTERED:
+        return _validate_common_fields(data, REQUIRED_KEYS_V2)
+    return _validate_common_fields(data, REQUIRED_KEYS_V1)
+
+
+def _verify_registration_invariant(record, max_skew=60, max_gap=REGISTRATION_S):
+    registered_at = record['registered_at']
+    event_at = record['event_at']
+    _require(registered_at >= event_at - max_skew,
+             'host handback registration predates congruent host event')
+    _require(registered_at - event_at <= max_gap,
+             'host handback registration outside comment window')
 
 
 def build_record(
@@ -120,9 +146,11 @@ def build_record(
     gh_actor_id,
     comment_id,
     comment_body_sha256,
+    schema_version=EVENT_VERSION,
+    registered_at=None,
 ):
     record = {
-        'version': EVENT_VERSION,
+        'version': schema_version,
         'item': item,
         'head': head,
         'event_at': event_at,
@@ -133,6 +161,9 @@ def build_record(
         'comment_id': comment_id,
         'comment_body_sha256': comment_body_sha256,
     }
+    if schema_version == EVENT_VERSION_REGISTERED:
+        _require(registered_at is not None, 'registered_at required for version 2 events')
+        record['registered_at'] = registered_at
     return normalize_record(record)
 
 
@@ -176,19 +207,46 @@ def verify_comment_binding(record, comment):
     return body
 
 
-def verify_event(record, comment, current_head, now=None, max_skew=60, max_age=900):
-    """Revalidate a stored event against live receipt bytes and GH comment."""
-    record = normalize_record(record)
-    now = now if now is not None else time.time()
+def _verify_live_bindings(record, comment, current_head, now, max_skew):
     _require(record['head'] == current_head, 'event head does not match current head')
     _require(record['event_at'] <= now + max_skew, 'host handback event timestamp is in the future')
-    _require(0 < max_age <= 900, 'event freshness window must be between zero and 900 seconds')
-    _require(now - record['event_at'] <= max_age, 'host handback event is stale')
     comment_at = _comment_created_at(comment)
     _require(abs(record['event_at'] - comment_at) <= max_skew,
              'event_at and comment created_at disagree beyond clock skew')
     verify_receipt_binding(record)
     verify_comment_binding(record, comment)
+
+
+def verify_event(record, comment, current_head, now=None, max_skew=60, max_age=900):
+    """Revalidate a version-1 stored event against live receipt bytes and GH comment."""
+    record = normalize_record(record)
+    _require(record['version'] == EVENT_VERSION,
+             'version 2 host handback events require verify_observation')
+    now = now if now is not None else time.time()
+    _require(0 < max_age <= REGISTRATION_S, 'event freshness window must be between zero and 900 seconds')
+    _require(now - record['event_at'] <= max_age, 'host handback event is stale')
+    _verify_live_bindings(record, comment, current_head, now, max_skew)
+    return record
+
+
+def verify_observation(record, comment, current_head, observed_at, now=None, max_skew=60,
+                       max_observation_age=OBSERVATION_S):
+    """Revalidate a version-2 event with a fresh collector observation.
+
+    ``event_at`` remains the review-age clock and is not rewritten. Observation
+    freshness is enforced on ``observed_at`` (when the collector held the snapshot).
+    """
+    record = normalize_record(record)
+    _require(record['version'] == EVENT_VERSION_REGISTERED,
+             'verify_observation requires version 2 host handback events')
+    now = now if now is not None else time.time()
+    _require(0 < max_observation_age <= OBSERVATION_S,
+             'observation freshness window must be between zero and 900 seconds')
+    _require(observed_at <= now + max_skew, 'host handback observation timestamp is in the future')
+    _require(now - observed_at <= max_observation_age, 'host handback observation is stale')
+    _require(record['registered_at'] <= now + max_skew, 'host handback registration timestamp is in the future')
+    _verify_registration_invariant(record, max_skew=max_skew)
+    _verify_live_bindings(record, comment, current_head, now, max_skew)
     return record
 
 
@@ -205,10 +263,21 @@ def produce_event(
     comment_id,
     comment_body,
     now=None,
+    schema_version=EVENT_VERSION,
+    registered_at=None,
 ):
     """Write a new host-recorded event after binding checks. Refuses existing files."""
     now = now if now is not None else time.time()
+    _require(schema_version in SUPPORTED_VERSIONS, 'unsupported host handback event version')
     body_sha = digest_comment_body(comment_body)
+    if schema_version == EVENT_VERSION_REGISTERED:
+        registered_at = registered_at if registered_at is not None else now
+        _require(registered_at <= now + 60, 'registered_at cannot be in the future')
+        _require(event_at <= registered_at + 60, 'event_at cannot follow registration')
+        _require(registered_at - event_at <= REGISTRATION_S,
+                 'host handback registration outside comment window')
+        _require(now - event_at <= REGISTRATION_S,
+                 'refusing historical host handback registration')
     record = build_record(
         item=item,
         head=head,
@@ -219,6 +288,8 @@ def produce_event(
         gh_actor_id=gh_actor_id,
         comment_id=comment_id,
         comment_body_sha256=body_sha,
+        schema_version=schema_version,
+        registered_at=registered_at,
     )
     _require(record['event_at'] <= now + 60, 'event_at cannot be in the future')
     data = read_receipt_bytes(receipt_path)
