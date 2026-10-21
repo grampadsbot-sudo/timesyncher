@@ -301,6 +301,53 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
+export function isHotelPlanningNote(value = '') {
+  const row = text(value, 4000);
+  if (!row) return false;
+  if (!/^Neighborhood:/i.test(row)) return false;
+  return /Rating:/i.test(row) || /Status:\s*candidate/i.test(row) || /Price:\s*\$/i.test(row);
+}
+
+export function hotelStoredCcabListNarrative(title = '', ccabRecord = {}) {
+  if (!ccabRecord || typeof ccabRecord !== 'object') return null;
+  const displayTitle = text(title, 240);
+  const neighborhoodMatch = text(ccabRecord.description).match(/Neighborhood:\s*([^;]+)/i);
+  const neighborhood = neighborhoodMatch
+    ? text(neighborhoodMatch[1], 160)
+    : text(ccabRecord.neighborhood || ccabRecord.address, 160);
+  const sourceRecord = { ...ccabRecord, neighborhood };
+  const built = buildCategoryDescription({
+    category: 'hotel',
+    title: displayTitle,
+    sourceRecord,
+    address: ccabRecord.address,
+    rawDescription: text(ccabRecord.websiteFlavour),
+  });
+  const longRaw = text(ccabRecord.longDetails || ccabRecord.description);
+  const ratingSource = text(ccabRecord.thirdPartySource, 40)
+    || (ccabRecord.googleRating ? 'Google' : '');
+  const ratingLine = text(ccabRecord.thirdPartyRating || ccabRecord.googleRating)
+    ? `${ratingSource || 'Guest'} rating ${text(ccabRecord.thirdPartyRating || ccabRecord.googleRating)}${text(ccabRecord.thirdPartyReviewCount || ccabRecord.googleReviewCount) ? ` (${text(ccabRecord.thirdPartyReviewCount || ccabRecord.googleReviewCount)} reviews)` : ''}`
+    : '';
+  const longDetails = isHotelPlanningNote(longRaw)
+    ? text(
+      `${built}${ratingLine ? `. ${ratingLine}` : ''}. Compare room types, fees, and cancellation rules on the official listing before you book this candidate.`,
+    )
+    : longRaw;
+  let summary = text(ccabRecord.websiteFlavour)
+    ? shortLineFromSourceText(ccabRecord.websiteFlavour, 160)
+    : shortLineFromSourceText(built, 160);
+  if (isHotelPlanningNote(text(ccabRecord.summary))) {
+    summary = shortLineFromSourceText(built, 160) || summary;
+  }
+  return {
+    summary,
+    longDetails,
+    neighborhood,
+    websiteFlavour: text(ccabRecord.websiteFlavour),
+  };
+}
+
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);

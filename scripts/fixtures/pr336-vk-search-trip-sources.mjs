@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { enrichSearchPlace, isGenericDescription } from '../../src/vacation/trip-thing-enrichment.mjs';
+import {
+  enrichSearchPlace,
+  hotelStoredCcabListNarrative,
+  isGenericDescription,
+  isHotelPlanningNote,
+} from '../../src/vacation/trip-thing-enrichment.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -68,6 +73,7 @@ function storedCcabNarrativeNeedsMerge(place = {}, override = {}) {
   if (!hit) return false;
   const existing = listNarrativeCandidateText(place, override);
   if (!existing) return true;
+  if (isHotelPlanningNote(existing)) return true;
   if (narrativeWordCount(existing) < 30) return true;
   return isGenericDescription(existing);
 }
@@ -208,7 +214,11 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
   const existing = listNarrativeCandidateText(place, override);
-  if (narrativeWordCount(existing) >= 30 && !isGenericDescription(existing)) return override;
+  if (
+    narrativeWordCount(existing) >= 30
+    && !isGenericDescription(existing)
+    && !isHotelPlanningNote(existing)
+  ) return override;
   const enriched = enrichListRowFromStoredCcab(
     place,
     override,
@@ -240,20 +250,43 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
     if (!text(place.externalId)) place.externalId = hit.ccabKey;
   }
+  const hotelCategory = text(override.category || place.category_name || record.category, 40).toLowerCase();
+  const hotelNarrative = (hotelCategory === 'hotel' || hotelCategory.includes('lodging'))
+    && !text(record.websiteFlavour)
+    && isHotelPlanningNote(record.description || record.summary)
+    ? hotelStoredCcabListNarrative(
+      place.name || place.title || hit.ccabKey,
+      record,
+    )
+    : null;
+  if (hotelNarrative) {
+    if (hotelNarrative.summary) next.summary = hotelNarrative.summary;
+    if (hotelNarrative.longDetails) {
+      next.longDetails = hotelNarrative.longDetails;
+      if (!text(next.details)) next.details = hotelNarrative.longDetails;
+      if (!text(next.description)) next.description = hotelNarrative.longDetails;
+      place.description = hotelNarrative.longDetails;
+    }
+    if (hotelNarrative.neighborhood) next.neighborhood = hotelNarrative.neighborhood;
+    if (hotelNarrative.websiteFlavour) next.websiteFlavour = hotelNarrative.websiteFlavour;
+  }
   for (const key of [
     'summary',
     'itineraryNote',
     'websiteFlavour',
     'address',
+    'neighborhood',
     'googleRating',
     'googleReviewCount',
     'yelpRating',
     'yelpReviewCount',
     'thirdPartyRating',
     'thirdPartyReviewCount',
+    'thirdPartySource',
     'reviewThemes',
     'website',
   ]) {
+    if (hotelNarrative && key === 'summary') continue;
     if (record[key] != null && record[key] !== '' && (next[key] == null || next[key] === '')) {
       next[key] = record[key];
     }

@@ -12,6 +12,7 @@ import {
   resolveStoredCcabKey,
   shouldMergeStoredCcabOnFixtureReplay,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
+import { isHotelPlanningNote } from '../src/vacation/trip-thing-enrichment.mjs';
 
 function narrativeWordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
@@ -221,5 +222,47 @@ assert.ok(
   'Blue Note alias row should bind stored ccab narrative via website or unique name prefix',
 );
 assert.match(aliasOverride.longDetails || '', /Greenwich Village jazz/i);
+
+const gateBHotelNames = [
+  'Park Central Hotel New York',
+  'New York Marriott Downtown',
+  'The Manhattan at Times Square Hotel',
+  'Hotel Edison',
+  'Hyatt Grand Central New York',
+];
+for (const name of gateBHotelNames) {
+  const served = finalizeServedSharedTripPayload({
+    places: [{ id: 701, name, category_name: 'hotel' }],
+    thingOverrides: { 'place:701': {} },
+    days: [],
+    assignments: {},
+  });
+  const place = served.places[0];
+  const override = served.thingOverrides['place:701'] || {};
+  const description = rowSummary(place, served);
+  assert.ok(narrativeWordCount(description) >= 30, `${name} hotel list row under 30 words`);
+  assert.equal(isHotelPlanningNote(override.summary), false, `${name} summary still planning-note template`);
+  assert.doesNotMatch(description, /^Neighborhood:/, `${name} description must not lead with planning-note template`);
+  assert.ok(
+    /walkable|subway|couples|guest rating|official listing/i.test(description),
+    `${name} missing hotel substance cues`,
+  );
+}
+
+const mottoServed = finalizeServedSharedTripPayload({
+  places: [{
+    id: 603,
+    name: 'Motto by Hilton New York City Times Square',
+    category_name: 'hotel',
+  }],
+  thingOverrides: { 'place:603': { price: 188 } },
+  days: [],
+  assignments: {},
+});
+assert.match(
+  rowSummary(mottoServed.places[0], mottoServed),
+  /fitness center|Times Square|eco-certified/i,
+  'Motto keeps sourced review overlay narrative',
+);
 
 console.log('stored ccab canonical identity tests passed');

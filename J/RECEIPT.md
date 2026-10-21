@@ -1,15 +1,16 @@
-# VK fill #549 receipt (cursor-ubuntu hard round 4, 2026-10-21)
+# VK fill #549 receipt (cursor-ubuntu, 2026-10-21)
 
 ## Root cause
 
-Gate B capture replay (`prepareFixtureReplaySharedTrip`) skipped `mergeStoredCcabNarrativeIntoOverride` for **Smoke Jazz & Supper Club** when the trek title already matched the ccab key, `timeline` was false, and no website was on the row (raw capture showed **3 words**: `Start: 9:00 PM`). Live `finalizeServedSharedTripPayload` always merged (109 words). Prior prefix-length fix (1141d5ce) only helped short titles like **Smoke**; full-title replay rows still failed `shouldMergeStoredCcabOnFixtureReplay` (harness #576 raw-vs-replay parity).
+Gate B Hotels tab rows bound stored ccab with **planning-note** copy (`Neighborhood:…; Rating:…; Status: candidate`) as the list **summary** hook. Only **Motto** had a sourced overlay (`websiteFlavour` + `reviewThemes` in `pr336-gate-b-vk-reviews.json`). Other hotels merged ccab but kept the template summary, so list descriptions failed Craig’s 80% hotel substance bar (issue #546 comment 6319245106).
 
-## Fix (local tip after commit)
+## Fix
 
-- `pr336-vk-search-trip-sources.mjs`: merge when stored ccab resolves and list narrative is missing, under 30 words, or `isGenericDescription`; same rule in `shouldMergeStoredCcabOnFixtureReplay` so fixture replay matches live serve.
-- `test_stored_ccab_canonical_identity.mjs`: regression for full-title Smoke replay without website.
+- `trip-thing-enrichment.mjs`: `isHotelPlanningNote`, `hotelStoredCcabListNarrative` — build substantive hotel list copy from ccab neighborhood/ratings/price (same stored path as search enrich).
+- `pr336-vk-search-trip-sources.mjs`: treat planning-note hotel copy as needing merge; apply hotel narrative on merge; copy `thirdPartySource` and `neighborhood`.
+- `test_stored_ccab_canonical_identity.mjs`: regress top Gate B hotel names + Motto overlay preservation.
 
-## Checks
+## Checks (local)
 
 | Command | Exit |
 | --- | --- |
