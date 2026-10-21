@@ -127,10 +127,30 @@ actor id, comment id, body digest, `pending`/`reviewed`). Legacy `at`/`message`/
 `receipt_exists` files are refused. The collector and alarm are unchanged in this round;
 wiring that reader into `CanonicalCollector` is follow-on host work.
 
+## Stall-alarm entrypoint config (`host-handback-entrypoint.json`)
+
+The tracked `tsv_stall_alarm.py` CLI loads `host_handback_entrypoint.py` on every
+invocation. The runtime root (`tsv_common.D`, usually `~/tsv-dispatch`) must contain
+`host-handback-entrypoint.json` with `version: 1` and explicit scoped event paths.
+Per-item maps (`handback_event_paths`, `acceptance_event_paths`,
+`resolution_event_paths`) or directory roots (`handback_event_root`, etc.) match
+`HostReaders` in `host_handback_evidence.py`. Paths must be absolute under
+`/home/ubishere9995/tsv-work/...` or `/home/ubishere9995/gpt-.../...`. Missing,
+malformed or empty config raises `EvidenceError` before GitHub scan or generic retry.
+`--dry` wraps GitHub in a read-only adapter, runs `CanonicalCollector`, prints scan
+decisions, and skips legacy fix, ring and state writes. `--handback-config` overrides
+the default file path for tests only.
+
 ## Outer-host proof command
 
 Run this only on the independent supervisor's outer host, as the ordinary authorized
 host user, after reviewing the source and providing the missing real readers:
+
+```sh
+PYTHONPATH=/home/ubishere9995/tsv-dispatch python3 -B scripts/ops/dispatch/tsv_stall_alarm.py --dry
+```
+
+Named alternate proof (same collector wiring, explicit source tree):
 
 ```sh
 python3 -B /home/ubishere9995/vk569-adapter-20261020-1000/source/scripts/ops/dispatch/host_handback_live_dryrun.py --runtime-root /home/ubishere9995/tsv-dispatch

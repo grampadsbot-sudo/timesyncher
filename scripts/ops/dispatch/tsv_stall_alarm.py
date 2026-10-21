@@ -310,5 +310,24 @@ def main(dry=False, review_scan=None):
             import bell_gate
             bell_gate.ring("stall-alarm", msg, "eggbot_decision", meta={"slug": SLUG})
 
+def cli(argv=None):
+    from host_handback_entrypoint import run_entrypoint
+    argv = list(argv if argv is not None else sys.argv)
+    dry, review_scan = run_entrypoint(GH, REPO, D, argv)
+    decisions = main(dry=dry, review_scan=review_scan)
+    if dry:
+        print(json.dumps({
+            'check': 'HOST-HANDBACK-ALARM-DRYRUN',
+            'mode': 'read-only',
+            'config': 'host-handback-entrypoint.json',
+            'objects': {str(number): {
+                'state': decision.state,
+                'reason': decision.reason,
+                'event': decision.event,
+            } for number, decision in (decisions or {}).items()},
+        }, indent=2))
+    return decisions
+
+
 if __name__ == "__main__":
-    main("--dry" in sys.argv)
+    cli()
