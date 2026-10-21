@@ -13,6 +13,9 @@ const OE_ROW_SUMMARY_PATCH = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summ
 const OE_ROW_TITLE_SPAN_NEEDLE = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
 const OE_ROW_TITLE_SPAN_PATCH = 'n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",width:"100%"},children:Mi(G)||Zi(G)||bn(G)?Zn:n.jsx("strong",{children:Bs(mr(G))})})';
 
+const OE_ROW_ZN_STRONG_NEEDLE = 'Zn=bn(G)?n.jsx(Qo,{item:G}):Mi(G)?n.jsx(be,{item:G}):Zi(G)?n.jsx(je,{item:G,title:ua}):ua,sr=n.jsxs';
+const OE_ROW_ZN_STRONG_PATCH = 'Zn=bn(G)?n.jsx(Qo,{item:G}):Mi(G)?n.jsx(be,{item:G}):Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{children:ua}),sr=n.jsxs';
+
 const OE_CAR_BE_GRID_PATCH = 'be=({item:G})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto auto",gap:6,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)||""}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:uc(G)||"Car type"})]})';
 
 function patchCarBeGrid(js = '') {
@@ -66,6 +69,11 @@ export function patchSharedTripOeListRows(source = '') {
   }
   if (js.includes(OE_ROW_TITLE_SPAN_NEEDLE)) {
     js = js.replaceAll(OE_ROW_TITLE_SPAN_NEEDLE, OE_ROW_TITLE_SPAN_PATCH);
+  }
+  if (js.includes(OE_ROW_ZN_STRONG_NEEDLE)) {
+    js = js.replace(OE_ROW_ZN_STRONG_NEEDLE, OE_ROW_ZN_STRONG_PATCH);
+  } else if (!js.includes('Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{children:ua})')) {
+    throw new Error('shared trip Oe() default row title must wrap ua in strong for Gate B name line');
   }
   return js;
 }

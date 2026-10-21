@@ -1,33 +1,28 @@
-# VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution round 2)
+# VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
-**Start sha:** `500202d80fcecbe0df955fba5c5fe484616ce1e1`  
-**Tip sha:** `b4caf0a5` (merge on `500202d8`; base merge `c1b7b286`; receipt doc commit on branch tip)
+**Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
+**Tip sha:** `0fd6dc78`
 
-## Handoff
+## Problem
 
-GBrain `bot-admin/lanes/vk-pr-handoff/pr-581` (chief dr 11:50 AM PT 10/21): host-started merge of `origin/migrate/trek-source` (`c1b7b286`); resolve `J/RECEIPT.md` and `J/PR_DESCRIPTION.md` only.
+Gate B structure on `migrate/trek-source` failed `logo not centred with name` for Events list rows (Apple Fifth Avenue, Bergdorf Goodman, Blue Note, …): `missing visible name line (fail closed)`. Capture records `first_text` only from a `span`/`strong` leaf inside `[data-ts-list-row-name]`; default `Oe()` rows used plain `ua` text in that span (no leaf), so `first_text` was null while the logo chip was measured.
 
-## Product (#579)
+## Fix
 
-Day-by-day map markers: 30×30 shell, 26×26 `object-fit:contain` img. Map pins use **`data-ts-map-marker-logo` only**. Patch in `src/vacation/trek-live-product-patches.mjs`; rebaked `public/assets/index-BKun7ofk.js`.
+Wrap the default non-flight/car/hotel title in `<strong>` when building `Zn` in `src/vacation/shared-trip-oe-list-row-patch.mjs`; rebake `public/assets/index-BKun7ofk.js`. Assert in `scripts/test_itinerary_fresh_daybyday_bundle.mjs`.
 
-## This round
-
-Host-started merge completed: kept #581 receipt and PR description; dropped base #585 doc text. No product, bundle, test, or checker edits. `git commit --no-edit` completes merge on `500202d8`.
+## Checks (local)
 
 | Command | Exit |
 | --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
 | `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-## Offline manifest (host)
-
-`scripts/offline-tests.txt` in order with `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`: lines through `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` pass; stops at `scripts/test_live_transcript_dialog_pdf.mjs` (`rules.via` `gbrain-cli-get_page` vs `bundled-get_page`; host env, not introduced by this merge).
-
 ## Verdict
 
-Merge conflict resolved in docs only on `b4caf0a5`; pre-DONE gates pass; host publishes branch tip; CI + Gate B (allowance #579) on new tip.
+Product fix ready on branch `vkfill/589-20261021131734`; host publishes once; CI + Gate B on PR head are authority for close.
