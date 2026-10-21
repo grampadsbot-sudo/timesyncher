@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 
-import { buildBudgetModel } from '../apps/vacation-client/src/lib/budgetModel.mjs';
+import { buildBudgetModel, budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
+import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -73,6 +74,19 @@ assert.deepEqual(
   missing.map((row) => `${row.bucket}:${row.name}`),
   [],
   `every NYC budget row must show a fill price, missing: ${missing.map((row) => row.name).join(', ')}`,
+);
+
+const hasFlight = model.rows.some((row) => row.bucket === 'Flights');
+const hasCar = model.rows.some((row) => row.bucket === 'Cars');
+assert.equal(hasFlight, true, 'NYC test fixture must include at least one flight budget row');
+assert.equal(hasCar, true, 'NYC test fixture must include at least one car budget row');
+
+const gateBudgetPrices = gateBBudgetPriceCompleteness(trip);
+assert.equal(gateBudgetPrices.pass, true);
+assert.equal(gateBudgetPrices.optionalMissingPriceCount, 0);
+assert.equal(
+  budgetCompletenessChecks(trip).find((check) => check.name === 'required_travel_budget_prices')?.pass,
+  true,
 );
 
 const searchPlaces = buildPr336VkSearchPlacesByRowId(gateBRows);

@@ -9,6 +9,7 @@ import {
   gateBThingDetailCompleteness,
   thingDetailCompletenessForPlace,
 } from '../src/vacation/gate-b-thing-detail-completeness.mjs';
+import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
 import { categoryFor } from '../src/vacation/intake-shared-trip-category.mjs';
 import { sharedTripFromIntake, thingRecordFromTripRow } from '../src/vacation/intake-shared-trip.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
@@ -263,6 +264,7 @@ for (const [name, record] of Object.entries(nycEnrichment)) {
 }
 
 const negativeFixture = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+assert.equal(gateBBudgetPriceCompleteness(negativeFixture).pass, true);
 const negativeFixtureReport = assessGateBNycFixtureContract(negativeFixture, { profile: 'negative' });
 assert.equal(negativeFixtureReport.pass, false, 'short-copy PR340 fixture must fail the positive contract');
 assert.ok(negativeFixtureReport.violations.length >= 10, `expected many violations, got ${negativeFixtureReport.violations.length}`);
