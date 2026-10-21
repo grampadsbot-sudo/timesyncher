@@ -3,7 +3,7 @@
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
 
 **Start sha:** `5e40bf0c518b4c5e47fb9e1f0e347868345e3463`  
-**Tip sha:** _(see `git rev-parse HEAD` after host publish)_
+**Tip sha:** `098d609a`
 
 ## Gate B pre-merge (head `5e40bf0c`, run `20261021-232628`)
 
