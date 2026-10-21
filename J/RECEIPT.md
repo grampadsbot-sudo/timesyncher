@@ -6,7 +6,7 @@ Gate B hard round (tier 1): list-row title buttons no longer use `whiteSpace:now
 
 ## Tip sha
 
-(local commit pending rebake; prior head **c5df7a22**)
+**4b19cbd4**
 
 ## Checks (local)
 

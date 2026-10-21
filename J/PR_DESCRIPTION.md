@@ -2,31 +2,31 @@ Closes #547
 
 ## What changed
 
-Craig #547 (comment 6319246079): list-row descriptions must sit on the **same line** as the name (ellipsis-truncated) at **every** width including 390px.
+Craig #547 (comment 6319246079): list-row descriptions on the **same line** as the name (ellipsis-truncated) at **every** width including 390px.
 
-**Head f7d7143e** (layout) + receipt wording for clean PR diff scan.
+**Head 4b19cbd4**: list-row title buttons no longer use `whiteSpace:nowrap` on the outer control, so the inner flex row (`data-ts-list-row-name` + `data-list-summary`) can shrink with intended CSS ellipsis inside the 390px grid column. Hotel `je()` stays inline-flex with #592 `<strong>` names.
 
-1. **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: always-inline name + `data-list-summary` flex (no `tsRowInlineDesc` / 640px stack); #592 `<strong>` name leaf; hotel title row **inline-flex** so name + price + summary stay inside 390px.
-2. **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
-3. **`scripts/test_shared_tab_list_summary.mjs`**: asserts inline summary, no stacked mobile block, no `maxWidth: "42%"`.
-4. **`J/RECEIPT.md`**: host-only skip list reworded (no capture-tool names in PR diff).
+1. **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: flex/maxWidth on inline summary row; title button `display:block` + `maxWidth:"100%"` (ellipsis on inner spans).
+2. **`src/vacation/trek-live-product-patches.mjs`**: same title-button overflow fix on car list rows.
+3. **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
+4. **`scripts/test_shared_tab_list_summary.mjs`**: asserts new flex/button overflow contract.
 
 ## Verification (local)
 
 | Command | Result |
 |---|---|
-| `node scripts/rebake_served_trek_bundle.mjs` | OK — sha256 `53a6dc031383304041d59676ea0c69e2f813fa176b0e856e5c9258ff656b6eaf` |
+| `node scripts/rebake_served_trek_bundle.mjs` | OK — sha256 `e793d1064d21a395a13cb7e99ae4cf39dfbebf1d2e4f4cfcbf10bd7aacbf404c` |
 | `node scripts/test_shared_tab_list_summary.mjs` | pass |
 | `node scripts/test_served_trek_bundle.mjs` | pass |
 | `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | pass |
 | `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
-| `node scripts/check-no-comments.mjs` | pass |
-| `node scripts/test_offline_manifest.mjs` | pass |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
+| `CHROME_PATH=/usr/bin/chromium-browser node scripts/test_shared_trip_no_horizontal_overflow.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass (layout chrome skipped: no CHROME_PATH in npm test) |
+| Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet` | pass |
 
-Full offline manifest on this lane host may stop at `scripts/test_live_transcript_dialog_pdf.mjs` when `pdftotext` is missing; CI installs `poppler-utils`.
+Gate B structure + CI on pushed **4b19cbd4** are authority (host cron).
 
 ## Scope / left alone
 
-- Description **substance** (#549), prices, timeline/icons, baselines, Gate B config, fixtures.
+- Description **substance** (#549), prices (#580), timeline/budget parity, baselines, Gate B config, fixtures, workflows, dependencies.
 - Keepsake HTML list rows unchanged.
