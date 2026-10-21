@@ -1,7 +1,7 @@
 # VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
-**Tip sha:** _(filled at commit)_
+**Tip sha:** `0fd6dc78`
 
 ## Problem
 
