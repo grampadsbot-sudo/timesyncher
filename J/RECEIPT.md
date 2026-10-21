@@ -29,7 +29,7 @@ Round 2 on `da8e61d9`: row 608 `price` strip on list-only hotel; merge `7bc66068
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-**Tip sha:** (after merge commit)
+**Tip sha:** `ac6b586e`
 
 ## Left alone
 
