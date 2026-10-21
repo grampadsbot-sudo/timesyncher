@@ -1,10 +1,8 @@
 
 
 import {
-  LIST_TAB_IDS,
   formatUsd,
   placeName,
-  placesForCategoryTab,
   tabCategoryKey,
 } from './listTabModel.mjs';
 
@@ -15,6 +13,7 @@ import {
   OTHER_THINGS_BUCKET,
   bucketTargetAmountFromMap,
 } from '../../../../src/vacation/budget-bucket-keys.mjs';
+import { assignedPlaceIds } from '../../../../src/vacation/itinerary-minimums.mjs';
 
 export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
@@ -58,9 +57,15 @@ function rememberBudgetPlace(seen, place) {
   seen.set(id, prev ? { ...prev, ...place } : place);
 }
 
+function placeHasDayPlacement(place, trip) {
+  const dayIds = overrideFor(trip, place).dayIds;
+  return Array.isArray(dayIds) && dayIds.length > 0;
+}
+
 function placeOnTimeline(place, trip) {
-  const override = overrideFor(trip, place);
-  return override.timeline === true;
+  const id = Number(place?.id);
+  if (id && assignedPlaceIds(trip).has(id)) return true;
+  return placeHasDayPlacement(place, trip);
 }
 
 function haFields(place, override) {
@@ -170,24 +175,16 @@ export function tripBudgetTargetTotal(trip) {
 
 export function placesForBudget(trip) {
   const seen = new Map();
-  for (const tab of LIST_TAB_IDS) {
-    for (const place of placesForCategoryTab(trip, tab)) {
-      rememberBudgetPlace(seen, place);
-    }
-  }
-  for (const place of trip?.places || []) {
-    const override = overrideFor(trip, place);
-    const dayIds = override.dayIds;
-    if (Array.isArray(dayIds) && dayIds.length) {
-      rememberBudgetPlace(seen, place);
-    }
-  }
   for (const rows of Object.values(trip?.assignments || {})) {
     if (!Array.isArray(rows)) continue;
     for (const row of rows) {
       const place = resolvePlace(row, trip);
       rememberBudgetPlace(seen, place);
     }
+  }
+  for (const place of trip?.places || []) {
+    if (!placeHasDayPlacement(place, trip)) continue;
+    rememberBudgetPlace(seen, place);
   }
   return [...seen.values()];
 }
@@ -282,6 +279,7 @@ export function budgetCompletenessChecks(trip) {
 
   for (const row of model.rows) {
     const id = String(row.place.id);
+    push(`row_on_timeline_${id}`, placeOnTimeline(row.place, trip));
     const catalog = canonicalBudgetPlace(trip, id);
     if (!catalog) continue;
     const expectedName = placeName(catalog);
