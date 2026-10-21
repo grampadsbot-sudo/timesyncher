@@ -20,4 +20,4 @@ Gate B `generic descriptions` on flights: served `rr()` dropped stored summaries
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | (pre-DONE) |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | (pre-DONE) |
 
-**Tip sha:** (filled after commit)
+**Tip sha:** `54d10d85`
