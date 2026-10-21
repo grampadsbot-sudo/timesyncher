@@ -2,12 +2,14 @@ Closes #546
 
 ## Summary
 
-Dr-sanctioned description/layout round (2026-10-21): Gate B on `180b6a4` reported **row layout** (description not on the name line on flights/cars/hotels at 1280) and **generic descriptions** for Smoke Jazz on events. List CSS now keeps name + price + description on one truncated line at 390 and 1280. List copy falls back to stored ccab `longDetails` when composed text is template-generic or under six words.
+Description substance round (2026-10-21): list rows now merge stored ccab narrative at display time, drop pipeline diagnostic copy (`Blocked:`, `ccab capture`, list-only stubs), replace timing-only shells with long sourced text, and include car `longDetails` in composed summaries. Midtown list-only hotel (608) shows an honest unbound planning line instead of internal capture text.
 
 ## Changes
 
-- **`apps/vacation-client/src/styles.css`**: flight row six-column grid; car rows use logo/name/price/description on one line (hide duplicate car-sub on list when class is in description); mobile no longer stacks `.tsv-row-desc` under the name.
-- **`apps/vacation-client/src/lib/listTabModel.mjs`**: feed `longDetails` into `composeListRowDescription`; `storedListNarrativeFallback` for non-generic stored narrative when compose output is too short or generic.
+- **`apps/vacation-client/src/lib/listTabModel.mjs`**: merge stored ccab into overrides before compose; `finalizeListRowDisplayDescription` + unbound-hotel spare when `provenanceBlocker` is set.
+- **`src/vacation/list-row-description.mjs`**: car longDetails in compose; experience timing-shell fallback to `longDetails`; `finalizeListRowDisplayDescription`; trek bundle snippet parity (diagnostic filter, spare fallback, car detail).
+- **`src/vacation/trip-thing-enrichment.mjs`**: `isListRowPipelineDiagnostic`, `hotelListRowUnboundNarrative`.
+- **`scripts/fixtures/pr336-vk-search-trip-sources.mjs`**: treat diagnostic snapshot copy as empty for merge; skip early-return when existing narrative is pipeline text.
 
 ## Verification
 
@@ -24,4 +26,4 @@ All passed locally on tip sha below.
 
 ## Left alone
 
-Baselines, Gate B capture/check config, workflows, fixtures, and `package.json` untouched. Pre-merge Gate B not run here (dispatcher cron).
+Baselines, Gate B capture/check config, workflows, fixture JSON bodies, and `package.json` untouched. Pre-merge Gate B not run here (dispatcher cron).

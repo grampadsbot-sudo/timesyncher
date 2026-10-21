@@ -31,6 +31,27 @@ export function isGenericDescription(value = '') {
   return false;
 }
 
+export function isListRowPipelineDiagnostic(value = '') {
+  const row = text(value, 4000);
+  if (!row) return false;
+  if (/\bBlocked:/i.test(row)) return true;
+  if (/\bprovenanceBlocker\b/i.test(row)) return true;
+  if (/\bccab capture\b/i.test(row)) return true;
+  if (/\blist-only\b/i.test(row) && /\b(?:hotel|row|property)\b/i.test(row)) return true;
+  if (/^List-only row until/i.test(row)) return true;
+  return false;
+}
+
+export function hotelListRowUnboundNarrative(title = '', address = '') {
+  const name = text(title, 120) || 'This hotel';
+  const area = text(address, 160) || 'the planned area';
+  return text(
+    `${name} is a planning row on the Hotels tab without a bound property identity for this trip. `
+    + `Use it to compare stay options near ${area}, but verify the real hotel name, nightly rate, check-in rules, and guest reviews on an official listing before you book.`,
+    4000,
+  );
+}
+
 function parsePriceValue(value) {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {

@@ -6,6 +6,7 @@ import {
   hotelStoredCcabListNarrative,
   isGenericDescription,
   isHotelPlanningNote,
+  isListRowPipelineDiagnostic,
 } from '../../src/vacation/trip-thing-enrichment.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
@@ -59,13 +60,14 @@ function narrativeWordCount(value) {
 }
 
 function listNarrativeCandidateText(place = {}, override = {}) {
-  return text(
+  const row = text(
     override.longDetails ||
       override.details ||
       override.description ||
       place.description ||
       place.notes,
   );
+  return isListRowPipelineDiagnostic(row) ? '' : row;
 }
 
 function placeCategoryLabel(place = {}, override = {}) {
@@ -270,6 +272,7 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     narrativeWordCount(existing) >= 30
     && !isGenericDescription(existing)
     && !isHotelPlanningNote(existing)
+    && !isListRowPipelineDiagnostic(existing)
   ) return override;
   const enriched = enrichListRowFromStoredCcab(
     place,
@@ -287,12 +290,12 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
       record.description ||
       record.summary,
   );
-  if (details) {
+  if (details && !isListRowPipelineDiagnostic(details)) {
     next.longDetails = details;
     if (!text(next.details)) next.details = details;
     if (!text(next.description)) next.description = details;
     const placeDesc = text(place.description);
-    if (!placeDesc || narrativeWordCount(placeDesc) < 30) {
+    if ((!placeDesc || narrativeWordCount(placeDesc) < 30) && !isListRowPipelineDiagnostic(placeDesc)) {
       place.description = details;
     }
   }
