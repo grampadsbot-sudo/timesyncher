@@ -17,7 +17,7 @@ GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-591`: page not found (fetch fai
 - `node scripts/test_shared_logo_chip_center_bundle.mjs` — pass
 - `node scripts/test_served_trek_bundle.mjs` — pass
 - `node scripts/rebake_served_trek_bundle.mjs`
-- `node scripts/run-offline-tests.mjs` — blocked locally: missing `apps/vacation-client/node_modules/typescript` (MODULE_NOT_FOUND in `comment-tools.mjs`)
+- Pre-DONE at `04e3683c`: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (after `npm ci` + `apps/vacation-client/npm ci`)
 
 ## Out of scope / not run here
 - Ubuntu Gate B re-capture on new head (required for Done).
