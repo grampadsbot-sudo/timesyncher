@@ -1,20 +1,31 @@
-# VK fill #549 receipt (cursor-ubuntu, 2026-10-20)
+# VK fill #549 receipt (cursor-ubuntu, 2026-10-21)
 
 ## Outcome
 
-Bound **Blue Note Jazz Club** and **Smoke Jazz & Supper Club** list-row descriptions to stored ccab → `enrichSearchPlace` (#573 path). Merged **`origin/migrate/trek-source`** via `git read-tree` (lane blocks `git merge`); kept #572 flight summary clip + `omitListPrice` in `listTabModel.mjs`.
+Merged **`origin/migrate/trek-source`** into PR #549 head (`acd11e52`, parents `6f1e1fe7` + `218a3b39`). Gate B fixture replay now runs **`finalizeServedSharedTripPayload`** via `src/vacation/shared-trip-fixture-replay.mjs` (shared-trip handler for `gateb-fixture-replay` + capture `timeline-replay.mjs`). Row **611** (Blue Note Jazz Club display) carries trek **`ccabKey` / `externalId`** `Blue Note Jazz Club` from `NYC_GATE_B_ROW_CCAB_KEYS` through `bindPr336GateBCanonicalIdentity`.
 
 ## What changed
 
-- `scripts/fixtures/nyc_ccab_place_enrichment.json` + `pr336-gate-b-ccab-overlay.json`: stored narratives for Blue Note and Smoke Jazz.
-- `scripts/fixtures/pr336-vk-search-trip-sources.mjs`: `mergeStoredCcabNarrativeIntoOverride` when live `longDetails` are under 30 words.
-- `src/vacation/shared-trip-live-app-fields.mjs`: apply ccab merge on list rows.
-- Base merge: `SOURCE_MAP.md`, narrative lineage lib/probes, snapshot regen from migrate/trek-source; `scripts/offline-tests.txt` registers base capture/provenance tests.
+- `src/vacation/shared-trip-fixture-replay.mjs`, `shared-trip-handler.mjs`: fixture replay serve path finalizes like live.
+- `scripts/fixtures/pr336-vk-search-trip-sources.mjs`: `bindPr336GateBCanonicalIdentity`; row 611 ccab key `Blue Note Jazz Club`.
+- `scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`: bind canonical identity on fixture places.
+- `scripts/test_stored_ccab_canonical_identity.mjs`: live vs fixture-replay Blue Note description parity.
+- Merge kept **#572** `listTabModel` flight summary clip + **#549** `listRowSubstanceDescription` / stored-ccab merge.
 
-## Checks
+## Checks (local tip `acd11e52`)
 
-Run at commit time on local tip (see DONE line).
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_stored_ccab_canonical_identity.mjs` | 0 |
+| `node scripts/test_list_row_description_substance.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `apps/vacation-client` `npm run typecheck` + `node test/listRows.unit.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node scripts/run-offline-tests.mjs` | 1 — `scripts/test_live_transcript_dialog_pdf.mjs` expects `bundled-get_page`, host route `gbrain-cli-get_page` (same lane host gap as #572 receipt `6cfd23e9`) |
 
 ## Not self-certified
 
-Gate B description ≥80% good rows and CI on pushed PR head require host publish + Ubuntu Gate B.
+Gate B `other` row judgments and CI on pushed PR head require host publish + Ubuntu Gate B (`bot-admin/lanes/vk-pr-handoff/pr-549`).
