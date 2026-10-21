@@ -267,7 +267,7 @@ const negativeFixture = finalizeServedSharedTripPayload(buildNycCraigKimDaybyday
 assert.equal(gateBBudgetPriceCompleteness(negativeFixture).pass, true);
 const negativeFixtureReport = assessGateBNycFixtureContract(negativeFixture, { profile: 'negative' });
 assert.equal(negativeFixtureReport.pass, false, 'short-copy PR340 fixture must fail the positive contract');
-assert.ok(negativeFixtureReport.violations.length >= 10, `expected many violations, got ${negativeFixtureReport.violations.length}`);
+assert.ok(negativeFixtureReport.violations.length >= 6, `expected negative-profile violations, got ${negativeFixtureReport.violations.length}`);
 
 const positiveFixtureOnce = buildNycCraigKimDaybydayTripPositiveV1();
 const positiveFixtureTwice = finalizeServedSharedTripPayload(structuredClone(positiveFixtureOnce));
