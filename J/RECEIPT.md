@@ -1,17 +1,18 @@
-# PR543 — list logos and stores tab (vkfill-543)
+# PR543 — list logos and stores tab (vkfill-543-20261020172727)
 
-Outcome: local fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`); starting HEAD `7f95c3e1d37603d5ac294657a19918bfbabd1a9f`. CI and Gate B on the new head are for the host publisher; not claimed here.
+Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Tip `02ef6a926ce06dfb9edbd53e2988c465a7c30db8` (pushed to `vkfill/335-p3a-wiring-202610190827`). CI and Gate B on this head are for the host publisher; not claimed here.
 
 ## Changes
 
-1. **Row logos** — `logoUrlForPlace` again uses `resolveThingLogoUrl` (same chain as staging TREK / `shared-trip-live-tab-lists.mjs` list rows) plus explicit source favicon fields. Commit ac2bc4ec had dropped runtime resolution, so rows with only website-derived logos rendered with `data-has-logo="0"`.
-2. **Stores tab** — Deduplicate store rows by normalized name (keep the lower-priced duplicate). Default sort for stores is **price** ascending (cheapest-first), matching flights/hotels/cars.
+1. **Row logos** — `logoUrlForPlace` calls `resolveThingLogoUrl` (same resolution chain as staging TREK / `thing-logo-capture.mjs`) before explicit override/place/source fields, so website-derived and brand-name logos render again on list rows that only had URL-based resolution on staging.
+2. **Stores tab** — Deduplicate store places by normalized name (keep the lower-priced row when names collide). Default sort for stores is **price** ascending (cheapest-first), same as flights/hotels/cars.
 
 Files: `apps/vacation-client/src/lib/listTabModel.mjs`, `apps/vacation-client/src/screens/CategoryTabScreen.tsx`, `apps/vacation-client/test/listRows.unit.mjs`.
 
-## Checks (local)
+## Checks (local, tip `02ef6a92`)
 
 - `node apps/vacation-client/test/listRows.unit.mjs` — pass
+- `cd apps/vacation-client && npm run typecheck && npm run test` — pass
 - `node scripts/check-no-comments.mjs` — pass
 - `node scripts/test_offline_manifest.mjs` — pass
 - `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (0 fail)
@@ -20,4 +21,4 @@ Files: `apps/vacation-client/src/lib/listTabModel.mjs`, `apps/vacation-client/sr
 
 - List long-description vs itinerary summary behavior (16:03 PT ruling) — unchanged.
 - Checker, fixtures, baselines, `vercel.json`, dependencies — not touched.
-- No merge/rebase/push from this lane.
+- No merge/rebase from this lane.
