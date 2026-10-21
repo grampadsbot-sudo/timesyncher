@@ -1,3 +1,39 @@
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, round 2)
+
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
+
+**Start sha:** `5e40bf0c518b4c5e47fb9e1f0e347868345e3463`  
+**Tip sha:** _(see `git rev-parse HEAD` after host publish)_
+
+## Gate B pre-merge (head `5e40bf0c`, run `20261021-232628`)
+
+Hermes pixel compare vs PR base `e3364ac` (not NYC reference): **FAIL** on 14 list-tab screens named in kickback (`~/tsv-dispatch/logs/gateb-verdicts.jsonl`, `~/tsv-gateb/runs/20261021-232628/comment.md`). Vision flagged layout/text deltas from the list-row logo axis change; not re-certified here.
+
+Local structure probe on captured regions (`~/tsv-gateb/restore-check.mjs`, `events-390-top.png` / `hotels-390-top.png`): hotel visible rows pass name-line logo centering vs base; Apple Fifth Avenue remains −1.5px high on both base and candidate (asset ink asymmetry).
+
+## Round 2 change
+
+Replace round-1 flex/`minHeight:28` `sr` row with grid `alignItems:"start"`, fixed 28×28 `dc` slot — smaller delta vs base while top-aligning chip with first name line (hotels with price column).
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Product fix committed locally on `vkfill/601-20261021155744`; host publishes after DONE. CI green + Gate B on new head close #601 (not self-certified).
+
+---
+
 # VK issue #601 receipt (cursor-ubuntu vkfill-601)
 
 **Start sha:** `e3364ac5b3d44795cd3b2d9c857e9c940a9f6790`  
