@@ -18,7 +18,8 @@ assert.match(rendered, /"data-ts-logo-chip":"1","aria-hidden":"true",style:\{wid
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);
-assert.match(rendered, /data-ts-logo-chip="1" style="width:30px;height:30px;display:grid;place-items:center/);
+assert.match(rendered, /data-ts-map-marker-logo="1" data-ts-logo-chip="1" style="width:30px;height:30px;max-width:30px;max-height:30px;overflow:hidden/);
+assert.match(rendered, /width:26px;height:26px;max-width:26px;max-height:26px;object-fit:contain;border:0;background:transparent;filter:drop-shadow\(0 2px 3px rgba\(0,0,0,0\.30\)\)/);
 assert.doesNotMatch(rendered, /translateY\(-0\.5px\)/);
 
 assert.throws(
