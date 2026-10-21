@@ -28,4 +28,4 @@ Layout/look beyond start commit, baselines, Gate B config, workflows, timeline h
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-**Tip sha:** `5a020404`
+**Tip sha:** `bca3bfb7`
