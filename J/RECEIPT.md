@@ -2,7 +2,7 @@
 
 **Branch:** `vkfill/588-20261021125728`  
 **Start head:** `bf232ddddc5ca1472c275eeba273e0ea8e27027b`  
-**Tip head:** `cc88e5ee`  
+**Tip head:** `5dee755b`  
 **Authority:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-590` + chief-dr dirty-head merge brief
 
 ## Base merge
@@ -31,4 +31,4 @@ Host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab651dca078f2cd3
 
 ## Verdict
 
-Base-merge tip `cc88e5ee` (merge `55639cb5` + receipt) ready for host push; CI `unit-tests` + Gate B on tip are merge authority.
+Base-merge tip `5dee755b` (merge `55639cb5` + receipt) ready for host push; CI `unit-tests` + Gate B on tip are merge authority.
