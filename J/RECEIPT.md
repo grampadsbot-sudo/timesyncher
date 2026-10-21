@@ -2,15 +2,16 @@
 
 ## Outcome
 
-Same-line list-row description at all widths (#547): removed `tsRowInlineDesc` narrow stacking; rebaked served bundle after `migrate/trek-source` merge.
+Same-line list-row description at all widths (#547): removed `tsRowInlineDesc` narrow stacking; rebaked served bundle after `migrate/trek-source` merge at **7bc66068**.
 
 ## Commits
 
-- Merge `origin/migrate/trek-source` (bundle conflict → base `index-BKun7ofk.js`)
-- Layout + tests + rebake (see tip sha in DONE line)
+- Merge `origin/migrate/trek-source` (bundle conflict → base `index-BKun7ofk.js`, then rebake)
+- Layout + tests unchanged from `438cce18`; see tip sha in DONE line
 
 ## Checks (tip)
 
+- `cd apps/vacation-client && npm test` — (see DONE line)
 - `node scripts/test_shared_tab_list_summary.mjs` — pass
 - `node scripts/test_served_trek_bundle.mjs` — pass
 - `node scripts/test_gate_b_live_tab_logo_rows.mjs` — pass
@@ -18,7 +19,7 @@ Same-line list-row description at all widths (#547): removed `tsRowInlineDesc` n
 
 ## Local env note
 
-`node scripts/run-offline-tests.mjs` fails on this host at `scripts/test_live_transcript_dialog_pdf.mjs` when `pdftotext` is missing (`layout.status` null). GitHub `unit-tests` installs `poppler-utils` (`.github/workflows/evidence-secrets.yml`).
+`node scripts/run-offline-tests.mjs` may fail on this host at `scripts/test_live_transcript_dialog_pdf.mjs` when `pdftotext` is missing. GitHub `unit-tests` installs `poppler-utils`.
 
 ## Gate B / CI
 

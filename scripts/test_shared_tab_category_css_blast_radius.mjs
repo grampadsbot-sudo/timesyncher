@@ -27,7 +27,8 @@ assert.ok(tabChipAnchor.includes('data-ts-logo-chip'), 'tab row chip uses data-t
 assert.doesNotMatch(vacationApp, /data-tab-category/);
 assert.doesNotMatch(vacationApp, /\[data-ts-logo-chip\]\[data-tab-category/);
 
-const mapChip = rendered.match(/data-ts-logo-chip="1" style="width:30px[^]{0,120}/)?.[0] || '';
+const mapChip = rendered.match(/data-ts-map-marker-logo="1"[^]{0,160}/)?.[0] || '';
 assert.ok(mapChip && !mapChip.includes('data-tab-category'), 'map marker chip must not use data-tab-category');
+assert.ok(mapChip && !mapChip.includes('data-ts-logo-chip'), 'map marker must not use data-ts-logo-chip');
 
 console.log('shared tab category css blast radius tests passed');
