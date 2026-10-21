@@ -1,0 +1,16 @@
+{
+  "runtime_dispatcher_sha256": "d2ff396cd200871b561a2cc9ceacc065557a1fd8db474b1df5f66e3556edf562",
+  "patched_function_sha256": {
+    "_capture_replay_env": "b6f0a9c15a5976b8c099e43e7bf20024ae19df11cfc97fa9f5170eba796358ee",
+    "capture_and_compare": "cbbe00b7f761edcb9fc8cda0a0eca24f6330e719b5557ae0cd0e9be1bf0cabce",
+    "local_capture": "5f5364368258faeae6e68bf5d87c866ca0dcbfadf1afb95ecdc9ba4a5346ee70",
+    "staging_capture": "3b72b96cc61dccd5ca927e105ff198a314509174856902c97f0ffb03af1f7077",
+    "route_protected": "f70e60073254809923bd849d37efae7e1d48b6baa695cb0e21a56253469efdcd",
+    "_sanctioned_replay_producer_head": "92daab6308fac673fec128ed87bce6ba601be7c56f079a28822f7dc814b49d8e",
+    "base_reference_capture": "239301a89ec7785c1da373613f61190a08ca64ec03164d4b8b89ec5496bbd6fc",
+    "pregate_run_capture": "d4e2efb692b780886075f3744111d71e0c26b2cafd9f02bc8042e055290e86b2",
+    "deploy_pre_staging_capture": "17763ddaf16cb7d3318035e8ca24a1958054311bf900dcdbdfadf9100eb21a33",
+    "postdeploy_staging_capture": "d983fe7dd26801d5d37d2e40d74540bca2000f8621509e875f59f370fc0a315a",
+    "staging_gate_capture": "3b104792cbf2be59c76b455e137bd9a2c8e63e9ebfeb1445f08a233f67b9b689"
+  }
+}

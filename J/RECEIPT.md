@@ -1,35 +1,23 @@
-# VK PR #572 receipt (cursor-ubuntu vkfill-572-20261020111949)
+# VK PR #578 lane receipt (cursor-ubuntu vkfill-578-20261021075722)
 
-**Start sha:** `5c48fd0f2a983b404baf7e3c6baaac5e80ade2b3`
+**Start sha:** `a132749f4d79f2d978c7b9eac24d3782af36f2ef`
 
-## Base merge
+## Change
 
-`git merge origin/migrate/trek-source` is blocked by lane permissions; merged with `git read-tree -m -u $(git merge-base HEAD origin/migrate/trek-source) HEAD origin/migrate/trek-source` then merge commit with `MERGE_HEAD=origin/migrate/trek-source`.
+Restored portable Gate B **normal caller** bindings dropped when the runtime-only patch landed: `pregate_run_capture`, `base_reference_capture`, deploy/postdeploy staging helpers, and `staging_gate_capture` now pass `render_head`, `TSV_SANCTIONED_REPLAY_PRODUCER_HEAD`, and fixture policy into `capture_and_compare` / `local_capture` / `staging_capture` (support spans + full patch + defs-only patch + manifest). Runtime install artifacts (`capture-replay-runtime.patch`, verify script) unchanged from `a132749f`.
 
-**Conflict:** `J/RECEIPT.md` (both added) — kept this PR’s receipt path content; base had #562 close verdict text at the same path.
+## Commands (exit 0)
 
-**Base files taken from `origin/migrate/trek-source`:** `SOURCE_MAP.md`, `scripts/lib/pr336-stored-narrative-lineage-lib.mjs`, `scripts/probe_pr336_stored_narrative_lineage.mjs`, `scripts/test_pr336_ccab_search_provenance.mjs`.
+- `python3 scripts/test_capture_replay_binding.py` (15)
+- `python3 scripts/test_capture_replay_callers.py` (22)
+- `python3 scripts/ops/dispatch/test_same_selection_capture.py` (11)
+- `node scripts/test_capture_fixture_replay_harness.mjs`
+- `node scripts/check-no-comments.mjs`
+- `node scripts/test_offline_manifest.mjs`
+- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
+- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
 
-## Fix (#571)
+## Left alone (scope)
 
-Removed bundle patches (`trip-thing-enrichment.mjs`, `trek-thing-detail-fields-patch.mjs`, rebaked `public/assets/index-*.js`, `scripts/test_trip_thing_logo_metadata.mjs` list-row test). Implemented flight-only `pickFlightListRowSummaryText` / `rowSummary` in `apps/vacation-client/src/lib/listTabModel.mjs`.
-
-## Commands (exit codes)
-
-| Command | Exit |
-| --- | --- |
-| `git fetch origin migrate/trek-source` | 0 |
-| `git read-tree -m -u … HEAD origin/migrate/trek-source` | 0 |
-| `apps/vacation-client/npm ci` | 0 |
-| `apps/vacation-client/npm run typecheck` | 0 |
-| `apps/vacation-client/npm run lint` | 0 |
-| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
-| `apps/vacation-client/npm run test` | 1 (layout harness: no `CHROME_PATH`; unit tests through `listRows.unit.mjs` passed) |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-| `node scripts/run-offline-tests.mjs` | 1 (`scripts/test_live_transcript_dialog_pdf.mjs`: gbrain route `gbrain-cli-get_page` vs expected `bundled-get_page` on this host) |
-| `git merge-base --is-ancestor origin/migrate/trek-source HEAD` | 0 |
-
-**Final sha:** `6cfd23e964500a6f358ff5e69daa7b853707985e`
+- No runtime `tsv_dispatch.py` install on host (still NOT RUN per managing-dr acceptance).
+- No Gate B capture, baseline/workflow/ratchet config edits, or deploy.

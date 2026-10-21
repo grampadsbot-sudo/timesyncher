@@ -12,13 +12,14 @@ import {
   placesForBudget,
   tripBudgetTargetTotal,
 } from '../src/lib/budgetModel.mjs';
-import { numericPrice } from '../src/lib/listTabModel.mjs';
 import { findLegacyMiscBucketLabelInVacationSource } from '../../../src/vacation/budget-legacy-label-source-scan.mjs';
 import { extractUpstreamMiscBucketLabel } from '../../../src/vacation/trek-budget-upstream-misc-patch.mjs';
 
 const hotelTrip = {
   trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
   places: [{ id: 1, name: 'Midtown sample hotel', category_name: 'Hotel' }],
+  assignments: { 50: [{ place_id: 1, place: { id: 1, name: 'Midtown sample hotel' } }] },
   thingOverrides: {
     'place:1': { price: 389, stayDays: 4, category: 'hotel' },
   },
@@ -43,10 +44,17 @@ assert.equal(model.tripPlanned, 1556);
 
 const targetsTrip = {
   trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
   places: [
     { id: 10, name: 'Hertz', category_name: 'Car' },
     { id: 11, name: 'Alamo', category_name: 'Car' },
   ],
+  assignments: {
+    50: [
+      { place_id: 10, place: { id: 10, name: 'Hertz' } },
+      { place_id: 11, place: { id: 11, name: 'Alamo' } },
+    ],
+  },
   thingOverrides: {
     __budgetTargets: { 'overall:Cars': '200' },
     'place:10': { price: 45, category: 'car' },
@@ -83,8 +91,13 @@ const unionTrip = {
   },
 };
 const budgetPlaces = placesForBudget(unionTrip);
-assert.equal(budgetPlaces.length, 2);
-assert.equal(numericPrice(budgetPlaces[1], unionTrip), 50);
+assert.equal(budgetPlaces.length, 1);
+assert.equal(String(budgetPlaces[0].id), '20');
+assert.equal(
+  budgetPlaces.some((place) => String(place.id) === '21'),
+  false,
+  'list-only hotel must not appear on budget',
+);
 
 const score = budgetCompletenessScore(unionTrip);
 assert.equal(score.pass, score.total);
@@ -128,7 +141,9 @@ assert.equal(bucketDisplayLabel('Flights'), 'Flights');
 const legacyMiscTargetKey = `overall:${legacyCustomerBucketLabel}`;
 const legacyTargetsTrip = {
   trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
   places: [{ id: 40, name: 'Broadway show', category_name: 'Event' }],
+  assignments: { 50: [{ place_id: 40, place: { id: 40, name: 'Broadway show' } }] },
   thingOverrides: {
     __budgetTargets: { [legacyMiscTargetKey]: '500' },
     'place:40': { price: 120, category: 'event' },
@@ -152,6 +167,33 @@ const legacyScore = budgetCompletenessScore(legacyTargetsTrip);
 assert.equal(
   legacyScore.checks.some((c) => c.name === `saved_target_${legacyCustomerBucketLabel}` && c.pass),
   true,
+);
+
+const unscheduledSavedTrip = {
+  trip: { currency: 'USD' },
+  days: [{ id: 50, day_number: 1 }],
+  places: [
+    { id: 30, name: 'Scheduled cafe', category_name: 'Restaurant' },
+    { id: 31, name: 'Saved unscheduled bistro', category_name: 'Restaurant' },
+  ],
+  assignments: { 50: [{ place_id: 30, place: { id: 30, name: 'Scheduled cafe' } }] },
+  thingOverrides: {
+    'place:30': { price: 40, category: 'restaurant' },
+    'place:31': { price: 55, category: 'restaurant', timeline: false },
+  },
+};
+const unscheduledBudget = buildBudgetModel(unscheduledSavedTrip);
+assert.equal(unscheduledBudget.rows.length, 1);
+assert.equal(String(unscheduledBudget.rows[0].place.id), '30');
+const unscheduledScore = budgetCompletenessScore(unscheduledSavedTrip);
+assert.equal(
+  unscheduledScore.checks.some((c) => c.name === 'row_on_timeline_30' && c.pass),
+  true,
+);
+assert.equal(
+  unscheduledScore.checks.some((c) => c.name === 'row_place_31' && c.pass),
+  false,
+  'unscheduled saved place must not produce a budget row check',
 );
 
 console.log('vacation-client budget unit checks passed');

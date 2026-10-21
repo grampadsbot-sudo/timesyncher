@@ -1,0 +1,15 @@
+--- capture.mjs
++++ capture.mjs
+@@ -7,0 +8 @@
++import { prepareTimelineReplay } from './timeline-replay.mjs';
+@@ -15 +16,2 @@
+-const payload = fs.readFileSync(FIXTURE);
++const fixtureBytes = fs.readFileSync(FIXTURE);
++const { payload, timelineReplay } = await prepareTimelineReplay(fixtureBytes);
+@@ -24 +26 @@
+-const manifest = { base: BASE, api_origin: API_ORIGIN || null, token: TOKEN, fixture: FIXTURE, started: new Date().toISOString(), shots: [], notes: [], page_errors: [] };
++const manifest = { base: BASE, api_origin: API_ORIGIN || null, token: TOKEN, fixture: FIXTURE, capture_route: 'fixture-replay', started: new Date().toISOString(), shots: [], notes: [], page_errors: [] };
+@@ -31 +33,2 @@
+-manifest.fixture_sha256 = sha256File(FIXTURE);
++manifest.fixture_sha256 = timelineReplay.source_fixture_sha256;
++manifest.timeline_replay = timelineReplay;

@@ -1,0 +1,122 @@
+--- a/runtime-dispatcher.py
++++ b/runtime-dispatcher.py
+@@ -1231 +1231,19 @@
+-def capture_and_compare(out, base, api_origin, target, note, reference=None, no_vision=False, structure=False, data_snapshot=None, require_data_snapshot=False, capture_fixture=None, merge_base_sha=None, pr_files=None, pr_number=None):
++def _capture_replay_env(render_head, replay_producer_head, remote_base=None, require_remote=False, fixture_path=None):
++    """Per-invocation fixture-replay binding (#576): render_head vs replay_producer_head."""
++    _dispatch_dir = os.path.dirname(os.path.abspath(__file__))
++    if _dispatch_dir not in sys.path:
++        sys.path.insert(0, _dispatch_dir)
++    from capture_replay_binding import CaptureReplayError, build_capture_replay_env
++    try:
++        return build_capture_replay_env(
++            render_head, replay_producer_head, PR_SRC,
++            remote_base=remote_base, require_remote=require_remote, fixture_path=fixture_path,
++        )
++    except CaptureReplayError as ex:
++        raise ValueError(str(ex))
++
++def _sanctioned_replay_producer_head():
++    raw = (os.environ.get("TSV_SANCTIONED_REPLAY_PRODUCER_HEAD") or "").strip().lower()
++    return raw if re.fullmatch(r"[0-9a-f]{40}", raw) else None
++
++def capture_and_compare(out, base, api_origin, target, note, reference=None, no_vision=False, structure=False, data_snapshot=None, require_data_snapshot=False, capture_fixture=None, merge_base_sha=None, pr_files=None, pr_number=None, render_head=None, replay_producer_head=None):
+@@ -1235,0 +1254,7 @@
++    if not render_head or not replay_producer_head:
++        return None, "capture failed: render_head and replay_producer_head required for fixture replay binding"
++    try:
++        env.update(_capture_replay_env(render_head, replay_producer_head, remote_base=base, require_remote=not base.startswith(("http://127.0.0.1:", "http://localhost:")), fixture_path=capture_fixture))
++    except ValueError as ex:
++        return None, "capture failed: %s" % ex
++    env["TSV_CAPTURE_BASE"] = base
+@@ -1237 +1262 @@
+-    rc, o, e = run([CAPTURE_SCRIPT, out], env=env, timeout=900)
++    rc, o, e = run([CAPTURE_SCRIPT, out, replay_producer_head, render_head], env=env, timeout=900)
+@@ -1270 +1295 @@
+-def local_capture(sha, ref, out, fixture=None):
++def local_capture(sha, ref, out, fixture=None, replay_producer_head=None):
+@@ -1279 +1304,11 @@
+-        if fixture: env["TSV_CAPTURE_FIXTURE"] = fixture   # capture.mjs pins the fixture path + sha256 in capture-manifest.json
++        if fixture: env["TSV_CAPTURE_FIXTURE"] = fixture
++        producer = replay_producer_head or sha
++        cap_fixture = fixture or CAPTURE_FIXTURE
++        if not sha or not re.fullmatch(r"[0-9a-f]{40}", sha) or not producer or not re.fullmatch(r"[0-9a-f]{40}", producer):
++            return "capture failed: render_head and replay_producer_head required for fixture replay binding"
++        try:
++            env.update(_capture_replay_env(sha, producer, fixture_path=cap_fixture))
++        except ValueError as ex:
++            return str(ex)
++        env["TSV_CAPTURE_BASE"] = "http://127.0.0.1:%d" % LOCAL_PORT
++        env["TSV_CAPTURE_API_ORIGIN"] = STAGING_ORIGIN
+@@ -1281 +1316 @@
+-        rc, o, e = run([CAPTURE_SCRIPT, out], env=env, timeout=900)
++        rc, o, e = run([CAPTURE_SCRIPT, out, producer, sha], env=env, timeout=900)
+@@ -1306 +1341,4 @@
+-    err = local_capture(base_sha, staging, fout, fixture=fixture)
++    producer = _sanctioned_replay_producer_head()
++    if not producer:
++        return None, "capture replay producer policy unset (TSV_SANCTIONED_REPLAY_PRODUCER_HEAD)"
++    err = local_capture(base_sha, staging, fout, fixture=fixture, replay_producer_head=producer)
+@@ -1318 +1356,5 @@
+-        err = local_capture(base_sha, staging, out)
++        producer = _sanctioned_replay_producer_head()
++        if not producer:
++            return None, {"error": "capture replay producer policy unset (TSV_SANCTIONED_REPLAY_PRODUCER_HEAD)"}
++        cap_fixture = fixture or CAPTURE_FIXTURE
++        err = local_capture(base_sha, staging, out, fixture=cap_fixture, replay_producer_head=producer)
+@@ -1522,0 +1565,4 @@
++        producer = _sanctioned_replay_producer_head()
++        if not producer:
++            log("pregate: PR #%d replay producer policy unset (TSV_SANCTIONED_REPLAY_PRODUCER_HEAD); retry next run" % n); return
++        cap_fixture = head_capture_fixture(sha, snap) or CAPTURE_FIXTURE
+@@ -1524,2 +1570,3 @@
+-                                       data_snapshot=snap, require_data_snapshot=structure, capture_fixture=head_capture_fixture(sha, snap),
+-                                       merge_base_sha=base_sha, pr_files=files, pr_number=n)
++                                       data_snapshot=snap, require_data_snapshot=structure, capture_fixture=cap_fixture,
++                                       merge_base_sha=base_sha, pr_files=files, pr_number=n,
++                                       render_head=sha, replay_producer_head=producer)
+@@ -2234 +2281 @@
+-def staging_capture(out):
++def staging_capture(out, render_head, replay_producer_head, fixture_path=None):
+@@ -2236,0 +2284,10 @@
++    if not render_head or not replay_producer_head:
++        return None, "capture failed: render_head and replay_producer_head required for fixture replay binding"
++    if not fixture_path or not os.path.isfile(fixture_path):
++        return None, "capture failed: fixture_path required for staging capture"
++    try:
++        cap_env = _capture_replay_env(
++            render_head, replay_producer_head, remote_base=STAGING_ORIGIN, require_remote=True, fixture_path=fixture_path,
++        )
++    except ValueError as ex:
++        return None, "capture failed: %s" % ex
+@@ -2238 +2295,4 @@
+-    rc, o, e = run([CAPTURE_SCRIPT, out], env=dict(os.environ, TSV_CAPTURE_BASE=STAGING_ORIGIN), timeout=900)
++    env = dict(os.environ, **cap_env)
++    env["TSV_CAPTURE_BASE"] = STAGING_ORIGIN
++    env["TSV_CAPTURE_FIXTURE"] = fixture_path
++    rc, o, e = run([CAPTURE_SCRIPT, out, replay_producer_head, render_head], env=env, timeout=900)
+@@ -2315 +2375,9 @@
+-    pre_dir, pre_err = staging_capture("%s/gateb-cand/predeploy-%s" % (D, (last_sha or "none")[:7])) if prev and os.access(CAPTURE_SCRIPT, os.X_OK) else (None, "no capture")
++    if prev and os.access(CAPTURE_SCRIPT, os.X_OK):
++        producer = _sanctioned_replay_producer_head()
++        render = (last_sha or "").strip()
++        if not producer or not re.fullmatch(r"[0-9a-f]{40}", render):
++            pre_dir, pre_err = None, "pre-deploy staging capture refused (missing render or producer policy)"
++        else:
++            pre_dir, pre_err = staging_capture("%s/gateb-cand/predeploy-%s" % (D, render[:7]), render, producer, fixture_path=CAPTURE_FIXTURE)
++    else:
++        pre_dir, pre_err = None, "no capture"
+@@ -2361 +2429,5 @@
+-    new_dir, err = staging_capture("%s/gateb-cand/staging-%s" % (D, tip[:7]))
++    producer = _sanctioned_replay_producer_head()
++    if not producer or not re.fullmatch(r"[0-9a-f]{40}", (tip or "")):
++        new_dir, err = None, "post-deploy staging capture refused (missing render or producer policy)"
++    else:
++        new_dir, err = staging_capture("%s/gateb-cand/staging-%s" % (D, tip[:7]), tip, producer, fixture_path=CAPTURE_FIXTURE)
+@@ -2380 +2452,5 @@
+-    res, err = capture_and_compare(out, STAGING_ORIGIN, None, None, "Post-deploy Gate B on staging %s (%s), Ubuntu cron" % (dpl, sha[:7]))
++    producer = _sanctioned_replay_producer_head()
++    if not producer:
++        log("postgate: replay producer policy unset (TSV_SANCTIONED_REPLAY_PRODUCER_HEAD)"); return
++    res, err = capture_and_compare(out, STAGING_ORIGIN, None, None, "Post-deploy Gate B on staging %s (%s), Ubuntu cron" % (dpl, sha[:7]),
++                                   capture_fixture=CAPTURE_FIXTURE, render_head=sha, replay_producer_head=producer)
