@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { mergeBindingsIntoShared } from '../../src/vacation/thing-media-bind.mjs';
 import { finalizeServedSharedTripPayload } from '../../src/vacation/shared-trip-served-page.mjs';
+import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
 import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
@@ -221,11 +222,38 @@ function applyVkSearchSnapshotCopyFields(search, place, override) {
   applyVkSearchSnapshotContractFields(search, place, override);
 }
 
+function applySearchFillEstimatedPrice(row, place, override, search = null) {
+  if (override.price != null && override.price !== '') return;
+  const record = search?.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
+  const enriched = enrichSearchPlace({
+    title: place.name || row.name,
+    category: row.cat || override.category,
+    description: place.description || override.longDetails || search?.description || '',
+    summary: override.summary || search?.summary || '',
+    address: place.address || search?.address || '',
+    source: place.source || 'fixture-nyc',
+    sourceRecord: { ...record, summary: override.summary || search?.summary || '' },
+  });
+  if (enriched.price == null || enriched.price === '') return;
+  const blocked = provenanceBlockedFieldSet(record);
+  if (blocked.has('price')) {
+    place.price = enriched.price;
+    return;
+  }
+  override.price = enriched.price;
+}
+
 function applyPr336SearchFields(row, place, override) {
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
-  if (!search) return;
-  if (VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
+  if (search && VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
     applyVkSearchSnapshotCopyFields(search, place, override);
+    applySearchFillEstimatedPrice(row, place, override, search);
+    return;
+  }
+  if (!search) {
+    applySearchFillEstimatedPrice(row, place, override, search);
     return;
   }
   const record = search.sourceRecord && typeof search.sourceRecord === 'object'
@@ -286,6 +314,7 @@ function applyPr336SearchFields(row, place, override) {
       if (field in record) override[field] = record[field] || null;
     }
   }
+  applySearchFillEstimatedPrice(row, place, override, search);
 }
 
 function text(value) {

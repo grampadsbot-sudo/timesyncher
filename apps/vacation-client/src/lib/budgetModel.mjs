@@ -17,6 +17,8 @@ import { assignedPlaceIds } from '../../../../src/vacation/itinerary-minimums.mj
 
 export { OTHER_THINGS_BUCKET, BUDGET_BUCKET_ORDER };
 
+const BUDGET_REQUIRED_PRICE_BUCKETS = new Set(['Flights', 'Hotel', 'Cars']);
+
 const PER_PERSON_CATEGORIES = new Set([
   'restaurant',
   'store',
@@ -333,6 +335,19 @@ export function budgetCompletenessChecks(trip) {
   if (tripBudgetTargetTotal(trip) !== null) {
     push('trip_target_sum', Number.isFinite(tripBudgetTargetTotal(trip)));
   }
+
+  const missingRequiredPrices = model.rows.filter(
+    (row) => BUDGET_REQUIRED_PRICE_BUCKETS.has(row.bucket) && !row.hasPrice,
+  );
+  push('required_travel_budget_prices', missingRequiredPrices.length === 0);
+  for (const row of missingRequiredPrices) {
+    push(`required_price_${row.bucket}_${row.place.id}`, false);
+  }
+
+  const missingOptionalPrices = model.rows.filter(
+    (row) => !BUDGET_REQUIRED_PRICE_BUCKETS.has(row.bucket) && !row.hasPrice,
+  );
+  push(`report_optional_budget_missing_prices_${missingOptionalPrices.length}`, true);
 
   return checks;
 }
