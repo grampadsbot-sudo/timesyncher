@@ -1,6 +1,6 @@
 const BOOKINGS_TAB_LUCIDE_ICON_NEEDLE = '}):n.jsx(G.Icon,{size:13}),n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
 
-const BOOKINGS_TAB_LUCIDE_ICON_PATCH = '}):n.jsx("span",{"data-tab-category":G.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",alignSelf:"center",transform:"translateY(0.75px)"},children:n.jsx(G.Icon,{size:13})}),n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
+const BOOKINGS_TAB_LUCIDE_ICON_PATCH = '}):n.jsx("span",{"data-tab-category":String(G.id),"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1","aria-hidden":"true",style:{width:16,height:16,minWidth:16,minHeight:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",boxSizing:"border-box",alignSelf:"center",transform:"translateY(0.75px)"},children:n.jsx(G.Icon,{size:13})}),n.jsx("span",{style:Re&&q!==G.id?{display:"none"}:{lineHeight:1,display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})';
 
 const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
@@ -18,7 +18,7 @@ export function patchTabIconVerticalCenter(js = '') {
   let out = String(js || '');
   if (out.includes(BOOKINGS_TAB_LUCIDE_ICON_NEEDLE)) {
     out = out.replace(BOOKINGS_TAB_LUCIDE_ICON_NEEDLE, BOOKINGS_TAB_LUCIDE_ICON_PATCH);
-  } else if (!out.includes('transform:"translateY(0.75px)"},children:n.jsx(G.Icon,{size:13})')) {
+  } else if (!out.includes('transform:"translateY(0.75px)"},children:n.jsx(G.Icon,{size:13})') && !out.includes('"data-tab-category":String(G.id)')) {
     throw new Error('trek bundle missing lucide tab icon centering patch anchor');
   }
   if (out.includes(TAB_EMOJI_INK_TAIL_NEEDLE)) {
