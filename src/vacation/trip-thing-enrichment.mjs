@@ -1,5 +1,6 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 
@@ -318,8 +319,16 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
 
 export function enrichSearchPlace(place = {}) {
   const next = { ...place };
-  const sourceRecord = sourceRecordFrom(next);
+  let sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
+  if (category === 'hotel' || category === 'lodging') {
+    sourceRecord = applySourcedHotelDescriptionToRecord(sourceRecord, {
+      title: next.title,
+      category,
+      address: next.address || sourceRecord.address,
+    });
+    next.sourceRecord = sourceRecord;
+  }
   const description = sourcedLongDescription(next, sourceRecord);
   const summary = sourcedShortSummary(next, sourceRecord, description);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
