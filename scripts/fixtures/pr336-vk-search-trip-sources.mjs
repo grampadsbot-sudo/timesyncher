@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { enrichSearchPlace, isGenericDescription } from '../../src/vacation/trip-thing-enrichment.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -51,6 +51,25 @@ function text(value, max = 4000) {
 
 function narrativeWordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function listNarrativeCandidateText(place = {}, override = {}) {
+  return text(
+    override.longDetails ||
+      override.details ||
+      override.description ||
+      place.description ||
+      place.notes,
+  );
+}
+
+function storedCcabNarrativeNeedsMerge(place = {}, override = {}) {
+  const hit = resolveStoredCcabKey(place, override);
+  if (!hit) return false;
+  const existing = listNarrativeCandidateText(place, override);
+  if (!existing) return true;
+  if (narrativeWordCount(existing) < 30) return true;
+  return isGenericDescription(existing);
 }
 
 function enrichmentHit(ccabKey = '') {
@@ -188,8 +207,8 @@ export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') 
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
-  const existing = text(override.longDetails || override.details || override.description);
-  if (narrativeWordCount(existing) >= 30) return override;
+  const existing = listNarrativeCandidateText(place, override);
+  if (narrativeWordCount(existing) >= 30 && !isGenericDescription(existing)) return override;
   const enriched = enrichListRowFromStoredCcab(
     place,
     override,
@@ -295,6 +314,7 @@ export function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) 
   if (enrichmentHitByWebsite(place, override)) return true;
   const hit = resolveStoredCcabKey(place, override);
   if (!hit) return false;
+  if (storedCcabNarrativeNeedsMerge(place, override)) return true;
   const displayName = text(place.name || place.title || override.title);
   if (displayName && displayName !== hit.ccabKey) return true;
   if (override.timeline === true) {

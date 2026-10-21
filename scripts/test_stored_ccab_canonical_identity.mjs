@@ -135,6 +135,28 @@ assert.equal(
 );
 assert.ok(narrativeWordCount(rowSummary(smokeReplayPlace, smokeReplay)) >= 30);
 
+const smokeReplayFullTitle = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify({
+  places: [{
+    id: 49,
+    name: 'Smoke Jazz & Supper Club',
+    category_name: 'Activity',
+    description: 'Documented NYC option (music)',
+    price: 45,
+  }],
+  thingOverrides: {
+    'place:49': { timeline: false, startTime: '9:00 PM' },
+  },
+}))).served;
+const smokeFullPlace = smokeReplayFullTitle.places.find((place) => place.id === 49);
+assert.equal(
+  shouldMergeStoredCcabOnFixtureReplay(smokeFullPlace, smokeReplayFullTitle.thingOverrides['place:49']),
+  true,
+);
+assert.ok(
+  narrativeWordCount(rowSummary(smokeFullPlace, smokeReplayFullTitle)) >= 30,
+  'fixture replay must merge stored ccab when title matches key but copy is generic',
+);
+
 const liveFields = applyLiveAppListRowFields({
   places: [{
     id: 903,
