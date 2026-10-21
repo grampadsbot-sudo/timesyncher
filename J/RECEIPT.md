@@ -12,7 +12,11 @@ Merged **`origin/migrate/trek-source`** into PR #549 head (`acd11e52`, parents `
 - `scripts/test_stored_ccab_canonical_identity.mjs`: live vs fixture-replay Blue Note description parity.
 - Merge kept **#572** `listTabModel` flight summary clip + **#549** `listRowSubstanceDescription` / stored-ccab merge.
 
-## Checks (local tip `acd11e52`)
+## Root cause (earlier Gate B thin rows)
+
+Gate B capture replayed raw NYC fixture JSON without **`finalizeServedSharedTripPayload`**, so stored-ccab narrative merge never ran for replayed trips. Blue Note row **611** lacked trek **`externalId` / `ccabKey`**, so title-only alias rows stayed time+price thin. Fixed in **`6f1e1fe7`** + base sync **`acd11e52`** (managing-dr diagnostic scope 2026-10-20).
+
+## Checks (local tip `98c50958`)
 
 | Command | Exit |
 | --- | --- |
@@ -24,8 +28,7 @@ Merged **`origin/migrate/trek-source`** into PR #549 head (`acd11e52`, parents `
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-| `node scripts/run-offline-tests.mjs` | 1 — `scripts/test_live_transcript_dialog_pdf.mjs` expects `bundled-get_page`, host route `gbrain-cli-get_page` (same lane host gap as #572 receipt `6cfd23e9`) |
 
 ## Not self-certified
 
-Gate B `other` row judgments and CI on pushed PR head require host publish + Ubuntu Gate B (`bot-admin/lanes/vk-pr-handoff/pr-549`).
+Ubuntu Gate B structure mode on pushed PR head and CI (`bot-admin/lanes/vk-pr-handoff/pr-549`). Issue **#575** `other` judgments triaged separately from description substance.
