@@ -2,7 +2,7 @@ import {
   composeListRowDescription,
   finalizeListRowDisplayDescription,
 } from '../../../../src/vacation/list-row-description.mjs';
-import { mergeStoredCcabNarrativeIntoOverride } from '../../../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
+import { mergeStoredCcabNarrativeIntoOverride } from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 import {
   hotelListRowUnboundNarrative,

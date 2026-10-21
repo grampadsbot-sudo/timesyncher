@@ -1,4 +1,4 @@
-import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
+import { mergeStoredCcabNarrativeIntoOverride } from './stored-ccab-narrative-merge.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
 const EXPERIENCE_CATEGORIES = new Set([
