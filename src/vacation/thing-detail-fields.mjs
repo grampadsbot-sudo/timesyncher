@@ -1,6 +1,7 @@
 import { transportKind } from './intake-transport-kind.mjs';
 import { normalizeThingType } from './timeline-icons.mjs';
 import { writeRatings } from './write-ratings.mjs';
+import { provenanceBlocksSourcedPrice } from './shared-trip-live-app-fields.mjs';
 
 const NON_TRANSPORT_CATEGORIES = new Set([
   'restaurant',
@@ -383,7 +384,11 @@ export function applyThingDetailOverrides(shared = {}) {
       },
       sourceRecord: place.sourceRecord,
     };
-    thingOverrides[key] = { ...thingDetailOverrideFields(mergedThing), ...prior };
+    const merged = { ...thingDetailOverrideFields(mergedThing), ...prior };
+    if (provenanceBlocksSourcedPrice(merged, { ...place, sourceRecord: place.sourceRecord })) {
+      delete merged.price;
+    }
+    thingOverrides[key] = merged;
   }
   return { ...shared, places, thingOverrides };
 }

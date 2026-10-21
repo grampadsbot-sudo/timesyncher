@@ -1,23 +1,27 @@
-# vkfill-549 round 3 (CI-red `rawSearchPlaceFromCcab` export)
+# vkfill-549 round (base merge + Gate B generic/logo)
 
-## Fix
+## Step 1 — merge `origin/migrate/trek-source`
 
-- **`scripts/fixtures/pr336-vk-search-trip-sources.mjs`**: re-export `rawSearchPlaceFromCcab` (imported from `src/vacation/stored-ccab-narrative-merge.mjs` for internal `buildGateBSearchPlaceForRow` / contract samples but was not a public fixture export after round 2 refactor). Restores the bf1ad7ad public surface for `scripts/test_pr336_ccab_search_provenance.mjs` and `scripts/lib/pr336-stored-narrative-lineage-lib.mjs` importers.
+Resolved conflicts keeping #549 J/ text, both fixture imports (`bindPr336GateBCanonicalIdentity` + `enrichSearchPlace`), base `timeline-replay.mjs` capture binding, merged `listTabModel` (#549 ccab helpers + base `pickFlightListRowSummaryText` export), then rebaked `public/assets/index-BKun7ofk.js`.
 
-## Checks (local tip; host push + CI is authority)
+## Step 2 — Gate B rows (generic descriptions, logo lost)
+
+- **`list-row-description.mjs`**: never compose or finalize generic `Documented … option` placeholder copy; bundle `tsListRowDescription` matches.
+- **`flight-list-row-summary.mjs`**: flight clip no longer returns documented-option placeholders.
+- **`listTabModel.mjs`**: `logoUrlForPlace` merges stored ccab + `resolveThingLogoUrl`.
+- **`shared-trip-fixture-replay.mjs`**: replay served trip runs `applyLiveAppListRowFields` after ccab merge.
+- **`scripts/test_stored_ccab_canonical_identity.mjs`**: placeholder never rendered; Strand logo stable across fixture replay.
+
+## Checks (local; host push + CI/Gate B authority)
 
 ```bash
-node scripts/test_pr336_ccab_search_provenance.mjs
 node scripts/test_stored_ccab_canonical_identity.mjs
 node scripts/test_list_row_description_substance.mjs
-node scripts/test_evidence_secrets.mjs
-node scripts/test_check_hardcoded_content.mjs && node scripts/check-hardcoded-content.mjs
-cd apps/vacation-client && npm run typecheck && npm run lint && npm run build && npm test
+node scripts/test_capture_fixture_replay_harness.mjs
+cd apps/vacation-client && npm test
 node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
 ```
 
-All above passed on local commit tip (see DONE line). Full `scripts/offline-tests.txt` loop failed locally only on `scripts/test_live_transcript_dialog_pdf.mjs` (`gbrain-cli-get_page` vs `bundled-get_page` — env, not this diff). No served-bundle rebake (fixture export only).
-
 ## Left alone
 
-Description behaviour, secrets/hardcoded-content layout, baselines, Gate B config, workflows.
+Baselines, Gate B checker config, workflows, `scripts/offline-tests.txt`, fixture JSON bodies.

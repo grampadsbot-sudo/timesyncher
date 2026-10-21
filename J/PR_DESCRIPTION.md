@@ -2,28 +2,25 @@ Closes #546
 
 ## Summary
 
-Gate B description substance (#546) plus CI fixes on `migrate/trek-source`: list-row ccab merge, vite-safe client path, secrets/hardcoded-content split, served bundle rebake. **This round** restores the missing fixture export that broke `unit-tests` after round 2.
+Merge current `migrate/trek-source` (budget #580, flight list-row summary #586, capture replay binding) into #549, then fix the two Gate B structure failures on the prior head: generic `Documented NYC option (…)` list/timeline copy and logos dropped after stored-ccab merge/replay.
 
-## Changes (latest round)
+## Changes
 
-- **`scripts/fixtures/pr336-vk-search-trip-sources.mjs`**: `export { rawSearchPlaceFromCcab }` so provenance and lineage tests import it from the fixture again (same implementation in `stored-ccab-narrative-merge.mjs`).
+- Completed host-started merge; rebaked served trek bundle.
+- List-row description compose/finalize and served `tsListRowDescription` reject generic documented-option placeholders; ccab merge still supplies real narratives.
+- `logoUrlForPlace` uses stored-ccab merge + `resolveThingLogoUrl`; fixture replay applies live list-row fields (including logos).
+- Extended `scripts/test_stored_ccab_canonical_identity.mjs` for placeholder + Strand logo replay.
 
-## Prior rounds (on branch)
-
-- Description merge / diagnostic filter / `listTabModel` + `list-row-description.mjs`.
-- Data-free `stored-ccab-narrative-merge.mjs`; fixture-bound `createStoredCcabNarrativeMerge(ENRICHMENT, …)`.
-- Rebaked `public/assets/index-BKun7ofk.js` when src changed served trek output.
-
-## Verification (local tip)
+## Verification
 
 ```bash
-node scripts/test_pr336_ccab_search_provenance.mjs
 node scripts/test_stored_ccab_canonical_identity.mjs
 node scripts/test_list_row_description_substance.mjs
-cd apps/vacation-client && npm run typecheck && npm run lint && npm run build && npm test
+node scripts/test_capture_fixture_replay_harness.mjs
+cd apps/vacation-client && npm test
 node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
 ```
 
 ## Left alone
 
-Baselines, Gate B capture/check config, workflows, fixture JSON bodies, `package.json`. Pre-merge Gate B runs on CI after green `unit-tests`.
+Baselines, Gate B capture thresholds/allowlists, workflows, NYC fixture JSON.

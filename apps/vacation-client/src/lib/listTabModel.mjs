@@ -3,6 +3,7 @@ import {
   finalizeListRowDisplayDescription,
 } from '../../../../src/vacation/list-row-description.mjs';
 import { mergeStoredCcabNarrativeIntoOverride } from '../../../../src/vacation/stored-ccab-narrative-merge.mjs';
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { productThingCategory } from '../../../../src/vacation/keepsake-product-overrides.mjs';
 import {
   hotelListRowUnboundNarrative,
@@ -324,7 +325,9 @@ export function carSubtitle(place, trip) {
   );
 }
 
-const FLIGHT_LIST_ROW_MIN_WORDS = 6;
+import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-list-row-summary.mjs';
+
+export { pickFlightListRowSummaryText };
 
 function wordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
@@ -354,38 +357,6 @@ function listRowHook(override, source) {
       source.itinerary_note,
   );
   return isListRowPipelineDiagnostic(hook) ? '' : hook;
-}
-
-function clipText(value, max) {
-  const row = text(value);
-  if (!row || row.length <= max) return row;
-  return row.slice(0, max).trim();
-}
-
-function shortLineFromStoredSummary(value = '', max = 120) {
-  const row = text(value);
-  if (!row) return '';
-  const clauses = row.match(/[^.!?;]+[.!?;]/gy);
-  if (clauses) {
-    let line = '';
-    for (const clause of clauses) {
-      const next = clipText(`${line} ${clause}`, 4000);
-      if (line && next.length > max) break;
-      line = next;
-      if (wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS) break;
-    }
-    return clipText(line, max);
-  }
-  return clipText(row.split(/\s+/).slice(0, 10).join(' '), max);
-}
-
-export function pickFlightListRowSummaryText(value = '') {
-  const s = text(value);
-  if (!s) return '';
-  if (wordCount(s) <= 20) return s;
-  if (/^Documented .+ option/i.test(s)) return s;
-  const line = shortLineFromStoredSummary(s);
-  return wordCount(line) >= FLIGHT_LIST_ROW_MIN_WORDS ? line : '';
 }
 
 export function listRowSubstanceDescription(
@@ -442,14 +413,17 @@ export function rowSummary(place, trip) {
 }
 
 export function logoUrlForPlace(place, trip) {
-  const override = overrideFor(trip, place);
-  const source = sourceRecord(place, override);
+  const mergedOverride = mergeStoredCcabNarrativeIntoOverride(place, {
+    ...(overrideFor(trip, place) || {}),
+  });
+  const source = sourceRecord(place, mergedOverride);
   return text(
-    override.logoUrl ||
-      override.iconUrl ||
-      place.logoUrl ||
-      place.captured_logo_url ||
-      source.logoUrl,
+    resolveThingLogoUrl(place, mergedOverride)
+      || mergedOverride.logoUrl
+      || mergedOverride.iconUrl
+      || place.logoUrl
+      || place.captured_logo_url
+      || source.logoUrl,
   );
 }
 

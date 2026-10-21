@@ -13,6 +13,8 @@ import {
   sortPlaces,
   tabCategoryKey,
 } from '../src/lib/listTabModel.mjs';
+import { STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../../../src/vacation/flight-list-row-summary.mjs';
+import { patchThingDetailFields } from '../../../src/vacation/trek-thing-detail-fields-patch.mjs';
 
 const trip = applyLiveAppListRowFields({
   places: [
@@ -99,6 +101,17 @@ const longFlightNarrative =
 const derivedFlightSummary = pickFlightListRowSummaryText(longFlightNarrative);
 assert.ok(wordCount(derivedFlightSummary) >= 6, derivedFlightSummary);
 assert.ok(derivedFlightSummary.length < longFlightNarrative.length);
+
+const jetBlueFixtureSummary =
+  'Airline: JetBlue; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23 07:22-15:31; Return: 2026-06-30 16:50-19:36; Duration: 5h09m out / 5h46m return; Price: $252 Blue Basic / $254 Economy Cabin; Status: candidate only; not booked.';
+const jetBlueListLine = pickFlightListRowSummaryText(jetBlueFixtureSummary);
+assert.ok(wordCount(jetBlueListLine) >= 6, jetBlueListLine);
+assert.match(jetBlueListLine, /JetBlue|LAS-JFK|nonstop/i);
+
+const bundlePick = new Function(`return (${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE})`)();
+assert.equal(bundlePick(jetBlueFixtureSummary), jetBlueListLine);
+const patched = patchThingDetailFields('prefix,rr=G=>{const pick=t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;return""};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""},suffix');
+assert.ok(patched.includes('wc(line)>=6'), patched.slice(0, 120));
 
 const flightRowTrip = applyLiveAppListRowFields({
   places: [{ id: 90, name: 'JetBlue LAS → JFK', category_name: 'Flight' }],

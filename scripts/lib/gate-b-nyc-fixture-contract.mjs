@@ -27,8 +27,12 @@ export function renderedPrice(shared = {}, place = {}) {
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return null;
   if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
-  const parsed = Number(String(raw).replace(/[^0-9.-]/g, ''));
-  return Number.isFinite(parsed) ? parsed : null;
+  const nums = [...String(raw).matchAll(/\$?([0-9][0-9,]*(?:\.\d+)?)/g)]
+    .map((match) => Number(String(match[1]).replace(/,/g, '')))
+    .filter((n) => Number.isFinite(n));
+  if (!nums.length) return null;
+  if (nums.length >= 2) return Math.round((nums[0] + nums[1]) / 2);
+  return nums[0];
 }
 
 function scheduleTime(shared = {}, place = {}) {

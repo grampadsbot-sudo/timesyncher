@@ -1,4 +1,7 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
+import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+
+export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
@@ -87,7 +90,7 @@ function sourceRecordFrom(place = {}) {
 function firstPrice(...values) {
   for (const value of values) {
     const parsed = parsePriceValue(value);
-    if (parsed != null) return parsed;
+    if (parsed != null && parsed > 0) return parsed;
   }
   return null;
 }
@@ -387,7 +390,8 @@ export function enrichSearchPlace(place = {}) {
   const category = text(next.category, 80).toLowerCase();
   const description = sourcedLongDescription(next, sourceRecord);
   const summary = sourcedShortSummary(next, sourceRecord, description);
-  const price = firstPrice(
+  const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
+  let price = firstPrice(
     next.price,
     next.totalPrice,
     sourceRecord.price,
@@ -408,6 +412,15 @@ export function enrichSearchPlace(place = {}) {
     sourceRecord.longDetails,
     sourceRecord.details,
   );
+  if (price == null && !explicitBannedZero) {
+    price = estimateSearchPlacePrice({
+      category,
+      title: next.title,
+      description,
+      summary,
+      sourceRecord,
+    });
+  }
   const logoUrl = logoUrlFromSearchPlace(next, sourceRecord);
   const enrichedSource = {
     ...sourceRecord,
@@ -440,13 +453,22 @@ export function enrichTripThing(thing = {}) {
     address: location.address || '',
     rawDescription: thing.description,
   });
-  const price = firstPrice(
+  let price = firstPrice(
     thing.price,
     meta.price,
     sourceRecord.price,
     thing.description,
     description,
   );
+  if (price == null && thing.price !== 0) {
+    price = estimateSearchPlacePrice({
+      category,
+      title: thing.title,
+      description,
+      summary: sourceRecord.summary || thing.summary,
+      sourceRecord,
+    });
+  }
   const logoUrl = logoUrlFromSearchPlace(
     {
       title: thing.title,
