@@ -13,7 +13,7 @@ Craig #547 (comment 6319246079): list-row descriptions must sit on the **same li
 
 | Command | Result |
 |---|---|
-| `node scripts/rebake_served_trek_bundle.mjs` | (see tip commit / receipt) |
+| `node scripts/rebake_served_trek_bundle.mjs` | OK — sha256 `23285dadd7a970ed85b02f81534afbfdfce151da12cd1b9d54dc568bb87cfd5c` |
 | `node scripts/test_shared_tab_list_summary.mjs` | pass |
 | `node scripts/test_served_trek_bundle.mjs` | pass |
 | `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
