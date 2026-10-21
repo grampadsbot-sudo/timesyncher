@@ -1,9 +1,21 @@
 """Portable helpers for VK #562 same-selection capture (offline tests + optional host replay CLI)."""
 import copy
+import hashlib
 import json
+import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
+
+from capture_replay_binding import (
+    CaptureReplayError,
+    capture_replay_env_for_pair,
+    pair_from_fixture,
+)
+
+DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD = '1141d5ce833b3648b18f114a95ede1af4b03c265'
+_FULL_SHA_RE = re.compile(r'^[0-9a-f]{40}$')
 
 def fixture_selected_keys(trip):
     keys = []
@@ -72,8 +84,61 @@ def require_selected_titles(timeline_titles, trip):
             raise AssertionError('selected Thing missing from timeline: %s' % title)
 
 
-def node_prepare(fixture_bytes, capture_dir):
-    timeline_replay = capture_dir / 'timeline-replay.mjs'
+def _repo_root_from_capture_dir(capture_dir):
+    return Path(capture_dir).resolve().parents[2]
+
+
+def _git_head(repo_root):
+    proc = subprocess.run(
+        ['git', '-C', str(repo_root), 'rev-parse', 'HEAD'],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return proc.stdout.strip().lower()
+
+
+def _sanctioned_replay_producer_head():
+    raw = (os.environ.get('TSV_SANCTIONED_REPLAY_PRODUCER_HEAD') or DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD).strip().lower()
+    if not _FULL_SHA_RE.match(raw):
+        raise CaptureReplayError('same-selection capture requires full 40-char TSV_SANCTIONED_REPLAY_PRODUCER_HEAD')
+    return raw
+
+
+def _anchor_worktree(repo_root):
+    for candidate in (
+        os.environ.get('TSV_CAPTURE_ANCHOR_WORKTREE', '').strip(),
+        os.path.expanduser('~/tsv-dispatch/pr-src'),
+        str(repo_root),
+    ):
+        if candidate and Path(candidate).is_dir():
+            return candidate
+    raise CaptureReplayError('same-selection capture requires anchor worktree')
+
+
+def capture_binding_env_for_bytes(
+    fixture_bytes,
+    fixture_path,
+    capture_dir,
+    render_head=None,
+    replay_producer_head=None,
+    anchor_worktree=None,
+):
+    repo_root = _repo_root_from_capture_dir(capture_dir)
+    render = (render_head or _git_head(repo_root)).strip().lower()
+    if not _FULL_SHA_RE.match(render):
+        raise CaptureReplayError('same-selection capture requires full 40-char render_head')
+    producer = (replay_producer_head or _sanctioned_replay_producer_head()).strip().lower()
+    digest = hashlib.sha256(fixture_bytes).hexdigest()
+    anchor = anchor_worktree or _anchor_worktree(repo_root)
+    pair = pair_from_fixture(render, producer, fixture_path, digest)
+    env = dict(os.environ)
+    env.update(capture_replay_env_for_pair(pair, anchor))
+    return env
+
+
+def node_prepare(fixture_bytes, capture_dir, render_head=None, replay_producer_head=None, anchor_worktree=None):
+    timeline_replay = Path(capture_dir) / 'timeline-replay.mjs'
     driver = (
         "import { prepareTimelineReplay } from "
         + json.dumps(timeline_replay.resolve().as_uri())
@@ -81,19 +146,26 @@ def node_prepare(fixture_bytes, capture_dir):
         "const r=prepareTimelineReplay(b); process.stdout.write(JSON.stringify({"
         "timelineReplay:r.timelineReplay,payload_b64:r.payload.toString('base64')}));"
     )
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as tmp:
         tmp.write(fixture_bytes)
         path = tmp.name
     try:
+        env = capture_binding_env_for_bytes(
+            fixture_bytes,
+            path,
+            capture_dir,
+            render_head=render_head,
+            replay_producer_head=replay_producer_head,
+            anchor_worktree=anchor_worktree,
+        )
         out = subprocess.run(
             ['node', '--input-type=module', '-e', driver, path],
             check=True,
             capture_output=True,
             text=True,
+            env=env,
         )
     finally:
-        import os
-
         os.unlink(path)
     data = json.loads(out.stdout)
     import base64
