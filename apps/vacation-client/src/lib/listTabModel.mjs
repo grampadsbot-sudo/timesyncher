@@ -1,4 +1,5 @@
 import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
+import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
 import { detailSummary } from './detailModel.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
@@ -94,7 +95,28 @@ export function placesForCategoryTab(trip, tab) {
   if (tab === 'hotels') return places.filter((p) => tabCategoryKey(p, trip) === 'hotel');
   if (tab === 'cars') return places.filter((p) => tabCategoryKey(p, trip) === 'car');
   if (tab === 'restaurants') return places.filter((p) => tabCategoryKey(p, trip) === 'restaurant');
-  if (tab === 'stores') return places.filter((p) => tabCategoryKey(p, trip) === 'store');
+  if (tab === 'stores') {
+    const stores = places.filter((p) => tabCategoryKey(p, trip) === 'store');
+    const seen = new Map();
+    const rows = [];
+    for (const place of stores) {
+      const key = placeName(place).toLowerCase();
+      const prior = seen.get(key);
+      if (!prior) {
+        seen.set(key, place);
+        rows.push(place);
+        continue;
+      }
+      const priorPrice = numericPrice(prior, trip);
+      const nextPrice = numericPrice(place, trip);
+      if (nextPrice != null && (priorPrice == null || nextPrice < priorPrice)) {
+        const index = rows.indexOf(prior);
+        if (index >= 0) rows[index] = place;
+        seen.set(key, place);
+      }
+    }
+    return rows;
+  }
   if (tab === 'events') {
     return places.filter((p) => {
       const k = tabCategoryKey(p, trip);
@@ -424,12 +446,18 @@ export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   return text(
-    override.logoUrl ||
+    resolveThingLogoUrl(place, override) ||
+      override.logoUrl ||
       override.iconUrl ||
       place.logoUrl ||
       place.captured_logo_url ||
+      place.iconUrl ||
+      place.image_url ||
       source.logoUrl ||
-      source.iconUrl,
+      source.iconUrl ||
+      source.logo ||
+      source.favicon ||
+      source.faviconUrl,
   );
 }
 

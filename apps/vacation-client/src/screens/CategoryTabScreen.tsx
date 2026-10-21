@@ -24,7 +24,7 @@ type Props = {
 type SortKey = 'name' | 'price' | 'catalog';
 
 function defaultSortKey(tab: Props['tab']): SortKey {
-  if (tab === 'flights' || tab === 'hotels' || tab === 'cars') return 'price';
+  if (tab === 'flights' || tab === 'hotels' || tab === 'cars' || tab === 'stores') return 'price';
   return 'catalog';
 }
 

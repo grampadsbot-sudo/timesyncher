@@ -7,6 +7,7 @@ import {
   filterPlaces,
   flightPriceDisplay,
   flightSchedule,
+  logoUrlForPlace,
   parsePrice,
   pickFlightListRowSummaryText,
   placesForCategoryTab,
@@ -94,6 +95,35 @@ assert.equal(
 assert.equal(
   emptyStateMessage('stores', { categoryCount: 0, filterActive: false }),
   'No items in this category yet.',
+);
+
+const storeTrip = {
+  places: [
+    { id: 1, name: "Zabar's", category_name: 'Store' },
+    { id: 2, name: 'Strand Book Store', category_name: 'Store' },
+    { id: 3, name: "Zabar's", category_name: 'Store' },
+    { id: 4, name: 'Strand Book Store', category_name: 'Store' },
+  ],
+  thingOverrides: {
+    'place:1': { price: 40 },
+    'place:2': { price: 30 },
+    'place:3': { price: 25 },
+    'place:4': { price: 35 },
+  },
+};
+const storeRows = placesForCategoryTab(storeTrip, 'stores');
+assert.equal(storeRows.length, 2);
+const storePriceOrder = sortPlaces(storeRows, storeTrip, { key: 'price', dir: 'asc' });
+assert.equal(storePriceOrder[0].name, "Zabar's");
+assert.equal(storePriceOrder[1].name, 'Strand Book Store');
+
+const logoTrip = {
+  places: [{ id: 88, name: 'Village Vanguard', category_name: 'event', url: 'https://www.villagevanguard.com/' }],
+  thingOverrides: { 'place:88': { category: 'event' } },
+};
+assert.equal(
+  logoUrlForPlace(logoTrip.places[0], logoTrip),
+  'https://www.villagevanguard.com/favicon.ico',
 );
 
 const longFlightNarrative =
