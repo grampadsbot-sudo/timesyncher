@@ -6,12 +6,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 
 const repo = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const captureDir = path.join(repo, 'scripts/ops/capture');
 const headSha = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const replayProducerHead = (process.env.TSV_SANCTIONED_REPLAY_PRODUCER_HEAD || '1141d5ce833b3648b18f114a95ede1af4b03c265')
+  .trim()
+  .toLowerCase();
+assert.match(replayProducerHead, /^[0-9a-f]{40}$/, 'TSV_SANCTIONED_REPLAY_PRODUCER_HEAD must be a full git sha');
 
 function narrativeWordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
@@ -52,6 +55,20 @@ print(json.dumps(capture_replay_env_for_pair(pair, ${JSON.stringify(repo)})))
   return JSON.parse(out);
 }
 
+async function loadProducerReplaySurface(env) {
+  const root = env.TSV_CAPTURE_REPO_ROOT;
+  assert.ok(root, 'binding env must set TSV_CAPTURE_REPO_ROOT');
+  const producerPath = path.join(root, 'src/vacation/shared-trip-fixture-replay.mjs');
+  assert.ok(fs.existsSync(producerPath), `sanctioned producer missing at ${producerPath}`);
+  const listTabPath = path.join(root, 'apps/vacation-client/src/lib/listTabModel.mjs');
+  assert.ok(fs.existsSync(listTabPath), `producer listTabModel missing at ${listTabPath}`);
+  const mod = await import(pathToFileURL(producerPath).href);
+  const listTab = await import(pathToFileURL(listTabPath).href);
+  assert.equal(typeof mod.prepareFixtureReplaySharedTrip, 'function');
+  assert.equal(typeof listTab.rowSummary, 'function');
+  return { prepareFixtureReplaySharedTrip: mod.prepareFixtureReplaySharedTrip, rowSummaryServed: listTab.rowSummary };
+}
+
 const smokeFixture = {
   places: [{
     id: 49,
@@ -73,27 +90,29 @@ const rawPlace = rawTrip.places.find((place) => place.id === 49);
 const rawWords = narrativeWordCount(rowSummary(rawPlace, rawTrip));
 assert.ok(rawWords < 10, `raw fixture row must stay thin (${rawWords} words)`);
 
-const boundEnv = bindingEnv(headSha, headSha, fixturePath, fixtureDigest);
+const boundEnv = bindingEnv(replayProducerHead, headSha, fixturePath, fixtureDigest);
+assert.equal(boundEnv.TSV_CAPTURE_PRODUCER_HEAD_SHA, replayProducerHead);
+const { prepareFixtureReplaySharedTrip, rowSummaryServed } = await loadProducerReplaySurface(boundEnv);
 const okRun = runTimelineReplay(boundEnv, fixtureBytes);
 assert.equal(okRun.status, 0, okRun.stderr || okRun.stdout);
 const okData = JSON.parse(okRun.stdout);
 const { served } = prepareFixtureReplaySharedTrip(fixtureBytes);
 const servedPlace = served.places.find((place) => place.id === 49);
-const servedWords = narrativeWordCount(rowSummary(servedPlace, served));
+const servedWords = narrativeWordCount(rowSummaryServed(servedPlace, served));
 assert.ok(servedWords >= 30, `replay must bind stored ccab narrative (${servedWords} words)`);
 assert.equal(okData.timelineReplay.source_fixture_sha256, fixtureDigest);
 assert.equal(okData.timelineReplay.render_head, headSha);
-assert.equal(okData.timelineReplay.replay_producer_head, headSha);
+assert.equal(okData.timelineReplay.replay_producer_head, replayProducerHead);
 
 const otherRender = 'c'.repeat(40);
-const splitRenderEnv = bindingEnv(headSha, otherRender, fixturePath, fixtureDigest);
+const splitRenderEnv = bindingEnv(replayProducerHead, otherRender, fixturePath, fixtureDigest);
 assert.equal(splitRenderEnv.TSV_CAPTURE_RENDER_HEAD_SHA, otherRender);
-assert.equal(splitRenderEnv.TSV_CAPTURE_PRODUCER_HEAD_SHA, headSha);
+assert.equal(splitRenderEnv.TSV_CAPTURE_PRODUCER_HEAD_SHA, replayProducerHead);
 assert.equal(splitRenderEnv.TSV_CAPTURE_REPO_ROOT, boundEnv.TSV_CAPTURE_REPO_ROOT);
 
 const shortSha = {
   ...boundEnv,
-  TSV_CAPTURE_PRODUCER_HEAD_SHA: headSha.slice(0, 7),
+  TSV_CAPTURE_PRODUCER_HEAD_SHA: replayProducerHead.slice(0, 7),
 };
 const shortRun = runTimelineReplay(shortSha, fixtureBytes);
 assert.notEqual(shortRun.status, 0);
@@ -179,5 +198,10 @@ assert.equal(callers.status, 0, callers.stderr || callers.stdout);
 
 console.log(
   'capture-fixture-replay-harness OK:',
-  JSON.stringify({ rawWords, servedWords, producerHead: headSha.slice(0, 7) }),
+  JSON.stringify({
+    rawWords,
+    servedWords,
+    renderHead: headSha.slice(0, 7),
+    producerHead: replayProducerHead.slice(0, 7),
+  }),
 );
