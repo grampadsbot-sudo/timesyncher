@@ -26,4 +26,4 @@ CI would fail `scripts/test_served_trek_bundle.mjs`: committed `public/assets/in
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-**Tip sha:** (filled after commit)
+**Tip sha:** `d2e1378a`
