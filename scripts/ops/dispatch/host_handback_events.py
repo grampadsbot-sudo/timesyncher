@@ -144,6 +144,19 @@ def verify_receipt_binding(record):
     return data
 
 
+def _comment_created_at(comment):
+    _require(isinstance(comment, dict), 'comment must be an object')
+    created = comment.get('created_at')
+    _require(isinstance(created, str) and created, 'comment created_at required')
+    from datetime import datetime
+    try:
+        stamp = datetime.fromisoformat(created.replace('Z', '+00:00'))
+    except ValueError as exc:
+        raise EventError('comment created_at is not exact UTC') from exc
+    _require(stamp.tzinfo is not None, 'comment created_at is not exact UTC')
+    return stamp.timestamp()
+
+
 def verify_comment_binding(record, comment):
     record = normalize_record(record)
     _require(isinstance(comment, dict), 'comment must be an object')
@@ -171,6 +184,9 @@ def verify_event(record, comment, current_head, now=None, max_skew=60, max_age=9
     _require(record['event_at'] <= now + max_skew, 'host handback event timestamp is in the future')
     _require(0 < max_age <= 900, 'event freshness window must be between zero and 900 seconds')
     _require(now - record['event_at'] <= max_age, 'host handback event is stale')
+    comment_at = _comment_created_at(comment)
+    _require(abs(record['event_at'] - comment_at) <= max_skew,
+             'event_at and comment created_at disagree beyond clock skew')
     verify_receipt_binding(record)
     verify_comment_binding(record, comment)
     return record

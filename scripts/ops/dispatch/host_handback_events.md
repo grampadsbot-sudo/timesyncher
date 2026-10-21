@@ -30,7 +30,9 @@ Legacy `HOST_HANDOFF.json` shapes (`at` / `message` / `receipt_exists` only) are
 - `load_event(path)` — parse and structural-check; refuse legacy.
 - `verify_event(record, comment, current_head, now=...)` — re-read receipt bytes and
   match comment issue URL/item, id, actor id, body digest, head, and timestamps (`created_at` must equal
-  `updated_at`). Events older than 900 seconds fail closed; callers may narrow that window.
+  `updated_at`). `event_at` and comment `created_at` must agree within 60 seconds (timezone-aware timestamp parsing;
+  malformed timestamps fail closed). Events older than 900 seconds fail closed; callers may narrow that window.
+  Only `state: pending` records authenticate through the collector; `reviewed` raises an explicit error.
 - `verify_receipt_binding(record)` / `verify_comment_binding(record, comment)` — split checks.
 
 ## Collector wiring (`host_handback_evidence.py`)
@@ -38,14 +40,19 @@ Legacy `HOST_HANDOFF.json` shapes (`at` / `message` / `receipt_exists` only) are
 Supply paths explicitly when constructing `HostReaders`:
 
 - `handback_event_paths={569: "/home/.../job/HOST_HANDOFF.json"}` — fixed path per item.
-- `handback_event_root="/home/.../job/events"` — uses `{root}/{item}.json` when that file exists.
+- `handback_event_root="/home/.../job/events"` — uses `{root}/{item}.json` for every item under that root (file must exist at collection time; missing file is fail-closed, not legacy fallback).
 
 Paths are never parsed from GBrain receipt prose. Without a configured path, the
-collector keeps the legacy scoped-receipt byte check.
+collector keeps the legacy scoped-receipt byte check. When configured, only the
+GitHub comment whose id matches the event record is authenticated; other historical
+`host review required` comments are ignored.
 
 Event `event_at` freshness uses the existing 900-second `verify_event` window at
 collection time. Classifier review timing (`REVIEW_S`, 20 minutes on comment time)
-is unchanged and separate.
+is unchanged and separate. Because `event_at` and comment `created_at` are bound
+within 60 seconds, a comment old enough for `DUE` (20 minutes) implies `event_at`
+is also beyond the 900-second authentication window. Overdue host-review routing
+via authenticated NEW events therefore remains blocked without weakening either threshold.
 
 ## Unresolved (not implemented here)
 

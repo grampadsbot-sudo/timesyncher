@@ -3,6 +3,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -40,14 +41,16 @@ class HostHandbackEvents(unittest.TestCase):
         self.comment_body = 'Independent review continues; host review required.'
         self.event_path = self.root / 'HOST_HANDOFF.json'
 
-    def comment(self, **changes):
+    def comment(self, at=None, **changes):
+        stamp = datetime.fromtimestamp(at if at is not None else NOW - 120, timezone.utc).strftime(
+            '%Y-%m-%dT%H:%M:%SZ')
         base = {
             'id': COMMENT_ID,
             'user': {'id': ACTOR, 'login': 'grampadsbot-sudo'},
             'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/569',
             'body': self.comment_body,
-            'created_at': '2026-10-20T17:33:10Z',
-            'updated_at': '2026-10-20T17:33:10Z',
+            'created_at': stamp,
+            'updated_at': stamp,
         }
         base.update(changes)
         return base
@@ -155,7 +158,20 @@ class HostHandbackEvents(unittest.TestCase):
     def test_stale_event_refused(self):
         record = dict(self.write_event(), event_at=NOW - 901)
         with self.assertRaisesRegex(EventError, 'stale'):
-            verify_event(record, self.comment(), HEAD, now=NOW)
+            verify_event(record, self.comment(at=NOW - 901), HEAD, now=NOW)
+
+    def test_event_at_comment_created_at_skew_refused(self):
+        record = self.write_event()
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            with self.assertRaisesRegex(EventError, 'clock skew'):
+                verify_event(record, self.comment(at=NOW - 3600), HEAD, now=NOW)
+
+    def test_non_utc_comment_timestamp_refused(self):
+        record = self.write_event()
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            with self.assertRaisesRegex(EventError, 'exact UTC'):
+                verify_event(record, self.comment(created_at='not-a-timestamp', updated_at='not-a-timestamp'),
+                             HEAD, now=NOW)
 
     def test_freshness_cannot_be_disabled(self):
         record = self.write_event()

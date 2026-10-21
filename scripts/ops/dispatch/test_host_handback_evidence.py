@@ -117,6 +117,7 @@ class CollectorBoundaries(unittest.TestCase):
         self.record = self.comments[0]['html_url'] + '\n' + SHA
         self.readers = Mock(spec=HostReaders)
         self.readers.handback_event_path.return_value = None
+        self.readers.handback_event_configured.return_value = False
         self.readers.page.side_effect = lambda slug: self.page if slug == ASSESSMENT else self.record
         self.readers.running.return_value = frozenset()
         self.readers.receipt.return_value = self.comments[0]['body']
@@ -375,12 +376,13 @@ class CollectorHandbackEvents(unittest.TestCase):
         self.event_path = self.root / 'HOST_HANDOFF.json'
         self.item = issue()
         self.item['head'] = {'sha': SHA}
+        self.event_at = NOW - 120
         self.comments = [{
             'id': 42,
             'user': {'login': 'host-supervisor', 'id': self.ACTOR_ID},
             'body': self.COMMENT_BODY,
-            'created_at': iso(NOW - 3600),
-            'updated_at': iso(NOW - 3600),
+            'created_at': iso(self.event_at),
+            'updated_at': iso(self.event_at),
             'html_url': 'https://example.test/issues/566#issuecomment-42',
             'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/566',
         }]
@@ -397,7 +399,7 @@ class CollectorHandbackEvents(unittest.TestCase):
             'path': self.event_path,
             'item': 566,
             'head': SHA,
-            'event_at': NOW - 120,
+            'event_at': self.event_at,
             'state': 'pending',
             'receipt_path': str(self.receipt_path),
             'receipt_sha256': self.receipt_sha,
@@ -415,7 +417,7 @@ class CollectorHandbackEvents(unittest.TestCase):
 
     def test_authenticated_new_event_routes_to_review(self):
         ev = self.evidence()
-        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'DUE')
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'OWNED')
         self.assertIn(42, ev.handback_ids)
 
     def test_absent_event_file_refuses(self):
@@ -477,7 +479,7 @@ class CollectorHandbackEvents(unittest.TestCase):
             per_item,
             item=566,
             head=SHA,
-            event_at=NOW - 120,
+            event_at=self.event_at,
             state='pending',
             receipt_path=str(self.receipt_path),
             receipt_sha256=self.receipt_sha,
@@ -488,6 +490,58 @@ class CollectorHandbackEvents(unittest.TestCase):
         )
         ev = collector(self.item, self.comments, NOW)
         self.assertIn(42, ev.handback_ids)
+
+    def test_event_root_missing_item_file_fail_closed(self):
+        event_dir = self.root / 'events'
+        event_dir.mkdir()
+        readers = HostReaders(self.root, handback_event_root=event_dir)
+        readers.page = self.readers.page
+        readers.running = self.readers.running
+        collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', readers, clock=lambda: NOW)
+        with self.assertRaisesRegex(EvidenceError, 'event file not found'):
+            collector(self.item, self.comments, NOW)
+
+    def test_historical_host_re_comment_not_used_for_new_event(self):
+        self.write_event()
+        self.comments.insert(0, {
+            'id': 10,
+            'user': {'login': 'host-supervisor', 'id': self.ACTOR_ID},
+            'body': self.COMMENT_BODY,
+            'created_at': iso(NOW - 7200),
+            'updated_at': iso(NOW - 7200),
+            'html_url': 'https://example.test/issues/566#issuecomment-10',
+            'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/566',
+        })
+        ev = self.collector(self.item, self.comments, NOW)
+        self.assertEqual(ev.handback_ids, frozenset({42}))
+
+    def test_reviewed_event_record_refuses(self):
+        self.write_event(state='reviewed')
+        with self.assertRaisesRegex(EvidenceError, 'unsupported reviewed'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_artificial_old_comment_with_fresh_event_refuses(self):
+        self.write_event()
+        self.comments[0]['created_at'] = iso(NOW - 3600)
+        self.comments[0]['updated_at'] = iso(NOW - 3600)
+        with self.assertRaisesRegex(EvidenceError, 'clock skew'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_fresh_event_at_fifteen_minutes_classifies_owned(self):
+        self.event_at = NOW - 900
+        self.comments[0]['created_at'] = iso(self.event_at)
+        self.comments[0]['updated_at'] = iso(self.event_at)
+        self.write_event(event_at=self.event_at)
+        ev = self.collector(self.item, self.comments, NOW)
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'OWNED')
+
+    def test_overdue_event_at_twenty_minutes_refuses_before_classifier(self):
+        self.event_at = NOW - 1200
+        self.comments[0]['created_at'] = iso(self.event_at)
+        self.comments[0]['updated_at'] = iso(self.event_at)
+        self.write_event(event_at=self.event_at)
+        with self.assertRaisesRegex(EvidenceError, 'stale'):
+            self.collector(self.item, self.comments, NOW)
 
 
 class GuardedCraigLookSend(unittest.TestCase):

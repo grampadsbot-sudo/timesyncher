@@ -177,14 +177,15 @@ class HostReaders:
         self.handback_event_root = Path(handback_event_root) if handback_event_root else None
         self.handback_event_paths = dict(handback_event_paths or {})
 
+    def handback_event_configured(self, number):
+        return number in self.handback_event_paths or self.handback_event_root is not None
+
     def handback_event_path(self, number):
-        """Return an explicit on-disk event record path for this item, if configured."""
+        """Return the configured on-disk event record path for this item, if any."""
         if number in self.handback_event_paths:
             return Path(self.handback_event_paths[number])
         if self.handback_event_root is not None:
-            candidate = self.handback_event_root / ('%d.json' % number)
-            if candidate.is_file():
-                return candidate
+            return self.handback_event_root / ('%d.json' % number)
         return None
 
     def authenticate_handback_event(self, path, item, head, comment, now):
@@ -195,6 +196,8 @@ class HostReaders:
         except EventError as exc:
             raise EvidenceError(str(exc)) from exc
         require(record['item'] == item, 'host handback event item mismatch')
+        require(record['state'] == 'pending',
+                'unsupported reviewed host handback resolution; explicit acceptance contract required')
         try:
             verify_event(record, comment, head, now=now)
         except EventError as exc:
@@ -341,24 +344,39 @@ class CanonicalCollector:
                 guarded = self.readers.guarded_craig(item, self.pages)
                 require(type(guarded) is bool, 'Craig guard must be authenticated boolean proof')
             handbacks = set()
-            event_path = self.readers.handback_event_path(n)
-            for comment in comments:
-                if not HOST_RE.search(comment.get('body') or ''):
-                    continue
+            if self.readers.handback_event_configured(n):
+                event_path = self.readers.handback_event_path(n)
+                require(event_path is not None, 'authenticated host handback event path missing')
+                require(event_path.is_file(), 'authenticated host handback event file not found')
+                try:
+                    record = load_event(event_path)
+                except EventError as exc:
+                    raise EvidenceError(str(exc)) from exc
+                require(record['item'] == n, 'host handback event item mismatch')
+                bound_id = record['comment_id']
+                bound = [c for c in comments if c.get('id') == bound_id]
+                require(len(bound) == 1, 'event comment id missing from current snapshot')
+                comment = bound[0]
+                require(HOST_RE.search(comment.get('body') or ''),
+                        'bound host handback comment lacks host review trigger')
                 require(comment.get('user', {}).get('id') == self.actor['id']
                         and comment['user'].get('login') in self.actors, 'host receipt GH actor mismatch')
-                if event_path is not None:
-                    require(event_path.is_file(), 'authenticated host handback event file not found')
-                    self.readers.authenticate_handback_event(event_path, n, head, comment, checked)
+                self.readers.authenticate_handback_event(event_path, n, head, comment, checked)
+                handbacks.add(bound_id)
+            else:
+                for comment in comments:
+                    if not HOST_RE.search(comment.get('body') or ''):
+                        continue
+                    require(comment.get('user', {}).get('id') == self.actor['id']
+                            and comment['user'].get('login') in self.actors, 'host receipt GH actor mismatch')
+                    url = comment.get('html_url')
+                    sources = [page for page in self.pages.values() if url and url in page]
+                    require(sources, 'host-review comment lacks canonical host receipt reference')
+                    require(comment.get('created_at') == comment.get('updated_at'),
+                            'edited host event requires new authenticated receipt')
+                    require(any(comment['body'] == self.readers.receipt(page, n, head) for page in sources),
+                            'host comment differs from authenticated scoped receipt bytes')
                     handbacks.add(comment['id'])
-                    continue
-                url = comment.get('html_url')
-                sources = [page for page in self.pages.values() if url and url in page]
-                require(sources, 'host-review comment lacks canonical host receipt reference')
-                require(comment.get('created_at') == comment.get('updated_at'), 'edited host event requires new authenticated receipt')
-                require(any(comment['body'] == self.readers.receipt(page, n, head) for page in sources),
-                        'host comment differs from authenticated scoped receipt bytes')
-                handbacks.add(comment['id'])
             if handbacks:
                 newest = max((c for c in comments if c.get('user', {}).get('login') in self.actors),
                              key=lambda c: (_time(c['created_at']), c['id']))
