@@ -1,6 +1,6 @@
 # PR543 — list logos and stores tab (vkfill-543-20261020172727)
 
-Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Tip `02ef6a926ce06dfb9edbd53e2988c465a7c30db8` (pushed to `vkfill/335-p3a-wiring-202610190827`). CI and Gate B on this head are for the host publisher; not claimed here.
+Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane tip `c030d57cb950113d0d1576ee6053b5e8534177dc` (receipt commit, host publish). CI and Gate B on the published head are for the host; not claimed here.
 
 ## Changes
 
@@ -9,10 +9,10 @@ Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-fil
 
 Files: `apps/vacation-client/src/lib/listTabModel.mjs`, `apps/vacation-client/src/screens/CategoryTabScreen.tsx`, `apps/vacation-client/test/listRows.unit.mjs`.
 
-## Checks (local, tip `02ef6a92`)
+## Checks (local, lane tip `c030d57c`, 2026-10-21 UTC)
 
 - `node apps/vacation-client/test/listRows.unit.mjs` — pass
-- `cd apps/vacation-client && npm run typecheck && npm run test` — pass
+- `cd apps/vacation-client && npm run typecheck && npm run test` — pass (unit; shell-layout skipped without CHROME_PATH)
 - `node scripts/check-no-comments.mjs` — pass
 - `node scripts/test_offline_manifest.mjs` — pass
 - `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (0 fail)
