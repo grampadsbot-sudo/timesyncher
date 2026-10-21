@@ -13,13 +13,18 @@ Base merge: host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab65
 ## Gate B context
 - Prior fail run `20261021-215421`, head `ec64acf4`: `daybyday-390-top.png` (tab calendar chip), `stores-1280.png` (vision header flake; `stores-1280-top.png` PASS at same pixel diff).
 
-## Local verification
+## Local verification (tip `ba720b10`, merge `446e1913` into `8e44c247`)
+- `node scripts/rebake_served_trek_bundle.mjs` — pass
+- `CHROME_PATH=/usr/bin/chromium-browser npm test` (apps/vacation-client) — pass
 - `node scripts/test_shared_tab_category_css_blast_radius.mjs` — pass
 - `node scripts/test_shared_category_tab_icon_center_bundle.mjs` — pass
 - `node scripts/test_shared_logo_chip_center_bundle.mjs` — pass
 - `node scripts/test_served_trek_bundle.mjs` — pass
-- `node scripts/rebake_served_trek_bundle.mjs`
-- Pre-DONE at `04e3683c`: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass (after `npm ci` + `apps/vacation-client/npm ci`)
+- `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` — pass
+- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — pass
+
+## Lane offline suite gap (not product)
+- `node scripts/run-offline-tests.mjs` stops at `scripts/test_live_transcript_dialog_pdf.mjs`: with `gbrain` on PATH, `rules.via` is `gbrain-cli-get_page` (test expects `bundled-get_page`); without gbrain, `pdftotext` is missing on this host. Host CI is authority.
 
 ## Out of scope / not run here
 - Ubuntu Gate B re-capture on new head (required for Done).
