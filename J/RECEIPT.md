@@ -21,6 +21,6 @@ List-row description substance (#546): ccab merge at display time, no pipeline d
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
-Tip sha: _(filled after commit)_.
+Tip sha: `33cdcfb1a6575a8e9e126a00bd1d11d9d5da5629`.
 
 Pre-merge Gate B: not run (cron); targets generic descriptions / `description substance and quality` on head per handoff `bot-admin/lanes/vk-pr-handoff/pr-549`.

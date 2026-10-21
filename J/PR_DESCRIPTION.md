@@ -22,7 +22,7 @@ cd apps/vacation-client && npm run typecheck
 node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
 ```
 
-All passed locally on tip sha below.
+All passed locally on tip `33cdcfb1`.
 
 ## Left alone
 
