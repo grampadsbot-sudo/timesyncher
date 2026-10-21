@@ -111,7 +111,9 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Drop-off hours', fields.dropoffHours);
     push('Drop-off time', fields.dropoffTime || fields.returnTime || fields.endTime);
     const carDetail = text(fields.longDetails || fields.details || fields.description, 4000);
-    if (carDetail && !parts.join(' · ').includes(carDetail)) parts.push(carDetail);
+    if (carDetail && !isGenericListDescription(carDetail) && !parts.join(' · ').includes(carDetail)) {
+      parts.push(carDetail);
+    }
     const price = formatMoney(fields.price);
     if (!omitListPrice && hasPriceDigits(price)) push('', `${price} total`);
     push('Reputation', text(fields.reputationNote, 500) || reputationFromThemes(fields.reviewThemes));
@@ -125,7 +127,9 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     push('Area', fields.neighborhood);
     push('Location', fields.address);
     const hotelDetail = text(fields.longDetails || fields.details || fields.description, 4000);
-    if (hotelDetail && !parts.join(' · ').includes(hotelDetail)) parts.push(hotelDetail);
+    if (hotelDetail && !isGenericListDescription(hotelDetail) && !parts.join(' · ').includes(hotelDetail)) {
+      parts.push(hotelDetail);
+    }
     push('', fields.websiteFlavour);
     push('Amenities', Array.isArray(fields.amenities) ? fields.amenities.join(', ') : fields.amenities);
     push('Price level', fields.priceLevel);
@@ -150,7 +154,14 @@ export function composeListRowDescription({ category = '', summary = '', fields 
     }
     const joined = () => parts.join(' · ');
     const what = text(fields.longDetails || fields.details || fields.description, 4000);
-    if (what && !joined().includes(what)) parts.push(what);
+    if (
+      what
+      && !isPipelineDiagnostic(what)
+      && !isGenericListDescription(what)
+      && !joined().includes(what)
+    ) {
+      parts.push(what);
+    }
     const flavour = text(fields.websiteFlavour, 2000);
     if (flavour && !joined().includes(flavour)) parts.push(flavour);
     push('Where', fields.address || fields.location);
@@ -166,10 +177,15 @@ export function composeListRowDescription({ category = '', summary = '', fields 
       : '';
     push('Why go', text(fields.worthNote, 500) || praise || rating);
     const experienceRow = parts.join(' · ') || hook || note;
-    if ((wordCount(experienceRow) < 6 || isGenericListDescription(experienceRow)) && what) {
+    if (
+      (wordCount(experienceRow) < 6 || isGenericListDescription(experienceRow))
+      && what
+      && !isPipelineDiagnostic(what)
+      && !isGenericListDescription(what)
+    ) {
       return what;
     }
-    return experienceRow;
+    return isGenericListDescription(experienceRow) ? '' : experienceRow;
   }
 
   return hook;
@@ -191,7 +207,7 @@ export function finalizeListRowDisplayDescription(composed = '', { spare = '' } 
       row = fallback;
     }
   }
-  if (isPipelineDiagnostic(row) || isTimingShell(row)) return '';
+  if (isPipelineDiagnostic(row) || isTimingShell(row) || isGenericListDescription(row)) return '';
   return row;
 }
 
@@ -204,9 +220,10 @@ export function listRowDescriptionBundleSnippet() {
     'if(!row.address&&G&&G.address)row.address=G.address;if(row.price==null&&G&&G.price!=null&&!blocked.includes("price"))row.price=G.price;',
     'const wc=v=>String(v||"").replace(/\\s+/g," ").trim().split(/\\s+/).filter(Boolean).length;',
     'const isDiag=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();return!s?false:/\\bBlocked:/i.test(s)||/\\bccab capture\\b/i.test(s)||/^List-only row until/i.test(s);};',
+    'const isGeneric=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s)return true;if(/^Documented NYC option\\b/i.test(s))return true;if(/^Documented .+ option\\b/i.test(s))return true;return wc(s)<6;};',
     'const isShell=v=>{const s=String(v||"").replace(/\\s+/g," ").trim();if(!s||wc(s)>=12)return false;const stripped=s.replace(/\\b(?:Start|Duration|Price estimate):[^·;]+/gi,"").replace(/[·;]/g," ").trim();return wc(stripped)<4;};',
     'const spare=String(row.longDetails||row.details||row.description||(G&&G.description)||"").replace(/\\s+/g," ").trim();',
-    'const finalizeRow=out=>{let row=String(out||"").replace(/\\s+/g," ").trim();if((wc(row)<6||isShell(row)||isDiag(row))&&spare&&!isDiag(spare))row=spare;if(isDiag(row)||isShell(row))return"";return row;};',
+    'const finalizeRow=out=>{let row=String(out||"").replace(/\\s+/g," ").trim();if((wc(row)<6||isShell(row)||isDiag(row)||isGeneric(row))&&spare&&!isDiag(spare)&&!isGeneric(spare))row=spare;if(isDiag(row)||isShell(row)||isGeneric(row))return"";return row;};',
     'let hook=String(row.summary||row.itineraryNote||row.itinerary_note||"").replace(/\\s+/g," ").trim();if(isDiag(hook))hook="";',
     'const cat=String(It(G)||"").toLowerCase();',
     'const parts=[],push=(label,val)=>{const s=String(val||"").replace(/\\s+/g," ").trim();if(s)parts.push(label?label+": "+s:s);};',
@@ -246,7 +263,7 @@ export function listRowDescriptionBundleSnippet() {
     'if(experience.has(cat)){push("Start",when);push("Duration",row.duration);}',
     'const joined=()=>parts.join(" · ");',
     'const what=String(row.longDetails||row.details||row.description||"").replace(/\\s+/g," ").trim();',
-    'if(what&&!isDiag(what)&&!joined().includes(what))parts.push(what);',
+    'if(what&&!isDiag(what)&&!isGeneric(what)&&!joined().includes(what))parts.push(what);',
     'const flavour=String(row.websiteFlavour||"").replace(/\\s+/g," ").trim();',
     'if(flavour&&!joined().includes(flavour))parts.push(flavour);',
     'push("Where",row.address||row.location);',
@@ -254,7 +271,7 @@ export function listRowDescriptionBundleSnippet() {
     'const expRep=row.thirdPartyRating?(row.thirdPartySource||"Rating")+" "+row.thirdPartyRating+(row.thirdPartyReviewCount?" ("+row.thirdPartyReviewCount+")":""):"";',
     'let praise="";if(row.reviewThemes&&typeof row.reviewThemes==="object"&&Array.isArray(row.reviewThemes.praise))praise=row.reviewThemes.praise.map(t=>String(t||"").trim()).filter(Boolean).join("; ");',
     'push("Why go",row.worthNote||praise||expRep);',
-    'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow))&&what&&!isDiag(what))expRow=what;',
+    'let expRow=parts.join(" · ")||hook||note;if((wc(expRow)<6||isShell(expRow)||isGeneric(expRow))&&what&&!isDiag(what)&&!isGeneric(what))expRow=what;if(isGeneric(expRow))return"";',
     'return finalizeRow(expRow);}',
     'return finalizeRow(hook);},',
   ].join('');

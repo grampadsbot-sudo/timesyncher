@@ -87,7 +87,7 @@ fs.writeFileSync(fixturePath, fixtureBytes);
 const fixtureDigest = createHash('sha256').update(fixtureBytes).digest('hex');
 const rawTrip = JSON.parse(fixtureBytes.toString('utf8'));
 const rawPlace = rawTrip.places.find((place) => place.id === 49);
-const rawWords = narrativeWordCount(rowSummary(rawPlace, rawTrip));
+const rawWords = narrativeWordCount(rawPlace.description);
 assert.ok(rawWords < 10, `raw fixture row must stay thin (${rawWords} words)`);
 
 const boundEnv = bindingEnv(replayProducerHead, headSha, fixturePath, fixtureDigest);

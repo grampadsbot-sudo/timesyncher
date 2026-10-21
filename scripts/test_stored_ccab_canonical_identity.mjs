@@ -6,7 +6,7 @@ import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixt
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { buildGateBApprovedSharedTrip } from './fixtures/gate-b-approved-shared-trip.mjs';
 import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
-import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
+import { logoUrlForPlace, rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
 import {
   mergeStoredCcabNarrativeIntoOverride,
   resolveStoredCcabKey,
@@ -264,5 +264,30 @@ assert.match(
   /fitness center|Times Square|eco-certified/i,
   'Motto keeps sourced review overlay narrative',
 );
+
+const placeholderTrip = finalizeServedSharedTripPayload({
+  places: [{
+    id: 904,
+    name: 'Smoke',
+    category_name: 'activity',
+    description: 'Documented NYC option (music)',
+    price: 45,
+  }],
+  thingOverrides: { 'place:904': { startTime: '21:00' } },
+  days: [],
+  assignments: {},
+});
+const placeholderPlace = placeholderTrip.places.find((place) => place.id === 904);
+const placeholderSummary = rowSummary(placeholderPlace, placeholderTrip);
+assert.doesNotMatch(placeholderSummary, /\bDocumented\b.*\boption\b/i);
+assert.ok(narrativeWordCount(placeholderSummary) >= 30);
+
+const replayFixture = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify(rawFixture))).served;
+const strandLive = rawFixture.places.find((place) => place.id === 605);
+const strandReplay = replayFixture.places.find((place) => place.id === 605);
+const liveStrandLogo = logoUrlForPlace(strandLive, rawFixture);
+const replayStrandLogo = logoUrlForPlace(strandReplay, replayFixture);
+assert.ok(liveStrandLogo, 'Strand row should keep a bound logo on the live fixture');
+assert.equal(replayStrandLogo, liveStrandLogo, 'fixture replay must keep the same bound Strand logo');
 
 console.log('stored ccab canonical identity tests passed');
