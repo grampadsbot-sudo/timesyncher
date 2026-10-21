@@ -1,7 +1,7 @@
 # VK issue #601 receipt (cursor-ubuntu vkfill-601)
 
 **Start sha:** `e3364ac5b3d44795cd3b2d9c857e9c940a9f6790`  
-**Tip sha:** `05c2b245`
+**Tip sha:** `b27e3630`
 
 ## Problem
 
