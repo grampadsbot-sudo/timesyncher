@@ -26,4 +26,4 @@ Fixed unit-tests vite build break on `8d3d845e`: `listTabModel.mjs` no longer im
 
 Pre-merge Gate B: not run (cron). Prior named rows on `180b6a4`; head after this fix awaits structure verdict on new tip.
 
-Tip sha: _(filled after commit)_.
+Tip sha: `620922da`.
