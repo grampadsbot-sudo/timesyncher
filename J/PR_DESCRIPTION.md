@@ -1,27 +1,21 @@
-Closes #588
-
 ## Summary
 
-Fixes the migrate/trek-source **generic logos** known gap (`bot-admin/lanes/vk-known-gaps-218a3b39`): Gate B fixture replay now merges stored NYC ccab `logoUrl` values (and live-app list row resolution) so Boat tour candidates, Chelsea Market, United flight option, Hyatt House Chelsea, and related rows no longer share one placeholder chip on Events/Hotels.
+Fixes `unit-tests` failures on `scripts/ops/dispatch/test_same_selection_capture.py` (CI run 39667545911): fixture replay must not rewrite served `places` (category strings stay strings; no replay-time `logoUrl`/`website` injection).
 
-## What changed
+Generic list logos for #588 are resolved in the vacation client at render time via `logoUrlForPlace` → `resolveThingLogoUrl` in `apps/vacation-client/src/lib/listTabModel.mjs`, not by mutating the served trip payload.
 
-- New `prepareFixtureReplaySharedTrip` in `src/vacation/shared-trip-fixture-replay.mjs` for capture replay.
-- Stored-ccab merge/bind helpers in `scripts/fixtures/pr336-vk-search-trip-sources.mjs` (ccab logo wins over stale fixture URLs).
-- `nyc_ccab_place_enrichment.json`: Boat tour candidates (Circle Line); Hyatt House favicon path.
-- `listTabModel.mjs`: `resolveThingLogoUrl` fallback for list chips.
+Reverted the prior round’s fixture/ccab harness churn and restored the subprocess sanctioned-producer binding in `scripts/ops/capture/timeline-replay.mjs`.
 
-## Checks run locally
+## Test plan
 
-- `node scripts/test_pr336_ccab_search_provenance.mjs`
-- `node scripts/test_gate_b_product_row_fields.mjs`
-- `node scripts/test_trip_thing_logo_metadata.mjs`
-- `node scripts/check-no-comments.mjs`
-- `node scripts/test_offline_manifest.mjs`
-- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
-
-Fixture replay spot-check: `prepareFixtureReplaySharedTrip` on `nyc-shared.json` — no single `logoUrl` on 7+ rows; Boat/Chelsea/United/Hyatt show operator favicons.
+- [x] `python3 scripts/ops/dispatch/test_same_selection_capture.py`
+- [x] `node scripts/test_capture_fixture_replay_harness.mjs`
+- [x] `cd apps/vacation-client && npm run typecheck && npm run test`
+- [x] Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=codex/ruling95-consolidated-logo check-code-ratchet`
+- [ ] CI `unit-tests` green on PR head (host)
+- [ ] Gate B structure mode on 32 screens (host)
 
 ## Left alone (scope)
 
-Layout, timeline, baselines, Gate B checker thresholds, workflows, dependencies.
+- Baselines, capture/Gate B thresholds, `offline-tests.txt`, NYC reference screenshots
+- Fixture/snapshot edits for logo chips (reverted)

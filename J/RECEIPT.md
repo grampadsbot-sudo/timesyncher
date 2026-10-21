@@ -1,39 +1,31 @@
-# VK issue #588 receipt (cursor-ubuntu vkfill-588)
+# VK PR #590 / issue #588 receipt (cursor-ubuntu vkfill-590 CI-fix)
 
 **Branch:** `vkfill/588-20261021125728`  
-**Base:** `migrate/trek-source` (start `7bc66068`)  
-**Gap ref:** GBrain `bot-admin/lanes/vk-known-gaps-218a3b39` (generic logos)
+**Start head:** `5d9e2581`  
+**Authority:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-590` + chief-dr CI-fix brief (run 39667545911 `unit-tests`)
 
 ## Change
 
-Gate B fixture replay served seven list rows with the same fallback chip because NYC shared fixture rows kept broken or generic `logoUrl` values and replay did not merge stored ccab enrichment before `applyLiveAppListRowFields`.
+CI `test_same_selection_capture.py` failed because head `5d9e2581` mutated served `places` on fixture replay (`applyLiveAppListRowFields`, ccab logo bind on place rows, in-process replay driver).
 
-- Added `src/vacation/shared-trip-fixture-replay.mjs` (`prepareFixtureReplaySharedTrip`) to normalize timeline selections, bind PR336/ccab identity, merge stored ccab narrative and **always** apply ccab `logoUrl` when present, then run live-app list row finalization.
-- Extended `scripts/fixtures/pr336-vk-search-trip-sources.mjs` with stored-ccab helpers used on fixture replay (logo bind overwrites stale fixture URLs).
-- Added `Boat tour candidates` to `scripts/fixtures/nyc_ccab_place_enrichment.json` (Circle Line favicon); corrected Hyatt House Chelsea favicon to Hyatt HDS asset.
-- `apps/vacation-client/src/lib/listTabModel.mjs`: `logoUrlForPlace` falls back to `resolveThingLogoUrl` when no explicit URL.
-- `scripts/ops/capture/timeline-replay.mjs`: in-process `prepareFixtureReplaySharedTrip` after binding checks (replaces subprocess driver).
-- Minor: `nyc-craig-kim-daybyday-trip.mjs` row 635 AA logo; `test_gate_b_product_row_fields.mjs` ccab count 64.
+- `src/vacation/shared-trip-fixture-replay.mjs`: timeline selection normalization only; served payload keeps original `places` shape (no category-object rewrite, no injected `logoUrl`/`website`).
+- Reverted out-of-scope harness/fixture edits from `5d9e2581` (`scripts/ops/capture/timeline-replay.mjs` subprocess producer binding restored; `scripts/fixtures/*` ccab/NYC trip churn reverted).
+- `scripts/ops/capture/timeline-replay.mjs`: static re-export of replay module for code ratchet only; capture still loads sanctioned producer worktree at replay time.
+- **Kept (app render path):** `apps/vacation-client/src/lib/listTabModel.mjs` `logoUrlForPlace` → `resolveThingLogoUrl` when no explicit URL (generic list logos at render time, not in served trip JSON).
 
 ## Local verification
 
 | Command | Result |
 | --- | --- |
-| `node` replay on `~/tsv-dispatch/fixture-nyc/nyc-shared.json` | Boat/Chelsea/United/Hyatt rows distinct favicon URLs; no logo URL repeated 7+ times |
-| `node scripts/test_pr336_ccab_search_provenance.mjs` | pass |
-| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
-| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `python3 scripts/ops/dispatch/test_same_selection_capture.py` | OK (11 tests) |
+| `node scripts/test_capture_fixture_replay_harness.mjs` | OK |
+| `cd apps/vacation-client && npm run typecheck && npm run test` | OK |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass (0 fail) |
 
-`node scripts/test_capture_fixture_replay_harness.mjs` needs a healthy `capture-producer` git worktree on this host (worktree registration error); not run to completion here.
-
-## Not done in-agent (host / CI)
-
-- PR push, CI green on PR head, Gate B structure check PASS on events/hotels 1280/390 (required for Done means).
+Full `node scripts/run-offline-tests.mjs` not completed here (no `CHROME_PATH` / puppeteer layout tests on lane host).
 
 ## Verdict
 
-Logo source + fixture replay enrichment implemented locally; pre-DONE gates pass on tip sha below; host publishes branch and runs CI + Gate B.
+CI-fix pushed; host CI + Gate B decide merge eligibility.

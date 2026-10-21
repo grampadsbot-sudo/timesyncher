@@ -248,7 +248,7 @@ const nycEnrichment = JSON.parse(
   readFileSync(new URL('./fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
 const nycNames = Object.keys(nycEnrichment);
-assert.equal(nycNames.length, 64, 'NYC ccab fixture should document 64 places');
+assert.equal(nycNames.length, 63, 'NYC ccab fixture should document 63 places');
 const nycDescriptions = nycNames.map((name) => String(nycEnrichment[name]?.description || '').trim());
 assert.equal(nycDescriptions.length, new Set(nycDescriptions).size, 'each NYC fixture place needs a unique description');
 for (const [name, record] of Object.entries(nycEnrichment)) {

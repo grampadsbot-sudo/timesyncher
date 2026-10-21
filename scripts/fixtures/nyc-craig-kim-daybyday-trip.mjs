@@ -440,10 +440,6 @@ function buildPayload() {
     if (row.id === 612) {
       override.logoUrl = 'https://www.chelseamarket.com/favicon.ico';
     }
-    if (row.id === 635) {
-      override.logoUrl = 'https://www.aa.com/favicon.ico';
-      override.airline = 'American Airlines';
-    }
     if (row.id === 613) {
       override.logoUrl = 'https://www.macys.com/favicon.ico';
     }

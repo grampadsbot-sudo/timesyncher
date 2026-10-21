@@ -1,15 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
-import {
-  bindPr336GateBCanonicalIdentity,
-  enrichListRowFromStoredCcab,
-  mergeStoredCcabNarrativeIntoOverride,
-  resolveStoredCcabKey,
-  shouldMergeStoredCcabOnFixtureReplay,
-} from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
-import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
-
 export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 
 function normalizeTimelineSelections(trip = {}) {
@@ -32,53 +23,13 @@ function normalizeTimelineSelections(trip = {}) {
   };
 }
 
-function bindStoredCcabLogo(place = {}, override = {}) {
-  const hit = resolveStoredCcabKey(place, override);
-  if (!hit) return override;
-  const enriched = enrichListRowFromStoredCcab(
-    place,
-    override,
-    override.category || place.category_name,
-  );
-  if (!enriched?.logoUrl) return override;
-  const next = { ...override, logoUrl: enriched.logoUrl };
-  place.logoUrl = enriched.logoUrl;
-  if (!text(place.website) && enriched.sourceRecord?.website) {
-    place.website = enriched.sourceRecord.website;
-  }
-  return next;
-}
-
-function text(value) {
-  return String(value || '').trim();
-}
-
-function enrichFixtureReplayServedTrip(shared = {}) {
-  const places = Array.isArray(shared.places) ? shared.places.map((place) => ({ ...place })) : [];
-  const thingOverrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
-    ? { ...shared.thingOverrides }
-    : {};
-  for (const place of places) {
-    const key = `place:${place.id}`;
-    let override = { ...(thingOverrides[key] || {}) };
-    override = bindPr336GateBCanonicalIdentity(place.id, place, override);
-    override = shouldMergeStoredCcabOnFixtureReplay(place, override)
-      ? mergeStoredCcabNarrativeIntoOverride(place, override)
-      : override;
-    override = bindStoredCcabLogo(place, override);
-    thingOverrides[key] = override;
-  }
-  return applyLiveAppListRowFields({ ...shared, places, thingOverrides });
-}
-
 export function prepareFixtureReplaySharedTrip(bytes) {
   const source = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   const parsed = JSON.parse(source.toString('utf8'));
   const { trip, selectedPlaceKeys } = normalizeTimelineSelections(parsed);
-  const served = enrichFixtureReplayServedTrip(trip);
-  const payload = Buffer.from(JSON.stringify(served));
+  const payload = Buffer.from(JSON.stringify(trip));
   return {
-    served,
+    served: trip,
     payload,
     timelineReplay: {
       policy: 'timeline-explicit-v1',
