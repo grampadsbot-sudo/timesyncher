@@ -162,7 +162,7 @@ export function materializePr336GateBSnapshotPlaces(placesById = {}) {
 }
 
 export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
-  const ccabKey = rowCcabKey || NYC_GATE_B_ROW_CCAB_KEYS[id] || resolveNycCcabKey(name);
+  const ccabKey = resolveNycCcabKey(rowCcabKey || NYC_GATE_B_ROW_CCAB_KEYS[id] || name);
   let ccabRecord = ccabKey ? ENRICHMENT[ccabKey] : null;
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);

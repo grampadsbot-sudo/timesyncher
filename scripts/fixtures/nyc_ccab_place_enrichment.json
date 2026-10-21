@@ -241,17 +241,6 @@
     "lng": null,
     "address": "Hell’s Kitchen, New York, NY"
   },
-  "Romer Hell's Kitchen": {
-    "category": "hotel",
-    "description": "Neighborhood: Hell’s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Hell’s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.",
-    "price": 425,
-    "website": "https://www.romerhotels.com/hells-kitchen/",
-    "logoUrl": "https://www.romerhotels.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Hell’s Kitchen, New York, NY"
-  },
   "Midtown sample hotel": {
     "category": "hotel",
     "description": "Neighborhood: Central Park / Midtown; Rating: 8.3 (4,345 Booking.com reviews); Price: $386/night; $2,704/week for 2 adults; Suite-style option; subway access; Gate B display name for The Manhattan Club candidate; Status: candidate, not booked.",
