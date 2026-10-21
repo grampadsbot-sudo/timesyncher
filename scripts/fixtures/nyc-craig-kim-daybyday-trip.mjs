@@ -553,7 +553,16 @@ function buildPayload() {
       };
     }
   }
-  return finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const served = finalizeServedSharedTripPayload(mergeBindingsIntoShared(withTimeline, bindings));
+  const listOnlyHotelKey = 'place:608';
+  if (served.thingOverrides[listOnlyHotelKey]) {
+    delete served.thingOverrides[listOnlyHotelKey].price;
+  }
+  const listOnlyHotel = served.places.find((place) => place.id === 608);
+  if (listOnlyHotel) {
+    delete listOnlyHotel.price;
+  }
+  return served;
 }
 
 export function buildNycCraigKimDaybydayTrip() {

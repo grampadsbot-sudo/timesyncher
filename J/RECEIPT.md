@@ -1,27 +1,30 @@
-# vkfill-549 round (base merge + Gate B generic/logo)
+# vkfill-549 round 2 (merge 7bc66068 + row 608 CI)
 
-## Step 1 — merge `origin/migrate/trek-source`
+**Start sha:** `da8e61d95b5a739f082b9b2a9abe5452cea116fa`
 
-Resolved conflicts keeping #549 J/ text, both fixture imports (`bindPr336GateBCanonicalIdentity` + `enrichSearchPlace`), base `timeline-replay.mjs` capture binding, merged `listTabModel` (#549 ccab helpers + base `pickFlightListRowSummaryText` export), then rebaked `public/assets/index-BKun7ofk.js`.
+## Step 1 — finish host-started merge
 
-## Step 2 — Gate B rows (generic descriptions, logo lost)
+- Kept #549 `J/PR_DESCRIPTION.md` and `J/RECEIPT.md`.
+- Took base `public/assets/index-BKun7ofk.js`, ran `node scripts/rebake_served_trek_bundle.mjs`.
+- `git commit --no-edit` completes merge of `origin/migrate/trek-source` (`7bc66068`).
 
-- **`list-row-description.mjs`**: never compose or finalize generic `Documented … option` placeholder copy; bundle `tsListRowDescription` matches.
-- **`flight-list-row-summary.mjs`**: flight clip no longer returns documented-option placeholders.
-- **`listTabModel.mjs`**: `logoUrlForPlace` merges stored ccab + `resolveThingLogoUrl`.
-- **`shared-trip-fixture-replay.mjs`**: replay served trip runs `applyLiveAppListRowFields` after ccab merge.
-- **`scripts/test_stored_ccab_canonical_identity.mjs`**: placeholder never rendered; Strand logo stable across fixture replay.
+## Step 2 — CI `test_vk_search_place_output_contract` (row 608 price)
 
-## Checks (local; host push + CI/Gate B authority)
+Round 1 fixture merge left list-only row 608 with `thingOverrides.place:608.price` after `finalizeServedSharedTripPayload` (ccab list-row merge). Base keeps row 608 price blocked on the override.
+
+- **`scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`**: after finalize, delete `price` on place 608 and `thingOverrides['place:608']` only.
+
+## Checks (local; host publish + CI authority)
 
 ```bash
-node scripts/test_stored_ccab_canonical_identity.mjs
-node scripts/test_list_row_description_substance.mjs
-node scripts/test_capture_fixture_replay_harness.mjs
 cd apps/vacation-client && npm test
-node scripts/check-no-comments.mjs && node scripts/test_offline_manifest.mjs && BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
+# scripts/offline-tests.txt in order (PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser where needed)
+node scripts/check-no-comments.mjs
+node scripts/test_offline_manifest.mjs
+BASE=migrate/trek-source node scripts/check-code-ratchet.mjs
+BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs
 ```
 
 ## Left alone
 
-Baselines, Gate B checker config, workflows, `scripts/offline-tests.txt`, fixture JSON bodies.
+Tests/checkers, baselines, Gate B config, workflows, timeline hotel prices from #580.
