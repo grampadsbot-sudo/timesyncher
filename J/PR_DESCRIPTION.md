@@ -10,10 +10,13 @@ Flights list rows on the served TREK shared-trip UI now show a substantive descr
 - `src/vacation/trek-thing-detail-fields-patch.mjs` — replace broken list-row `rr` patch with clause-based picker; re-patch already-baked bundles
 - `apps/vacation-client/src/lib/listTabModel.mjs` — use shared module (same behavior as #571 vacation-client path)
 - `apps/vacation-client/test/listRows.unit.mjs` — JetBlue fixture summary + bundle picker parity
+- `public/assets/index-BKun7ofk.js` — rebaked so committed served bundle matches `renderServedTrekBundle()` (fixes `test_served_trek_bundle.mjs` after `rr()` patch)
 
 ## Test plan
 
 - [x] `node apps/vacation-client/test/listRows.unit.mjs`
+- [x] `node scripts/test_served_trek_bundle.mjs`
+- [x] `node scripts/rebake_served_trek_bundle.mjs`
 - [x] `node scripts/check-no-comments.mjs`
 - [x] `node scripts/test_offline_manifest.mjs`
 - [x] `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
