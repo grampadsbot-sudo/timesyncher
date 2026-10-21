@@ -25,4 +25,4 @@ Scoped ccab merge gating: fixture replay no longer enriches minimal trips on bar
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-Tip sha: _(filled after commit)_.
+Tip sha: `576f18a1`.
