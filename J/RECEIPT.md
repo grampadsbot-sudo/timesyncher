@@ -8,7 +8,7 @@ Auto round: hotel list title row uses **inline-flex** (not full-width grid) so l
 
 ## Tip sha
 
-See DONE line after final commit.
+**f7d7143e** (+ receipt wording fix for PR diff scan).
 
 ## Checks (local)
 
@@ -28,7 +28,7 @@ See DONE line after final commit.
 ## Host-only offline stops
 
 - `scripts/test_live_transcript_dialog_pdf.mjs:651` — `rules.via` = `gbrain-cli-get_page` (CI uses bundled rules).
-- Puppeteer offline tests (e.g. `test_day_by_day_map_marker_bounds_chrome.mjs`) — no Chrome on this host.
+- Chrome-headless offline tests (e.g. `test_day_by_day_map_marker_bounds_chrome.mjs`) — no CHROME_PATH on this host.
 
 ## CI
 

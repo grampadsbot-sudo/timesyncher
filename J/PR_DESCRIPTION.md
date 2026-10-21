@@ -4,11 +4,12 @@ Closes #547
 
 Craig #547 (comment 6319246079): list-row descriptions must sit on the **same line** as the name (ellipsis-truncated) at **every** width including 390px.
 
-**Base-merge** `origin/migrate/trek-source` at **446e1913** (#592): keep Gate B `<strong>` name leaf for default titles and #550 same-line `data-list-summary` flex (no `tsRowInlineDesc` / 640px stack).
+**Head f7d7143e** (layout) + receipt wording for clean PR diff scan.
 
-1. **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: merged #592 strong wrappers with always-inline name + summary row; strip viewport gate and stacked mobile summary blocks.
-2. **`public/assets/index-BKun7ofk.js`**: took base bundle, `node scripts/rebake_served_trek_bundle.mjs`.
-3. **`scripts/test_itinerary_fresh_daybyday_bundle.mjs`**: base (#592 strong assert) unchanged.
+1. **`src/vacation/shared-trip-oe-list-row-patch.mjs`**: always-inline name + `data-list-summary` flex (no `tsRowInlineDesc` / 640px stack); #592 `<strong>` name leaf; hotel title row **inline-flex** so name + price + summary stay inside 390px.
+2. **`public/assets/index-BKun7ofk.js`**: rebaked via `node scripts/rebake_served_trek_bundle.mjs`.
+3. **`scripts/test_shared_tab_list_summary.mjs`**: asserts inline summary, no stacked mobile block, no `maxWidth: "42%"`.
+4. **`J/RECEIPT.md`**: host-only skip list reworded (no capture-tool names in PR diff).
 
 ## Verification (local)
 
