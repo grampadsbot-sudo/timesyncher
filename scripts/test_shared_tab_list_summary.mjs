@@ -62,8 +62,10 @@ assert.doesNotMatch(bundle, /tsRowInlineDesc/);
 assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
 assert.match(
   bundle,
-  /n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",overflow:"hidden"\},children:\[n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,flex:"0 1 auto",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
+  /n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",maxWidth:"100%",overflow:"hidden"\},children:\[n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,flex:"0 1 auto",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
 );
+assert.match(bundle, /maxWidth:"100%",overflow:"hidden",display:"block",textDecoration:"underline"/);
+assert.doesNotMatch(bundle, /fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline"/);
 assert.doesNotMatch(
   bundle,
   /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
