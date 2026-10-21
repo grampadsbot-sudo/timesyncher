@@ -10,8 +10,12 @@ import {
   composeSourcedHotelDescriptionFromRecord,
 } from '../src/vacation/xai-sourced-hotel-description.mjs';
 
+function text(value) {
+  return String(value || '').trim();
+}
+
 function narrativeWordCount(value) {
-  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
+  return text(value).split(/\s+/).filter(Boolean).length;
 }
 
 const xaiHotelRecord = applySourcedHotelDescriptionToRecord({
@@ -65,5 +69,23 @@ const live = applyLiveAppListRowFields(structuredClone(hotelFixture));
 const livePlace = live.places.find((place) => place.id === 701);
 const liveWords = narrativeWordCount(rowSummary(livePlace, live));
 assert.ok(liveWords >= 6, `live serve hotel narrative (${liveWords} words)`);
+
+const timelineRestaurant = applyLiveAppListRowFields({
+  places: [{
+    id: 901,
+    name: "Carbone",
+    category_name: 'Restaurant',
+    description: 'Documented NYC option (restaurant)',
+  }],
+  thingOverrides: {
+    'place:901': { timeline: true, category: 'restaurant' },
+  },
+});
+const timelineOverride = timelineRestaurant.thingOverrides['place:901'] || {};
+assert.equal(text(timelineOverride.longDetails), '', 'timeline restaurant must not get override longDetails from ccab merge');
+assert.ok(
+  narrativeWordCount(timelineRestaurant.places[0].description) >= 30,
+  'timeline restaurant place.description should still upgrade from ccab',
+);
 
 console.log('hotel ccab narrative fill tests passed');

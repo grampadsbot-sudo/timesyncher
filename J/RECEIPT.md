@@ -1,28 +1,20 @@
-# VK issue #589 receipt (cursor-ubuntu vkfill-589)
+# VK issue #595 receipt (PR #599)
 
-**Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
-**Tip sha:** `0fd6dc78`
+**Start sha:** `446e19137ebe9c6ee0dab651dca078f2cd35f13f`  
+**PR:** https://github.com/grampadsbot-sudo/timesyncher/pull/599
+
+## GBrain handoff
+
+`gbrain get bot-admin/lanes/vk-pr-handoff/pr-599` → **page_not_found** (2026-10-21).
 
 ## Problem
 
-Gate B structure on `migrate/trek-source` failed `logo not centred with name` for Events list rows (Apple Fifth Avenue, Bergdorf Goodman, Blue Note, …): `missing visible name line (fail closed)`. Capture records `first_text` only from a `span`/`strong` leaf inside `[data-ts-list-row-name]`; default `Oe()` rows used plain `ua` text in that span (no leaf), so `first_text` was null while the logo chip was measured.
+Gate B reported `daybyday-1280.png` at 0.03% vs baseline (run `20261021-230524`). CCAB narrative merge was writing `longDetails` / `summary` onto timeline-selected non-hotel overrides, so Day-by-Day `rowSummary` subtitles appeared where the baseline had none.
 
 ## Fix
 
-Wrap the default non-flight/car/hotel title in `<strong>` when building `Zn` in `src/vacation/shared-trip-oe-list-row-patch.mjs`; rebake `public/assets/index-BKun7ofk.js`. Assert in `scripts/test_itinerary_fresh_daybyday_bundle.mjs`.
+Scope `mergeStoredCcabNarrativeIntoOverride` so override list-row narrative (longDetails, price, logo, full sourceRecord) applies to hotels and list-only rows only; timeline non-hotel rows upgrade `place.description` for VK contract without override fields that feed the day timeline.
 
 ## Checks (local)
 
-| Command | Exit |
-| --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-
-## Verdict
-
-Product fix ready on branch `vkfill/589-20261021131734`; host publishes once; CI + Gate B on PR head are authority for close.
+Run on tip before push; record exit codes in PR description.

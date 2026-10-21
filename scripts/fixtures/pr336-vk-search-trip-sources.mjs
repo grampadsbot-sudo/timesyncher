@@ -185,6 +185,15 @@ export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') 
   return enrichListRowFromStoredCcab({ name: title }, {}, categoryHint);
 }
 
+function listRowCategory(place = {}, override = {}) {
+  return text(override.category || place.category || place.category_name, 40).toLowerCase();
+}
+
+function isHotelCategory(category = '') {
+  const cat = text(category, 40).toLowerCase();
+  return cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
+}
+
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
@@ -200,16 +209,24 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     ? enriched.sourceRecord
     : {};
   const next = { ...override };
+  const category = listRowCategory(place, override);
+  const isHotel = isHotelCategory(category);
+  const onTimeline = override.timeline === true;
   const details = text(
     enriched.description ||
       record.longDetails ||
       record.description ||
       record.summary,
   );
-  if (details) {
+  const bindOverrideNarrative = isHotel || !onTimeline;
+  if (details && bindOverrideNarrative) {
     next.longDetails = details;
     if (!text(next.details)) next.details = details;
     if (!text(next.description)) next.description = details;
+  }
+  const placeDesc = text(place.description);
+  if (details && (!placeDesc || narrativeWordCount(placeDesc) < 30 || isGenericDescription(placeDesc))) {
+    place.description = details;
   }
   if (hit.ccabKey && !text(next.externalId)) next.externalId = hit.ccabKey;
   if (hit.ccabKey) {
@@ -217,30 +234,17 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
     if (!text(place.externalId)) place.externalId = hit.ccabKey;
   }
-  for (const key of [
-    'summary',
-    'itineraryNote',
-    'websiteFlavour',
-    'address',
-    'googleRating',
-    'googleReviewCount',
-    'yelpRating',
-    'yelpReviewCount',
-    'thirdPartyRating',
-    'thirdPartyReviewCount',
-    'reviewThemes',
-    'website',
-  ]) {
-    if (record[key] != null && record[key] !== '' && (next[key] == null || next[key] === '')) {
-      next[key] = record[key];
+  if (bindOverrideNarrative) {
+    if (next.price == null && enriched.price != null) next.price = enriched.price;
+    if (isHotel && !next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
+    if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
+      next.sourceRecord = { ...record };
+    } else {
+      next.sourceRecord = { ...record, ...next.sourceRecord };
     }
-  }
-  if (next.price == null && enriched.price != null) next.price = enriched.price;
-  if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
-  if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
-    next.sourceRecord = { ...record };
-  } else {
-    next.sourceRecord = { ...record, ...next.sourceRecord };
+  } else if (hit.ccabKey) {
+    const prior = next.sourceRecord && typeof next.sourceRecord === 'object' ? next.sourceRecord : {};
+    next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
   }
   return next;
 }
