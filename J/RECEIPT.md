@@ -1,7 +1,7 @@
 # VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution)
 
 **Start sha:** `239c265983d652b534e5101eaa6f790efe9182bd`  
-**Tip sha:** `120b0afc` (merge `9fa1d339` + docs; base merge `153c1900`)
+**Tip sha:** `0959f22d` (merge `9fa1d339` + docs; base merge `153c1900`)
 
 ## Handoff
 
