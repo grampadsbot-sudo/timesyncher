@@ -2,6 +2,8 @@
 
 GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-591`: page not found (fetch failed at lane start).
 
+Base merge: host merged `origin/migrate/trek-source` at `446e19137ebe9c6ee0dab651dca078f2cd35f13f` into PR head `8e44c247ad03539de038fb82811f10e6a8ebc86a` (chief dr dirty-head round).
+
 ## Change (hard round tier 1, Gate B fail ec64acf4)
 - Root cause: per-emoji `translateY` nudges (especially 📅 at 1.05px) plus dropping `top:0px` on `tsPaintTabEmoji` moved Day-by-Day tab ink ~2.1px vs label while merge-base `7bc66068` was ~0.25px; Gate B `daybyday-390-top.png` vision flagged the tab calendar chip. Timeline wrapper had dropped `data-ts-category-tab-icon`, shifting Macy's row ink vs base on earlier heads.
 - `src/vacation/trek-tab-icon-center-patches.mjs`: restore merge-base `tsPaintTabEmoji` (ink mass centering + `top:0px`, no nudge map); keep Lucide category-tab `translateY(0.75px)` patch only; strip any prior nudge suffix when rebaking.
