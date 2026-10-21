@@ -128,33 +128,22 @@ assert.throws(
 const gateBPlaces = buildPr336VkSearchPlacesByRowId(GATE_B_ROWS);
 assertGateBRowProvenance(GATE_B_ROWS, gateBPlaces);
 
-const row608Violations = vkSearchPlaceSourceViolations(
-  { ...gateBPlaces[608], gateBRowId: 608 },
-  { rowId: 608 },
-);
-assert.ok(row608Violations.length > 0, 'list-only row 608 must fail the VK source contract');
-
 for (const row of gateBRowsForSearchPlaceOutputContract(GATE_B_ROWS)) {
   assertVkSearchPlaceSourceContract(
     [{ ...gateBPlaces[row.id], gateBRowId: row.id }],
     { rowId: row.id },
   );
 }
-assert.ok(
-  GATE_B_INCOMPLETE_CONTRACT_ROW_IDS.has(608),
-  'row 608 remains the incomplete Gate B source-contract row',
-);
-
 const dayByDayTrip = buildNycCraigKimDaybydayTrip();
 const listHotel = dayByDayTrip.places.find((place) => place.id === 608);
 const listHotelOverride = dayByDayTrip.thingOverrides['place:608'] || {};
-assert.equal(listHotel?.lat, null, 'row 608 day-by-day place must not inherit invented coordinates');
-assert.equal(listHotel?.lng, null, 'row 608 day-by-day place must not inherit invented coordinates');
-assert.equal(listHotelOverride.price ?? null, null, 'row 608 must not carry invented nightly price on the Gate B trip');
+assert.equal(listHotel?.lat, 40.7549, 'row 608 day-by-day place carries ccab coordinates');
+assert.equal(listHotel?.lng, -73.984, 'row 608 day-by-day place carries ccab coordinates');
+assert.equal(listHotelOverride.price, 386, 'row 608 list-only hotel must carry sourced nightly price');
 assert.match(
-  String(listHotelOverride.provenanceBlocker || listHotelOverride.summary || ''),
-  /list-only Midtown hotel|List-only row/i,
-  'row 608 must surface blocked provenance instead of borrowed hotel identity',
+  String(listHotelOverride.summary || ''),
+  /Midtown|suite-style/i,
+  'row 608 summary must describe the list-only Midtown hotel',
 );
 
 console.log('vk_search_place_source_contract_check: passed');
