@@ -6,6 +6,7 @@ import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
+import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -104,12 +105,6 @@ const TAB_BUTTON_DATA_TAB_NEEDLE = 'n.jsxs("button",{title:Re?G.label:void 0,"ar
 
 const TAB_BUTTON_DATA_TAB_PATCH = 'n.jsxs("button",{"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0,"aria-label":G.label,onClick:()=>{W(G.id)},style:{';
 
-const TAB_EMOJI_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
-
-const TAB_EMOJI_LABEL_STYLE_NEEDLE = 'if(label){label.style.lineHeight="1";label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}';
-const TAB_EMOJI_LABEL_STYLE_PATCH = 'if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}';
-const TAB_EMOJI_INK_FN = `function tsPaintTabEmoji(node,emoji){if(!node||!emoji)return;var chip=node.closest("[data-ts-category-tab-icon]")||node.parentElement;if(chip){chip.style.setProperty("display","inline-flex","important");chip.style.setProperty("align-items","center","important");chip.style.setProperty("justify-content","center","important");chip.style.setProperty("line-height","1","important");chip.style.setProperty("position","relative","important");chip.style.setProperty("top","0px","important");chip.style.setProperty("align-self","center","important")}var btn=chip&&chip.closest("button");if(btn){btn.style.alignItems="center";btn.style.lineHeight="1";var label=[].slice.call(btn.children).filter(function(n){return n!==chip})[0];if(label){label.style.lineHeight="1";if(label.style.display!=="none"){label.style.display="inline-flex";label.style.alignItems="center";label.style.verticalAlign="middle"}}}var cssSize=16,dpr=2;node.width=cssSize*dpr;node.height=cssSize*dpr;var ctx=node.getContext("2d",{willReadFrequently:true});if(!ctx)return;var cs=getComputedStyle(chip||node);var font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;function paint(shift){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssSize,cssSize);ctx.font=font;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,cssSize/2,cssSize/2+shift)}paint(0);var img=ctx.getImageData(0,0,node.width,node.height);var sum=0,mass=0,y,x,a;for(y=0;y<node.height;y++){for(x=0;x<node.width;x++){a=img.data[(y*node.width+x)*4+3];if(a<20)continue;sum+=y*a;mass+=a}}if(mass)paint((node.height/2-sum/mass)/dpr)}`;
-
 const SERVED_FOOTER_AI_ASSISTED_NEEDLE = ',n.jsx("span",{style:{fontSize:11,color:"#c4c9d1"},children:"· AI-assisted vacation itinerary planning"})';
 
 export function patchThingLogoChipAlignment(source = '') {
@@ -141,6 +136,7 @@ export function patchThingLogoChipAlignment(source = '') {
   } else if (!js.includes('display:"inline-flex",alignItems:"center",verticalAlign:"middle"},children:G.label})')) {
     throw new Error('trek bundle missing category tab label anchor for centering patch');
   }
+  js = patchTabIconVerticalCenter(js);
   if (js.includes(TAB_BUTTON_LINE_HEIGHT_NEEDLE)) {
     js = js.replace(TAB_BUTTON_LINE_HEIGHT_NEEDLE, TAB_BUTTON_LINE_HEIGHT_PATCH);
   } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
@@ -150,16 +146,6 @@ export function patchThingLogoChipAlignment(source = '') {
     js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
   } else if (!js.includes('"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0')) {
     throw new Error('trek bundle missing category tab button anchor for data-tab patch');
-  }
-  if (!js.includes('function tsPaintTabEmoji(')) {
-    if (!js.includes(TAB_EMOJI_INK_ANCHOR)) {
-      throw new Error('trek bundle missing anchor for category tab emoji ink centering');
-    }
-    js = js.replace(TAB_EMOJI_INK_ANCHOR, `${TAB_EMOJI_INK_FN}${TAB_EMOJI_INK_ANCHOR}`);
-  } else if (js.includes(TAB_EMOJI_LABEL_STYLE_NEEDLE)) {
-    js = js.replace(TAB_EMOJI_LABEL_STYLE_NEEDLE, TAB_EMOJI_LABEL_STYLE_PATCH);
-  } else if (!js.includes('if(label.style.display!=="none")')) {
-    throw new Error('trek bundle missing tsPaintTabEmoji mobile label guard');
   }
   if (js.includes('function tsListColumnSort(')) {
     throw new Error('trek bundle must not inject tsListColumnSort (use original Wr sort pills)');
