@@ -35,6 +35,15 @@ PM = HOME + "/tsv-gateb/pm.mjs"
 RPM = HOME + "/tsv-gateb/region-pm.mjs"
 STOP_F = D + "/CURSOR_STOP"
 PR_SRC = D + "/pr-src"
+STAGING_ORIGIN = os.environ.get("TSV_STAGING_ORIGIN", "https://vacation-staging.timesyncher.com")
+_DISPATCH_PKG = os.path.dirname(os.path.abspath(__file__))
+if _DISPATCH_PKG not in sys.path:
+    sys.path.insert(0, _DISPATCH_PKG)
+from capture_replay_binding import (  # noqa: E402
+    CaptureReplayError,
+    capture_subprocess_env,
+    staging_manifest_inventory_ok,
+)
 NORMAL_MODEL = "composer-2.5"
 V6_DEFAULT = "_v6_default"
 STALL_ROUNDS = 6
@@ -225,24 +234,40 @@ def staging_capture(ctx, pr, fixture, cand_dir=None):
         expected = candidate["timeline_replay"]
         valid = (candidate.get("fixture_sha256") == fixture_sha
                  and expected.get("source_fixture_sha256") == fixture_sha
+                 and expected.get("fixture_sha256") == fixture_sha
                  and expected.get("policy") == "timeline-explicit-v1"
                  and expected.get("selected_place_keys") == selected
                  and bool(re.fullmatch(r"[0-9a-f]{64}", expected.get("served_payload_sha256") or "")))
     except (OSError, ValueError, KeyError, TypeError):
         valid = False
     if not valid: return None, "candidate selection binding missing or invalid (re-capture needed)"
+    head_sha = (pr.get("head") or {}).get("sha") or ""
+    if not re.fullmatch(r"[0-9a-f]{40}", head_sha or ""):
+        return None, "candidate head sha unknown (fail closed)"
     d = os.path.join(D, "gateb-cand", "staging-" + tip[:7] + "-fixture-" + fixture_key + "-timeline-explicit-v1")
     def bound_inventory():
         if not _staging_has_inventory(d): return False
         try:
             manifest = json.load(open(os.path.join(d, "capture-manifest.json")))
             binding = manifest["timeline_replay"]
-            return manifest.get("fixture_sha256") == fixture_sha and binding == expected
+            return staging_manifest_inventory_ok(manifest, expected, fixture_sha, tip, head_sha)
         except (OSError, ValueError, KeyError, TypeError):
             return False
     if bound_inventory(): return d, None
     if ctx.dry: return None, "staging capture for %s not present (dry run)" % tip[:7]
-    try: r = subprocess.run([CAPTURE_STAGING, d], capture_output=True, text=True, timeout=900, env=dict(os.environ, TSV_CAPTURE_FIXTURE=fixture))
+    try:
+        cap_env = capture_subprocess_env(
+            tip,
+            PR_SRC,
+            replay_producer_head=head_sha,
+            remote_base=STAGING_ORIGIN,
+            require_remote=True,
+            fixture_path=fixture,
+            fixture_sha256=fixture_sha,
+        )
+    except CaptureReplayError as ex:
+        return None, "staging capture for %s producer binding failed (%s)" % (tip[:7], ex)
+    try: r = subprocess.run([CAPTURE_STAGING, d, head_sha, tip], capture_output=True, text=True, timeout=900, env=cap_env)
     except subprocess.TimeoutExpired: return None, "staging capture for %s timed out" % tip[:7]
     if r.returncode or not bound_inventory(): return None, "staging capture for %s failed or selection binding missing (rc=%s)" % (tip[:7], r.returncode)
     return d, None

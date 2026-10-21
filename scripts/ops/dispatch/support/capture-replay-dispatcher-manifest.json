@@ -1,0 +1,10 @@
+{
+  "runtime_dispatcher_sha256": "d2ff396cd200871b561a2cc9ceacc065557a1fd8db474b1df5f66e3556edf562",
+  "patched_function_sha256": {
+    "_capture_replay_env": "b6f0a9c15a5976b8c099e43e7bf20024ae19df11cfc97fa9f5170eba796358ee",
+    "capture_and_compare": "ad77c28ddc5799243215c8ae1c09c88342c6cfb9ab705112cd860482032bd681",
+    "local_capture": "fbe1b80dad5632e778e53105c052883be8ad86f406f167d469259cd9210398f5",
+    "staging_capture": "3b72b96cc61dccd5ca927e105ff198a314509174856902c97f0ffb03af1f7077",
+    "route_protected": "f70e60073254809923bd849d37efae7e1d48b6baa695cb0e21a56253469efdcd"
+  }
+}
