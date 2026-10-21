@@ -68,11 +68,63 @@ function listNarrativeCandidateText(place = {}, override = {}) {
   );
 }
 
+function placeCategoryLabel(place = {}, override = {}) {
+  return text(
+    override.category || place.category_name || place.category?.name || place.category,
+    40,
+  ).toLowerCase();
+}
+
+function ccabRecordMatchesPlaceCategory(hit, place = {}, override = {}) {
+  if (!hit) return false;
+  const ccabKey = text(hit.ccabKey);
+  const ccabCat = text(hit.ccabRecord?.category, 40).toLowerCase();
+  const placeCat = placeCategoryLabel(place, override);
+  if (/^flight option:/i.test(ccabKey) || ccabCat === 'flight') {
+    return placeCat.includes('flight');
+  }
+  if (ccabCat === 'car') {
+    return placeCat.includes('car') || placeCat.includes('rental');
+  }
+  if (ccabCat === 'hotel' || ccabCat.includes('lodging')) {
+    return placeCat.includes('hotel') || placeCat.includes('lodging');
+  }
+  return true;
+}
+
+function hasStoredCcabIdentity(place = {}, override = {}, hit = null) {
+  const resolved = hit || resolveStoredCcabKey(place, override);
+  if (!resolved) return false;
+  if (NYC_GATE_B_ROW_CCAB_KEYS[place.id]) return true;
+  if (enrichmentHitByWebsite(place, override)) return true;
+  const { overrideRecord, placeRecord, metaRecord, meta } = sourceRecordsForIdentity(place, override);
+  const identityKeys = [
+    overrideRecord?.identityProvenance?.ccabKey,
+    overrideRecord?.ccabKey,
+    placeRecord?.identityProvenance?.ccabKey,
+    placeRecord?.ccabKey,
+    override.externalId,
+    place.externalId,
+    meta.externalId,
+    metaRecord?.identityProvenance?.ccabKey,
+    metaRecord?.ccabKey,
+  ].map((row) => text(row, 240)).filter(Boolean);
+  if (identityKeys.some((key) => key === resolved.ccabKey)) return true;
+  const displayName = text(place.name || place.title || override.title);
+  if (displayName && displayName !== resolved.ccabKey) return true;
+  const prefixHit = enrichmentHitByUniqueNamePrefix(displayName);
+  return Boolean(
+    prefixHit
+    && prefixHit.ccabKey === resolved.ccabKey
+    && displayName !== resolved.ccabKey,
+  );
+}
+
 function storedCcabNarrativeNeedsMerge(place = {}, override = {}) {
   const hit = resolveStoredCcabKey(place, override);
-  if (!hit) return false;
+  if (!hit || !ccabRecordMatchesPlaceCategory(hit, place, override)) return false;
   const existing = listNarrativeCandidateText(place, override);
-  if (!existing) return true;
+  if (!existing) return hasStoredCcabIdentity(place, override, hit);
   if (isHotelPlanningNote(existing)) return true;
   if (narrativeWordCount(existing) < 30) return true;
   return isGenericDescription(existing);
@@ -212,7 +264,7 @@ export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') 
 
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
   const hit = storedCcabRecordForPlace(place, override);
-  if (!hit) return override;
+  if (!hit || !ccabRecordMatchesPlaceCategory(hit, place, override)) return override;
   const existing = listNarrativeCandidateText(place, override);
   if (
     narrativeWordCount(existing) >= 30
@@ -346,13 +398,13 @@ export function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) 
   if (NYC_GATE_B_ROW_CCAB_KEYS[place.id]) return true;
   if (enrichmentHitByWebsite(place, override)) return true;
   const hit = resolveStoredCcabKey(place, override);
-  if (!hit) return false;
+  if (!hit || !ccabRecordMatchesPlaceCategory(hit, place, override)) return false;
   if (storedCcabNarrativeNeedsMerge(place, override)) return true;
   const displayName = text(place.name || place.title || override.title);
   if (displayName && displayName !== hit.ccabKey) return true;
   if (override.timeline === true) {
-    const cat = text(place.category || place.category_name, 40).toLowerCase();
-    if (cat !== 'hotel' && !cat.includes('hotel') && !cat.includes('lodging')) return true;
+    const cat = placeCategoryLabel(place, override);
+    if (!cat.includes('hotel') && !cat.includes('lodging')) return true;
   }
   return false;
 }
