@@ -2,33 +2,29 @@
 
 ## Outcome
 
-Same-line list-row description at all widths (#547): removed `tsRowInlineDesc` narrow stacking; rebaked served bundle after `migrate/trek-source` merge at **7bc66068**.
+Base-merge round 2: `origin/migrate/trek-source` **446e1913** into #550 head **13ad272f**; merged `<strong>` name line (#592) with same-line description at all widths (#547).
 
 ## Commits
 
-- Merge `origin/migrate/trek-source` (bundle conflict → base `index-BKun7ofk.js`, then rebake)
-- Layout + tests unchanged from `438cce18`; see tip sha in DONE line
+- Merge `origin/migrate/trek-source` at 446e1913 (J/ + base bundle, rebake)
+- Rebake sha256 `53a6dc031383304041d59676ea0c69e2f813fa176b0e856e5c9258ff656b6eaf`
 
 ## Tip sha
 
-`7bda801b4885bba6c7325bd4bcf0fa29786ec667` (merge `438cce18` + `migrate/trek-source` `7bc66068`; rebake sha256 `23285dadd7a970ed85b02f81534afbfdfce151da12cd1b9d54dc568bb87cfd5c`)
+See DONE line after final commit.
 
-## Checks (tip)
+## Checks (local)
 
-- `CHROME_PATH=/usr/bin/chromium-browser cd apps/vacation-client && npm test` — pass (vite build + layout)
 - `node scripts/test_shared_tab_list_summary.mjs` — pass
 - `node scripts/test_served_trek_bundle.mjs` — pass
+- `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` — pass
 - `node scripts/test_gate_b_live_tab_logo_rows.mjs` — pass
-- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet`, `BASE=codex/ruling95-consolidated-logo check-code-ratchet` — pass
+- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet`, `BASE=codex/ruling95-consolidated-logo check-code-ratchet` — see DONE line
 
 ## Offline manifest stop (host env)
 
-`scripts/test_live_transcript_dialog_pdf.mjs` line 651: `assert.equal(rules.via, 'bundled-get_page')` got `gbrain-cli-get_page`. Same as prior lane rounds; CI uses bundled rules. Not introduced by #550 merge.
-
-## Local env note
-
-`node scripts/run-offline-tests.mjs` may fail on this host at `scripts/test_live_transcript_dialog_pdf.mjs` when `pdftotext` is missing. GitHub `unit-tests` installs `poppler-utils`.
+`scripts/test_live_transcript_dialog_pdf.mjs` line 651: `assert.equal(rules.via, 'bundled-get_page')` got `gbrain-cli-get_page`. CI uses bundled rules. Not introduced by this merge.
 
 ## Gate B / CI
 
-Not run here; host publishes for CI + cron Gate B on new head.
+Host publishes; cron Gate B + CI on new head are authority.
