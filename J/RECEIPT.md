@@ -1,6 +1,6 @@
 # PR543 — list logos and stores tab (vkfill-543-20261020172727)
 
-Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane tip `1a2e25d6a9b7337adb9dda48d775a985440c40f6` (receipt commit, host publish). CI and Gate B on the published head are for the host; not claimed here.
+Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane tip `6bb46b7625d1e82091f289d79baba4edc03d7fbb` (receipt commit, host publish). CI and Gate B on the published head are for the host; not claimed here.
 
 ## Changes
 
@@ -9,7 +9,7 @@ Outcome: fix for dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-fil
 
 Files: `apps/vacation-client/src/lib/listTabModel.mjs`, `apps/vacation-client/src/screens/CategoryTabScreen.tsx`, `apps/vacation-client/test/listRows.unit.mjs`.
 
-## Checks (local, lane tip `1a2e25d6`, 2026-10-21 UTC)
+## Checks (local, lane tip `6bb46b76`, 2026-10-21 UTC)
 
 - `node apps/vacation-client/test/listRows.unit.mjs` — pass
 - `cd apps/vacation-client && npm run typecheck && npm run test` — pass (unit; shell-layout skipped without CHROME_PATH)
