@@ -6,6 +6,8 @@ import {
   rawSearchPlaceFromCcab,
 } from '../../src/vacation/stored-ccab-narrative-merge.mjs';
 
+export { rawSearchPlaceFromCcab };
+
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
