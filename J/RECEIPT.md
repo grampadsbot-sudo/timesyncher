@@ -26,3 +26,35 @@ Wrap the default non-flight/car/hotel title in `<strong>` when building `Zn` in 
 ## Verdict
 
 Product fix ready on branch `vkfill/589-20261021131734`; host publishes once; CI + Gate B on PR head are authority for close.
+
+---
+
+# TSV PR #598 Gate B fix-it (TSV #596)
+
+**Start sha:** `375fdc067c9beca9fc65559d6a824a60d496866f`  
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-598` (initial automated fetch returned `page_not_found`; page exists via `gbrain get_page` with compiled handoff at 4:10 PM PT)
+
+## Problem
+
+- Gate B pixel compare flagged `daybyday-1280.png` (~0.034%): OSM map tile flake vs frozen `base-446e191` (handoff: harness/map, not list CSS).
+- Remaining product gap: **Events (The Rest) at 390px** — long `Flight option:` rows (`tsv-row-flight-main`) kept `nowrap` names and extended past the viewport.
+
+## Fix
+
+- Consolidate mobile wrap into one `@media (max-width: 480px)` block; budget names use `.tsv-budget-line .tsv-budget-line-name` so base `nowrap` does not win.
+- Add `[data-shared-live-tab='events'] .tsv-row-flight-main .tsv-row-name` mobile wrap (Flights tab keeps single-line flight names for ink/layout tests).
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vacation_client_list_row_390_text_wrap.mjs` | 0 |
+| `node apps/vacation-client/test/list-layout.mjs` | 0 |
+| Gate NYC fixture events @390 row box probe (no elements with `right > viewport`) | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Pushed to `cursor/tsv-596-vk-390px-descriptions-are-clipped-run-past-the-right-edge-hotels-the-rest-budget-8ccf`; CI + Gate B on new head are authority for close.
