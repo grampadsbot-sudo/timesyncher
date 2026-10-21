@@ -5,6 +5,8 @@ scripts/test_api_route_bundle.mjs
 scripts/test_bind_thing_media.mjs
 scripts/test_bind_thing_media_cache.mjs
 scripts/test_budget_checkout_harness.mjs
+scripts/test_nyc_budget_search_fill_prices.mjs
+scripts/test_budget_required_price_completeness.mjs
 scripts/test_budget_timeline_only_rows.mjs
 scripts/test_build_used_vs_tip.mjs
 scripts/test_chat_place_search.mjs

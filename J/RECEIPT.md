@@ -1,36 +1,33 @@
-# VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution)
+# VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution round 2)
 
-**Start sha:** `239c265983d652b534e5101eaa6f790efe9182bd`  
-**Tip sha:** `0959f22d` (merge `9fa1d339` + docs; base merge `153c1900`)
+**Start sha:** `500202d80fcecbe0df955fba5c5fe484616ce1e1`  
+**Tip sha:** (set after merge commit; base merge `c1b7b286`)
 
 ## Handoff
 
-GBrain `bot-admin/lanes/vk-pr-handoff/pr-581` (chief dr 11:35 AM PT 10/21): merge base into PR branch; resolve `J/RECEIPT.md` + served bundle only.
+GBrain `bot-admin/lanes/vk-pr-handoff/pr-581` (chief dr 11:50 AM PT 10/21): host-started merge of `origin/migrate/trek-source` (`c1b7b286`); resolve `J/RECEIPT.md` and `J/PR_DESCRIPTION.md` only.
 
 ## Product (#579)
 
-Day-by-day map markers: 30×30 shell, 26×26 `object-fit:contain` img. Map pins use **`data-ts-map-marker-logo` only**. Patch in `src/vacation/trek-live-product-patches.mjs`; rebaked `public/assets/index-BKun7ofk.js` (sha256 `f659963bf9cd3f91d35670625d08e96d5df1a00230629c6c4a71312e701f50db`).
+Day-by-day map markers: 30×30 shell, 26×26 `object-fit:contain` img. Map pins use **`data-ts-map-marker-logo` only**. Patch in `src/vacation/trek-live-product-patches.mjs`; rebaked `public/assets/index-BKun7ofk.js`.
 
 ## This round
 
-Host-started merge completed: kept #581 receipt; bundle = base `index-BKun7ofk.js` + `node scripts/rebake_served_trek_bundle.mjs`. `git commit --no-edit` → `9fa1d339`.
-
-## Commands (exit codes)
+Host-started merge completed: kept #581 receipt and PR description; dropped base #585 doc text. No product, bundle, test, or checker edits. `git commit --no-edit` completes merge on `500202d8`.
 
 | Command | Exit |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | (run) |
+| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | (run) |
+| `node scripts/check-no-comments.mjs` | (run) |
+| `node scripts/test_offline_manifest.mjs` | (run) |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | (run) |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | (run) |
 
 ## Offline manifest (host)
 
-`scripts/offline-tests.txt` lines 1–44 and 45–91 passed locally after `npm ci` (+ `apps/vacation-client/npm ci`). Stopped at `scripts/test_live_transcript_dialog_pdf.mjs`: `rules.via` was `gbrain-cli-get_page` (host has `gbrain` in PATH; CI expects `bundled-get_page`). Full manifest not re-run on host; CI unit-tests job runs `node scripts/run-offline-tests.mjs` with `python3-reportlab` (`.github/workflows/evidence-secrets.yml`).
+`scripts/offline-tests.txt` in order per brief. Stopped at `scripts/test_live_transcript_dialog_pdf.mjs` if `rules.via` is `gbrain-cli-get_page` (host env; CI uses bundled rules).
 
 ## Verdict
 
-Merge conflict resolved; pre-DONE gates + #579 bundle tests pass on `9fa1d339`. Host publishes; CI + Gate B on new head.
+Merge conflict resolved in docs only; host publishes new head; CI + Gate B (allowance #579) on new tip.
