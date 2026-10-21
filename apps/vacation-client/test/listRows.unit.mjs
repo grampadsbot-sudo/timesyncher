@@ -126,6 +126,45 @@ assert.equal(
   'https://www.villagevanguard.com/favicon.ico',
 );
 
+const faviconOnlyHotel = {
+  places: [{ id: 701, name: 'Hyatt Grand Central New York', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:701': {
+      category: 'hotel',
+      website: 'https://www.hyatt.com/en-US/hotel/new-york/hyatt-grand-central-new-york/nychn',
+    },
+  },
+};
+assert.match(
+  logoUrlForPlace(faviconOnlyHotel.places[0], faviconOnlyHotel),
+  /^https:\/\/www\.hyatt\.com\/.*favicon\.ico$/,
+);
+
+const faviconOnlyEvent = {
+  places: [{ id: 702, name: 'Open-air bus tour candidates', category_name: 'event' }],
+  thingOverrides: {
+    'place:702': { category: 'event', url: 'https://www.bigbustours.com/en/new-york/new-york-bus-tours' },
+  },
+};
+assert.equal(
+  logoUrlForPlace(faviconOnlyEvent.places[0], faviconOnlyEvent),
+  'https://www.bigbustours.com/favicon.ico',
+);
+
+const faviconOnlyRestaurant = {
+  places: [{ id: 703, name: 'Rosa Mexicano - Lincoln Center', category_name: 'Restaurant' }],
+  thingOverrides: {
+    'place:703': {
+      category: 'restaurant',
+      website: 'https://www.rosamexicano.com/location/lincoln-center/',
+    },
+  },
+};
+assert.equal(
+  logoUrlForPlace(faviconOnlyRestaurant.places[0], faviconOnlyRestaurant),
+  'https://www.rosamexicano.com/favicon.ico',
+);
+
 const longFlightNarrative =
   'American Airlines nonstop LAS to JFK on Day 1 afternoon arrival; lands with time to reach the UWS hotel before dinner. Fixture lists $257 one-way fare per traveler for planning math only, not a verified live quote.';
 const derivedFlightSummary = pickFlightListRowSummaryText(longFlightNarrative);

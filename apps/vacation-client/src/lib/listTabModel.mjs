@@ -445,20 +445,13 @@ export function rowDescription(place, trip) {
 export function logoUrlForPlace(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
-  return text(
-    resolveThingLogoUrl(place, override) ||
-      override.logoUrl ||
-      override.iconUrl ||
-      place.logoUrl ||
-      place.captured_logo_url ||
-      place.iconUrl ||
-      place.image_url ||
-      source.logoUrl ||
-      source.iconUrl ||
-      source.logo ||
-      source.favicon ||
-      source.faviconUrl,
-  );
+  const resolved = resolveThingLogoUrl(place, override);
+  if (resolved) return resolved;
+  const raw = text(override.logoUrl || override.iconUrl || place.logoUrl || place.iconUrl);
+  if (raw && !/^data:image\/svg\+xml/i.test(raw) && !(/\/ts-thing-media\//i.test(raw) && !/\/ts-thing-logos\//i.test(raw))) {
+    return raw;
+  }
+  return text(source.logoUrl || source.iconUrl || source.logo || source.favicon || source.faviconUrl || place.captured_logo_url);
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

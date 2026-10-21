@@ -88,7 +88,10 @@ function brandLogoFromName(name = '') {
 function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   return text(
-    source.url
+    override.url
+    || override.website
+    || override.sourceUrl
+    || source.url
     || source.website
     || source.sourceUrl
     || thing.url
@@ -121,10 +124,7 @@ export function logoCaptureMissReason(thing = {}, override = {}) {
     const logo = usableLogo(value);
     if (logo) return '';
   }
-  const page = text(
-    source.url || source.website || source.sourceUrl
-    || thing.url || thing.website || thing.sourceUrl || thing.source_url,
-  );
+  const page = pageUrlForLogo(thing, override);
   if (!page) return 'no_place_website';
   if (!httpUrl(page)) return 'no_usable_place_website';
   return 'no_logo_or_favicon';
