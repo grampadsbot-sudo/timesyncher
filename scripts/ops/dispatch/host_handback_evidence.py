@@ -1,17 +1,24 @@
 """Read-only host collector. Unsupported canonical evidence is an error, never absence."""
+import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import socket
 import subprocess
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
-                                  is_acceptance_record, load_event, verify_acceptance_event,
-                                  verify_acceptance_observation, verify_event, verify_observation)
+                                  is_acceptance_record, is_resolution_record, load_event,
+                                  verify_acceptance_event, verify_acceptance_observation, verify_event,
+                                  verify_observation, verify_resolution_event,
+                                  verify_resolution_observation)
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -26,6 +33,8 @@ LOOK_OK_RE = re.compile(
 LOOK_TAG_RE = re.compile(r'^tsv-look-pr(\d+)-\d{12}$')
 LOOK_LOG = 'dispatch-%s.log'
 LOOK_KEYS = frozenset({'sent_at', 'sent_ms', 'sha', 'tag', 'media'})
+CURSOR_LIVE_RUN = frozenset({'RUNNING', 'CREATING'})
+CURSOR_TERMINAL_RUN = frozenset({'FINISHED', 'FAILED', 'CANCELLED', 'STOPPED', 'IDLE', 'EXPIRED'})
 
 
 def require(condition, reason):
@@ -174,13 +183,106 @@ class HostReaders:
     Paths are never inferred from GBrain prose or receipt text.
     """
     def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None,
-                 acceptance_event_root=None, acceptance_event_paths=None):
+                 acceptance_event_root=None, acceptance_event_paths=None,
+                 resolution_event_root=None, resolution_event_paths=None, cursor_api_get=None):
         self.root = Path(root)
         self.proc_root = Path(proc_root)
         self.handback_event_root = Path(handback_event_root) if handback_event_root else None
         self.handback_event_paths = dict(handback_event_paths or {})
         self.acceptance_event_root = Path(acceptance_event_root) if acceptance_event_root else None
         self.acceptance_event_paths = dict(acceptance_event_paths or {})
+        self.resolution_event_root = Path(resolution_event_root) if resolution_event_root else None
+        self.resolution_event_paths = dict(resolution_event_paths or {})
+        self._cursor_api_get = cursor_api_get
+
+    def cursor_api_get(self, path):
+        """Read-only Cursor Cloud Agents API (same key route as cursor_launch / idle_capacity)."""
+        if self._cursor_api_get is not None:
+            return self._cursor_api_get(path)
+        from tsv_common import read_secret
+        key = read_secret(os.path.expanduser('~/.config/tsv-cursor/api-key'))
+        require(key, 'Cursor API key missing for authenticated live job proof')
+        auth = 'Basic ' + base64.b64encode((key + ':').encode()).decode()
+        request = urllib.request.Request(
+            'https://api.cursor.com' + path,
+            headers={'Authorization': auth, 'User-Agent': 'host-handback-evidence'})
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                body = response.read()
+                return json.loads(body) if body else {}
+        except urllib.error.HTTPError as exc:
+            raise EvidenceError('Cursor API read failed for live job proof: HTTP %d' % exc.code) from exc
+        except Exception as exc:
+            raise EvidenceError('Cursor API read failed for live job proof: %s' % type(exc).__name__) from exc
+
+    @staticmethod
+    def _run_commit_sha(run):
+        git = run.get('git') if isinstance(run.get('git'), dict) else {}
+        for branch in git.get('branches') or []:
+            if not isinstance(branch, dict):
+                continue
+            for key in ('commitSha', 'sha', 'headSha'):
+                value = branch.get(key)
+                if isinstance(value, str) and HEAD_RE.fullmatch(value):
+                    return value
+        for key in ('commitSha', 'sha', 'headSha'):
+            value = git.get(key) if isinstance(git, dict) else None
+            if isinstance(value, str) and HEAD_RE.fullmatch(value):
+                return value
+        return None
+
+    def _cloud_job_running(self, number, cloud_rec, cursor_issues, heads, cursor_meta=None):
+        """Authenticate agent/run against Cursor API; True only for live runs."""
+        cursor_meta = dict(cursor_meta or cursor_issues.get(str(number)) or {})
+        agent = cloud_rec.get('agent') or cursor_meta.get('agent')
+        issue_n = cloud_rec.get('issue')
+        if issue_n is not None:
+            linked = cursor_issues.get(str(issue_n)) or {}
+            if linked.get('agent'):
+                require(not agent or agent == linked['agent'],
+                        'cloud cursor agent identity mismatch #%d' % number)
+                agent = agent or linked['agent']
+                if not cursor_meta.get('agent'):
+                    cursor_meta = linked
+        require(agent, 'active cloud flag lacks authenticated agent binding #%d' % number)
+        agent_obj = self.cursor_api_get('/v1/agents/' + urllib.parse.quote(agent, safe=''))
+        require(agent_obj.get('id') == agent, 'authenticated Cursor agent id mismatch #%d' % number)
+        latest_run_id = agent_obj.get('latestRunId')
+        require(latest_run_id, 'authenticated Cursor latest run id missing #%d' % number)
+        stored_run_id = cloud_rec.get('followup_run') or cursor_meta.get('run')
+        agent_q = urllib.parse.quote(agent, safe='')
+        if stored_run_id and stored_run_id != latest_run_id:
+            stored_run = self.cursor_api_get('/v1/agents/%s/runs/%s' % (
+                agent_q, urllib.parse.quote(stored_run_id, safe='')))
+            require(stored_run.get('id') == stored_run_id,
+                    'authenticated Cursor stored run id mismatch #%d' % number)
+            stored_status = (stored_run.get('status') or '').upper()
+            if stored_status in CURSOR_LIVE_RUN:
+                raise EvidenceError(
+                    'authenticated stored follow-up still live but not latest #%d' % number)
+            if stored_status not in CURSOR_TERMINAL_RUN:
+                raise EvidenceError(
+                    'authenticated stored follow-up run status unknown #%d: %s'
+                    % (number, stored_status or '?'))
+        elif stored_run_id:
+            require(stored_run_id == latest_run_id,
+                    'authenticated Cursor follow-up run mismatch #%d' % number)
+        run_id = latest_run_id
+        run = self.cursor_api_get('/v1/agents/%s/runs/%s' % (
+            agent_q, urllib.parse.quote(run_id, safe='')))
+        require(run.get('id') == run_id, 'authenticated Cursor run id mismatch #%d' % number)
+        status = (run.get('status') or '').upper()
+        if status in CURSOR_LIVE_RUN:
+            if heads and heads.get(number):
+                expected = heads[number]
+                actual = self._run_commit_sha(run)
+                require(actual and HEAD_RE.fullmatch(actual),
+                        'authenticated Cursor run lacks verifiable head #%d' % number)
+                require(actual == expected, 'authenticated Cursor run head mismatch #%d' % number)
+            return True
+        if status in CURSOR_TERMINAL_RUN:
+            return False
+        raise EvidenceError('authenticated Cursor run status unknown #%d: %s' % (number, status or '?'))
 
     def handback_event_configured(self, number):
         return number in self.handback_event_paths or self.handback_event_root is not None
@@ -202,6 +304,40 @@ class HostReaders:
         if self.acceptance_event_root is not None:
             return self.acceptance_event_root / ('%d.json' % number)
         return None
+
+    def resolution_event_configured(self, number):
+        return number in self.resolution_event_paths or self.resolution_event_root is not None
+
+    def resolution_event_path(self, number):
+        if number in self.resolution_event_paths:
+            return Path(self.resolution_event_paths[number])
+        if self.resolution_event_root is not None:
+            return self.resolution_event_root / ('%d.json' % number)
+        return None
+
+    def authenticate_resolution_event(self, path, item, head, handback_comment_id, comment, now,
+                                      observed_at=None):
+        require(head and HEAD_RE.fullmatch(head), 'resolution event requires exact current head')
+        try:
+            record = load_event(path)
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        require(is_resolution_record(record), 'configured host event is not a resolution record')
+        require(record['item'] == item, 'resolution event item mismatch')
+        require(record['state'] == 'pending',
+                'unsupported reviewed host handback resolution; explicit acceptance contract required')
+        try:
+            if record['version'] == EVENT_VERSION_REGISTERED:
+                require(observed_at is not None, 'resolution event observation time missing')
+                verify_resolution_observation(record, comment, handback_comment_id, head,
+                                            observed_at, now=now)
+            elif record['version'] == EVENT_VERSION:
+                verify_resolution_event(record, comment, handback_comment_id, head, now=now)
+            else:
+                raise EventError('unsupported host handback event version')
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        return record
 
     def authenticate_acceptance_event(self, path, item, head, now, observed_at=None):
         require(head and HEAD_RE.fullmatch(head), 'acceptance event requires exact current head')
@@ -297,13 +433,23 @@ class HostReaders:
             running.update(identities)
         cloud = self.json('rereview-state.json')
         cursor = self.json('cursor-state.json')
-        require(isinstance(cloud, dict) and isinstance(cursor.get('issues'), dict), 'cloud job records unreadable')
+        issues = cursor.get('issues')
+        require(isinstance(cloud, dict) and isinstance(issues, dict), 'cloud job records unreadable')
         for number in numbers:
-            require(not (cloud.get(str(number)) or {}).get('active'),
-                    'active cloud flag requires authenticated live job proof #%d' % number)
-            meta = cursor['issues'].get(str(number)) or {}
-            require(not meta.get('agent') or str(meta.get('last_status', meta.get('status', ''))).upper() == 'FINISHED',
-                    'Cursor job requires authenticated current run proof #%d' % number)
+            cloud_rec = cloud.get(str(number))
+            cloud_rec = cloud_rec if isinstance(cloud_rec, dict) else {}
+            if cloud_rec.get('active'):
+                if self._cloud_job_running(number, cloud_rec, issues, heads):
+                    running.add(number)
+                continue
+            meta = issues.get(str(number)) or {}
+            if not meta.get('agent'):
+                continue
+            local = str(meta.get('last_status', meta.get('status', ''))).upper()
+            if local == 'FINISHED' or str(meta.get('status', '')).lower() == 'finished':
+                continue
+            if self._cloud_job_running(number, {}, issues, heads, cursor_meta=meta):
+                running.add(number)
         return frozenset(running)
 
     def receipt(self, page, number, head):
@@ -424,11 +570,32 @@ class CanonicalCollector:
                     require(any(comment['body'] == self.readers.receipt(page, n, head) for page in sources),
                             'host comment differs from authenticated scoped receipt bytes')
                     handbacks.add(comment['id'])
+            authenticated_host_ids = set(handbacks)
             if handbacks:
                 newest = max((c for c in comments if c.get('user', {}).get('login') in self.actors),
                              key=lambda c: (_time(c['created_at']), c['id']))
-                require(newest['id'] in handbacks,
+                if newest['id'] not in authenticated_host_ids:
+                    require(self.readers.resolution_event_configured(n) is True,
+                            'newer host comment needs authenticated resolution proof; generic retry refused')
+                    resolution_path = self.readers.resolution_event_path(n)
+                    require(resolution_path is not None, 'authenticated resolution event path missing')
+                    require(resolution_path.is_file(), 'authenticated resolution event file not found')
+                    try:
+                        resolution = load_event(resolution_path)
+                    except EventError as exc:
+                        raise EvidenceError(str(exc)) from exc
+                    require(resolution['resolve_comment_id'] == newest['id'],
+                            'resolution event does not bind newest host comment')
+                    bound_handback = resolution['handback_comment_id']
+                    require(bound_handback in handbacks,
+                            'resolution handback comment not authenticated')
+                    self.readers.authenticate_resolution_event(
+                        resolution_path, n, head, bound_handback, newest, checked,
+                        observed_at=snapshot_at)
+                    authenticated_host_ids.add(newest['id'])
+                require(newest['id'] in authenticated_host_ids,
                         'newer host comment needs authenticated resolution proof; generic retry refused')
+            handbacks = frozenset(authenticated_host_ids)
             acceptance_pending, acceptance_at = False, None
             if item.get('draft') and ACCEPT_RE.search(item.get('body') or ''):
                 require(item.get('user', {}).get('login') in self.actors,

@@ -12,7 +12,8 @@ from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceErro
                                     HostReaders, authenticate_guarded_look_send,
                                     current_section, last_action, ownership)
 from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
-                                  produce_acceptance_event, produce_event, verify_observation)
+                                  produce_acceptance_event, produce_event, produce_resolution_event,
+                                  verify_observation)
 from host_handback_review import REVIEW_S, classify, route
 from test_host_handback_review import NOW, iso, issue, receipt
 
@@ -120,6 +121,7 @@ class CollectorBoundaries(unittest.TestCase):
         self.readers.handback_event_path.return_value = None
         self.readers.handback_event_configured.return_value = False
         self.readers.acceptance_event_configured.return_value = False
+        self.readers.resolution_event_configured.return_value = False
         self.readers.page.side_effect = lambda slug: self.page if slug == ASSESSMENT else self.record
         self.readers.running.return_value = frozenset()
         self.readers.receipt.return_value = self.comments[0]['body']
@@ -327,15 +329,196 @@ class HostFileBoundaries(unittest.TestCase):
         with self.assertRaisesRegex(EvidenceError, 'canonical job mapping'):
             self.reader.running({566})
 
-    def test_active_cloud_flag_is_not_live_process(self):
+    def test_active_cloud_flag_without_binding_refuses(self):
         (self.root / 'rereview-state.json').write_text(json.dumps({'566': {'active': True}}))
-        with self.assertRaisesRegex(EvidenceError, 'authenticated live job proof'):
+        with self.assertRaisesRegex(EvidenceError, 'agent binding'):
             self.reader.running({566})
 
-    def test_active_cursor_record_requires_current_run(self):
-        (self.root / 'cursor-state.json').write_text(json.dumps({'issues': {'566': {'agent': 'fake'}}}))
-        with self.assertRaisesRegex(EvidenceError, 'current run proof'):
-            self.reader.running({566})
+    def test_active_cloud_flag_terminal_is_not_running(self):
+        agent = 'agent-terminal'
+        run = 'run-terminal'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': run, 'fixit_sha': SHA},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': run},
+            '/v1/agents/%s/runs/%s' % (agent, run): {'id': run, 'status': 'FINISHED'},
+        }))
+        self.assertEqual(reader.running({566}, {566: SHA}), frozenset())
+
+    def test_active_cloud_flag_live_authenticated_counts_as_running(self):
+        agent = 'agent-live'
+        run = 'run-live'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': run, 'fixit_sha': SHA},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': run},
+            '/v1/agents/%s/runs/%s' % (agent, run): {
+                'id': run, 'status': 'RUNNING', 'git': {'branches': [{'commitSha': SHA}]},
+            },
+        }))
+        self.assertEqual(reader.running({566}, {566: SHA}), frozenset({566}))
+
+    def test_active_cloud_wrong_agent_refuses(self):
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': 'agent-a', 'followup_run': 'run-a'},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/agent-a': {'id': 'agent-b', 'latestRunId': 'run-a'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'agent id mismatch'):
+            reader.running({566})
+
+    def test_active_cloud_wrong_run_refuses(self):
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': 'agent-a', 'followup_run': 'run-a'},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/agent-a': {'id': 'agent-a', 'latestRunId': 'run-a'},
+            '/v1/agents/agent-a/runs/run-a': {'id': 'run-b', 'status': 'RUNNING'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'run id mismatch'):
+            reader.running({566})
+
+    def test_active_cloud_wrong_head_refuses(self):
+        agent = 'agent-a'
+        run = 'run-a'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': run, 'fixit_sha': SHA},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': run},
+            '/v1/agents/%s/runs/%s' % (agent, run): {
+                'id': run, 'status': 'RUNNING', 'git': {'branches': [{'commitSha': 'b' * 40}]},
+            },
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'head mismatch'):
+            reader.running({566}, {566: SHA})
+
+    def test_active_cloud_api_error_refuses(self):
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': 'agent-a', 'followup_run': 'run-a'},
+        }))
+        def boom(_path):
+            raise EvidenceError('Cursor API read failed for live job proof: HTTP 503')
+        reader = HostReaders(self.root, cursor_api_get=boom)
+        with self.assertRaisesRegex(EvidenceError, 'HTTP 503'):
+            reader.running({566})
+
+    def test_active_cloud_terminal_stored_followup_live_latest_counts_as_running(self):
+        agent = 'agent-stale'
+        old_run = 'run-old'
+        new_run = 'run-new'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': old_run, 'fixit_sha': SHA},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': new_run},
+            '/v1/agents/%s/runs/%s' % (agent, old_run): {'id': old_run, 'status': 'FINISHED'},
+            '/v1/agents/%s/runs/%s' % (agent, new_run): {
+                'id': new_run, 'status': 'RUNNING', 'git': {'branches': [{'commitSha': SHA}]},
+            },
+        }))
+        self.assertEqual(reader.running({566}, {566: SHA}), frozenset({566}))
+
+    def test_active_cloud_terminal_stored_and_terminal_latest_is_not_running(self):
+        agent = 'agent-both-terminal'
+        old_run = 'run-old'
+        new_run = 'run-new'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': old_run},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': new_run},
+            '/v1/agents/%s/runs/%s' % (agent, old_run): {'id': old_run, 'status': 'FINISHED'},
+            '/v1/agents/%s/runs/%s' % (agent, new_run): {'id': new_run, 'status': 'IDLE'},
+        }))
+        self.assertEqual(reader.running({566}), frozenset())
+
+    def test_active_cloud_stored_followup_live_not_latest_refuses(self):
+        agent = 'agent-split'
+        old_run = 'run-old'
+        new_run = 'run-new'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': old_run},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': new_run},
+            '/v1/agents/%s/runs/%s' % (agent, old_run): {'id': old_run, 'status': 'RUNNING'},
+            '/v1/agents/%s/runs/%s' % (agent, new_run): {'id': new_run, 'status': 'RUNNING'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'still live but not latest'):
+            reader.running({566})
+
+    def test_active_cloud_stored_followup_unknown_status_refuses(self):
+        agent = 'agent-unknown-stored'
+        old_run = 'run-old'
+        new_run = 'run-new'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': old_run},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': new_run},
+            '/v1/agents/%s/runs/%s' % (agent, old_run): {'id': old_run, 'status': 'QUEUED'},
+            '/v1/agents/%s/runs/%s' % (agent, new_run): {'id': new_run, 'status': 'RUNNING'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'stored follow-up run status unknown'):
+            reader.running({566})
+
+    def test_active_cloud_latest_run_unknown_status_refuses(self):
+        agent = 'agent-unknown-latest'
+        run = 'run-latest'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': run},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': run},
+            '/v1/agents/%s/runs/%s' % (agent, run): {'id': run, 'status': 'QUEUED'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'run status unknown'):
+            reader.running({566})
+
+    def test_active_cloud_missing_api_head_refuses_even_with_local_fixit(self):
+        agent = 'agent-no-git'
+        run = 'run-no-git'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': run, 'fixit_sha': SHA},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent, 'latestRunId': run},
+            '/v1/agents/%s/runs/%s' % (agent, run): {'id': run, 'status': 'RUNNING'},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'lacks verifiable head'):
+            reader.running({566}, {566: SHA})
+
+    def test_active_cloud_missing_latest_run_id_refuses(self):
+        agent = 'agent-no-latest'
+        (self.root / 'rereview-state.json').write_text(json.dumps({
+            '566': {'active': True, 'agent': agent, 'followup_run': 'run-a'},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/' + agent: {'id': agent},
+        }))
+        with self.assertRaisesRegex(EvidenceError, 'latest run id missing'):
+            reader.running({566})
+
+    def test_active_cursor_record_terminal_via_api_is_not_running(self):
+        (self.root / 'cursor-state.json').write_text(json.dumps({
+            'issues': {'566': {'agent': 'agent-c', 'run': 'run-c', 'status': 'running'}},
+        }))
+        reader = HostReaders(self.root, cursor_api_get=self._cursor_api({
+            '/v1/agents/agent-c': {'id': 'agent-c', 'latestRunId': 'run-c'},
+            '/v1/agents/agent-c/runs/run-c': {'id': 'run-c', 'status': 'IDLE'},
+        }))
+        self.assertEqual(reader.running({566}), frozenset())
+
+    def _cursor_api(self, mapping):
+        def get(path):
+            if path not in mapping:
+                raise EvidenceError('unexpected Cursor API path in test: ' + path)
+            return mapping[path]
+        return get
 
     def test_missing_craig_reader_refuses(self):
         item = issue()
@@ -746,6 +929,201 @@ class CollectorPendingAcceptance(unittest.TestCase):
             now=NOW,
         )
         with self.assertRaisesRegex(EvidenceError, 'pending-acceptance record'):
+            self.collector(self.item, self.comments, NOW)
+
+
+class CollectorAcceptanceHandbackResolution(unittest.TestCase):
+    DRAFT_BODY = 'Closes #562\npaired real candidate/reference capture acceptance NOT RUN'
+    HANDOFF_BODY = 'receipt ready; host review required'
+    VERDICT_BODY = 'HOST-HANDBACK-REVIEW: verdict posted; acceptance lifecycle continues'
+    ACTOR_ID = 7
+    HANDOFF_ID = 100
+    VERDICT_ID = 101
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self._scope_patch = patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p))
+        self._scope_patch.start()
+        self.addCleanup(self._scope_patch.stop)
+        self.receipt_body = '#569\n' + SHA + '\nacceptance pending\n'
+        self.receipt_path = self.root / 'tsv-work' / 'synthetic-job' / 'RECEIPT.md'
+        self.receipt_path.parent.mkdir(parents=True)
+        self.receipt_path.write_text(self.receipt_body)
+        self.receipt_sha = hashlib.sha256(self.receipt_body.encode()).hexdigest()
+        self.verdict_receipt_body = '#569 verdict\n' + SHA + '\n'
+        self.verdict_receipt_path = self.root / 'tsv-work' / 'synthetic-job' / 'VERDICT-RECEIPT.md'
+        self.verdict_receipt_path.write_text(self.verdict_receipt_body)
+        self.verdict_receipt_sha = hashlib.sha256(self.verdict_receipt_body.encode()).hexdigest()
+        self.acceptance_path = self.root / 'HOST_ACCEPTANCE.json'
+        self.handback_path = self.root / 'HOST_HANDOFF.json'
+        self.resolution_path = self.root / 'HOST_RESOLUTION.json'
+        self.handback_at = NOW - 600
+        self.acceptance_at = NOW - 580
+        self.verdict_at = NOW - 120
+        self.item = issue(569)
+        self.item.update(draft=True, head={'sha': SHA}, body=self.DRAFT_BODY,
+                         user={'login': 'host-supervisor', 'id': self.ACTOR_ID})
+        self.comments = [
+            {
+                'id': self.HANDOFF_ID,
+                'user': {'login': 'host-supervisor', 'id': self.ACTOR_ID},
+                'body': self.HANDOFF_BODY,
+                'created_at': iso(self.handback_at),
+                'updated_at': iso(self.handback_at),
+                'html_url': 'https://example.test/issues/569#issuecomment-%d' % self.HANDOFF_ID,
+                'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/569',
+            },
+            {
+                'id': self.VERDICT_ID,
+                'user': {'login': 'host-supervisor', 'id': self.ACTOR_ID},
+                'body': self.VERDICT_BODY,
+                'created_at': iso(self.verdict_at),
+                'updated_at': iso(self.verdict_at),
+                'html_url': 'https://example.test/issues/569#issuecomment-%d' % self.VERDICT_ID,
+                'issue_url': 'https://api.github.com/repos/grampadsbot-sudo/timesyncher/issues/569',
+            },
+        ]
+        self.page = assessment().replace('#566', '#569').replace('| #566 |', '| #569 |')
+        self.readers = HostReaders(
+            self.root,
+            handback_event_paths={569: str(self.handback_path)},
+            acceptance_event_paths={569: str(self.acceptance_path)},
+            resolution_event_paths={569: str(self.resolution_path)},
+        )
+        self.readers.page = Mock(side_effect=lambda slug: self.page if slug == ASSESSMENT else '')
+        self.readers.running = Mock(return_value=frozenset())
+        self.gh = Mock()
+        self.gh.req.return_value = {'id': self.ACTOR_ID, 'login': 'host-supervisor'}
+        self.collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', self.readers, clock=lambda: NOW)
+
+    def _write_v2_json(self, path, record):
+        path.write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+
+    def write_records(self, **resolution_changes):
+        self._write_v2_json(self.handback_path, {
+            'version': EVENT_VERSION_REGISTERED,
+            'item': 569,
+            'head': SHA,
+            'event_at': self.handback_at,
+            'registered_at': self.handback_at + 1,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'comment_id': self.HANDOFF_ID,
+            'comment_body_sha256': hashlib.sha256(self.HANDOFF_BODY.encode()).hexdigest(),
+        })
+        self._write_v2_json(self.acceptance_path, {
+            'version': EVENT_VERSION_REGISTERED,
+            'item': 569,
+            'head': SHA,
+            'event_at': self.acceptance_at,
+            'registered_at': self.acceptance_at + 1,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'draft_body_sha256': hashlib.sha256(self.DRAFT_BODY.encode()).hexdigest(),
+        })
+        defaults = {
+            'path': self.resolution_path,
+            'item': 569,
+            'head': SHA,
+            'event_at': self.verdict_at,
+            'state': 'pending',
+            'receipt_path': str(self.verdict_receipt_path),
+            'receipt_sha256': self.verdict_receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'handback_comment_id': self.HANDOFF_ID,
+            'resolve_comment_id': self.VERDICT_ID,
+            'resolve_comment_body': self.VERDICT_BODY,
+            'now': NOW,
+            'schema_version': EVENT_VERSION_REGISTERED,
+            'registered_at': self.verdict_at + 1,
+        }
+        defaults.update(resolution_changes)
+        produce_resolution_event(**defaults)
+
+    def evidence(self):
+        self.write_records()
+        return self.collector(self.item, self.comments, NOW)
+
+    def test_newer_verdict_with_resolution_keeps_acceptance_clock(self):
+        ev = self.evidence()
+        self.assertTrue(ev.acceptance_pending)
+        self.assertEqual(ev.acceptance_at, self.acceptance_at)
+        self.assertEqual(ev.handback_ids, frozenset({self.HANDOFF_ID, self.VERDICT_ID}))
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'OWNED')
+
+    def test_newer_verdict_without_resolution_refuses(self):
+        self.write_records()
+        self.resolution_path.unlink()
+        with self.assertRaisesRegex(EvidenceError, 'resolution event file not found'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_unconfigured_resolution_refuses_newer_host_comment(self):
+        readers = HostReaders(
+            self.root,
+            handback_event_paths={569: str(self.handback_path)},
+            acceptance_event_paths={569: str(self.acceptance_path)},
+        )
+        readers.page = self.readers.page
+        readers.running = self.readers.running
+        collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', readers, clock=lambda: NOW)
+        self.write_records()
+        with self.assertRaisesRegex(EvidenceError, 'resolution proof'):
+            collector(self.item, self.comments, NOW)
+
+    def test_acceptance_due_after_twenty_minutes_unchanged_by_verdict(self):
+        self.acceptance_at = NOW - REVIEW_S
+        self.handback_at = self.acceptance_at - 60
+        self.verdict_at = NOW - 30
+        self.comments[0]['created_at'] = iso(self.handback_at)
+        self.comments[0]['updated_at'] = iso(self.handback_at)
+        self.comments[1]['created_at'] = iso(self.verdict_at)
+        self.comments[1]['updated_at'] = iso(self.verdict_at)
+        self.write_records()
+        ev = self.collector(self.item, self.comments, NOW)
+        self.assertEqual(ev.acceptance_at, self.acceptance_at)
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'DUE')
+
+    def test_dedup_after_due_routes_once(self):
+        self.acceptance_at = NOW - REVIEW_S
+        self.handback_at = self.acceptance_at - 60
+        self.verdict_at = NOW - 30
+        self.comments[0]['created_at'] = iso(self.handback_at)
+        self.comments[0]['updated_at'] = iso(self.handback_at)
+        self.comments[1]['created_at'] = iso(self.verdict_at)
+        self.comments[1]['updated_at'] = iso(self.verdict_at)
+        self.write_records()
+        ev = self.collector(self.item, self.comments, NOW)
+        decision = classify(self.item, self.comments, ev, NOW, self.collector.actors, {})
+        bell = Mock(return_value='ok')
+        sent = {}
+        self.assertEqual(route(self.item, decision, sent, bell), 'ok')
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, sent).state, 'WAIT')
+
+    def test_wrong_resolve_head_refuses(self):
+        self.write_records(head='b' * 40)
+        with self.assertRaisesRegex(EvidenceError, 'current head'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_wrong_handback_binding_refuses(self):
+        self.write_records(handback_comment_id=self.HANDOFF_ID + 1)
+        with self.assertRaisesRegex(EvidenceError, 'handback comment not authenticated'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_edited_verdict_comment_refuses(self):
+        self.write_records()
+        self.comments[1]['updated_at'] = iso(NOW)
+        with self.assertRaisesRegex(EvidenceError, 'edited host comment'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_reviewed_resolution_record_refuses(self):
+        self.write_records(state='reviewed')
+        with self.assertRaisesRegex(EvidenceError, 'unsupported reviewed'):
             self.collector(self.item, self.comments, NOW)
 
 

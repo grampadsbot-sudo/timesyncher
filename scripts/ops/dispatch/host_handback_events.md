@@ -89,6 +89,27 @@ Handoff and acceptance field sets cannot be mixed on one record. Producer/reader
 `Evidence.acceptance_pending` / `acceptance_at` from the immutable `event_at`. Without a
 configured path, draft `ACCEPT_RE` items still raise `EvidenceError`.
 
+## Host-review resolution records (newer verdict after registered handoff)
+
+When a registered handoff event authenticates an older host comment but a newer host
+actor comment exists on the same snapshot, the collector requires an explicit
+resolution record binding the authenticated handoff comment to the newest comment.
+
+| Field | Meaning |
+|---|---|
+| `handback_comment_id` | Exact `comment_id` from the registered handoff event |
+| `resolve_comment_id` | Exact GitHub comment id of the resolving verdict |
+| `resolve_comment_body_sha256` | SHA-256 of the exact resolve comment body bytes |
+
+Handoff, acceptance, and resolution field sets cannot be mixed. Producer/reader:
+
+- `produce_resolution_event(...)` / `verify_resolution_event` / `verify_resolution_observation`
+- `verify_resolve_comment_binding(record, comment)`
+
+`HostReaders` accepts `resolution_event_root` or `resolution_event_paths`. Resolution
+`event_at` records when the host registered the verdict; it does not rewrite the
+pending-acceptance `event_at` used for review-age timing.
+
 ## Unresolved (not implemented here)
 
 Transition from `pending` to `reviewed` for acceptance records remains follow-on work.

@@ -31,8 +31,16 @@ head SHA; missing/unparseable action evidence is an error, not an empty budget.
 Scoped process checks read the existing `lane-worker-jobs.json`, lane slot files,
 `rereview-state.json` and `cursor-state.json`. Lane jobs need the actual PID, exact
 lane/tag argv, matching worktree, stable process start identity and current head.
-A boolean cloud flag or a stale Cursor entry cannot prove a running job. Unsupported
-active cloud evidence is an error. The collector never scans host processes globally,
+An active `rereview-state.json` cloud flag or a non-finished `cursor-state.json`
+entry is authenticated read-only through the Cursor Cloud Agents API (same key route
+as `cursor_launch` / `idle_capacity`): the authenticated agent `latestRunId` is the
+authoritative newest run; a stored follow-up run that differs must reconcile explicitly
+(terminal stored run, then evaluate latest). Live `RUNNING`/`CREATING` on latest counts
+as running; terminal `FINISHED`/`IDLE`/etc. on latest is an honest not-running result.
+Run head proof uses API commit bytes only, not local `fixit_sha`. Missing bindings,
+API failure, identity mismatch, unknown status, stale stored run still live, or a live
+run whose head disagrees with the current GitHub head fail closed. The collector never scans host
+processes globally,
 uses systemctl, calls a model, writes records or performs a privileged operation.
 
 A handback requires its exact GitHub permalink in a currently referenced canonical
@@ -97,6 +105,14 @@ make the scan succeed. The smallest subsequent adapter work needs the host's act
 authenticated event/receipt and guarded-send contracts, with explicit resolution
 semantics, before replacing those assumptions. Unsupported original acceptance,
 guarded review and remote running-job formats still raise `EvidenceError`.
+
+## Host-review resolution records (#569 continuation)
+
+When a registered handoff event authenticates an older host comment and a newer host
+actor comment exists, `CanonicalCollector` requires an explicit resolution record
+(`handback_comment_id`, `resolve_comment_id`, resolve body digest, receipt binding)
+via `HostReaders.resolution_event_*`. Resolution registration time does not rewrite
+pending-acceptance `event_at` used for the 20-minute review-age clock.
 
 `CANONICAL-HANDBACK-SCHEMA` requires independent host verification of the actual
 current section/row owners, stale/future/missing/ambiguous refusals and traceable
