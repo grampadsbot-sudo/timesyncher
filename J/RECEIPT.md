@@ -1,6 +1,6 @@
-# PR543 — list logos and stores tab (vkfill-543-20261020174727)
+# PR543 — list logos and stores tab (vkfill-543-20261020180727)
 
-Outcome: dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane `vkfill-543-20261020175727` re-verified pre-DONE gates (lane tip full sha at publish; host publish). CI and Gate B on published head are for the host.
+Outcome: dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/briefs/543.md`). Product fix `02ef6a926ce06dfb9edbd53e2988c465a7c30db8`; lane `vkfill-543-20261020180727` re-verified pre-DONE gates on detached tip (host publish / CI / Gate B).
 
 ## Changes (02ef6a92)
 
@@ -9,7 +9,7 @@ Outcome: dr eggbot 2026-10-20 4:45 PM PT brief (`~/tsv-dispatch/auto-filler/brie
 
 Files: `apps/vacation-client/src/lib/listTabModel.mjs`, `apps/vacation-client/src/screens/CategoryTabScreen.tsx`, `apps/vacation-client/test/listRows.unit.mjs`.
 
-## Checks (local, vkfill-543-20261020175727)
+## Checks (local, vkfill-543-20261020180727)
 
 - `node apps/vacation-client/test/listRows.unit.mjs` — pass
 - `cd apps/vacation-client && npm run typecheck` — pass
