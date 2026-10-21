@@ -1,17 +1,25 @@
-Closes #589
-
 ## Summary
 
-- Gate B structure failed on Events (and similar) list rows because capture could not record `first_text` for logo-vs-name centering: the name sat as a bare text node inside `[data-ts-list-row-name]`, not in a `span`/`strong` leaf.
-- Patch `Oe()` so the default title branch wraps `ua` in `<strong>` (flight/car/hotel components unchanged). Rebake `public/assets/index-BKun7ofk.js`.
+Fixes `unit-tests` failures on `scripts/ops/dispatch/test_same_selection_capture.py` (CI run 39667545911): fixture replay must not rewrite served `places` (category strings stay strings; no replay-time `logoUrl`/`website` injection).
 
-## Checks
+Generic list logos for #588 are resolved in the vacation client at render time via `logoUrlForPlace` → `resolveThingLogoUrl` in `apps/vacation-client/src/lib/listTabModel.mjs`, not by mutating the served trip payload.
 
-- `node scripts/rebake_served_trek_bundle.mjs` — 0
-- `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` — 0
-- `node scripts/test_served_trek_bundle.mjs` — 0
-- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (bases `migrate/trek-source` and `codex/ruling95-consolidated-logo`) — 0
+Reverted the prior round’s fixture/ccab harness churn and restored the subprocess sanctioned-producer binding in `scripts/ops/capture/timeline-replay.mjs`.
+
+Merged `origin/migrate/trek-source` at `446e1913` (host): kept base `Oe()` `<strong>` list-row title wrap + rebaked served bundle alongside this PR’s replay/logo fixes.
+
+Merged `origin/migrate/trek-source` at `e3364ac5` (dirty-head requeue 2026-10-21): absorbed #597/#600 Gate B NYC fixture updates; J conflict only.
+
+## Test plan
+
+- [x] `python3 scripts/ops/dispatch/test_same_selection_capture.py`
+- [x] `node scripts/test_capture_fixture_replay_harness.mjs`
+- [x] `cd apps/vacation-client && npm run typecheck && npm run test`
+- [x] Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet`
+- [ ] CI `unit-tests` green on PR head (host)
+- [ ] Gate B structure mode on 32 screens (host)
 
 ## Left alone (scope)
 
-- Capture/Gate B scripts, baselines, fixtures, and `scripts/offline-tests.txt` (no new test file; extended existing bundle test).
+- Baselines, capture/Gate B thresholds, `offline-tests.txt`, NYC reference screenshots
+- Fixture/snapshot edits for logo chips (reverted)
