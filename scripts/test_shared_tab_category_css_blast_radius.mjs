@@ -29,5 +29,6 @@ assert.doesNotMatch(vacationApp, /\[data-ts-logo-chip\]\[data-tab-category/);
 
 const mapChip = rendered.match(/data-ts-map-marker-logo="1"[^]{0,160}/)?.[0] || '';
 assert.ok(mapChip && !mapChip.includes('data-tab-category'), 'map marker chip must not use data-tab-category');
+assert.ok(mapChip && !mapChip.includes('data-ts-logo-chip'), 'map marker must not use data-ts-logo-chip');
 
 console.log('shared tab category css blast radius tests passed');
