@@ -1,36 +1,33 @@
-# VK PR #585 lane receipt (cursor-ubuntu vkfill-585-20261021110623)
+# VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution round 2)
 
-**Start sha:** `101d3f81d7b02bbae9e1da1a398907bcd6cf4742`  
-**Tip sha:** `c8f41da3c62419c1ae3c487a95afc6a1f92f9543` (merge `5add6a7d` + receipt/PR body)
+**Start sha:** `500202d80fcecbe0df955fba5c5fe484616ce1e1`  
+**Tip sha:** `b4caf0a5` (merge on `500202d8`; base merge `c1b7b286`; receipt doc commit on branch tip)
 
-## Round 2 (conflict resolution)
+## Handoff
 
-Host-started merge of `origin/migrate/trek-source` (includes #586 flight list-row summary) onto `101d3f81`. Single conflict: `J/RECEIPT.md` — kept #585 receipt, dropped base #584 receipt text. Auto-merged: `listTabModel.mjs`, `listRows.unit.mjs`, `flight-list-row-summary.mjs`, `trek-thing-detail-fields-patch.mjs`, `public/assets/index-BKun7ofk.js`.
+GBrain `bot-admin/lanes/vk-pr-handoff/pr-581` (chief dr 11:50 AM PT 10/21): host-started merge of `origin/migrate/trek-source` (`c1b7b286`); resolve `J/RECEIPT.md` and `J/PR_DESCRIPTION.md` only.
 
-## Prior (round 1)
+## Product (#579)
 
-Completed merge of `abf5f38c`: `scripts/offline-tests.txt` union; `budgetModel.mjs` combines timeline-only budget rows (#582) with required Flights/Hotel/Cars price completeness (#580).
+Day-by-day map markers: 30×30 shell, 26×26 `object-fit:contain` img. Map pins use **`data-ts-map-marker-logo` only**. Patch in `src/vacation/trek-live-product-patches.mjs`; rebaked `public/assets/index-BKun7ofk.js`.
 
-## Commands (exit 0 unless noted)
+## This round
 
-- `node scripts/test_budget_timeline_only_rows.mjs`
-- `node scripts/test_budget_required_price_completeness.mjs`
-- `node scripts/test_nyc_budget_search_fill_prices.mjs`
-- `node scripts/test_budget_checkout_harness.mjs`
-- `node scripts/test_capture_fixture_replay_harness.mjs`
-- `node scripts/test_check_hardcoded_content.mjs` / `node scripts/check-hardcoded-content.mjs` (0 fail)
-- `node scripts/test_served_trek_bundle.mjs`
-- `npm ci && npm run typecheck && npm run lint && npm test` (in `apps/vacation-client`, `CHROME_PATH=/usr/bin/chromium-browser`)
-- `node scripts/check-no-comments.mjs`
-- `node scripts/test_offline_manifest.mjs`
-- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
-- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
+Host-started merge completed: kept #581 receipt and PR description; dropped base #585 doc text. No product, bundle, test, or checker edits. `git commit --no-edit` completes merge on `500202d8`.
 
-## Lane note
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-Full `scripts/offline-tests.txt` run stops on this host at `scripts/test_live_transcript_dialog_pdf.mjs` (`rules.via` is `gbrain-cli-get_page`, test expects `bundled-get_page`; not introduced by this merge). `scripts/test_same_selection_capture.mjs` errors on stale `capture-producer-roots` worktree under `~/tsv-dispatch/pr-src` (host env). Budget and capture-replay scope tests above pass.
+## Offline manifest (host)
 
-## Left alone (scope)
+`scripts/offline-tests.txt` in order with `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`: lines through `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` pass; stops at `scripts/test_live_transcript_dialog_pdf.mjs` (`rules.via` `gbrain-cli-get_page` vs `bundled-get_page`; host env, not introduced by this merge).
 
-- No Gate B capture, baseline, workflow, or checker threshold edits.
-- No timeline/layout/logo UI changes beyond base auto-merge for #586.
+## Verdict
+
+Merge conflict resolved in docs only on `b4caf0a5`; pre-DONE gates pass; host publishes branch tip; CI + Gate B (allowance #579) on new tip.
