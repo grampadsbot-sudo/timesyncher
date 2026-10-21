@@ -13,7 +13,9 @@ from host_handback_events import (
     digest_comment_body,
     is_legacy_record,
     load_event,
+    produce_acceptance_event,
     produce_event,
+    verify_acceptance_observation,
     verify_event,
     verify_observation,
     verify_receipt_binding,
@@ -232,6 +234,45 @@ class HostHandbackEvents(unittest.TestCase):
         with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
             with self.assertRaisesRegex(EventError, 'registration timestamp is in the future'):
                 verify_observation(record, self.comment(), HEAD, NOW, now=NOW)
+
+    def test_acceptance_producer_roundtrip(self):
+        draft = 'paired real candidate/reference capture acceptance NOT RUN'
+        path = self.root / 'HOST_ACCEPTANCE.json'
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            record = produce_acceptance_event(
+            path,
+            item=569,
+            head=HEAD,
+            event_at=NOW - 120,
+            state='pending',
+            receipt_path=str(self.receipt_path),
+            receipt_sha256=self.receipt_sha,
+            gh_actor_id=ACTOR,
+            draft_body=draft,
+            now=NOW,
+            schema_version=EVENT_VERSION_REGISTERED,
+            registered_at=NOW - 60,
+            )
+        item = {'number': 569, 'draft': True, 'body': draft, 'user': {'id': ACTOR}}
+        with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
+            verify_acceptance_observation(record, item, HEAD, NOW - 1, now=NOW)
+
+    def test_acceptance_cannot_mix_handoff_fields(self):
+        data = {
+            'version': 1,
+            'item': 569,
+            'head': HEAD,
+            'event_at': NOW,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': ACTOR,
+            'draft_body_sha256': 'a' * 64,
+            'comment_id': 1,
+        }
+        self.event_path.write_text(json.dumps(data))
+        with self.assertRaisesRegex(EventError, 'mix handoff and acceptance'):
+            load_event(self.event_path)
 
 
 if __name__ == '__main__':

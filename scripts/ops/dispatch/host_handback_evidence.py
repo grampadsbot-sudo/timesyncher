@@ -10,7 +10,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
-                                  load_event, verify_event, verify_observation)
+                                  is_acceptance_record, load_event, verify_acceptance_event,
+                                  verify_acceptance_observation, verify_event, verify_observation)
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -172,11 +173,14 @@ class HostReaders:
     New host handback events use an explicitly supplied path map or event root.
     Paths are never inferred from GBrain prose or receipt text.
     """
-    def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None):
+    def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None,
+                 acceptance_event_root=None, acceptance_event_paths=None):
         self.root = Path(root)
         self.proc_root = Path(proc_root)
         self.handback_event_root = Path(handback_event_root) if handback_event_root else None
         self.handback_event_paths = dict(handback_event_paths or {})
+        self.acceptance_event_root = Path(acceptance_event_root) if acceptance_event_root else None
+        self.acceptance_event_paths = dict(acceptance_event_paths or {})
 
     def handback_event_configured(self, number):
         return number in self.handback_event_paths or self.handback_event_root is not None
@@ -188,6 +192,40 @@ class HostReaders:
         if self.handback_event_root is not None:
             return self.handback_event_root / ('%d.json' % number)
         return None
+
+    def acceptance_event_configured(self, number):
+        return number in self.acceptance_event_paths or self.acceptance_event_root is not None
+
+    def acceptance_event_path(self, number):
+        if number in self.acceptance_event_paths:
+            return Path(self.acceptance_event_paths[number])
+        if self.acceptance_event_root is not None:
+            return self.acceptance_event_root / ('%d.json' % number)
+        return None
+
+    def authenticate_acceptance_event(self, path, item, head, now, observed_at=None):
+        require(head and HEAD_RE.fullmatch(head), 'acceptance event requires exact current head')
+        try:
+            record = load_event(path)
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        require(is_acceptance_record(record), 'configured host event is not a pending-acceptance record')
+        require(record['item'] == item['number'], 'acceptance event item mismatch')
+        require(record['state'] == 'pending',
+                'unsupported reviewed acceptance resolution; explicit acceptance contract required')
+        author = item.get('user') or {}
+        require(author.get('id') == record['gh_actor_id'], 'acceptance event GH actor mismatch')
+        try:
+            if record['version'] == EVENT_VERSION_REGISTERED:
+                require(observed_at is not None, 'acceptance event observation time missing')
+                verify_acceptance_observation(record, item, head, observed_at, now=now)
+            elif record['version'] == EVENT_VERSION:
+                verify_acceptance_event(record, item, head, now=now)
+            else:
+                raise EventError('unsupported host handback event version')
+        except EventError as exc:
+            raise EvidenceError(str(exc)) from exc
+        return record
 
     def authenticate_handback_event(self, path, item, head, comment, now, observed_at=None):
         """Bind a HOST_HANDOFF record to live comment bytes and current head."""
@@ -391,16 +429,27 @@ class CanonicalCollector:
                              key=lambda c: (_time(c['created_at']), c['id']))
                 require(newest['id'] in handbacks,
                         'newer host comment needs authenticated resolution proof; generic retry refused')
-            pending, at = False, None
+            acceptance_pending, acceptance_at = False, None
             if item.get('draft') and ACCEPT_RE.search(item.get('body') or ''):
-                raise EvidenceError('authenticated pending-acceptance event reader/schema not supplied for #%d' % n)
+                require(item.get('user', {}).get('login') in self.actors,
+                        'draft acceptance author is not an authenticated host actor')
+                if not self.readers.acceptance_event_configured(n):
+                    raise EvidenceError(
+                        'authenticated pending-acceptance event reader/schema not supplied for #%d' % n)
+                acceptance_path = self.readers.acceptance_event_path(n)
+                require(acceptance_path is not None, 'authenticated pending-acceptance event path missing')
+                require(acceptance_path.is_file(), 'authenticated pending-acceptance event file not found')
+                record = self.readers.authenticate_acceptance_event(
+                    acceptance_path, item, head, checked, observed_at=snapshot_at)
+                acceptance_pending = True
+                acceptance_at = record['event_at']
             require(self.readers.page(ASSESSMENT) == self.assessment, 'shared assessment changed during collection')
             for slug, page in self.pages.items():
                 require(self.readers.page(slug) == page, 'canonical host receipt changed during collection')
             require(0 <= self.clock() - self.started <= 60, 'complete host evidence collection exceeded freshness window')
             return Evidence(snapshot_key(item, comments), checked, ASSESSMENT + '@sha256:' +
                             hashlib.sha256(self.assessment.encode()).hexdigest(), owner, n, action,
-                            guarded, running, frozenset(handbacks), pending, at)
+                            guarded, running, frozenset(handbacks), acceptance_pending, acceptance_at)
         except EvidenceError:
             raise
         except Exception as exc:

@@ -70,11 +70,28 @@ collection time. Version 2 uses `verify_observation` with a fresh snapshot times
 `event_at` remains the review-age clock for `REVIEW_S` (20 minutes) without rewrite.
 Classifier review timing is unchanged and separate.
 
+## Pending-acceptance records (draft `ACCEPT_RE` items)
+
+Same version 1/2 clocks as handoff events, but bind the **draft PR body** instead of a
+GitHub comment:
+
+| Field | Meaning |
+|---|---|
+| `draft_body_sha256` | SHA-256 of the exact draft body bytes (replaces `comment_id` / `comment_body_sha256`) |
+
+Handoff and acceptance field sets cannot be mixed on one record. Producer/reader:
+
+- `produce_acceptance_event(...)` / `verify_acceptance_event` / `verify_acceptance_observation`
+- `verify_acceptance_binding(record, item)` — live draft body digest and `gh_actor_id` must match the PR author.
+
+`HostReaders` accepts `acceptance_event_root` or `acceptance_event_paths`. When configured,
+`CanonicalCollector` authenticates draft pending acceptance through these APIs and sets
+`Evidence.acceptance_pending` / `acceptance_at` from the immutable `event_at`. Without a
+configured path, draft `ACCEPT_RE` items still raise `EvidenceError`.
+
 ## Unresolved (not implemented here)
 
-Transition from `pending` to `reviewed` and how that feeds acceptance vs host-review
-classification for draft `ACCEPT_RE` items remain follow-on work. Pending acceptance
-still raises `EvidenceError` when no acceptance event reader is supplied.
+Transition from `pending` to `reviewed` for acceptance records remains follow-on work.
 
 ## Example outer-host call
 

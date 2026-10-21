@@ -12,8 +12,8 @@ from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceErro
                                     HostReaders, authenticate_guarded_look_send,
                                     current_section, last_action, ownership)
 from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
-                                  produce_event, verify_observation)
-from host_handback_review import REVIEW_S, classify
+                                  produce_acceptance_event, produce_event, verify_observation)
+from host_handback_review import REVIEW_S, classify, route
 from test_host_handback_review import NOW, iso, issue, receipt
 
 SLUG = 'bot-admin/receipts/synthetic-host-review'
@@ -119,6 +119,7 @@ class CollectorBoundaries(unittest.TestCase):
         self.readers = Mock(spec=HostReaders)
         self.readers.handback_event_path.return_value = None
         self.readers.handback_event_configured.return_value = False
+        self.readers.acceptance_event_configured.return_value = False
         self.readers.page.side_effect = lambda slug: self.page if slug == ASSESSMENT else self.record
         self.readers.running.return_value = frozenset()
         self.readers.receipt.return_value = self.comments[0]['body']
@@ -610,6 +611,142 @@ class CollectorHandbackEvents(unittest.TestCase):
                                   event_at=NOW - 120)
         with patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p)):
             verify_observation(record, self.comments[0], SHA, NOW - 1, now=NOW)
+
+
+class CollectorPendingAcceptance(unittest.TestCase):
+    DRAFT_BODY = 'Closes #562\npaired real candidate/reference capture acceptance NOT RUN'
+    ACTOR_ID = 7
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self._scope_patch = patch('host_handback_events.validate_scoped_receipt_path', lambda p: Path(p))
+        self._scope_patch.start()
+        self.addCleanup(self._scope_patch.stop)
+        self.receipt_body = '#569\n' + SHA + '\nacceptance pending\n'
+        self.receipt_path = self.root / 'tsv-work' / 'synthetic-job' / 'RECEIPT.md'
+        self.receipt_path.parent.mkdir(parents=True)
+        self.receipt_path.write_text(self.receipt_body)
+        self.receipt_sha = hashlib.sha256(self.receipt_body.encode()).hexdigest()
+        self.event_path = self.root / 'HOST_ACCEPTANCE.json'
+        self.item = issue(569)
+        self.item.update(draft=True, head={'sha': SHA}, body=self.DRAFT_BODY,
+                         user={'login': 'host-supervisor', 'id': self.ACTOR_ID})
+        self.event_at = NOW - 120
+        self.comments = []
+        self.page = assessment().replace('#566', '#569').replace('| #566 |', '| #569 |')
+        self.readers = HostReaders(self.root, acceptance_event_paths={569: str(self.event_path)})
+        self.readers.page = Mock(side_effect=lambda slug: self.page if slug == ASSESSMENT else '')
+        self.readers.running = Mock(return_value=frozenset())
+        self.gh = Mock()
+        self.gh.req.return_value = {'id': self.ACTOR_ID, 'login': 'host-supervisor'}
+        self.collector = CanonicalCollector(self.gh, 'grampadsbot-sudo/timesyncher', self.readers, clock=lambda: NOW)
+
+    def write_event(self, **changes):
+        defaults = {
+            'path': self.event_path,
+            'item': 569,
+            'head': SHA,
+            'event_at': self.event_at,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'draft_body': self.DRAFT_BODY,
+            'now': NOW,
+            'schema_version': EVENT_VERSION_REGISTERED,
+            'registered_at': self.event_at + 1,
+        }
+        defaults.update(changes)
+        return produce_acceptance_event(**defaults)
+
+    def write_v2_record(self, event_at, registered_at):
+        record = {
+            'version': EVENT_VERSION_REGISTERED,
+            'item': 569,
+            'head': SHA,
+            'event_at': event_at,
+            'registered_at': registered_at,
+            'state': 'pending',
+            'receipt_path': str(self.receipt_path),
+            'receipt_sha256': self.receipt_sha,
+            'gh_actor_id': self.ACTOR_ID,
+            'draft_body_sha256': hashlib.sha256(self.DRAFT_BODY.encode()).hexdigest(),
+        }
+        self.event_path.write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+        return record
+
+    def evidence(self):
+        self.write_event()
+        return self.collector(self.item, self.comments, NOW)
+
+    def test_authenticated_draft_acceptance_routes_reviewer(self):
+        ev = self.evidence()
+        self.assertTrue(ev.acceptance_pending)
+        self.assertEqual(ev.acceptance_at, self.event_at)
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'OWNED')
+
+    def test_overdue_draft_acceptance_due_after_twenty_minutes(self):
+        self.event_at = NOW - REVIEW_S
+        self.write_v2_record(self.event_at, self.event_at + 1)
+        ev = self.collector(self.item, self.comments, NOW)
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, {}).state, 'DUE')
+
+    def test_dedup_review_action_routes_once(self):
+        self.event_at = NOW - REVIEW_S
+        self.write_v2_record(self.event_at, self.event_at + 1)
+        ev = self.collector(self.item, self.comments, NOW)
+        decision = classify(self.item, self.comments, ev, NOW, self.collector.actors, {})
+        bell = Mock(return_value='ok')
+        sent = {}
+        self.assertEqual(route(self.item, decision, sent, bell), 'ok')
+        self.assertEqual(classify(self.item, self.comments, ev, NOW, self.collector.actors, sent).state, 'WAIT')
+        bell.assert_called_once()
+
+    def test_configured_missing_event_file_refuses(self):
+        with self.assertRaisesRegex(EvidenceError, 'acceptance event file not found'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_wrong_current_head_refuses(self):
+        self.write_event()
+        self.item['head']['sha'] = 'b' * 40
+        with self.assertRaisesRegex(EvidenceError, 'current head'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_wrong_actor_refuses(self):
+        self.write_event()
+        self.item['user']['id'] = self.ACTOR_ID + 1
+        with self.assertRaisesRegex(EvidenceError, 'actor'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_edited_draft_body_refuses(self):
+        self.write_event()
+        self.item['body'] = self.DRAFT_BODY + '\nedit'
+        with self.assertRaisesRegex(EvidenceError, 'draft body'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_forged_late_registration_refuses(self):
+        self.write_v2_record(NOW - 1200, NOW)
+        with self.assertRaisesRegex(EvidenceError, 'registration outside comment window'):
+            self.collector(self.item, self.comments, NOW)
+
+    def test_handoff_record_at_acceptance_path_refuses(self):
+        produce_event(
+            self.event_path,
+            item=569,
+            head=SHA,
+            event_at=self.event_at,
+            state='pending',
+            receipt_path=str(self.receipt_path),
+            receipt_sha256=self.receipt_sha,
+            gh_actor_id=self.ACTOR_ID,
+            comment_id=42,
+            comment_body='host review required',
+            now=NOW,
+        )
+        with self.assertRaisesRegex(EvidenceError, 'pending-acceptance record'):
+            self.collector(self.item, self.comments, NOW)
 
 
 class GuardedCraigLookSend(unittest.TestCase):

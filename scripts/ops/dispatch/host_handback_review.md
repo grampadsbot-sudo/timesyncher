@@ -58,9 +58,10 @@ GBrain narrative, `needs-craig` alone, and assessment prose are not proof.
 
 ## Evidence still required
 
-The six supplied runtime modules do **not** identify the authenticated original
-pending-acceptance event reader/schema. The default host reader still raises
-`EvidenceError` for that boundary. No phrase-only acceptance, label-only Craig proof,
+Source now includes an explicit pending-acceptance record/reader in
+`host_handback_events.py` (draft body digest, receipt binding, version 2 observation
+clock) wired through `HostReaders.acceptance_event_*` and `CanonicalCollector`. Runtime
+installation and host dry-run remain separate. No phrase-only acceptance, label-only Craig proof,
 new fabricated canonical record, or guessed source actor was substituted. Host must
 supply/review that actual reader before the complete current-object dry-run can meet
 the acceptance criterion.
