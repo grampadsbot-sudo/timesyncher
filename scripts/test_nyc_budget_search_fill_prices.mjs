@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+
+import { buildBudgetModel } from '../apps/vacation-client/src/lib/budgetModel.mjs';
+import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
+import { placeToTripThing } from '../src/vacation/place-search.mjs';
+import {
+  buildGateBSearchPlaceForRow,
+  buildPr336VkSearchPlacesByRowId,
+} from './fixtures/pr336-vk-search-trip-sources.mjs';
+import { buildNycCraigKimDaybydayTrip } from './fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import {
+  enrichSearchPlace,
+  estimateSearchPlacePrice,
+} from '../src/vacation/trip-thing-enrichment.mjs';
+
+const BUDGET_CATEGORIES = new Set([
+  'flight',
+  'hotel',
+  'car',
+  'restaurant',
+  'store',
+  'activity',
+  'event',
+  'music',
+]);
+
+const gateBRows = [
+  { id: 601, name: 'JetBlue LAS → JFK', cat: 'flight' },
+  { id: 602, name: "Zabar's", cat: 'store' },
+  { id: 603, name: 'Motto by Hilton New York City Times Square', cat: 'hotel' },
+  { id: 608, name: 'Midtown sample hotel', cat: 'hotel' },
+  { id: 609, name: 'Priceline opaque Standard sedan', cat: 'car' },
+  { id: 610, name: 'Carbone', cat: 'restaurant' },
+  { id: 611, name: 'Jazz at Lincoln Center', cat: 'activity' },
+];
+
+for (const row of gateBRows) {
+  const place = buildGateBSearchPlaceForRow(row);
+  const thing = placeToTripThing(place);
+  const price = thing.price ?? thing.metadata?.price;
+  assert.ok(price != null && price !== '' && price !== 0, `VK fill must set price on ${row.id} ${row.cat}`);
+}
+
+const restaurantEstimate = estimateSearchPlacePrice({
+  category: 'restaurant',
+  title: 'Neighborhood bistro',
+  sourceRecord: { priceLevel: '$$' },
+});
+assert.equal(restaurantEstimate, 42);
+
+const hotelEstimate = estimateSearchPlacePrice({
+  category: 'hotel',
+  title: 'Midtown stay',
+  description: '',
+  sourceRecord: {},
+});
+assert.equal(hotelEstimate, '$250-$350/night');
+
+const enrichedNoSourcePrice = enrichSearchPlace({
+  category: 'store',
+  title: 'Corner market',
+  summary: 'Quick stop for snacks.',
+  description: 'Neighborhood market with prepared foods and picnic supplies.',
+  sourceRecord: { source: 'brave' },
+});
+assert.ok(enrichedNoSourcePrice.price != null && enrichedNoSourcePrice.price > 0);
+
+const trip = finalizeServedSharedTripPayload(buildNycCraigKimDaybydayTrip());
+const model = buildBudgetModel(trip);
+const missing = model.rows.filter((row) => !row.hasPrice);
+assert.deepEqual(
+  missing.map((row) => `${row.bucket}:${row.name}`),
+  [],
+  `every NYC budget row must show a fill price, missing: ${missing.map((row) => row.name).join(', ')}`,
+);
+
+const searchPlaces = buildPr336VkSearchPlacesByRowId(gateBRows);
+for (const row of gateBRows) {
+  if (!BUDGET_CATEGORIES.has(row.cat) && row.cat !== 'activity') continue;
+  const place = searchPlaces[row.id];
+  assert.ok(place?.price != null && place.price !== 0, `search fill price on place ${row.id}`);
+}
+
+console.log('NYC budget search fill price tests passed');

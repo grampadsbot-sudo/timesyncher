@@ -42,6 +42,20 @@ function placeMetadata(place = {}) {
     : {};
 }
 
+export function provenanceBlocksSourcedPrice(override = {}, place = {}) {
+  for (const bag of [
+    override,
+    place.sourceRecord,
+    place.source && typeof place.source === 'object' ? place.source : null,
+  ]) {
+    if (!bag || typeof bag !== 'object') continue;
+    if (!text(bag.provenanceBlocker)) continue;
+    const blocked = Array.isArray(bag.provenanceBlocked) ? bag.provenanceBlocked : [];
+    if (blocked.some((field) => text(field, 80).toLowerCase() === 'price')) return true;
+  }
+  return false;
+}
+
 function rentalCompanyFromTitle(name = '') {
   const title = text(name);
   if (!title) return '';
@@ -141,9 +155,10 @@ export function applyLiveAppListRowFields(shared = {}) {
     }
 
     const price = priceFromRecords(place, override, source);
+    const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
     if (price != null) {
-      override.price = price;
       if (place.price == null || place.price === '') place.price = price;
+      if (!keepPriceOnPlaceOnly) override.price = price;
     }
 
     if (category === 'car') {
