@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
+import { loadFixtureReplaySharedTripFromPath } from '../src/vacation/shared-trip-fixture-replay.mjs';
 
 const repo = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const captureDir = path.join(repo, 'scripts/ops/capture');

@@ -1,33 +1,39 @@
-# VK PR #581 receipt (cursor-ubuntu vkfill-581 conflict-resolution round 2)
+# VK issue #588 receipt (cursor-ubuntu vkfill-588)
 
-**Start sha:** `500202d80fcecbe0df955fba5c5fe484616ce1e1`  
-**Tip sha:** `b4caf0a5` (merge on `500202d8`; base merge `c1b7b286`; receipt doc commit on branch tip)
+**Branch:** `vkfill/588-20261021125728`  
+**Base:** `migrate/trek-source` (start `7bc66068`)  
+**Gap ref:** GBrain `bot-admin/lanes/vk-known-gaps-218a3b39` (generic logos)
 
-## Handoff
+## Change
 
-GBrain `bot-admin/lanes/vk-pr-handoff/pr-581` (chief dr 11:50 AM PT 10/21): host-started merge of `origin/migrate/trek-source` (`c1b7b286`); resolve `J/RECEIPT.md` and `J/PR_DESCRIPTION.md` only.
+Gate B fixture replay served seven list rows with the same fallback chip because NYC shared fixture rows kept broken or generic `logoUrl` values and replay did not merge stored ccab enrichment before `applyLiveAppListRowFields`.
 
-## Product (#579)
+- Added `src/vacation/shared-trip-fixture-replay.mjs` (`prepareFixtureReplaySharedTrip`) to normalize timeline selections, bind PR336/ccab identity, merge stored ccab narrative and **always** apply ccab `logoUrl` when present, then run live-app list row finalization.
+- Extended `scripts/fixtures/pr336-vk-search-trip-sources.mjs` with stored-ccab helpers used on fixture replay (logo bind overwrites stale fixture URLs).
+- Added `Boat tour candidates` to `scripts/fixtures/nyc_ccab_place_enrichment.json` (Circle Line favicon); corrected Hyatt House Chelsea favicon to Hyatt HDS asset.
+- `apps/vacation-client/src/lib/listTabModel.mjs`: `logoUrlForPlace` falls back to `resolveThingLogoUrl` when no explicit URL.
+- `scripts/ops/capture/timeline-replay.mjs`: in-process `prepareFixtureReplaySharedTrip` after binding checks (replaces subprocess driver).
+- Minor: `nyc-craig-kim-daybyday-trip.mjs` row 635 AA logo; `test_gate_b_product_row_fields.mjs` ccab count 64.
 
-Day-by-day map markers: 30×30 shell, 26×26 `object-fit:contain` img. Map pins use **`data-ts-map-marker-logo` only**. Patch in `src/vacation/trek-live-product-patches.mjs`; rebaked `public/assets/index-BKun7ofk.js`.
+## Local verification
 
-## This round
-
-Host-started merge completed: kept #581 receipt and PR description; dropped base #585 doc text. No product, bundle, test, or checker edits. `git commit --no-edit` completes merge on `500202d8`.
-
-| Command | Exit |
+| Command | Result |
 | --- | --- |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node` replay on `~/tsv-dispatch/fixture-nyc/nyc-shared.json` | Boat/Chelsea/United/Hyatt rows distinct favicon URLs; no logo URL repeated 7+ times |
+| `node scripts/test_pr336_ccab_search_provenance.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
 
-## Offline manifest (host)
+`node scripts/test_capture_fixture_replay_harness.mjs` needs a healthy `capture-producer` git worktree on this host (worktree registration error); not run to completion here.
 
-`scripts/offline-tests.txt` in order with `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`: lines through `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` pass; stops at `scripts/test_live_transcript_dialog_pdf.mjs` (`rules.via` `gbrain-cli-get_page` vs `bundled-get_page`; host env, not introduced by this merge).
+## Not done in-agent (host / CI)
+
+- PR push, CI green on PR head, Gate B structure check PASS on events/hotels 1280/390 (required for Done means).
 
 ## Verdict
 
-Merge conflict resolved in docs only on `b4caf0a5`; pre-DONE gates pass; host publishes branch tip; CI + Gate B (allowance #579) on new tip.
+Logo source + fixture replay enrichment implemented locally; pre-DONE gates pass on tip sha below; host publishes branch and runs CI + Gate B.

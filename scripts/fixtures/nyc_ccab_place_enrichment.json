@@ -175,13 +175,24 @@
     "lng": null,
     "address": "Times Square, New York, NY"
   },
+  "Boat tour candidates": {
+    "category": "tour",
+    "description": "Harbor sightseeing boat tours from Manhattan; compare Circle Line, Statue Cruises ferry packages, and specialty operators before booking. Fixture uses Circle Line as the planning anchor for logo and operator site only; pick the actual sailing that fits your day.",
+    "summary": "Harbor boat-tour options to compare before you pick a sailing time.",
+    "price": null,
+    "website": "https://www.circleline.com/",
+    "logoUrl": "https://www.circleline.com/favicon.ico",
+    "lat": 40.701,
+    "lng": -74.013,
+    "address": "Pier 83, Hudson River, New York, NY"
+  },
   "Hyatt House New York/Chelsea": {
     "category": "hotel",
     "description": "Neighborhood: Chelsea; Rating: 8.6 (1,794 Booking.com reviews); Price: $324/night; $2,267/week for 2 adults; Breakfast included; subway access; Booking.com escalation result; Status: candidate, not booked.",
     "summary": "Neighborhood: Chelsea; Rating: 8.6 (1,794 Booking.com reviews); Price: $324/night; $2,267/week for 2 adults; Breakfast included; subway access; Booking.com escalation result; Status: candidate, not booked.",
     "price": 324,
     "website": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
-    "logoUrl": "https://www.hyatt.com/favicon.ico",
+    "logoUrl": "https://www.hyatt.com/hyatt/hds/images/4.0.0/favicon.ico",
     "lat": null,
     "lng": null,
     "address": "Chelsea, New York, NY"

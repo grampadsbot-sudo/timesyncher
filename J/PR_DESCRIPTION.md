@@ -1,20 +1,27 @@
-Closes #579
+Closes #588
 
 ## Summary
 
-Day-by-day Leaflet map markers with `logoUrl` favicons were constrained to a **30×30** shell (`overflow:hidden`) and **26×26** `object-fit:contain` inner image so 64px+ bitmaps no longer cover the map. Map pins use **`data-ts-map-marker-logo` only** (not `data-ts-logo-chip`) so capture does not score pins as list-row logo chips.
+Fixes the migrate/trek-source **generic logos** known gap (`bot-admin/lanes/vk-known-gaps-218a3b39`): Gate B fixture replay now merges stored NYC ccab `logoUrl` values (and live-app list row resolution) so Boat tour candidates, Chelsea Market, United flight option, Hyatt House Chelsea, and related rows no longer share one placeholder chip on Events/Hotels.
 
-This round merged current `migrate/trek-source` (`c1b7b286`) into the PR branch: resolved `J/RECEIPT.md` and `J/PR_DESCRIPTION.md` only (docs conflict with #585). Product fix unchanged (`dab52f74` marker sizing).
+## What changed
 
-## Test plan
+- New `prepareFixtureReplaySharedTrip` in `src/vacation/shared-trip-fixture-replay.mjs` for capture replay.
+- Stored-ccab merge/bind helpers in `scripts/fixtures/pr336-vk-search-trip-sources.mjs` (ccab logo wins over stale fixture URLs).
+- `nyc_ccab_place_enrichment.json`: Boat tour candidates (Circle Line); Hyatt House favicon path.
+- `listTabModel.mjs`: `resolveThingLogoUrl` fallback for list chips.
 
-- [x] `node scripts/test_served_trek_bundle.mjs`
-- [x] `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser node scripts/test_day_by_day_map_marker_bounds_chrome.mjs`
-- [x] `node scripts/check-no-comments.mjs`
-- [x] `node scripts/test_offline_manifest.mjs`
-- [x] `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
-- [x] `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs`
+## Checks run locally
+
+- `node scripts/test_pr336_ccab_search_provenance.mjs`
+- `node scripts/test_gate_b_product_row_fields.mjs`
+- `node scripts/test_trip_thing_logo_metadata.mjs`
+- `node scripts/check-no-comments.mjs`
+- `node scripts/test_offline_manifest.mjs`
+- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
+
+Fixture replay spot-check: `prepareFixtureReplaySharedTrip` on `nyc-shared.json` — no single `logoUrl` on 7+ rows; Boat/Chelsea/United/Hyatt show operator favicons.
 
 ## Left alone (scope)
 
-Baselines, Gate B / capture scripts and allowlists, workflows, `scripts/offline-tests.txt`, deploy config, dependencies, NYC fixture literals, list-tab `_l()` chain beyond map-marker sizing. Base merge brought in #585 budget harness files auto-merged; not edited this round.
+Layout, timeline, baselines, Gate B checker thresholds, workflows, dependencies.

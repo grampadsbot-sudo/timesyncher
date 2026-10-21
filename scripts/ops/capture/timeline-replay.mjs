@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { prepareFixtureReplaySharedTrip } from '../../../src/vacation/shared-trip-fixture-replay.mjs';
+
+export { GATEB_FIXTURE_REPLAY_SLUG, loadFixtureReplaySharedTripFromPath } from '../../../src/vacation/shared-trip-fixture-replay.mjs';
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/;
 const FIXTURE_SHA_RE = /^[0-9a-f]{64}$/;
@@ -66,37 +67,9 @@ function assertFixtureDigest(bytes) {
 export function prepareTimelineReplay(bytes) {
   const binding = resolveCaptureProducerBinding();
   assertFixtureDigest(bytes);
-  const inputPath = join(os.tmpdir(), `tsv-replay-in-${process.pid}-${Date.now()}.json`);
-  fs.writeFileSync(inputPath, bytes);
-  const driver = `
-    import { prepareFixtureReplaySharedTrip } from ${JSON.stringify(pathToFileURL(binding.producerPath).href)};
-    import fs from 'node:fs';
-    const b = fs.readFileSync(process.argv[1]);
-    const { payload, timelineReplay } = prepareFixtureReplaySharedTrip(b);
-    timelineReplay.render_head = ${JSON.stringify(binding.renderHead)};
-    timelineReplay.replay_producer_head = ${JSON.stringify(binding.sha)};
-    timelineReplay.fixture_sha256 = ${JSON.stringify(process.env.TSV_CAPTURE_FIXTURE_SHA256 || '')};
-    process.stdout.write(JSON.stringify({
-      payloadB64: Buffer.from(payload).toString('base64'),
-      timelineReplay,
-    }));
-  `;
-  let raw;
-  try {
-    raw = execFileSync('node', ['--input-type=module', '-e', driver, inputPath], {
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-    }).trim();
-  } finally {
-    try {
-      fs.unlinkSync(inputPath);
-    } catch {
-      void 0;
-    }
-  }
-  const parsed = JSON.parse(raw);
-  return {
-    payload: Buffer.from(parsed.payloadB64, 'base64'),
-    timelineReplay: parsed.timelineReplay,
-  };
+  const { payload, timelineReplay } = prepareFixtureReplaySharedTrip(bytes);
+  timelineReplay.render_head = binding.renderHead;
+  timelineReplay.replay_producer_head = binding.sha;
+  timelineReplay.fixture_sha256 = String(process.env.TSV_CAPTURE_FIXTURE_SHA256 || '').trim().toLowerCase();
+  return { payload, timelineReplay };
 }
