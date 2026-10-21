@@ -2,7 +2,7 @@
 
 **Branch:** `vkfill/588-20261021125728`  
 **Start head:** `6e029f24ddc3314c2f62f7af97774944af557a6d`  
-**Tip head:** `c98fc690`  
+**Tip head:** `ce70be64`  
 **Authority:** GBrain `bot-admin/lanes/vk-pr-handoff/pr-590` + chief-dr dirty-head merge brief
 
 ## Base merge
@@ -31,4 +31,4 @@ Second dirty-head merge: merged `origin/migrate/trek-source` at `e3364ac5b3d4479
 
 ## Verdict
 
-Base-merge tip `c98fc690` ready for host push; CI `unit-tests` + Gate B on pushed head are merge authority.
+Base-merge tip `ce70be64` (merge `27c0ea8a` + J) ready for host push; CI `unit-tests` + Gate B on pushed head are merge authority.
