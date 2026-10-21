@@ -14,7 +14,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from same_selection_capture_lib import (
+    DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD,
     assert_hotel_stay_parity,
+    capture_binding_env_for_bytes,
     fixture_selected_keys,
     hotel_stay_row_errors,
     minimal_trip_hotel_unchecked,
@@ -28,9 +30,12 @@ from same_selection_capture_lib import (
 
 ROOT = HERE.parents[2]
 CAPTURE = ROOT / 'scripts/ops/capture'
+MOCK_BASE_RENDER_HEAD = '2b6d8df000000000000000000000000000000000'
 
 
 def load_staging_capture_module(tmp_dispatch):
+    from capture_replay_binding import CaptureReplayError, capture_subprocess_env, staging_manifest_inventory_ok
+
     source = ast.parse((HERE / 'tsv_rereview.py').read_text())
     functions = [
         n
@@ -46,6 +51,11 @@ def load_staging_capture_module(tmp_dispatch):
         'subprocess': subprocess,
         'CAPTURE_STAGING': os.path.join(tmp_dispatch, 'capture-staging.sh'),
         'HOME': os.environ.get('HOME', '/tmp'),
+        'PR_SRC': str(ROOT),
+        'STAGING_ORIGIN': 'https://vacation-staging.timesyncher.com',
+        'CaptureReplayError': CaptureReplayError,
+        'capture_subprocess_env': capture_subprocess_env,
+        'staging_manifest_inventory_ok': staging_manifest_inventory_ok,
     }
     exec(compile(ast.Module(body=functions, type_ignores=[]), 'tsv_rereview.py', 'exec'), namespace)
     return namespace['staging_capture']
@@ -63,7 +73,7 @@ class DryContext:
 
     def api(self, method, route):
         assert method == 'GET'
-        return {'object': {'sha': '2b6d8dfdeadbeefdeadbeefdeadbeefdeadbeef'}}
+        return {'object': {'sha': MOCK_BASE_RENDER_HEAD}}
 
 
 class HotelStayRowOracleTests(unittest.TestCase):
@@ -104,13 +114,69 @@ class HotelStayRowOracleTests(unittest.TestCase):
         self.assertEqual(hotel_stay_row_errors(required_hotel_stay_row_titles(hotel), hotel, True), [])
 
 
+class NodePrepareCallerBindingTests(unittest.TestCase):
+    def test_prepare_timeline_replay_without_binding_env_fails(self):
+        timeline_replay = CAPTURE / 'timeline-replay.mjs'
+        trip = minimal_trip_hotel_unchecked()
+        fixture_bytes = json.dumps(trip).encode()
+        driver = (
+            "import { prepareTimelineReplay } from "
+            + json.dumps(timeline_replay.resolve().as_uri())
+            + "; import fs from 'node:fs'; prepareTimelineReplay(fs.readFileSync(process.argv[1]));"
+        )
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as tmp:
+            tmp.write(fixture_bytes)
+            path = tmp.name
+        try:
+            stripped = {k: v for k, v in os.environ.items() if not k.startswith('TSV_CAPTURE_')}
+            proc = subprocess.run(
+                ['node', '--input-type=module', '-e', driver, path],
+                capture_output=True,
+                text=True,
+                env=stripped,
+            )
+        finally:
+            os.unlink(path)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertRegex(proc.stderr + proc.stdout, r'binding missing', re.I)
+
+    def test_node_prepare_binds_fixture_producer_and_render_heads(self):
+        trip = minimal_trip_hotel_unchecked()
+        fixture_bytes = json.dumps(trip).encode()
+        fixture_sha = hashlib.sha256(fixture_bytes).hexdigest()
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as tmp:
+            tmp.write(fixture_bytes)
+            path = tmp.name
+        try:
+            env = capture_binding_env_for_bytes(fixture_bytes, path, CAPTURE)
+            self.assertEqual(env['TSV_CAPTURE_FIXTURE_SHA256'], fixture_sha)
+            self.assertEqual(env['TSV_CAPTURE_PRODUCER_HEAD_SHA'], DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD)
+            self.assertRegex(env['TSV_CAPTURE_RENDER_HEAD_SHA'], r'^[0-9a-f]{40}$')
+            self.assertTrue(Path(env['TSV_CAPTURE_REPO_ROOT']).is_dir())
+        finally:
+            os.unlink(path)
+        replay = node_prepare(fixture_bytes, CAPTURE)
+        binding = replay['timelineReplay']
+        self.assertEqual(binding['source_fixture_sha256'], fixture_sha)
+        self.assertEqual(binding['fixture_sha256'], fixture_sha)
+        self.assertEqual(binding['replay_producer_head'], DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD)
+        self.assertRegex(binding['render_head'], r'^[0-9a-f]{40}$')
+
+
 class ProducerAndCacheTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.trip = minimal_trip_hotel_unchecked()
         cls.fixture_bytes = json.dumps(cls.trip).encode()
         cls.fixture_sha = hashlib.sha256(cls.fixture_bytes).hexdigest()
-        cls.replay = node_prepare(cls.fixture_bytes, CAPTURE)
+        cls.render_head = MOCK_BASE_RENDER_HEAD
+        cls.producer_head = DEFAULT_SANCTIONED_REPLAY_PRODUCER_HEAD
+        cls.replay = node_prepare(
+            cls.fixture_bytes,
+            CAPTURE,
+            render_head=cls.render_head,
+            replay_producer_head=cls.producer_head,
+        )
 
     def test_selection_namespace_is_place_per_thing(self):
         self.assertEqual(selection_namespace_keys(self.trip), ['place:1', 'place:9', 'place:25'])
@@ -198,7 +264,11 @@ class ProducerAndCacheTests(unittest.TestCase):
             }
             (Path(tmp) / 'fixture.json').write_bytes(self.fixture_bytes)
             (candidate_dir / 'capture-manifest.json').write_text(json.dumps(candidate_manifest))
-            args = (DryContext(), {'base': {'ref': 'migrate/trek-source'}}, str(Path(tmp) / 'fixture.json'), str(candidate_dir))
+            pr = {
+                'base': {'ref': 'migrate/trek-source'},
+                'head': {'sha': self.producer_head},
+            }
+            args = (DryContext(), pr, str(Path(tmp) / 'fixture.json'), str(candidate_dir))
             old = Path(tmp) / 'gateb-cand' / ('staging-2b6d8df-fixture-%s' % self.fixture_sha[:16])
             old.mkdir(parents=True)
             (old / 'capture-regions.json').write_text(json.dumps(minimal_regions()))
