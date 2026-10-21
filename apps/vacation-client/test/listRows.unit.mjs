@@ -7,6 +7,7 @@ import {
   filterPlaces,
   flightPriceDisplay,
   flightSchedule,
+  logoS2FallbackUrlForPlace,
   logoUrlForPlace,
   parsePrice,
   pickFlightListRowSummaryText,
@@ -163,6 +164,19 @@ const faviconOnlyRestaurant = {
 assert.equal(
   logoUrlForPlace(faviconOnlyRestaurant.places[0], faviconOnlyRestaurant),
   'https://www.rosamexicano.com/favicon.ico',
+);
+
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyHotel.places[0], faviconOnlyHotel),
+  'https://www.google.com/s2/favicons?domain=hyatt.com&sz=64',
+);
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyEvent.places[0], faviconOnlyEvent),
+  'https://www.google.com/s2/favicons?domain=bigbustours.com&sz=64',
+);
+assert.equal(
+  logoS2FallbackUrlForPlace(faviconOnlyRestaurant.places[0], faviconOnlyRestaurant),
+  'https://www.google.com/s2/favicons?domain=rosamexicano.com&sz=64',
 );
 
 const longFlightNarrative =

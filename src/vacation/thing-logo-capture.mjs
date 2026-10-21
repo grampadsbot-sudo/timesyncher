@@ -85,20 +85,47 @@ function brandLogoFromName(name = '') {
   return '';
 }
 
-function pageUrlForLogo(thing = {}, override = {}) {
+export function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
+  let metadata = {};
+  try {
+    metadata = typeof thing.metadata === 'string'
+      ? JSON.parse(thing.metadata || '{}')
+      : (thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {});
+  } catch {
+    metadata = {};
+  }
   return text(
     override.url
     || override.website
     || override.sourceUrl
+    || thing.website
+    || metadata.officialUrl
+    || metadata.bookingUrl
+    || metadata.sourceUrl
+    || thing.location
     || source.url
     || source.website
     || source.sourceUrl
     || thing.url
-    || thing.website
     || thing.sourceUrl
     || thing.source_url,
   );
+}
+
+function hostnameForS2Favicon(pageUrl = '') {
+  const parsed = httpUrl(pageUrl);
+  if (parsed) return parsed.hostname.replace(/^www\./, '');
+  try {
+    return new URL(String(pageUrl)).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+export function googleS2FaviconUrl(pageUrl = '') {
+  const host = hostnameForS2Favicon(pageUrl);
+  return host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64` : '';
 }
 
 export function logoCaptureMissReason(thing = {}, override = {}) {

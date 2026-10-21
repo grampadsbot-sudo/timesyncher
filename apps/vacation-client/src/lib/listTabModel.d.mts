@@ -39,6 +39,7 @@ export function pickFlightListRowSummaryText(value?: string): string;
 export function rowSummary(place: SharedPlace, trip: SharedTripPayload): string;
 export function rowDescription(place: SharedPlace, trip: SharedTripPayload): string;
 export function logoUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
+export function logoS2FallbackUrlForPlace(place: SharedPlace, trip: SharedTripPayload): string;
 export function hotelFirstRowNote(
   place: SharedPlace,
   trip: SharedTripPayload,

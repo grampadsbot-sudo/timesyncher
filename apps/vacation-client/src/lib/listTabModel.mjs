@@ -1,5 +1,9 @@
 import { isGenericDescription } from '../../../../src/vacation/trip-thing-enrichment.mjs';
-import { resolveThingLogoUrl } from '../../../../src/vacation/thing-logo-capture.mjs';
+import {
+  googleS2FaviconUrl,
+  pageUrlForLogo,
+  resolveThingLogoUrl,
+} from '../../../../src/vacation/thing-logo-capture.mjs';
 import { detailSummary } from './detailModel.mjs';
 
 export const LIST_TAB_IDS = ['flights', 'hotels', 'cars', 'restaurants', 'stores', 'events'];
@@ -451,7 +455,14 @@ export function logoUrlForPlace(place, trip) {
   if (raw && !/^data:image\/svg\+xml/i.test(raw) && !(/\/ts-thing-media\//i.test(raw) && !/\/ts-thing-logos\//i.test(raw))) {
     return raw;
   }
-  return text(source.logoUrl || source.iconUrl || source.logo || source.favicon || source.faviconUrl || place.captured_logo_url);
+  const fromSource = text(source.logoUrl || source.iconUrl || source.logo || source.favicon || source.faviconUrl || place.captured_logo_url);
+  if (fromSource) return fromSource;
+  return googleS2FaviconUrl(pageUrlForLogo(place, override));
+}
+
+export function logoS2FallbackUrlForPlace(place, trip) {
+  const override = overrideFor(trip, place);
+  return googleS2FaviconUrl(pageUrlForLogo(place, override));
 }
 
 export function hotelFirstRowNote(place, trip, isFirstHotel) {

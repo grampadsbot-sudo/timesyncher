@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { logoS2FallbackUrlForPlace, logoUrlForPlace, tabCategoryKey } from '../lib/listTabModel.mjs';
+import { PlaceLogoImg } from './PlaceLogoImg';
 import { overrideFor, placeName } from '../lib/placeHelpers';
 
 type TimelineMedia = {
@@ -77,17 +78,36 @@ function TimelineIcon({
   }
   const place = entry.place;
   if (!place) return null;
-  const logo = logoUrlForPlace(place, trip);
+  return <TimelinePlaceLogo entry={entry} place={place} trip={trip} />;
+}
+
+function TimelinePlaceLogo({
+  entry,
+  place,
+  trip,
+}: {
+  entry: TimelineEntry;
+  place: SharedPlace;
+  trip: SharedTripPayload;
+}) {
+  const logo = logoUrlForPlace(place, trip) || logoS2FallbackUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const category = tabCategoryKey(place, trip);
   const fallback =
     entry.kind === 'hotel-event' || entry.kind === 'hotel-checkout' || category === 'hotel'
       ? '🧳'
       : String(override.icon || place.category?.icon || place.category_icon || '📍');
+  const [showFallback, setShowFallback] = useState(!logo);
   return (
     <span className="tsv-timeline-icon" data-ts-timeline-icon="1" aria-hidden="true">
-      {logo ? (
-        <img className="tsv-timeline-logo" src={logo} alt="" loading="lazy" />
+      {logo && !showFallback ? (
+        <PlaceLogoImg
+          place={place}
+          trip={trip}
+          className="tsv-timeline-logo"
+          loading="lazy"
+          onGiveUp={() => setShowFallback(true)}
+        />
       ) : (
         <span className="tsv-timeline-emoji">{fallback}</span>
       )}
