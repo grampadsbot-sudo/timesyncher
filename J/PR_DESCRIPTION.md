@@ -8,6 +8,8 @@ Reverted the prior round’s fixture/ccab harness churn and restored the subproc
 
 Merged `origin/migrate/trek-source` at `446e1913` (host): kept base `Oe()` `<strong>` list-row title wrap + rebaked served bundle alongside this PR’s replay/logo fixes.
 
+Merged `origin/migrate/trek-source` at `e3364ac5` (dirty-head requeue 2026-10-21): absorbed #597/#600 Gate B NYC fixture updates; J conflict only.
+
 ## Test plan
 
 - [x] `python3 scripts/ops/dispatch/test_same_selection_capture.py`
