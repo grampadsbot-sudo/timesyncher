@@ -4,6 +4,8 @@
 
 **Start sha:** `8b2ba628b2520ced218d4af903028c0870bd3667`
 
+**Base merge:** Host merged `origin/migrate/trek-source` at `53130bbc2a855c86b97c447c674782101fb6d7c7` into PR head `bd4d0caaea620353fea0622388e740616d51d003` (2026-10-22 cursor-ubuntu vkfill-604 base-merge round).
+
 ## Change
 
 1. Reverted `OE_ROW_SR_LOGO_ALIGN_*` flex row in `shared-trip-oe-list-row-patch.mjs` (row/name axis back to base `e3364ac` grid).
@@ -25,4 +27,4 @@
 
 Rethink approach landed; not self-certified. CI + Ubuntu Gate B structure on pushed head decide PASS/FAIL.
 
-**Tip sha:** `a14982b9e4f46c275990067df5e3b388796dd631`
+**Tip sha:** (filled after merge commit)

@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { assertGateBCapturePreDataCheckPayload } from './capture-pre-data-check.mjs';
 import { prepareTimelineReplay } from './timeline-replay.mjs';
 import { dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
 const [,, outdir] = process.argv;
@@ -15,6 +16,12 @@ if (!outdir) { console.error('usage: capture.mjs <outdir>'); process.exit(2); }
 fs.mkdirSync(outdir, { recursive: true });
 const fixtureBytes = fs.readFileSync(FIXTURE);
 const { payload, timelineReplay } = prepareTimelineReplay(fixtureBytes);
+try {
+  await assertGateBCapturePreDataCheckPayload(payload);
+} catch (e) {
+  console.error(String(e.message || e));
+  process.exit(1);
+}
 
 const TABS = [
   ['daybyday', ['Day-by-Day']], ['flights', ['Flights']], ['hotels', ['Hotels']], ['cars', ['Cars']],
