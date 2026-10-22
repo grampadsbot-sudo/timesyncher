@@ -45,58 +45,88 @@ export function verticalNudgePxForInkCenter({ inkCenterY, naturalHeight, display
 
 function centerThingLogoInk(img) {
   if (!img || img.dataset.tsLogoInkDone === '1') return;
-  const chip = img.closest('[data-ts-logo-chip]');
-  if (!chip) return;
-  const nw = img.naturalWidth;
-  const nh = img.naturalHeight;
-  if (nw < 2 || nh < 2) return;
-  const dispH = img.getBoundingClientRect().height;
-  if (dispH < 2) return;
-  const canvas = document.createElement('canvas');
-  canvas.width = nw;
-  canvas.height = nh;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return;
-  try {
-    ctx.drawImage(img, 0, 0, nw, nh);
-  } catch {
-    return;
-  }
-  const data = ctx.getImageData(0, 0, nw, nh).data;
-  const corners = [[0, 0], [nw - 1, 0], [0, nh - 1], [nw - 1, nh - 1]];
-  const bg = [0, 0, 0];
-  for (let i = 0; i < 4; i += 1) {
-    const p = (corners[i][1] * nw + corners[i][0]) * 4;
-    bg[0] += data[p];
-    bg[1] += data[p + 1];
-    bg[2] += data[p + 2];
-  }
-  bg[0] /= 4;
-  bg[1] /= 4;
-  bg[2] /= 4;
-  let minY = null;
-  let maxY = null;
-  const thr = 24;
-  for (let y = 0; y < nh; y += 1) {
-    for (let x = 0; x < nw; x += 1) {
-      const k = (y * nw + x) * 4;
-      const a = data[k + 3];
-      if (a < 20) continue;
-      const dr = Math.max(Math.abs(data[k] - bg[0]), Math.abs(data[k + 1] - bg[1]), Math.abs(data[k + 2] - bg[2]));
-      if (dr <= thr) continue;
-      if (minY === null || y < minY) minY = y;
-      if (maxY === null || y > maxY) maxY = y;
+  if (img.dataset.tsLogoInkQueued === '1') return;
+  img.dataset.tsLogoInkQueued = '1';
+  const run = () => {
+    try {
+      if (!img || img.dataset.tsLogoInkDone === '1') return;
+      const chip = img.closest('[data-ts-logo-chip]');
+      if (!chip) return;
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      if (nw < 2 || nh < 2) return;
+      const dispH = img.getBoundingClientRect().height;
+      if (dispH < 2) return;
+      const maxSide = 72;
+      const side = Math.max(nw, nh);
+      const sampleScale = side > maxSide ? maxSide / side : 1;
+      const cw = Math.max(2, Math.round(nw * sampleScale));
+      const ch = Math.max(2, Math.round(nh * sampleScale));
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+      try {
+        ctx.drawImage(img, 0, 0, cw, ch);
+      } catch {
+        img.dataset.tsLogoInkDone = '1';
+        return;
+      }
+      let data;
+      try {
+        data = ctx.getImageData(0, 0, cw, ch).data;
+      } catch {
+        img.dataset.tsLogoInkDone = '1';
+        return;
+      }
+      const corners = [[0, 0], [cw - 1, 0], [0, ch - 1], [cw - 1, ch - 1]];
+      const bg = [0, 0, 0];
+      for (let i = 0; i < 4; i += 1) {
+        const p = (corners[i][1] * cw + corners[i][0]) * 4;
+        bg[0] += data[p];
+        bg[1] += data[p + 1];
+        bg[2] += data[p + 2];
+      }
+      bg[0] /= 4;
+      bg[1] /= 4;
+      bg[2] /= 4;
+      let minY = null;
+      let maxY = null;
+      const thr = 24;
+      for (let y = 0; y < ch; y += 1) {
+        for (let x = 0; x < cw; x += 1) {
+          const k = (y * cw + x) * 4;
+          const a = data[k + 3];
+          if (a < 20) continue;
+          const dr = Math.max(
+            Math.abs(data[k] - bg[0]),
+            Math.abs(data[k + 1] - bg[1]),
+            Math.abs(data[k + 2] - bg[2]),
+          );
+          if (dr <= thr) continue;
+          if (minY === null || y < minY) minY = y;
+          if (maxY === null || y > maxY) maxY = y;
+        }
+      }
+      if (minY === null || maxY === null) {
+        img.dataset.tsLogoInkDone = '1';
+        return;
+      }
+      const inkCySample = (minY + maxY) / 2;
+      const inkCy = inkCySample / sampleScale;
+      const scale = dispH / nh;
+      const dy = (nh / 2 - inkCy) * scale;
+      if (Math.abs(dy) > 0.01) img.style.transform = `translateY(${dy}px)`;
+      img.dataset.tsLogoInkDone = '1';
+    } catch {
+      img.dataset.tsLogoInkDone = '1';
+    } finally {
+      delete img.dataset.tsLogoInkQueued;
     }
-  }
-  if (minY === null || maxY === null) {
-    img.dataset.tsLogoInkDone = '1';
-    return;
-  }
-  const inkCy = (minY + maxY) / 2;
-  const scale = dispH / nh;
-  const dy = (nh / 2 - inkCy) * scale;
-  if (Math.abs(dy) > 0.01) img.style.transform = `translateY(${dy}px)`;
-  img.dataset.tsLogoInkDone = '1';
+  };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+  else setTimeout(run, 0);
 }
 
 export function thingLogoInkCenterBundleSnippet() {
@@ -105,7 +135,7 @@ export function thingLogoInkCenterBundleSnippet() {
   return `function tsCenterThingLogoInk${bodyFromOpen}`;
 }
 
-const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},ref:function(Rn){tsCenterThingLogoInk(Rn)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
 
 const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
