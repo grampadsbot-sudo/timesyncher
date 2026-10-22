@@ -197,8 +197,14 @@ export function resolveStoredCcabKey(place = {}, override = {}) {
     override.title,
   ];
   for (const candidate of candidates) {
+    if (!candidate) continue;
     const hit = enrichmentHit(candidate);
     if (hit) return hit;
+    const normalized = resolveNycCcabKey(candidate);
+    if (normalized && normalized !== candidate) {
+      const aliasHit = enrichmentHit(normalized);
+      if (aliasHit) return aliasHit;
+    }
   }
   const websiteHit = enrichmentHitByWebsite(place, override);
   if (websiteHit) return websiteHit;
@@ -276,6 +282,11 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
     if (!text(place.externalId)) place.externalId = hit.ccabKey;
   }
+  const travelRow = isHotel || category === 'flight' || category === 'car';
+  if (travelRow && next.price == null && enriched.price != null) {
+    next.price = enriched.price;
+    if (place.price == null || place.price === '') place.price = enriched.price;
+  }
   if (bindOverrideNarrative) {
     if (next.price == null && enriched.price != null) next.price = enriched.price;
     if (isHotel && !next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
@@ -332,13 +343,25 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   }
 }
 
+function travelRowHasBoundPrice(place = {}, override = {}) {
+  const source = override.sourceRecord || place.sourceRecord || {};
+  for (const candidate of [override.price, place.price, source.price, source.nightlyRate]) {
+    if (candidate === null || candidate === undefined || candidate === '') continue;
+    if (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0) return true;
+    if (typeof candidate === 'string' && /\$\s*\d/.test(candidate)) return true;
+  }
+  return false;
+}
+
 export function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) {
   if (NYC_GATE_B_ROW_CCAB_KEYS[place.id]) return true;
   if (enrichmentHitByWebsite(place, override)) return true;
-  const hit = resolveStoredCcabKey(place, override);
-  if (!hit) return false;
   const cat = text(override.category || place.category || place.category_name, 40).toLowerCase();
   const isHotel = cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
+  const isTravel = isHotel || cat === 'flight' || cat === 'car';
+  if (isTravel && !travelRowHasBoundPrice(place, override)) return true;
+  const hit = resolveStoredCcabKey(place, override);
+  if (!hit) return false;
   if (isHotel) {
     const narrative = text(
       override.longDetails || override.description || place.description,

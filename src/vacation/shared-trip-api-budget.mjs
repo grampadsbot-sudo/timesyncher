@@ -30,8 +30,32 @@ function haFields(place = {}, override = {}) {
   return { ...place, ...override, ...(override && typeof override === 'object' ? override : {}) };
 }
 
+function parsePrice(value) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const match = String(value).match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  return match ? Number(match[1].replace(/,/g, '')) : null;
+}
+
+function sourceRecordFor(place = {}, override = {}) {
+  return (
+    override.sourceRecord ||
+    place.sourceRecord ||
+    (place.source && typeof place.source === 'object' ? place.source : null) ||
+    {}
+  );
+}
+
 function priceText(place = {}, override = {}) {
   const row = haFields(place, override);
+  const source = sourceRecordFor(place, override);
+  const parsed =
+    parsePrice(row.price) ??
+    parsePrice(place.price) ??
+    parsePrice(source.price) ??
+    parsePrice(source.totalPrice) ??
+    parsePrice(source.nightlyRate);
+  if (parsed != null) return `$${parsed}`;
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return '';
   if (typeof raw === 'number' && Number.isFinite(raw)) return `$${raw}`;

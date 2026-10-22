@@ -144,7 +144,8 @@ function gatebFixtureReplaySharedResponse(shareToken) {
   const fixturePath = cleanText(process.env.TSV_CAPTURE_FIXTURE);
   if (!fixturePath) return null;
   const loaded = loadFixtureReplaySharedTripFromPath(fixturePath);
-  return loaded?.served || null;
+  if (!loaded?.served) return null;
+  return finalizeServedSharedTripPayload(loaded.served);
 }
 
 async function offlineApprovedSharedResponse(shareToken) {
