@@ -1,3 +1,37 @@
+# VK PR #599 / issue #595 — round 6 (row 603 CI + snapshot-bound hotel finalize)
+
+**Start sha:** `1e0000aa1a02b12cc45294c328034e1c1a521e6e` (host merge of `6edb079` not in worktree; ported #619 Belleclaire + `sourcedShortSummary` tagline from `migrate/trek-source` without git merge).
+
+## Problem
+
+`test_vk_search_place_output_contract.mjs` failed row 603 `blank_description` (inherited base debt fixed on `6edb079` via #619). `test_gate_b_product_row_fields.mjs` required pr336 snapshot copy on timeline hotels 601–611 after CCAB bind; judge-passing Belleclaire CCAB prose conflicted with snapshot `summary` on finalize.
+
+## Fix
+
+- `trip-thing-enrichment.mjs`: `ccabNeighborhoodTaglineFromRecord` in `thing-detail-fields.mjs` + `sourcedShortSummary(..., title)` (base #619).
+- `nyc-craig-kim-daybyday-trip.mjs`: re-apply pr336 snapshot copy after CCAB bind (#619).
+- `nyc_ccab_place_enrichment.json`: judge-passing Belleclaire hotel prose (#619).
+- `pr336-vk-search-trip-sources.mjs`: `reapplyPr336SnapshotBoundCopy` for snapshot-bound hotels when finalize would promote long CCAB body onto `summary`; keep positive-fixture long summaries.
+
+## Checks (local, pre-commit)
+
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` full loop | **fail** `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` (no `/usr/bin/google-chrome-stable` on lane VM); `scripts/test_live_transcript_dialog_pdf.mjs` (gbrain CLI vs bundled get_page) |
+
+Gate B Ubuntu 32/32 not self-certified; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 5 (Romer / sub-30 CCAB hotel narratives)
 
 **Start sha:** `2a2a63c976ebe663f40806b839fa1789a9d832c1` (BASE-MERGE receipt; no further merge this round).

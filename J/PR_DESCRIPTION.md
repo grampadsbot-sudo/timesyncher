@@ -12,24 +12,24 @@ Closes #595
 
 **CI fix-it — shared tab list summary (`a4600d9f`)** — `bindHotelListSummary` was promoting the Manhattan Club CCAB card onto **PR225** `Midtown sample hotel` (title alias match), replacing the intake **“Strong transit access…”** summary. **Fix:** skip CCAB merge when the place already has a non-fixture intake `summary`; keep existing short summaries in `bindHotelListSummary`; do not rewrite `stored_fixture_literal` CCAB hotel copy in `composeSourcedHotelDescriptionFromRecord` (unblocks **`test_gate_b_product_row_fields.mjs`** snapshot binding once **`test_shared_tab_list_summary.mjs`** runs).
 
-## Verification (local, merge tip `85a6c33f`)
+**Round 6 (`1e0000aa` → local tip)** — Port #619 row 603 contract fix from `migrate/trek-source` @ `6edb079` (no host merge in worktree): Belleclaire judge-passing CCAB copy, pr336 snapshot re-bind after CCAB on NYC fixture rows, `sourcedShortSummary` neighborhood tagline; snapshot-bound hotel finalize guard so pr336 `summary`/`description` stay byte-stable without breaking the positive NYC fixture.
+
+## Verification (local, round 6)
 
 | Command | Result |
 | --- | --- |
 | `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
-| `node scripts/test_shared_tab_list_summary.mjs` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
 | `node scripts/test_gate_b_product_row_fields.mjs` | pass |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | pass |
 | `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
 | `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
-| `scripts/offline-tests.txt` full loop | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` (lane `gbrain` CLI vs bundled get_page; host CI expected) |
 
 ## Notes
 
 - GBrain handoff via agent brief (`bot-admin/lanes/vk-pr-handoff/pr-599`).
-- Baselines, capture scripts, workflows, and allowlists untouched on this round (base-merge only).
-- Gate B Ubuntu coverage re-run pending on host push (not self-certified).
+- Baselines, capture scripts, workflows, and allowlists untouched.
+- Full `origin/migrate/trek-source` merge still dirty vs `6edb079`; host should merge/rebase before Gate B on latest base.
+- Gate B Ubuntu not self-certified on this head.

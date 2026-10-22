@@ -392,3 +392,9 @@ export function applyThingDetailOverrides(shared = {}) {
   }
   return { ...shared, places, thingOverrides };
 }
+
+export function ccabNeighborhoodTaglineFromRecord(sourceRecord = {}, title = '') {
+  const hood = text(sourceRecord.summary || sourceRecord.description, 500).match(/Neighborhood:\s*([^;]+)/i);
+  const name = text(title, 160);
+  return hood && name ? text(`${name} in ${hood[1]}`, 120) : '';
+}

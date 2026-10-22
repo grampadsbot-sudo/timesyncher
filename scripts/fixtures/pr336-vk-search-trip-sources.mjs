@@ -28,6 +28,31 @@ export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
 const PR336_SNAPSHOT_BOUND_PLACE_IDS = new Set(
   Array.from({ length: 11 }, (_, index) => 601 + index),
 );
+const PR336_SEARCH_SNAPSHOT = JSON.parse(
+  readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
+);
+
+function reapplyPr336SnapshotBoundCopy(place = {}, override = {}) {
+  const placeId = Number(place.id);
+  if (!PR336_SNAPSHOT_BOUND_PLACE_IDS.has(placeId)) return override;
+  const search = PR336_SEARCH_SNAPSHOT[String(placeId)];
+  if (!search) return override;
+  const next = { ...override };
+  const title = text(search.title);
+  if (title) place.name = title;
+  if (search.description) {
+    place.description = search.description;
+    next.longDetails = search.description;
+    if (!text(next.details)) next.details = search.description;
+  }
+  if (search.summary) next.summary = search.summary;
+  if (search.price != null) next.price = search.price;
+  if (search.logoUrl) {
+    next.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  return next;
+}
 
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
@@ -278,11 +303,21 @@ function intakeSourceBlocksCcabMerge(place = {}, override = {}) {
 }
 
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
+  const category = listRowCategory(place, override);
+  const isHotel = isHotelCategory(category);
+  const placeId = Number(place.id);
+  if (isHotel && PR336_SNAPSHOT_BOUND_PLACE_IDS.has(placeId)) {
+    const snap = PR336_SEARCH_SNAPSHOT[String(placeId)];
+    const current = text(override.summary);
+    const snapSummary = text(snap?.summary);
+    const snapDesc = text(snap?.description);
+    if (snap && current === snapSummary) return override;
+    if (snap && narrativeWordCount(current) >= 30 && current !== snapDesc) return override;
+    if (snap) return reapplyPr336SnapshotBoundCopy(place, { ...override });
+  }
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
   if (intakeSourceBlocksCcabMerge(place, override)) return override;
-  const category = listRowCategory(place, override);
-  const isHotel = isHotelCategory(category);
   const existing = text(override.longDetails || override.details || override.description);
   if (narrativeWordCount(existing) >= 30) {
     return isHotel ? bindHotelListSummary({ ...override }, place, existing) : override;

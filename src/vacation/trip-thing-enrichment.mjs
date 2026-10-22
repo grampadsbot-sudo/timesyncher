@@ -1,10 +1,8 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { ccabNeighborhoodTaglineFromRecord, descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
-
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
   /^Documented .+ option\b/i,
@@ -323,9 +321,13 @@ function descriptionWhenJudgeFails({
   return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
 }
 
-function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
+function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
+  if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
+    const tagline = ccabNeighborhoodTaglineFromRecord(sourceRecord, title) || shortLineFromSourceText(longDescription);
+    if (tagline) return tagline;
+  }
   if (itinerary && itinerary !== longDescription) return itinerary;
   if (summary && summary === longDescription) return shortLineFromSourceText(summary);
   if (summary.length > 140) summary = shortLineFromSourceText(summary);
@@ -362,7 +364,7 @@ export function enrichSearchPlace(place = {}) {
       rawDescription: sourcedLongDescription(next, sourceRecord),
     });
   }
-  const summary = sourcedShortSummary(next, sourceRecord, description);
+  const summary = sourcedShortSummary(next, sourceRecord, description, title);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
     next.price,
@@ -482,7 +484,6 @@ export function enrichTripThing(thing = {}) {
     ...(price != null ? { price } : {}),
   };
 }
-
 export function rowNeedsProductEnrichment(row = {}) {
   const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   if (isGenericDescription(row?.description)) return true;
