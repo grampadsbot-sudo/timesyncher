@@ -22,9 +22,11 @@
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
+| `scripts/offline-tests.txt` full loop (`PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `actual 'gbrain-cli-get_page' expected 'bundled-get_page'`; host CI expected |
 
 ## Verdict
 
-Rethink approach landed; not self-certified. CI + Ubuntu Gate B structure on pushed head decide PASS/FAIL.
+Base-merge round: resolved `J/RECEIPT.md`, merged `origin/migrate/trek-source` @ `53130bbc` into `bd4d0caa`; `node scripts/rebake_served_trek_bundle.mjs` left `public/assets` byte-identical to pre-merge PR head (ink-centre bundle preserved). Not self-certified; CI + Gate B on pushed head are authority.
 
-**Tip sha:** (filled after merge commit)
+**Tip sha:** `f8ae5691cd402d35c6f13728e78937535352466f` (merge `origin/migrate/trek-source` @ `53130bbc` into `bd4d0caa`; rebake unchanged served bundle vs `bd4d0caa`).
