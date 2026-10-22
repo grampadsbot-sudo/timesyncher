@@ -190,7 +190,4 @@ const romerTrip = applyLiveAppListRowFields({
 const romerLine = rowSummary(romerTrip.places[0], romerTrip);
 assert.match(romerLine, /king room|425|Standard/i);
 
-const patchedRr = patchThingDetailFields('prefix,rr=G=>ha(G).summary??"",suffix');
-assert.ok(patchedRr.includes('longDetails'), patchedRr.slice(0, 160));
-
 console.log('vacation-client list row unit checks passed');

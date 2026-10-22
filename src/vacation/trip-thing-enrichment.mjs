@@ -1,6 +1,5 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-import { isThinNeighborhoodListSummary } from './flight-list-row-summary.mjs';
 import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
@@ -25,6 +24,19 @@ function text(value, max = 4000) {
 
 function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
+}
+
+function isThinNeighborhoodListSummary(value = '') {
+  const row = text(value, 500);
+  if (!row) return false;
+  if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
+  if (/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) {
+    if (/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row)) {
+      return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 export function isGenericDescription(value = '') {

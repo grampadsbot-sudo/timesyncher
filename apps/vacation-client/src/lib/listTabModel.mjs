@@ -312,12 +312,62 @@ export function carSubtitle(place, trip) {
   );
 }
 
-import {
-  isThinNeighborhoodListSummary,
-  pickFlightListRowSummaryText,
-} from '../../../../src/vacation/flight-list-row-summary.mjs';
+import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-list-row-summary.mjs';
 
 export { pickFlightListRowSummaryText };
+
+const HOTEL_LIST_ROW_MIN_WORDS = 6;
+const HOTEL_LIST_ROW_SHORT_MAX = 120;
+
+function listRowWordCount(value) {
+  return String(value ?? '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function isThinNeighborhoodListSummary(value = '') {
+  const row = String(value ?? '').trim();
+  if (!row) return false;
+  if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
+  if (/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) {
+    if (/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row)) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function hotelListSummaryClauses(row = '') {
+  const line = String(row ?? '').trim();
+  if (!line) return null;
+  if (/^Neighborhood:/i.test(line) && line.includes(';')) {
+    return line.split(/;\s*/).filter(Boolean).map((part, idx, parts) => {
+      const chunk = String(part).trim();
+      return idx < parts.length - 1 ? `${chunk};` : chunk;
+    });
+  }
+  return line.match(/[^.!?;]+[.!?;]/gy);
+}
+
+function pickHotelListDescriptionFromLongCopy(value = '') {
+  const row = String(value ?? '').trim();
+  if (!row) return '';
+  const clauses = hotelListSummaryClauses(row);
+  if (clauses) {
+    let line = '';
+    for (const clause of clauses) {
+      const next = text(`${line} ${clause}`, 4000);
+      if (line && next.length > HOTEL_LIST_ROW_SHORT_MAX) break;
+      line = next;
+      if (listRowWordCount(line) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(line)) break;
+    }
+    const clipped = text(line, HOTEL_LIST_ROW_SHORT_MAX);
+    return listRowWordCount(clipped) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(clipped)
+      ? clipped
+      : '';
+  }
+  const ten = text(row.split(/\s+/).slice(0, 10).join(' '), HOTEL_LIST_ROW_SHORT_MAX);
+  return listRowWordCount(ten) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(ten) ? ten : '';
+}
 
 function storedRowSummaryText(place, trip) {
   const override = overrideFor(trip, place);
@@ -344,7 +394,7 @@ export function rowSummary(place, trip) {
       place.description,
   );
   if (isThinNeighborhoodListSummary(raw) && longBody) {
-    const picked = pickFlightListRowSummaryText(longBody);
+    const picked = pickHotelListDescriptionFromLongCopy(longBody);
     return picked || longBody;
   }
   if (tabCategoryKey(place, trip) !== 'flight') return raw;
