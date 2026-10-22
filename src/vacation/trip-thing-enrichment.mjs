@@ -1,5 +1,6 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
+import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
@@ -305,6 +306,23 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
+function ccabFactText(sourceRecord = {}, place = {}) {
+  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
+}
+
+function descriptionWhenJudgeFails({
+  category = '',
+  title = '',
+  sourceRecord = {},
+  address = '',
+  place = {},
+  rawDescription = '',
+} = {}) {
+  const cat = text(category, 80).toLowerCase();
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
+}
+
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
@@ -329,7 +347,21 @@ export function enrichSearchPlace(place = {}) {
     });
     next.sourceRecord = sourceRecord;
   }
-  const description = sourcedLongDescription(next, sourceRecord);
+  const title = text(next.title || next.name, 240);
+  let description = text(
+    next.longDetails || sourceRecord.longDetails || sourcedLongDescription(next, sourceRecord),
+    4000,
+  );
+  if (!descriptionPassesDetailJudge(description, title)) {
+    description = descriptionWhenJudgeFails({
+      category,
+      title: next.title,
+      sourceRecord,
+      address: next.address || '',
+      place: next,
+      rawDescription: sourcedLongDescription(next, sourceRecord),
+    });
+  }
   const summary = sourcedShortSummary(next, sourceRecord, description);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
   let price = firstPrice(
@@ -387,13 +419,26 @@ export function enrichTripThing(thing = {}) {
     : {};
   const category = text(thing.category, 80).toLowerCase();
   const location = thing.location && typeof thing.location === 'object' ? thing.location : {};
-  const description = buildCategoryDescription({
-    category,
-    title: thing.title,
-    sourceRecord,
-    address: location.address || '',
-    rawDescription: thing.description,
-  });
+  const title = text(thing.title, 240);
+  const sourcedLong = text(
+    meta.thingDetail?.longDetails
+    || sourceRecord.longDetails
+    || thing.description,
+    4000,
+  );
+  let description = '';
+  if (descriptionPassesDetailJudge(sourcedLong, title)) {
+    description = sourcedLong;
+  } else {
+    description = descriptionWhenJudgeFails({
+      category,
+      title: thing.title,
+      sourceRecord,
+      address: location.address || '',
+      place: { description: thing.description, summary: thing.summary },
+      rawDescription: thing.description,
+    });
+  }
   let price = firstPrice(
     thing.price,
     meta.price,

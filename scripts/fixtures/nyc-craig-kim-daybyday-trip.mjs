@@ -8,6 +8,10 @@ import {
   applyLiveAppTimelineSelections,
   assignPlaceToTripDays,
 } from '../../src/vacation/shared-trip-live-app-fields.mjs';
+import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
+import { buildGateBSearchPlaceForRow } from './pr336-vk-search-trip-sources.mjs';
+
+export { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
 
 const PR336_SEARCH_SNAPSHOT = JSON.parse(
   readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
@@ -245,7 +249,91 @@ function applySearchFillEstimatedPrice(row, place, override, search = null) {
   override.price = enriched.price;
 }
 
+function applyCcabRowSearchFields(row, place, override) {
+  if (!row.ccabKey) return false;
+  const search = buildGateBSearchPlaceForRow(row);
+  const record = search.sourceRecord && typeof search.sourceRecord === 'object'
+    ? search.sourceRecord
+    : {};
+  if (search.description) {
+    place.description = search.description;
+    override.longDetails = search.description;
+  }
+  if (search.summary) override.summary = search.summary;
+  if (search.price != null) override.price = search.price;
+  if (search.logoUrl) {
+    override.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  if (search.url) {
+    place.website = search.url;
+    override.website = search.url;
+  }
+  if (search.address && text(search.address)) {
+    place.address = search.address;
+    override.address = search.address;
+  }
+  if (search.lat != null && search.lng != null) {
+    place.lat = search.lat;
+    place.lng = search.lng;
+    override.lat = search.lat;
+    override.lng = search.lng;
+  }
+  for (const key of [
+    'googleRating',
+    'yelpRating',
+    'thirdPartyRating',
+    'googleReviewCount',
+    'yelpReviewCount',
+    'thirdPartyReviewCount',
+    'thirdPartySource',
+    'googleRatingSourceUrl',
+    'yelpRatingSourceUrl',
+    'otherRatingSites',
+    'ratingCount',
+    'ratingMix',
+    'reviewThemes',
+    'websiteFlavour',
+    'xaiRatingsFetched',
+    'missingFields',
+    'rentalCompany',
+    'vehicleClass',
+    'carType',
+    'pickupLocation',
+    'returnLocation',
+    'pickupHours',
+    'dropoffHours',
+    'startTime',
+    'endTime',
+    'totalPrice',
+    'reputationNote',
+  ]) {
+    if (record[key] != null && record[key] !== '') override[key] = record[key];
+  }
+  for (const key of ['pickupHours', 'dropoffHours', 'pickupLocation', 'returnLocation']) {
+    if (record[key]) place[key] = record[key];
+  }
+  if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
+  for (let index = 1; index <= 4; index += 1) {
+    for (const suffix of ['', 'Rating']) {
+      const field = `review${index}${suffix}`;
+      if (record[field]) override[field] = record[field];
+    }
+    for (const suffix of ['Source', 'Url']) {
+      const field = `review${index}${suffix}`;
+      if (field in record) override[field] = record[field] || null;
+    }
+  }
+  applyProvenanceBlockedClears(record, place, override);
+  return true;
+}
+
 function applyPr336SearchFields(row, place, override) {
+  if (applyCcabRowSearchFields(row, place, override)) {
+    applySearchFillEstimatedPrice(row, place, override, null);
+    return;
+  }
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
   if (search && VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
     applyVkSearchSnapshotCopyFields(search, place, override);
@@ -340,30 +428,7 @@ function buildPayload() {
   const places = [];
   const assignments = Object.fromEntries(days.map((day) => [String(day.id), []]));
   const thingOverrides = {};
-  const rows = [
-    { day: 1, time: '12:37', name: 'American Airlines LAS → JFK', cat: 'flight', id: 601 },
-    { day: 1, time: '14:00', name: "Zabar's", cat: 'store', id: 602, photo: true },
-    { day: 1, time: '16:00', name: 'Hotel Belleclaire Central Park', cat: 'hotel', id: 603 },
-    { day: 1, time: '19:00', name: 'Carbone', cat: 'restaurant', id: 610 },
-    { day: 1, time: '20:30', name: 'Blue Note Jazz Club', cat: 'activity', id: 611 },
-    { day: 2, time: '11:00', name: 'Statue of Liberty walking tour', cat: 'activity', id: 604, photo: true, video: true },
-    { day: 2, time: '15:30', name: 'Strand Book Store', cat: 'store', id: 605 },
-    { day: NYC_CONFLICT_DAY, time: '14:00', name: 'Afternoon matinee show', cat: 'activity', id: 606 },
-    { day: NYC_CONFLICT_DAY, time: '14:30', name: 'Friend meetup at Bryant Park', cat: 'activity', id: 607 },
-    { day: 4, time: '12:30', name: 'Chelsea Market', cat: 'store', id: 612 },
-    { day: 5, time: '11:00', name: "Macy's Herald Square", cat: 'store', id: 613 },
-    { day: 6, time: '14:00', name: 'MoMA Design Store - 53rd Street', cat: 'store', id: 614 },
-    { day: 7, time: '11:00', name: 'Bergdorf Goodman', cat: 'store', id: 615 },
-    { day: 8, time: '10:00', name: 'Whole Foods Market Columbus Circle', cat: 'store', id: 616 },
-    { day: 8, time: '18:00', name: 'American Airlines JFK → LAS', cat: 'flight', id: 635 },
-    { day: 1, time: '11:00', name: 'Midtown sample hotel', cat: 'hotel', id: 608, listOnly: true },
-    { day: 1, time: '11:00', name: 'Priceline opaque Standard sedan', cat: 'car', id: 609, listOnly: true },
-    { day: 1, time: '07:25', name: 'Southwest LAS → LGA 07:25–16:35', cat: 'flight', id: 630, listOnly: true },
-    { day: 1, time: '11:30', name: 'Southwest LAS → LGA 11:30–22:25', cat: 'flight', id: 631, listOnly: true },
-    { day: 1, time: '05:05', name: 'Southwest LAS → LGA 05:05–15:45', cat: 'flight', id: 632, listOnly: true },
-    { day: 1, time: '06:30', name: 'Southwest LAS → LGA 06:30–16:55', cat: 'flight', id: 633, listOnly: true },
-    { day: 1, time: '06:50', name: 'Southwest LAS → LGA 06:50–18:55', cat: 'flight', id: 634, listOnly: true },
-  ];
+  const rows = buildNycCraigKimDaybydayFixtureRows();
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];

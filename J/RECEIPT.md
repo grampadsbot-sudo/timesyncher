@@ -1,5 +1,7 @@
 # VK PR #599 / issue #595 — round 4 (hotel list summary / description coverage)
 
+**Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `a4600d9fc043930f72b02d5baa13e6fe71e100a8` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE).
+
 **Start sha:** `f15d4e9403335df46bff4421f8f75519f089e04b`  
 **Head sha:** `ba21e1e5` (cursor-ubuntu vkfill-599 hard round, 2026-10-22).
 
@@ -139,3 +141,29 @@ Merge commit `f2308dff` on `cursor/tsv-596-vk-390px-descriptions-are-clipped-run
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
 **Verdict:** Fix committed locally on detached HEAD at start commit; host publishes once. CI green on pushed PR head is authority for close (not self-certified).
+
+---
+
+# TSV PR #617 CI fix-it (issue #615)
+
+**Start sha:** `b8c8a7859582608554e344ac6e9db5b2f34f45ba`  
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-617` — automated fetch returned `page_not_found`; confirmed via `gbrain get_page` (same code).
+
+## Problem
+
+`unit-tests` / `scripts/test_vk_search_place_output_contract.mjs` still used legacy Gate B timeline rows (Motto at 603, JetBlue 601). After #615 fixture port, `assertGateBRowProvenance` failed. Row 611 (`Blue Note Jazz Club` display, `Jazz at Lincoln Center` ccab) lost event logo lookup because Tavily query used the display title.
+
+## Fix
+
+- Drive contract test rows from `buildNycCraigKimDaybydayTimelineRows()` (ids ≤611 + list-only), matching `vk_search_place_source_contract_check.mjs`.
+- Event logo recorded replay: search with `PR336_GATE_B_EVENT_LOGO_TARGETS.title`, restore display title after enrich (`pr336-gate-b-event-logo-recorded-lib.mjs`).
+- Align `pr336-gate-b-xai-place-targets.mjs` row 603 with Hotel Belleclaire.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |

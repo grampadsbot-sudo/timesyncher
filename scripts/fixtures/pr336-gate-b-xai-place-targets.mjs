@@ -9,10 +9,10 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   },
   {
     rowId: 603,
-    ccabKey: 'Motto by Hilton New York City Times Square',
-    title: 'Motto by Hilton New York City Times Square',
+    ccabKey: 'Hotel Belleclaire Central Park',
+    title: 'Hotel Belleclaire Central Park',
     category: 'hotel',
-    destination: 'Times Square, New York, NY',
+    destination: 'Upper West Side, New York, NY',
   },
   {
     rowId: 604,
