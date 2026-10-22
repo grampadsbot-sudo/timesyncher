@@ -306,17 +306,6 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
-function ccabFactText(sourceRecord = {}, place = {}) {
-  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
-}
-
-function ccabNeighborhoodTagline(sourceRecord = {}, title = '') {
-  const neighborhood = ccabFactText(sourceRecord, {}).match(/Neighborhood:\s*([^;]+)/i);
-  const name = text(title, 160);
-  if (neighborhood && name) return text(`${name} in ${neighborhood[1]}`, 120);
-  return '';
-}
-
 function descriptionWhenJudgeFails({
   category = '',
   title = '',
@@ -326,7 +315,8 @@ function descriptionWhenJudgeFails({
   rawDescription = '',
 } = {}) {
   const cat = text(category, 80).toLowerCase();
-  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  const ccabFacts = text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFacts)) return '';
   return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
 }
 
@@ -335,7 +325,11 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
   if (isThinNeighborhoodListSummary(summary)) summary = '';
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
   if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
-    const tagline = ccabNeighborhoodTagline(sourceRecord, title) || shortLineFromSourceText(longDescription);
+    const neighborhood = text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500)
+      .match(/Neighborhood:\s*([^;]+)/i);
+    const name = text(title, 160);
+    const tagline = (neighborhood && name ? text(`${name} in ${neighborhood[1]}`, 120) : '')
+      || shortLineFromSourceText(longDescription);
     if (tagline) return tagline;
   }
   if (itinerary && itinerary !== longDescription) return itinerary;
