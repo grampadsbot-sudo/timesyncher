@@ -1,18 +1,18 @@
-Closes #608
+Closes #619
 
 ## Summary
 
-- Documented the #608 enrichment tip sha (`f07da90b`) on `J/RECEIPT.md` (PR #612 scope).
-- Fixed CI `unit-tests`: after #608, `enrichSearchPlace` cleared every hotel `description` that failed the 30-word judge, including Brave rows that should keep category-built copy. Only ccab semicolon fact sheets (`Neighborhood:`) stay blank until Tavily web detail; other hotels and non-hotels fall back to `buildCategoryDescription` again. Matched `enrichTripThing` hotel handling.
+- Restored merge-lost pr336 snapshot copy on ccab-backed Gate B timeline rows (`applyVkSearchSnapshotCopyFields` after `applyCcabRowSearchFields`), so row **602** summary binds to the checked-in snapshot again (`UWS specialty market; grab picnic supplies before a long day out.`).
+- Replaced **Hotel Belleclaire Central Park** ccab semicolon fact sheet with judge-passing hotel prose so `buildPr336VkSearchPlacesByRowId` no longer clears row **603** `description` after #608 (`blank_description`).
 
 ## Checks (local)
 
-- `node scripts/test_trip_thing_logo_metadata.mjs` — 0
+- `node scripts/test_gate_b_product_row_fields.mjs` — 0
+- `node scripts/test_vk_search_place_output_contract.mjs` — 0
 - `node scripts/test_vk_hotel_detail_fill.mjs` — 0
 - Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — 0
 
 ## Left alone (scope)
 
-- GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-612` — page not found (noted in `J/RECEIPT.md`).
-- Baselines, Gate B/capture scripts, `scripts/offline-tests.txt`, workflows, fixtures beyond enrichment behavior.
-- Prior CI failure on head `c91b77c2`: GitHub Actions run `39704818179`, job `unit-tests` / `Offline unit tests` (`test_trip_thing_logo_metadata.mjs` hotel description assertion).
+- PR #614 hotel-row ellipsis bundle assert (`data-ts-hotel-row-head`) — not present on `migrate/trek-source` served bundle; only the snapshot re-bind from `c504de62` applies here.
+- Baselines, Gate B/capture config, `scripts/offline-tests.txt`, workflows, `pr336-vk-search-places.snapshot.json` (trip binding still overlays snapshot for copy rows 601–611).

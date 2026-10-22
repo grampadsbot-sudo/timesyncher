@@ -1,3 +1,34 @@
+# VK issue #619 (cursor-ubuntu vkfill-619)
+
+**Start sha:** `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba`  
+**Tip sha:** `60be25c1`
+
+## Problem
+
+`migrate/trek-source` tip `e2cbfce` red `unit-tests` (Actions job 119618410865): `scripts/test_gate_b_product_row_fields.mjs` — `602 summary` (Google-derived summary instead of pr336 snapshot after ccab bind). Next failure on same base (job 119631611305): `scripts/test_vk_search_place_output_contract.mjs:319` — row **603** `blank_description` after #608 cleared semicolon ccab hotel copy in `enrichSearchPlace`.
+
+## Fix
+
+- `scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`: after ccab row bind, re-apply pr336 snapshot copy fields for rows 601–611 (same as PR #614 `c504de62` trip half).
+- `scripts/fixtures/nyc_ccab_place_enrichment.json`: Hotel Belleclaire — real judge-passing description + short summary (not semicolon ccab sheet).
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Fix committed locally on `vkfill/619-20261021220749`; host publishes once. CI green on pushed PR head into `migrate/trek-source` is authority for close (not self-certified).
+
+---
+
 # TSV PR #612 (cursor-ubuntu vkfill-612)
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-612` — **page not found** (lane brief fetch failed 2026-10-22).
