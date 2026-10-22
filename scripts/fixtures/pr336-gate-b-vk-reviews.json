@@ -294,6 +294,39 @@
     "review4Source": null,
     "review4Url": null
   },
+  "Hotel Belleclaire Central Park": {
+    "googleRating": "4.1",
+    "googleReviewCount": "2100",
+    "thirdPartyRating": "8.4",
+    "thirdPartyReviewCount": "4906",
+    "thirdPartySource": "Booking.com",
+    "ratingCount": 4906,
+    "reviewThemes": {
+      "praise": [
+        "Upper West Side location near Central Park and Lincoln Center subway lines",
+        "Breakfast included on many Booking.com rate cards for week-long stays",
+        "Compact but quiet rooms that work well for theater and museum days",
+        "Flexible cancellation terms on several published rate cards"
+      ],
+      "complaints": [
+        "Elevators can run slow during peak check-in windows on weekends",
+        "Some street-facing rooms pick up Broadway traffic noise at night"
+      ]
+    },
+    "review1": "Upper West Side base with strong subway access and breakfast included on many published rate cards for week-long New York stays.",
+    "review2": "Rooms are compact but quiet for Manhattan standards and the location works well when Lincoln Center and Central Park are daily priorities.",
+    "review3": "Free cancellation terms on several Booking.com cards made it easier to shift dates without losing the whole deposit during planning.",
+    "review4": "Front desk staff handled an early bag drop before check-in without extra fees and kept the process straightforward after a long flight.",
+    "review1Source": "Booking.com",
+    "review2Source": "Booking.com",
+    "review3Source": "Booking.com",
+    "review4Source": "Booking.com",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "5",
+    "xaiRatingsFetched": true
+  },
   "Carbone": {
     "googleRating": "4.3",
     "googleReviewCount": "2498",
