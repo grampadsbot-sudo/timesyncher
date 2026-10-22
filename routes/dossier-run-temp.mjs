@@ -11,7 +11,7 @@ import {
 import { prepareDossierFindings } from '../src/vacation/thing-dossier-fields.mjs';
 
 function authorized(req, env) {
-  const want = Buffer.from(String(env.VERCEL_AUTOMATION_BYPASS_SECRET || ''));
+  const want = Buffer.from(String(env.VERCEL_AUTOMATION_BYPASS_SECRET || env.DOSSIER_RUN_SECRET || ''));
   const got = Buffer.from(String(req.headers['x-dossier-run-secret'] || ''));
   return want.length > 0 && got.length === want.length && timingSafeEqual(want, got);
 }
@@ -25,7 +25,7 @@ function memoryStore() {
 }
 
 export default async function handler(req, res) {
-  if (!authorized(req, process.env)) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
+  if (!authorized(req, process.env)) return sendJson(res, 401, { ok: false, error: 'unauthorized', guardConfigured: Boolean(process.env.VERCEL_AUTOMATION_BYPASS_SECRET || process.env.DOSSIER_RUN_SECRET), automationSecretInRuntime: Boolean(process.env.VERCEL_AUTOMATION_BYPASS_SECRET) });
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method not allowed' });
   try {
     const body = await readJson(req);
