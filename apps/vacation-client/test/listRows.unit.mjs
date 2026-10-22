@@ -141,6 +141,23 @@ const hotelRowTrip = applyLiveAppListRowFields({
 assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
 assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
 
+const shortNeighborhoodTrip = applyLiveAppListRowFields({
+  places: [{ id: 93, name: 'Park Central Hotel New York', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:93': {
+      category: 'hotel',
+      price: 144,
+      summary: 'Neighborhood: Midtown / Central Park South;',
+      longDetails:
+        'Neighborhood: Midtown / Central Park South; Rating: 3.8 (~7.6K); Price: $144/night; strong Midtown base.',
+    },
+  },
+});
+assert.equal(
+  rowSummary(shortNeighborhoodTrip.places[0], shortNeighborhoodTrip),
+  'Neighborhood: Midtown / Central Park South;',
+);
+
 const thinHotelTrip = applyLiveAppListRowFields({
   places: [{ id: 92, name: 'Hotel A', category_name: 'Hotel' }],
   thingOverrides: {

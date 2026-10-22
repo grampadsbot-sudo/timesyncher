@@ -19,7 +19,6 @@ export function isThinNeighborhoodListSummary(value = '') {
   const row = text(value);
   if (!row) return false;
   if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
-  if (/^Neighborhood:\s*.+;\s*$/i.test(row) && wordCount(row) < 12) return true;
   if (/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) {
     if (/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row)) {
       return false;
@@ -29,10 +28,22 @@ export function isThinNeighborhoodListSummary(value = '') {
   return false;
 }
 
+function summaryClauses(row = '') {
+  const line = text(row);
+  if (!line) return null;
+  if (/^Neighborhood:/i.test(line) && line.includes(';')) {
+    return line.split(/;\s*/).filter(Boolean).map((part, idx, parts) => {
+      const chunk = text(part);
+      return idx < parts.length - 1 ? `${chunk};` : chunk;
+    });
+  }
+  return line.match(/[^.!?;]+[.!?;]/gy);
+}
+
 function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
   const row = text(value);
   if (!row) return '';
-  const clauses = row.match(/[^.!?;]+[.!?;]/gy);
+  const clauses = summaryClauses(row);
   if (clauses) {
     let line = '';
     for (const clause of clauses) {
@@ -57,4 +68,4 @@ export function pickFlightListRowSummaryText(value = '') {
 }
 
 export const STORED_SUMMARY_LIST_ROW_PICK_BUNDLE =
-  't=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n||"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};const thin=n=>{const r=String(n||"").trim();if(/^Neighborhood:\\s*.+;\\s*Rating:\\s*[\\d.]+\\.?\\s*$/i.test(r))return!0;if(/^Neighborhood:\\s*.+;\\s*$/i.test(r)&&wc(r)<12)return!0;if(/^Neighborhood:\\s*.+;\\s*Rating:/i.test(r))return!/\\b(Price:\\s*\\$|\\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\\b/i.test(r);return!1};if(thin(s))return"";if(wc(s)<=20)return s;if(/^Documented .+ option/i.test(s))return s;const cl=s.match(/[^.!?;]+[.!?;]/gy);if(cl){let line="";for(const x of cl){const next=clip((line?line+" ":"")+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6&&!thin(line))break}const out=clip(line,120);return wc(out)>=6&&!thin(out)?out:""}const ten=clip(s.split(/\\s+/).slice(0,10).join(" "),120);return wc(ten)>=6&&!thin(ten)?ten:""}';
+  't=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n||"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};const thin=n=>{const r=String(n||"").trim();if(/^Neighborhood:\\s*.+;\\s*Rating:\\s*[\\d.]+\\.?\\s*$/i.test(r))return!0;if(/^Neighborhood:\\s*.+;\\s*Rating:/i.test(r))return!/\\b(Price:\\s*\\$|\\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\\b/i.test(r);return!1};const cl=n=>{const r=String(n||"").trim();if(!r)return null;if(/^Neighborhood:/i.test(r)&&r.includes(";"))return r.split(/;\\s*/).filter(Boolean).map((x,i,a)=>i<a.length-1?String(x).trim()+";":String(x).trim());return r.match(/[^.!?;]+[.!?;]/gy)};if(thin(s))return"";if(wc(s)<=20)return s;if(/^Documented .+ option/i.test(s))return s;const parts=cl(s);if(parts){let line="";for(const x of parts){const next=clip((line?line+" ":"")+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6&&!thin(line))break}const out=clip(line,120);return wc(out)>=6&&!thin(out)?out:""}const ten=clip(s.split(/\\s+/).slice(0,10).join(" "),120);return wc(ten)>=6&&!thin(ten)?ten:""}';
