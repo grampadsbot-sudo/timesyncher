@@ -154,6 +154,7 @@ scripts/test_shared_trip_served_live_tab_mount.mjs
 scripts/test_shared_tab_filter_chips.mjs
 scripts/test_trip_thing_logo_metadata.mjs
 scripts/test_pr336_ccab_search_provenance.mjs
+scripts/test_pr336_vk_search_places_snapshot_keys.mjs
 scripts/test_vk_search_place_output_contract.mjs
 scripts/test_vk_hotel_detail_fill.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs

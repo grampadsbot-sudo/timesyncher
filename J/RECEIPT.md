@@ -1,3 +1,36 @@
+# VK issue #621 (cursor-ubuntu vkfill-621)
+
+**Start sha:** `6edb0791f521004df36fc3b0ef58819127839942`  
+**Tip sha:** pending commit
+
+## Problem
+
+`scripts/fixtures/pr336-vk-search-places.snapshot.json` had 76 rows with one key `"undefined"` (Motto by Hilton New York City Times Square) since #615 port — missing `id` on the staging list-tab row.
+
+## Fix
+
+- `scripts/fixtures/nyc-vk-list-tab-rows.mjs`: Motto `id` 676; treat missing list `id` like id collision (allocate `nextFreeId`).
+- `scripts/fixtures/pr336-vk-search-trip-sources.mjs`: `pr336SnapshotRowIdKey` guard in `buildPr336VkSearchPlacesByRowId`.
+- Snapshot: `"undefined"` → `"676"`.
+- `scripts/test_pr336_vk_search_places_snapshot_keys.mjs` + `scripts/offline-tests.txt`.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_pr336_vk_search_places_snapshot_keys.mjs` | 0 |
+| `node scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Fix committed locally on `vkfill/621-20261022012757`; host publishes once. CI green on PR head into `migrate/trek-source` is authority for close.
+
+---
+
 # VK issue #619 (cursor-ubuntu vkfill-619)
 
 **Start sha:** `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba`  
