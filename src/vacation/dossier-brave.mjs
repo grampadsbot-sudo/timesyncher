@@ -1,9 +1,5 @@
-// Round 5: Brave local evidence for a Thing (skills/tsv-search-providers: Brave for places).
-// Local place search finds the POI id; local POIs returns TripAdvisor rating, count and review snippets.
 import { createHash } from 'node:crypto';
-import { braveSubscriptionKey } from './poi-search.mjs';
-
-const BRAVE = 'https://api.search.brave.com/res/v1';
+import { braveSubscriptionKey, BRAVE_SEARCH_RES_V1 } from './poi-search.mjs';
 const nameKey = (value) => String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
 function finite(value) {
@@ -11,7 +7,7 @@ function finite(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-export function placeCoords(place = {}) {
+function placeCoords(place = {}) {
   const src = place.sourceRecord || {};
   const lat = finite(place.lat ?? place.latitude ?? src.lat ?? src.latitude ?? place.coordinates?.lat);
   const lng = finite(place.lng ?? place.lon ?? place.longitude ?? src.lng ?? src.lon ?? src.longitude ?? place.coordinates?.lng);
@@ -28,8 +24,6 @@ function reviewText(row) {
   return String(row?.comment || row?.description || row?.text || '').replace(/\s+/g, ' ').trim();
 }
 
-// Pure: POI payload row -> dossier page (or null). Text is the provider data rendered as lines so
-// the writer/judge/quote checks work on it like any other saved page.
 export function bravePoiPage(poi = {}, { fetchedAt = new Date().toISOString(), id = '' } = {}) {
   const rating = poi.rating || {};
   const average = finite(rating.ratingValue);
@@ -58,7 +52,7 @@ export function bravePoiPage(poi = {}, { fetchedAt = new Date().toISOString(), i
 }
 
 async function braveGet(path, key, fetchImpl) {
-  const response = await fetchImpl(`${BRAVE}${path}`, { method: 'GET', headers: { accept: 'application/json', 'X-Subscription-Token': key } });
+  const response = await fetchImpl(`${BRAVE_SEARCH_RES_V1}${path}`, { method: 'GET', headers: { accept: 'application/json', 'X-Subscription-Token': key } });
   if (!response?.ok) throw new Error(`brave_http_${Number(response?.status) || 0}`);
   return response.json();
 }

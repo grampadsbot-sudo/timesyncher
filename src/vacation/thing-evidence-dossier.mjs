@@ -60,12 +60,10 @@ function pageText(body, type) {
     .join('\n').replace(/[ \t]+/g, ' ').trim();
 }
 
-export const DOSSIER_MAX_PAGES = 40;
-export const DOSSIER_PAGE_CHARS = 12000;
+const DOSSIER_MAX_PAGES = 40;
+const DOSSIER_PAGE_CHARS = 12000;
 
-// Chief dr 10/22 1:51 PT: review breadth. Several review-site queries per Thing; the bar is >=10 reviews read across
-// >=3 distinct review sources (hosts).
-export function dossierSearchTopics(place = {}) {
+function dossierSearchTopics(place = {}) {
   const category = String(place.category || place.sourceRecord?.category || '').toLowerCase();
   const topics = [
     { q: 'official website menu prices opening hours happy hour' },
@@ -140,7 +138,6 @@ export async function gatherThingEvidence(place = {}, {
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official) urls.add(official);
   const topics = dossierSearchTopics(place).map((topic) => ({ topic, max: topic.review ? 5 : 8 }));
-  // Round 5: Brave local place search + local POIs (TripAdvisor rating, count, snippets) alongside Tavily.
   const bravePromise = braveImpl ? Promise.resolve(braveImpl(place, { destination, env, fetchImpl })).catch(() => ({ pages: [], attempts: [{ kind: 'brave', status: 'failed' }] })) : null;
   const results = await Promise.all(topics.map(async ({ topic, max }) => {
     try {

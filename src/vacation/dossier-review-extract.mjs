@@ -1,6 +1,3 @@
-// Round 4 (chief dr 10/22 2:12 PT): before writing, extract every distinct review/opinion from the dossier pages,
-// code first (JSON-LD reviewBody, review-site and Reddit comment markers), model second; every model excerpt must be
-// grounded in its cited page by token shingles; then dedupe. The writer gets the full set; the count shown is this count.
 import { dossierPageId } from './thing-dossier-fields.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
 
@@ -44,7 +41,7 @@ export function extractReviewsByCode(dossier = {}) {
     }
     for (const m of text.matchAll(/"reviewBody"\s*:\s*"((?:[^"\\]|\\.)*)"/g)) {
       let body = m[1];
-      try { body = JSON.parse(`"${m[1]}"`); } catch { /* keep raw */ }
+      try { body = JSON.parse(`"${m[1]}"`); } catch { body = m[1]; }
       if (looksLikeReview(body)) out.push({ text: clip(body), page: id, method: 'code:jsonld' });
     }
     const cuts = [];
@@ -92,8 +89,6 @@ export function extractionPrompt(dossier = {}, codeItems = []) {
 }
 
 export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [], keepIds = null) {
-  // Code candidates survive only when the model confirms they are about this place; without a model verdict,
-  // only candidates from pages that name the place are kept.
   const core = tokens(String(dossier.thing || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
   const keep = Array.isArray(keepIds) ? new Set(keepIds.map(String)) : null;
   codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || (keep ? keep.has(`k${i + 1}`)

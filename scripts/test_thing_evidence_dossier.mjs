@@ -133,7 +133,6 @@ assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings
 assert.ok(record.review1, 'representative review text must land on the record');
 assert.match(String(record.reviewsLabel), /Representative review written from 20 reviews/);
 
-// Round 3: breadth bar >=10 reviews across >=3 sources; below it reviews are written, labelled limited, and fail.
 const { descriptionNamesThing, MIN_REVIEWS_READ } = await import('../src/vacation/thing-dossier-fields.mjs');
 assert.equal(MIN_REVIEWS_READ, 10);
 assert.deepEqual(built.reviewSources.length, 3);
@@ -153,7 +152,6 @@ await judgeDossierFindings({ pages: goodPages }, kf, { judgeImpl: async (_d, ite
 assert.equal(kfAsked[0].kind, 'knownFor', 'known-for claims go to the judge tagged for the signature test');
 assert.equal(kfAsked[0].item, 'bar');
 
-// Round 4: extraction (code first, model second, grounded, deduped), claim-level drop, 10-point stars, specific known-for, word fit.
 const X4 = await import('../src/vacation/dossier-review-extract.mjs');
 const F4 = await import('../src/vacation/thing-dossier-fields.mjs');
 const rvPage = page('https://www.reddit.com/r/nyc/x', 'thread alpha_user • 2y ago I loved the margherita here, the crust was great and we went back twice beta_user • 1y ago Honestly overpriced and the staff were rude to my friends when we visited last spring gamma_user • 3mo ago Best pizza on the block, I recommend the margherita without hesitation to anyone visiting delta • 2d ago end');
@@ -193,7 +191,6 @@ assert.deepEqual(changedDossierPageUrls([goodPages[0]], [goodPages[0], goodPages
 const { hashes, sources } = computeDossierFieldHashes(built);
 assert.equal(hashes.description, goodPages[0].sha256);
 assert.equal(sources.description, urlA);
-// reviews now draw excerpts from all three review sources, so their hash covers every cited page
 assert.ok(goodPages.every((row) => String(hashes.reviews).includes(row.sha256)));
 assert.ok(String(sources.reviews).includes(urlB));
 assert.equal(dossierFieldHashesStale({ fieldHashes: hashes, fieldSources: sources }, built), false);

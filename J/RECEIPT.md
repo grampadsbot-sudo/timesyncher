@@ -1,27 +1,28 @@
-# PR #632 / issue #631 — cursor-ubuntu correction pass (2026-10-22)
+# PR #632 / issue #631 — cursor-ubuntu pass (2026-10-22)
 
-**Start sha:** `6e191085bb13ad42df77c1398a24611314949c9c`
+**Start sha:** `bb8be14dc9a34ac54148f804136f4f34f89a68e5`
 
-## Host gaps addressed (comment 6349028367 / manager-pass brief)
+## Changes (host verdict 6349028367 follow-up)
 
-- `computeDossierFieldHashes` now tracks `reviews` against saved review-page SHA bundles (comma-separated sources when needed).
-- `fetchXaiPlaceRatings` re-gathers pages, uses `changedDossierPageUrls` + `dossierRebuildFields`, skips the builder when hashes are fresh, runs max-age full refresh, and `mergeSelectiveDossierFindings` keeps unaffected fields byte-identical on partial page changes.
-- Persisted dossiers use one store abstraction (`thing-evidence-dossier-store.mjs`); `applyStoredDossiersToSharedTrip` loads via `loadDossiersByKeys` (same store as save). `intakeSharedResponse` applies dossiers before serve. Gate B fixture reads the same local store path via `loadNycDaybydayDossiersFromDisk`.
-- Staging batch: `src/vacation/thing-evidence-dossier-execution.mjs` + `scripts/build_nyc_thing_evidence_dossiers.mjs`; worker-auth POST `api/thing-evidence-dossiers` (registered in `api/[...route].mjs`).
-- BAR-THING-CUSTOMER: dossier builder prompt uses “this place” (not “this exact Thing”).
+- Aligned `scripts/test_dossier_refresh_integration.mjs` with claims-based dossier fixtures; mock `judgeImpl` / `extractReviewsImpl` so offline runs need no `XAI_PLACE_SEARCH_MODEL`.
+- Removed comment violations across dossier modules (repo no-comment gate); reworded builder prompt (`must say` → `should state`).
+- `dossier-cost.mjs`: lazy place-search rate lookup (no bare model literal at module load); ratchet-clean.
+- `dossier-brave.mjs`: Brave API root from `poi-search.mjs` (`BRAVE_SEARCH_RES_V1`); `placeCoords` no longer exported dead.
+- `thing-evidence-dossier.mjs`: dossier gather helpers kept module-private for DEAD-CODE ratchet.
+- Registered `scripts/test_dossier_round5.mjs` in `scripts/offline-tests.txt`.
 
-## Tests run locally (starting tree + deps)
+## Pre-DONE gates (local)
 
 | Command | Result |
 | --- | --- |
 | `node scripts/test_thing_evidence_dossier.mjs` | pass |
 | `node scripts/test_dossier_refresh_integration.mjs` | pass |
-| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node scripts/test_dossier_round5.mjs` | pass |
 | `node scripts/test_check_hardcoded_content.mjs` | pass |
-| `node scripts/check-no-comments.mjs` | pass (840 files) |
-| `node scripts/test_offline_manifest.mjs` | pass (287 offline) |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass (0 fail) |
 
 ## Not claimed
 
-- Green CI on pushed head, Gate B 32/32, staging `build_nyc_thing_evidence_dossiers.mjs` with live keys, or `live_accept` — host publish + acceptance only.
+- Green CI on pushed head, Gate B 32/32, staging dossier batch with live keys, or `live_accept` — host publish + acceptance only.

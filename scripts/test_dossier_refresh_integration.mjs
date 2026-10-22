@@ -61,38 +61,37 @@ function goodPages(descriptionExtra = ' Menu lists happy hour oysters until six 
 }
 
 const findings = {
-  summary: { value: 'Wood-fired pies and a deep negroni list', quote: 'wood-fired pies', url: urlA },
+  summary: { value: 'Wood-fired pies and a deep negroni list', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
   description: {
     value: 'Riverside Bistro anchors the block with blistered Riverside Bistro pies, a deep negroni list, and happy hour oysters that regulars quote in every review thread online while the raw bar, pastry counter, and late-night espresso program keep the dining room busy from opening until close.',
-    quote: 'happy hour oysters',
-    url: urlA,
+    claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
   },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
-  knownFor: [{ item: 'margherita', quote: 'margherita as the signature pie', url: urlC }],
-  reviewExcerpts: reviewBodies.map((body) => ({ quote: body, url: urlB })),
+  knownFor: [{ item: 'margherita', claims: [{ text: 'margherita is the signature pie', pages: ['p3'], supported: true }] }],
+  reviewExcerpts: reviewBodies.map((body) => ({ text: body, pages: ['p2'], supported: true })),
   reviews: [
     {
       text: 'The margherita blistered crust lived up to the signature hype, and the cocktail list stayed balanced through a busy Friday service evening while the dining room kept a steady pace.',
       rating: 5,
-      cites: ['blistered from the wood oven'],
+      claims: [{ text: 'blistered from the wood oven', pages: ['p2'], supported: true }],
       verdict: true,
     },
     {
       text: 'Host stand efficiency stayed calm during the pre-show rush, and the team kept ticket pickup moving without making the lobby feel chaotic or rushed for first-time visitors.',
       rating: 4,
-      cites: ['extra guest detail about pacing'],
+      claims: [{ text: 'extra guest detail about pacing', pages: ['p2'], supported: true }],
       verdict: false,
     },
     {
       text: 'Sidewalk seating stayed comfortable even with passing traffic, and the staff checked in often enough that water refills and menu questions never had to wait long.',
       rating: 4,
-      cites: ['wood oven every night'],
+      claims: [{ text: 'wood oven every night', pages: ['p2'], supported: true }],
       verdict: false,
     },
     {
       text: 'Checkout timing was predictable on a packed night, and the margherita remained the dish guests mentioned most often when comparing this room to nearby options.',
       rating: 5,
-      cites: ['repeat visits this season'],
+      claims: [{ text: 'repeat visits this season', pages: ['p2'], supported: true }],
       verdict: true,
     },
   ],
@@ -103,7 +102,7 @@ const { hashes, sources } = computeDossierFieldHashes(built);
 built.fieldHashes = hashes;
 built.fieldSources = sources;
 assert.ok(hashes.reviews, 'reviews must track page-hash dependency');
-assert.equal(sources.reviews, urlB);
+assert.ok(String(sources.reviews).includes(urlB));
 
 let builderCalls = 0;
 const store = memoryStore();
@@ -117,12 +116,13 @@ const buildImpl = async () => {
   builderCalls += 1;
   return { payload: {}, structuredText: '{}', findings };
 };
+const judgeImpl = async (_dossier, items) => items.map((item) => ({ id: item.id, supported: true }));
+const extractReviewsImpl = async () => ({ reviews: [], keep: [] });
+const fetchOpts = { dossierKey, storeImpl: store, buildImpl, judgeImpl, extractReviewsImpl };
 
 const fresh = await fetchXaiPlaceRatings(place, {
-  dossierKey,
-  storeImpl: store,
+  ...fetchOpts,
   gatherImpl: unchangedGather,
-  buildImpl,
   nowMs: Date.now(),
 });
 assert.equal(builderCalls, 0, 'unchanged pages must skip builder');
@@ -135,10 +135,8 @@ const changedDescriptionGather = async () => ({
   attempts: [],
 });
 const changedOnlyDescription = await fetchXaiPlaceRatings(place, {
-  dossierKey,
-  storeImpl: store,
+  ...fetchOpts,
   gatherImpl: changedDescriptionGather,
-  buildImpl,
   nowMs: Date.now(),
 });
 assert.equal(builderCalls, 1, 'changed description page must invoke builder once');
@@ -150,10 +148,8 @@ assert.equal(
 
 builderCalls = 0;
 const expired = await fetchXaiPlaceRatings(place, {
-  dossierKey,
-  storeImpl: store,
+  ...fetchOpts,
   gatherImpl: unchangedGather,
-  buildImpl,
   nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
 });
 assert.equal(builderCalls, 1, 'max-age expiry must refresh even when pages are unchanged');

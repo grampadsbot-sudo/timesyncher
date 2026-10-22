@@ -4,8 +4,6 @@ function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
-// Name check ignores punctuation and accepts the name without its " - branch" suffix
-// (round 2: "The Smith - Lincoln Square" vs "The Smith Lincoln Square" was dropped).
 function nameKey(value) {
   return norm(value).replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -16,7 +14,6 @@ export function descriptionNamesThing(text = '', thing = '') {
   return names.some((name) => body.includes(name) || body.includes(name.replace(/^the /, '')));
 }
 
-// Round 4: descriptions over 120 words are trimmed at sentence ends (deterministic), never padded.
 export function fitDescriptionWords(text = '', max = 120) {
   const value = String(text).trim();
   if (words(value).length <= max) return value;
@@ -25,7 +22,6 @@ export function fitDescriptionWords(text = '', max = 120) {
   return sentences.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-// Round 4: a known-for item is one specific dish, drink, service or product, not a broad phrase.
 const BROAD_KNOWN_FOR = /\b(dining|experience|atmosphere|ambiance|ambience|vibes?|location|hospitality|food|cuisine|menu|drinks|nightlife|views?|setting|decor|service|staff|value|scene|energy)\b/i;
 export function knownForSpecific(item = '') {
   const text = norm(item);
@@ -51,9 +47,6 @@ function cited(dossier, claim) {
     && dossier.pages.some((page) => page.url === claim.url && norm(page.text).includes(norm(claim.quote)));
 }
 
-// Craig 10/22 12:35 PT binding rule: no exact-phrase matching. Every claim cites saved dossier page ids
-// (p1..pN); an independent judge pass marks each claim supported/unsupported from the cited page text.
-// Any unsupported claim, or a claim citing no known page, fails its field.
 export const NO_REVIEWS_FLAG = 'No reviews were found for this place.';
 
 export function dossierPageId(index) {
@@ -204,7 +197,6 @@ export function prepareDossierFindings(dossier, findings = {}) {
   next.reviewsRead = next.reviewExcerpts.length;
   next.reviewSources = [...new Set(next.reviewExcerpts.flatMap((item) => String(item.url || '').split(','))
     .map(reviewSourceHost).filter(Boolean))];
-  // Round 5: provider rating from Brave local POIs when the writer gives no valid cited rating.
   const braveRating = (dossier.pages || []).find((page) => page.via === 'brave' && page.braveRating)?.braveRating;
   const writerRating = findings.rating;
   const writerOk = writerRating && cited(dossier, writerRating);
@@ -233,14 +225,11 @@ export function prepareDossierFindings(dossier, findings = {}) {
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !descriptionNamesThing(claim.value, dossier.thing))) continue;
     next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
-    // Craig 10/22 12:39 PT: no reviews never fails the description; it ends with one short flag line instead.
     if (key === 'description' && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
     }
   }
-  // Round 4: an unsupported claim is dropped on its own; a review is kept while it has >=1 supported claim.
-  // Stars given on a 10-point scale (all <=10, some >5: Empire/PodTimes round 3) are converted to 1-5.
   const raw = Array.isArray(findings.reviews) ? findings.reviews : [];
   const tenPoint = raw.length && raw.every((r) => Number(r?.rating) <= 10) && raw.some((r) => Number(r?.rating) > 5);
   next.reviews = raw.map((review) => {
@@ -292,7 +281,6 @@ export function writeDossierReviews(record = {}, dossier = {}) {
   const missing = new Set(record.missingFields || []);
   missing.add('reviews');
   const valid = dossierReviewsValid(dossier);
-  // Chief dr 10/22 1:51 PT: below the breadth bar reviews are still written, labelled limited, and count as a fail.
   if (valid || dossierReviewsWritable(dossier)) {
     record.reviewsLabel = valid && dossierReviewBreadthOk(dossier)
       ? `Representative review written from ${dossier.reviewsRead} reviews`

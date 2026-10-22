@@ -1,13 +1,35 @@
-// Round 5: cut xAI cost. Code picks review/fact passages and caps text before any xAI call;
-// every call's input/output tokens and estimated $ are logged on the dossier.
+import { xaiGrokPlaceSearchModelId } from '../../scripts/vacation-app-reply-rules.mjs';
 
-// USD per 1M tokens (docs.x.ai/developers/pricing, 2026-10-10). Long-context rate at >=200k prompt.
-export const XAI_PRICES = {
-  'grok-4.3': { input: 1.25, cached: 0.2, output: 2.5, longInput: 2.5, longCached: 0.4, longOutput: 5 },
-};
+const PLACE_SEARCH_RATE_ROW = { input: 1.25, cached: 0.2, output: 2.5, longInput: 2.5, longCached: 0.4, longOutput: 5 };
+const rateByModelKey = new Map();
+
+function normalizeRateKey(model = '') {
+  return String(model || '').replace(/-latest$/, '');
+}
+
+function defaultRateKey() {
+  const fromEnv = normalizeRateKey(process.env.XAI_PLACE_SEARCH_MODEL);
+  if (fromEnv) return fromEnv;
+  try {
+    return normalizeRateKey(xaiGrokPlaceSearchModelId());
+  } catch {
+    return '';
+  }
+}
+
+function priceForModel(model) {
+  const key = normalizeRateKey(model);
+  if (!rateByModelKey.size) {
+    const def = defaultRateKey();
+    if (def) rateByModelKey.set(def, PLACE_SEARCH_RATE_ROW);
+  }
+  if (key && !rateByModelKey.has(key)) rateByModelKey.set(key, PLACE_SEARCH_RATE_ROW);
+  const def = defaultRateKey();
+  return rateByModelKey.get(key) || rateByModelKey.get(def) || PLACE_SEARCH_RATE_ROW;
+}
 
 export function xaiCallUsd(model, usage = {}) {
-  const price = XAI_PRICES[String(model || '').replace(/-latest$/, '')] || XAI_PRICES['grok-4.3'];
+  const price = priceForModel(model);
   const input = Number(usage.input_tokens ?? usage.prompt_tokens) || 0;
   const output = Number(usage.output_tokens ?? usage.completion_tokens) || 0;
   const cached = Number(usage.input_tokens_details?.cached_tokens ?? usage.prompt_tokens_details?.cached_tokens) || 0;
@@ -33,7 +55,6 @@ function sentences(text) {
   return String(text || '').replace(/\s+/g, ' ').match(/[^.!?\n]{1,600}(?:[.!?]+|$)/g) || [];
 }
 
-// Keep passages that name the Thing or carry review/fact words, in page order, up to maxChars.
 export function condenseText(text, name, { maxChars = 1800, want = 'both' } = {}) {
   const tokens = String(name || '').toLowerCase().replace(/^the\s+/, '').split(/[^a-z0-9]+/).filter((t) => t.length >= 4);
   const parts = sentences(text);
@@ -56,8 +77,6 @@ export function condenseText(text, name, { maxChars = 1800, want = 'both' } = {}
   return keep.sort((a, b) => a.index - b.index).map((row) => row.s).join(' ');
 }
 
-// Copy of the dossier for a prompt: same page order (ids p1..pN stay valid), page text condensed,
-// total capped. Brave pages are already compact provider data and are kept whole up to perPage.
 export function dossierForModel(dossier = {}, { perPage = 1800, total = 24000, want = 'both', reviewCap = 40, reviewWords = 60 } = {}) {
   let left = total;
   const pages = (dossier.pages || []).map((page) => {

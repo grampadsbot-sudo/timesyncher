@@ -38,8 +38,6 @@ export {
 
 const ESCALATE_STEPS = new Set(['builder']);
 
-// Round 5: one xAI call path. Extract/judge run with reasoning effort none (cheapest grok-4.3 mode);
-// if the API rejects the reasoning field, retry once without it. Logs tokens and $ on the dossier.
 async function postXai(dossier, step, model, content, { env, fetchImpl, timeoutMs }) {
   const base = { model, input: [{ role: 'user', content }], text: { format: { type: 'json_object' } } };
   const effort = env.XAI_DOSSIER_REASONING_EFFORT || (ESCALATE_STEPS.has(step) ? '' : 'none');
@@ -80,7 +78,7 @@ function dossierPrompt(dossier) {
     'reviewSet in the JSON below is the full deduplicated set of reviews and opinions already extracted from these pages (each has id, page, text); its size is the real count read. Do not return reviewExcerpts.',
     'You MUST return reviews and knownFor (when a page supports one) and rating (when a published average is on a page), in addition to the fields above.',
     'A known-for item is one specific dish, drink, service or product (e.g. "spicy rigatoni vodka", "tableside guacamole", "hand-sliced nova"), never a broad phrase like "pre-theater dining", "great location", "atmosphere" or "live music".',
-    'Return knownFor: [{item, claims}] only for an item a saved page names as a signature, specialty, famous or best-known dish, service or product (a menu marking it signature, an article, or reviews singling it out). Merely having an amenity, an on-site bar, or a neighbouring or tenant restaurant is NOT known-for. Each claim text must say the page names it as a signature (e.g. "p3 calls the spicy rigatoni its signature dish"). Omit knownFor when no page does this.',
+    'Return knownFor: [{item, claims}] only for an item a saved page names as a signature, specialty, famous or best-known dish, service or product (a menu marking it signature, an article, or reviews singling it out). Merely having an amenity, an on-site bar, or a neighbouring or tenant restaurant is NOT known-for. Each claim text should state that the page names it as a signature (e.g. "p3 calls the spicy rigatoni its signature dish"). Omit knownFor when no page does this.',
     'Review rating is an integer 1-5 stars (never a 10-point score).',
     'Return reviews: four {text,rating,verdict,claims} representative assessments in your own words, written from ALL of reviewSet (reflect its real spread of praise and complaints, not just a few entries); claims cite the page ids of the reviewSet entries they rest on. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
     'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
@@ -153,7 +151,6 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
       ({ reviews: model = [], keep = null } = await extractReviewsImpl(dossier, code));
       status = 'ok';
     } else if (env.XAI_API_KEY) {
-      // Only non-Brave pages, review passages only, capped: Brave snippets are already code-extracted.
       const slim = dossierForModel({ ...dossier, pages: (dossier.pages || []).map((p) => (p.via === 'brave' ? { ...p, text: '' } : p)) },
         { perPage: 1500, total: 16000, want: 'reviews' });
       const payload = await postXai(dossier, 'extract', env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
@@ -216,7 +213,6 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const { payload, structuredText, findings } = await callDossierBuilder(merged, {
     env, fetchImpl, timeoutMs, buildImpl,
   });
-  // Round 4: deterministic word fit before the judge, so the judge sees the final description.
   if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl });
   const built = prepareDossierFindings(merged, findings);

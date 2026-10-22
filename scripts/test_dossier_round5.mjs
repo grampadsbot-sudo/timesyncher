@@ -24,7 +24,6 @@ assert.equal(bravePoiPage({ title: 'x' }), null);
 assert.equal(pickBraveLocation([{ id: '1', title: 'Other Place' }, { id: '2', title: 'The Arthouse Hotel' }], 'Arthouse Hotel').id, '2');
 assert.equal(pickBraveLocation([{ id: '1', title: 'Other Place' }], 'Arthouse Hotel'), undefined);
 
-// braveLocalEvidence: no key -> no call; with key -> local search then pois
 assert.equal((await braveLocalEvidence({ title: 'Arthouse Hotel' }, { env: {}, fetchImpl: () => { throw new Error('no'); } })).pages.length, 0);
 const calls = [];
 const fake = async (url) => {
@@ -37,7 +36,6 @@ const brave = await braveLocalEvidence({ title: 'Arthouse Hotel' }, { destinatio
 assert.equal(brave.pages.length, 1);
 assert.ok(calls[0].includes('result_filter=locations') && calls[1].includes('ids=abc'));
 
-// gather merges Brave page next to Tavily pages
 const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel' }, {
   destination: 'NYC', env: {},
   searchImpl: async () => ({ results: [{ url: 'https://a.example/arthouse', rawContent: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }] }),
@@ -46,18 +44,15 @@ const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel' }, {
 assert.ok(dossier.pages.some((p) => p.via === 'brave'));
 assert.ok(dossier.attempts.some((a) => a.kind === 'brave' && a.step === 'pois'));
 
-// Brave snippets are code-extracted and survive the model keep filter
 const code = extractReviewsByCode(dossier).filter((r) => r.method === 'code:brave');
 assert.equal(code.length, 2);
 const set = finalizeReviewSet(dossier, code, [], []);
 assert.equal(set.length, 2);
 
-// rating falls back to Brave POI rating when the writer gives none
 const built = prepareDossierFindings({ ...dossier, reviewSet: set }, {});
 assert.equal(built.rating, 4.5);
 assert.equal(built.reviewsAvailable, 1234);
 
-// condense keeps relevant passages and caps
 const long = `${'Filler text about nothing in particular here. '.repeat(400)} Arthouse Hotel has a great rooftop bar, open daily 5 pm to 1 am.`;
 const short = condenseText(long, 'Arthouse Hotel', { maxChars: 300 });
 assert.ok(short.length <= 300 && /rooftop bar/.test(short));
@@ -66,7 +61,6 @@ assert.equal(slim.pages.length, 2);
 assert.ok(slim.pages[0].text.length <= 500);
 assert.equal(slim.pages[1].braveReviews, undefined);
 
-// cost math: grok-4.3 $1.25 in / $2.50 out per 1M
 assert.equal(xaiCallUsd('grok-4.3', { input_tokens: 100000, output_tokens: 100000 }).usd, 0.375);
 assert.equal(xaiCallUsd('grok-4.3', { input_tokens: 1e6, output_tokens: 1e6 }).usd, 7.5);
 const d = {};

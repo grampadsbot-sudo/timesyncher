@@ -8,6 +8,7 @@ const POI_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 const BRAVE_CACHE_MS = 8 * 60 * 60 * 1000;
 const cache = new Map();
 const braveCache = new Map();
+export const BRAVE_SEARCH_RES_V1 = 'https://api.search.brave.com/res/v1';
 
 export function clearPoiCache() {
   cache.clear();
@@ -429,7 +430,6 @@ export async function probePlaceSearchKeys(env = process.env, fetchImpl = global
 
 const TAVILY_EXTRACT_URL = 'https://api.tavily.com/extract';
 
-// Page content through Tavily (review sites refuse direct fetches). -> [{url, rawContent}]
 export async function extractTavily(urls = [], { apiKey, env = process.env, fetchImpl = globalThis.fetch, timeoutMs = 60000 } = {}) {
   const list = [...new Set((urls || []).map(publicHttpUrl).filter(Boolean))].slice(0, 20);
   if (!list.length) return [];
