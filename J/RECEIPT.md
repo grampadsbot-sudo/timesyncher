@@ -1,3 +1,36 @@
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, hard round tier 1)
+
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
+
+**Start sha:** `95cb58d9d5221b496ee8ec909ba8e4e89090140d`  
+**Tip sha:** _(after commit; host publish)_
+
+## Root cause (rounds 1–2)
+
+Pre-merge Gate B compares candidates to PR base `e3364ac` (NYC fixture, not approved reference). Rounds 1–2 changed `sr` logo+name layout; Hermes run `20261021-235450` on head `95cb58d9` failed pixel+vision on 19 list-tab PNGs (`~/tsv-gateb/runs/20261021-235450/comment.md`). Local `restore_check.py` v6 on captures in `~/tsv-dispatch/gateb-cand/base-e3364ac-fixture-ff197cd305e728ac` vs `pr604-95cb58d` reported **zero** `logo not centred with name` structure failures on both — the kickback was layout pixels, not structure.
+
+## Hard round fix
+
+Remove `OE_ROW_SR_LOGO_ALIGN_*` patches from `src/vacation/shared-trip-oe-list-row-patch.mjs`; rebake bundle to match `e3364ac` `sr=` grid (`alignItems:"center"`, direct `dc`).
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Product code matches PR base `e3364ac` for list-row layout; restores Gate B pixel parity. CI + Gate B on new head are authority (not self-certified). Trek-source `#601` sub-px name-line frame still needs a non-layout follow-up.
+
+---
+
 # VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, round 2)
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).

@@ -14,7 +14,6 @@ assert.equal(rendered, committed);
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-summary-stored":"1"/);
 assert.match(committed, /data-ts-list-row-name":"1"/);
-assert.match(committed, /alignItems:"start",width:"100%",minWidth:0\},children:\[n\.jsx\("span",\{style:\{width:28,height:28,display:"grid",placeItems:"center"\},children:n\.jsx\(dc,\{item:G,size:28\}\)\}\)/);
 assert.match(
   committed,
   /Zi\(G\)\?n\.jsx\(je,\{item:G,title:ua\}\):n\.jsx\("strong",\{children:ua\}\)/,
