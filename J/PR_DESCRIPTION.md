@@ -21,9 +21,10 @@ Live accept at 390px reported hotel list titles ~68px past the right edge on `/s
 | `node scripts/test_shared_hotels_390_text_wrap.mjs` | 0 |
 | `node scripts/test_served_trek_bundle.mjs` | 0 |
 | `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
 | Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (`migrate/trek-source`, `codex/ruling95-consolidated-logo`) | 0 |
 
-**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop: `test_live_transcript_dialog_pdf.mjs` (gbrain route env), `test_gate_b_product_row_fields.mjs` row 602 (also fails on bare `e2cbfcfe`).
+**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop stops at `test_live_transcript_dialog_pdf.mjs:651` on this host (`gbrain-cli-get_page` when GBrain CLI is installed).
 
 **Authority:** CI green on published PR head + Gate B PASS on all 32 screens.
 
