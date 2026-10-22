@@ -1,17 +1,18 @@
-Closes #589
+Closes #608
 
 ## Summary
 
-- Gate B structure failed on Events (and similar) list rows because capture could not record `first_text` for logo-vs-name centering: the name sat as a bare text node inside `[data-ts-list-row-name]`, not in a `span`/`strong` leaf.
-- Patch `Oe()` so the default title branch wraps `ua` in `<strong>` (flight/car/hotel components unchanged). Rebake `public/assets/index-BKun7ofk.js`.
+- Documented the #608 enrichment tip sha (`f07da90b`) on `J/RECEIPT.md` (PR #612 scope).
+- Fixed CI `unit-tests`: after #608, `enrichSearchPlace` cleared every hotel `description` that failed the 30-word judge, including Brave rows that should keep category-built copy. Only ccab semicolon fact sheets (`Neighborhood:`) stay blank until Tavily web detail; other hotels and non-hotels fall back to `buildCategoryDescription` again. Matched `enrichTripThing` hotel handling.
 
-## Checks
+## Checks (local)
 
-- `node scripts/rebake_served_trek_bundle.mjs` — 0
-- `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` — 0
-- `node scripts/test_served_trek_bundle.mjs` — 0
-- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (bases `migrate/trek-source` and `codex/ruling95-consolidated-logo`) — 0
+- `node scripts/test_trip_thing_logo_metadata.mjs` — 0
+- `node scripts/test_vk_hotel_detail_fill.mjs` — 0
+- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — 0
 
 ## Left alone (scope)
 
-- Capture/Gate B scripts, baselines, fixtures, and `scripts/offline-tests.txt` (no new test file; extended existing bundle test).
+- GBrain handoff `bot-admin/lanes/vk-pr-handoff/pr-612` — page not found (noted in `J/RECEIPT.md`).
+- Baselines, Gate B/capture scripts, `scripts/offline-tests.txt`, workflows, fixtures beyond enrichment behavior.
+- Prior CI failure on head `c91b77c2`: GitHub Actions run `39704818179`, job `unit-tests` / `Offline unit tests` (`test_trip_thing_logo_metadata.mjs` hotel description assertion).

@@ -2,6 +2,7 @@ import { insertTripThing, tripThingRow } from './trip-things.mjs';
 import { assignTripSiteUrlWhenThingsPresent } from './trip-site-url-after-insert.mjs';
 import { placeToTripThing, queriesFromWantedThings, searchPlaces } from './place-search.mjs';
 import { rowNeedsProductEnrichment } from './trip-thing-enrichment.mjs';
+import { searchPlaceNeedsWebDetailEnrichment } from './search-place-detail-enrichment.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
 import { normalizePlaceSearchTargetKind } from './place-search-target-kind.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
@@ -366,9 +367,30 @@ export function rowEligibleForChatPlaceBackfill(row = {}) {
   return rowNeedsProductEnrichment(row);
 }
 
+function rowNeedsVkTransportDetailFill(row = {}) {
+  const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const loc = row?.location && typeof row.location === 'object' ? row.location : {};
+  const record = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {};
+  const category = clean(row?.category, 80).toLowerCase();
+  const place = {
+    title: row.title,
+    category: row.category,
+    description: row.description,
+    sourceRecord: record,
+    address: loc.address || '',
+    lat: loc.lat,
+    lng: loc.lng,
+    price: row.price ?? meta.price,
+  };
+  if (searchPlaceNeedsWebDetailEnrichment(place)) return true;
+  if (!['flight', 'hotel', 'car'].includes(category)) return false;
+  const price = row.price ?? meta.price ?? record.price;
+  return price == null && row.price !== 0;
+}
+
 export function rowNeedsDetailBackfill(row = {}) {
   const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
-  if (meta.detailEnriched === true) return false;
+  if (meta.detailEnriched === true && !rowNeedsVkTransportDetailFill(row)) return false;
   const category = clean(row?.category, 80).toLowerCase();
   const detailCategories = new Set(['flight', 'hotel', 'car', 'bar', 'restaurant', 'tour', 'attraction']);
   if (!isChatIntakeGeocodableThing({ category }) && !detailCategories.has(category)) return false;
