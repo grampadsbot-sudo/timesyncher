@@ -1,39 +1,27 @@
-# VK issue #608 receipt (cursor-ubuntu vkfill-608, 2026-10-22)
+# PR #632 / issue #631 — cursor-ubuntu correction pass (2026-10-22)
 
-**Start sha:** `f8e5f34bf4a020e9ff74fb5a327b442de49e5848` (`migrate/trek-source`)
+**Start sha:** `6e191085bb13ad42df77c1398a24611314949c9c`
 
-**Tip sha:** `f8b9dd03` (local; host publishes branch `vkfill/608-20261022080833`)
+## Host gaps addressed (comment 6349028367 / manager-pass brief)
 
-## Change
+- `computeDossierFieldHashes` now tracks `reviews` against saved review-page SHA bundles (comma-separated sources when needed).
+- `fetchXaiPlaceRatings` re-gathers pages, uses `changedDossierPageUrls` + `dossierRebuildFields`, skips the builder when hashes are fresh, runs max-age full refresh, and `mergeSelectiveDossierFindings` keeps unaffected fields byte-identical on partial page changes.
+- Persisted dossiers use one store abstraction (`thing-evidence-dossier-store.mjs`); `applyStoredDossiersToSharedTrip` loads via `loadDossiersByKeys` (same store as save). `intakeSharedResponse` applies dossiers before serve. Gate B fixture reads the same local store path via `loadNycDaybydayDossiersFromDisk`.
+- Staging batch: `src/vacation/thing-evidence-dossier-execution.mjs` + `scripts/build_nyc_thing_evidence_dossiers.mjs`; worker-auth POST `api/thing-evidence-dossiers` (registered in `api/[...route].mjs`).
+- BAR-THING-CUSTOMER: dossier builder prompt uses “this place” (not “this exact Thing”).
 
-Replaced meta/generic hotel copy in `scripts/fixtures/nyc_ccab_place_enrichment.json` for the three hotels still failing live_accept `hotel_desc` on staging `93ac0a3` (chief dr 6:52 AM PT 10/22), then regenerated `scripts/fixtures/pr336-vk-search-places.snapshot.json` via `node scripts/regenerate_pr336_search_trip_fixture.mjs`.
+## Tests run locally (starting tree + deps)
 
-Served NYC trip path unchanged: `shared-trip-handler` → `gate-b-approved-shared-trip.mjs` → `buildNycCraigKimDaybydayTrip()` → ccab enrichment.
-
-## Three descriptions (detail field shown after `descriptionPassesDetailJudge`)
-
-**Midtown sample hotel** (managing-dr 4/5, not generic):
-
-Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.
-
-**Arthouse Hotel** (4/5):
-
-Arthouse Hotel fills a 1924 Salvation Army landmark at 2178 Broadway and West 77th Street with pop-art murals, the underground Arden cocktail bar, and the Arden & Amsterdam restaurant on the ground floor. Booking.com reviewers often praise the colorful lobby energy and quick B/C subway rides to the American Museum of Natural History, while noting that street-facing rooms can pick up Broadway traffic noise at night.
-
-**The Empire Hotel New York** (5/5):
-
-The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends.
-
-## Local verification
-
-| Check | Result |
+| Command | Result |
 | --- | --- |
-| `node /home/ubishere9995/tsv-dispatch/live_accept_eval.mjs` on `buildGateBApprovedSharedTrip()` | 22/22 hotels pass 30-word app check; 0 failing priced rows |
-| `desc_quality.live_hotel_quality` (judgments via `dr_judgment_autoanswer.py` on pending inbox) | 22/22 good (3/3 target hotels ≥4/5, not generic) |
-| `node scripts/test_nyc_budget_search_fill_prices.mjs` | 0 |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
-| `npm run test:keepsake-style2` | 0 |
-| Pre-DONE gate (below) | 0 |
+| `node scripts/test_thing_evidence_dossier.mjs` | pass |
+| `node scripts/test_dossier_refresh_integration.mjs` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node scripts/test_check_hardcoded_content.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass (840 files) |
+| `node scripts/test_offline_manifest.mjs` | pass (287 offline) |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
 
-Final proof after deploy: `~/tsv-dispatch/live_accept.py` `hotel_desc` 22/22 on live staging (not run from this lane).
+## Not claimed
+
+- Green CI on pushed head, Gate B 32/32, staging `build_nyc_thing_evidence_dossiers.mjs` with live keys, or `live_accept` — host publish + acceptance only.

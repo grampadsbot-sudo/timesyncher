@@ -4,6 +4,7 @@ import { applyThingPresentation, intakeShareSlug, sharedTripFromIntake, thingRec
 import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
+import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 
 let sharedTripDatabase = null;
@@ -128,7 +129,8 @@ export async function intakeSharedResponse(shareToken, db = null) {
   const presented = applyThingPresentation({ ...shared, forecast: Array.isArray(forecast) ? forecast : [] });
   const captured = applyCapturedLogos(presented);
   const withBudgetTargets = applyTripMetadataBudgetTargets(captured, trip);
-  return finalizeServedSharedTripPayload(withBudgetTargets);
+  const withDossiers = await applyStoredDossiersToSharedTrip(withBudgetTargets, { env: process.env });
+  return finalizeServedSharedTripPayload(withDossiers);
 }
 
 function sharedPayloadHasPlaces(payload) {

@@ -18,6 +18,115 @@ function cited(dossier, claim) {
     && dossier.pages.some((page) => page.url === claim.url && norm(page.text).includes(norm(claim.quote)));
 }
 
+function pageHashBundle(pageByUrl, url = '') {
+  const urls = String(url || '').split(',').map((row) => row.trim()).filter(Boolean);
+  return urls.map((row) => pageByUrl.get(row)).filter(Boolean).join('|');
+}
+
+export function computeDossierFieldHashes(dossier = {}) {
+  const hashes = {};
+  const sources = {};
+  const pageByUrl = new Map((dossier.pages || []).map((page) => [page.url, page.sha256]));
+  const track = (field, claim) => {
+    if (!field || !claim?.url) return;
+    const hash = pageByUrl.get(claim.url);
+    if (!hash) return;
+    hashes[field] = hash;
+    sources[field] = claim.url;
+  };
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
+    track(key, dossier.fields?.[key]);
+  }
+  track('rating', dossier.ratingEvidence);
+  for (const [index, item] of (dossier.knownFor || []).entries()) {
+    track(`knownFor:${index}`, item);
+  }
+  const reviewUrls = [...new Set((dossier.reviewExcerpts || []).map((row) => row.url).filter(Boolean))];
+  if (reviewUrls.length && Array.isArray(dossier.reviews) && dossier.reviews.length === 4) {
+    const bundle = reviewUrls.map((url) => pageByUrl.get(url)).filter(Boolean).join('|');
+    if (bundle) {
+      hashes.reviews = bundle;
+      sources.reviews = reviewUrls.join(',');
+    }
+  }
+  return { hashes, sources };
+}
+
+export function dossierFieldHashesStale(persisted = {}, merged = {}) {
+  if (!persisted.fieldHashes || typeof persisted.fieldHashes !== 'object') return true;
+  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
+  return Object.entries(persisted.fieldHashes).some(([field, hash]) => {
+    const url = persisted.fieldSources?.[field];
+    if (!url) return true;
+    return pageHashBundle(pageByUrl, url) !== hash;
+  });
+}
+
+const DOSSIER_REBUILD_GROUPS = [
+  'summary',
+  'description',
+  'price',
+  'hours',
+  'happyHourDetails',
+  'rating',
+  'reviews',
+  'knownFor',
+];
+
+export function dossierRebuildFields(persisted = {}, merged = {}, {
+  maxAgeExpired = false,
+  changedUrls = [],
+} = {}) {
+  const all = new Set(DOSSIER_REBUILD_GROUPS);
+  if (!persisted?.fieldHashes || maxAgeExpired) return all;
+  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
+  const changed = new Set(changedUrls);
+  const stale = new Set();
+  for (const [field, hash] of Object.entries(persisted.fieldHashes)) {
+    const url = persisted.fieldSources?.[field];
+    if (!url || pageHashBundle(pageByUrl, url) !== hash) {
+      if (field === 'reviews' || field.startsWith('knownFor:')) stale.add(field.startsWith('knownFor:') ? 'knownFor' : field);
+      else stale.add(field);
+    }
+  }
+  for (const url of changed) {
+    for (const [field, source] of Object.entries(persisted.fieldSources || {})) {
+      const sources = String(source || '').split(',').map((row) => row.trim()).filter(Boolean);
+      if (sources.includes(url)) stale.add(field === 'reviews' ? 'reviews' : field.startsWith('knownFor:') ? 'knownFor' : field);
+    }
+  }
+  return stale;
+}
+
+export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuildFields = new Set()) {
+  const fields = rebuildFields instanceof Set ? rebuildFields : new Set(rebuildFields);
+  if (!persisted || fields.size === 0) return built;
+  if (fields.size >= DOSSIER_REBUILD_GROUPS.length) return built;
+  const next = JSON.parse(JSON.stringify(persisted));
+  next.pages = built.pages;
+  next.attempts = built.attempts;
+  next.thing = built.thing || next.thing;
+  if (fields.has('knownFor')) next.knownFor = built.knownFor;
+  if (fields.has('rating')) {
+    next.rating = built.rating;
+    next.reviewsAvailable = built.reviewsAvailable;
+    next.ratingEvidence = built.ratingEvidence;
+    next.ratingMix = built.ratingMix;
+  }
+  if (fields.has('reviews')) {
+    next.reviews = built.reviews;
+    next.reviewExcerpts = built.reviewExcerpts;
+    next.reviewsRead = built.reviewsRead;
+  }
+  next.fields = { ...(next.fields || {}) };
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
+    if (!fields.has(key)) continue;
+    if (built.fields?.[key]) next.fields[key] = built.fields[key];
+    else delete next.fields[key];
+  }
+  return next;
+}
+
 export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
@@ -126,6 +235,11 @@ export function applyDossierFields(record = {}, dossier = {}) {
       next.thirdPartyRating = String(dossier.rating);
       next.thirdPartyReviewCount = String(dossier.reviewsAvailable);
       next.ratingCount = dossier.reviewsAvailable;
+      if (Array.isArray(dossier.ratingMix) && dossier.ratingMix.length === 5) {
+        next.ratingMix = Object.fromEntries(dossier.ratingMix.map((value, index) => [String(index + 1), value]));
+      } else if (dossier.ratingMix && typeof dossier.ratingMix === 'object') {
+        next.ratingMix = dossier.ratingMix;
+      }
       missing.delete('ratings');
     }
   }

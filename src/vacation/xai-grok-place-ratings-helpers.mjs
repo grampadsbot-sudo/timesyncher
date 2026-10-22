@@ -181,6 +181,15 @@ export function xaiThemesReviewPath(record = {}) {
     && typeof record.reviewThemes === 'object';
 }
 
+export function xaiDossierReviewPath(record = {}) {
+  const dossier = record?.evidenceDossier;
+  return record?.xaiRatingsFetched === true
+    && dossier
+    && typeof dossier === 'object'
+    && Array.isArray(dossier.pages)
+    && dossier.pages.length > 0;
+}
+
 export function reviewThemesDistinctCount(record = {}) {
   const themes = record.reviewThemes && typeof record.reviewThemes === 'object' ? record.reviewThemes : {};
   const praise = Array.isArray(themes.praise) ? themes.praise : [];

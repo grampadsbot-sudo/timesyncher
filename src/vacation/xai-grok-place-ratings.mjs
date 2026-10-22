@@ -2,8 +2,24 @@ import {
   postXaiPlaceRatingsResponses,
   xaiGrokPlaceSearchModelId,
 } from '../../scripts/vacation-app-reply-rules.mjs';
-import { gatherThingEvidence } from './thing-evidence-dossier.mjs';
-import { applyDossierFields, prepareDossierFindings } from './thing-dossier-fields.mjs';
+import {
+  changedDossierPageUrls,
+  DEFAULT_DOSSIER_MAX_AGE_MS,
+  dossierNeedsRefresh,
+  gatherThingEvidence,
+  mergeDossierPages,
+} from './thing-evidence-dossier.mjs';
+import {
+  loadThingEvidenceDossier,
+  saveThingEvidenceDossier,
+  thingEvidenceDossierKey,
+} from './thing-evidence-dossier-store.mjs';
+import {
+  applyDossierFields,
+  dossierRebuildFields,
+  mergeSelectiveDossierFindings,
+  prepareDossierFindings,
+} from './thing-dossier-fields.mjs';
 
 export {
   parseXaiStructuredPayload,
@@ -22,7 +38,7 @@ function outputText(payload) {
 
 function dossierPrompt(dossier) {
   return [
-    'Build fields for this exact Thing using ONLY the saved dossier pages below. Never search or use remembered facts.',
+    'Build fields for this place using ONLY the saved dossier pages below. Never search or use remembered facts.',
     'Return JSON. Every factual field must be backed by an exact verbatim quote and the saved page URL.',
     'Return summary, description, price, hours, happyHourDetails as {value,quote,url}; omit unavailable fields.',
     'Description: 40-120 words naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
@@ -37,12 +53,8 @@ function dossierPrompt(dossier) {
   ].join('\n');
 }
 
-export async function fetchXaiPlaceRatings(place = {}, {
-  env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
-  gatherImpl = gatherThingEvidence, searchImpl, resolveImpl,
-} = {}) {
-  const dossier = await gatherImpl(place, { env, fetchImpl, destination, searchImpl, resolveImpl });
-  if (!dossier.pages.length) return { payload: {}, structuredText: '', parsed: { evidenceDossier: dossier } };
+async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImpl }) {
+  if (buildImpl) return buildImpl(dossier);
   const response = await postXaiPlaceRatingsResponses({
     apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
     payload: {
@@ -60,7 +72,45 @@ export async function fetchXaiPlaceRatings(place = {}, {
   } catch {
     findings = {};
   }
-  return { payload, structuredText, parsed: { evidenceDossier: prepareDossierFindings(dossier, findings) } };
+  return { payload, structuredText, findings };
+}
+
+export async function fetchXaiPlaceRatings(place = {}, {
+  env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
+  gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl,
+  dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(),
+} = {}) {
+  const key = dossierKey || thingEvidenceDossierKey(place);
+  const persisted = key ? await loadThingEvidenceDossier(key, { env, storeImpl }) : null;
+  const maxAgeExpired = persisted ? dossierNeedsRefresh(persisted, maxAgeMs, nowMs) : true;
+  const gathered = await gatherImpl(place, { env, fetchImpl, destination, searchImpl, resolveImpl });
+  const merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
+  const changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
+  const rebuildFields = persisted
+    ? dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls })
+    : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor']);
+  const skipBuilder = persisted
+    && !maxAgeExpired
+    && rebuildFields.size === 0
+    && persisted.fields
+    && Object.keys(persisted.fields).length;
+  if (skipBuilder) {
+    if (key && merged !== persisted) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+  }
+  if (!merged.pages.length) {
+    if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+  }
+  const { payload, structuredText, findings } = await callDossierBuilder(merged, {
+    env, fetchImpl, timeoutMs, buildImpl,
+  });
+  const built = prepareDossierFindings(merged, findings);
+  const final = persisted && !maxAgeExpired
+    ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
+    : built;
+  if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
+  return { payload, structuredText, parsed: { evidenceDossier: final } };
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {

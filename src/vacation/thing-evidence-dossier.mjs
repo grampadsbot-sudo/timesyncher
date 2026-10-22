@@ -59,10 +59,41 @@ function pageText(body, type) {
     .join('\n').replace(/[ \t]+/g, ' ').trim();
 }
 
+export const DEFAULT_DOSSIER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function dossierPagesVerified(dossier = {}) {
   return Array.isArray(dossier.pages) && dossier.pages.length > 0 && dossier.pages.every((page) =>
     /^https?:\/\//.test(page.url || '') && Number.isFinite(Date.parse(page.fetchedAt)) && page.text?.trim()
     && createHash('sha256').update(page.text).digest('hex') === page.sha256);
+}
+
+export function dossierNeedsRefresh(dossier = {}, maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, nowMs = Date.now()) {
+  if (!dossierPagesVerified(dossier)) return true;
+  const fetched = dossier.pages.map((page) => Date.parse(page.fetchedAt)).filter(Number.isFinite);
+  if (!fetched.length) return true;
+  const oldest = Math.min(...fetched);
+  return nowMs - oldest > Math.max(Number(maxAgeMs) || 0, 1);
+}
+
+export function mergeDossierPages(persisted = {}, gathered = {}) {
+  const byUrl = new Map((persisted.pages || []).map((page) => [page.url, page]));
+  for (const page of gathered.pages || []) byUrl.set(page.url, page);
+  return {
+    ...persisted,
+    ...gathered,
+    thing: gathered.thing || persisted.thing,
+    pages: [...byUrl.values()],
+    attempts: [...(persisted.attempts || []), ...(gathered.attempts || [])],
+  };
+}
+
+export function changedDossierPageUrls(before = [], after = []) {
+  const beforeByUrl = new Map(before.map((page) => [page.url, page.sha256]));
+  const changed = [];
+  for (const page of after) {
+    if (beforeByUrl.get(page.url) !== page.sha256) changed.push(page.url);
+  }
+  return changed;
 }
 
 export async function gatherThingEvidence(place = {}, {
