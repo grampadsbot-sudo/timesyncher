@@ -2,6 +2,7 @@
 
 import {
   formatUsd,
+  numericPrice,
   parsePrice,
   placeName,
   tabCategoryKey,
@@ -87,13 +88,7 @@ function sourceRecordFor(place, override) {
 function priceText(place, trip) {
   const override = overrideFor(trip, place);
   const row = haFields(place, override);
-  const source = sourceRecordFor(place, override);
-  const parsed =
-    parsePrice(row.price) ??
-    parsePrice(place.price) ??
-    parsePrice(source.price) ??
-    parsePrice(source.totalPrice) ??
-    parsePrice(source.nightlyRate);
+  const parsed = numericPrice(place, trip);
   if (parsed != null) return `$${parsed}`;
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return '';

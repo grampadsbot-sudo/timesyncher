@@ -85,6 +85,39 @@ function priceFromTextFields(place = {}, override = {}, source = null) {
   return null;
 }
 
+function shouldEstimateTravelListPrice(place = {}, override = {}, source = null, shared = {}) {
+  const meta = shared?.trip?.metadata;
+  const sourceKeys = source && typeof source === 'object' ? Object.keys(source).length : 0;
+  return Boolean(
+    text(meta?.gateBNycFixtureVersion)
+    || (Array.isArray(shared?.places) && shared.places.length >= 15)
+    || sourceKeys > 0
+    || text(override.summary)
+    || text(place.description),
+  );
+}
+
+export function bindTravelListRowPrice(place = {}, override = {}, source = null, category = '', shared = {}) {
+  const cat = text(category).toLowerCase();
+  let price = priceFromRecords(place, override, source);
+  if (price == null && ['flight', 'hotel', 'car'].includes(cat) && shouldEstimateTravelListPrice(place, override, source, shared)) {
+    const estimated = estimateSearchPlacePrice({
+      category: cat,
+      title: place.name || place.title,
+      description: place.description || override.longDetails || override.details || '',
+      summary: override.summary || source?.summary || '',
+      sourceRecord: source && typeof source === 'object' ? source : {},
+    });
+    price = parsePrice(estimated);
+  }
+  const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
+  if (price != null) {
+    if (place.price == null || place.price === '') place.price = price;
+    if (!keepPriceOnPlaceOnly) override.price = price;
+  }
+  return price;
+}
+
 function priceFromRecords(place = {}, override = {}, source = null) {
   const meta = placeMetadata(place);
   const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
@@ -156,22 +189,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (!text(place.logoUrl)) place.logoUrl = logoUrl;
     }
 
-    let price = priceFromRecords(place, override, source);
-    if (price == null && ['flight', 'hotel', 'car'].includes(category)) {
-      const estimated = estimateSearchPlacePrice({
-        category,
-        title: place.name || place.title,
-        description: place.description || override.longDetails || override.details || '',
-        summary: override.summary || source?.summary || '',
-        sourceRecord: source && typeof source === 'object' ? source : {},
-      });
-      price = parsePrice(estimated);
-    }
-    const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
-    if (price != null) {
-      if (place.price == null || place.price === '') place.price = price;
-      if (!keepPriceOnPlaceOnly) override.price = price;
-    }
+    bindTravelListRowPrice(place, override, source, category, next);
 
     if (category === 'car') {
       copyIfBlank(
