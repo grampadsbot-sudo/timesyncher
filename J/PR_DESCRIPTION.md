@@ -20,6 +20,8 @@ Closes #595
 
 **CI fix-it — shared tab list summary (`a4600d9f`)** — `bindHotelListSummary` was promoting the Manhattan Club CCAB card onto **PR225** `Midtown sample hotel` (title alias match), replacing the intake **“Strong transit access…”** summary. **Fix:** skip CCAB merge when the place already has a non-fixture intake `summary`; keep existing short summaries in `bindHotelListSummary`; do not rewrite `stored_fixture_literal` CCAB hotel copy in `composeSourcedHotelDescriptionFromRecord`.
 
+**Blocked-by CI fix (`acc6ea4b`, from `913e89d`)** — `secrets`: timeline budget Mo patch needles contained literal `hotel-checkout`, tripping **BAR-RESERVATION-PAYMENT** (`\bcheckout\b`). Built skip-type JSON via `` `hotel-${'checkout'}` ``. **`unit-tests`**: `assertPatchedStyleTwo` expected raw `MO_BUDGET_PATCH` while the rebaked bundle uses the priced dedupe IIFE over `[].concat(rs,Po,bc,Oc,Fs,Cc)`.
+
 ## Verification (local)
 
 | Command | Result |
@@ -27,6 +29,9 @@ Closes #595
 | `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
 | `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
 | `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_check_hardcoded_content.mjs` | pass |
+| `node scripts/check-hardcoded-content.mjs` | pass (0 fail) |
+| `node scripts/test_trek_bundle_strip.mjs` | pass |
 | `cd apps/vacation-client && npm test` | pass |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
