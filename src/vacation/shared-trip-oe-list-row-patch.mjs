@@ -33,7 +33,7 @@ function patchCarBeGrid(js = '') {
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
-const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:n.jsx("strong",{style:{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
 
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
@@ -44,7 +44,9 @@ export function patchSharedTripOeListRows(source = '') {
   js = patchCarBeGrid(js);
   if (js.includes(OE_HOTEL_JE_TITLE_NEEDLE)) {
     js = js.replace(OE_HOTEL_JE_TITLE_NEEDLE, OE_HOTEL_JE_TITLE_PATCH);
-  } else if (!js.includes('je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')) {
+  } else if (
+    !js.includes('data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')
+  ) {
     throw new Error('shared trip Oe() hotel header patch did not apply');
   }
   if (js.includes(WR_SORT_ROW_NEEDLE)) {
