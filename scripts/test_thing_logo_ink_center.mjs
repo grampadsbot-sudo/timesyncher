@@ -10,6 +10,9 @@ import {
   thingLogoInkCenterBundleSnippet,
   verticalNudgePxForInkCenter,
   verticalNudgePxForInkToScreenTarget,
+  verticalNudgePxForEmojiFallback,
+  listRowFirstNameLineCenterY,
+  emojiInkCenterCssY,
 } from '../src/vacation/thing-logo-ink-center.mjs';
 import { patchThingLogoChipAlignment } from '../src/vacation/trek-live-product-patches.mjs';
 
@@ -83,8 +86,24 @@ assert.match(snippet, /TS_LOGO_INK_CY\[key\]/);
 assert.match(snippet, /data-ts-list-row-name/);
 assert.match(snippet, /createTreeWalker/);
 assert.match(snippet, /function tsCenterThingLogoInk\(/);
+assert.match(snippet, /function tsCenterThingLogoFallback\(/);
+assert.match(snippet, /function tsCenterListLogoFallbackDom\(/);
 assert.match(snippet, /translateY/);
-assert.doesNotMatch(snippet, /getImageData/);
+assert.doesNotMatch(
+  snippet.match(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\} function tsCenterThingLogoFallback/)?.[0] || '',
+  /getImageData/,
+);
+
+const emojiNudge = verticalNudgePxForEmojiFallback({
+  chipRect: { top: 100, height: 22 },
+  emoji: '🍽️',
+  font: '800 14px system-ui',
+  targetScreenY: 109,
+  cssSize: 22,
+});
+assert.ok(Math.abs(emojiNudge) < 12);
+assert.equal(listRowFirstNameLineCenterY(null), null);
+assert.equal(emojiInkCenterCssY({ emoji: '', font: '14px sans', cssSize: 22 }), null);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G})=>{}'),

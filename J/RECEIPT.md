@@ -1,34 +1,39 @@
-# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, 2026-10-22)
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604 rethink round, 2026-10-22)
 
-**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (rethink + dirty-head base merge).
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (chief dr option a: emoji fallback centering, generic path).
 
-**Start sha:** `62d8924384d0410c444cf4304386752482b31209`  
-**Tip sha:** `c7986b95d0d5c8e63d91c88d4f935dabf8dca49b`  
-**Base merge:** `origin/migrate/trek-source` @ `6800a3b34e9a9773734f52e1526326b3961d463b` (includes #621 Motto snapshot key `676`).
+**Start sha:** `0aa9f367bc2ae845897db28e263e580c958de1c5`
 
 ## Change
 
-1. **Offline logo ink offsets:** `scripts/build_thing_logo_ink_offsets.mjs` decodes list-tab logo URLs (ImageMagick, Gate B ink-bbox threshold 24) into `src/vacation/thing-logo-ink-offsets.json` (29 URLs; e.g. Apple `inkCy` 31.5/`nh` 64, Bergdorf Goodman 8/16). `dc()` applies fractional `translateY` from `TS_LOGO_INK_CY` toward `[data-ts-list-row-name]` — no runtime canvas / CORS read.
-2. Rebaked `public/assets/index-BKun7ofk.js` (`sha256=59966f556e322baef69dcb22209d741ca6f7e3be00fe6667b8c673ec2711eddf`).
-3. Merged base #621 fixture/test updates without row-layout churn.
+Center **placeholder / emoji** list-row logo chips on the **first name line** (same target as `~/tsv-gateb/lib/row-name-frame.mjs`), without per-venue code or favicon ink-cache rows:
+
+- `src/vacation/thing-logo-ink-center.mjs`: `tsCenterListLogoFallbackDom` / `tsCenterThingLogoFallback` — canvas ink-bbox (threshold 24) + `translateY` on `.tsv-logo-fallback`; shared `listRowFirstNameLineCenterY` for image ink path too.
+- TREK `dc()`: `ref` → `tsCenterThingLogoFallback(Rn)`; fallback span gets `tsv-logo-fallback` class.
+- Rebaked `public/assets/index-BKun7ofk.js`.
+- `apps/vacation-client` `ListRow` `useLayoutEffect` + `.tsv-logo-fallback` CSS (parity).
+
+## Real-render measurement (headless Chromium)
+
+**Harness:** Playwright chromium `~/.cache/ms-playwright/chromium-1243`, ink-bbox threshold 24, first-line centre from `Range.getClientRects()` (same rule as Gate B `row-name-frame.mjs`), tolerance 1.5 px.
+
+**Attempt:** `shared-app.html` + rebaked `index-BKun7ofk.js` + `scripts/fixtures/gate-b-nyc-shared-staging.json` (share token `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y`) — **blocked:** `li[data-list-row]` did not mount within 60s (local static harness; no staging API). No model-only offsets filed.
+
+**Authority for gap_close on published head:** Ubuntu Gate B structure mode on CI head.
 
 ## Local verification
 
 | Check | Result |
 | --- | --- |
-| `node scripts/build_thing_logo_ink_offsets.mjs` | 0 (29 rows, 29 skipped fetch/decode) |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 (`sha256=724d45bfd92190186050fa28c852b485f29b6434516fecabb06312aa45edcb4e`) |
 | `node scripts/test_thing_logo_ink_center.mjs` | 0 |
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
-| `node scripts/test_pr336_vk_search_places_snapshot_keys.mjs` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
-| `cd apps/vacation-client && npm test` | FAIL `detail.unit.mjs` — missing `@neondatabase/serverless` before `npm install` in app; not re-run to completion after install |
-| Full `scripts/offline-tests.txt` loop | FAIL `scripts/test_day_by_day_map_marker_bounds_chrome.mjs` — `/usr/bin/google-chrome-stable` missing |
-| Local Gate B gap_close / events capture | not run (no Chrome for `capture.mjs`) |
+| `cd apps/vacation-client && npm test` | 0 (layout chrome skipped: no CHROME_PATH in npm test harness) |
 
-## Verdict
+## Tip sha
 
-Merge + offline ink table landed on tip `c7986b95`; logo-centre gap_close not self-verified locally. CI + Ubuntu Gate B on published head are authority for #601 close.
+`8c4e5c33b7d689be969f3138bbdb5766047be4a1` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.

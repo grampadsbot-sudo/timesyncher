@@ -627,6 +627,15 @@ body {
   object-fit: contain;
 }
 
+.tsv-logo-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: inherit;
+  line-height: 1;
+}
+
 .tsv-day-screen {
   min-width: 0;
   max-width: 100%;
