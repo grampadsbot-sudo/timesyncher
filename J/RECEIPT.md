@@ -25,4 +25,4 @@
 
 Rethink approach landed; not self-certified. CI + Ubuntu Gate B structure on pushed head decide PASS/FAIL.
 
-**Tip sha:** _(filled after commit)_
+**Tip sha:** `a14982b9e4f46c275990067df5e3b388796dd631`
