@@ -25,6 +25,12 @@ function text(value, max = 4000) {
 function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
 }
+function isThinNeighborhoodListSummary(value = '') {
+  const row = text(value, 500);
+  if (!row || !/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) return false;
+  if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
+  return !/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row);
+}
 
 export function isGenericDescription(value = '') {
   const row = text(value, 4000);
@@ -298,22 +304,11 @@ function shortLineFromSourceText(value = '', max = 120) {
       const next = text(`${line} ${clause}`, 4000);
       if (line && next.length > max) break;
       line = next;
-      if (line.split(' ').length >= SHORT_LINE_MIN_WORDS) break;
+      if (wordCount(line) >= SHORT_LINE_MIN_WORDS && !isThinNeighborhoodListSummary(line)) break;
     }
     return text(line, max);
   }
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
-}
-
-function ccabFactText(sourceRecord = {}, place = {}) {
-  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
-}
-
-function ccabNeighborhoodTagline(sourceRecord = {}, title = '') {
-  const neighborhood = ccabFactText(sourceRecord, {}).match(/Neighborhood:\s*([^;]+)/i);
-  const name = text(title, 160);
-  if (neighborhood && name) return text(`${name} in ${neighborhood[1]}`, 120);
-  return '';
 }
 
 function descriptionWhenJudgeFails({
@@ -325,15 +320,20 @@ function descriptionWhenJudgeFails({
   rawDescription = '',
 } = {}) {
   const cat = text(category, 80).toLowerCase();
-  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  const ccabFacts = text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFacts)) return '';
   return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
 }
 
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
-  if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
-    const tagline = ccabNeighborhoodTagline(sourceRecord, title) || shortLineFromSourceText(longDescription);
+  if (!summary && longDescription && descriptionPassesDetailJudge(longDescription, title)) {
+    const neighborhood = text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500)
+      .match(/Neighborhood:\s*([^;]+)/i);
+    const name = text(title, 160);
+    const tagline = (neighborhood && name ? text(`${name} in ${neighborhood[1]}`, 120) : '')
+      || shortLineFromSourceText(longDescription);
     if (tagline) return tagline;
   }
   if (itinerary && itinerary !== longDescription) return itinerary;

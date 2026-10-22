@@ -16,6 +16,10 @@ import {
 import { STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../../../src/vacation/flight-list-row-summary.mjs';
 import { patchThingDetailFields } from '../../../src/vacation/trek-thing-detail-fields-patch.mjs';
 
+function wordCount(value) {
+  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
 const trip = applyLiveAppListRowFields({
   places: [
     { id: 1, name: 'Zebra Hotel', category_name: 'Hotel' },
@@ -137,8 +141,69 @@ const hotelRowTrip = applyLiveAppListRowFields({
 assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
 assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
 
-function wordCount(value) {
-  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
-}
+const shortNeighborhoodTrip = applyLiveAppListRowFields({
+  places: [{ id: 93, name: 'Park Central Hotel New York', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:93': {
+      category: 'hotel',
+      price: 144,
+      summary: 'Neighborhood: Midtown / Central Park South;',
+      longDetails:
+        'Neighborhood: Midtown / Central Park South; Rating: 3.8 (~7.6K); Price: $144/night; strong Midtown base.',
+    },
+  },
+});
+const shortNeighborhoodLine = rowSummary(shortNeighborhoodTrip.places[0], shortNeighborhoodTrip);
+assert.ok(wordCount(shortNeighborhoodLine) >= 6, shortNeighborhoodLine);
+assert.match(shortNeighborhoodLine, /3\.8|144|night/i);
+
+const uwsStubTrip = applyLiveAppListRowFields({
+  places: [{ id: 94, name: 'Hotel Beacon', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:94': {
+      category: 'hotel',
+      price: 736,
+      summary: 'Neighborhood: Upper West Side;',
+      longDetails:
+        'Neighborhood: Upper West Side; Rating: 8.8 (2,982 Booking.com reviews); Price: $736/night; sale $5,155/week for 2 adults; Kitchen studio; excellent but expensive; Status: candidate, not booked.',
+    },
+  },
+});
+const uwsStubLine = rowSummary(uwsStubTrip.places[0], uwsStubTrip);
+assert.ok(wordCount(uwsStubLine) >= 6, uwsStubLine);
+assert.match(uwsStubLine, /736|kitchen|8\.8/i);
+assert.notEqual(uwsStubLine.toLowerCase(), 'neighborhood: upper west side;');
+
+const thinHotelTrip = applyLiveAppListRowFields({
+  places: [{ id: 92, name: 'Hotel A', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:92': {
+      category: 'hotel',
+      price: 518,
+      summary: 'Neighborhood: Upper West Side; Rating: 8.',
+      longDetails:
+        'Neighborhood: Upper West Side; Rating: 8.4 (4,906 Booking.com reviews); Price: $518/night; Breakfast included; free cancellation noted; strong UWS fit.',
+    },
+  },
+});
+const thinHotelLine = rowSummary(thinHotelTrip.places[0], thinHotelTrip);
+assert.ok(wordCount(thinHotelLine) >= 6, thinHotelLine);
+assert.notEqual(thinHotelLine.toLowerCase(), 'neighborhood: upper west side; rating: 8.');
+assert.match(thinHotelLine, /breakfast|518|night/i);
+
+const romerTrip = applyLiveAppListRowFields({
+  places: [{ id: 625, name: 'Romer Hell\u2019s Kitchen', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:625': {
+      category: 'hotel',
+      price: 425,
+      summary: 'Neighborhood: Hell\u2019s Kitchen; Rating: 8. 7 (4,512 Booking.',
+      longDetails:
+        'Neighborhood: Hell\u2019s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.',
+    },
+  },
+});
+const romerLine = rowSummary(romerTrip.places[0], romerTrip);
+assert.match(romerLine, /king room|425|Standard/i);
 
 console.log('vacation-client list row unit checks passed');
