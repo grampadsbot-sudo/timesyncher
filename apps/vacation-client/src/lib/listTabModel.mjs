@@ -312,7 +312,10 @@ export function carSubtitle(place, trip) {
   );
 }
 
-import { pickFlightListRowSummaryText } from '../../../../src/vacation/flight-list-row-summary.mjs';
+import {
+  isThinNeighborhoodListSummary,
+  pickFlightListRowSummaryText,
+} from '../../../../src/vacation/flight-list-row-summary.mjs';
 
 export { pickFlightListRowSummaryText };
 
@@ -329,7 +332,20 @@ function storedRowSummaryText(place, trip) {
 }
 
 export function rowSummary(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
   const raw = storedRowSummaryText(place, trip);
+  const longBody = text(
+    override.longDetails ||
+      override.details ||
+      source.longDetails ||
+      source.details ||
+      place.description,
+  );
+  if (isThinNeighborhoodListSummary(raw) && longBody) {
+    const picked = pickFlightListRowSummaryText(longBody);
+    return picked || longBody;
+  }
   if (tabCategoryKey(place, trip) !== 'flight') return raw;
   const picked = pickFlightListRowSummaryText(raw);
   return picked || raw;

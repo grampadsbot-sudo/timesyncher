@@ -1,3 +1,40 @@
+# VK issue #607 receipt (cursor-ubuntu vkfill-607)
+
+**Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`  
+**Tip sha:** `dd379a36`
+
+## Problem
+
+Gate B structure on `migrate/trek-source` (`e3364ac5`): three hotel list rows shared the same description `neighborhood: upper west side; rating: 8.` (hotels-1280/390). Stored VK summaries are thin `Neighborhood: …; Rating: N.` templates; `rr()` and list-row pick logic treated them as final copy and stopped clause expansion at six words, so distinct hotels collapsed to the same line.
+
+## Fix
+
+- Reject thin neighborhood/rating template summaries in `pickFlightListRowSummaryText` / `STORED_SUMMARY_LIST_ROW_PICK_BUNDLE`; keep accumulating description clauses until the line is substantive.
+- Fall back to `longDetails` / `description` in patched `rr()` (`trek-thing-detail-fields-patch.mjs`).
+- Align vacation-client `rowSummary` and `sourcedShortSummary` / `shortLineFromSourceText` in `trip-thing-enrichment.mjs`.
+- Rebake `public/assets/index-BKun7ofk.js`.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node apps/vacation-client/test/listRows.unit.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+Simulated PR336 hotel list-row pick: 20 rows, 0 description groups with ≥3 identical lines (was 3 sharing UWS rating-8 template).
+
+## Verdict
+
+Product fix on `vkfill/607-20261021175801`; CI + Gate B on PR head are authority for close.
+
+---
+
 # VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  

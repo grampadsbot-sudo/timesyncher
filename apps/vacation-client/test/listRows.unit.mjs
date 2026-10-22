@@ -16,6 +16,10 @@ import {
 import { STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../../../src/vacation/flight-list-row-summary.mjs';
 import { patchThingDetailFields } from '../../../src/vacation/trek-thing-detail-fields-patch.mjs';
 
+function wordCount(value) {
+  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
 const trip = applyLiveAppListRowFields({
   places: [
     { id: 1, name: 'Zebra Hotel', category_name: 'Hotel' },
@@ -137,8 +141,23 @@ const hotelRowTrip = applyLiveAppListRowFields({
 assert.equal(rowSummary(flightRowTrip.places[0], flightRowTrip), derivedFlightSummary);
 assert.equal(rowSummary(hotelRowTrip.places[0], hotelRowTrip), longFlightNarrative);
 
-function wordCount(value) {
-  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
-}
+const thinHotelTrip = applyLiveAppListRowFields({
+  places: [{ id: 92, name: 'Hotel A', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:92': {
+      category: 'hotel',
+      price: 518,
+      summary: 'Neighborhood: Upper West Side; Rating: 8.',
+      longDetails:
+        'Neighborhood: Upper West Side; Rating: 8.4 (4,906 Booking.com reviews); Price: $518/night; Breakfast included; free cancellation noted; strong UWS fit.',
+    },
+  },
+});
+const thinHotelLine = rowSummary(thinHotelTrip.places[0], thinHotelTrip);
+assert.ok(wordCount(thinHotelLine) >= 6, thinHotelLine);
+assert.notEqual(thinHotelLine.toLowerCase(), 'neighborhood: upper west side; rating: 8.');
+
+const patchedRr = patchThingDetailFields('prefix,rr=G=>ha(G).summary??"",suffix');
+assert.ok(patchedRr.includes('longDetails'), patchedRr.slice(0, 160));
 
 console.log('vacation-client list row unit checks passed');

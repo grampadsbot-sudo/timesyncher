@@ -15,6 +15,14 @@ function clipText(value, max) {
   return row.slice(0, max).trim();
 }
 
+export function isThinNeighborhoodListSummary(value = '') {
+  const row = text(value);
+  if (!row) return false;
+  if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
+  if (/^Neighborhood:\s*.+;\s*$/i.test(row) && wordCount(row) < 12) return true;
+  return false;
+}
+
 function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
   const row = text(value);
   if (!row) return '';
@@ -25,7 +33,7 @@ function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
       const next = clipText(`${line} ${clause}`, 4000);
       if (line && next.length > max) break;
       line = next;
-      if (wordCount(line) >= LIST_ROW_MIN_WORDS) break;
+      if (wordCount(line) >= LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(line)) break;
     }
     return clipText(line, max);
   }
@@ -35,6 +43,7 @@ function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
 export function pickFlightListRowSummaryText(value = '') {
   const s = text(value);
   if (!s) return '';
+  if (isThinNeighborhoodListSummary(s)) return '';
   if (wordCount(s) <= 20) return s;
   if (/^Documented .+ option/i.test(s)) return s;
   const line = shortLineFromStoredSummary(s);
@@ -42,4 +51,4 @@ export function pickFlightListRowSummaryText(value = '') {
 }
 
 export const STORED_SUMMARY_LIST_ROW_PICK_BUNDLE =
-  't=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n||"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};if(wc(s)<=20)return s;if(/^Documented .+ option/i.test(s))return s;const cl=s.match(/[^.!?;]+[.!?;]/gy);if(cl){let line="";for(const x of cl){const next=clip((line?line+" ":"")+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6)break}const out=clip(line,120);return wc(out)>=6?out:""}const ten=clip(s.split(/\\s+/).slice(0,10).join(" "),120);return wc(ten)>=6?ten:""}';
+  't=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n||"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};const thin=n=>{const r=String(n||"").trim();return/^Neighborhood:\\s*.+;\\s*Rating:\\s*[\\d.]+\\.?\\s*$/i.test(r)||(/^Neighborhood:\\s*.+;\\s*$/i.test(r)&&wc(r)<12)};if(thin(s))return"";if(wc(s)<=20)return s;if(/^Documented .+ option/i.test(s))return s;const cl=s.match(/[^.!?;]+[.!?;]/gy);if(cl){let line="";for(const x of cl){const next=clip((line?line+" ":"")+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6&&!thin(line))break}const out=clip(line,120);return wc(out)>=6&&!thin(out)?out:""}const ten=clip(s.split(/\\s+/).slice(0,10).join(" "),120);return wc(ten)>=6&&!thin(ten)?ten:""}';

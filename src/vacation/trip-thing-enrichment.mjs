@@ -297,15 +297,24 @@ function shortLineFromSourceText(value = '', max = 120) {
       const next = text(`${line} ${clause}`, 4000);
       if (line && next.length > max) break;
       line = next;
-      if (line.split(' ').length >= SHORT_LINE_MIN_WORDS) break;
+      if (wordCount(line) >= SHORT_LINE_MIN_WORDS && !isThinNeighborhoodSummary(line)) break;
     }
     return text(line, max);
   }
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
+function isThinNeighborhoodSummary(value = '') {
+  const row = text(value, 500);
+  if (!row) return false;
+  if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
+  if (/^Neighborhood:\s*.+;\s*$/i.test(row) && wordCount(row) < 12) return true;
+  return false;
+}
+
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
+  if (isThinNeighborhoodSummary(summary)) summary = '';
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
   if (itinerary && itinerary !== longDescription) return itinerary;
   if (summary && summary === longDescription) return shortLineFromSourceText(summary);
