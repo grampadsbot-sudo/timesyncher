@@ -1,6 +1,8 @@
-# VK PR #610 auto round (cursor-ubuntu vkfill-610, 2026-10-22)
+# VK PR #610 (cursor-ubuntu vkfill-610, 2026-10-22)
 
-**Tip sha:** `3121f3be`
+Host merged `migrate/trek-source` at `6800a3b` (base #621 snapshot-key fixture hardening included).
+
+**Tip sha:** (set after commit)
 
 **Change:** #607 — hotel `rowSummary` treats neighborhood-only stubs (`Neighborhood: …;`) like thin rating lines; `pickHotelListDescriptionFromLongCopy` keeps absorbing clauses until the line is not a stub, so UWS hotels no longer share one list description.
 

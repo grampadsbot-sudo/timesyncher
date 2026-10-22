@@ -1,5 +1,7 @@
 Closes #607
 
+Host merged `migrate/trek-source` at `6800a3b` (includes base #621 pr336 snapshot key fix).
+
 ## Summary
 
 - Hotel list rows: when stored summary is only `Neighborhood: …;` (or other thin neighborhood/rating stub), derive the visible line from `longDetails` / long copy so each hotel gets a distinct, substantive description (#607).
