@@ -23,6 +23,8 @@ Flights list 16/16 and Budget hotel/flight rows missing `$` amounts while Hotels
 | `node scripts/test_gate_b_product_row_fields.mjs` | pass |
 | `cd apps/vacation-client && npm test` | pass |
 
+**Tip sha:** `92eda194829679097df142a1bd8a4d6016c81d67`
+
 Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
 
 ---
