@@ -18,11 +18,8 @@ import {
   applyDossierFields,
   dossierRebuildFields,
   mergeSelectiveDossierFindings,
-  dossierWriterProblems,
   prepareDossierFindings,
 } from './thing-dossier-fields.mjs';
-
-export const DOSSIER_WRITER_MAX_RETRIES = 2;
 
 export {
   parseXaiStructuredPayload,
@@ -39,7 +36,7 @@ function outputText(payload) {
     .filter((block) => ['output_text', 'text'].includes(block.type)).map((block) => block.text || '').join('');
 }
 
-function dossierPrompt(dossier, feedback = []) {
+function dossierPrompt(dossier) {
   return [
     'Build fields for this place using ONLY the saved dossier pages below. Never search or use remembered facts.',
     'Return JSON. Every factual field must be backed by an exact verbatim quote and the saved page URL.',
@@ -52,19 +49,17 @@ function dossierPrompt(dossier, feedback = []) {
     'Return reviews: four {text,rating,cites,verdict} representative assessments in your own words. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. cites: exact phrases from the reviewExcerpts. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
     'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
     'No per-review sources or URLs: those are on the dossier evidence list. Insufficient evidence means omitted fields, never filler.',
-    'Quotes must be copied character-for-character from one saved page text; never paraphrase, merge or trim words inside a quote.',
-    ...(feedback.length ? ['Your previous answer failed these checks. Fix every one:', ...feedback.map((row) => `- ${row}`)] : []),
     JSON.stringify(dossier),
   ].join('\n');
 }
 
-async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImpl, feedback = [] }) {
-  if (buildImpl) return buildImpl(dossier, { feedback });
+async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImpl }) {
+  if (buildImpl) return buildImpl(dossier);
   const response = await postXaiPlaceRatingsResponses({
     apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
     payload: {
       model: xaiGrokPlaceSearchModelId(env),
-      input: [{ role: 'user', content: dossierPrompt(dossier, feedback) }],
+      input: [{ role: 'user', content: dossierPrompt(dossier) }],
       text: { format: { type: 'json_object' } },
     },
   });
@@ -107,24 +102,15 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
   }
-  let result = await callDossierBuilder(merged, { env, fetchImpl, timeoutMs, buildImpl });
-  const writerAttempts = [];
-  for (let retry = 0; retry < DOSSIER_WRITER_MAX_RETRIES; retry += 1) {
-    const problems = dossierWriterProblems(merged, result.findings);
-    writerAttempts.push({ attempt: retry + 1, problems });
-    if (!problems.length) break;
-    result = await callDossierBuilder(merged, { env, fetchImpl, timeoutMs, buildImpl, feedback: problems });
-  }
-  if (writerAttempts.length === DOSSIER_WRITER_MAX_RETRIES && writerAttempts.at(-1).problems.length) {
-    writerAttempts.push({ attempt: DOSSIER_WRITER_MAX_RETRIES + 1, problems: dossierWriterProblems(merged, result.findings) });
-  }
-  const { payload, structuredText, findings } = result;
+  const { payload, structuredText, findings } = await callDossierBuilder(merged, {
+    env, fetchImpl, timeoutMs, buildImpl,
+  });
   const built = prepareDossierFindings(merged, findings);
   const final = persisted && !maxAgeExpired
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
     : built;
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
-  return { payload, structuredText, writerAttempts, parsed: { evidenceDossier: final } };
+  return { payload, structuredText, parsed: { evidenceDossier: final } };
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {

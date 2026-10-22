@@ -127,31 +127,6 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
   return next;
 }
 
-export function dossierWriterProblems(dossier = {}, findings = {}) {
-  const problems = [];
-  if (!findings || typeof findings !== 'object' || !Object.keys(findings).length) {
-    return ['The response was empty or not JSON. Return the full JSON object.'];
-  }
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
-    const claim = findings[key];
-    if (!claim) continue;
-    if (!cited(dossier, claim)) {
-      problems.push(`${key}.quote is not verbatim in the page at ${JSON.stringify(claim.url || '')}: ${JSON.stringify(String(claim.quote || '').slice(0, 300))}. Copy a sentence character-for-character from that page's text, or omit ${key}.`);
-    }
-  }
-  const description = findings.description;
-  if (!description || !norm(description.value)) {
-    problems.push('description is missing. Write 40-120 words naming the place, with a verbatim quote.');
-  } else {
-    const count = words(description.value).length;
-    if (count < 40 || count > 120) problems.push(`description.value has ${count} words; it must have 40-120 words.`);
-    if (!norm(description.value).includes(norm(dossier.thing))) {
-      problems.push(`description.value must include the exact name ${JSON.stringify(dossier.thing || '')}.`);
-    }
-  }
-  return problems;
-}
-
 export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
