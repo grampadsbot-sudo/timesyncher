@@ -2,7 +2,8 @@
 
 **Base merge:** Host merged `origin/migrate/trek-source` at `6edb0791f521004df36fc3b0ef58819127839942` into `b6db71429083a56615f2ebdb40eba9d28d5a753b` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 3). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept).
 
-**Start sha:** `b6db71429083a56615f2ebdb40eba9d28d5a753b`
+**Start sha:** `b6db71429083a56615f2ebdb40eba9d28d5a753b`  
+**Merge tip:** `53139acd3ea7c46e9ab6dff2492852bd795f125d`
 
 ## Problem
 
@@ -12,11 +13,22 @@ PR head was `mergeable_state=dirty` vs base `migrate/trek-source` tip `6edb079` 
 
 - Resolved `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` keeping PR #599 narrative; noted base merge at `6edb0791`.
 
-## Checks (local, post-merge — pending commit)
+## Checks (local, merge tip `53139acd`)
 
 | Command | Result |
 | --- | --- |
-| (run after commit) | |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` full loop | **fail** lane VM: `test_day_by_day_map_marker_bounds_chrome.mjs` (no google-chrome-stable); `test_live_transcript_dialog_pdf.mjs:651` (`gbrain-cli-get_page` vs `bundled-get_page`); `test_same_selection_capture.mjs` / `test_capture_fixture_replay_harness.mjs` (stale git worktree under `~/tsv-dispatch/pr-src`); `test_purchase_email_app_link.mjs` (ENOENT google-chrome) |
+
+**Verdict:** BASE-MERGE complete; host push + CI + Gate B on `53139acd` are authority (not self-certified).
 
 ---
 
