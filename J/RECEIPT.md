@@ -2,7 +2,7 @@
 
 Host merged `migrate/trek-source` at `6800a3b` (base #621 snapshot-key fixture hardening included).
 
-**Tip sha:** `6faf4311`
+**Tip sha:** `39d8f9d0`
 
 **Change:** #607 — hotel `rowSummary` treats neighborhood-only stubs (`Neighborhood: …;`) like thin rating lines; `pickHotelListDescriptionFromLongCopy` keeps absorbing clauses until the line is not a stub, so UWS hotels no longer share one list description.
 
