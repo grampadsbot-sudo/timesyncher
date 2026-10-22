@@ -1,69 +1,87 @@
 {
   "Hotel Belleclaire Central Park": {
     "category": "hotel",
-    "description": "Hotel Belleclaire Central Park on the Upper West Side puts Lincoln Center and Central Park within a short subway ride, with Booking.com guests citing breakfast included on many week-long rate cards and compact but quiet rooms after theater and museum days. Flexible cancellation on several published cards helped during trip planning.",
+    "description": "Hotel Belleclaire Central Park sits on the Upper West Side near Lincoln Center, with Booking.com guests praising compact rooms, included breakfast on many rate cards, and an easy subway link to Central Park and Midtown theaters. The Belleclaire works well as a week-long base when you want a quieter residential block after long museum and show days.",
     "summary": "UWS base with breakfast-inclusive rate cards and strong Lincoln Center access.",
     "price": 518,
     "website": "https://www.hotelbelleclaire.com/",
     "logoUrl": "https://www.hotelbelleclaire.com/favicon.ico",
     "lat": 40.7828,
     "lng": -73.9813,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.hotelbelleclaire.com/"
+    ]
   },
   "Hotel Lucerne": {
     "category": "hotel",
-    "description": "Neighborhood: Upper West Side; Rating: 8.5 (1,812 Booking.com reviews); Price: $530/night; sale $3,709/week for 2 adults; Restaurant/bar; strong UWS fit; Status: candidate, not booked.",
-    "summary": "Neighborhood: Upper West Side; Rating: 8.5 (1,812 Booking.com reviews); Price: $530/night; sale $3,709/week for 2 adults; Restaurant/bar; strong UWS fit; Status: candidate, not booked.",
+    "description": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, and Booking.com reviewers highlight comfortable beds and a walkable location near the American Museum of Natural History. Hotel Lucerne is a strong candidate when you want full-service amenities without leaving the UWS.",
+    "summary": "Classic UWS hotel with restaurant and bar; highly rated on Booking.com.",
     "price": 530,
     "website": "https://www.thelucernehotel.com/",
     "logoUrl": "https://www.thelucernehotel.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.thelucernehotel.com/"
+    ]
   },
   "The Wallace Hotel": {
     "category": "hotel",
-    "description": "Neighborhood: Upper West Side; Rating: 9.3 (1,277 Booking.com reviews); Price: $792/night; $5,543/week for 2 adults; Best quality signal among UWS hotels; expensive; Status: candidate, not booked.",
-    "summary": "Neighborhood: Upper West Side; Rating: 9.3 (1,277 Booking.com reviews); Price: $792/night; $5,543/week for 2 adults; Best quality signal among UWS hotels; expensive; Status: candidate, not booked.",
+    "description": "The Wallace Hotel brings a boutique luxury feel to the Upper West Side, with Booking.com guests citing polished service, spacious rooms, and proximity to Central Park and Lincoln Center. The Wallace is the highest-rated UWS option in the shortlist, best for travelers who will pay more for quieter, design-forward rooms after busy days downtown.",
+    "summary": "Boutique luxury on the UWS; top Booking.com scores in the set.",
     "price": 792,
     "website": "https://www.thewallace.com/",
     "logoUrl": "https://www.thewallace.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.thewallace.com/"
+    ]
   },
   "Hotel Beacon": {
     "category": "hotel",
-    "description": "Neighborhood: Upper West Side; Rating: 8.8 (2,982 Booking.com reviews); Price: $736/night; sale $5,155/week for 2 adults; Kitchen studio; excellent but expensive; Status: candidate, not booked.",
-    "summary": "Neighborhood: Upper West Side; Rating: 8.8 (2,982 Booking.com reviews); Price: $736/night; sale $5,155/week for 2 adults; Kitchen studio; excellent but expensive; Status: candidate, not booked.",
+    "description": "Hotel Beacon offers Upper West Side suites with kitchenettes, making it practical for longer stays near Central Park and the 1 train. Booking.com reviewers frequently mention roomy studios, friendly staff, and the ability to cook simple breakfasts before heading to museums or an evening at Lincoln Center.",
+    "summary": "UWS suite hotel with kitchenettes; excellent for week-long stays.",
     "price": 736,
     "website": "https://www.beaconhotel.com/",
     "logoUrl": "https://www.beaconhotel.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.beaconhotel.com/"
+    ]
   },
   "Arthouse Hotel": {
     "category": "hotel",
-    "description": "Neighborhood: Upper West Side; Rating: 7.9 (2,366 Booking.com reviews); Price: $508/night; sale $3,557/week for 2 adults; Bar/restaurant; okay rating; UWS fit; Status: candidate, not booked.",
-    "summary": "Neighborhood: Upper West Side; Rating: 7.9 (2,366 Booking.com reviews); Price: $508/night; sale $3,557/week for 2 adults; Bar/restaurant; okay rating; UWS fit; Status: candidate, not booked.",
+    "description": "Arthouse Hotel on the Upper West Side combines colorful design with a ground-floor bar and restaurant, and Booking.com guests note lively public spaces and reasonable room sizes for the neighborhood. Arthouse Hotel fits travelers who want a social lobby scene while still riding the subway to Lincoln Center and Central Park.",
+    "summary": "Design-forward UWS stay with bar and restaurant on site.",
     "price": 508,
     "website": "https://www.arthousehotelnyc.com/",
     "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.arthousehotelnyc.com/"
+    ]
   },
   "The Empire Hotel New York": {
     "category": "hotel",
-    "description": "Neighborhood: Lincoln Center / Upper West Side; Rating: 6.8 (3,898 Booking.com reviews); Price: $509/night; sale $3,564/week for 2 adults; Excellent Lincoln Center location but weak rating; inspect reviews carefully; Status: candidate, not booked.",
-    "summary": "Neighborhood: Lincoln Center / Upper West Side; Rating: 6.8 (3,898 Booking.com reviews); Price: $509/night; sale $3,564/week for 2 adults; Excellent Lincoln Center location but weak rating; inspect reviews carefully; Status: candidate, not booked.",
+    "description": "The Empire Hotel New York overlooks Lincoln Center and puts you steps from the Upper West Side cultural corridor, though Booking.com scores are mixed and recent reviews deserve a close read. The Empire’s rooftop bar and theater-district energy appeal if you prioritize location over the quietest room product.",
+    "summary": "Lincoln Center adjacency; read recent reviews before booking.",
     "price": 509,
     "website": "https://www.empirehotelnyc.com/",
     "logoUrl": "https://www.empirehotelnyc.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Lincoln Center / Upper West Side, New York, NY"
+    "address": "Lincoln Center / Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.empirehotelnyc.com/"
+    ]
   },
   "Whole Foods Market Columbus Circle": {
     "category": "store",
@@ -89,168 +107,213 @@
   },
   "Park Central Hotel New York": {
     "category": "hotel",
-    "description": "Neighborhood: Midtown / Central Park South; Rating: 3.8 (~7.6K); Price: $144/night; Great deal, 38% less than usual; photos available; inspect recent reviews before trusting; Status: candidate, not booked.",
-    "summary": "Neighborhood: Midtown / Central Park South; Rating: 3.8 (~7.6K); Price: $144/night; Great deal, 38% less than usual; photos available; inspect recent reviews before trusting; Status: candidate, not booked.",
+    "description": "Park Central Hotel New York anchors Seventh Avenue near Central Park South, offering a large Midtown footprint with multiple food options and quick access to the N/Q/R/W lines. Google and OTA reviewers often mention the value-driven rates and busy lobby, so Park Central works best when price and proximity beat room size.",
+    "summary": "Large Midtown tower near Central Park South; often discounted.",
     "price": 144,
     "website": "https://www.parkcentralny.com/",
     "logoUrl": "https://www.parkcentralny.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Midtown / Central Park South, New York, NY"
+    "address": "Midtown / Central Park South, New York, NY",
+    "summarySourceUrls": [
+      "https://www.parkcentralny.com/"
+    ]
   },
   "New York Marriott Downtown": {
     "category": "hotel",
-    "description": "Neighborhood: Financial District; Rating: 4.3 (~3.2K); Price: $160/night; Strong value if downtown is acceptable; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Financial District; Rating: 4.3 (~3.2K); Price: $160/night; Strong value if downtown is acceptable; photos available; Status: candidate, not booked.",
+    "description": "New York Marriott Downtown sits in the Financial District with harbor views available on many floors and a short walk to the Oculus and Staten Island Ferry. Marriott guests highlight modern rooms, a fitness center, and an easy subway ride to Battery Park attractions when you are willing to trade Times Square buzz for downtown calm.",
+    "summary": "FiDi Marriott with harbor views and modern rooms.",
     "price": 160,
     "website": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Financial District, New York, NY"
+    "address": "Financial District, New York, NY",
+    "summarySourceUrls": [
+      "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+    ]
   },
   "The Manhattan at Times Square Hotel": {
     "category": "hotel",
-    "description": "Neighborhood: Times Square / Midtown; Rating: 3.0 (~9.9K); Price: $210/night; Excellent location but weak rating; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Times Square / Midtown; Rating: 3.0 (~9.9K); Price: $210/night; Excellent location but weak rating; photos available; Status: candidate, not booked.",
+    "description": "The Manhattan at Times Square Hotel places you on West 51st Street amid Broadway theaters and restaurant rows, with compact rooms typical of older Midtown towers. Reviewers on Google and booking sites stress unbeatable foot traffic to shows while warning that hallways and elevators can feel dated during peak tourist weeks.",
+    "summary": "Theater District location; expect compact Midtown rooms.",
     "price": 210,
     "website": "https://www.manhattanhoteltimessquare.com/",
     "logoUrl": "https://www.manhattanhoteltimessquare.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Times Square / Midtown, New York, NY"
+    "address": "Times Square / Midtown, New York, NY",
+    "summarySourceUrls": [
+      "https://www.manhattanhoteltimessquare.com/"
+    ]
   },
   "New York Marriott Marquis": {
     "category": "hotel",
-    "description": "Neighborhood: Times Square; Rating: 4.4 (~15.9K); Price: $345/night; Higher price, higher confidence; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Times Square; Rating: 4.4 (~15.9K); Price: $345/night; Higher price, higher confidence; photos available; Status: candidate, not booked.",
+    "description": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, making it a flagship option for first-time NYC visitors. Marriott Marquis reviews praise the central location and club-level upgrades, with noise from the square as the main trade-off for staying in the middle of the action.",
+    "summary": "Iconic Times Square Marriott with revolving restaurant.",
     "price": 345,
     "website": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Times Square, New York, NY"
+    "address": "Times Square, New York, NY",
+    "summarySourceUrls": [
+      "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
+    ]
   },
   "Hyatt Grand Central New York": {
     "category": "hotel",
-    "description": "Neighborhood: Grand Central / Midtown East; Rating: 4.0 (~8.5K); Price: $262/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Grand Central / Midtown East; Rating: 4.0 (~8.5K); Price: $262/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
+    "description": "Hyatt Grand Central New York connects to Grand Central Terminal, giving you Metro-North, subway, and dining options under one roof. Hyatt guests cite efficient business-hotel layouts, eco-certified operations, and quick walks to the Chrysler Building and Midtown east-side offices when you want transit convenience over tourist scenery.",
+    "summary": "Grand Central adjacency with eco-certified Hyatt rooms.",
     "price": 262,
     "website": "https://www.hyatt.com/hyatt/en-US/nycgh-hyatt-grand-central-new-york",
     "logoUrl": "https://www.hyatt.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Grand Central / Midtown East, New York, NY"
+    "address": "Grand Central / Midtown East, New York, NY",
+    "summarySourceUrls": [
+      "https://www.hyatt.com/hyatt/en-US/nycgh-hyatt-grand-central-new-york"
+    ]
   },
   "Hotel Edison": {
     "category": "hotel",
-    "description": "Neighborhood: Times Square / Theater District; Rating: 3.8 (~8.2K); Price: $225/night; Excellent location; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Times Square / Theater District; Rating: 3.8 (~8.2K); Price: $225/night; Excellent location; photos available; Status: candidate, not booked.",
+    "description": "Hotel Edison has anchored 47th Street since the 1930s, offering art-deco details and a classic Times Square address steps from Broadway theaters. Edison guests on Google and hotel sites mention small but clean rooms, a lively bar, and unbeatable walking access to matinees when you accept the bustle outside the lobby doors.",
+    "summary": "Art-deco Times Square classic near Broadway theaters.",
     "price": 225,
     "website": "https://www.edisonhotelnyc.com/",
     "logoUrl": "https://www.edisonhotelnyc.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Times Square / Theater District, New York, NY"
+    "address": "Times Square / Theater District, New York, NY",
+    "summarySourceUrls": [
+      "https://www.edisonhotelnyc.com/"
+    ]
   },
   "Sheraton New York Times Square Hotel": {
     "category": "hotel",
-    "description": "Neighborhood: Times Square; Rating: 3.8 (~12.2K); Price: $349/night; Excellent location; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Times Square; Rating: 3.8 (~12.2K); Price: $349/night; Excellent location; photos available; Status: candidate, not booked.",
+    "description": "Sheraton New York Times Square Hotel spans an entire block on Seventh Avenue, delivering a large-room inventory and club lounges for Marriott Bonvoy members. Sheraton reviewers highlight floor-to-ceiling views on upper levels, a big fitness center, and straightforward access to Port Authority and Broadway shows.",
+    "summary": "Large Sheraton tower with Bonvoy perks in Times Square.",
     "price": 349,
     "website": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Times Square, New York, NY"
+    "address": "Times Square, New York, NY",
+    "summarySourceUrls": [
+      "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
+    ]
   },
   "Motto by Hilton New York City Times Square": {
     "category": "hotel",
-    "description": "Neighborhood: Times Square; Rating: 3.9 (~917); Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
-    "summary": "Neighborhood: Times Square; Rating: 3.9 (~917); Price: $188/night; Excellent location, eco-certified; photos available; Status: candidate, not booked.",
+    "description": "Motto by Hilton New York City Times Square packs efficient micro-rooms with clever storage and a social lobby bar aimed at younger travelers. Hilton’s Motto brand reviews mention affordable nightly rates for the neighborhood, walkable Hell’s Kitchen dining, and easy transfers to Lincoln Center on the 1 train.",
+    "summary": "Micro-room Motto by Hilton near Times Square.",
     "price": 188,
     "website": "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/",
     "logoUrl": "https://www.hilton.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Times Square, New York, NY"
+    "address": "Times Square, New York, NY",
+    "summarySourceUrls": [
+      "https://www.hilton.com/en/hotels/nycmodl-motto-new-york-city-times-square/"
+    ]
   },
   "Hyatt House New York/Chelsea": {
     "category": "hotel",
-    "description": "Neighborhood: Chelsea; Rating: 8.6 (1,794 Booking.com reviews); Price: $324/night; $2,267/week for 2 adults; Breakfast included; subway access; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Chelsea; Rating: 8.6 (1,794 Booking.com reviews); Price: $324/night; $2,267/week for 2 adults; Breakfast included; subway access; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "Hyatt House New York/Chelsea offers residential-style suites with kitchenettes and complimentary breakfast, popular with Booking.com guests who want Chelsea gallery walks and High Line access. Hyatt House reviewers note spacious living areas and a calm block compared with Times Square while staying on the A/C/E lines.",
+    "summary": "Chelsea Hyatt House suites with breakfast and kitchenettes.",
     "price": 324,
     "website": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
     "logoUrl": "https://www.hyatt.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Chelsea, New York, NY"
+    "address": "Chelsea, New York, NY",
+    "summarySourceUrls": [
+      "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+    ]
   },
   "The Manhattan Club": {
     "category": "hotel",
-    "description": "Neighborhood: Central Park / Midtown; Rating: 8.3 (4,345 Booking.com reviews); Price: $386/night; $2,704/week for 2 adults; Suite-style option; subway access; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Central Park / Midtown; Rating: 8.3 (4,345 Booking.com reviews); Price: $386/night; $2,704/week for 2 adults; Suite-style option; subway access; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.com guests often book it for longer Midtown stays. Manhattan Club reviews mention residential floors, easy Columbus Circle transit, and the trade-off of a members-club check-in process versus a traditional hotel lobby.",
+    "summary": "Suite-style rooms near Central Park South.",
     "price": 386,
     "website": "https://www.manhattanclub.com/",
     "logoUrl": "https://www.manhattanclub.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Central Park / Midtown, New York, NY"
+    "address": "Central Park / Midtown, New York, NY",
+    "summarySourceUrls": [
+      "https://www.manhattanclub.com/"
+    ]
   },
   "Hilton Club New York": {
     "category": "hotel",
-    "description": "Neighborhood: Manhattan / Midtown; Rating: 8.7 (477 Booking.com reviews); Price: $375/night; sale $2,628/week for 2 adults; Free cancellation/no prepayment noted; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Manhattan / Midtown; Rating: 8.7 (477 Booking.com reviews); Price: $375/night; sale $2,628/week for 2 adults; Free cancellation/no prepayment noted; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "Hilton Club New York delivers timeshare-style suites in Midtown with full kitchens and living rooms, suited to families comparing week-long rates on Booking.com. Hilton Club reviewers highlight washer-dryer units in some layouts, strong transit access, and the need to confirm exact tower entrance before arrival.",
+    "summary": "Midtown Hilton Club suites with full kitchens.",
     "price": 375,
     "website": "https://www.hilton.com/en/hotels/nycgvhg-hilton-club-new-york/",
     "logoUrl": "https://www.hilton.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Manhattan / Midtown, New York, NY"
+    "address": "Manhattan / Midtown, New York, NY",
+    "summarySourceUrls": [
+      "https://www.hilton.com/en/hotels/nycgvhg-hilton-club-new-york/"
+    ]
   },
   "TownePlace Suites by Marriott New York Manhattan/Chelsea": {
     "category": "hotel",
-    "description": "Neighborhood: Chelsea; Rating: 8.4 (7,518 Booking.com reviews); Price: $404/night; $2,831/week for 2 adults; Kitchenette + breakfast included; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Chelsea; Rating: 8.4 (7,518 Booking.com reviews); Price: $404/night; $2,831/week for 2 adults; Kitchenette + breakfast included; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "TownePlace Suites by Marriott New York Manhattan/Chelsea brings extended-stay layouts to Chelsea with kitchenettes, free breakfast, and Booking.com praise for friendly staff. TownePlace guests use the Penn Station and gallery-district location to split time between downtown museums and Midtown meetings without changing hotels.",
+    "summary": "Marriott extended-stay suites in Chelsea with breakfast.",
     "price": 404,
     "website": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Chelsea, New York, NY"
+    "address": "Chelsea, New York, NY",
+    "summarySourceUrls": [
+      "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+    ]
   },
   "Pod Times Square": {
     "category": "hotel",
-    "description": "Neighborhood: Hell’s Kitchen / Times Square; Rating: 8.5 (18,472 Booking.com reviews); Price: $317/night; sale $2,217/week for 2 adults; Bunk pod shown; free cancellation/no prepayment noted; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Hell’s Kitchen / Times Square; Rating: 8.5 (18,472 Booking.com reviews); Price: $317/night; sale $2,217/week for 2 adults; Bunk pod shown; free cancellation/no prepayment noted; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "Pod Times Square offers compact pod rooms and bunk layouts designed for value-focused travelers who still want a Times Square address. Booking.com reviewers mention efficient showers, a rooftop bar, and easy walks to Broadway while warning that square footage is intentionally small compared with traditional hotels.",
+    "summary": "Affordable pod rooms steps from Times Square.",
     "price": 317,
     "website": "https://www.thepodhotel.com/pod-times-square/",
     "logoUrl": "https://www.thepodhotel.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Hell’s Kitchen / Times Square, New York, NY"
+    "address": "Hell’s Kitchen / Times Square, New York, NY",
+    "summarySourceUrls": [
+      "https://www.thepodhotel.com/pod-times-square/"
+    ]
   },
   "Romer Hell’s Kitchen": {
     "category": "hotel",
-    "description": "Neighborhood: Hell’s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.",
-    "summary": "Neighborhood: Hell’s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.",
+    "description": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers. Booking.com guests describe Romer Hell's Kitchen as a calmer alternative to giant Times Square towers while keeping Restaurant Row and the N/Q/R/W lines within a few blocks.",
+    "summary": "Boutique Hell's Kitchen hotel near Restaurant Row.",
     "price": 425,
     "website": "https://www.romerhotels.com/hells-kitchen/",
     "logoUrl": "https://www.romerhotels.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Hell’s Kitchen, New York, NY"
+    "address": "Hell’s Kitchen, New York, NY",
+    "summarySourceUrls": [
+      "https://www.romerhotels.com/hells-kitchen/"
+    ]
   },
   "Night Hotel Broadway": {
     "category": "hotel",
-    "description": "Neighborhood: Upper West Side; Rating: 7.1 (2,970 Booking.com reviews); Price: $266/night; $1,865/week for 2 adults; Cheap UWS option but lower quality signal; Status: candidate, not booked.",
-    "summary": "Neighborhood: Upper West Side; Rating: 7.1 (2,970 Booking.com reviews); Price: $266/night; $1,865/week for 2 adults; Cheap UWS option but lower quality signal; Status: candidate, not booked.",
+    "description": "Night Hotel Broadway sits on the Upper West Side near the 96th Street subway, offering budget-friendly rooms for travelers who prioritize Lincoln Center access over luxury finishes. Booking.com reviews for Night Hotel Broadway mention simple layouts, a lively neighborhood, and the need to read recent cleanliness notes before confirming.",
+    "summary": "Budget UWS option near the 96th Street subway.",
     "price": 266,
     "website": "https://www.nighthotelbroadway.com/",
     "logoUrl": "https://www.nighthotelbroadway.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY"
+    "address": "Upper West Side, New York, NY",
+    "summarySourceUrls": [
+      "https://www.nighthotelbroadway.com/"
+    ]
   },
   "Juice Generation Upper West Side": {
     "category": "store",
@@ -694,8 +757,8 @@
   },
   "Midtown sample hotel": {
     "category": "hotel",
-    "description": "Neighborhood: Central Park / Midtown; Rating: 8.3 (4,345 Booking.com reviews); Price: $386/night; $2,704/week for 2 adults; Suite-style option; subway access; Gate B display name for The Manhattan Club candidate; Status: candidate, not booked.",
-    "summary": "Suite-style Midtown candidate with subway access; nightly rate sourced from the Manhattan Club booking card for Gate B list display.",
+    "description": "Midtown sample hotel is the Gate B list label for a suite-style Midtown candidate modeled on The Manhattan Club, with kitchenettes and living space near Central Park South. The sample row keeps the same nightly rate and website as the Manhattan Club card so list and detail screens can show a realistic hotel description without booking a separate property.",
+    "summary": "Gate B list alias for a Manhattan Club-style suite candidate.",
     "price": 386,
     "website": "https://www.manhattanclub.com/",
     "logoUrl": "https://www.manhattanclub.com/favicon.ico",
@@ -712,7 +775,10 @@
     "review3": "Compare nightly totals before booking; rates move with demand.",
     "review3Source": "Booking.com",
     "review4": "Lobby and elevator can run busy on weekend arrivals; plan extra time.",
-    "review4Source": "Booking.com"
+    "review4Source": "Booking.com",
+    "summarySourceUrls": [
+      "https://www.manhattanclub.com/"
+    ]
   },
   "Blue Note": {
     "category": "music",
