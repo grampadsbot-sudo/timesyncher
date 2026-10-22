@@ -1,6 +1,6 @@
 # VK PR #610 BASE-MERGE + scope cut (cursor-ubuntu vkfill-610, 2026-10-22)
 
-**Tip sha:** `79aab726b4cc78cd8a208ac3e4edd7526579dd1a` (local; host publishes to `vkfill/607-20261021175801`).
+**Tip sha:** `8100b20ed974dd01ff6eabca0735707c615dc1df` (local; host publishes to `vkfill/607-20261021175801`).
 
 **Merge:** host merged `origin/migrate/trek-source` at `6edb0791` into `75cb1caa`; fixture conflict → base.
 

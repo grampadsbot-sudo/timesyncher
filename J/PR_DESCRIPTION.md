@@ -5,7 +5,7 @@ Closes #607
 - Host-merged `migrate/trek-source` at `6edb0791` into PR head `75cb1caa`; conflicts resolved toward base except #607 hotel list description derivation.
 - Scope cut vs base tip: only `listTabModel.mjs` / `trip-thing-enrichment.mjs` (+ `listRows.unit.mjs`); removed out-of-scope trek Gate B patches, extra evidence PNGs, and `trek-gateb-list-budget-patches.mjs`; served bundle rebaked from base patches (matches base `public/assets/index-BKun7ofk.js`).
 
-## Checks (local, tip `79aab726b4cc78cd8a208ac3e4edd7526579dd1a`)
+## Checks (local, tip `8100b20ed974dd01ff6eabca0735707c615dc1df`)
 
 - `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` — 0
 - `node scripts/check-no-comments.mjs` — 0
