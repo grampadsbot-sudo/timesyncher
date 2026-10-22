@@ -5,7 +5,7 @@ Closes #601
 - Revert the round-4 `Oe()` `sr` flex/grid axis change so list-row name/text matches base `e3364ac` (grid `28px + name` unchanged).
 - Per-logo vertical ink centring in `dc()`: on load, measure each image’s ink bbox (canvas, threshold 24) and apply `translateY` so ink centre aligns with the chip centre without moving chip size/position or row layout.
 - New module `src/vacation/thing-logo-ink-center.mjs` + `scripts/test_thing_logo_ink_center.mjs` (asymmetric padded bar fixture); rebaked `public/assets/index-BKun7ofk.js`.
-- Base merge: host merged `origin/migrate/trek-source` @ `e2cbfce` into `822539f7` (2026-10-22 cursor-ubuntu vkfill-604).
+- Base merge: host merged `origin/migrate/trek-source` @ `6edb0791` into `ebe2e5aa` (2026-10-22 cursor-ubuntu vkfill-604 dirty-head requeue); base #619 fixture copy fixes merged in tree.
 
 ## Checks (local)
 

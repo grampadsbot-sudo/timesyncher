@@ -2,9 +2,9 @@
 
 **Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (chief dr brief 2026-10-21 6:55 PM PT).
 
-**Start sha:** `822539f7e3b4a2bb39e52776bf459823d0d6397c`
+**Start sha:** `ebe2e5aa311f7f7b06128a812457d61137432dca`
 
-**Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `822539f7` (2026-10-22 cursor-ubuntu vkfill-604 dirty-head requeue).
+**Base merge:** Host merged `origin/migrate/trek-source` at `6edb0791f521004df36fc3b0ef58819127839942` into `ebe2e5aa` (2026-10-22 cursor-ubuntu vkfill-604 dirty-head requeue). Base #619 pr336 snapshot re-bind + Hotel Belleclaire copy landed via staged fixture files.
 
 ## Change
 
@@ -20,16 +20,16 @@
 | `node scripts/test_thing_logo_ink_center.mjs` | 0 |
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
 | `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
-| `node scripts/test_trip_thing_logo_metadata.mjs` | 0 |
-| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
-| `scripts/offline-tests.txt` full loop (`PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`) | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `actual 'gbrain-cli-get_page' expected 'bundled-get_page'`; host CI expected |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `cd apps/vacation-client && npm test` | 0 |
+| `scripts/offline-tests.txt` full loop | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `actual 'gbrain-cli-get_page' expected 'bundled-get_page'` |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
 ## Verdict
 
-Base-merge round: merge `e2cbfce` into `822539f7`, conflicts resolved, rebaked bundle. Logo layout from PR head unchanged. Not self-certified; CI + Gate B on pushed head are authority.
+Base-merge round: merge `6edb0791` into `ebe2e5aa`, conflicts resolved, rebaked bundle. Logo layout from PR head unchanged. Offline loop stops on live-transcript env (gbrain CLI vs bundled get_page); host CI expected. Not self-certified; CI + Gate B on pushed head are authority.
 
-**Tip sha:** `75b0541f` (merge `2907c338` into `822539f7`)
+**Tip sha:** (pending merge commit)
