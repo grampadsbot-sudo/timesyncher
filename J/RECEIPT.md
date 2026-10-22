@@ -3,7 +3,7 @@
 **Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 4). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept); base delta: pr336 snapshot key guard (#621).
 
 **Start sha:** `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf`  
-**Tip sha:** `401d3182`
+**Tip sha:** `fd00b8f2`
 
 ## Problem (Gate B coverage on `b6db7142`, run `20261022-083451`)
 
