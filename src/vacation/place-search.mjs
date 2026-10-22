@@ -21,6 +21,7 @@ import { buildProviderEnv, missingSearchKeys } from './provider-env.mjs';
 import { runPlaceProviderPass } from './place-search-provider-pass.mjs';
 import { sourceRecordFor, sourceRefFor } from './place-search-record.mjs';
 import { noteToTripThing, placeToTripThing } from './place-search-trip-thing.mjs';
+import { enrichSearchPlacesWithWebDetails } from './search-place-detail-enrichment.mjs';
 import { PlaceSearchError } from './place-search-error.mjs';
 import { isNominatimOpenStreetMapUrl } from './place-search-geocode.mjs';
 import { normalizePlaceSearchCategory } from './place-search-category-keys.mjs';
@@ -631,7 +632,12 @@ export async function searchPlaces({
     fetchImpl,
     destination: dest || center?.label || locationText || '',
   });
-  places = finalizeSearchPlaces(eventLogos.places);
+  const withWebDetails = await enrichSearchPlacesWithWebDetails(eventLogos.places, {
+    env,
+    fetchImpl,
+    destination: dest || center?.label || locationText || '',
+  });
+  places = finalizeSearchPlaces(withWebDetails);
   return {
     destination: dest || center?.label || locationText || '',
     center,

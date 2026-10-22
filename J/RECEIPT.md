@@ -1,4 +1,44 @@
-# VK issue #589 receipt (cursor-ubuntu vkfill-589)
+# VK issue #608 receipt (cursor-ubuntu vkfill-608)
+
+**Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`
+
+## Problem
+
+NYC VK hotels carried ccab semicolon fact sheets in `summary`/`longDetails` without 30+ word judge-passing prose; `detailSummary` preferred short `summary`, so Hotels UI showed blank descriptions. `enrichTripThing` fell back to the banned `hotelDescription` template for hotels missing sourced prose.
+
+## Fix
+
+- `src/vacation/search-place-detail-enrichment.mjs`: Tavily `enrichPlaceDetail` pass for hotel/flight/car search rows missing judge-passing `longDetails`; merges prose, `summarySourceUrls`, and price.
+- `src/vacation/place-search.mjs`: runs web detail enrichment before `finalizeSearchPlaces`.
+- `src/vacation/trip-thing-enrichment.mjs`: drops semicolon ccab blobs from `description` when judge fails; short neighborhood taglines in `summary`; hotels no longer use `hotelDescription` when sourced long text is absent.
+- `apps/vacation-client/src/lib/detailModel.mjs` + `listTabModel.mjs`: prefer `longDetails` over `summary` for display.
+- `src/vacation/chat-intake-place-persist.mjs`: staging backfill re-runs when transport rows still fail description/price fill.
+- `scripts/enrich_pr336_snapshot_place_details.mjs`: operator script to re-Tavily-fill and rewrite `pr336-vk-search-places.snapshot.json` (run on staging with provider keys, then `node scripts/backfill_chat_intake_places.mjs --backfill-chat-places` for NYC trip rows).
+- `scripts/test_vk_hotel_detail_fill.mjs` registered in `scripts/offline-tests.txt`.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Staging NYC re-fill (post-merge / with keys)
+
+1. `node scripts/enrich_pr336_snapshot_place_details.mjs` (needs Tavily env on Ubuntu staging).
+2. `TIMESYNCHER_ALLOW_CHAT_PLACE_BACKFILL=1 node scripts/backfill_chat_intake_places.mjs --backfill-chat-places` against staging `DATABASE_URL`.
+
+Counts for PR description: run `node scripts/test_vk_hotel_detail_fill.mjs` plus snapshot script output `hotelsPassingDetailJudge` after step 1.
+
+## Verdict
+
+Product + backfill path ready on branch `vkfill/608-20261021180746`; CI + staging pull of `/api/shared/<NYC token>` after backfill are authority for close.
+
+---
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
 **Tip sha:** `0fd6dc78`
