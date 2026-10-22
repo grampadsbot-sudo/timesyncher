@@ -14,12 +14,28 @@ const OVERLAY_ENRICHMENT = JSON.parse(
 const REVIEW_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
 );
+const SOURCED_REVIEW_ENRICHMENT = JSON.parse(
+  readFileSync(new URL('./nyc-vk-sourced-reviews-enrichment.json', import.meta.url), 'utf8'),
+);
 const ENRICHMENT = { ...BASE_ENRICHMENT };
 for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
 }
 for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(ENRICHMENT[key] || {}), ...patch };
+}
+function mergeSourcedReviewPatch(key, patch) {
+  ENRICHMENT[key] = { ...(ENRICHMENT[key] || {}), ...patch };
+  delete ENRICHMENT[key].reviewThemes;
+  delete ENRICHMENT[key].websiteFlavour;
+}
+
+for (const [key, patch] of Object.entries(SOURCED_REVIEW_ENRICHMENT)) {
+  mergeSourcedReviewPatch(key, patch);
+  const curly = key.replace(/'/g, '\u2019');
+  const straight = key.replace(/\u2019/g, "'");
+  if (curly !== key) mergeSourcedReviewPatch(curly, patch);
+  if (straight !== key && straight !== curly) mergeSourcedReviewPatch(straight, patch);
 }
 
 export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';

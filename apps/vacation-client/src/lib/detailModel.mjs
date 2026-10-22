@@ -151,7 +151,6 @@ function reviewIsComplete(override, index) {
   const minWords = xaiRepresentativeReviews(override) ? XAI_REPRESENTATIVE_REVIEW_MIN_WORDS : 25;
   if (wordCount(body) < minWords) return false;
   if (!/\d/.test(rating)) return false;
-  if (xaiRepresentativeReviews(override)) return true;
   return REVIEW_SOURCES.has(source);
 }
 

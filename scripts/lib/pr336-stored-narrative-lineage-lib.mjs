@@ -61,6 +61,7 @@ function narrativeLineageForRow(rowId) {
       'scripts/fixtures/nyc_ccab_place_enrichment.json',
       'scripts/fixtures/pr336-gate-b-ccab-overlay.json',
       'scripts/fixtures/pr336-gate-b-vk-reviews.json',
+      'scripts/fixtures/nyc-vk-sourced-reviews-enrichment.json',
       'scripts/fixtures/pr336-vk-search-trip-sources.mjs#ENRICHMENT merge',
       'rawSearchPlaceFromCcab',
       'enrichSearchPlace (src/vacation/trip-thing-enrichment.mjs#sourcedLongDescription)',
