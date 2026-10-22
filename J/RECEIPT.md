@@ -4,11 +4,11 @@
 
 Gate B hard round (tier 1): compact `Oe()` rows (events/restaurants/stores) now render as `li[data-list-row]` so capture records rows; name + `data-list-summary` flex shares width with `flex:1 1 0`; car header is inline-flex (no 3-col grid overflow); expanded row grid clips horizontally. Craig #547 same-line ellipsis preserved (#592 strong names).
 
-Base merge: `origin/migrate/trek-source` at **e3364ac5** (host merge into 4163fee7).
+Base merge: `origin/migrate/trek-source` at **58f5be59** (host dirty-head merge into **5d9c4eb7**, 2026-10-21).
 
 ## Tip sha
 
-**eb232a48**
+(pending merge commit)
 
 ## Checks (local)
 
