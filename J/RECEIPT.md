@@ -1,7 +1,7 @@
 # VK issue #621 (cursor-ubuntu vkfill-621)
 
 **Start sha:** `6edb0791f521004df36fc3b0ef58819127839942`  
-**Tip sha:** pending commit
+**Tip sha:** `fba2488a`
 
 ## Problem
 
