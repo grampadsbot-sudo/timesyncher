@@ -114,64 +114,6 @@ export function listRowFirstNameLineCenterY(chip) {
   return null;
 }
 
-export function emojiInkCenterCssY({ emoji, font, cssSize, shiftY = 0, dpr = 2, threshold = 24 }) {
-  const text = String(emoji || '').trim();
-  if (!text || !font || !cssSize || typeof document === 'undefined') return null;
-  const node = document.createElement('canvas');
-  node.width = cssSize * dpr;
-  node.height = cssSize * dpr;
-  const live = node.getContext('2d', { willReadFrequently: true });
-  if (!live) return null;
-  live.setTransform(dpr, 0, 0, dpr, 0, 0);
-  live.clearRect(0, 0, cssSize, cssSize);
-  live.font = font;
-  live.textAlign = 'center';
-  live.textBaseline = 'middle';
-  live.fillStyle = '#111827';
-  live.fillText(text, cssSize / 2, cssSize / 2 + shiftY);
-  const inkCy = inkBboxCenterYFromRgba(
-    live.getImageData(0, 0, node.width, node.height).data,
-    node.width,
-    node.height,
-    threshold,
-  );
-  if (inkCy == null) return null;
-  return inkCy / dpr;
-}
-
-export function verticalNudgePxForEmojiFallback({ chipRect, emoji, font, targetScreenY, cssSize, dpr = 2 }) {
-  if (!chipRect || targetScreenY == null) return 0;
-  const inkCssY = emojiInkCenterCssY({ emoji, font, cssSize, dpr });
-  if (inkCssY == null) return 0;
-  const inkScreenY = chipRect.top + inkCssY;
-  return targetScreenY - inkScreenY;
-}
-
-export function centerListLogoFallbackDom(chip) {
-  if (!chip || chip.dataset.tsLogoFallbackDone === '1') return;
-  const img = chip.querySelector('img');
-  if (img && img.style.display !== 'none' && img.complete && img.naturalWidth > 1) return;
-  const glyph = chip.querySelector('.tsv-logo-fallback') || chip.querySelector('span');
-  const emoji = String(glyph?.textContent || '').trim();
-  if (!emoji || !glyph) return;
-  const targetY = listRowFirstNameLineCenterY(chip);
-  if (targetY == null) return;
-  const chipRect = chip.getBoundingClientRect();
-  if (chipRect.height < 4) return;
-  const cssSize = Math.round(chipRect.height) || 22;
-  const cs = chip.ownerDocument.defaultView.getComputedStyle(chip);
-  const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-  const dy = verticalNudgePxForEmojiFallback({
-    chipRect,
-    emoji,
-    font,
-    targetScreenY: targetY,
-    cssSize,
-  });
-  if (Math.abs(dy) > 0.01) glyph.style.transform = `translateY(${dy}px)`;
-  chip.dataset.tsLogoFallbackDone = '1';
-}
-
 function centerThingLogoInk(img) {
   if (!img || img.dataset.tsLogoInkDone === '1') return;
   if (img.dataset.tsLogoInkQueued === '1') return;
@@ -228,23 +170,6 @@ function centerThingLogoInk(img) {
   else setTimeout(run, 0);
 }
 
-function centerThingLogoFallback(chip) {
-  if (!chip || chip.dataset.tsLogoFallbackDone === '1') return;
-  if (chip.dataset.tsLogoFallbackQueued === '1') return;
-  chip.dataset.tsLogoFallbackQueued = '1';
-  const run = () => {
-    try {
-      centerListLogoFallbackDom(chip);
-    } catch {
-      chip.dataset.tsLogoFallbackDone = '1';
-    } finally {
-      delete chip.dataset.tsLogoFallbackQueued;
-    }
-  };
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
-  else setTimeout(run, 0);
-}
-
 function minifyFn(fn) {
   return fn.toString().replace(/\s+/g, ' ').trim();
 }
@@ -252,26 +177,15 @@ function minifyFn(fn) {
 const BUNDLE_INK_RUNTIME_FNS = [
   inkBboxCenterYFromRgba,
   listRowFirstNameLineCenterY,
-  emojiInkCenterCssY,
-  verticalNudgePxForEmojiFallback,
-  centerListLogoFallbackDom,
   centerThingLogoInk,
-  centerThingLogoFallback,
 ];
 
 const BUNDLE_INK_RENAMES = [
   ['function inkBboxCenterYFromRgba', 'function tsInkBboxCenterYFromRgba'],
   ['function listRowFirstNameLineCenterY', 'function tsListRowFirstNameLineCenterY'],
-  ['function emojiInkCenterCssY', 'function tsEmojiInkCenterCssY'],
-  ['function verticalNudgePxForEmojiFallback', 'function tsVerticalNudgePxForEmojiFallback'],
-  ['function centerListLogoFallbackDom', 'function tsCenterListLogoFallbackDom'],
   ['function centerThingLogoInk', 'function tsCenterThingLogoInk'],
-  ['function centerThingLogoFallback', 'function tsCenterThingLogoFallback'],
   ['inkBboxCenterYFromRgba(', 'tsInkBboxCenterYFromRgba('],
   ['listRowFirstNameLineCenterY(', 'tsListRowFirstNameLineCenterY('],
-  ['emojiInkCenterCssY(', 'tsEmojiInkCenterCssY('],
-  ['verticalNudgePxForEmojiFallback(', 'tsVerticalNudgePxForEmojiFallback('],
-  ['centerListLogoFallbackDom(', 'tsCenterListLogoFallbackDom('],
 ];
 
 export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffsets) {
@@ -281,7 +195,7 @@ export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffset
   return `const TS_LOGO_INK_CY=${tableJson};${body}`;
 }
 
-const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",ref:Rn=>{if(Rn)tsCenterThingLogoFallback(Rn)},style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},ref:Rn=>{if(Rn&&Rn.complete&&Rn.naturalWidth>1)tsCenterThingLogoInk(Rn)},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{className:"tsv-logo-fallback",style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},ref:Rn=>{if(Rn&&Rn.complete&&Rn.naturalWidth>1)tsCenterThingLogoInk(Rn)},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{className:"tsv-logo-fallback",style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,transform:"translateY(-2.5px)"},children:ua})]})}';
 
 const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
@@ -294,16 +208,8 @@ export function patchThingLogoInkCenterInBundle(js = '', dcNeedles = []) {
       throw new Error('trek bundle missing anchor for thing logo ink centering');
     }
     out = out.replace(THING_LOGO_INK_ANCHOR, `${snippet}${THING_LOGO_INK_ANCHOR}`);
-  } else if (!out.includes('const TS_LOGO_INK_CY=') || !out.includes('function tsCenterListLogoFallbackDom(')) {
-    if (out.includes('const TS_LOGO_INK_CY=')) {
-      out = out.replace(
-        /const TS_LOGO_INK_CY=[^;]+;function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\}function tsCenterThingLogoFallback\([^)]*\)\{[\s\S]*?\}/,
-        snippet,
-      );
-    }
-    if (!out.includes('function tsCenterListLogoFallbackDom(')) {
-      out = out.replace(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\}(?=function )/, snippet);
-    }
+  } else if (!out.includes('const TS_LOGO_INK_CY=')) {
+    out = out.replace(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\}(?=function )/, snippet);
     if (!out.includes('const TS_LOGO_INK_CY=')) {
       const prefix = snippet.split('function tsCenterThingLogoInk')[0];
       out = out.replace('function tsCenterThingLogoInk(', `${prefix}function tsCenterThingLogoInk(`);
@@ -318,8 +224,8 @@ export function patchThingLogoInkCenterInBundle(js = '', dcNeedles = []) {
   if (!out.includes('tsCenterThingLogoInk(Rn.currentTarget)')) {
     throw new Error('trek bundle dc() logo chip ink patch did not apply');
   }
-  if (!out.includes('tsCenterThingLogoFallback(Rn)')) {
-    throw new Error('trek bundle dc() logo fallback center patch did not apply');
+  if (!out.includes('transform:"translateY(-2.5px)"')) {
+    throw new Error('trek bundle dc() emoji fallback vertical center patch did not apply');
   }
   return out;
 }

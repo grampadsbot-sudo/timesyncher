@@ -1,7 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
-
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
-import { centerListLogoFallbackDom } from '../../../../src/vacation/thing-logo-ink-center.mjs';
 import {
   carPriceDisplay,
   carSubtitle,
@@ -33,20 +30,11 @@ type Props = {
 };
 
 function LogoChip({ place, trip }: { place: SharedPlace; trip: SharedTripPayload }) {
-  const chipRef = useRef<HTMLSpanElement | null>(null);
   const logo = logoUrlForPlace(place, trip);
   const override = overrideFor(trip, place);
   const fallback = String(override.icon || place.category?.icon || place.category_icon || '📍');
-  useLayoutEffect(() => {
-    const chip = chipRef.current;
-    if (!chip || logo) return;
-    delete chip.dataset.tsLogoFallbackDone;
-    centerListLogoFallbackDom(chip);
-    const id = requestAnimationFrame(() => centerListLogoFallbackDom(chip));
-    return () => cancelAnimationFrame(id);
-  }, [logo, fallback, place.id]);
   return (
-    <span ref={chipRef} className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
+    <span className="tsv-logo-chip" data-ts-logo-chip="1" aria-hidden="true">
       {logo ? (
         <img className="tsv-logo" src={logo} alt="" />
       ) : (
