@@ -156,6 +156,22 @@ const thinHotelTrip = applyLiveAppListRowFields({
 const thinHotelLine = rowSummary(thinHotelTrip.places[0], thinHotelTrip);
 assert.ok(wordCount(thinHotelLine) >= 6, thinHotelLine);
 assert.notEqual(thinHotelLine.toLowerCase(), 'neighborhood: upper west side; rating: 8.');
+assert.match(thinHotelLine, /breakfast|518|night/i);
+
+const romerTrip = applyLiveAppListRowFields({
+  places: [{ id: 625, name: 'Romer Hell\u2019s Kitchen', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:625': {
+      category: 'hotel',
+      price: 425,
+      summary: 'Neighborhood: Hell\u2019s Kitchen; Rating: 8. 7 (4,512 Booking.',
+      longDetails:
+        'Neighborhood: Hell\u2019s Kitchen; Rating: 8.7 (4,512 Booking.com reviews); Price: $425/night; $2,977/week for 2 adults; Standard king room; Booking.com escalation result; Status: candidate, not booked.',
+    },
+  },
+});
+const romerLine = rowSummary(romerTrip.places[0], romerTrip);
+assert.match(romerLine, /king room|425|Standard/i);
 
 const patchedRr = patchThingDetailFields('prefix,rr=G=>ha(G).summary??"",suffix');
 assert.ok(patchedRr.includes('longDetails'), patchedRr.slice(0, 160));
