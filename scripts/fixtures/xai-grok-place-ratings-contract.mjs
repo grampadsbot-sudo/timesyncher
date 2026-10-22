@@ -27,25 +27,24 @@ function dossierPage(url, text) {
 }
 
 function verifiedDossierFixture() {
-  const urlA = 'https://example.com/official';
-  const urlB = 'https://example.com/reviews';
-  const urlC = 'https://example.com/article';
+  const urlA = 'https://official.example/harbor-lantern';
+  const urlB = 'https://reviews.example/harbor-lantern';
+  const urlC = 'https://article.example/harbor-lantern';
   const quote = 'Guests praise the blistered margherita and balanced negroni list nightly';
   const reviewBodies = Array.from({ length: 20 }, (_, index) =>
     `Review ${index + 1}: ${quote} with extra guest detail about pacing value and repeat visits this season.`);
   const pages = [
-    dossierPage(urlA, `Harbor Lantern Bar site. ${quote}. Average 4.6 from 820 published reviews. Entrees from 48 per person.`),
-    dossierPage(urlB, reviewBodies.join(' ')),
-    dossierPage(urlC, `Article calls the margherita the signature cocktail-bar pie.`),
+    dossierPage(urlA, `Harbor Lantern Bar site. ${quote}. Average 4.6 from 820 published reviews. Entrees from 48 per person. ${reviewBodies.slice(0, 7).join(' ')}`),
+    dossierPage(urlB, reviewBodies.slice(7, 14).join(' ')),
+    dossierPage(urlC, `Article calls the margherita the signature cocktail-bar pie. ${reviewBodies.slice(14).join(' ')}`),
   ];
   return prepareDossierFindings({ thing: 'Harbor Lantern Bar', pages, attempts: [] }, {
-    summary: { value: 'Balanced cocktails and blistered pies', quote: 'balanced negroni list', url: urlA },
+    summary: { value: 'Balanced cocktails and blistered pies', claims: [{ text: 'balanced negroni list', pages: ['p1'], supported: true }] },
     description: {
       value: 'Harbor Lantern Bar pairs a deep negroni program with wood-fired pies, and Harbor Lantern Bar regulars cite the blistered margherita and happy-hour value in long-form reviews across the saved pages while the raw bar, dessert counter, and late espresso service keep the room full from open to close.',
-      quote: 'blistered margherita',
-      url: urlA,
+      claims: [{ text: 'blistered margherita', pages: ['p1'], supported: true }],
     },
-    price: { value: 48, unit: 'per person', quote: 'entrees from 48 per person', url: urlA },
+    price: { value: 48, unit: 'per person', claims: [{ text: 'entrees from 48 per person', pages: ['p1'], supported: true }] },
     rating: {
       average: 4.6,
       count: 820,
@@ -54,31 +53,31 @@ function verifiedDossierFixture() {
       url: urlA,
       starMix: [328, 164, 82, 164, 82],
     },
-    knownFor: [{ item: 'margherita', quote: 'margherita the signature', url: urlC }],
-    reviewExcerpts: reviewBodies.map((body) => ({ quote: body, url: urlB })),
+    knownFor: [{ item: 'margherita', claims: [{ text: 'margherita the signature', pages: ['p3'], supported: true }] }],
+    reviewExcerpts: reviewBodies.map((body, index) => ({ text: body, pages: [index < 7 ? 'p1' : index < 14 ? 'p2' : 'p3'], supported: true })),
     reviews: [
       {
         text: 'The margherita crust and negroni balance justified the hype, and the margherita stayed consistent across two visits this month while the room kept its energy without feeling rushed.',
         rating: 5,
-        cites: ['blistered margherita'],
+        claims: [{ text: 'blistered margherita', pages: ['p1'], supported: true }],
         verdict: true,
       },
       {
         text: 'Host stand efficiency stayed calm during the pre-show rush, and the team kept ticket pickup moving without making the lobby feel chaotic or rushed for first-time visitors.',
         rating: 4,
-        cites: ['extra guest detail about pacing'],
+        claims: [{ text: 'extra guest detail about pacing', pages: ['p2'], supported: true }],
         verdict: false,
       },
       {
         text: 'Sidewalk seating stayed comfortable even with passing traffic, and the staff checked in often enough that water refills and menu questions never had to wait long.',
         rating: 4,
-        cites: ['repeat visits this season'],
+        claims: [{ text: 'repeat visits this season', pages: ['p2'], supported: true }],
         verdict: false,
       },
       {
         text: 'Checkout timing was predictable on a packed night, and the margherita remained the dish guests mentioned most often when comparing this room to nearby options.',
         rating: 5,
-        cites: ['balanced negroni list'],
+        claims: [{ text: 'balanced negroni list', pages: ['p3'], supported: true }],
         verdict: true,
       },
     ],
@@ -104,6 +103,12 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
   assert.equal(dossierRecord.review1Source, undefined);
   assert.ok(String(dossierRecord.review1).split(/\s+/).length >= 12);
   assert.match(String(dossierRecord.reviewsLabel), /Representative review written from 20 reviews/);
+  assert.equal(dossierRecord.xaiRatingsFetched, true);
+  assert.equal(dossierRecord.missingFields.includes('reviews'), false);
+  for (let i = 1; i <= 4; i += 1) {
+    assert.equal(dossierRecord[`review${i}Claims`].length, 1);
+    assert.ok(dossierRecord[`review${i}Claims`].every((claim) => claim.supported && claim.pages.length));
+  }
   const xaiPlace = {
     category: 'restaurant',
     title: 'Harbor Lantern Bar',
