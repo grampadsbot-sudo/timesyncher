@@ -242,11 +242,22 @@ function isHotelCategory(category = '') {
   return cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
 }
 
+function bindHotelListSummary(next, place, narrative = '') {
+  const body = text(narrative || next.longDetails || next.details || place.description);
+  if (!body || narrativeWordCount(body) < 30 || isGenericDescription(body)) return next;
+  if (narrativeWordCount(next.summary) >= 30 && !isGenericDescription(next.summary)) return next;
+  return { ...next, summary: body };
+}
+
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
+  const category = listRowCategory(place, override);
+  const isHotel = isHotelCategory(category);
   const existing = text(override.longDetails || override.details || override.description);
-  if (narrativeWordCount(existing) >= 30) return override;
+  if (narrativeWordCount(existing) >= 30) {
+    return isHotel ? bindHotelListSummary({ ...override }, place, existing) : override;
+  }
   const enriched = enrichListRowFromStoredCcab(
     place,
     override,
@@ -257,8 +268,6 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     ? enriched.sourceRecord
     : {};
   const next = { ...override };
-  const category = listRowCategory(place, override);
-  const isHotel = isHotelCategory(category);
   const onTimeline = override.timeline === true;
   const details = text(
     enriched.description ||
@@ -299,7 +308,7 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     const prior = next.sourceRecord && typeof next.sourceRecord === 'object' ? next.sourceRecord : {};
     next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
   }
-  return next;
+  return isHotel ? bindHotelListSummary(next, place, details) : next;
 }
 
 export function rawSearchPlaceFromCcab({
