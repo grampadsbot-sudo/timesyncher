@@ -244,14 +244,41 @@ function isHotelCategory(category = '') {
 
 function bindHotelListSummary(next, place, narrative = '') {
   const body = text(narrative || next.longDetails || next.details || place.description);
+  const current = text(next.summary);
+  if (current && current !== body && narrativeWordCount(current) >= 10 && !isGenericDescription(current)) {
+    return next;
+  }
   if (!body || narrativeWordCount(body) < 30 || isGenericDescription(body)) return next;
-  if (narrativeWordCount(next.summary) >= 30 && !isGenericDescription(next.summary)) return next;
+  if (narrativeWordCount(current) >= 30 && !isGenericDescription(current)) return next;
+  const stored = text(next.sourceRecord?.summary);
+  if (stored && stored !== body && narrativeWordCount(stored) >= 30 && !isGenericDescription(stored)) {
+    return { ...next, summary: stored };
+  }
   return { ...next, summary: body };
+}
+
+function intakeSourceBlocksCcabMerge(place = {}, override = {}) {
+  const { overrideRecord, placeRecord, metaRecord } = sourceRecordsForIdentity(place, override);
+  const bags = [overrideRecord, metaRecord, placeRecord].filter(Boolean);
+  const placeSource = place.source && typeof place.source === 'object' && !Array.isArray(place.source)
+    ? place.source
+    : null;
+  if (placeSource) bags.push(placeSource);
+  for (const record of bags) {
+    const src = text(record.source).toLowerCase();
+    if (src === 'fixture') continue;
+    if (text(record.ccabInputKind) === 'stored_fixture_literal') continue;
+    if (text(record.ccabKey)) continue;
+    if (text(record.identityProvenance?.ccabKey)) continue;
+    if (text(record.summary) && !isGenericDescription(record.summary)) return true;
+  }
+  return false;
 }
 
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
   const hit = storedCcabRecordForPlace(place, override);
   if (!hit) return override;
+  if (intakeSourceBlocksCcabMerge(place, override)) return override;
   const category = listRowCategory(place, override);
   const isHotel = isHotelCategory(category);
   const existing = text(override.longDetails || override.details || override.description);

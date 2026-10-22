@@ -60,6 +60,13 @@ export function composeSourcedHotelDescriptionFromRecord(record = {}, {
   const existing = text(
     record.longDetails || record.details || record.description || record.summary,
   );
+  if (
+    text(record.ccabInputKind) === 'stored_fixture_literal'
+    && existing
+    && !isGenericDescription(existing)
+  ) {
+    return existing;
+  }
   if (existing && !isGenericDescription(existing) && wordCount(existing) >= 30) {
     return existing;
   }
@@ -109,6 +116,14 @@ export function applySourcedHotelDescriptionToRecord(record = {}, context = {}) 
   });
   if (!composed) return next;
   const prior = text(next.description || next.longDetails || next.summary);
+  if (
+    text(next.ccabInputKind) === 'stored_fixture_literal'
+    && prior
+    && !isGenericDescription(prior)
+    && wordCount(prior) >= 10
+  ) {
+    return next;
+  }
   if (!prior || isGenericDescription(prior) || wordCount(prior) < 30) {
     next.description = composed;
     next.longDetails = composed;
