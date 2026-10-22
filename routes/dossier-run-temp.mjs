@@ -11,9 +11,11 @@ import {
 import { prepareDossierFindings } from '../src/vacation/thing-dossier-fields.mjs';
 
 function authorized(req, env) {
-  const want = Buffer.from(String(env.VERCEL_AUTOMATION_BYPASS_SECRET || env.DOSSIER_RUN_SECRET || ''));
   const got = Buffer.from(String(req.headers['x-dossier-run-secret'] || ''));
-  return want.length > 0 && got.length === want.length && timingSafeEqual(want, got);
+  return [env.VERCEL_AUTOMATION_BYPASS_SECRET, env.DOSSIER_RUN_SECRET].some((value) => {
+    const want = Buffer.from(String(value || ''));
+    return want.length > 0 && got.length === want.length && timingSafeEqual(want, got);
+  });
 }
 
 function memoryStore() {
