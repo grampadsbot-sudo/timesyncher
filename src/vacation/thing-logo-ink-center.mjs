@@ -1,3 +1,25 @@
+import thingLogoInkOffsets from './thing-logo-ink-offsets.json' with { type: 'json' };
+
+export function normalizeThingLogoUrl(src) {
+  const s = String(src || '').trim();
+  if (!s) return '';
+  try {
+    const u = new URL(s, 'https://timesyncher.invalid/');
+    return u.href.split('#')[0];
+  } catch {
+    return s;
+  }
+}
+
+export function inkCenterYNaturalFromTable(table, src, naturalHeight) {
+  const key = normalizeThingLogoUrl(src);
+  const row = table && table[key];
+  if (!row || row.nh < 2 || row.inkCy == null) return null;
+  const nh = Number(naturalHeight) || row.nh;
+  if (Math.abs(nh - row.nh) > 2) return (row.inkCy / row.nh) * nh;
+  return row.inkCy;
+}
+
 export function inkBboxCenterYFromRgba(data, width, height, threshold = 24) {
   if (!width || !height || !data || data.length < width * height * 4) return null;
   const corners = [
@@ -84,69 +106,29 @@ function centerThingLogoInk(img) {
       const nw = img.naturalWidth;
       const nh = img.naturalHeight;
       if (nw < 2 || nh < 2) return;
-      const dispH = img.getBoundingClientRect().height;
-      if (dispH < 2) return;
-      const maxSide = 72;
-      const side = Math.max(nw, nh);
-      const sampleScale = side > maxSide ? maxSide / side : 1;
-      const cw = Math.max(2, Math.round(nw * sampleScale));
-      const ch = Math.max(2, Math.round(nh * sampleScale));
-      const canvas = document.createElement('canvas');
-      canvas.width = cw;
-      canvas.height = ch;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (!ctx) return;
-      try {
-        ctx.drawImage(img, 0, 0, cw, ch);
-      } catch {
-        img.dataset.tsLogoInkDone = '1';
-        return;
-      }
-      let data;
-      try {
-        data = ctx.getImageData(0, 0, cw, ch).data;
-      } catch {
-        img.dataset.tsLogoInkDone = '1';
-        return;
-      }
-      const corners = [[0, 0], [cw - 1, 0], [0, ch - 1], [cw - 1, ch - 1]];
-      const bg = [0, 0, 0];
-      for (let i = 0; i < 4; i += 1) {
-        const p = (corners[i][1] * cw + corners[i][0]) * 4;
-        bg[0] += data[p];
-        bg[1] += data[p + 1];
-        bg[2] += data[p + 2];
-      }
-      bg[0] /= 4;
-      bg[1] /= 4;
-      bg[2] /= 4;
-      let minY = null;
-      let maxY = null;
-      const thr = 24;
-      for (let y = 0; y < ch; y += 1) {
-        for (let x = 0; x < cw; x += 1) {
-          const k = (y * cw + x) * 4;
-          const a = data[k + 3];
-          if (a < 20) continue;
-          const dr = Math.max(
-            Math.abs(data[k] - bg[0]),
-            Math.abs(data[k + 1] - bg[1]),
-            Math.abs(data[k + 2] - bg[2]),
-          );
-          if (dr <= thr) continue;
-          if (minY === null || y < minY) minY = y;
-          if (maxY === null || y > maxY) maxY = y;
+      const src = img.currentSrc || img.src || '';
+      const key = (() => {
+        const s = String(src || '').trim();
+        if (!s) return '';
+        try {
+          const u = new URL(s, document.baseURI || 'https://timesyncher.invalid/');
+          return u.href.split('#')[0];
+        } catch {
+          return s;
         }
+      })();
+      const row = key && TS_LOGO_INK_CY ? TS_LOGO_INK_CY[key] : null;
+      let inkCy = null;
+      if (row && row.nh > 1 && row.inkCy != null) {
+        inkCy = Math.abs(nh - row.nh) > 2 ? (row.inkCy / row.nh) * nh : row.inkCy;
       }
-      if (minY === null || maxY === null) {
+      if (inkCy == null) {
         img.dataset.tsLogoInkDone = '1';
         return;
       }
-      const inkCySample = (minY + maxY) / 2;
-      const inkCy = inkCySample / sampleScale;
       const imgRect = img.getBoundingClientRect();
-      const row = img.closest('li[data-list-row]');
-      const nameEl = row ? row.querySelector('[data-ts-list-row-name]') : null;
+      const listRow = img.closest('li[data-list-row]');
+      const nameEl = listRow ? listRow.querySelector('[data-ts-list-row-name]') : null;
       let targetY = null;
       if (nameEl) {
         const firstText = [...nameEl.querySelectorAll('span,strong')].find(
@@ -178,10 +160,11 @@ function centerThingLogoInk(img) {
   else setTimeout(run, 0);
 }
 
-export function thingLogoInkCenterBundleSnippet() {
+export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffsets) {
+  const tableJson = JSON.stringify(offsetTable || {});
   const fn = centerThingLogoInk.toString().replace(/\s+/g, ' ').trim();
   const bodyFromOpen = fn.slice(fn.indexOf('('));
-  return `function tsCenterThingLogoInk${bodyFromOpen}`;
+  return `const TS_LOGO_INK_CY=${tableJson};function tsCenterThingLogoInk${bodyFromOpen}`;
 }
 
 const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},ref:Rn=>{if(Rn&&Rn.complete&&Rn.naturalWidth>1)tsCenterThingLogoInk(Rn)},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
@@ -190,11 +173,19 @@ const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
 export function patchThingLogoInkCenterInBundle(js = '', dcNeedles = []) {
   let out = String(js || '');
+  const table = thingLogoInkOffsets;
+  const snippet = thingLogoInkCenterBundleSnippet(table);
   if (!out.includes('function tsCenterThingLogoInk(')) {
     if (!out.includes(THING_LOGO_INK_ANCHOR)) {
       throw new Error('trek bundle missing anchor for thing logo ink centering');
     }
-    out = out.replace(THING_LOGO_INK_ANCHOR, `${thingLogoInkCenterBundleSnippet()}${THING_LOGO_INK_ANCHOR}`);
+    out = out.replace(THING_LOGO_INK_ANCHOR, `${snippet}${THING_LOGO_INK_ANCHOR}`);
+  } else if (!out.includes('const TS_LOGO_INK_CY=')) {
+    out = out.replace(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\}(?=function |const |var |let )/, snippet);
+    if (!out.includes('const TS_LOGO_INK_CY=')) {
+      const prefix = snippet.split('function tsCenterThingLogoInk')[0];
+      out = out.replace('function tsCenterThingLogoInk(', `${prefix}function tsCenterThingLogoInk(`);
+    }
   }
   for (const needle of dcNeedles) {
     if (out.includes(needle)) {

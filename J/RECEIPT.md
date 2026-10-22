@@ -1,41 +1,30 @@
 # VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, 2026-10-22)
 
-**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (kickback 2026-10-22 12:15 AM PT).
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (rethink + dirty-head base merge).
 
-**Start sha:** `fe221bb44ddc348925bd6dcf6a7b676df58e0eeb` (includes `ac6689ac` 390px tab fix).
+**Start sha:** `62d8924384d0410c444cf4304386752482b31209`  
+**Base merge:** `origin/migrate/trek-source` @ `6800a3b34e9a9773734f52e1526326b3961d463b` (includes #621 Motto snapshot key `676`).
 
 ## Change
 
-1. **390px tab capture (from `ac6689ac`):** defer per-logo canvas ink work off the React commit path (`requestAnimationFrame` / `setTimeout(0)`), harden canvas reads, `onLoad` + deferred `ref` when `img.complete` (ref only schedules ink fn; no sync canvas in ref).
-2. **Ink vs first name line:** `tsCenterThingLogoInk` targets `[data-ts-list-row-name]` first-line centre (Gate B `judgeRowNameFrame`), with `object-fit: contain` content-box math; chip-centre fallback when name node missing.
-3. Rebaked `public/assets/index-BKun7ofk.js` via `node scripts/rebake_served_trek_bundle.mjs`.
-
-Row `sr` / chip box untouched.
+1. **Offline logo ink offsets:** `scripts/build_thing_logo_ink_offsets.mjs` decodes each list-tab logo URL (ImageMagick, Gate B ink-bbox threshold 24) into `src/vacation/thing-logo-ink-offsets.json`. `dc()` applies fractional `translateY` from the table toward `[data-ts-list-row-name]` — no runtime canvas.
+2. Rebaked `public/assets/index-BKun7ofk.js` via `node scripts/rebake_served_trek_bundle.mjs`.
+3. Merged base fixture/test updates for #621 without changing PR #601 row layout.
 
 ## Local verification
 
 | Check | Result |
 | --- | --- |
-| `TSV_CAPTURE_BASE=http://127.0.0.1:9876` + `~/tsv-dispatch/capture/capture.mjs` (head build) | `{"shots":32,"failed":0}` at 390 and 1280 |
-| Playwright on restaurants tab | `getImageData` fails: canvas tainted by cross-origin logo URLs (e.g. `static.spotapps.co`); `tsLogoInkDone=1` with empty `transform` |
-
-Ink bbox measurement cannot run in-browser on NYC fixture logos without same-origin bytes or server-computed `logoInkCenterY` on `thingOverrides` (chief brief: measure where logos are fetched/stored). Not fixed this round.
-
-## Checks (local)
-
-| Command | Exit |
-| --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_thing_logo_ink_center.mjs` | 0 |
-| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
-| `cd apps/vacation-client && npm test` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node scripts/build_thing_logo_ink_offsets.mjs` | pending |
+| `node scripts/rebake_served_trek_bundle.mjs` | pending |
+| `node scripts/test_thing_logo_ink_center.mjs` | pending |
+| `cd apps/vacation-client && npm test` | pending |
+| `node scripts/check-no-comments.mjs` | pending |
+| `node scripts/test_offline_manifest.mjs` | pending |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pending |
 
 ## Verdict
 
-390px tab regression addressed on branch tip; logo-centre Gate B still blocked on cross-origin canvas taint until server-side ink metadata or a same-origin logo fetch path lands. Not self-certified; CI + Gate B on published head are authority.
+Not self-certified; CI + Gate B gap_close on published head are authority.
 
-**Tip sha:** `7b5dfcee460a2124149ef1f01739934545f9edca`
+**Tip sha:** (filled at DONE)

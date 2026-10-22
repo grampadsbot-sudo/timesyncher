@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 
 import {
   inkBboxCenterYFromRgba,
+  inkCenterYNaturalFromTable,
   inkScreenCenterY,
+  normalizeThingLogoUrl,
   objectFitContainContentRect,
   thingLogoInkCenterBundleSnippet,
   verticalNudgePxForInkCenter,
@@ -60,10 +62,28 @@ const toName = verticalNudgePxForInkToScreenTarget({
 });
 assert.ok(toName > 0.5);
 
-const snippet = thingLogoInkCenterBundleSnippet();
+const table = {
+  'https://www.apple.com/favicon.ico': { inkCy: 8, nh: 32 },
+};
+const fromTable = inkCenterYNaturalFromTable(
+  table,
+  'https://www.apple.com/favicon.ico',
+  32,
+);
+assert.equal(fromTable, 8);
+assert.equal(
+  inkCenterYNaturalFromTable(table, 'https://www.apple.com/favicon.ico#x', 64),
+  16,
+);
+assert.equal(normalizeThingLogoUrl('https://x/y.ico#frag'), 'https://x/y.ico');
+
+const snippet = thingLogoInkCenterBundleSnippet(table);
+assert.match(snippet, /const TS_LOGO_INK_CY=/);
+assert.match(snippet, /TS_LOGO_INK_CY\[key\]/);
 assert.match(snippet, /data-ts-list-row-name/);
-assert.match(snippet, /^function tsCenterThingLogoInk\(/);
+assert.match(snippet, /function tsCenterThingLogoInk\(/);
 assert.match(snippet, /translateY/);
+assert.doesNotMatch(snippet, /getImageData/);
 
 assert.throws(
   () => patchThingLogoChipAlignment('dc=({item:G})=>{}'),
