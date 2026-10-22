@@ -28,15 +28,9 @@ function wordCount(value = '') {
 
 function isThinNeighborhoodListSummary(value = '') {
   const row = text(value, 500);
-  if (!row) return false;
+  if (!row || !/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) return false;
   if (/^Neighborhood:\s*.+;\s*Rating:\s*[\d.]+\.?\s*$/i.test(row)) return true;
-  if (/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) {
-    if (/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row)) {
-      return false;
-    }
-    return true;
-  }
-  return false;
+  return !/\b(Price:\s*\$|\/night|room|suite|pod|king|queen|bunk|breakfast|cancellation|candidate|walk|subway|week for)\b/i.test(row);
 }
 
 export function isGenericDescription(value = '') {
