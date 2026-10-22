@@ -17,14 +17,23 @@ const hotelRow = NYC_STAGING_CAPTURE_LIST_ROWS.find((row) => row.id === 616);
 assert.ok(hotelRow, 'Hotel Edison list row fixture');
 
 const ccabPlace = buildGateBSearchPlaceForRow(hotelRow);
-assert.equal(searchPlaceNeedsWebDetailEnrichment(ccabPlace), true, 'ccab semicolon hotel copy must need web detail');
+assert.equal(
+  searchPlaceNeedsWebDetailEnrichment(ccabPlace),
+  false,
+  'fixture prose hotel copy must not require web detail enrichment',
+);
 
 const enriched = enrichSearchPlace(ccabPlace);
+assert.equal(
+  descriptionPassesDetailJudge(enriched.description, enriched.title),
+  true,
+  'fixture hotel description must pass detail judge',
+);
 assert.ok(
   wordCount(enriched.summary) < 30 || descriptionPassesDetailJudge(enriched.summary, enriched.title),
-  'summary must stay a short tagline when longDetails is absent',
+  'summary must stay a short tagline',
 );
-assert.equal(enriched.description, '', 'semicolon ccab facts must not ship as description');
+assert.ok(enriched.price != null && enriched.price > 0, 'hotel price must survive enrichment');
 
 const prose = 'Hotel Edison sits in the Times Square theater district with a classic 1930s lobby, strong Broadway foot traffic, and compact Midtown rooms that trade space for location. Guests mention the grand public areas, late-night diner, and easy subway access while noting that standard rooms can feel dated and busy on show nights.';
 const merged = mergeWebDetailIntoSearchPlace(ccabPlace, {

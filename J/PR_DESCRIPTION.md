@@ -1,35 +1,36 @@
-Closes #613
+Closes #608
 
-## Problem
+## Summary
 
-Live accept at 390px reported hotel list titles ~68px past the right edge on `/shared/` (served `Oe()` bundle). Round 0 added mobile **wrap** CSS; Gate B failed `hotels-390` / `hotels-390-top` pixel compare and conflicts with #547 (name and description stay one ellipsis-truncated line at every width).
+- Replaced semicolon-style ccab hotel blurbs in `scripts/fixtures/nyc_ccab_place_enrichment.json` with 40–120 word prose that names each property and keeps `summarySourceUrls` on the hotel website.
+- Aligned the Motto overlay in `scripts/fixtures/pr336-gate-b-ccab-overlay.json` and regenerated `scripts/fixtures/pr336-vk-search-places.snapshot.json` so offline NYC shared-trip serving (`buildNycCraigKimDaybydayTrip`) picks up the same copy.
+- Updated `scripts/test_vk_hotel_detail_fill.mjs` to assert fixture-backed hotels pass `descriptionPassesDetailJudge` without web enrichment (Hotel Edison list row).
 
-## Fix
+List-tab rows from `nyc-vk-list-tab-rows.mjs` were already on this branch at `fb95a63`; this change fills description/price data those rows consume.
 
-1. Keep `data-ts-hotel-row-head` and `minmax(0,1fr) auto` hotel title+price grid in `shared-trip-oe-list-row-patch.mjs`; add block ellipsis on the title `<strong>`.
-2. Replace `@media (max-width:480px)` Hotels rules in `public/assets/index-CbEHlMj6.css` with **truncation** (`nowrap` + `text-overflow:ellipsis`, grid `min-width:0`) — no `white-space:normal` / `overflow-wrap`.
-3. `[data-ts-list-row-name]` gets `width:100%` / `maxWidth:100%` via `trek-live-product-patches.mjs`.
-4. Offline contract `scripts/test_shared_hotels_390_text_wrap.mjs` updated for truncation (registered in `scripts/offline-tests.txt`).
+## Local verification
 
-**Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into PR head `934915c863c4760423f53a4422953ed0aad8273b` (2026-10-22 cursor-ubuntu vkfill-614); served `public/assets/*.js` taken from base then `node scripts/rebake_served_trek_bundle.mjs` with PR patch sources restored.
+```bash
+node --input-type=module -e "
+import { buildNycCraigKimDaybydayTrip } from './scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs';
+import { descriptionPassesDetailJudge } from './src/vacation/thing-detail-fields.mjs';
+const trip = buildNycCraigKimDaybydayTrip();
+const o = trip.thingOverrides || {};
+const hotels = trip.places.filter(p => (o['place:'+p.id]||{}).category === 'hotel');
+const pass = hotels.filter(h => descriptionPassesDetailJudge((o['place:'+h.id]||{}).longDetails || h.description, h.name));
+console.log({ hotels: hotels.length, hotel_desc_pass: pass.length, flights: trip.places.filter(p=>(o['place:'+p.id]||{}).category==='flight').length, cars: trip.places.filter(p=>(o['place:'+p.id]||{}).category==='car').length });
+"
+# hotel_desc_pass 22 / hotels 22; flights 16; cars 1; missing prices 0
 
-## Checks run (local)
+node scripts/test_gate_b_product_row_fields.mjs
+node scripts/test_nyc_budget_search_fill_prices.mjs
+node scripts/test_vk_hotel_detail_fill.mjs
+node scripts/regenerate_pr336_search_trip_fixture.mjs
+```
 
-| Command | Result |
-| --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | 0 |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
-| Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (`migrate/trek-source`, `codex/ruling95-consolidated-logo`) | 0 |
+Pre-DONE gate (lane): `check-no-comments`, `test_offline_manifest`, `BASE=codex/ruling95-consolidated-logo check-code-ratchet` — all exit 0 on commit tip.
 
-**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop may stop at `test_live_transcript_dialog_pdf.mjs` on hosts with GBrain CLI installed.
+## Out of scope (left alone)
 
-**Authority:** CI green on published PR head + Gate B PASS on all 32 screens.
-
-## Left alone
-
-- `apps/vacation-client` mobile wrap rules (#596 path).
-- Fixture price/description gaps named in chief-dr brief (data/harness; not patched in this layout round).
-- Base `#621` snapshot-key hardening merged via `migrate/trek-source` (Motto row id 676); no change to #614 hotel ellipsis look.
+- Gate B pixel compare and `live_accept.py` on staging (host/CI after publish).
+- UI/renderer changes; timeline rows 601–611 unchanged in `nyc-craig-kim-daybyday-rows.mjs`.
