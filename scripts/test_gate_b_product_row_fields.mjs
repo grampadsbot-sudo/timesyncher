@@ -202,7 +202,10 @@ const bundle = patchLiveProductDetailBundle(
 );
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:J\(G\)\|\|"Rental"\}\)/);
-assert.match(bundle, /children:n\.jsx\("strong",\{children:Re\}\)/);
+assert.match(
+  bundle,
+  /data-ts-hotel-row-head":"1"[\s\S]*n\.jsx\("strong",\{style:\{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"\},children:Re\}\)/,
+);
 assert.doesNotMatch(bundle, /Open details for summary/);
 assert.match(bundle, /Itinerary note/);
 assert.match(bundle, /ha\(G\)\.itineraryNote/);
