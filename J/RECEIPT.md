@@ -1,7 +1,7 @@
 # TSV PR #614 / issue #613 (cursor-ubuntu vkfill-614)
 
 **Start sha:** `8481be47a74f2e17d0e265123c97847eeffe90e5`  
-**Tip sha:** `23a74a5c` (merge) + follow-up manifest/J receipt  
+**Tip sha:** `d9db2979`  
 **Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into PR head `8481be47` (2026-10-22 cursor-ubuntu vkfill-614).
 
 ## Problem
