@@ -14,7 +14,8 @@ assert.equal(rendered, committed);
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-summary-stored":"1"/);
 assert.match(committed, /data-ts-list-row-name":"1"/);
-assert.match(committed, /minHeight:28},children:Zn}\)\]\}\),Xr=fo/);
+assert.match(committed, /gridTemplateColumns:"28px minmax\(0, 1fr\)"/);
+assert.doesNotMatch(committed, /minHeight:28},children:Zn}\)\]\}\),Xr=fo/);
 assert.match(
   committed,
   /Zi\(G\)\?n\.jsx\(je,\{item:G,title:ua\}\):n\.jsx\("strong",\{children:ua\}\)/,

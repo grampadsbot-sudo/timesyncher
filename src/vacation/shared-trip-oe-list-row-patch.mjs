@@ -38,9 +38,6 @@ const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{d
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
 
-const OE_ROW_SR_LOGO_ALIGN_NEEDLE = 'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
-const OE_ROW_SR_LOGO_ALIGN_PATCH = 'sr=n.jsxs("span",{style:{display:"flex",alignItems:"center",gap:9,width:"100%",minWidth:0},children:[n.jsx("span",{style:{width:28,height:28,flexShrink:0,display:"grid",placeItems:"center"},children:n.jsx(dc,{item:G,size:28})}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1,display:"flex",alignItems:"center",flex:1,minHeight:28},children:Zn})';
-
 export function patchSharedTripOeListRows(source = '') {
   let js = String(source || '');
   if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;
@@ -77,11 +74,6 @@ export function patchSharedTripOeListRows(source = '') {
     js = js.replace(OE_ROW_ZN_STRONG_NEEDLE, OE_ROW_ZN_STRONG_PATCH);
   } else if (!js.includes('Zi(G)?n.jsx(je,{item:G,title:ua}):n.jsx("strong",{children:ua})')) {
     throw new Error('shared trip Oe() default row title must wrap ua in strong for Gate B name line');
-  }
-  if (js.includes(OE_ROW_SR_LOGO_ALIGN_NEEDLE)) {
-    js = js.replace(OE_ROW_SR_LOGO_ALIGN_NEEDLE, OE_ROW_SR_LOGO_ALIGN_PATCH);
-  } else if (!js.includes('children:n.jsx(dc,{item:G,size:28})}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1,display:"flex",alignItems:"center",flex:1,minHeight:28}')) {
-    throw new Error('shared trip Oe() list row logo/name axis patch did not apply');
   }
   return js;
 }
