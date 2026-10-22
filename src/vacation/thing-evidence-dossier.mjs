@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { extractTavily, searchTavily } from './poi-search.mjs';
+import { braveLocalEvidence } from './dossier-brave.mjs';
 
 function publicAddress(address) {
   if (isIP(address) === 6) return /^2[0-9a-f]{3}:/i.test(address);
@@ -124,7 +125,7 @@ export function changedDossierPageUrls(before = [], after = []) {
 
 export async function gatherThingEvidence(place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
-  searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily,
+  searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
@@ -139,6 +140,8 @@ export async function gatherThingEvidence(place = {}, {
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official) urls.add(official);
   const topics = dossierSearchTopics(place).map((topic) => ({ topic, max: topic.review ? 5 : 8 }));
+  // Round 5: Brave local place search + local POIs (TripAdvisor rating, count, snippets) alongside Tavily.
+  const bravePromise = braveImpl ? Promise.resolve(braveImpl(place, { destination, env, fetchImpl })).catch(() => ({ pages: [], attempts: [{ kind: 'brave', status: 'failed' }] })) : null;
   const results = await Promise.all(topics.map(async ({ topic, max }) => {
     try {
       const result = await searchImpl(`${name} ${destination} ${topic.q}`.replace(/\s+/g, ' ').trim(),
@@ -185,6 +188,11 @@ export async function gatherThingEvidence(place = {}, {
     } catch {
       dossier.attempts.push({ kind: 'page', url, status: 'failed' });
     }
+  }
+  if (bravePromise) {
+    const brave = await bravePromise;
+    dossier.attempts.push(...(brave.attempts || []));
+    for (const page of brave.pages || []) if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
   }
   return dossier;
 }

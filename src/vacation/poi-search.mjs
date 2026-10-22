@@ -156,7 +156,7 @@ export class TavilySearchError extends Error {
   }
 }
 
-function braveSubscriptionKey(env = process.env) {
+export function braveSubscriptionKey(env = process.env) {
   return String(buildProviderEnv(env).brave || '').trim();
 }
 

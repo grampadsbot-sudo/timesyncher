@@ -39,6 +39,9 @@ export function extractReviewsByCode(dossier = {}) {
   (dossier.pages || []).forEach((page, index) => {
     const id = dossierPageId(index);
     const text = String(page.text || '');
+    if (page.via === 'brave' && Array.isArray(page.braveReviews)) {
+      for (const row of page.braveReviews) if (row?.text) out.push({ text: clip(row.text), page: id, method: 'code:brave', ...(row.rating ? { rating: row.rating } : {}) });
+    }
     for (const m of text.matchAll(/"reviewBody"\s*:\s*"((?:[^"\\]|\\.)*)"/g)) {
       let body = m[1];
       try { body = JSON.parse(`"${m[1]}"`); } catch { /* keep raw */ }
@@ -93,7 +96,7 @@ export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [],
   // only candidates from pages that name the place are kept.
   const core = tokens(String(dossier.thing || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
   const keep = Array.isArray(keepIds) ? new Set(keepIds.map(String)) : null;
-  codeItems = codeItems.filter((c, i) => (keep ? keep.has(`k${i + 1}`)
+  codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || (keep ? keep.has(`k${i + 1}`)
     : tokens(pageFor0(dossier, c.page)?.text || '').join(' ').includes(core)));
   const pageFor = (id) => { const m = /^p(\d+)$/.exec(String(id || '')); return m ? dossier.pages?.[Number(m[1]) - 1] : null; };
   const model = (Array.isArray(modelItems) ? modelItems : []).filter((r) => r && typeof r.text === 'string')

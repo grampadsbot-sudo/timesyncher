@@ -204,7 +204,11 @@ export function prepareDossierFindings(dossier, findings = {}) {
   next.reviewsRead = next.reviewExcerpts.length;
   next.reviewSources = [...new Set(next.reviewExcerpts.flatMap((item) => String(item.url || '').split(','))
     .map(reviewSourceHost).filter(Boolean))];
-  const rating = findings.rating;
+  // Round 5: provider rating from Brave local POIs when the writer gives no valid cited rating.
+  const braveRating = (dossier.pages || []).find((page) => page.via === 'brave' && page.braveRating)?.braveRating;
+  const writerRating = findings.rating;
+  const writerOk = writerRating && cited(dossier, writerRating);
+  const rating = writerOk || !braveRating ? writerRating : { ...braveRating, provider: 'brave' };
   const average = Number(rating?.average);
   const count = Number(rating?.count);
   const scale = Number(rating?.scaleMax);

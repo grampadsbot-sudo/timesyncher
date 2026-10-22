@@ -24,6 +24,7 @@ import {
   prepareDossierFindings,
   fitDescriptionWords,
 } from './thing-dossier-fields.mjs';
+import { dossierForModel, logXaiUsage, promptChars } from './dossier-cost.mjs';
 import { dedupeReviews, extractionPrompt, extractReviewsByCode, finalizeReviewSet } from './dossier-review-extract.mjs';
 
 export {
@@ -34,6 +35,28 @@ export {
   xaiThemesReviewPath,
   reviewThemesDistinctCount,
 } from './xai-grok-place-ratings-helpers.mjs';
+
+const ESCALATE_STEPS = new Set(['builder']);
+
+// Round 5: one xAI call path. Extract/judge run with reasoning effort none (cheapest grok-4.3 mode);
+// if the API rejects the reasoning field, retry once without it. Logs tokens and $ on the dossier.
+async function postXai(dossier, step, model, content, { env, fetchImpl, timeoutMs }) {
+  const base = { model, input: [{ role: 'user', content }], text: { format: { type: 'json_object' } } };
+  const effort = env.XAI_DOSSIER_REASONING_EFFORT || (ESCALATE_STEPS.has(step) ? '' : 'none');
+  let response = await postXaiPlaceRatingsResponses({ apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
+    payload: effort ? { ...base, reasoning: { effort } } : base });
+  if (effort && response.status === 400) {
+    response = await postXaiPlaceRatingsResponses({ apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs, payload: base });
+  }
+  if (!response.ok) {
+    logXaiUsage(dossier, step, model, {});
+    throw new Error(`dossier_${step === 'builder' ? 'builder' : step}_http_${response.status}`);
+  }
+  const payload = await response.json();
+  const row = logXaiUsage(dossier, step, model, payload);
+  row.promptChars = content.length;
+  return payload;
+}
 
 function outputText(payload) {
   if (typeof payload.output_text === 'string') return payload.output_text;
@@ -62,7 +85,7 @@ function dossierPrompt(dossier) {
     'Return reviews: four {text,rating,verdict,claims} representative assessments in your own words, written from ALL of reviewSet (reflect its real spread of praise and complaints, not just a few entries); claims cite the page ids of the reviewSet entries they rest on. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
     'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
     'No per-review sources or URLs: those are on the dossier evidence list. Insufficient evidence means omitted fields, never filler.',
-    JSON.stringify(dossierWithPageIds(dossier)),
+    JSON.stringify(dossierWithPageIds(dossierForModel(dossier, { perPage: 1800, total: 24000 }))),
   ].join('\n');
 }
 
@@ -79,7 +102,8 @@ export function collectDossierClaims(findings = {}) {
 
 function judgePrompt(dossier, items) {
   const ids = [...new Set(items.flatMap((item) => item.pages || []))];
-  const pages = ids.map((id) => ({ id, page: dossierPageById(dossier, id) })).filter((row) => row.page)
+  const slim = dossierForModel(dossier, { perPage: 1800, total: 24000 });
+  const pages = ids.map((id) => ({ id, page: dossierPageById(slim, id) })).filter((row) => row.page)
     .map(({ id, page }) => ({ id, url: page.url, fetchedAt: page.fetchedAt, sha256: page.sha256, text: page.text }));
   return [
     'You are an independent fact checker. You did not write these claims.',
@@ -102,17 +126,10 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
   if (judgeImpl) {
     results = await judgeImpl(dossier, ask.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })));
   } else {
-    const response = await postXaiPlaceRatingsResponses({
-      apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
-      payload: {
-        model: env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
-        input: [{ role: 'user', content: judgePrompt(dossier, ask) }],
-        text: { format: { type: 'json_object' } },
-      },
-    });
-    if (!response.ok) throw new Error(`dossier_judge_http_${response.status}`);
+    const payload = await postXai(dossier, 'judge', env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
+      judgePrompt(dossier, ask), { env, fetchImpl, timeoutMs });
     try {
-      results = JSON.parse(outputText(await response.json())).results;
+      results = JSON.parse(outputText(payload)).results;
     } catch {
       results = [];
     }
@@ -136,16 +153,12 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
       ({ reviews: model = [], keep = null } = await extractReviewsImpl(dossier, code));
       status = 'ok';
     } else if (env.XAI_API_KEY) {
-      const response = await postXaiPlaceRatingsResponses({
-        apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
-        payload: {
-          model: env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
-          input: [{ role: 'user', content: extractionPrompt(dossier, code) }],
-          text: { format: { type: 'json_object' } },
-        },
-      });
-      if (!response.ok) throw new Error(`dossier_extract_http_${response.status}`);
-      const out = JSON.parse(outputText(await response.json()));
+      // Only non-Brave pages, review passages only, capped: Brave snippets are already code-extracted.
+      const slim = dossierForModel({ ...dossier, pages: (dossier.pages || []).map((p) => (p.via === 'brave' ? { ...p, text: '' } : p)) },
+        { perPage: 1500, total: 16000, want: 'reviews' });
+      const payload = await postXai(dossier, 'extract', env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
+        extractionPrompt(slim, code.slice(0, 60)), { env, fetchImpl, timeoutMs });
+      const out = JSON.parse(outputText(payload));
       model = out.reviews || [];
       keep = Array.isArray(out.keep) ? out.keep : null;
       status = 'ok';
@@ -159,16 +172,7 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
 
 async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImpl }) {
   if (buildImpl) return buildImpl(dossier);
-  const response = await postXaiPlaceRatingsResponses({
-    apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
-    payload: {
-      model: xaiGrokPlaceSearchModelId(env),
-      input: [{ role: 'user', content: dossierPrompt(dossier) }],
-      text: { format: { type: 'json_object' } },
-    },
-  });
-  if (!response.ok) throw new Error(`dossier_builder_http_${response.status}`);
-  const payload = await response.json();
+  const payload = await postXai(dossier, 'builder', xaiGrokPlaceSearchModelId(env), dossierPrompt(dossier), { env, fetchImpl, timeoutMs });
   const structuredText = outputText(payload);
   let findings;
   try {
@@ -220,7 +224,10 @@ export async function fetchXaiPlaceRatings(place = {}, {
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
     : built;
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
-  return { payload, structuredText, judge, findings, extraction: extraction.stats, parsed: { evidenceDossier: final } };
+  final.xaiUsage = merged.xaiUsage || [];
+  final.xaiUsd = merged.xaiUsd || 0;
+  final.fullPageChars = promptChars(merged);
+  return { payload, structuredText, judge, findings, extraction: extraction.stats, xaiUsage: final.xaiUsage, xaiUsd: final.xaiUsd, parsed: { evidenceDossier: final } };
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {
