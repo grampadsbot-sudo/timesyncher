@@ -29,4 +29,4 @@ Ink-centre behaviour unchanged in intent; layout/row `sr` untouched.
 
 Fix pushed for host publish. Not self-certified; CI + Gate B on published head are authority.
 
-**Tip sha:** `5a60da93e7b81cd30cb874682a06b3ea30167994`
+**Tip sha:** `574361141dc90bd4aa67e02b6a9f787fbe0f4e72`
