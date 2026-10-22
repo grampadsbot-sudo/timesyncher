@@ -7,6 +7,17 @@ import path from 'path';
 import { assertGateBCapturePreDataCheckPayload } from './capture-pre-data-check.mjs';
 import { prepareTimelineReplay } from './timeline-replay.mjs';
 import { dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
+import {
+  DOM_TILE_EVAL,
+  buildLogoShotRecord,
+  buildTileShotRecord,
+  isMapTileUrl,
+  isPublicLogoImageUrl,
+  logoRequestRecord,
+  summarizeImageHosts,
+  sanitizePublicImageUrl,
+  tileRequestRecord,
+} from './passive-acquisition.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -235,24 +246,79 @@ async function recordRegions(page, shot, full) {
   } catch (e) { regions[shot] = { ok: false, error: String(e.message || e).split('\n')[0] }; }
 }
 
-const TILE_RE = /\/\d{1,2}\/\d{1,7}\/\d{1,7}(@2x)?\.(png|jpe?g|webp)$/i;
 const T0 = Date.now();
 const tileLog = { requests: [], shots: [] };
+const logoLog = { requests: [], shots: [] };
 function watchTiles(page, w) {
   page.on('response', async (resp) => {
     try {
       if (resp.request().resourceType() !== 'image') return;
-      const u = new URL(resp.url()); if (!TILE_RE.test(u.pathname)) return;
-      const h = resp.headers(); let bytes = Number(h['content-length']);
-      if (!Number.isFinite(bytes)) { try { bytes = (await resp.body()).length; } catch { bytes = null; } }
-      tileLog.requests.push({ w, host: u.host, status: resp.status(), content_type: h['content-type'] || null, bytes, t_ms: Date.now() - T0 });
+      const rawUrl = resp.url();
+      if (!isMapTileUrl(rawUrl)) return;
+      const h = resp.headers();
+      let bytes = Number(h['content-length']);
+      let body = null;
+      if (!Number.isFinite(bytes)) { try { body = await resp.body(); bytes = body.length; } catch { bytes = null; } }
+      const rec = tileRequestRecord({
+        w, t0: T0, url: rawUrl, status: resp.status(), contentType: h['content-type'] || null, bytes,
+      });
+      tileLog.requests.push(rec);
+      const pendingBody = body ? Promise.resolve(body) : resp.body();
+      pendingBody.then((value) => { rec.body_sha256 = crypto.createHash('sha256').update(value).digest('hex'); }).catch((e) => { void e; });
     } catch (e) { void e; }
   });
   page.on('requestfailed', (req) => {
     try {
       if (req.resourceType() !== 'image') return;
-      const u = new URL(req.url()); if (!TILE_RE.test(u.pathname)) return;
-      tileLog.requests.push({ w, host: u.host, status: 0, failure: (req.failure() || {}).errorText || 'failed', content_type: null, bytes: 0, t_ms: Date.now() - T0 });
+      const rawUrl = req.url();
+      if (!isMapTileUrl(rawUrl)) return;
+      tileLog.requests.push(tileRequestRecord({
+        w,
+        t0: T0,
+        url: rawUrl,
+        status: 0,
+        contentType: null,
+        bytes: 0,
+        failure: (req.failure() || {}).errorText || 'failed',
+      }));
+    } catch (e) { void e; }
+  });
+}
+function watchLogos(page, w) {
+  page.on('response', async (resp) => {
+    try {
+      if (resp.request().resourceType() !== 'image') return;
+      const rawUrl = resp.url();
+      if (!isPublicLogoImageUrl(rawUrl)) return;
+      const h = resp.headers();
+      let bytes = Number(h['content-length']);
+      let bodySha256 = null;
+      try {
+        const body = await resp.body();
+        if (!Number.isFinite(bytes)) bytes = body.length;
+        if (body?.length) bodySha256 = crypto.createHash('sha256').update(body).digest('hex');
+      } catch { if (!Number.isFinite(bytes)) bytes = null; }
+      const rec = logoRequestRecord({
+        w, t0: T0, url: rawUrl, status: resp.status(), contentType: h['content-type'] || null, bytes, bodySha256,
+      });
+      if (rec) logoLog.requests.push(rec);
+    } catch (e) { void e; }
+  });
+  page.on('requestfailed', (req) => {
+    try {
+      if (req.resourceType() !== 'image') return;
+      const rawUrl = req.url();
+      if (!isPublicLogoImageUrl(rawUrl)) return;
+      const rec = logoRequestRecord({
+        w,
+        t0: T0,
+        url: rawUrl,
+        status: 0,
+        contentType: null,
+        bytes: 0,
+        failure: (req.failure() || {}).errorText || 'failed',
+      });
+      if (rec) logoLog.requests.push(rec);
     } catch (e) { void e; }
   });
 }
@@ -288,6 +354,7 @@ async function captureTabPair(page, w, topShot, fullShot) {
   await waitForMap(page, topShot.replace(/\.png$/, ''));
   await recordTileShot(page, w, topShot);
   await recordRegions(page, topShot, false);
+  recordLogoShot(w, topShot);
   await page.screenshot({ path: path.join(outdir, topShot), animations: 'disabled' });
   const h = await page.addStyleTag({ content: FULLPAGE_CSS });
   await page.waitForTimeout(300);
@@ -295,6 +362,7 @@ async function captureTabPair(page, w, topShot, fullShot) {
   await waitForMap(page, fullStem);
   await recordTileShot(page, w, fullShot);
   await recordRegions(page, fullShot, true);
+  recordLogoShot(w, fullShot);
   await page.screenshot({ path: path.join(outdir, fullShot), fullPage: true, animations: 'disabled' });
   await h.evaluate((n) => n.remove());
   await page.waitForTimeout(200);
@@ -303,18 +371,18 @@ async function captureTabPair(page, w, topShot, fullShot) {
 
 async function recordTileShot(page, w, shot) {
   try {
-
-    const dom = await page.evaluate(() => {
-      const imgs = [...document.querySelectorAll('.leaflet-container img.leaflet-tile')];
-      const pins = [...document.querySelectorAll('.leaflet-container .leaflet-marker-icon')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
-      return { total: imgs.length, loaded: imgs.filter((i) => i.complete && i.naturalWidth > 0).length, markers: pins.length };
-    });
+    const dom = await page.evaluate(DOM_TILE_EVAL);
     const t = Date.now() - T0;
-    const got = tileLog.requests.filter((q) => q.w === w && q.status === 200 && /^image\//i.test(q.content_type || '')).length;
-
-    const sizes = new Set(tileLog.requests.filter((q) => q.w === w && q.t_ms <= t && q.status === 200 && /^image\//i.test(q.content_type || '') && q.bytes != null).map((q) => q.bytes));
-    tileLog.shots.push({ shot, w, loaded_before_shot: dom.loaded, dom_tiles_total: dom.total, dom_tiles_loaded: dom.loaded, status200_so_far: got, markers: dom.markers, distinct_tile_bytes: sizes.size, t_ms: t });
+    tileLog.shots.push(buildTileShotRecord({ shot, w, dom, t, tileLog }));
   } catch (e) { void e; }
+}
+function recordLogoShot(w, shot) {
+  const domLogos = (regions[shot]?.items || []).filter((row) => row.img).map((row) => ({
+    row_cat: row.cat, url: sanitizePublicImageUrl(row.img.src),
+    rect: row.img.box, natural: row.img.natural, loaded: row.img.loaded,
+    visible: row.img.visible,
+  }));
+  logoLog.shots.push(buildLogoShotRecord({ shot, w, t: Date.now() - T0, domLogos }));
 }
 
 const browser = await chromium.launch();
@@ -324,6 +392,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: 'reduce', locale: 'en-US', timezoneId: 'America/Los_Angeles' });
     const page = await ctx.newPage();
     watchTiles(page, w);
+    watchLogos(page, w);
 
     page.on('pageerror', (e) => manifest.page_errors.push({ w, kind: 'pageerror', msg: String(e.message || e).slice(0, 200) }));
     page.on('console', (m) => { if (m.type() === 'error') manifest.page_errors.push({ w, kind: 'console', msg: m.text().slice(0, 200), url: ((m.location() || {}).url || '').slice(0, 200) }); });
@@ -401,11 +470,13 @@ try {
   }
 } finally { await browser.close(); }
 
-const tileSum = {};
-for (const q of tileLog.requests) { const k = `${q.host} ${q.status}`; tileSum[k] = (tileSum[k] || 0) + 1; }
+const tileSum = summarizeImageHosts(tileLog.requests);
+const logoSum = summarizeImageHosts(logoLog.requests);
 manifest.tile_hosts = tileSum;
+manifest.logo_hosts = logoSum;
 if (tileLog.shots.length && !tileLog.requests.some((q) => q.status === 200)) manifest.notes.push('no map tile came back 200 in this capture (see tile-log.json)');
 fs.writeFileSync(path.join(outdir, 'tile-log.json'), JSON.stringify({ base: BASE, requests: tileLog.requests, shots: tileLog.shots, summary: tileSum }, null, 1));
+fs.writeFileSync(path.join(outdir, 'logo-log.json'), JSON.stringify({ base: BASE, requests: logoLog.requests, shots: logoLog.shots, summary: logoSum }, null, 1));
 manifest.finished = new Date().toISOString();
 fs.writeFileSync(path.join(outdir, 'capture-manifest.json'), JSON.stringify(manifest, null, 2));
 fs.writeFileSync(path.join(outdir, 'capture-regions.json'), JSON.stringify(regions, null, 1));
