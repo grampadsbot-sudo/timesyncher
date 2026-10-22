@@ -323,9 +323,10 @@ function storedRowSummaryText(place, trip) {
   const override = overrideFor(trip, place);
   const source = sourceRecord(place, override);
   return text(
-    override.summary ||
-      override.longDetails ||
+    override.longDetails ||
       override.details ||
+      override.summary ||
+      source.longDetails ||
       source.summary ||
       place.description,
   );

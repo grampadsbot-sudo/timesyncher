@@ -90,6 +90,7 @@ scripts/test_roster_extraction_party.mjs
 scripts/test_offline_manifest.mjs
 scripts/test_same_selection_capture.mjs
 scripts/test_capture_acquisition.mjs
+scripts/test_gate_b_capture_pre_data_check.mjs
 scripts/test_capture_fixture_replay_harness.mjs
 scripts/test_onboarding_welcome_precheck.mjs
 scripts/test_pregate_one_harness.mjs
@@ -154,6 +155,7 @@ scripts/test_shared_tab_filter_chips.mjs
 scripts/test_trip_thing_logo_metadata.mjs
 scripts/test_pr336_ccab_search_provenance.mjs
 scripts/test_vk_search_place_output_contract.mjs
+scripts/test_vk_hotel_detail_fill.mjs
 scripts/test_vacation_collaborator_accept_e2e.mjs
 scripts/test_collaborator_no_commerce_offers.mjs
 scripts/test_eula_collaborator_name.mjs

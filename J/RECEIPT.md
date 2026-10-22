@@ -1,3 +1,16 @@
+# VK PR #610 base merge (cursor-ubuntu vkfill-610)
+
+**Base merge:** host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into PR head `62dac9c375e1022936ed94a1df472a094d7d834f` (2026-10-22).
+
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-610` page not found at lane launch (2026-10-22).
+
+## Merge resolution
+
+- `src/vacation/trip-thing-enrichment.mjs`: kept base judge/ccab hotel blanking plus PR `isThinNeighborhoodListSummary` list-copy gating.
+- `public/assets/index-BKun7ofk.js`: base served bundle then `node scripts/rebake_served_trek_bundle.mjs`.
+
+---
+
 # VK PR #610 hard round (cursor-ubuntu vkfill-610)
 
 **Parent start sha:** `8a6f10d507b6c12adc1e312f0c2b95c2cb254a55`  

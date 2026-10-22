@@ -203,9 +203,10 @@ export function detailSummary(place, trip) {
   const source = sourceRecord(place, override);
   const name = placeName(place);
   const candidate = text(
-    override.summary ||
-      override.longDetails ||
+    override.longDetails ||
       override.details ||
+      override.summary ||
+      source.longDetails ||
       source.summary ||
       place.description,
   );
