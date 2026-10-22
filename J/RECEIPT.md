@@ -1,3 +1,34 @@
+# VK PR #599 / issue #595 — round 7 (BASE-MERGE 6800a3b + travel price bind)
+
+**Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 4). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept); base delta: pr336 snapshot key guard (#621).
+
+**Start sha:** `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf`
+
+## Problem (Gate B coverage on `b6db7142`, run `20261022-083451`)
+
+Hotels list mostly priced; Budget hotel lines and Flights list rows showed no `$` amounts in capture body text (21/23 budget hotels, 16/16 flights). Root cause: `applyThingDetailOverrides` left F/H/C rows without bound `price` until a later `applyLiveAppListRowFields` pass; Budget/Flights UI reads the same fields as Hotels list but detail merge ran without rebinding.
+
+## Fix (local tip pending commit)
+
+- `shared-trip-live-app-fields.mjs`: export `bindTravelListRowPrice`; reuse in list-row finalize.
+- `thing-detail-fields.mjs`: after detail override merge, bind travel list prices (same as Hotels list).
+- `listTabModel.mjs` / `budgetModel.mjs`: `numericPrice` estimate fallback + `nightlyRate` so Budget and list tabs stay aligned on served NYC data.
+
+## Checks (local, pre-commit)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+
+Gate B Ubuntu `gateb_coverage` not self-certified on this head; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 6 BASE-MERGE (`6edb079` into `b6db7142`)
 
 **Base merge:** Host merged `origin/migrate/trek-source` at `6edb0791f521004df36fc3b0ef58819127839942` into `b6db71429083a56615f2ebdb40eba9d28d5a753b` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 3). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept).
