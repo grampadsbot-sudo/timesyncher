@@ -38,4 +38,4 @@ Ink bbox measurement cannot run in-browser on NYC fixture logos without same-ori
 
 390px tab regression addressed on branch tip; logo-centre Gate B still blocked on cross-origin canvas taint until server-side ink metadata or a same-origin logo fetch path lands. Not self-certified; CI + Gate B on published head are authority.
 
-**Tip sha:** (set at commit)
+**Tip sha:** `7b5dfcee460a2124149ef1f01739934545f9edca`
