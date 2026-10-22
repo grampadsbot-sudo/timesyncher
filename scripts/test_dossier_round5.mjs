@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { xaiGrokPlaceSearchModelId } from './vacation-app-reply-rules.mjs';
 import { bravePoiPage, pickBraveLocation, braveLocalEvidence } from '../src/vacation/dossier-brave.mjs';
 import { condenseText, dossierForModel, xaiCallUsd, logXaiUsage } from '../src/vacation/dossier-cost.mjs';
 import { extractReviewsByCode, finalizeReviewSet } from '../src/vacation/dossier-review-extract.mjs';
@@ -61,11 +62,12 @@ assert.equal(slim.pages.length, 2);
 assert.ok(slim.pages[0].text.length <= 500);
 assert.equal(slim.pages[1].braveReviews, undefined);
 
-assert.equal(xaiCallUsd('grok-4.3', { input_tokens: 100000, output_tokens: 100000 }).usd, 0.375);
-assert.equal(xaiCallUsd('grok-4.3', { input_tokens: 1e6, output_tokens: 1e6 }).usd, 7.5);
+const model = xaiGrokPlaceSearchModelId({ XAI_PLACE_SEARCH_MODEL: 'dossier-test-model' });
+assert.equal(xaiCallUsd(model, { input_tokens: 100000, output_tokens: 100000 }).usd, 0.375);
+assert.equal(xaiCallUsd(model, { input_tokens: 1e6, output_tokens: 1e6 }).usd, 7.5);
 const d = {};
-logXaiUsage(d, 'builder', 'grok-4.3', { usage: { input_tokens: 8000, output_tokens: 2000 } });
-logXaiUsage(d, 'judge', 'grok-4.3', { usage: { input_tokens: 4000, output_tokens: 400 } });
+logXaiUsage(d, 'builder', model, { usage: { input_tokens: 8000, output_tokens: 2000 } });
+logXaiUsage(d, 'judge', model, { usage: { input_tokens: 4000, output_tokens: 400 } });
 assert.equal(d.xaiUsage.length, 2);
 assert.equal(d.xaiUsd, 0.021);
 console.log('test_dossier_round5: ok');

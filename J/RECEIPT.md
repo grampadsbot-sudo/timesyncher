@@ -26,3 +26,45 @@
 ## Not claimed
 
 - Green CI on pushed head, Gate B 32/32, staging dossier batch with live keys, or `live_accept` — host publish + acceptance only.
+
+
+---
+
+# PR #632 / issue #631 — host publication handoff
+
+Outcome: source-ready, uncommitted for host review; starting HEAD `eb8455fa36d5243c52f7839d166547a088bb7859` verified before edits and unchanged. This is not a green-CI or merge-eligibility claim.
+
+## Governing evidence
+
+- GBrain `bot-admin/lanes/vk-pr-handoff/pr-632` and `bot-admin/receipts/gpt-manager-pass-20261022-1521` read through the local gbrain CLI. Current PR/issue comments and holds saved as `issue-632.json`, `issue-631.json`, `issue-628.json` in this job directory.
+- Exact starting-head CI run [39865851072](https://github.com/grampadsbot-sudo/timesyncher/actions/runs/39865851072): unit-tests job `120127726739` and secrets job `120127726694` first error is `MODEL-BARE scripts/test_dossier_round5.mjs:64 grok-4.3`. Both complete logs saved locally. Earlier six-ratchet/five-hardcoded diagnosis was for older `bb8be14d`; local reproduction on `eb8455fa36d5243c52f7839d166547a088bb7859` shows only this remaining model literal. Ratchet already reports zero new failures.
+- Canonical data page `skills/vk-thing-data-contract/skill` read, with later binding issue comments `6346704181`, `6347521496`, `6349748310` taking precedence. Raw `get_skill` returned `skill_not_found`, authorized skill catalog empty; canonical page remained accessible. No access or missing-key blocker is claimed.
+- Applied GBrain `skills/tsv-engineer-pr-process/skill`; test-only changes skip screenshot steps 4–5 under its Scope section. Loaded keepsake/verification and required SoT pages. No screenshot or Gate B round authorized or run.
+
+## Change and reason
+
+`scripts/test_dossier_round5.mjs` now resolves the model through the existing `xaiGrokPlaceSearchModelId` accessor using an explicit local test configuration. The four cost/log calls use that configured ID. All existing assertions, expected USD totals, review checks and evidence checks are preserved. No scanner exceptions, identifier splitting, new test files, product-data edits or runtime behavior changes.
+
+## Local verification
+
+All results below apply to starting HEAD `eb8455fa36d5243c52f7839d166547a088bb7859` plus the uncommitted test diff; logs are in this job directory.
+
+| Command | Result and evidence |
+| --- | --- |
+| `node scripts/test_dossier_round5.mjs` | Exit 0; `round5-final.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `node scripts/test_thing_evidence_dossier.mjs` | Exit 0; `dossier-final.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `node scripts/test_dossier_refresh_integration.mjs` | Exit 0; `refresh-final.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `npm run test:keepsake-style2` | Exit 0; `keepsake-final.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `node scripts/test_check_hardcoded_content.mjs` | Exit 0; `hardcoded.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `node scripts/check-no-comments.mjs` | Exit 0, 844 files; `no-comments-final.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `node scripts/test_offline_manifest.mjs` | Exit 0, 288 offline / 17 online; `manifest.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | Exit 0, 255 report / 0 fail; `ratchet.log`; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+| `git diff --check` | Exit 0; `eb8455fa36d5243c52f7839d166547a088bb7859` + diff |
+
+The initial dossier/no-comments attempts stopped on missing local Neon/TypeScript packages. Installed existing locked root and client dependencies with `npm ci --ignore-scripts --no-audit --no-fund`, cache confined to this job directory; final checks above then executed successfully. No package or lockfile source edits.
+
+## Host-owned next step and retained boundaries
+
+Host reviews the uncommitted patch, publishes through the existing PR branch, and obtains green CI on that exact published head. PR #632 is still awaiting that acceptance; no CI restart/retrigger or external publication was performed. No commit, stage, push, merge, rebase, Git metadata write/probe, deploy, model-provider call, live DB write, quota reset, Gate B claim or Craig message. Existing holds and guards remain untouched. No new feature, production pricing-policy repair or adapter refactor was added to the single remaining exact-head failure scope.
+
+Prepared PR description: `PR-DESCRIPTION.md`. Source patch: `source.patch`. Receipt copy: `J/RECEIPT.md` in this job directory.
