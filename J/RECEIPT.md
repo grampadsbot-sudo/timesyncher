@@ -1,6 +1,24 @@
 # VK PR #599 / issue #595 — round 4 (hotel list summary / description coverage)
 
-**Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `a4600d9fc043930f72b02d5baa13e6fe71e100a8` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE).
+**Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `a4600d9fc043930f72b02d5baa13e6fe71e100a8` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 2). **Merge tip:** `85a6c33f` — resolved `J/RECEIPT.md`, `pr336-vk-search-trip-sources.mjs`, `trip-thing-enrichment.mjs` (PR hotel `applySourcedHotelDescriptionToRecord` + base `descriptionWhenJudgeFails` / `enrichTripThing` judge path); rebaked served trek bundle.
+
+**Start sha:** `a4600d9fc043930f72b02d5baa13e6fe71e100a8`  
+**Head sha:** `85a6c33f` (cursor-ubuntu vkfill-599 BASE-MERGE, 2026-10-22).
+
+## BASE-MERGE checks (`85a6c33f`)
+
+| Command | Result |
+| --- | --- |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | pass |
+| `node scripts/test_shared_tab_list_summary.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` full loop | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `actual 'gbrain-cli-get_page' expected 'bundled-get_page'` (lane VM has `gbrain` CLI; host CI expected) |
+| `node scripts/test_vk_search_place_output_contract.mjs` | **fail** row 603 `blank_description` — reproduces on pure `origin/migrate/trek-source` `trip-thing-enrichment.mjs` (base debt) |
 
 **Start sha:** `f15d4e9403335df46bff4421f8f75519f089e04b`  
 **Head sha:** `ba21e1e5` (cursor-ubuntu vkfill-599 hard round, 2026-10-22).
