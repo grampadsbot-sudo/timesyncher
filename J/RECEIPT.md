@@ -1,6 +1,7 @@
 # VK issue #608 receipt (cursor-ubuntu vkfill-608)
 
-**Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`
+**Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`  
+**Tip sha:** `f07da90b`
 
 ## Problem
 
