@@ -4,7 +4,7 @@ Closes #595
 
 **BASE-MERGE (`b1c7e5b4` + merge commit)** — Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 4). Resolved conflicts in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only; brought base #621 pr336 snapshot key guard (`Motto` row id 676, `test_pr336_vk_search_places_snapshot_keys.mjs`).
 
-**Gate B coverage — F/H/C list + Budget prices** — `applyThingDetailOverrides` now runs the same travel-row price bind as list tabs (`bindTravelListRowPrice`), so flights/hotels/cars keep estimated prices after detail merge. Client `numericPrice` / `budgetModel` use the same estimate fallback (incl. `nightlyRate`) so Budget rows and Flights list match Hotels list pricing.
+**Gate B coverage — F/H/C list + Budget prices** — `applyThingDetailOverrides` runs `bindTravelListRowPrice` after detail merge so flights/hotels/cars keep estimated prices through `prepareSharedTripForLiveApp` and `syncSharedTripApiBudget`. Serve-path bind stays unconditional for F/H/C when no sourced price (restores API budget + small Gate B fixtures). Client `numericPrice` / `budgetModel` use the same estimate fallback (incl. `nightlyRate`) on served VK trips.
 
 **Data fill (issue #595)** — Hotel descriptions from xAI grok fields + stored NYC CCAB enrichment on list rows (`xai-sourced-hotel-description.mjs`, fixture replay, live serve merge).
 
@@ -14,12 +14,14 @@ Closes #595
 
 **CI fix-it — shared tab list summary (`a4600d9f`)** — `bindHotelListSummary` was promoting the Manhattan Club CCAB card onto **PR225** `Midtown sample hotel` (title alias match), replacing the intake **“Strong transit access…”** summary. **Fix:** skip CCAB merge when the place already has a non-fixture intake `summary`; keep existing short summaries in `bindHotelListSummary`; do not rewrite `stored_fixture_literal` CCAB hotel copy in `composeSourcedHotelDescriptionFromRecord`.
 
-## Verification (local, pending commit tip)
+## Verification (local)
 
 | Command | Result |
 | --- | --- |
 | `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
 | `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |

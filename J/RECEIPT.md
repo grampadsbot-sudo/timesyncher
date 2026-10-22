@@ -1,3 +1,31 @@
+# VK PR #599 / issue #595 — round 8 (travel price bind regression)
+
+**Start sha:** `44de9d5966bbd60b1b0a287fd82377dd564417e5`
+
+## Problem
+
+Round 7 (`fd00b8f2`) gated `bindTravelListRowPrice` behind `shouldEstimateTravelListPrice`, so small Gate B budget fixtures and any F/H/C row without 15+ places stopped binding estimated nightly fares before `syncSharedTripApiBudget`. `scripts/test_shared_trip_api_budget_lines.mjs` failed on hotel totals; served NYC still needed unconditional serve-path bind after detail merge.
+
+## Fix
+
+- `shared-trip-live-app-fields.mjs`: restore unconditional F/H/C estimate in `bindTravelListRowPrice` when no sourced price (detail-merge rebind unchanged).
+
+## Checks (local)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+
+Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 7 (BASE-MERGE 6800a3b + travel price bind)
 
 **Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 4). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept); base delta: pr336 snapshot key guard (#621).

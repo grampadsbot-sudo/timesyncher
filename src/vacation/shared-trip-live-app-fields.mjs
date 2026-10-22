@@ -85,22 +85,10 @@ function priceFromTextFields(place = {}, override = {}, source = null) {
   return null;
 }
 
-function shouldEstimateTravelListPrice(place = {}, override = {}, source = null, shared = {}) {
-  const meta = shared?.trip?.metadata;
-  const sourceKeys = source && typeof source === 'object' ? Object.keys(source).length : 0;
-  return Boolean(
-    text(meta?.gateBNycFixtureVersion)
-    || (Array.isArray(shared?.places) && shared.places.length >= 15)
-    || sourceKeys > 0
-    || text(override.summary)
-    || text(place.description),
-  );
-}
-
 export function bindTravelListRowPrice(place = {}, override = {}, source = null, category = '', shared = {}) {
   const cat = text(category).toLowerCase();
   let price = priceFromRecords(place, override, source);
-  if (price == null && ['flight', 'hotel', 'car'].includes(cat) && shouldEstimateTravelListPrice(place, override, source, shared)) {
+  if (price == null && ['flight', 'hotel', 'car'].includes(cat)) {
     const estimated = estimateSearchPlacePrice({
       category: cat,
       title: place.name || place.title,
