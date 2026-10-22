@@ -7,6 +7,10 @@ Host merged `migrate/trek-source` at `fb95a6306b16ea71cfc1adc6fc76a5779ec47403` 
 - Hotel list rows: when stored summary is only `Neighborhood: …;` (or other thin neighborhood/rating stub), derive the visible line from `longDetails` / long copy so each hotel gets a distinct, substantive description (#607).
 - Unit tests cover UWS stub summaries and updated midtown long-copy pick expectations.
 
+## This round (base merge `3f8c28e2`)
+
+Resolved merge conflicts in `J/*`; base served `public/assets/index-BKun7ofk.js` + `node scripts/rebake_served_trek_bundle.mjs`. No #607 logic edits.
+
 ## Fix
 
 - `node apps/vacation-client/test/listRows.unit.mjs` — pass
