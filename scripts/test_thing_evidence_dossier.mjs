@@ -63,38 +63,37 @@ const goodPages = [
 ];
 
 const findings = {
-  summary: { value: 'Wood-fired pies and a deep negroni list', quote: 'wood-fired pies', url: urlA },
+  summary: { value: 'Wood-fired pies and a deep negroni list', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
   description: {
     value: 'Riverside Bistro anchors the block with blistered Riverside Bistro pies, a deep negroni list, and happy hour oysters that regulars quote in every review thread online while the raw bar, pastry counter, and late-night espresso program keep the dining room busy from opening until close.',
-    quote: 'happy hour oysters',
-    url: urlA,
+    claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
   },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
-  knownFor: [{ item: 'margherita', quote: 'margherita as the signature pie', url: urlC }],
-  reviewExcerpts: reviewBodies.map((body) => ({ quote: body, url: urlB })),
+  knownFor: [{ item: 'margherita', claims: [{ text: 'margherita is the signature pie', pages: ['p3'], supported: true }] }],
+  reviewExcerpts: reviewBodies.map((body) => ({ text: body, pages: ['p2'], supported: true })),
   reviews: [
     {
       text: 'The margherita blistered crust lived up to the signature hype, and the cocktail list stayed balanced through a busy Friday service evening while the dining room kept a steady pace.',
       rating: 5,
-      cites: ['blistered from the wood oven'],
+      claims: [{ text: 'blistered from the wood oven', pages: ['p2'], supported: true }],
       verdict: true,
     },
     {
       text: 'Host stand efficiency stayed calm during the pre-show rush, and the team kept ticket pickup moving without making the lobby feel chaotic or rushed for first-time visitors.',
       rating: 4,
-      cites: ['extra guest detail about pacing'],
+      claims: [{ text: 'extra guest detail about pacing', pages: ['p2'], supported: true }],
       verdict: false,
     },
     {
       text: 'Sidewalk seating stayed comfortable even with passing traffic, and the staff checked in often enough that water refills and menu questions never had to wait long.',
       rating: 4,
-      cites: ['wood oven every night'],
+      claims: [{ text: 'wood oven every night', pages: ['p2'], supported: true }],
       verdict: false,
     },
     {
       text: 'Checkout timing was predictable on a packed night, and the margherita remained the dish guests mentioned most often when comparing this room to nearby options.',
       rating: 5,
-      cites: ['repeat visits this season'],
+      claims: [{ text: 'repeat visits this season', pages: ['p2'], supported: true }],
       verdict: true,
     },
   ],
@@ -106,9 +105,27 @@ assert.equal(built.reviews.length, 4, 'builder output must keep four representat
 
 const rejected = prepareDossierFindings(
   { thing: 'Riverside Bistro', pages: goodPages, attempts: [] },
-  { summary: { value: 'Invented summary', quote: 'not in any saved page', url: urlA } },
+  { summary: { value: 'Invented summary', claims: [{ text: 'invented', pages: ['p1'], supported: false }] },
+    hours: { value: '9-5', claims: [{ text: 'open 9-5', pages: [], supported: true }] },
+    price: { value: 20, unit: 'per person', claims: [{ text: 'twenty dollars', pages: ['p9'], supported: true }] } },
 );
-assert.equal(rejected.fields.summary, undefined, 'uncited summary must be omitted');
+assert.equal(rejected.fields.summary, undefined, 'judge-unsupported summary must be omitted');
+assert.equal(rejected.fields.hours, undefined, 'claim citing no page must fail');
+assert.equal(rejected.fields.price, undefined, 'claim citing an unknown page must fail');
+const noReviews = prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, { ...findings, reviewExcerpts: [] });
+assert.equal(noReviews.fields.description, undefined, 'description from a dossier with no reviews is incomplete');
+assert.equal(noReviews.descriptionStatus, 'incomplete_no_reviews');
+const unsupportedReview = JSON.parse(JSON.stringify(findings));
+unsupportedReview.reviews[1].claims[0].supported = false;
+const badReview = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, unsupportedReview) });
+assert.equal(badReview.review1, undefined, 'any unsupported review claim fails reviews');
+const { judgeDossierFindings } = await import('../src/vacation/xai-grok-place-ratings.mjs');
+const toJudge = { summary: { value: 'x', claims: [{ text: 'a', pages: ['p1'] }, { text: 'b', pages: [] }] } };
+let asked = [];
+await judgeDossierFindings({ pages: goodPages }, toJudge, { judgeImpl: async (_d, items) => { asked = items; return [{ id: 'c1', supported: true }]; } });
+assert.equal(asked.length, 1, 'judge is asked only about claims citing saved pages');
+assert.equal(toJudge.summary.claims[0].supported, true);
+assert.equal(toJudge.summary.claims[1].supported, false);
 
 const record = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: built });
 assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings fetched');

@@ -18,6 +18,34 @@ function cited(dossier, claim) {
     && dossier.pages.some((page) => page.url === claim.url && norm(page.text).includes(norm(claim.quote)));
 }
 
+// Craig 10/22 12:35 PT binding rule: no exact-phrase matching. Every claim cites saved dossier page ids
+// (p1..pN); an independent judge pass marks each claim supported/unsupported from the cited page text.
+// Any unsupported claim, or a claim citing no known page, fails its field.
+export function dossierPageId(index) {
+  return `p${index + 1}`;
+}
+
+export function dossierPageById(dossier = {}, id = '') {
+  const match = /^p(\d+)$/.exec(String(id || '').trim());
+  return match ? (dossier.pages || [])[Number(match[1]) - 1] || null : null;
+}
+
+export function claimCitesKnownPages(dossier, claim) {
+  return Boolean(claim && norm(claim.text) && Array.isArray(claim.pages) && claim.pages.length
+    && claim.pages.every((id) => dossierPageById(dossier, id)));
+}
+
+export function claimsSupported(dossier, owner) {
+  const claims = owner?.claims;
+  return Array.isArray(claims) && claims.length > 0
+    && claims.every((claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true);
+}
+
+function claimUrls(dossier, owner) {
+  return [...new Set((owner?.claims || []).flatMap((claim) => claim.pages || [])
+    .map((id) => dossierPageById(dossier, id)?.url).filter(Boolean))].join(',');
+}
+
 function pageHashBundle(pageByUrl, url = '') {
   const urls = String(url || '').split(',').map((row) => row.trim()).filter(Boolean);
   return urls.map((row) => pageByUrl.get(row)).filter(Boolean).join('|');
@@ -29,7 +57,7 @@ export function computeDossierFieldHashes(dossier = {}) {
   const pageByUrl = new Map((dossier.pages || []).map((page) => [page.url, page.sha256]));
   const track = (field, claim) => {
     if (!field || !claim?.url) return;
-    const hash = pageByUrl.get(claim.url);
+    const hash = pageHashBundle(pageByUrl, claim.url);
     if (!hash) return;
     hashes[field] = hash;
     sources[field] = claim.url;
@@ -41,7 +69,8 @@ export function computeDossierFieldHashes(dossier = {}) {
   for (const [index, item] of (dossier.knownFor || []).entries()) {
     track(`knownFor:${index}`, item);
   }
-  const reviewUrls = [...new Set((dossier.reviewExcerpts || []).map((row) => row.url).filter(Boolean))];
+  const reviewUrls = [...new Set([...(dossier.reviewExcerpts || []), ...(dossier.reviews || [])]
+    .flatMap((row) => String(row.url || '').split(',')).map((row) => row.trim()).filter(Boolean))];
   if (reviewUrls.length && Array.isArray(dossier.reviews) && dossier.reviews.length === 4) {
     const bundle = reviewUrls.map((url) => pageByUrl.get(url)).filter(Boolean).join('|');
     if (bundle) {
@@ -131,10 +160,12 @@ export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
   next.knownFor = (Array.isArray(findings.knownFor) ? findings.knownFor : [])
-    .filter((item) => cited(dossier, item) && norm(item.item) && norm(item.quote).includes(norm(item.item)));
+    .filter((item) => norm(item?.item) && claimsSupported(dossier, item))
+    .map((item) => ({ ...item, url: claimUrls(dossier, item) }));
   const excerpts = (Array.isArray(findings.reviewExcerpts) ? findings.reviewExcerpts : [])
-    .filter((item) => cited(dossier, item) && words(item.quote).length >= 12);
-  next.reviewExcerpts = [...new Map(excerpts.map((item) => [norm(item.quote), item])).values()];
+    .filter((item) => claimCitesKnownPages(dossier, item) && item.supported === true)
+    .map((item) => ({ ...item, url: claimUrls(dossier, { claims: [item] }) }));
+  next.reviewExcerpts = [...new Map(excerpts.map((item) => [norm(item.text), item])).values()];
   next.reviewsRead = next.reviewExcerpts.length;
   const rating = findings.rating;
   const average = Number(rating?.average);
@@ -153,16 +184,18 @@ export function prepareDossierFindings(dossier, findings = {}) {
   }
   for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
     const claim = findings[key];
-    if (!cited(dossier, claim) || !norm(claim.value)) continue;
+    if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
     if (key === 'price') {
       const value = Number(claim.value);
-      if (!(value > 0) || !norm(claim.quote).replace(/,/g, '').includes(String(value)) || !norm(claim.unit)) continue;
+      if (!(value > 0) || !norm(claim.unit)) continue;
     }
+    if (key === 'description' && !next.reviewsRead) { next.descriptionStatus = 'incomplete_no_reviews'; continue; }
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !norm(claim.value).includes(norm(dossier.thing)))) continue;
-    next.fields[key] = claim;
+    next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
   }
-  next.reviews = Array.isArray(findings.reviews) ? findings.reviews : [];
+  next.reviews = (Array.isArray(findings.reviews) ? findings.reviews : [])
+    .map((review) => ({ ...review, url: claimUrls(dossier, review) }));
   return next;
 }
 
@@ -176,8 +209,7 @@ function dossierReviewsValid(dossier = {}) {
   let total = 0;
   for (const review of dossier.reviews) {
     if (words(review.text).length < 25 || !Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5
-      || !Array.isArray(review.cites) || !review.cites.length) return false;
-    if (review.cites.some((cite) => !dossier.reviewExcerpts?.some((excerpt) => norm(excerpt.quote).includes(norm(cite))) || norm(cite).length < 8)) return false;
+      || !claimsSupported(dossier, review)) return false;
     const sh = shingles(review.text);
     if (seen.some((prev) => [...sh].some((part) => prev.has(part)))) return false;
     const copied = new Set([...sh].filter((part) => description.has(part)).flatMap((part) => part.split(' ')));
@@ -202,7 +234,8 @@ export function writeDossierReviews(record = {}, dossier = {}) {
       const key = `review${index + 1}`;
       record[key] = review.text;
       record[`${key}Rating`] = String(review.rating);
-      record[`${key}Cites`] = [...review.cites];
+      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
@@ -224,7 +257,7 @@ export function applyDossierFields(record = {}, dossier = {}) {
   if (dossierPagesVerified(dossier)) {
     next.summarySourceUrls = dossier.pages.map((page) => page.url);
     for (const [key, claim] of Object.entries(dossier.fields || {})) {
-      if (!['summary', 'description', 'price', 'hours', 'happyHourDetails'].includes(key) || !cited(dossier, claim)) continue;
+      if (!['summary', 'description', 'price', 'hours', 'happyHourDetails'].includes(key) || !claimsSupported(dossier, claim)) continue;
       next[key] = key === 'price' ? Number(claim.value) : claim.value;
       missing.delete(key);
     }
