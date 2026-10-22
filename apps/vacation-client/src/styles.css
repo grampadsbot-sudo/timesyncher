@@ -570,12 +570,21 @@ body {
     grid-column: 2;
     justify-self: end;
   }
+  .tsv-row-main:not(.tsv-row-flight-main) .tsv-row-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+  }
   .tsv-row-desc,
-  .tsv-row-hotel-note {
+  .tsv-row-hotel-note,
+  .tsv-row-car-desc,
+  .tsv-row-car-sub {
     grid-column: 1 / -1;
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
+    overflow-wrap: anywhere;
   }
   .tsv-row-flight-main {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -587,6 +596,18 @@ body {
   }
   .tsv-row-car-main {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .tsv-budget-line .tsv-budget-line-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+  }
+  [data-shared-live-tab='events'] .tsv-row-flight-main .tsv-row-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
   }
 }
 
