@@ -322,9 +322,8 @@ function descriptionWhenJudgeFails({
 
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
   let summary = text(sourceRecord.summary || place.summary, 500);
-  if (isThinNeighborhoodListSummary(summary)) summary = '';
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
-  if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
+  if (!summary && longDescription && descriptionPassesDetailJudge(longDescription, title)) {
     const neighborhood = text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500)
       .match(/Neighborhood:\s*([^;]+)/i);
     const name = text(title, 160);

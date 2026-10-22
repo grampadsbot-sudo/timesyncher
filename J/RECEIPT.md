@@ -7,7 +7,27 @@
 ## Merge resolution
 
 - `src/vacation/trip-thing-enrichment.mjs`: kept base judge/ccab hotel blanking plus PR `isThinNeighborhoodListSummary` list-copy gating.
+- `apps/vacation-client/src/lib/listTabModel.mjs`: list rows prefer `summary` over `longDetails` (detail tab unchanged).
+- `scripts/fixtures/nyc-craig-kim-daybyday-trip.mjs`: snapshot copy overlay for rows `601`–`611` after ccab fill.
 - `public/assets/index-BKun7ofk.js`: base served bundle then `node scripts/rebake_served_trek_bundle.mjs`.
+
+## Checks (local, tip pending host push)
+
+| Command | Exit |
+| --- | --- |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+
+`node scripts/run-offline-tests.mjs` (PATH without `gbrain`, Chromium): fails `scripts/test_live_transcript_dialog_pdf.mjs:861` (`null !== 0`).
+
+## Verdict
+
+Merge + follow-up fixes committed locally on detached HEAD; host publishes to `vkfill/607-20261021175801`. CI + Gate B on pushed head are authority (not self-certified).
 
 ---
 

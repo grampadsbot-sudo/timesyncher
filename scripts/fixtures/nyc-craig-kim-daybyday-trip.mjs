@@ -331,7 +331,11 @@ function applyCcabRowSearchFields(row, place, override) {
 
 function applyPr336SearchFields(row, place, override) {
   if (applyCcabRowSearchFields(row, place, override)) {
-    applySearchFillEstimatedPrice(row, place, override, null);
+    const snapshot = PR336_SEARCH_SNAPSHOT[String(row.id)];
+    if (snapshot && VK_SEARCH_SNAPSHOT_COPY_ROW_ID_SET.has(row.id)) {
+      applyVkSearchSnapshotCopyFields(snapshot, place, override);
+    }
+    applySearchFillEstimatedPrice(row, place, override, snapshot || null);
     return;
   }
   const search = PR336_SEARCH_SNAPSHOT[String(row.id)];
