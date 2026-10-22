@@ -1,8 +1,24 @@
-import { dossierPagesVerified } from './thing-evidence-dossier.mjs';
+import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
+
+// Name check ignores punctuation and accepts the name without its " - branch" suffix
+// (round 2: "The Smith - Lincoln Square" vs "The Smith Lincoln Square" was dropped).
+function nameKey(value) {
+  return norm(value).replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+export function descriptionNamesThing(text = '', thing = '') {
+  const body = nameKey(text);
+  const names = [thing, String(thing).split(/\s+[-–—|:]\s+/)[0]].map(nameKey).filter(Boolean);
+  return names.some((name) => body.includes(name) || body.includes(name.replace(/^the /, '')));
+}
+
+export const MIN_REVIEWS_READ = 10;
+export const MIN_REVIEW_SOURCES = 3;
+export const limitedReviewsLabel = (n) => `limited reviews found (${n})`;
 
 function words(value) {
   return norm(value).split(/\s+/).filter(Boolean);
@@ -169,6 +185,8 @@ export function prepareDossierFindings(dossier, findings = {}) {
     .map((item) => ({ ...item, url: claimUrls(dossier, { claims: [item] }) }));
   next.reviewExcerpts = [...new Map(excerpts.map((item) => [norm(item.text), item])).values()];
   next.reviewsRead = next.reviewExcerpts.length;
+  next.reviewSources = [...new Set(next.reviewExcerpts.flatMap((item) => String(item.url || '').split(','))
+    .map(reviewSourceHost).filter(Boolean))];
   const rating = findings.rating;
   const average = Number(rating?.average);
   const count = Number(rating?.count);
@@ -192,7 +210,7 @@ export function prepareDossierFindings(dossier, findings = {}) {
       if (!(value > 0) || !norm(claim.unit)) continue;
     }
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
-      || !norm(claim.value).includes(norm(dossier.thing)))) continue;
+      || !descriptionNamesThing(claim.value, dossier.thing))) continue;
     next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
     // Craig 10/22 12:39 PT: no reviews never fails the description; it ends with one short flag line instead.
     if (key === 'description' && !next.reviewsRead) {
@@ -205,9 +223,19 @@ export function prepareDossierFindings(dossier, findings = {}) {
   return next;
 }
 
+export function dossierReviewBreadthOk(dossier = {}) {
+  return (dossier.reviewsRead || 0) >= MIN_REVIEWS_READ && (dossier.reviewSources || []).length >= MIN_REVIEW_SOURCES;
+}
+
+function dossierReviewsWritable(dossier = {}) {
+  return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
+    && dossier.reviews.every((review) => Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
+      && claimsSupported(dossier, review));
+}
+
 function dossierReviewsValid(dossier = {}) {
   if (!dossierPagesVerified(dossier) || !(dossier.rating > 0 && dossier.rating <= 5)
-    || dossier.pages.length < 3 || dossier.reviewsRead < Math.min(20, dossier.reviewsAvailable || 20)
+    || dossier.pages.length < 3 || !dossierReviewBreadthOk(dossier)
     || !dossier.knownFor?.length || dossier.reviews?.length !== 4) return false;
   const description = shingles([dossier.fields?.summary?.value, dossier.fields?.description?.value].join(' '));
   const seen = [];
@@ -234,8 +262,12 @@ export function writeDossierReviews(record = {}, dossier = {}) {
   delete record.reviewsLabel;
   const missing = new Set(record.missingFields || []);
   missing.add('reviews');
-  if (dossierReviewsValid(dossier)) {
-    record.reviewsLabel = `Representative review written from ${dossier.reviewsRead} reviews`;
+  const valid = dossierReviewsValid(dossier);
+  // Chief dr 10/22 1:51 PT: below the breadth bar reviews are still written, labelled limited, and count as a fail.
+  if (valid || dossierReviewsWritable(dossier)) {
+    record.reviewsLabel = valid && dossierReviewBreadthOk(dossier)
+      ? `Representative review written from ${dossier.reviewsRead} reviews`
+      : limitedReviewsLabel(dossier.reviewsRead || 0);
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
       record[key] = review.text;
@@ -245,7 +277,7 @@ export function writeDossierReviews(record = {}, dossier = {}) {
       record[`${key}Label`] = record.reviewsLabel;
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
-    missing.delete('reviews');
+    if (valid) missing.delete('reviews');
   }
   record.missingFields = [...missing];
   return record;

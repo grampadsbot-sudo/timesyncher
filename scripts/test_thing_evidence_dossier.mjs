@@ -43,9 +43,9 @@ function memoryStore() {
   };
 }
 
-const urlA = 'https://example.com/a';
-const urlB = 'https://example.com/b';
-const urlC = 'https://example.com/c';
+const urlA = 'https://yelp.example/a';
+const urlB = 'https://tripadvisor.example/b';
+const urlC = 'https://google.example/c';
 const quote = 'The house margherita arrives blistered from the wood oven every night';
 const baseText = `Riverside Bistro review page. ${quote}. Published average 4.5 stars from 120 verified diner reviews.`;
 
@@ -70,7 +70,7 @@ const findings = {
   },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
   knownFor: [{ item: 'margherita', claims: [{ text: 'margherita is the signature pie', pages: ['p3'], supported: true }] }],
-  reviewExcerpts: reviewBodies.map((body) => ({ text: body, pages: ['p2'], supported: true })),
+  reviewExcerpts: reviewBodies.map((body, i) => ({ text: body, pages: [`p${(i % 3) + 1}`], supported: true })),
   reviews: [
     {
       text: 'The margherita blistered crust lived up to the signature hype, and the cocktail list stayed balanced through a busy Friday service evening while the dining room kept a steady pace.',
@@ -133,6 +133,26 @@ assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings
 assert.ok(record.review1, 'representative review text must land on the record');
 assert.match(String(record.reviewsLabel), /Representative review written from 20 reviews/);
 
+// Round 3: breadth bar >=10 reviews across >=3 sources; below it reviews are written, labelled limited, and fail.
+const { descriptionNamesThing, MIN_REVIEWS_READ } = await import('../src/vacation/thing-dossier-fields.mjs');
+assert.equal(MIN_REVIEWS_READ, 10);
+assert.deepEqual(built.reviewSources.length, 3);
+const narrow = JSON.parse(JSON.stringify(findings));
+narrow.reviewExcerpts = narrow.reviewExcerpts.map((item) => ({ ...item, pages: ['p2'] }));
+const narrowRec = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, narrow) });
+assert.equal(narrowRec.xaiRatingsFetched, false, 'one review source fails the breadth bar');
+assert.ok(narrowRec.review1, 'limited reviews are still written');
+assert.match(String(narrowRec.reviewsLabel), /^limited reviews found \(\d+\)$/);
+assert.ok(narrowRec.missingFields.includes('reviews'));
+assert.equal(descriptionNamesThing('The Smith Lincoln Square is a brasserie', 'The Smith - Lincoln Square'), true);
+assert.equal(descriptionNamesThing("Zabar's sells lox", "Zabar's"), true);
+assert.equal(descriptionNamesThing('A brasserie near the park', 'The Smith - Lincoln Square'), false);
+const kf = { knownFor: [{ item: 'bar', claims: [{ text: 'p1 lists a bar', pages: ['p1'] }] }] };
+let kfAsked = [];
+await judgeDossierFindings({ pages: goodPages }, kf, { judgeImpl: async (_d, items) => { kfAsked = items; return []; } });
+assert.equal(kfAsked[0].kind, 'knownFor', 'known-for claims go to the judge tagged for the signature test');
+assert.equal(kfAsked[0].item, 'bar');
+
 const empty = enrichPlaceRecordWithXaiRatings({ review1: 'stale' }, { evidenceDossier: { thing: 'Empty', pages: [], attempts: [] } });
 assert.ok(empty.missingFields.includes('reviews'));
 assert.ok(empty.missingFields.includes('ratings'));
@@ -148,8 +168,9 @@ assert.deepEqual(changedDossierPageUrls([goodPages[0]], [goodPages[0], goodPages
 const { hashes, sources } = computeDossierFieldHashes(built);
 assert.equal(hashes.description, goodPages[0].sha256);
 assert.equal(sources.description, urlA);
-assert.equal(hashes.reviews, goodPages[1].sha256);
-assert.equal(sources.reviews, urlB);
+// reviews now draw excerpts from all three review sources, so their hash covers every cited page
+assert.ok(goodPages.every((row) => String(hashes.reviews).includes(row.sha256)));
+assert.ok(String(sources.reviews).includes(urlB));
 assert.equal(dossierFieldHashesStale({ fieldHashes: hashes, fieldSources: sources }, built), false);
 assert.equal(
   dossierFieldHashesStale({ fieldHashes: hashes, fieldSources: sources }, {

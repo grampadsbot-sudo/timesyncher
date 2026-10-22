@@ -49,11 +49,11 @@ function dossierPrompt(dossier) {
     'Write in your own words: summaries of what the pages say, not copied phrases. Every factual statement you make must be listed as a claim.',
     'A claim is {text, pages}: text is one short factual statement you rely on; pages lists the id(s) of the saved pages that support it. A claim with no page id fails.',
     'Return summary, description, price, hours, happyHourDetails as {value, claims}; omit unavailable fields. Price also carries unit.',
-    'Description: 40-120 words naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
+    'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
-    'Return reviewExcerpts: [{text, pages}] with one entry per distinct actual customer review readable in the saved pages, text a one-sentence summary of that review. Never manufacture reviews or counts.',
-    'Return knownFor: [{item, claims}] naming its known-for dish, service or product from its own site or an article.',
+    'Return reviewExcerpts: [{text, pages}] with one entry per distinct actual customer review or opinion (Yelp, TripAdvisor, Google, Reddit, critic reviews, guest reviews), citing exactly the one page it is on, readable in the saved pages, text a one-sentence summary of that review. Never manufacture reviews or counts.',
+    'Return knownFor: [{item, claims}] only for an item a saved page names as a signature, specialty, famous or best-known dish, service or product (a menu marking it signature, an article, or reviews singling it out). Merely having an amenity, an on-site bar, or a neighbouring or tenant restaurant is NOT known-for. Each claim text must say the page names it as a signature (e.g. "p3 calls the spicy rigatoni its signature dish"). Omit knownFor when no page does this.',
     'Return reviews: four {text,rating,verdict,claims} representative assessments in your own words. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
     'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
     'No per-review sources or URLs: those are on the dossier evidence list. Insufficient evidence means omitted fields, never filler.',
@@ -67,7 +67,7 @@ export function collectDossierClaims(findings = {}) {
   for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
     (findings[key]?.claims || []).forEach(add);
   }
-  for (const item of findings.knownFor || []) (item?.claims || []).forEach(add);
+  for (const item of findings.knownFor || []) (item?.claims || []).forEach((claim) => { if (claim && typeof claim === 'object') { claim.kind = 'knownFor'; claim.item = item.item; add(claim); } });
   for (const review of findings.reviews || []) (review?.claims || []).forEach(add);
   (findings.reviewExcerpts || []).forEach(add);
   return items;
@@ -81,8 +81,9 @@ function judgePrompt(dossier, items) {
     'You are an independent fact checker. You did not write these claims.',
     'For each claim, read ONLY the saved page text of the page ids it cites. supported:true only when those pages state or clearly imply the claim; paraphrase is fine, exact wording is not required.',
     'Anything not backed by the cited pages (outside knowledge, other pages, exaggeration, invented numbers or details) is supported:false.',
+    'Claims with kind "knownFor": supported:true ONLY when a cited page names that item as a signature, specialty, famous or best-known thing of THIS place. A page that merely lists it (an on-site bar, an amenity, a tenant or neighbouring restaurant) is supported:false.',
     'Return JSON {"results":[{"id":"c1","supported":true,"reason":"..."}]} with one result per claim.',
-    JSON.stringify({ claims: items.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages })), pages }),
+    JSON.stringify({ claims: items.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })), pages }),
   ].join('\n');
 }
 
@@ -94,7 +95,7 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
   if (!ask.length) return { judged: 0, results: [] };
   let results;
   if (judgeImpl) {
-    results = await judgeImpl(dossier, ask.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages })));
+    results = await judgeImpl(dossier, ask.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })));
   } else {
     const response = await postXaiPlaceRatingsResponses({
       apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,

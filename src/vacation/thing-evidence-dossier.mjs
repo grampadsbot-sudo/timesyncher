@@ -59,6 +59,32 @@ function pageText(body, type) {
     .join('\n').replace(/[ \t]+/g, ' ').trim();
 }
 
+export const DOSSIER_MAX_PAGES = 40;
+export const DOSSIER_PAGE_CHARS = 12000;
+
+// Chief dr 10/22 1:51 PT: review breadth. Several review-site queries per Thing; the bar is >=10 reviews read across
+// >=3 distinct review sources (hosts).
+export function dossierSearchTopics(place = {}) {
+  const category = String(place.category || place.sourceRecord?.category || '').toLowerCase();
+  const topics = [
+    { q: 'official website menu prices opening hours happy hour' },
+    { q: 'articles known for signature' },
+    { q: 'reviews', review: true },
+    { q: 'yelp reviews', review: true },
+    { q: 'tripadvisor reviews', review: true },
+    { q: 'google reviews', review: true },
+    { q: 'reddit', review: true },
+    { q: 'eater OR infatuation OR timeout review', review: true },
+  ];
+  if (/book/.test(category)) topics.push({ q: 'goodreads reviews', review: true });
+  if (/hotel|lodg|stay|inn/.test(category)) topics.push({ q: 'booking.com OR expedia guest reviews', review: true });
+  return topics;
+}
+
+export function reviewSourceHost(url = '') {
+  try { return new URL(url).hostname.replace(/^(www|m|en)\./, ''); } catch { return ''; }
+}
+
 export const DEFAULT_DOSSIER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function dossierPagesVerified(dossier = {}) {
@@ -112,17 +138,23 @@ export async function gatherThingEvidence(place = {}, {
   };
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official) urls.add(official);
-  for (const topic of ['official website menu prices opening hours happy hour', 'ratings reviews', 'articles known for']) {
+  const topics = dossierSearchTopics(place).map((topic) => ({ topic, max: topic.review ? 5 : 8 }));
+  const results = await Promise.all(topics.map(async ({ topic, max }) => {
     try {
-      const result = await searchImpl(`${name} ${destination} ${topic}`, { env, fetchImpl, maxResults: 10, searchDepth: 'advanced', includeRawContent: true });
-      for (const row of result.results || []) {
-        if (!row.url) continue;
-        urls.add(row.url);
-        if (row.rawContent && !raw.has(row.url)) raw.set(row.url, row.rawContent);
-      }
-      dossier.attempts.push({ kind: 'search', topic, status: 'ok' });
+      const result = await searchImpl(`${name} ${destination} ${topic.q}`.replace(/\s+/g, ' ').trim(),
+        { env, fetchImpl, maxResults: max, searchDepth: 'advanced', includeRawContent: true });
+      dossier.attempts.push({ kind: 'search', topic: topic.q, status: 'ok' });
+      return result.results || [];
     } catch {
-      dossier.attempts.push({ kind: 'search', topic, status: 'failed' });
+      dossier.attempts.push({ kind: 'search', topic: topic.q, status: 'failed' });
+      return [];
+    }
+  }));
+  for (const rows of results) {
+    for (const row of rows) {
+      if (!row.url || urls.size >= DOSSIER_MAX_PAGES) continue;
+      urls.add(row.url);
+      if (row.rawContent && !raw.has(row.url)) raw.set(row.url, row.rawContent);
     }
   }
   const missing = [...urls].filter((url) => !raw.has(url));
@@ -135,7 +167,7 @@ export async function gatherThingEvidence(place = {}, {
     }
   }
   for (const url of urls) {
-    const text = String(raw.get(url) || '').replace(/\s+/g, ' ').trim();
+    const text = String(raw.get(url) || '').replace(/\s+/g, ' ').trim().slice(0, DOSSIER_PAGE_CHARS);
     if (text) {
       addPage(url, text, 'tavily');
       dossier.attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily' });
@@ -146,8 +178,8 @@ export async function gatherThingEvidence(place = {}, {
       const text = pageText(response.body, response.type);
       if (!text) throw new Error('evidence_page_empty');
       if (!dossier.pages.some((page) => page.url === response.url)) dossier.pages.push({
-        url: response.url, fetchedAt: new Date().toISOString(), text,
-        sha256: createHash('sha256').update(text).digest('hex'),
+        url: response.url, fetchedAt: new Date().toISOString(), text: text.slice(0, DOSSIER_PAGE_CHARS),
+        sha256: createHash('sha256').update(text.slice(0, DOSSIER_PAGE_CHARS)).digest('hex'),
       });
       dossier.attempts.push({ kind: 'page', url, status: 'ok' });
     } catch {
