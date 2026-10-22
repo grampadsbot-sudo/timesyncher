@@ -57,28 +57,28 @@
   },
   "Arthouse Hotel": {
     "category": "hotel",
-    "description": "Arthouse Hotel on the Upper West Side combines colorful design with a ground-floor bar and restaurant, and Booking.com guests note lively public spaces and reasonable room sizes for the neighborhood. Arthouse Hotel fits travelers who want a social lobby scene while still riding the subway to Lincoln Center and Central Park.",
-    "summary": "Design-forward UWS stay with bar and restaurant on site.",
+    "description": "Arthouse Hotel fills a 1924 Salvation Army landmark at 2178 Broadway and West 77th Street with pop-art murals, the underground Arden cocktail bar, and the Arden & Amsterdam restaurant on the ground floor. Booking.com reviewers often praise the colorful lobby energy and quick B/C subway rides to the American Museum of Natural History, while noting that street-facing rooms can pick up Broadway traffic noise at night.",
+    "summary": "Pop-art UWS hotel with Arden bar and Arden & Amsterdam dining.",
     "price": 508,
     "website": "https://www.arthousehotelnyc.com/",
     "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY",
+    "address": "2178 Broadway, New York, NY 10024",
     "summarySourceUrls": [
       "https://www.arthousehotelnyc.com/"
     ]
   },
   "The Empire Hotel New York": {
     "category": "hotel",
-    "description": "The Empire Hotel New York overlooks Lincoln Center and puts you steps from the Upper West Side cultural corridor, though Booking.com scores are mixed and recent reviews deserve a close read. The Empire’s rooftop bar and theater-district energy appeal if you prioritize location over the quietest room product.",
-    "summary": "Lincoln Center adjacency; read recent reviews before booking.",
+    "description": "The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends.",
+    "summary": "Lincoln Center neighbor with Empire Rooftop and 66th St subway access.",
     "price": 509,
     "website": "https://www.empirehotelnyc.com/",
     "logoUrl": "https://www.empirehotelnyc.com/favicon.ico",
     "lat": null,
     "lng": null,
-    "address": "Lincoln Center / Upper West Side, New York, NY",
+    "address": "44 West 63rd Street, New York, NY 10023",
     "summarySourceUrls": [
       "https://www.empirehotelnyc.com/"
     ]
@@ -757,14 +757,14 @@
   },
   "Midtown sample hotel": {
     "category": "hotel",
-    "description": "Midtown sample hotel is the Gate B list label for a suite-style Midtown candidate modeled on The Manhattan Club, with kitchenettes and living space near Central Park South. The sample row keeps the same nightly rate and website as the Manhattan Club card so list and detail screens can show a realistic hotel description without booking a separate property.",
-    "summary": "Gate B list alias for a Manhattan Club-style suite candidate.",
+    "description": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.",
+    "summary": "Suite-style Manhattan Club residence near Carnegie Hall and Columbus Circle.",
     "price": 386,
     "website": "https://www.manhattanclub.com/",
     "logoUrl": "https://www.manhattanclub.com/favicon.ico",
     "lat": 40.7549,
     "lng": -73.984,
-    "address": "Central Park / Midtown, New York, NY",
+    "address": "200 West 56th Street, New York, NY 10019",
     "thirdPartyRating": "8.3",
     "thirdPartyReviewCount": "4345",
     "thirdPartySource": "Booking.com",
