@@ -1,3 +1,25 @@
+# VK PR #610 base merge follow-up (cursor-ubuntu vkfill-610, 2026-10-22)
+
+**Start sha:** `00d9dd53979bc9e9be5fcfbb7c612bdeff3c92e8` (merge already committed; host merge target was `62dac9c3` + `e2cbfce`).
+
+**Fix:** Re-applied migrate/trek-source #620 (`60be25c1`) Belleclaire ccab prose in `scripts/fixtures/nyc_ccab_place_enrichment.json` lost when merge predated `6edb0791`. Restores `scripts/test_vk_search_place_output_contract.mjs` row 603 (blank_description / summary_template_neighborhood).
+
+**Checks (local, tip pending host push):**
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+CI + Gate B on pushed head are authority (not self-certified).
+
+---
+
 # VK PR #610 base merge (cursor-ubuntu vkfill-610)
 
 **Base merge:** host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into PR head `62dac9c375e1022936ed94a1df472a094d7d834f` (2026-10-22).
