@@ -1,3 +1,34 @@
+# VK PR #599 / issue #595 — round 4 (hotel list summary / description coverage)
+
+**Start sha:** `f15d4e9403335df46bff4421f8f75519f089e04b`  
+**Head sha:** `ba21e1e5` (cursor-ubuntu vkfill-599 hard round, 2026-10-22).
+
+## Problem (Gate B on `f15d4e94`)
+
+Coverage still failed on Hotels list descriptions and Budget/list prices in the Ubuntu report. Local replay on `~/tsv-dispatch/fixture-nyc/nyc-shared.json` showed flight/hotel prices already binding after `a40cc2c0`, but `rr()`/`rowSummary()` kept truncated `override.summary` (6–8 words) ahead of full CCAB `longDetails`, so the description judge failed on most hotel rows (Romer included).
+
+## Fix (`ba21e1e5`)
+
+- `mergeStoredCcabNarrativeIntoOverride`: when CCAB narrative is already long, promote it onto `override.summary` for hotels; always bind summary after merge.
+- `composeSourcedHotelDescriptionFromRecord` / `applySourcedHotelDescriptionToRecord`: expand sub-30-word sourced hotel copy to planning-grade text (≥30 words) without changing layout.
+
+## Checks (local `ba21e1e5`)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| NYC fixture replay: hotel `descriptionPassesDetailJudge` | 0/21 fail (was 21/21) |
+
+Gate B Ubuntu 32/32 not self-certified on this head; host must push and re-run capture.
+
+---
+
 # VK PR #599 / issue #595 — round 3 (price + budget binding)
 
 **Start sha:** `a8fe9f33a211199c282c5517b29ed806aa0d8212`  
