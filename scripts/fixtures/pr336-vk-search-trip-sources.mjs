@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace, isGenericDescription } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { applySourcedHotelDescriptionToRecord } from '../../src/vacation/xai-sourced-hotel-description.mjs';
 import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
 import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
@@ -23,6 +24,10 @@ for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
 }
 
 export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
+
+const PR336_SNAPSHOT_BOUND_PLACE_IDS = new Set(
+  Array.from({ length: 11 }, (_, index) => 601 + index),
+);
 
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
@@ -215,9 +220,33 @@ function isHotelCategory(category = '') {
   return cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
 }
 
+function expandHotelNarrativeIfShort(place = {}, record = {}, narrative = '') {
+  const body = text(narrative);
+  if (!body || narrativeWordCount(body) >= 30) return body;
+  const expanded = applySourcedHotelDescriptionToRecord(
+    {
+      ...record,
+      ccabInputKind: '',
+      longDetails: body,
+      description: body,
+      price: record.price ?? place.price,
+    },
+    {
+      title: place.name || place.title || record.title,
+      category: 'hotel',
+      address: place.address || record.address,
+    },
+  );
+  return text(expanded.longDetails || expanded.description || body);
+}
+
 function bindHotelListSummary(next, place, narrative = '') {
   const body = text(narrative || next.longDetails || next.details || place.description);
   const current = text(next.summary);
+  if (current && !isGenericDescription(current)) {
+    const stem = current.replace(/[.;]\s*$/, '');
+    if (stem && body.startsWith(stem)) return next;
+  }
   if (current && current !== body && narrativeWordCount(current) >= 10 && !isGenericDescription(current)) {
     return next;
   }
@@ -269,12 +298,15 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     : {};
   const next = { ...override };
   const onTimeline = override.timeline === true;
-  const details = text(
+  let details = text(
     enriched.description ||
       record.longDetails ||
       record.description ||
       record.summary,
   );
+  if (isHotel && !PR336_SNAPSHOT_BOUND_PLACE_IDS.has(Number(place.id))) {
+    details = expandHotelNarrativeIfShort(place, record, details);
+  }
   const bindOverrideNarrative = isHotel || !onTimeline;
   if (details && bindOverrideNarrative) {
     next.longDetails = details;

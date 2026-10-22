@@ -1,3 +1,35 @@
+# VK PR #599 / issue #595 — round 5 (Romer / sub-30 CCAB hotel narratives)
+
+**Start sha:** `2a2a63c976ebe663f40806b839fa1789a9d832c1` (BASE-MERGE receipt; no further merge this round).
+
+## Problem (Gate B round 4 on `f15d4e94`)
+
+Romer Hell's Kitchen and other list hotels kept CCAB `stored_fixture_literal` copy under 30 words, so capture `hotel_description_judge` / 30-word layout checks failed while pr336 snapshot rows 601–611 must stay byte-stable.
+
+## Fix (local tip pending commit)
+
+- `mergeStoredCcabNarrativeIntoOverride`: expand sub-30-word hotel narratives via `applySourcedHotelDescriptionToRecord` (strip `ccabInputKind` for expansion only); skip expansion for pr336 snapshot-bound place ids 601–611; preserve truncated pr336 `summary` when it is a prefix of the long body.
+
+## Checks (local, pre-push)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
+| `node scripts/test_shared_tab_list_summary.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| NYC positive fixture `gateBCapturePreDataCheck` after finalize | Romer longDetails 49w; 1 hotel fail (603 snapshot-bound 28w, >80% share) |
+
+Gate B Ubuntu 32/32 not self-certified; host push + re-capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 4 (hotel list summary / description coverage)
 
 **Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `a4600d9fc043930f72b02d5baa13e6fe71e100a8` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 2). **Merge tip:** `85a6c33f` — resolved `J/RECEIPT.md`, `pr336-vk-search-trip-sources.mjs`, `trip-thing-enrichment.mjs` (PR hotel `applySourcedHotelDescriptionToRecord` + base `descriptionWhenJudgeFails` / `enrichTripThing` judge path); rebaked served trek bundle.
