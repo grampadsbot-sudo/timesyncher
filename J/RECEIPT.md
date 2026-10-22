@@ -1,7 +1,7 @@
 # TSV PR #614 / issue #613 (cursor-ubuntu vkfill-614)
 
 **Start sha:** `3e0095ecc2f5e9824b1eaa03ef955df7b995d507`  
-**Tip sha:** `75a0897ec61c319cacd0a12a8be8de2534ae52f7`
+**Tip sha:** `307637c84a65889957b71c438b88b913231c1eba` (product fix `75a0897e`)
 
 ## Problem
 
