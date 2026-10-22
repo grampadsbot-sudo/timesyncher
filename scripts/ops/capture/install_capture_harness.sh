@@ -64,5 +64,8 @@ if [ -f "$DEST/timeline-replay.mjs" ]; then cp -a "$DEST/timeline-replay.mjs" "$
 )
 NEW_SHA="$(sha256sum "$DEST/capture.mjs" | awk '{print $1}')"
 install -m 664 "$REPLAY_SRC" "$DEST/timeline-replay.mjs"
+PRECHECK_SRC="$REPO_ROOT/scripts/ops/capture/capture-pre-data-check.mjs"
+[ -f "$PRECHECK_SRC" ] || { echo "install_capture_harness: missing $PRECHECK_SRC" >&2; exit 2; }
+install -m 664 "$PRECHECK_SRC" "$DEST/capture-pre-data-check.mjs"
 
 echo "install_capture_harness OK producer=$REQUIRE_SHA dest=$DEST capture_sha=$NEW_SHA backup=$BACKUP"
