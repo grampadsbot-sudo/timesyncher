@@ -3,7 +3,6 @@ import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
 import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
 
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
   /^Documented .+ option\b/i,
@@ -346,6 +345,7 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
 }
 
 export function enrichSearchPlace(place = {}) {
+  if (place.sourceRecord?.evidenceDossier) return { ...place };
   const next = { ...place };
   const sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();

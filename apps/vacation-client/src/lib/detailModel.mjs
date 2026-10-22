@@ -156,6 +156,8 @@ function reviewIsComplete(override, index) {
 }
 
 function reviewCompositeLabel(override, index) {
+  const dossierLabel = text(override[`review${index}Label`] || override.reviewsLabel, 200);
+  if (dossierLabel) return dossierLabel;
   const explicit = text(override[`review${index}CompositeLabel`], 200);
   if (explicit) return explicit;
   const flagged = override[`review${index}Composite`];

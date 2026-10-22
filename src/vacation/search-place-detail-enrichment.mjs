@@ -26,6 +26,7 @@ function shortLineFromLong(value = '', max = 120) {
 }
 
 export function searchPlaceNeedsWebDetailEnrichment(place = {}) {
+  if (place.sourceRecord?.evidenceDossier) return false;
   const category = text(place.category, 40).toLowerCase();
   if (!DETAIL_CATEGORIES.has(category)) return false;
   const title = text(place.title || place.name, 240);
