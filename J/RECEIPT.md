@@ -1,3 +1,37 @@
+# VK PR #599 / issue #595 — round 9 (BASE-MERGE fb95a63)
+
+**Start sha:** `cf1aaf21416c23c70823020c430bc77620baf374`
+
+**Base merge:** Host merged `origin/migrate/trek-source` at `fb95a6306b16ea71cfc1adc6fc76a5779ec47403` into `cf1aaf21416c23c70823020c430bc77620baf374` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 5). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR #599 text kept). Took base `public/assets/*.js`, ran `node scripts/rebake_served_trek_bundle.mjs`. Base delta includes #614 hotel 390px ellipsis (`shared-trip-oe-list-row-patch.mjs`, `test_shared_hotels_390_text_wrap.mjs`) and #621 pr336 snapshot key guard.
+
+## Problem
+
+Dirty `mergeable_state` against `migrate/trek-source` at `fb95a63`; chief dr authorized base-merge resolution only (no new layout beyond start commit).
+
+## Fix (this round)
+
+- Resolved `J/` merge conflicts; rebaked served bundle after base JS/CSS.
+
+## Checks (local)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_shared_hotels_390_text_wrap.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` full loop (CHROME_PATH=/usr/bin/chromium-browser) | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `gbrain-cli-get_page` vs `bundled-get_page` (lane VM has GBrain CLI; host CI expected) |
+
+Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 8 (travel price bind regression)
 
 **Start sha:** `44de9d5966bbd60b1b0a287fd82377dd564417e5`
