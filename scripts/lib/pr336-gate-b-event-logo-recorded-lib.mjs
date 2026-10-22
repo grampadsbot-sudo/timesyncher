@@ -102,15 +102,25 @@ export async function applyPr336GateBEventLogosFromRecorded(placesById = {}, {
   destination = 'New York',
   searchImpl = buildRecordedEventLogoSearchImpl(),
 } = {}) {
+  const logoTargetByRowId = new Map(
+    PR336_GATE_B_EVENT_LOGO_TARGETS.map((target) => [target.rowId, target]),
+  );
   const rowIds = [...PR336_GATE_B_EVENT_LOGO_ROW_IDS].filter((id) => placesById[id]);
-  const stripped = rowIds.map((id) => stripEventLogoFields(placesById[id]));
+  const stripped = rowIds.map((id) => {
+    const place = stripEventLogoFields(placesById[id]);
+    const target = logoTargetByRowId.get(id);
+    if (!target?.title) return place;
+    return { ...place, title: text(target.title, 240) };
+  });
   const { places: enriched } = await enrichSearchPlacesWithEventLogos(stripped, {
     destination,
     searchImpl,
   });
   const out = { ...placesById };
   enriched.forEach((place, index) => {
-    out[rowIds[index]] = place;
+    const id = rowIds[index];
+    const displayTitle = text(placesById[id]?.title, 240);
+    out[id] = displayTitle ? { ...place, title: displayTitle } : place;
   });
   return {
     placesById: out,

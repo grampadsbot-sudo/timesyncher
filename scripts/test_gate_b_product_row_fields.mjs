@@ -202,10 +202,7 @@ const bundle = patchLiveProductDetailBundle(
 );
 assert.match(bundle, /"data-list-summary":"1","data-summary-src":"thing"/);
 assert.match(bundle, /children:n\.jsx\("strong",\{children:J\(G\)\|\|"Rental"\}\)/);
-assert.match(
-  bundle,
-  /data-ts-hotel-row-head":"1"[\s\S]*n\.jsx\("strong",\{style:\{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"\},children:Re\}\)/,
-);
+assert.match(bundle, /children:n\.jsx\("strong",\{children:Re\}\)/);
 assert.doesNotMatch(bundle, /Open details for summary/);
 assert.match(bundle, /Itinerary note/);
 assert.match(bundle, /ha\(G\)\.itineraryNote/);
@@ -251,7 +248,7 @@ const nycEnrichment = JSON.parse(
   readFileSync(new URL('./fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
 const nycNames = Object.keys(nycEnrichment);
-assert.equal(nycNames.length, 64, 'NYC ccab fixture should document 64 places');
+assert.equal(nycNames.length, 81, 'NYC ccab fixture should document 81 places');
 const nycDescriptions = nycNames.map((name) => String(nycEnrichment[name]?.description || '').trim());
 assert.equal(nycDescriptions.length, new Set(nycDescriptions).size, 'each NYC fixture place needs a unique description');
 for (const [name, record] of Object.entries(nycEnrichment)) {

@@ -1,38 +1,77 @@
-# TSV PR #614 / issue #613 (cursor-ubuntu vkfill-614)
+# TSV PR #612 (cursor-ubuntu vkfill-612)
 
-**Start sha:** `3e0095ecc2f5e9824b1eaa03ef955df7b995d507`  
-**Tip sha:** `307637c84a65889957b71c438b88b913231c1eba` (product fix `75a0897e`)
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-612` — **page not found** (lane brief fetch failed 2026-10-22).
+
+**Start sha:** `c91b77c22315bfde71f4889786493c75e1c7d5fb`  
+**Tip sha:** `49d48deb`
 
 ## Problem
 
-Gate B pixel FAIL on `hotels-390.png` and `hotels-390-top.png` at head `3e0095ec`: round-0 fix used `@media (max-width:480px)` wrap (`white-space:normal`, `overflow-wrap:anywhere`), which conflicts with Craig #547 (name + description stay one ellipsis line at 390).
+- Receipt for #608 lacked a **Tip sha** line; added in `c91b77c2`.
+- CI on `c91b77c2` failed `unit-tests` (Actions run `39704818179`, step Offline unit tests): `scripts/test_trip_thing_logo_metadata.mjs` — Brave hotel fixture lost `description` because `enrichSearchPlace` zeroed all judge-failing hotel copy, not only ccab semicolon sheets.
 
 ## Fix
 
-- Replace Hotels mobile CSS with single-line `text-overflow:ellipsis` / `nowrap` constraints on row grid, `[data-ts-list-row-name]`, `[data-ts-hotel-row-head]`, and summary line (no title wrap).
-- `je()` hotel head: block-level ellipsis on `<strong>`; list-row name span `width:100%` / `maxWidth:100%` in `trek-live-product-patches.mjs`.
-- Rebake `public/assets/index-BKun7ofk.js`; update `scripts/test_shared_hotels_390_text_wrap.mjs` to forbid wrap and assert truncation.
+- `src/vacation/trip-thing-enrichment.mjs`: `isCcabSemicolonFactSheet` gates blank hotel `description`; other judge-failing search rows use `buildCategoryDescription`. `enrichTripThing` hotels aligned.
 
 ## Checks (local)
 
 | Command | Exit |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | 0 |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | 0 |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Docs + CI fix committed locally on `vkfill/608-20261021180746`; host publishes once. Green CI on pushed PR head is authority for close (not self-certified).
+
+---
+
+# VK issue #608 receipt (cursor-ubuntu vkfill-608)
+
+**Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`  
+**Tip sha:** `f07da90b`
+
+## Problem
+
+NYC VK hotels carried ccab semicolon fact sheets in `summary`/`longDetails` without 30+ word judge-passing prose; `detailSummary` preferred short `summary`, so Hotels UI showed blank descriptions. `enrichTripThing` fell back to the banned `hotelDescription` template for hotels missing sourced prose.
+
+## Fix
+
+- `src/vacation/search-place-detail-enrichment.mjs`: Tavily `enrichPlaceDetail` pass for hotel/flight/car search rows missing judge-passing `longDetails`; merges prose, `summarySourceUrls`, and price.
+- `src/vacation/place-search.mjs`: runs web detail enrichment before `finalizeSearchPlaces`.
+- `src/vacation/trip-thing-enrichment.mjs`: drops semicolon ccab blobs from `description` when judge fails; short neighborhood taglines in `summary`; hotels no longer use `hotelDescription` when sourced long text is absent.
+- `apps/vacation-client/src/lib/detailModel.mjs` + `listTabModel.mjs`: prefer `longDetails` over `summary` for display.
+- `src/vacation/chat-intake-place-persist.mjs`: staging backfill re-runs when transport rows still fail description/price fill.
+- `scripts/enrich_pr336_snapshot_place_details.mjs`: operator script to re-Tavily-fill and rewrite `pr336-vk-search-places.snapshot.json` (run on staging with provider keys, then `node scripts/backfill_chat_intake_places.mjs --backfill-chat-places` for NYC trip rows).
+- `scripts/test_vk_hotel_detail_fill.mjs` registered in `scripts/offline-tests.txt`.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
+## Staging NYC re-fill (post-merge / with keys)
+
+1. `node scripts/enrich_pr336_snapshot_place_details.mjs` (needs Tavily env on Ubuntu staging).
+2. `TIMESYNCHER_ALLOW_CHAT_PLACE_BACKFILL=1 node scripts/backfill_chat_intake_places.mjs --backfill-chat-places` against staging `DATABASE_URL`.
+
+Counts for PR description: run `node scripts/test_vk_hotel_detail_fill.mjs` plus snapshot script output `hotelsPassingDetailJudge` after step 1.
+
 ## Verdict
 
-Layout fix ready on detached tip for host publish; CI + Gate B 32/32 on new head are authority for merge. Chief-dr price/description lines on fixture data not changed this round (no UI/data patch in scope).
+Product + backfill path ready on branch `vkfill/608-20261021180746`; CI + staging pull of `/api/shared/<NYC token>` after backfill are authority for close.
 
 ---
-
-# VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
 **Tip sha:** `0fd6dc78`
@@ -136,3 +175,29 @@ Merge commit `f2308dff` on `cursor/tsv-596-vk-390px-descriptions-are-clipped-run
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
 
 **Verdict:** Fix committed locally on detached HEAD at start commit; host publishes once. CI green on pushed PR head is authority for close (not self-certified).
+
+---
+
+# TSV PR #617 CI fix-it (issue #615)
+
+**Start sha:** `b8c8a7859582608554e344ac6e9db5b2f34f45ba`  
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-617` — automated fetch returned `page_not_found`; confirmed via `gbrain get_page` (same code).
+
+## Problem
+
+`unit-tests` / `scripts/test_vk_search_place_output_contract.mjs` still used legacy Gate B timeline rows (Motto at 603, JetBlue 601). After #615 fixture port, `assertGateBRowProvenance` failed. Row 611 (`Blue Note Jazz Club` display, `Jazz at Lincoln Center` ccab) lost event logo lookup because Tavily query used the display title.
+
+## Fix
+
+- Drive contract test rows from `buildNycCraigKimDaybydayTimelineRows()` (ids ≤611 + list-only), matching `vk_search_place_source_contract_check.mjs`.
+- Event logo recorded replay: search with `PR336_GATE_B_EVENT_LOGO_TARGETS.title`, restore display title after enrich (`pr336-gate-b-event-logo-recorded-lib.mjs`).
+- Align `pr336-gate-b-xai-place-targets.mjs` row 603 with Hotel Belleclaire.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_vk_search_place_output_contract.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
