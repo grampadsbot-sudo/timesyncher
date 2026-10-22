@@ -135,8 +135,25 @@ function centerThingLogoInk(img) {
           (e) => !e.children.length && String(e.textContent || '').trim(),
         );
         const label = firstText || nameEl.querySelector('strong') || nameEl;
-        const nr = label.getBoundingClientRect();
-        if (nr.height > 0) targetY = nr.top + nr.height / 2;
+        if (label) {
+          const doc = label.ownerDocument;
+          const tw = doc.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+          let nd;
+          while ((nd = tw.nextNode())) {
+            if (!String(nd.textContent || '').trim()) continue;
+            const rg = doc.createRange();
+            rg.selectNodeContents(nd);
+            const rs = [...rg.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+            if (rs.length) {
+              targetY = rs[0].top + rs[0].height / 2;
+              break;
+            }
+          }
+          if (targetY == null) {
+            const nr = label.getBoundingClientRect();
+            if (nr.height > 0) targetY = nr.top + nr.height / 2;
+          }
+        }
       }
       if (targetY == null) {
         const chipRect = chip.getBoundingClientRect();

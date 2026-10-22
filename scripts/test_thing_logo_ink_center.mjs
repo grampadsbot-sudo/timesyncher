@@ -81,6 +81,7 @@ const snippet = thingLogoInkCenterBundleSnippet(table);
 assert.match(snippet, /const TS_LOGO_INK_CY=/);
 assert.match(snippet, /TS_LOGO_INK_CY\[key\]/);
 assert.match(snippet, /data-ts-list-row-name/);
+assert.match(snippet, /createTreeWalker/);
 assert.match(snippet, /function tsCenterThingLogoInk\(/);
 assert.match(snippet, /translateY/);
 assert.doesNotMatch(snippet, /getImageData/);

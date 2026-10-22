@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import { NAMED_THING_LOGOS } from '../src/vacation/thing-logo-capture.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const outPath = path.join(root, 'src/vacation/thing-logo-ink-offsets.json');
+const cacheDir = path.join(root, 'scripts/fixtures/thing-logo-ink-cache');
 const INK_THRESHOLD = 24;
 
 function decodeImageBuffer(buf, ext = 'bin') {
@@ -61,7 +62,26 @@ function extFromUrl(url) {
   return 'bin';
 }
 
+function readCachedLogoBytes(rawUrl) {
+  try {
+    const host = new URL(rawUrl).hostname;
+    if (!host) return null;
+    for (const ext of ['.ico', '.png', '.webp', '.jpg', '.bin']) {
+      const p = path.join(cacheDir, `${host}${ext}`);
+      if (existsSync(p)) {
+        const buf = readFileSync(p);
+        if (buf.length >= 32) return buf;
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 async function fetchLogo(url) {
+  const cached = readCachedLogoBytes(url);
+  if (cached) return cached;
   const res = await fetch(url, {
     redirect: 'follow',
     headers: { 'user-agent': 'TimeSyncherVKLogoInkBuild/1.0' },

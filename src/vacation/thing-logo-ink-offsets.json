@@ -143,5 +143,30 @@
     "inkCy": 39.5,
     "nh": 80,
     "nw": 80
+  },
+  "https://www.ameliebistro.com/favicon.ico": {
+    "inkCy": 21.5,
+    "nh": 26,
+    "nw": 26
+  },
+  "https://www.bodega88nyc.com/favicon.ico": {
+    "inkCy": 23.5,
+    "nh": 26,
+    "nw": 26
+  },
+  "https://www.esbarnyc.com/favicon.ico": {
+    "inkCy": 21,
+    "nh": 26,
+    "nw": 26
+  },
+  "https://www.nobodytoldme.nyc/favicon.ico": {
+    "inkCy": 21.5,
+    "nh": 26,
+    "nw": 26
+  },
+  "https://www.rosamexicano.com/favicon.ico": {
+    "inkCy": 24,
+    "nh": 26,
+    "nw": 26
   }
 }
