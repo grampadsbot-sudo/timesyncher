@@ -41,10 +41,18 @@ const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"as
 const BI_PRICE_NEEDLE = 'bi=G=>ha(G).price??G.price??""';
 const BI_PRICE_PATCH = 'bi=G=>{const o=ha(G).price,p=G.price;const pick=v=>v===""||v==null?null:v;return pick(o)??pick(p)??""}';
 
+const BUDGET_MO_SKIP_TYPES_JSON = JSON.stringify([
+  'travel',
+  'travel-to-thing',
+  'transport',
+  'hotel-wake',
+  'hotel-sleep',
+  `hotel-${'checkout'}`,
+]);
 const BUDGET_MO_DEDUPE_NEEDLE = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 const BUDGET_MO_DEDUPE_PATCH = 'Mo=(()=>{const m=new Map();for(const Xi of [].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean)){const k=Qt(Xi);const row={item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))};const prev=m.get(k);if(!prev||!prev.hasPrice&&row.hasPrice)m.set(k,row);}return[...m.values()]})()';
-const BUDGET_MO_TIMELINE_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
-const BUDGET_MO_TIMELINE_PATCH = 'Mo=(()=>{const m=new Map();for(const di of Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)){const Xi=di.item;const row={item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))};const k=Qt(Xi);const prev=m.get(k);if(!prev||!prev.hasPrice&&row.hasPrice)m.set(k,row);}return[...m.values()]})()';
+const BUDGET_MO_TIMELINE_NEEDLE = `Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!${BUDGET_MO_SKIP_TYPES_JSON}.includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())`;
+const BUDGET_MO_TIMELINE_PATCH = `Mo=(()=>{const m=new Map();for(const di of Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!${BUDGET_MO_SKIP_TYPES_JSON}.includes(di.type)){const Xi=di.item;const row={item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))};const k=Qt(Xi);const prev=m.get(k);if(!prev||!prev.hasPrice&&row.hasPrice)m.set(k,row);}return[...m.values()]})()`;
 
 export function patchTrekBiPriceField(source = '', options = {}) {
   let js = String(source || '');

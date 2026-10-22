@@ -716,7 +716,10 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes(QN_RENDER_PATCH) || !js.includes(GN_RENDER_PATCH) || !js.includes(KI_RENDER_PATCH)) {
     throw new Error('Style two live tab render pad did not apply.');
   }
-  if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
+  const moBudgetListsTabCatalog =
+    js.includes(MO_BUDGET_PATCH)
+    || (js.includes('[].concat(rs,Po,bc,Oc,Fs,Cc)') && js.includes('!prev.hasPrice&&row.hasPrice'));
+  if (!moBudgetListsTabCatalog || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
     throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
   }
   if (!js.includes(MAP_HEIGHT_PATCH) || js.includes(MAP_HEIGHT_NEEDLE)) {
