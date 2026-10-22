@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
-import { searchTavily } from './poi-search.mjs';
+import { extractTavily, searchTavily } from './poi-search.mjs';
 
 function publicAddress(address) {
   if (isIP(address) === 6) return /^2[0-9a-f]{3}:/i.test(address);
@@ -98,24 +98,49 @@ export function changedDossierPageUrls(before = [], after = []) {
 
 export async function gatherThingEvidence(place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
-  searchImpl = searchTavily, resolveImpl = lookup,
+  searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
   const dossier = { thing: name, pages: [], attempts: [], reviewsRead: 0, knownFor: [] };
   const urls = new Set();
+  const raw = new Map();
+  const addPage = (url, text, via) => {
+    if (!text || dossier.pages.some((page) => page.url === url)) return;
+    dossier.pages.push({ url, fetchedAt: new Date().toISOString(), text, via,
+      sha256: createHash('sha256').update(text).digest('hex') });
+  };
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official) urls.add(official);
   for (const topic of ['official website menu prices opening hours happy hour', 'ratings reviews', 'articles known for']) {
     try {
-      const result = await searchImpl(`${name} ${destination} ${topic}`, { env, fetchImpl, maxResults: 10, searchDepth: 'advanced' });
-      for (const row of result.results || []) if (row.url) urls.add(row.url);
+      const result = await searchImpl(`${name} ${destination} ${topic}`, { env, fetchImpl, maxResults: 10, searchDepth: 'advanced', includeRawContent: true });
+      for (const row of result.results || []) {
+        if (!row.url) continue;
+        urls.add(row.url);
+        if (row.rawContent && !raw.has(row.url)) raw.set(row.url, row.rawContent);
+      }
       dossier.attempts.push({ kind: 'search', topic, status: 'ok' });
     } catch {
       dossier.attempts.push({ kind: 'search', topic, status: 'failed' });
     }
   }
+  const missing = [...urls].filter((url) => !raw.has(url));
+  if (missing.length) {
+    try {
+      for (const row of await extractImpl(missing, { env, fetchImpl })) if (!raw.has(row.url)) raw.set(row.url, row.rawContent);
+      dossier.attempts.push({ kind: 'extract', status: 'ok', urls: missing.length });
+    } catch {
+      dossier.attempts.push({ kind: 'extract', status: 'failed', urls: missing.length });
+    }
+  }
   for (const url of urls) {
+    const text = String(raw.get(url) || '').replace(/\s+/g, ' ').trim();
+    if (text) {
+      addPage(url, text, 'tavily');
+      dossier.attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily' });
+      continue;
+    }
     try {
       const response = await pageResponse(url, { fetchImpl, resolveImpl });
       const text = pageText(response.body, response.type);

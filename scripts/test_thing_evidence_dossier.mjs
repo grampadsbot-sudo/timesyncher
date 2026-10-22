@@ -113,8 +113,9 @@ assert.equal(rejected.fields.summary, undefined, 'judge-unsupported summary must
 assert.equal(rejected.fields.hours, undefined, 'claim citing no page must fail');
 assert.equal(rejected.fields.price, undefined, 'claim citing an unknown page must fail');
 const noReviews = prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, { ...findings, reviewExcerpts: [] });
-assert.equal(noReviews.fields.description, undefined, 'description from a dossier with no reviews is incomplete');
-assert.equal(noReviews.descriptionStatus, 'incomplete_no_reviews');
+assert.ok(noReviews.fields.description, 'no reviews must not fail the description');
+assert.match(noReviews.fields.description.value, /\nNo reviews were found for this place\.$/);
+assert.equal(built.fields.description.value.includes('No reviews were found'), false);
 const unsupportedReview = JSON.parse(JSON.stringify(findings));
 unsupportedReview.reviews[1].claims[0].supported = false;
 const badReview = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, unsupportedReview) });

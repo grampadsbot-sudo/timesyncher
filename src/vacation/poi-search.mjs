@@ -192,6 +192,7 @@ function tavilyResult(row) {
     url,
     title: String(row?.title || '').trim(),
     content: String(row?.content || '').trim(),
+    rawContent: String(row?.raw_content || '').trim(),
     score: Number.isFinite(score) ? score : null,
   };
 }
@@ -204,6 +205,7 @@ export async function searchTavily(query, {
   maxResults = 5,
   searchDepth = 'basic',
   topic = 'general',
+  includeRawContent = false,
   signal,
 } = {}) {
   const text = String(query || '').trim();
@@ -236,7 +238,7 @@ export async function searchTavily(query, {
         topic: topic || 'general',
         max_results: limit,
         include_answer: false,
-        include_raw_content: false,
+        include_raw_content: includeRawContent ? 'text' : false,
         auto_parameters: false,
       }),
       signal: controller.signal,
@@ -423,4 +425,31 @@ export async function probePlaceSearchKeys(env = process.env, fetchImpl = global
   const tavily = await probeTavilyProvider(env, fetchImpl);
   if (tavily.error === 'missing_key') return { ok: false, statusCode: 503, body: tavily };
   return { ok: true, statusCode: 200, body: { ok: true, providers: [brave, tavily] } };
+}
+
+const TAVILY_EXTRACT_URL = 'https://api.tavily.com/extract';
+
+// Page content through Tavily (review sites refuse direct fetches). -> [{url, rawContent}]
+export async function extractTavily(urls = [], { apiKey, env = process.env, fetchImpl = globalThis.fetch, timeoutMs = 60000 } = {}) {
+  const list = [...new Set((urls || []).map(publicHttpUrl).filter(Boolean))].slice(0, 20);
+  if (!list.length) return [];
+  const key = String(apiKey ?? tavilyApiKey(env)).trim();
+  requireTavilyApiKey(key);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(TAVILY_EXTRACT_URL, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${key}`, accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ urls: list, extract_depth: 'advanced', format: 'text' }),
+      signal: controller.signal,
+    });
+    if (!response?.ok) throw new TavilySearchError(`Tavily extract failed with HTTP ${Number(response?.status) || 0}.`, { code: 'TAVILY_HTTP_ERROR' });
+    const payload = await response.json();
+    return (Array.isArray(payload?.results) ? payload.results : [])
+      .map((row) => ({ url: publicHttpUrl(row?.url), rawContent: String(row?.raw_content || '').trim() }))
+      .filter((row) => row.url && row.rawContent);
+  } finally {
+    clearTimeout(timer);
+  }
 }

@@ -21,6 +21,8 @@ function cited(dossier, claim) {
 // Craig 10/22 12:35 PT binding rule: no exact-phrase matching. Every claim cites saved dossier page ids
 // (p1..pN); an independent judge pass marks each claim supported/unsupported from the cited page text.
 // Any unsupported claim, or a claim citing no known page, fails its field.
+export const NO_REVIEWS_FLAG = 'No reviews were found for this place.';
+
 export function dossierPageId(index) {
   return `p${index + 1}`;
 }
@@ -189,10 +191,14 @@ export function prepareDossierFindings(dossier, findings = {}) {
       const value = Number(claim.value);
       if (!(value > 0) || !norm(claim.unit)) continue;
     }
-    if (key === 'description' && !next.reviewsRead) { next.descriptionStatus = 'incomplete_no_reviews'; continue; }
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !norm(claim.value).includes(norm(dossier.thing)))) continue;
     next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
+    // Craig 10/22 12:39 PT: no reviews never fails the description; it ends with one short flag line instead.
+    if (key === 'description' && !next.reviewsRead) {
+      next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
+      next.fields[key].noReviewsFlag = true;
+    }
   }
   next.reviews = (Array.isArray(findings.reviews) ? findings.reviews : [])
     .map((review) => ({ ...review, url: claimUrls(dossier, review) }));
