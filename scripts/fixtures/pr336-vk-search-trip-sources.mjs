@@ -182,10 +182,18 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
   }));
 }
 
+export function pr336SnapshotRowIdKey(id) {
+  const key = String(id);
+  if (!/^[1-9]\d*$/.test(key)) {
+    throw new Error(`gate-b row id must be a positive integer; got ${JSON.stringify(id)}`);
+  }
+  return key;
+}
+
 export function buildPr336VkSearchPlacesByRowId(rows = []) {
   const out = {};
   for (const row of rows) {
-    out[row.id] = buildGateBSearchPlaceForRow(row);
+    out[pr336SnapshotRowIdKey(row.id)] = buildGateBSearchPlaceForRow(row);
   }
   return out;
 }
