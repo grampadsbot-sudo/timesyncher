@@ -16,19 +16,22 @@ Hotel descriptions 22/23 OK. Coverage FAIL (PR owns): hotels/flights showed pric
 - CCAB merge: resolve keys via `resolveNycCcabKey`; merge when travel rows lack bound price; always bind enriched fare onto flight/hotel/car overrides (timeline flights included).
 - Live serve: estimated price fallback for flight/hotel/car when records lack a numeric price.
 
-## Checks (local tip pending commit)
+## BASE-MERGE round (cursor-ubuntu vkfill-599, 2026-10-22)
+
+**Merge tip:** `f60648cd6c83d99e048010e25bdecb3052d3f3d6` — resolved `J/RECEIPT.md`; brought in `migrate/trek-source` @ `58f5be59` (DayMap 390 wrap + `test_vacation_client_list_row_390_text_wrap.mjs` from #598). Ran `node scripts/rebake_served_trek_bundle.mjs` after taking base `public/assets/*.js`.
+
+## Checks (local tip `f60648cd`)
 
 | Command | Result |
 | --- | --- |
-| `cd apps/vacation-client && npm test` | pass |
-| `node scripts/test_hotel_ccab_narrative_fill.mjs` | pass |
-| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
-| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | pass |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `scripts/offline-tests.txt` full loop | **fail** `scripts/test_live_transcript_dialog_pdf.mjs:651` — `actual 'gbrain-cli-get_page' expected 'bundled-get_page'` (lane VM has `gbrain` CLI; host CI expected) |
 
-Gate B Ubuntu structure re-run pending on pushed head (not self-certified).
+Gate B Ubuntu coverage re-run pending on pushed merge head (not self-certified). Prior round-3 price/description fixes remain on branch; this round was base-merge only.
 
 ---
 
