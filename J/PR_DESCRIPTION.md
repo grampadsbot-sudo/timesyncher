@@ -11,7 +11,7 @@ Live accept at 390px reported hotel list titles ~68px past the right edge on `/s
 3. `[data-ts-list-row-name]` gets `width:100%` / `maxWidth:100%` via `trek-live-product-patches.mjs`.
 4. Offline contract `scripts/test_shared_hotels_390_text_wrap.mjs` updated for truncation (registered in `scripts/offline-tests.txt`).
 
-**Base merge:** Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into PR head `8481be47` (2026-10-22 cursor-ubuntu vkfill-614); served `public/assets/*.js` taken from base then `node scripts/rebake_served_trek_bundle.mjs` with PR patch sources restored.
+**Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into PR head `934915c863c4760423f53a4422953ed0aad8273b` (2026-10-22 cursor-ubuntu vkfill-614); served `public/assets/*.js` taken from base then `node scripts/rebake_served_trek_bundle.mjs` with PR patch sources restored.
 
 ## Checks run (local)
 
@@ -24,7 +24,7 @@ Live accept at 390px reported hotel list titles ~68px past the right edge on `/s
 | `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
 | Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (`migrate/trek-source`, `codex/ruling95-consolidated-logo`) | 0 |
 
-**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop stops at `test_live_transcript_dialog_pdf.mjs:651` on this host (`gbrain-cli-get_page` when GBrain CLI is installed).
+**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop may stop at `test_live_transcript_dialog_pdf.mjs` on hosts with GBrain CLI installed.
 
 **Authority:** CI green on published PR head + Gate B PASS on all 32 screens.
 
@@ -32,3 +32,4 @@ Live accept at 390px reported hotel list titles ~68px past the right edge on `/s
 
 - `apps/vacation-client` mobile wrap rules (#596 path).
 - Fixture price/description gaps named in chief-dr brief (data/harness; not patched in this layout round).
+- Base `#621` snapshot-key hardening merged via `migrate/trek-source` (Motto row id 676); no change to #614 hotel ellipsis look.

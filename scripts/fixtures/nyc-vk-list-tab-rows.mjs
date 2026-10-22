@@ -54,6 +54,7 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "ccabKey": "Hyatt House New York/Chelsea"
   },
   {
+    "id": 676,
     "name": "Motto by Hilton New York City Times Square",
     "cat": "hotel",
     "ccabKey": "Motto by Hilton New York City Times Square"
@@ -379,7 +380,7 @@ export function appendNycStagingListTabRows(rows, options = {}) {
     if (seenRowIdentities.has(identity)) continue;
     seenRowIdentities.add(identity);
     let id = listRow.id;
-    if (seenIds.has(id)) {
+    if (listRow.id == null || seenIds.has(id)) {
       id = nextFreeId;
       seenIds.add(id);
       nextFreeId += 1;
