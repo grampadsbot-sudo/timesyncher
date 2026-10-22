@@ -31,4 +31,4 @@ Removed runtime `tsCenterThingLogoFallback` / `tsCenterListLogoFallbackDom` (did
 
 ## Tip sha
 
-(filled after local commit)
+`2a917a6f7fa603d52b3726c6f2299a6b9588aacf` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.
