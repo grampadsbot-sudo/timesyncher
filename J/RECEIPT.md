@@ -2,22 +2,27 @@
 
 ## Outcome
 
-Gate B hard round (tier 1): compact `Oe()` rows (events/restaurants/stores) now render as `li[data-list-row]` so capture records rows; name + `data-list-summary` flex shares width with `flex:1 1 0`; car header is inline-flex (no 3-col grid overflow); expanded row grid clips horizontally. Craig #547 same-line ellipsis preserved (#592 strong names).
+Dirty-head base merge: resolved `J/RECEIPT.md` conflict; kept #550 row-layout + took `migrate/trek-source` served bundle at **58f5be59**, rebaked (`ffe2c859`). Inherited base #598 vacation-client 390px flight-row wrap (`DayMap.tsx`, `styles.css`, `test_vacation_client_list_row_390_text_wrap.mjs`). #547 list-row look unchanged from **5d9c4eb7**.
 
-Base merge: `origin/migrate/trek-source` at **58f5be59** (host dirty-head merge into **5d9c4eb7**, 2026-10-21).
+Base merge: `origin/migrate/trek-source` at **58f5be59** (host dirty-head merge into **5d9c4eb7**, 2026-10-21). Merge tip **d8635906**.
 
 ## Tip sha
 
-(pending merge commit)
+**ffe2c859**
 
 ## Checks (local)
 
-- `node scripts/rebake_served_trek_bundle.mjs`
-- `cd apps/vacation-client && npm test`
-- `node scripts/test_shared_tab_list_summary.mjs`
-- `node scripts/test_served_trek_bundle.mjs`
-- `node scripts/test_gate_b_live_tab_logo_rows.mjs`
-- Pre-DONE: `check-no-comments`, `test_offline_manifest`, `BASE=migrate/trek-source check-code-ratchet`
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `cd apps/vacation-client && npm test` | 0 (layout shell skipped: no CHROME_PATH) |
+| `node scripts/test_shared_tab_list_summary.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_vacation_client_list_row_390_text_wrap.mjs` | 0 |
+| Pre-DONE gates | 0 |
+| `scripts/offline-tests.txt` full loop | **fail** `test_day_by_day_map_marker_bounds_chrome.mjs` — Browser not found at `/usr/bin/google-chrome-stable` |
 
 ## Gate B / look (authority)
 
