@@ -1,35 +1,37 @@
-Closes #613
+Closes #595
 
-## Problem
+## What changed
 
-Live accept at 390px reported hotel list titles ~68px past the right edge on `/shared/` (served `Oe()` bundle). Round 0 added mobile **wrap** CSS; Gate B failed `hotels-390` / `hotels-390-top` pixel compare and conflicts with #547 (name and description stay one ellipsis-truncated line at every width).
+**Gate B coverage — blank override prices (`92eda194`)** — Upstream `thingOverrides` sometimes carry `price: ""`, which made trek `bi()` return empty and hid Flights list + Budget amounts even when `place.price` was filled on serve. Strip blank override prices before bind, refresh zero `budget` API lines from computed F/H/C totals, and patch served trek `bi()` to fall through empty overrides to `place.price`.
 
-## Fix
+**BASE-MERGE (`cf1aaf21` + merge commit)** — Host merged `origin/migrate/trek-source` at `fb95a6306b16ea71cfc1adc6fc76a5779ec47403` into `cf1aaf21416c23c70823020c430bc77620baf374` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 5). Resolved conflicts in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only; took base `public/assets/*.js` then `node scripts/rebake_served_trek_bundle.mjs` (base #614 hotel 390px ellipsis + #621 pr336 snapshot key guard).
 
-1. Keep `data-ts-hotel-row-head` and `minmax(0,1fr) auto` hotel title+price grid in `shared-trip-oe-list-row-patch.mjs`; add block ellipsis on the title `<strong>`.
-2. Replace `@media (max-width:480px)` Hotels rules in `public/assets/index-CbEHlMj6.css` with **truncation** (`nowrap` + `text-overflow:ellipsis`, grid `min-width:0`) — no `white-space:normal` / `overflow-wrap`.
-3. `[data-ts-list-row-name]` gets `width:100%` / `maxWidth:100%` via `trek-live-product-patches.mjs`.
-4. Offline contract `scripts/test_shared_hotels_390_text_wrap.mjs` updated for truncation (registered in `scripts/offline-tests.txt`).
+**BASE-MERGE (`b1c7e5b4` + merge commit)** — Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into `b1c7e5b4b8250a2447a8aee377d449bd0f09d5cf` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 4). Resolved conflicts in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only; brought base #621 pr336 snapshot key guard (`Motto` row id 676, `test_pr336_vk_search_places_snapshot_keys.mjs`).
 
-**Base merge:** Host merged `origin/migrate/trek-source` at `6800a3b34e9a9773734f52e1526326b3961d463b` into PR head `934915c863c4760423f53a4422953ed0aad8273b` (2026-10-22 cursor-ubuntu vkfill-614); served `public/assets/*.js` taken from base then `node scripts/rebake_served_trek_bundle.mjs` with PR patch sources restored.
+**Gate B coverage — F/H/C list + Budget prices** — `applyThingDetailOverrides` runs `bindTravelListRowPrice` after detail merge so flights/hotels/cars keep estimated prices through `prepareSharedTripForLiveApp` and `syncSharedTripApiBudget`. Serve-path bind stays unconditional for F/H/C when no sourced price (restores API budget + small Gate B fixtures). Client `numericPrice` / `budgetModel` use the same estimate fallback (incl. `nightlyRate`) on served VK trips.
 
-## Checks run (local)
+**Data fill (issue #595)** — Hotel descriptions from xAI grok fields + stored NYC CCAB enrichment on list rows (`xai-sourced-hotel-description.mjs`, fixture replay, live serve merge).
+
+**Gate B fix-it (daybyday-1280 @ 0.03%, run `20261021-230524`)** — CCAB merge was copying `longDetails` / `summary` onto **timeline-selected non-hotel** overrides. Day-by-Day renders `rowSummary()` for `kind === 'thing'`, so subtitles appeared vs baseline. **Fix (7ccc8481):** bind override narrative (`longDetails`, price, logo, full `sourceRecord`) only for **hotels** and **list-only** rows; timeline non-hotels only upgrade `place.description` when thin/generic.
+
+**CI fix-it — API budget lines (`5defdcb8`)** — Estimated F/H/C prices on `prepareSharedTripForLiveApp` updated **`scripts/test_shared_trip_api_budget_lines.mjs`** Gate B scrape fixtures (no more `$0` hotel rows).
+
+**CI fix-it — shared tab list summary (`a4600d9f`)** — `bindHotelListSummary` was promoting the Manhattan Club CCAB card onto **PR225** `Midtown sample hotel` (title alias match), replacing the intake **“Strong transit access…”** summary. **Fix:** skip CCAB merge when the place already has a non-fixture intake `summary`; keep existing short summaries in `bindHotelListSummary`; do not rewrite `stored_fixture_literal` CCAB hotel copy in `composeSourcedHotelDescriptionFromRecord`.
+
+## Verification (local)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
-| `node scripts/test_shared_hotels_390_text_wrap.mjs` | 0 |
-| `node scripts/test_served_trek_bundle.mjs` | 0 |
-| `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` | 0 |
-| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
-| Pre-DONE: `check-no-comments`, `test_offline_manifest`, `check-code-ratchet` (`migrate/trek-source`, `codex/ruling95-consolidated-logo`) | 0 |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
 
-**Not run locally:** Gate B pixel compare, live `live_accept.py`. Full `offline-tests.txt` loop may stop at `test_live_transcript_dialog_pdf.mjs` on hosts with GBrain CLI installed.
+## Notes
 
-**Authority:** CI green on published PR head + Gate B PASS on all 32 screens.
-
-## Left alone
-
-- `apps/vacation-client` mobile wrap rules (#596 path).
-- Fixture price/description gaps named in chief-dr brief (data/harness; not patched in this layout round).
-- Base `#621` snapshot-key hardening merged via `migrate/trek-source` (Motto row id 676); no change to #614 hotel ellipsis look.
+- GBrain handoff via agent brief (`bot-admin/lanes/vk-pr-handoff/pr-599`).
+- Baselines, capture scripts, workflows, and allowlists untouched.
+- Gate B Ubuntu coverage not self-certified; host push + capture is authority.

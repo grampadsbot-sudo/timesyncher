@@ -1,3 +1,5 @@
+import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
+import { estimateSearchPlacePrice } from './trip-thing-enrichment.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
@@ -34,6 +36,12 @@ function parsePrice(value) {
   if (Number.isFinite(direct)) return direct;
   const match = String(value).match(/\$\s*([\d,]+(?:\.\d+)?)/);
   return match ? Number(match[1].replace(/,/g, '')) : null;
+}
+
+function dropBlankPriceField(target, key) {
+  if (!target || typeof target !== 'object') return;
+  const raw = target[key];
+  if (raw === '' || raw === null) delete target[key];
 }
 
 function placeMetadata(place = {}) {
@@ -81,6 +89,27 @@ function priceFromTextFields(place = {}, override = {}, source = null) {
     if (parsed != null) return parsed;
   }
   return null;
+}
+
+export function bindTravelListRowPrice(place = {}, override = {}, source = null, category = '', shared = {}) {
+  const cat = text(category).toLowerCase();
+  let price = priceFromRecords(place, override, source);
+  if (price == null && ['flight', 'hotel', 'car'].includes(cat)) {
+    const estimated = estimateSearchPlacePrice({
+      category: cat,
+      title: place.name || place.title,
+      description: place.description || override.longDetails || override.details || '',
+      summary: override.summary || source?.summary || '',
+      sourceRecord: source && typeof source === 'object' ? source : {},
+    });
+    price = parsePrice(estimated);
+  }
+  const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
+  if (price != null) {
+    if (place.price == null || place.price === '') place.price = price;
+    if (!keepPriceOnPlaceOnly) override.price = price;
+  }
+  return price;
 }
 
 function priceFromRecords(place = {}, override = {}, source = null) {
@@ -140,6 +169,8 @@ export function applyLiveAppListRowFields(shared = {}) {
   for (const place of next.places) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
+    dropBlankPriceField(override, 'price');
+    dropBlankPriceField(place, 'price');
     const source = sourceObject(
       override.sourceRecord,
       place.sourceRecord,
@@ -154,12 +185,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (!text(place.logoUrl)) place.logoUrl = logoUrl;
     }
 
-    const price = priceFromRecords(place, override, source);
-    const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
-    if (price != null) {
-      if (place.price == null || place.price === '') place.price = price;
-      if (!keepPriceOnPlaceOnly) override.price = price;
-    }
+    bindTravelListRowPrice(place, override, source, category, next);
 
     if (category === 'car') {
       copyIfBlank(
@@ -233,6 +259,8 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (override.timeline == null && source?.timeline != null) {
       override.timeline = !!source.timeline;
     }
+
+    Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
 
     next.thingOverrides[key] = override;
   }

@@ -38,6 +38,18 @@ const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
 
+const BI_PRICE_NEEDLE = 'bi=G=>ha(G).price??G.price??""';
+const BI_PRICE_PATCH = 'bi=G=>{const o=ha(G).price,p=G.price;const pick=v=>v===""||v==null?null:v;return pick(o)??pick(p)??""}';
+
+export function patchTrekBiPriceField(source = '', options = {}) {
+  let js = String(source || '');
+  if (js.includes(BI_PRICE_NEEDLE)) return js.replace(BI_PRICE_NEEDLE, BI_PRICE_PATCH);
+  if (options.served && !js.includes('const pick=v=>v===""||v==null?null:v')) {
+    throw new Error('trek bi() price patch did not apply');
+  }
+  return js;
+}
+
 export function patchSharedTripOeListRows(source = '') {
   let js = String(source || '');
   if (!js.includes('Oe=(G,Re,zt=!1)=>')) return js;

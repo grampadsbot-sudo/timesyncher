@@ -1,7 +1,8 @@
 import { transportKind } from './intake-transport-kind.mjs';
 import { normalizeThingType } from './timeline-icons.mjs';
 import { writeRatings } from './write-ratings.mjs';
-import { provenanceBlocksSourcedPrice } from './shared-trip-live-app-fields.mjs';
+import { bindTravelListRowPrice, provenanceBlocksSourcedPrice } from './shared-trip-live-app-fields.mjs';
+import { productThingCategory } from './keepsake-product-overrides.mjs';
 
 const NON_TRANSPORT_CATEGORIES = new Set([
   'restaurant',
@@ -385,10 +386,21 @@ export function applyThingDetailOverrides(shared = {}) {
       sourceRecord: place.sourceRecord,
     };
     const merged = { ...thingDetailOverrideFields(mergedThing), ...prior };
+    if (merged.price === '' || merged.price === null) delete merged.price;
+    if (place.price === '' || place.price === null) delete place.price;
     if (provenanceBlocksSourcedPrice(merged, { ...place, sourceRecord: place.sourceRecord })) {
       delete merged.price;
     }
+    const category = productThingCategory(place, merged);
+    const source = merged.sourceRecord || place.sourceRecord || null;
+    bindTravelListRowPrice(place, merged, source, category, { ...shared, places, thingOverrides });
     thingOverrides[key] = merged;
   }
   return { ...shared, places, thingOverrides };
+}
+
+export function ccabNeighborhoodTaglineFromRecord(sourceRecord = {}, title = '') {
+  const hood = text(sourceRecord.summary || sourceRecord.description, 500).match(/Neighborhood:\s*([^;]+)/i);
+  const name = text(title, 160);
+  return hood && name ? text(`${name} in ${hood[1]}`, 120) : '';
 }

@@ -92,7 +92,9 @@ const gateShared = prepareSharedTripForLiveApp({
 });
 
 const gateAllowed = new Set(gateShared.budget.map((line) => Number(line.total_price)));
-assert.equal(gateAllowed.has(0), true, 'unpriced hotel rows and $0 bucket headers must be on API budget');
+assert.equal(gateAllowed.has(1750), true, 'estimated hotel stay totals must be on API budget');
+assert.equal(gateAllowed.has(3500), true, 'hotel bucket planned total must be on API budget');
+assert.equal(gateAllowed.has(3600), true, 'trip planned total must include estimated hotels');
 assert.equal(gateAllowed.has(45), true);
 assert.equal(gateAllowed.has(55), true);
 assert.equal(gateAllowed.has(100), true, 'trip and cars planned totals must be on API budget');
@@ -101,13 +103,13 @@ assert.equal(gateAllowed.has(200), true, 'trip budget cap from __budgetTargets m
 const gateBodySnippet = [
   'Overall trip budget',
   'Trip total',
-  '$100 / $200',
-  'Under by $100',
+  '$3600 / $200',
+  'Over by $3400',
   'Hotel',
-  '$0',
-  '$0 timeline',
+  '$3500',
+  '$3500 timeline',
   'Hyatt Regency Maui Resort & Spa',
-  'Add price',
+  '$1750',
   "The Westin Maui Resort & Spa, Ka'anapali",
   'Cars',
   '$100 /',
@@ -115,6 +117,7 @@ const gateBodySnippet = [
   'Hertz',
   '$45',
   'Alamo rental',
+  '$55',
 ].join('\n');
 const gateHits = budgetHardcodedHits(gateBodySnippet, gateShared.budget, gateShared);
 assert.deepEqual(gateHits, [], `Gate B budget tab scrape must match API lines: ${JSON.stringify(gateHits)}`);
@@ -196,14 +199,16 @@ assert.equal(unsetAllowed.has(200), false, 'unset targets must not put fake $200
 assert.equal(unsetAllowed.has(100), true);
 assert.equal(unsetAllowed.has(45), true);
 assert.equal(unsetAllowed.has(55), true);
-assert.equal(unsetAllowed.has(0), true);
+assert.equal(unsetAllowed.has(1750), true, 'estimated hotels must be on API budget when targets unset');
+assert.equal(unsetAllowed.has(3500), true);
+assert.equal(unsetAllowed.has(3600), true);
 const unsetBodySnippet = [
   'Overall trip budget',
   'Trip total',
-  '$100',
+  '$3600',
   'Hotel',
-  '$0',
-  '$0 timeline',
+  '$3500',
+  '$3500 timeline',
   'Cars',
   '$100',
   '$100 timeline',
@@ -223,6 +228,31 @@ assert.equal(
   true,
   'unset __budgetTargets must still fail invented / $200 targets in the DOM',
 );
+
+const blankOverrideHotelId = 1101;
+const blankOverrideShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [{ id: blankOverrideHotelId, name: 'Harbor Hotel', category_name: 'Hotel', price: 320 }],
+  thingOverrides: { [`place:${blankOverrideHotelId}`]: { price: '', category: 'hotel', stayDays: 3 } },
+  budget: [{
+    id: 1,
+    trip_id: tripId,
+    category: 'Hotel',
+    name: 'Harbor Hotel',
+    total_price: 0,
+    note: '',
+    sort_order: 0,
+  }],
+});
+const blankHotelAmt = trekBudgetAmount(
+  blankOverrideShared.places[0],
+  blankOverrideShared.thingOverrides[`place:${blankOverrideHotelId}`],
+  'hotel',
+);
+assert.equal(blankHotelAmt.hasPrice, true);
+assert.equal(blankHotelAmt.amount, 960);
+const blankHotelBudgetLine = blankOverrideShared.budget.find((line) => line.name === 'Harbor Hotel');
+assert.equal(Number(blankHotelBudgetLine?.total_price), 960);
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);

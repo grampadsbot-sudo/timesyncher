@@ -9,6 +9,7 @@ import {
   searchProductCategoryFromPlace,
   writeRepresentativeReviews,
 } from './xai-grok-place-ratings-helpers.mjs';
+import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
 
 export {
   parseXaiStructuredPayload,
@@ -257,7 +258,11 @@ export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}, { titl
     writeRepresentativeReviews(next, parsed, { title });
   }
   next.xaiRatingsFetched = true;
-  return next;
+  return applySourcedHotelDescriptionToRecord(next, {
+    title,
+    category: searchProductCategoryFromPlace({ category: next.category }),
+    address: next.address,
+  });
 }
 
 function placeNeedsGrokRatings(place = {}) {

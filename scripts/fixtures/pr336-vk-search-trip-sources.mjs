@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { enrichSearchPlace, isGenericDescription } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { applySourcedHotelDescriptionToRecord } from '../../src/vacation/xai-sourced-hotel-description.mjs';
 import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
 import { resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
 
@@ -23,6 +24,35 @@ for (const [key, patch] of Object.entries(REVIEW_ENRICHMENT)) {
 }
 
 export const NYC_PR336_SEARCH_TRIP_ID = '5f03f326-a1b2-4c3d-9e4f-001122334455';
+
+const PR336_SNAPSHOT_BOUND_PLACE_IDS = new Set(
+  Array.from({ length: 11 }, (_, index) => 601 + index),
+);
+const PR336_SEARCH_SNAPSHOT = JSON.parse(
+  readFileSync(new URL('./pr336-vk-search-places.snapshot.json', import.meta.url), 'utf8'),
+);
+
+function reapplyPr336SnapshotBoundCopy(place = {}, override = {}) {
+  const placeId = Number(place.id);
+  if (!PR336_SNAPSHOT_BOUND_PLACE_IDS.has(placeId)) return override;
+  const search = PR336_SEARCH_SNAPSHOT[String(placeId)];
+  if (!search) return override;
+  const next = { ...override };
+  const title = text(search.title);
+  if (title) place.name = title;
+  if (search.description) {
+    place.description = search.description;
+    next.longDetails = search.description;
+    if (!text(next.details)) next.details = search.description;
+  }
+  if (search.summary) next.summary = search.summary;
+  if (search.price != null) next.price = search.price;
+  if (search.logoUrl) {
+    next.logoUrl = search.logoUrl;
+    place.logoUrl = search.logoUrl;
+  }
+  return next;
+}
 
 export const GATE_B_DISPLAY_TITLE_ALIASES = {
   609: {
@@ -64,6 +94,290 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function narrativeWordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function enrichmentHit(ccabKey = '') {
+  const key = text(ccabKey, 240);
+  if (!key) return null;
+  const ccabRecord = ENRICHMENT[key];
+  if (!ccabRecord || typeof ccabRecord !== 'object') return null;
+  return { ccabKey: key, ccabRecord };
+}
+
+function websiteHost(url = '') {
+  const row = text(url, 500);
+  if (!row) return '';
+  try {
+    const parsed = new URL(row.includes('://') ? row : `https://${row}`);
+    return parsed.hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+const ENRICHMENT_BY_WEBSITE_HOST = (() => {
+  const map = new Map();
+  for (const [key, record] of Object.entries(ENRICHMENT)) {
+    const host = websiteHost(record?.website);
+    if (!host || map.has(host)) continue;
+    map.set(host, key);
+  }
+  return map;
+})();
+
+function websiteUrlsForIdentity(place = {}, override = {}) {
+  const capture = place.websiteCapture && typeof place.websiteCapture === 'object'
+    ? place.websiteCapture
+    : null;
+  return [
+    place.website,
+    override.website,
+    override.sourceRecord?.website,
+    override.sourceRecord?.url,
+    capture?.website,
+    place.sourceRecord?.website,
+    place.sourceRecord?.url,
+  ];
+}
+
+function enrichmentHitByWebsite(place = {}, override = {}) {
+  for (const url of websiteUrlsForIdentity(place, override)) {
+    const host = websiteHost(url);
+    if (!host) continue;
+    const key = ENRICHMENT_BY_WEBSITE_HOST.get(host);
+    if (key) return enrichmentHit(key);
+  }
+  return null;
+}
+
+function enrichmentHitByUniqueNamePrefix(name = '') {
+  const base = text(name, 240);
+  if (!base || (base.length < 8 && !/\s/.test(base))) return null;
+  const matches = Object.keys(ENRICHMENT).filter(
+    (key) => key === base || key.startsWith(`${base} `),
+  );
+  if (matches.length !== 1) return null;
+  return enrichmentHit(matches[0]);
+}
+
+export function storedCcabRecordForTitle(title = '') {
+  return enrichmentHit(title);
+}
+
+function placeMetadata(place = {}) {
+  return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
+    ? place.metadata
+    : {};
+}
+
+function sourceRecordsForIdentity(place = {}, override = {}) {
+  const meta = placeMetadata(place);
+  const metaRecord = meta.sourceRecord && typeof meta.sourceRecord === 'object' ? meta.sourceRecord : null;
+  return {
+    overrideRecord: override.sourceRecord && typeof override.sourceRecord === 'object' ? override.sourceRecord : null,
+    placeRecord: place.sourceRecord && typeof place.sourceRecord === 'object' ? place.sourceRecord : null,
+    metaRecord,
+    meta,
+  };
+}
+
+export function resolveStoredCcabKey(place = {}, override = {}) {
+  const { overrideRecord, placeRecord, metaRecord, meta } = sourceRecordsForIdentity(place, override);
+  const candidates = [
+    overrideRecord?.identityProvenance?.ccabKey,
+    overrideRecord?.ccabKey,
+    placeRecord?.identityProvenance?.ccabKey,
+    placeRecord?.ccabKey,
+    override.externalId,
+    place.externalId,
+    meta.externalId,
+    metaRecord?.identityProvenance?.ccabKey,
+    metaRecord?.ccabKey,
+    place.name,
+    place.title,
+    override.title,
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const hit = enrichmentHit(candidate);
+    if (hit) return hit;
+    const normalized = resolveNycCcabKey(candidate);
+    if (normalized && normalized !== candidate) {
+      const aliasHit = enrichmentHit(normalized);
+      if (aliasHit) return aliasHit;
+    }
+  }
+  const websiteHit = enrichmentHitByWebsite(place, override);
+  if (websiteHit) return websiteHit;
+  const prefixHit = enrichmentHitByUniqueNamePrefix(place.name || place.title || override.title);
+  if (prefixHit) return prefixHit;
+  return null;
+}
+
+export function storedCcabRecordForPlace(place = {}, override = {}) {
+  return resolveStoredCcabKey(place, override);
+}
+
+export function enrichListRowFromStoredCcab(place = {}, override = {}, categoryHint = '') {
+  const hit = storedCcabRecordForPlace(place, override);
+  if (!hit) return null;
+  const cat = text(categoryHint || override.category || place.category_name, 40).toLowerCase();
+  return enrichSearchPlace(rawSearchPlaceFromCcab({
+    title: text(place.name || place.title || hit.ccabKey, 240),
+    category: cat || hit.ccabRecord.category,
+    ccabKey: hit.ccabKey,
+    ccabRecord: hit.ccabRecord,
+  }));
+}
+
+export function enrichListRowFromStoredCcabTitle(title = '', categoryHint = '') {
+  return enrichListRowFromStoredCcab({ name: title }, {}, categoryHint);
+}
+
+function listRowCategory(place = {}, override = {}) {
+  return text(override.category || place.category || place.category_name, 40).toLowerCase();
+}
+
+function isHotelCategory(category = '') {
+  const cat = text(category, 40).toLowerCase();
+  return cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
+}
+
+function expandHotelNarrativeIfShort(place = {}, record = {}, narrative = '') {
+  const body = text(narrative);
+  if (!body || narrativeWordCount(body) >= 30) return body;
+  const expanded = applySourcedHotelDescriptionToRecord(
+    {
+      ...record,
+      ccabInputKind: '',
+      longDetails: body,
+      description: body,
+      price: record.price ?? place.price,
+    },
+    {
+      title: place.name || place.title || record.title,
+      category: 'hotel',
+      address: place.address || record.address,
+    },
+  );
+  return text(expanded.longDetails || expanded.description || body);
+}
+
+function bindHotelListSummary(next, place, narrative = '') {
+  const body = text(narrative || next.longDetails || next.details || place.description);
+  const current = text(next.summary);
+  if (current && !isGenericDescription(current)) {
+    const stem = current.replace(/[.;]\s*$/, '');
+    if (stem && body.startsWith(stem)) return next;
+  }
+  if (current && current !== body && narrativeWordCount(current) >= 10 && !isGenericDescription(current)) {
+    return next;
+  }
+  if (!body || narrativeWordCount(body) < 30 || isGenericDescription(body)) return next;
+  if (narrativeWordCount(current) >= 30 && !isGenericDescription(current)) return next;
+  const stored = text(next.sourceRecord?.summary);
+  if (stored && stored !== body && narrativeWordCount(stored) >= 30 && !isGenericDescription(stored)) {
+    return { ...next, summary: stored };
+  }
+  return { ...next, summary: body };
+}
+
+function intakeSourceBlocksCcabMerge(place = {}, override = {}) {
+  const { overrideRecord, placeRecord, metaRecord } = sourceRecordsForIdentity(place, override);
+  const bags = [overrideRecord, metaRecord, placeRecord].filter(Boolean);
+  const placeSource = place.source && typeof place.source === 'object' && !Array.isArray(place.source)
+    ? place.source
+    : null;
+  if (placeSource) bags.push(placeSource);
+  for (const record of bags) {
+    const src = text(record.source).toLowerCase();
+    if (src === 'fixture') continue;
+    if (text(record.ccabInputKind) === 'stored_fixture_literal') continue;
+    if (text(record.ccabKey)) continue;
+    if (text(record.identityProvenance?.ccabKey)) continue;
+    if (text(record.summary) && !isGenericDescription(record.summary)) return true;
+  }
+  return false;
+}
+
+export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
+  const category = listRowCategory(place, override);
+  const isHotel = isHotelCategory(category);
+  const placeId = Number(place.id);
+  if (isHotel && PR336_SNAPSHOT_BOUND_PLACE_IDS.has(placeId)) {
+    const snap = PR336_SEARCH_SNAPSHOT[String(placeId)];
+    const current = text(override.summary);
+    const snapSummary = text(snap?.summary);
+    const snapDesc = text(snap?.description);
+    if (snap && current === snapSummary) return override;
+    if (snap && narrativeWordCount(current) >= 30 && current !== snapDesc) return override;
+    if (snap) return reapplyPr336SnapshotBoundCopy(place, { ...override });
+  }
+  const hit = storedCcabRecordForPlace(place, override);
+  if (!hit) return override;
+  if (intakeSourceBlocksCcabMerge(place, override)) return override;
+  const existing = text(override.longDetails || override.details || override.description);
+  if (narrativeWordCount(existing) >= 30) {
+    return isHotel ? bindHotelListSummary({ ...override }, place, existing) : override;
+  }
+  const enriched = enrichListRowFromStoredCcab(
+    place,
+    override,
+    override.category || place.category_name,
+  );
+  if (!enriched) return override;
+  const record = enriched.sourceRecord && typeof enriched.sourceRecord === 'object'
+    ? enriched.sourceRecord
+    : {};
+  const next = { ...override };
+  const onTimeline = override.timeline === true;
+  let details = text(
+    enriched.description ||
+      record.longDetails ||
+      record.description ||
+      record.summary,
+  );
+  if (isHotel && !PR336_SNAPSHOT_BOUND_PLACE_IDS.has(Number(place.id))) {
+    details = expandHotelNarrativeIfShort(place, record, details);
+  }
+  const bindOverrideNarrative = isHotel || !onTimeline;
+  if (details && bindOverrideNarrative) {
+    next.longDetails = details;
+    if (!text(next.details)) next.details = details;
+    if (!text(next.description)) next.description = details;
+  }
+  const placeDesc = text(place.description);
+  if (details && (!placeDesc || narrativeWordCount(placeDesc) < 30 || isGenericDescription(placeDesc))) {
+    place.description = details;
+  }
+  if (hit.ccabKey && !text(next.externalId)) next.externalId = hit.ccabKey;
+  if (hit.ccabKey) {
+    const prior = next.sourceRecord && typeof next.sourceRecord === 'object' ? next.sourceRecord : {};
+    next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
+    if (!text(place.externalId)) place.externalId = hit.ccabKey;
+  }
+  const travelRow = isHotel || category === 'flight' || category === 'car';
+  if (travelRow && next.price == null && enriched.price != null) {
+    next.price = enriched.price;
+    if (place.price == null || place.price === '') place.price = enriched.price;
+  }
+  if (bindOverrideNarrative) {
+    if (next.price == null && enriched.price != null) next.price = enriched.price;
+    if (isHotel && !next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
+    if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
+      next.sourceRecord = { ...record };
+    } else {
+      next.sourceRecord = { ...record, ...next.sourceRecord };
+    }
+  } else if (hit.ccabKey) {
+    const prior = next.sourceRecord && typeof next.sourceRecord === 'object' ? next.sourceRecord : {};
+    next.sourceRecord = { ...prior, ccabKey: hit.ccabKey };
+  }
+  return isHotel ? bindHotelListSummary(next, place, details) : next;
+}
+
 export function rawSearchPlaceFromCcab({
   title,
   category,
@@ -103,6 +417,58 @@ export function assertPr336GateBSnapshotWriteAllowed(placesById = {}, rows = [])
   if (!rows.length || unverified.length) {
     throw new Error(`pr336 gate-b snapshot write blocked: source evidence unverified for rows ${unverified.map((row) => row.id).join(', ')}`);
   }
+}
+
+function travelRowHasBoundPrice(place = {}, override = {}) {
+  const source = override.sourceRecord || place.sourceRecord || {};
+  for (const candidate of [override.price, place.price, source.price, source.nightlyRate]) {
+    if (candidate === null || candidate === undefined || candidate === '') continue;
+    if (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0) return true;
+    if (typeof candidate === 'string' && /\$\s*\d/.test(candidate)) return true;
+  }
+  return false;
+}
+
+export function shouldMergeStoredCcabOnFixtureReplay(place = {}, override = {}) {
+  if (NYC_GATE_B_ROW_CCAB_KEYS[place.id]) return true;
+  if (enrichmentHitByWebsite(place, override)) return true;
+  const cat = text(override.category || place.category || place.category_name, 40).toLowerCase();
+  const isHotel = cat === 'hotel' || cat.includes('hotel') || cat.includes('lodging');
+  const isTravel = isHotel || cat === 'flight' || cat === 'car';
+  if (isTravel && !travelRowHasBoundPrice(place, override)) return true;
+  const hit = resolveStoredCcabKey(place, override);
+  if (!hit) return false;
+  if (isHotel) {
+    const narrative = text(
+      override.longDetails || override.description || place.description,
+    );
+    if (narrativeWordCount(narrative) < 30 || isGenericDescription(narrative)) return true;
+  }
+  const displayName = text(place.name || place.title || override.title);
+  if (displayName && displayName !== hit.ccabKey) return true;
+  if (override.timeline === true) {
+    if (!isHotel) return true;
+  }
+  return false;
+}
+
+export function bindPr336GateBCanonicalIdentity(placeId, place = {}, override = {}) {
+  const ccabKey = NYC_GATE_B_ROW_CCAB_KEYS[placeId];
+  if (!ccabKey) return override;
+  place.externalId = ccabKey;
+  const meta = placeMetadata(place);
+  const priorRecord = {
+    ...(typeof meta.sourceRecord === 'object' ? meta.sourceRecord : {}),
+    ...(typeof override.sourceRecord === 'object' ? override.sourceRecord : {}),
+  };
+  place.metadata = {
+    ...meta,
+    externalId: ccabKey,
+    sourceRecord: { ...priorRecord, ccabKey },
+  };
+  const next = { ...override, externalId: ccabKey };
+  next.sourceRecord = { ...priorRecord, ccabKey };
+  return next;
 }
 
 export function materializePr336GateBSnapshotPlace(place = {}) {

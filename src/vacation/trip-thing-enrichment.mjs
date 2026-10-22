@@ -1,9 +1,8 @@
 import { captureThingLogo } from './thing-logo-capture.mjs';
 import { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
-
+import { ccabNeighborhoodTaglineFromRecord, descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { applySourcedHotelDescriptionToRecord } from './xai-sourced-hotel-description.mjs';
 export { estimateSearchPlacePrice } from './search-place-price-estimate.mjs';
-
 const GENERIC_DESCRIPTION_RES = [
   /^Documented NYC option\b/i,
   /^Documented .+ option\b/i,
@@ -309,13 +308,6 @@ function ccabFactText(sourceRecord = {}, place = {}) {
   return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
 }
 
-function ccabNeighborhoodTagline(sourceRecord = {}, title = '') {
-  const neighborhood = ccabFactText(sourceRecord, {}).match(/Neighborhood:\s*([^;]+)/i);
-  const name = text(title, 160);
-  if (neighborhood && name) return text(`${name} in ${neighborhood[1]}`, 120);
-  return '';
-}
-
 function descriptionWhenJudgeFails({
   category = '',
   title = '',
@@ -333,7 +325,7 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
   let summary = text(sourceRecord.summary || place.summary, 500);
   const itinerary = text(sourceRecord.itineraryNote || sourceRecord.itinerary_note, 280);
   if (longDescription && descriptionPassesDetailJudge(longDescription, title)) {
-    const tagline = ccabNeighborhoodTagline(sourceRecord, title) || shortLineFromSourceText(longDescription);
+    const tagline = ccabNeighborhoodTaglineFromRecord(sourceRecord, title) || shortLineFromSourceText(longDescription);
     if (tagline) return tagline;
   }
   if (itinerary && itinerary !== longDescription) return itinerary;
@@ -347,8 +339,16 @@ function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = ''
 
 export function enrichSearchPlace(place = {}) {
   const next = { ...place };
-  const sourceRecord = sourceRecordFrom(next);
+  let sourceRecord = sourceRecordFrom(next);
   const category = text(next.category, 80).toLowerCase();
+  if (category === 'hotel' || category === 'lodging') {
+    sourceRecord = applySourcedHotelDescriptionToRecord(sourceRecord, {
+      title: next.title,
+      category,
+      address: next.address || sourceRecord.address,
+    });
+    next.sourceRecord = sourceRecord;
+  }
   const title = text(next.title || next.name, 240);
   let description = text(
     next.longDetails || sourceRecord.longDetails || sourcedLongDescription(next, sourceRecord),
@@ -484,7 +484,6 @@ export function enrichTripThing(thing = {}) {
     ...(price != null ? { price } : {}),
   };
 }
-
 export function rowNeedsProductEnrichment(row = {}) {
   const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   if (isGenericDescription(row?.description)) return true;

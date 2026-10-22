@@ -2,6 +2,8 @@
 
 import {
   formatUsd,
+  numericPrice,
+  parsePrice,
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
@@ -74,9 +76,20 @@ function haFields(place, override) {
   return { ...place, ...override };
 }
 
+function sourceRecordFor(place, override) {
+  return (
+    override.sourceRecord ||
+    place.sourceRecord ||
+    (place.source && typeof place.source === 'object' ? place.source : null) ||
+    {}
+  );
+}
+
 function priceText(place, trip) {
   const override = overrideFor(trip, place);
   const row = haFields(place, override);
+  const parsed = numericPrice(place, trip);
+  if (parsed != null) return `$${parsed}`;
   const raw = row.price ?? place.price;
   if (raw === null || raw === undefined || raw === '') return '';
   if (typeof raw === 'string' && !text(raw)) return '';
