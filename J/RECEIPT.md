@@ -1,3 +1,37 @@
+# TSV PR #614 / issue #613 (cursor-ubuntu vkfill-614)
+
+**Start sha:** `3e0095ecc2f5e9824b1eaa03ef955df7b995d507`  
+**Tip sha:** (written at commit)
+
+## Problem
+
+Gate B pixel FAIL on `hotels-390.png` and `hotels-390-top.png` at head `3e0095ec`: round-0 fix used `@media (max-width:480px)` wrap (`white-space:normal`, `overflow-wrap:anywhere`), which conflicts with Craig #547 (name + description stay one ellipsis line at 390).
+
+## Fix
+
+- Replace Hotels mobile CSS with single-line `text-overflow:ellipsis` / `nowrap` constraints on row grid, `[data-ts-list-row-name]`, `[data-ts-hotel-row-head]`, and summary line (no title wrap).
+- `je()` hotel head: block-level ellipsis on `<strong>`; list-row name span `width:100%` / `maxWidth:100%` in `trek-live-product-patches.mjs`.
+- Rebake `public/assets/index-BKun7ofk.js`; update `scripts/test_shared_hotels_390_text_wrap.mjs` to forbid wrap and assert truncation.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_shared_hotels_390_text_wrap.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Layout fix ready on detached tip for host publish; CI + Gate B 32/32 on new head are authority for merge. Chief-dr price/description lines on fixture data not changed this round (no UI/data patch in scope).
+
+---
+
 # VK issue #589 receipt (cursor-ubuntu vkfill-589)
 
 **Start sha:** `7bc66068db57e6afa646eec0ddbcf911b4f5f9ed`  
