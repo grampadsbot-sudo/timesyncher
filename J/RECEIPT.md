@@ -1,6 +1,7 @@
 # VK issue #619 (cursor-ubuntu vkfill-619)
 
-**Start sha:** `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba`
+**Start sha:** `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba`  
+**Tip sha:** `60be25c1`
 
 ## Problem
 
