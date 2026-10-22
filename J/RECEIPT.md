@@ -1,3 +1,32 @@
+# VK PR #599 / issue #595 — round 10 (Gate B F/H/C price coverage)
+
+**Start sha:** `d28086859f1d06aace8726d4711ec31240d7903d`
+
+## Problem (Gate B `gateb_coverage` on `d2808685`, auto round 3)
+
+Flights list 16/16 and Budget hotel/flight rows missing `$` amounts while Hotels list mostly priced; Romer Hell's Kitchen missing description/price. Trek budget/list UIs read `bi(G)=>ha(G).price??G.price`; blank `thingOverrides.price` blocked fallback to served `place.price`.
+
+## Fix
+
+- `shared-trip-live-app-fields.mjs` / `thing-detail-fields.mjs`: drop blank override/place `price` before travel bind.
+- `shared-trip-api-budget.mjs`: replace zero `total_price` budget lines when computed row has price.
+- `trek-live-product-patches.mjs`: patch served `bi()` empty-string fallback; rebaked `public/assets/index-BKun7ofk.js`.
+- `scripts/test_shared_trip_api_budget_lines.mjs`: blank override + zero budget line regression.
+
+## Checks (local)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `cd apps/vacation-client && npm test` | pass |
+
+Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 9 (BASE-MERGE fb95a63)
 
 **Start sha:** `cf1aaf21416c23c70823020c430bc77620baf374`

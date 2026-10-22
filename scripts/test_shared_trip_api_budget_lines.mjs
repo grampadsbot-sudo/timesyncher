@@ -229,6 +229,31 @@ assert.equal(
   'unset __budgetTargets must still fail invented / $200 targets in the DOM',
 );
 
+const blankOverrideHotelId = 1101;
+const blankOverrideShared = prepareSharedTripForLiveApp({
+  ...base,
+  places: [{ id: blankOverrideHotelId, name: 'Harbor Hotel', category_name: 'Hotel', price: 320 }],
+  thingOverrides: { [`place:${blankOverrideHotelId}`]: { price: '', category: 'hotel', stayDays: 3 } },
+  budget: [{
+    id: 1,
+    trip_id: tripId,
+    category: 'Hotel',
+    name: 'Harbor Hotel',
+    total_price: 0,
+    note: '',
+    sort_order: 0,
+  }],
+});
+const blankHotelAmt = trekBudgetAmount(
+  blankOverrideShared.places[0],
+  blankOverrideShared.thingOverrides[`place:${blankOverrideHotelId}`],
+  'hotel',
+);
+assert.equal(blankHotelAmt.hasPrice, true);
+assert.equal(blankHotelAmt.amount, 960);
+const blankHotelBudgetLine = blankOverrideShared.budget.find((line) => line.name === 'Harbor Hotel');
+assert.equal(Number(blankHotelBudgetLine?.total_price), 960);
+
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
 

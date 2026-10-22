@@ -386,6 +386,8 @@ export function applyThingDetailOverrides(shared = {}) {
       sourceRecord: place.sourceRecord,
     };
     const merged = { ...thingDetailOverrideFields(mergedThing), ...prior };
+    if (merged.price === '' || merged.price === null) delete merged.price;
+    if (place.price === '' || place.price === null) delete place.price;
     if (provenanceBlocksSourcedPrice(merged, { ...place, sourceRecord: place.sourceRecord })) {
       delete merged.price;
     }

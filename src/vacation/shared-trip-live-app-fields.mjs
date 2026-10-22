@@ -38,6 +38,12 @@ function parsePrice(value) {
   return match ? Number(match[1].replace(/,/g, '')) : null;
 }
 
+function dropBlankPriceField(target, key) {
+  if (!target || typeof target !== 'object') return;
+  const raw = target[key];
+  if (raw === '' || raw === null) delete target[key];
+}
+
 function placeMetadata(place = {}) {
   return place.metadata && typeof place.metadata === 'object' && !Array.isArray(place.metadata)
     ? place.metadata
@@ -163,6 +169,8 @@ export function applyLiveAppListRowFields(shared = {}) {
   for (const place of next.places) {
     const key = `place:${place.id}`;
     const override = { ...(next.thingOverrides[key] || {}) };
+    dropBlankPriceField(override, 'price');
+    dropBlankPriceField(place, 'price');
     const source = sourceObject(
       override.sourceRecord,
       place.sourceRecord,

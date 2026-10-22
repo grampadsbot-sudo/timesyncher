@@ -253,6 +253,18 @@ export function syncSharedTripApiBudget(shared = {}) {
 
   let sortOrder = lines.length;
   for (const row of rows) {
+    const rowName = text(row.place.name || row.place.title) || 'Trip item';
+    const lineIdx = lines.findIndex(
+      (line) => line.category === row.bucket && text(line.name) === rowName,
+    );
+    if (lineIdx >= 0 && row.hasPrice && row.amount > 0) {
+      const current = Number(lines[lineIdx].total_price);
+      if (!Number.isFinite(current) || current <= 0) {
+        lines[lineIdx] = { ...lines[lineIdx], total_price: row.amount };
+        covered.add(row.amount);
+      }
+      continue;
+    }
     if (covered.has(row.amount)) continue;
     lines.push({
       id: intId(`${tripId}:budget:place:${row.place.id}`),

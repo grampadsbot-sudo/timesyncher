@@ -1,5 +1,5 @@
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
-import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
+import { patchSharedTripOeListRows, patchTrekBiPriceField } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
 import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
@@ -486,6 +486,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   if (js.includes('tsListColumnSort({listKey:G')) {
     throw new Error('served shared bundle must use original Wr Name/Price sort pills');
   }
+  js = patchTrekBiPriceField(js, { served });
   js = patchSharedTripOeListRows(js);
   if (served) {
     if (!js.includes('data-shared-live-tab":"hotels"') || !js.includes('data-shared-live-tab":"cars"')) {
