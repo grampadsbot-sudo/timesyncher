@@ -1,11 +1,11 @@
-# VK PR #610 BASE-MERGE + scope cut (cursor-ubuntu vkfill-610, 2026-10-22)
+# VK PR #610 auto round (cursor-ubuntu vkfill-610, 2026-10-22)
 
-**Tip sha:** `340fe5ebf8a6d1aa66aad162ffde84bd38e743e6` (local; host publishes to `vkfill/607-20261021175801`).
+**Tip sha:** `3121f3be`
 
-**Merge:** host merged `origin/migrate/trek-source` at `6edb0791` into `75cb1caa`; fixture conflict → base.
+**Change:** #607 — hotel `rowSummary` treats neighborhood-only stubs (`Neighborhood: …;`) like thin rating lines; `pickHotelListDescriptionFromLongCopy` keeps absorbing clauses until the line is not a stub, so UWS hotels no longer share one list description.
 
-**Scope cut:** #607 hotel list copy only in `listTabModel.mjs` / `trip-thing-enrichment.mjs`; trek/flight/budget patches and PR-only evidence removed; base detail evidence restored.
+**Check:** `node apps/vacation-client/test/listRows.unit.mjs` — 0; `gate-b-nyc-shared-staging.json` hotel list — 0 duplicate description groups (was 3+). Pre-DONE gates — 0.
 
-**Checks (local):** `apps/vacation-client` npm test 0; pre-DONE gates 0 at tip above. `node scripts/run-offline-tests.mjs` stops on env (`test_live_transcript_dialog_pdf.mjs` / gbrain path) — lane env, not this diff.
+**Left alone:** Price gaps, Romer Hell's Kitchen on live staging (data), baselines, Gate B config, `trip-thing-enrichment.mjs` (file-size ratchet).
 
-**Verdict:** Ready for host push; CI + Gate B on pushed head are authority (not self-certified).
+**Verdict:** Ready for host push; CI + Gate B on pushed head are authority.

@@ -336,6 +336,14 @@ function isThinNeighborhoodListSummary(value = '') {
   return false;
 }
 
+function isStubHotelListSummary(value = '') {
+  const row = String(value ?? '').trim();
+  if (!row) return false;
+  if (isThinNeighborhoodListSummary(row)) return true;
+  if (/^Neighborhood:\s*[^;]+;\s*$/i.test(row)) return true;
+  return false;
+}
+
 function hotelListSummaryClauses(row = '') {
   const line = String(row ?? '').trim();
   if (!line) return null;
@@ -358,15 +366,15 @@ function pickHotelListDescriptionFromLongCopy(value = '') {
       const next = text(`${line} ${clause}`, 4000);
       if (line && next.length > HOTEL_LIST_ROW_SHORT_MAX) break;
       line = next;
-      if (listRowWordCount(line) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(line)) break;
+      if (listRowWordCount(line) >= HOTEL_LIST_ROW_MIN_WORDS && !isStubHotelListSummary(line)) break;
     }
     const clipped = text(line, HOTEL_LIST_ROW_SHORT_MAX);
-    return listRowWordCount(clipped) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(clipped)
+    return listRowWordCount(clipped) >= HOTEL_LIST_ROW_MIN_WORDS && !isStubHotelListSummary(clipped)
       ? clipped
       : '';
   }
   const ten = text(row.split(/\s+/).slice(0, 10).join(' '), HOTEL_LIST_ROW_SHORT_MAX);
-  return listRowWordCount(ten) >= HOTEL_LIST_ROW_MIN_WORDS && !isThinNeighborhoodListSummary(ten) ? ten : '';
+  return listRowWordCount(ten) >= HOTEL_LIST_ROW_MIN_WORDS && !isStubHotelListSummary(ten) ? ten : '';
 }
 
 function storedRowSummaryText(place, trip) {
@@ -393,7 +401,7 @@ export function rowSummary(place, trip) {
       source.details ||
       place.description,
   );
-  if (isThinNeighborhoodListSummary(raw) && longBody) {
+  if (tabCategoryKey(place, trip) === 'hotel' && isStubHotelListSummary(raw) && longBody) {
     const picked = pickHotelListDescriptionFromLongCopy(longBody);
     return picked || longBody;
   }

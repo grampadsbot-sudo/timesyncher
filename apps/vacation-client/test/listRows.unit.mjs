@@ -153,10 +153,26 @@ const shortNeighborhoodTrip = applyLiveAppListRowFields({
     },
   },
 });
-assert.equal(
-  rowSummary(shortNeighborhoodTrip.places[0], shortNeighborhoodTrip),
-  'Neighborhood: Midtown / Central Park South;',
-);
+const shortNeighborhoodLine = rowSummary(shortNeighborhoodTrip.places[0], shortNeighborhoodTrip);
+assert.ok(wordCount(shortNeighborhoodLine) >= 6, shortNeighborhoodLine);
+assert.match(shortNeighborhoodLine, /3\.8|144|night/i);
+
+const uwsStubTrip = applyLiveAppListRowFields({
+  places: [{ id: 94, name: 'Hotel Beacon', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:94': {
+      category: 'hotel',
+      price: 736,
+      summary: 'Neighborhood: Upper West Side;',
+      longDetails:
+        'Neighborhood: Upper West Side; Rating: 8.8 (2,982 Booking.com reviews); Price: $736/night; sale $5,155/week for 2 adults; Kitchen studio; excellent but expensive; Status: candidate, not booked.',
+    },
+  },
+});
+const uwsStubLine = rowSummary(uwsStubTrip.places[0], uwsStubTrip);
+assert.ok(wordCount(uwsStubLine) >= 6, uwsStubLine);
+assert.match(uwsStubLine, /736|kitchen|8\.8/i);
+assert.notEqual(uwsStubLine.toLowerCase(), 'neighborhood: upper west side;');
 
 const thinHotelTrip = applyLiveAppListRowFields({
   places: [{ id: 92, name: 'Hotel A', category_name: 'Hotel' }],
