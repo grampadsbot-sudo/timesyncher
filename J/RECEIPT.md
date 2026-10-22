@@ -3,7 +3,7 @@
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
 
 **Start sha:** `95cb58d9d5221b496ee8ec909ba8e4e89090140d`  
-**Tip sha:** _(after commit; host publish)_
+**Tip sha:** `29ae978442d9d4407cef4af09be774386305f723`
 
 ## Root cause (rounds 1–2)
 
