@@ -13,6 +13,7 @@ from pathlib import Path
 SOURCE = Path(__file__).resolve().parent
 PATCH = SOURCE / 'host-handback-runtime.patch'
 MODULES = (
+    'host_handback_observation.py',
     'host_handback_entrypoint.py',
     'host_handback_events.py',
     'host_handback_evidence.py',

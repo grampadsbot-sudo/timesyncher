@@ -127,6 +127,35 @@ actor id, comment id, body digest, `pending`/`reviewed`). Legacy `at`/`message`/
 `receipt_exists` files are refused. The collector and alarm are unchanged in this round;
 wiring that reader into `CanonicalCollector` is follow-on host work.
 
+## Zero-model host observation (`host_handback_observation.py`)
+
+When the published Current-pass header is older than 900 seconds, `current_section`
+still refuses unless `host-handback-entrypoint.json` names a scoped
+`host_observation_path` JSON artifact. The outer host produces that file with
+`produce_observation(...)` after live reads of assessment/receipt bytes, GitHub
+heads, and `runtime_root`. `CanonicalCollector` verifies freshness (900s),
+assessment/receipt digests, immutable `section_event_at`, and per-item owner/head
+bindings. Management `last_action_at` and host event clocks are unchanged.
+
+Outer-host producer (after live reads; path under `/home/ubishere9995/tsv-work/...`):
+
+```sh
+PYTHONPATH=/path/to/source/scripts/ops/dispatch python3 - <<'PY'
+from host_handback_observation import produce_observation
+# supply assessment_text, receipt_pages dict, items list [(n, owner, head), ...], runtime_root
+produce_observation("/home/ubishere9995/tsv-work/.../HOST_OBSERVATION.json", ...)
+PY
+```
+
+Alarm dry-run with observation configured:
+
+```sh
+PYTHONPATH=/home/ubishere9995/tsv-dispatch python3 -B scripts/ops/dispatch/tsv_stall_alarm.py --dry
+```
+
+(`host-handback-entrypoint.json` must include `host_observation_path` when the
+assessment header is stale.)
+
 ## Stall-alarm entrypoint config (`host-handback-entrypoint.json`)
 
 The tracked `tsv_stall_alarm.py` CLI loads `host_handback_entrypoint.py` on every

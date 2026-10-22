@@ -23,6 +23,7 @@ ROOT_KEYS = (
     'acceptance_event_root',
     'resolution_event_root',
 )
+OPTIONAL_PATH_KEYS = ('host_observation_path',)
 
 
 def _require(condition, reason):
@@ -73,7 +74,7 @@ def load_entrypoint_config(path):
     _require(isinstance(data, dict), 'host handback entrypoint config must be an object')
     version = data.get('version')
     _require(version == CONFIG_VERSION, 'unsupported host handback entrypoint config version')
-    extra = set(data) - {'version'} - set(PATH_MAP_KEYS) - set(ROOT_KEYS)
+    extra = set(data) - {'version'} - set(PATH_MAP_KEYS) - set(ROOT_KEYS) - set(OPTIONAL_PATH_KEYS)
     _require(not extra, 'host handback entrypoint config has unknown fields')
     parsed = {'version': CONFIG_VERSION}
     for field in PATH_MAP_KEYS:
@@ -82,6 +83,10 @@ def load_entrypoint_config(path):
     for field in ROOT_KEYS:
         if field in data:
             parsed[field] = _validate_root(data[field])
+    for field in OPTIONAL_PATH_KEYS:
+        if field in data:
+            from host_handback_observation import validate_observation_path
+            parsed[field] = validate_observation_path(data[field], must_exist=False)
     configured = any(field in parsed for field in PATH_MAP_KEYS + ROOT_KEYS)
     _require(configured, 'host handback entrypoint config has no event paths')
     return parsed
@@ -100,6 +105,7 @@ def build_review_scan(gh, repo, runtime_root, config):
         acceptance_event_paths=config.get('acceptance_event_paths'),
         resolution_event_root=config.get('resolution_event_root'),
         resolution_event_paths=config.get('resolution_event_paths'),
+        host_observation_path=config.get('host_observation_path'),
     )
     return CanonicalCollector(gh, repo, readers).scan()
 
@@ -131,5 +137,9 @@ def run_entrypoint(gh_factory, repo, runtime_root, argv):
     config_path = config_override or default_config_path(runtime_root)
     config = load_entrypoint_config(config_path)
     gh = ReadOnlyGH(gh_factory()) if dry else gh_factory()
+    if config.get('host_observation_path'):
+        from host_handback_evidence import HostReaders
+        from host_handback_observation import produce_live_observation
+        produce_live_observation(config['host_observation_path'], gh, repo, HostReaders(runtime_root))
     review_scan = build_review_scan(gh, repo, runtime_root, config)
     return dry, review_scan

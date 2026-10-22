@@ -19,6 +19,9 @@ from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, Event
                                   verify_acceptance_event, verify_acceptance_observation, verify_event,
                                   verify_observation, verify_resolution_event,
                                   verify_resolution_observation)
+from host_handback_observation import (ObservationError, load_observation,
+                                       locate_current_section, validate_observation_path,
+                                       verify_assessment_observation, verify_item_observation)
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -115,20 +118,17 @@ def authenticate_guarded_look_send(root, n, head):
     return True
 
 
-def current_section(text, now):
-    sections = re.split(r'(?m)^(?=## )', text)
-    for section in sections:
-        header = section.splitlines()[0] if section else ''
-        if not re.search(r'^## (?:Current (?:manager )?pass|Managing-dr pass)\b', header, re.I):
-            continue
-        utc = re.search(r'(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) UTC', header)
-        pt = re.search(r'(\d{4}-\d\d-\d\d) (\d\d:\d\d) PT', header)
-        require(utc or pt, 'assessment current section has no unambiguous event time')
-        at = (_time(utc[1].replace(' ', 'T') + 'Z') if utc else
-              datetime.strptime(pt[1] + ' ' + pt[2], '%Y-%m-%d %H:%M').replace(tzinfo=PT).timestamp())
-        require(0 <= now - at <= ASSESSMENT_S, 'assessment current section stale or future')
+def current_section(text, now, observation=None):
+    try:
+        section, at = locate_current_section(text)
+    except ObservationError as exc:
+        raise EvidenceError(str(exc)) from exc
+    if now < at:
+        raise EvidenceError('assessment current section stale or future')
+    if now - at <= ASSESSMENT_S:
         return section
-    raise EvidenceError('current canonical assessment section not found')
+    require(observation is not None, 'assessment current section stale or future')
+    return section
 
 
 def ownership(section, number):
@@ -184,8 +184,10 @@ class HostReaders:
     """
     def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None,
                  acceptance_event_root=None, acceptance_event_paths=None,
-                 resolution_event_root=None, resolution_event_paths=None, cursor_api_get=None):
+                 resolution_event_root=None, resolution_event_paths=None,
+                 host_observation_path=None, cursor_api_get=None):
         self.root = Path(root)
+        self.host_observation_path = host_observation_path
         self.proc_root = Path(proc_root)
         self.handback_event_root = Path(handback_event_root) if handback_event_root else None
         self.handback_event_paths = dict(handback_event_paths or {})
@@ -385,6 +387,12 @@ class HostReaders:
             raise EvidenceError(str(exc)) from exc
         return record
 
+    def host_observation(self):
+        if not self.host_observation_path:
+            return None
+        validate_observation_path(self.host_observation_path)
+        return load_observation(self.host_observation_path)
+
     def page(self, slug):
         from dr_scorecard import read_page
         return read_page(slug)
@@ -488,12 +496,23 @@ class CanonicalCollector:
             self.actor = actor
             self.actors = frozenset({actor['login']})
             self.assessment = readers.page(ASSESSMENT)
-            self.section = current_section(self.assessment, self.started)
+            observation_path = getattr(readers, 'host_observation_path', None)
+            self.observation = readers.host_observation() if observation_path else None
+            self.section = current_section(self.assessment, self.started,
+                                           observation=self.observation)
             slugs = set(SOURCE_RE.findall(self.section))
             require(slugs, 'current assessment has no canonical receipt source')
             self.pages = {slug: readers.page(slug) for slug in sorted(slugs)}
+            if self.observation is not None:
+                require(str(Path(readers.root).resolve()) ==
+                        str(Path(self.observation['runtime_root']).resolve()),
+                        'host observation runtime root mismatch')
+                verify_assessment_observation(self.observation, self.assessment, self.pages,
+                                                now=self.started)
         except EvidenceError:
             raise
+        except ObservationError as exc:
+            raise EvidenceError(str(exc)) from exc
         except Exception as exc:
             raise EvidenceError('canonical collector initialization failed: ' + type(exc).__name__) from exc
 
@@ -520,6 +539,11 @@ class CanonicalCollector:
             action = last_action(self.assessment, n, checked)
             head = (item.get('head') or {}).get('sha')
             require(not head or bool(HEAD_RE.fullmatch(head)), 'invalid current head SHA')
+            if self.observation is not None and head:
+                try:
+                    verify_item_observation(self.observation, n, owner, head, checked)
+                except ObservationError as exc:
+                    raise EvidenceError(str(exc)) from exc
             prerequisites = {int(x) for text in [item.get('body') or ''] +
                              [c.get('body') or '' for c in comments
                               if c.get('user', {}).get('login') in self.actors]
