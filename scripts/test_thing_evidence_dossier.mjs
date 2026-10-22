@@ -153,6 +153,31 @@ await judgeDossierFindings({ pages: goodPages }, kf, { judgeImpl: async (_d, ite
 assert.equal(kfAsked[0].kind, 'knownFor', 'known-for claims go to the judge tagged for the signature test');
 assert.equal(kfAsked[0].item, 'bar');
 
+// Round 4: extraction (code first, model second, grounded, deduped), claim-level drop, 10-point stars, specific known-for, word fit.
+const X4 = await import('../src/vacation/dossier-review-extract.mjs');
+const F4 = await import('../src/vacation/thing-dossier-fields.mjs');
+const rvPage = page('https://www.reddit.com/r/nyc/x', 'thread alpha_user • 2y ago I loved the margherita here, the crust was great and we went back twice beta_user • 1y ago Honestly overpriced and the staff were rude to my friends when we visited last spring gamma_user • 3mo ago Best pizza on the block, I recommend the margherita without hesitation to anyone visiting delta • 2d ago end');
+const codeSet = X4.extractReviewsByCode({ pages: [rvPage] });
+assert.equal(codeSet.length, 3, 'reddit comment markers split three opinions');
+const set4 = X4.finalizeReviewSet({ pages: [rvPage] }, codeSet, [
+  { page: 'p1', text: 'I loved the margherita here, the crust was great and we went back twice' },
+  { page: 'p1', text: 'Invented review that is not on the page at all, I loved it' },
+]);
+assert.equal(set4.length, 3, 'model duplicates are deduped and ungrounded model reviews dropped');
+assert.equal(set4[0].source, 'reddit.com');
+const tenPt = JSON.parse(JSON.stringify(findings));
+tenPt.reviews.forEach((r, i) => { r.rating = [9, 8, 9, 8][i]; });
+tenPt.reviews[0].claims.push({ text: 'unsupported extra', pages: ['p2'], supported: false });
+const b4 = prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, tenPt);
+assert.deepEqual(b4.reviews.map((r) => r.rating), [5, 4, 5, 4], '10-point stars convert to 1-5');
+assert.equal(b4.reviews[0].droppedClaims, 1, 'only the unsupported claim is dropped');
+assert.equal(b4.reviews.length, 4);
+assert.equal(F4.knownForSpecific('pre-theater dining'), false);
+assert.equal(F4.knownForSpecific('tableside guacamole'), true);
+const long = Array.from({ length: 13 }, (_, i) => `Sentence ${i} has exactly ten words in it for this test.`).join(' ');
+const fit = F4.fitDescriptionWords(long);
+assert.ok(F4.fitDescriptionWords(long).split(/\s+/).length <= 120 && fit.endsWith('.'), 'trim to <=120 words at a sentence end');
+
 const empty = enrichPlaceRecordWithXaiRatings({ review1: 'stale' }, { evidenceDossier: { thing: 'Empty', pages: [], attempts: [] } });
 assert.ok(empty.missingFields.includes('reviews'));
 assert.ok(empty.missingFields.includes('ratings'));

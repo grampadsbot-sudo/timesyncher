@@ -22,7 +22,9 @@ import {
   dossierPageById,
   dossierPageId,
   prepareDossierFindings,
+  fitDescriptionWords,
 } from './thing-dossier-fields.mjs';
+import { dedupeReviews, extractionPrompt, extractReviewsByCode, finalizeReviewSet } from './dossier-review-extract.mjs';
 
 export {
   parseXaiStructuredPayload,
@@ -52,8 +54,10 @@ function dossierPrompt(dossier) {
     'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
-    'Return reviewExcerpts: [{text, pages}] with one entry per distinct actual customer review or opinion (Yelp, TripAdvisor, Google, Reddit, critic reviews, guest reviews), citing exactly the one page it is on, readable in the saved pages, text a one-sentence summary of that review. Never manufacture reviews or counts.',
+    'reviewSet (in the JSON below) is the full deduplicated set of reviews and opinions already extracted from these pages; its size is the real count read. Do not return reviewExcerpts. Base the four representative reviews on ALL of reviewSet (its spread of praise and complaints), not on a few. Earlier instruction kept for reference only: readable in the saved pages, text a one-sentence summary of that review. Never manufacture reviews or counts.',
+    'A known-for item is one specific dish, drink, service or product (e.g. "spicy rigatoni vodka", "tableside guacamole", "hand-sliced nova"), never a broad phrase like "pre-theater dining", "great location", "atmosphere" or "live music".',
     'Return knownFor: [{item, claims}] only for an item a saved page names as a signature, specialty, famous or best-known dish, service or product (a menu marking it signature, an article, or reviews singling it out). Merely having an amenity, an on-site bar, or a neighbouring or tenant restaurant is NOT known-for. Each claim text must say the page names it as a signature (e.g. "p3 calls the spicy rigatoni its signature dish"). Omit knownFor when no page does this.',
+    'Review rating is an integer 1-5 stars (never a 10-point score).',
     'Return reviews: four {text,rating,verdict,claims} representative assessments in your own words. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
     'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
     'No per-review sources or URLs: those are on the dossier evidence list. Insufficient evidence means omitted fields, never filler.',
@@ -69,7 +73,6 @@ export function collectDossierClaims(findings = {}) {
   }
   for (const item of findings.knownFor || []) (item?.claims || []).forEach((claim) => { if (claim && typeof claim === 'object') { claim.kind = 'knownFor'; claim.item = item.item; add(claim); } });
   for (const review of findings.reviews || []) (review?.claims || []).forEach(add);
-  (findings.reviewExcerpts || []).forEach(add);
   return items;
 }
 
@@ -82,6 +85,7 @@ function judgePrompt(dossier, items) {
     'For each claim, read ONLY the saved page text of the page ids it cites. supported:true only when those pages state or clearly imply the claim; paraphrase is fine, exact wording is not required.',
     'Anything not backed by the cited pages (outside knowledge, other pages, exaggeration, invented numbers or details) is supported:false.',
     'Claims with kind "knownFor": supported:true ONLY when a cited page names that item as a signature, specialty, famous or best-known thing of THIS place. A page that merely lists it (an on-site bar, an amenity, a tenant or neighbouring restaurant) is supported:false.',
+    'Claims with kind "knownFor" are also supported:false when the item is a broad phrase (dining, location, atmosphere, experience) rather than one specific dish, drink, service or product.',
     'Return JSON {"results":[{"id":"c1","supported":true,"reason":"..."}]} with one result per claim.',
     JSON.stringify({ claims: items.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })), pages }),
   ].join('\n');
@@ -121,6 +125,37 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
   return { judged: ask.length, results };
 }
 
+export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl } = {}) {
+  const code = dedupeReviews(extractReviewsByCode(dossier)).slice(0, 150);
+  let model = [];
+  let keep = null;
+  let status = 'skipped';
+  try {
+    if (extractReviewsImpl) {
+      ({ reviews: model = [], keep = null } = await extractReviewsImpl(dossier, code));
+      status = 'ok';
+    } else if (env.XAI_API_KEY) {
+      const response = await postXaiPlaceRatingsResponses({
+        apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
+        payload: {
+          model: env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
+          input: [{ role: 'user', content: extractionPrompt(dossier, code) }],
+          text: { format: { type: 'json_object' } },
+        },
+      });
+      if (!response.ok) throw new Error(`dossier_extract_http_${response.status}`);
+      const out = JSON.parse(outputText(await response.json()));
+      model = out.reviews || [];
+      keep = Array.isArray(out.keep) ? out.keep : null;
+      status = 'ok';
+    }
+  } catch {
+    status = 'failed';
+  }
+  const set = finalizeReviewSet(dossier, code, model, keep);
+  return { set, stats: { code: code.length, codeKept: keep ? keep.length : null, model: Array.isArray(model) ? model.length : 0, kept: set.length, status } };
+}
+
 async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImpl }) {
   if (buildImpl) return buildImpl(dossier);
   const response = await postXaiPlaceRatingsResponses({
@@ -145,7 +180,7 @@ async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImp
 
 export async function fetchXaiPlaceRatings(place = {}, {
   env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
-  gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl,
+  gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(),
 } = {}) {
   const key = dossierKey || thingEvidenceDossierKey(place);
@@ -170,16 +205,21 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
   }
+  const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl });
+  merged.reviewSet = extraction.set;
+  merged.reviewExtraction = extraction.stats;
   const { payload, structuredText, findings } = await callDossierBuilder(merged, {
     env, fetchImpl, timeoutMs, buildImpl,
   });
+  // Round 4: deterministic word fit before the judge, so the judge sees the final description.
+  if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl });
   const built = prepareDossierFindings(merged, findings);
   const final = persisted && !maxAgeExpired
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
     : built;
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
-  return { payload, structuredText, judge, findings, parsed: { evidenceDossier: final } };
+  return { payload, structuredText, judge, findings, extraction: extraction.stats, parsed: { evidenceDossier: final } };
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {

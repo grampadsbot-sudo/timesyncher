@@ -16,6 +16,23 @@ export function descriptionNamesThing(text = '', thing = '') {
   return names.some((name) => body.includes(name) || body.includes(name.replace(/^the /, '')));
 }
 
+// Round 4: descriptions over 120 words are trimmed at sentence ends (deterministic), never padded.
+export function fitDescriptionWords(text = '', max = 120) {
+  const value = String(text).trim();
+  if (words(value).length <= max) return value;
+  const sentences = value.match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g) || [value];
+  while (sentences.length > 1 && words(sentences.join(' ')).length > max) sentences.pop();
+  return sentences.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// Round 4: a known-for item is one specific dish, drink, service or product, not a broad phrase.
+const BROAD_KNOWN_FOR = /\b(dining|experience|atmosphere|ambiance|ambience|vibes?|location|hospitality|food|cuisine|menu|drinks|nightlife|views?|setting|decor|service|staff|value|scene|energy)\b/i;
+export function knownForSpecific(item = '') {
+  const text = norm(item);
+  if (!text || words(text).length > 6) return false;
+  return !BROAD_KNOWN_FOR.test(text);
+}
+
 export const MIN_REVIEWS_READ = 10;
 export const MIN_REVIEW_SOURCES = 3;
 export const limitedReviewsLabel = (n) => `limited reviews found (${n})`;
@@ -178,9 +195,9 @@ export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
   next.knownFor = (Array.isArray(findings.knownFor) ? findings.knownFor : [])
-    .filter((item) => norm(item?.item) && claimsSupported(dossier, item))
+    .filter((item) => norm(item?.item) && knownForSpecific(item.item) && claimsSupported(dossier, item))
     .map((item) => ({ ...item, url: claimUrls(dossier, item) }));
-  const excerpts = (Array.isArray(findings.reviewExcerpts) ? findings.reviewExcerpts : [])
+  const excerpts = Array.isArray(dossier.reviewSet) ? dossier.reviewSet : (Array.isArray(findings.reviewExcerpts) ? findings.reviewExcerpts : [])
     .filter((item) => claimCitesKnownPages(dossier, item) && item.supported === true)
     .map((item) => ({ ...item, url: claimUrls(dossier, { claims: [item] }) }));
   next.reviewExcerpts = [...new Map(excerpts.map((item) => [norm(item.text), item])).values()];
@@ -218,8 +235,16 @@ export function prepareDossierFindings(dossier, findings = {}) {
       next.fields[key].noReviewsFlag = true;
     }
   }
-  next.reviews = (Array.isArray(findings.reviews) ? findings.reviews : [])
-    .map((review) => ({ ...review, url: claimUrls(dossier, review) }));
+  // Round 4: an unsupported claim is dropped on its own; a review is kept while it has >=1 supported claim.
+  // Stars given on a 10-point scale (all <=10, some >5: Empire/PodTimes round 3) are converted to 1-5.
+  const raw = Array.isArray(findings.reviews) ? findings.reviews : [];
+  const tenPoint = raw.length && raw.every((r) => Number(r?.rating) <= 10) && raw.some((r) => Number(r?.rating) > 5);
+  next.reviews = raw.map((review) => {
+    const claims = (review?.claims || []).filter((claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true);
+    const dropped = (review?.claims || []).length - claims.length;
+    const rating = tenPoint ? Math.max(1, Math.round(Number(review.rating) / 2)) : review?.rating;
+    return { ...review, rating, claims, droppedClaims: dropped, url: claimUrls(dossier, { claims }) };
+  });
   return next;
 }
 
