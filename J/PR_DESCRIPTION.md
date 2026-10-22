@@ -2,6 +2,8 @@ Closes #595
 
 ## What changed
 
+**BASE-MERGE (`b6db7142` + merge commit)** — Host merged `origin/migrate/trek-source` at `6edb0791f521004df36fc3b0ef58819127839942` into `b6db71429083a56615f2ebdb40eba9d28d5a753b` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 3). Resolved conflicts in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only (PR #599 text retained).
+
 **BASE-MERGE (`85a6c33f`)** — Host merged `origin/migrate/trek-source` at `e2cbfcefe64f1f66d2537c24ce16dee9a7fff1ba` into `a4600d9f`. Resolved conflicts in `J/RECEIPT.md`, `scripts/fixtures/pr336-vk-search-trip-sources.mjs`, and `src/vacation/trip-thing-enrichment.mjs`: kept PR #599 hotel `applySourcedHotelDescriptionToRecord` + list-row CCAB helpers, imported base Day-by-Day fixture rows (`buildNycCraigKimDaybydayFixtureRows`), and combined base `descriptionWhenJudgeFails` / judge-aware `enrichTripThing` with PR `enrichSearchPlace` (hotel sourced copy + judge blanking for ccab semicolon sheets). Rebaked served trek bundle after taking base `public/assets/*.js`.
 
 **Data fill (issue #595)** — Hotel descriptions from xAI grok fields + stored NYC CCAB enrichment on list rows (`xai-sourced-hotel-description.mjs`, fixture replay, live serve merge).
@@ -31,5 +33,4 @@ Closes #595
 
 - GBrain handoff via agent brief (`bot-admin/lanes/vk-pr-handoff/pr-599`).
 - Baselines, capture scripts, workflows, and allowlists untouched.
-- Full `origin/migrate/trek-source` merge still dirty vs `6edb079`; host should merge/rebase before Gate B on latest base.
-- Gate B Ubuntu not self-certified on this head.
+- Gate B Ubuntu not self-certified on this head; host push + capture is authority.

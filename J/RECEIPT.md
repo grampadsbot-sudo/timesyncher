@@ -1,3 +1,25 @@
+# VK PR #599 / issue #595 — round 6 BASE-MERGE (`6edb079` into `b6db7142`)
+
+**Base merge:** Host merged `origin/migrate/trek-source` at `6edb0791f521004df36fc3b0ef58819127839942` into `b6db71429083a56615f2ebdb40eba9d28d5a753b` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 3). Conflicts: `J/PR_DESCRIPTION.md`, `J/RECEIPT.md` (PR text kept).
+
+**Start sha:** `b6db71429083a56615f2ebdb40eba9d28d5a753b`
+
+## Problem
+
+PR head was `mergeable_state=dirty` vs base `migrate/trek-source` tip `6edb079` (#620 row 603 fix on base). Host merge required J/ conflict resolution only; no code-file conflicts.
+
+## Fix
+
+- Resolved `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` keeping PR #599 narrative; noted base merge at `6edb0791`.
+
+## Checks (local, post-merge — pending commit)
+
+| Command | Result |
+| --- | --- |
+| (run after commit) | |
+
+---
+
 # VK PR #599 / issue #595 — round 6 (row 603 CI + snapshot-bound hotel finalize)
 
 **Start sha:** `1e0000aa1a02b12cc45294c328034e1c1a521e6e` (host merge of `6edb079` not in worktree; ported #619 Belleclaire + `sourcedShortSummary` tagline from `migrate/trek-source` without git merge).
