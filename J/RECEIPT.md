@@ -36,4 +36,4 @@ Center **placeholder / emoji** list-row logo chips on the **first name line** (s
 
 ## Tip sha
 
-`8c4e5c33b7d689be969f3138bbdb5766047be4a1` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.
+`0f004a331eecbe042c50a77921d4bb1d49367e06` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.
