@@ -1,3 +1,37 @@
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, hard round tier 1, reland)
+
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
+
+**Start sha:** `cad653f5861fd04c10875d81cdb7251c28315123`
+
+## Root cause (round 3 revert)
+
+Head `cad653f5` matched base `e3364ac` on `src/` + `public/assets/index-BKun7ofk.js` (docs-only diff). Pre-merge `record_backend_skip` + `known_gaps.gap_close_check` path (1): **0 changed px** on gap screens ⇒ `other gap not closed (#601): backend-only head cad653f changes no screen` (`~/tsv-dispatch/tsv_dispatch.py` L2076–2090; base gaps `~/tsv-dispatch/gateb-basegaps/e3364ac5b3d44795cd3b2d9c857e9c940a9f6790.json`).
+
+## Fix
+
+Restore round-1 `OE_ROW_SR_LOGO_ALIGN_*` flex row in `src/vacation/shared-trip-oe-list-row-patch.mjs` (same as head `b27e3630`). Local structure probe on `pr604-5e40bf0` vs `base-e3364ac` had no `logo not centred with name` on `events-390.png` / `hotels-390.png`; pixel compare without vision: 0 FAIL screens vs base (many NEEDS_JUDGMENT under 1%).
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 |
+| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/test_served_trek_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+UI diff vs `e3364ac` restored; closes #601 known gap on head structure (not self-certified). CI + Gate B on pushed head are authority.
+
+**Tip sha:** `147ebaa385674d38ccd908b2f8b95d27f884c3a4`
+
+---
+
 # VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, hard round tier 1)
 
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` — page not found (2026-10-21).
