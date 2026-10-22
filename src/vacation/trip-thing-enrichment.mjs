@@ -25,7 +25,6 @@ function text(value, max = 4000) {
 function wordCount(value = '') {
   return text(value, 4000).split(/\s+/).filter(Boolean).length;
 }
-
 function isThinNeighborhoodListSummary(value = '') {
   const row = text(value, 500);
   if (!row || !/^Neighborhood:\s*.+;\s*Rating:/i.test(row)) return false;
