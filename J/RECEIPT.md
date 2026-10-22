@@ -1,31 +1,34 @@
-# TSV issue #608 (cursor-ubuntu vkfill-608)
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604 rethink round 1, 2026-10-22)
 
-**Start sha:** `fb95a6306b16ea71cfc1adc6fc76a5779ec47403`  
-**Branch:** `vkfill/608-20261022042745` → `migrate/trek-source`
+**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (chief dr option a: CSS emoji fallback centering).
 
-## Problem
+**Start sha:** `7a82b21f5de6d5d8535ab728c1816a873dd72fcc`
 
-Staging NYC shared trip is served from `buildNycCraigKimDaybydayTrip()`; 22 hotels had ccab/semicolon copy that `enrichSearchPlace` strips, so `descriptionPassesDetailJudge` failed (0–3/22) despite prices largely present.
+## Step 1 — base merge
 
-## Fix
+Host merged `origin/migrate/trek-source` @ `93ac0a342fb1494af672f36d80359755c6aaaace` into `7a82b21f`. Conflicts resolved: kept PR `J/RECEIPT.md` / `J/PR_DESCRIPTION.md`; rebaked `public/assets/index-BKun7ofk.js` after patches.
 
-- Prose hotel descriptions + short summaries + `summarySourceUrls` in `nyc_ccab_place_enrichment.json` (22 hotels).
-- Motto overlay description aligned in `pr336-gate-b-ccab-overlay.json`.
-- Regenerated `pr336-vk-search-places.snapshot.json`.
-- `test_vk_hotel_detail_fill.mjs` expects fixture prose to pass without web enrichment.
+## Step 2 — emoji fallback vertical center (CSS only)
 
-## Checks (local, commit tip)
+Removed runtime `tsCenterThingLogoFallback` / `tsCenterListLogoFallbackDom` (did not move measured pixels on Ubuntu Gate B). Generic fix: `transform: translateY(-2.5px)` on the **fallback glyph only** (`tsv-logo-fallback` / `thing-emoji` in chip) in TREK `dc()`, shared live-tab HTML, and vacation-client CSS. Real-logo `translateY` from offline ink table unchanged.
 
-| Command | Result |
+## Measurement (Gate B row-name-frame, ink-bbox threshold 24, tol 1.5 px)
+
+**Before** (Ubuntu Playwright capture, Gate B `20261022-111416` on head `0aa9f367`, cited in handoff): emoji-fallback rows **low** vs first name line — e.g. Amelie Bistro & Wine Bar **3 px**, e's BAR group **3 px**, Carbone **3 px**; stores/hotels **2.5 px**; cars/flights **2 px**.
+
+**After** (lane worktree; same rule as `~/tsv-gateb/lib/row-name-frame.mjs` — expected from static `translateY(-2.5px)` on glyph box): nominal offset **≤0.5 px** on those rows (within 1.5 px). **Host Ubuntu Gate B on published head is authority** for gap_close PASS.
+
+## Local verification
+
+| Check | Result |
 | --- | --- |
-| Fixture judge script (22 hotels) | 22/22 `descriptionPassesDetailJudge`; 0 missing hotel/flight/car prices |
-| `node scripts/test_gate_b_product_row_fields.mjs` | exit 0 |
-| `node scripts/test_nyc_budget_search_fill_prices.mjs` | exit 0 |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | exit 0 |
-| `node scripts/check-no-comments.mjs` | exit 0 |
-| `node scripts/test_offline_manifest.mjs` | exit 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | exit 0 |
+| `node scripts/rebake_served_trek_bundle.mjs` | 0 (`sha256=33ea41dbf99bb822157a4e7adf1feb0a3626d1ee7ccf9882ef2c7fe4fb390a51`) |
+| `node scripts/test_thing_logo_ink_center.mjs` | 0 |
+| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
 
-## Verdict
+## Tip sha
 
-Ready for host publish + PR (`Closes #608`). Staging `live_accept.py` `hotel_desc` / `item_count` not run from this lane (no deploy).
+`2a917a6f7fa603d52b3726c6f2299a6b9588aacf` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.
