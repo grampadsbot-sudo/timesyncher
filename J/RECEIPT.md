@@ -32,4 +32,4 @@
 
 Base-merge round: merge `e2cbfce` into `822539f7`, conflicts resolved, rebaked bundle. Logo layout from PR head unchanged. Not self-certified; CI + Gate B on pushed head are authority.
 
-**Tip sha:** (filled after commit)
+**Tip sha:** `7aed2f14` (merge `2907c338` into `822539f7`)
