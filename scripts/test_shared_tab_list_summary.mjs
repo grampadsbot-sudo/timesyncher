@@ -58,6 +58,25 @@ assert.match(bundle, /data-summary-stored":"1"/);
 assert.match(bundle, /flexWrap:"wrap",justifyContent:"center"/);
 assert.doesNotMatch(bundle, /marginLeft:-8,marginRight:-8,width:"calc\(100% \+ 16px\)"/);
 assert.doesNotMatch(bundle, /data-day-itinerary-mount|data-trek-list/);
+assert.doesNotMatch(bundle, /tsRowInlineDesc/);
+assert.doesNotMatch(bundle, /matchMedia\("\(max-width:640px\)"\)/);
+assert.match(
+  bundle,
+  /n\.jsxs\("span",\{style:\{display:"flex",alignItems:"center",gap:8,minWidth:0,width:"100%",maxWidth:"100%",overflow:"hidden",flex:"1 1 0"\},children:\[n\.jsx\("span",\{"data-ts-list-row-name":"1",style:\{minWidth:0,flex:"1 1 0",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"\},children:Zn\}\),Pn\?n\.jsx\("span",\{"data-list-summary":"1","data-summary-src":"thing"/,
+);
+const oeListRow = bundle.slice(bundle.indexOf('Oe=(G,Re,zt=!1)=>'), bundle.indexOf('},tt=G=>', bundle.indexOf('Oe=(G,Re,zt=!1)=>')));
+assert.doesNotMatch(oeListRow, /\):n\.jsxs\("div",\{style:\{background:"var\(--bg-card, white\)"/);
+assert.match(
+  oeListRow,
+  /\):n\.jsxs\("li",\{"data-list-row":"1","data-has-logo":tsRowHasLogo,"data-logo-src":tsRowLogo/,
+);
+assert.match(bundle, /maxWidth:"100%",overflow:"hidden",display:"block",textDecoration:"underline"/);
+assert.doesNotMatch(bundle, /fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:"underline"/);
+assert.doesNotMatch(
+  bundle,
+  /!tsRowInlineDesc&&Pn\?n\.jsx\("div",\{"data-list-summary":"1","data-summary-src":"thing",style:\{marginTop:6/,
+);
+assert.doesNotMatch(bundle, /maxWidth:"42%"/);
 
 const named = [{ name: 'North' }, { name: 'south' }, { name: 'East' }];
 assert.deepEqual([...named].sort((a, b) => compareColumnRows(a, b, 'name', 'asc')).map((row) => row.name), ['East', 'North', 'south']);
