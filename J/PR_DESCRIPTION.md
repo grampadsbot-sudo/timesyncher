@@ -3,12 +3,15 @@ Closes #607
 ## Summary
 
 - Host-merged `migrate/trek-source` at `6edb0791` into PR head `75cb1caa`; conflicts resolved toward base except #607 hotel list description derivation.
-- Scope cut: PR diff vs base tip is hotel list copy from long Booking-style fields in `listTabModel.mjs` / `trip-thing-enrichment.mjs` (+ unit test) and rebaked `public/assets/index-BKun7ofk.js` only; flights/restaurants/events/budget trek patches and evidence PNGs restored to base.
+- Scope cut vs base tip: only `listTabModel.mjs` / `trip-thing-enrichment.mjs` (+ `listRows.unit.mjs`); removed out-of-scope trek Gate B patches, extra evidence PNGs, and `trek-gateb-list-budget-patches.mjs`; served bundle rebaked from base patches (matches base `public/assets/index-BKun7ofk.js`).
 
-## Checks (local)
+## Checks (local, tip `79aab726b4cc78cd8a208ac3e4edd7526579dd1a`)
 
-- `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` — pending this round
-- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
+- `cd apps/vacation-client && CHROME_PATH=/usr/bin/chromium-browser npm test` — 0
+- `node scripts/check-no-comments.mjs` — 0
+- `node scripts/test_offline_manifest.mjs` — 0
+- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` — 0
+- `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — 0
 
 ## Left alone (scope)
 
