@@ -32,4 +32,4 @@
 
 Base-merge round: merge `6edb0791` into `ebe2e5aa`, conflicts resolved, rebaked bundle. Logo layout from PR head unchanged. Offline loop stops on live-transcript env (gbrain CLI vs bundled get_page); host CI expected. Not self-certified; CI + Gate B on pushed head are authority.
 
-**Tip sha:** `31494b9c` (merge `e7ffecfd` + receipt docs)
+**Tip sha:** `f92a1994` (merge `e7ffecfd` into `ebe2e5aa` @ base `6edb0791`)
