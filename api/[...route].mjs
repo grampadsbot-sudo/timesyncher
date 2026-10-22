@@ -17,7 +17,6 @@ import version from '../routes/version.mjs';
 import workerJobs from '../routes/worker-jobs.mjs';
 import thingEvidenceDossiers from '../routes/thing-evidence-dossiers.mjs';
 import dossierRunTemp from '../routes/dossier-run-temp.mjs';
-import xaiDiagTemp from '../routes/xai-diag-temp.mjs';
 
 const handlers = {
   'admin-onboardings': adminOnboardings,
@@ -36,7 +35,6 @@ const handlers = {
   'worker-jobs': workerJobs,
   'thing-evidence-dossiers': thingEvidenceDossiers,
   'dossier-run-temp': dossierRunTemp,
-  'xai-diag-temp': xaiDiagTemp,
   'bind-thing-media': vacationItinerary,
   'vacation-web-access': vacationItinerary,
   pdf: vacationItinerary,
