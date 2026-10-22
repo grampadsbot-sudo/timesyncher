@@ -28,7 +28,7 @@ Restore round-1 `OE_ROW_SR_LOGO_ALIGN_*` flex row in `src/vacation/shared-trip-o
 
 UI diff vs `e3364ac` restored; closes #601 known gap on head structure (not self-certified). CI + Gate B on pushed head are authority.
 
-**Tip sha:** `147ebaa385674d38ccd908b2f8b95d27f884c3a4`
+**Tip sha:** `4c46967a9c52bfeb9af2564c70b28d2c547c323a`
 
 ---
 
