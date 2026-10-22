@@ -26,7 +26,7 @@ Hotels list showed `$` for 22/23 rows but Budget showed `Add price` for 21/23 ho
 | `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
 
-**Tip sha:** `b341168b73adbfd17e0ae98fbd8555d72511d747`
+**Tip sha:** `67c379be92c98599913156f0a78043d03d6ed234`
 
 Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
 
