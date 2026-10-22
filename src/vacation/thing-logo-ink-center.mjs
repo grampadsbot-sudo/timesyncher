@@ -37,10 +37,39 @@ export function inkBboxCenterYFromRgba(data, width, height, threshold = 24) {
   return (minY + maxY) / 2;
 }
 
+export function objectFitContainContentRect(imgRect, naturalWidth, naturalHeight) {
+  const r = imgRect;
+  if (!naturalWidth || !naturalHeight) {
+    return { top: r.top, left: r.left, width: r.width, height: r.height };
+  }
+  const scale = Math.min(r.width / naturalWidth, r.height / naturalHeight);
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+  return {
+    top: r.top + (r.height - height) / 2,
+    left: r.left + (r.width - width) / 2,
+    width,
+    height,
+  };
+}
+
+export function inkScreenCenterY({ inkCenterY, naturalHeight, contentRect }) {
+  if (inkCenterY == null || !naturalHeight || !contentRect || !contentRect.height) return null;
+  return contentRect.top + (inkCenterY / naturalHeight) * contentRect.height;
+}
+
 export function verticalNudgePxForInkCenter({ inkCenterY, naturalHeight, displayHeight }) {
   if (inkCenterY == null || !naturalHeight || !displayHeight) return 0;
   const scale = displayHeight / naturalHeight;
   return (naturalHeight / 2 - inkCenterY) * scale;
+}
+
+export function verticalNudgePxForInkToScreenTarget({ inkCenterY, naturalWidth, naturalHeight, imgRect, targetScreenY }) {
+  if (inkCenterY == null || !naturalHeight || targetScreenY == null || !imgRect) return 0;
+  const content = objectFitContainContentRect(imgRect, naturalWidth, naturalHeight);
+  const inkY = inkScreenCenterY({ inkCenterY, naturalHeight, contentRect: content });
+  if (inkY == null) return 0;
+  return targetScreenY - inkY;
 }
 
 function centerThingLogoInk(img) {
@@ -115,8 +144,28 @@ function centerThingLogoInk(img) {
       }
       const inkCySample = (minY + maxY) / 2;
       const inkCy = inkCySample / sampleScale;
-      const scale = dispH / nh;
-      const dy = (nh / 2 - inkCy) * scale;
+      const imgRect = img.getBoundingClientRect();
+      const row = img.closest('li[data-list-row]');
+      const nameEl = row ? row.querySelector('[data-ts-list-row-name]') : null;
+      let targetY = null;
+      if (nameEl) {
+        const firstText = [...nameEl.querySelectorAll('span,strong')].find(
+          (e) => !e.children.length && String(e.textContent || '').trim(),
+        );
+        const label = firstText || nameEl.querySelector('strong') || nameEl;
+        const nr = label.getBoundingClientRect();
+        if (nr.height > 0) targetY = nr.top + nr.height / 2;
+      }
+      if (targetY == null) {
+        const chipRect = chip.getBoundingClientRect();
+        targetY = chipRect.top + chipRect.height / 2;
+      }
+      const ir = imgRect;
+      const fitScale = Math.min(ir.width / nw, ir.height / nh);
+      const fitH = nh * fitScale;
+      const contentTop = ir.top + (ir.height - fitH) / 2;
+      const inkScreenY = contentTop + (inkCy / nh) * fitH;
+      const dy = targetY - inkScreenY;
       if (Math.abs(dy) > 0.01) img.style.transform = `translateY(${dy}px)`;
       img.dataset.tsLogoInkDone = '1';
     } catch {
@@ -135,7 +184,7 @@ export function thingLogoInkCenterBundleSnippet() {
   return `function tsCenterThingLogoInk${bodyFromOpen}`;
 }
 
-const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
+const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},ref:Rn=>{if(Rn&&Rn.complete&&Rn.naturalWidth>1)tsCenterThingLogoInk(Rn)},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1},children:ua})]})}';
 
 const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 

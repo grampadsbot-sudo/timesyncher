@@ -1,17 +1,25 @@
-# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, 390 tab regression)
+# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604, 2026-10-22)
 
 **Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (kickback 2026-10-22 12:15 AM PT).
 
-**Start sha:** `b77d36b128dbf7ffd15880071af344b5f9a118ad`
+**Start sha:** `fe221bb44ddc348925bd6dcf6a7b676df58e0eeb` (includes `ac6689ac` 390px tab fix).
 
 ## Change
 
-Gate B on `b77d36b` missed Cars/Restaurants/Stores/Events/Budget tabs at 390px (main thread blocked during capture). Root cause: synchronous per-logo canvas ink scan in `dc()` `ref` + `onLoad` on the served bundle.
+1. **390px tab capture (from `ac6689ac`):** defer per-logo canvas ink work off the React commit path (`requestAnimationFrame` / `setTimeout(0)`), harden canvas reads, `onLoad` + deferred `ref` when `img.complete` (ref only schedules ink fn; no sync canvas in ref).
+2. **Ink vs first name line:** `tsCenterThingLogoInk` targets `[data-ts-list-row-name]` first-line centre (Gate B `judgeRowNameFrame`), with `object-fit: contain` content-box math; chip-centre fallback when name node missing.
+3. Rebaked `public/assets/index-BKun7ofk.js` via `node scripts/rebake_served_trek_bundle.mjs`.
 
-1. `src/vacation/thing-logo-ink-center.mjs`: queue ink measurement on `requestAnimationFrame` (fallback `setTimeout(0)`), wrap canvas reads in try/catch, downsample large logos for bbox scan, drop sync `ref` from `dc()` (onLoad only).
-2. `node scripts/rebake_served_trek_bundle.mjs` — rebaked `public/assets/index-BKun7ofk.js`.
+Row `sr` / chip box untouched.
 
-Ink-centre behaviour unchanged in intent; layout/row `sr` untouched.
+## Local verification
+
+| Check | Result |
+| --- | --- |
+| `TSV_CAPTURE_BASE=http://127.0.0.1:9876` + `~/tsv-dispatch/capture/capture.mjs` (head build) | `{"shots":32,"failed":0}` at 390 and 1280 |
+| Playwright on restaurants tab | `getImageData` fails: canvas tainted by cross-origin logo URLs (e.g. `static.spotapps.co`); `tsLogoInkDone=1` with empty `transform` |
+
+Ink bbox measurement cannot run in-browser on NYC fixture logos without same-origin bytes or server-computed `logoInkCenterY` on `thingOverrides` (chief brief: measure where logos are fetched/stored). Not fixed this round.
 
 ## Checks (local)
 
@@ -20,6 +28,7 @@ Ink-centre behaviour unchanged in intent; layout/row `sr` untouched.
 | `node scripts/rebake_served_trek_bundle.mjs` | 0 |
 | `node scripts/test_thing_logo_ink_center.mjs` | 0 |
 | `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
+| `cd apps/vacation-client && npm test` | 0 |
 | `node scripts/check-no-comments.mjs` | 0 |
 | `node scripts/test_offline_manifest.mjs` | 0 |
 | `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | 0 |
@@ -27,6 +36,6 @@ Ink-centre behaviour unchanged in intent; layout/row `sr` untouched.
 
 ## Verdict
 
-Fix pushed for host publish. Not self-certified; CI + Gate B on published head are authority.
+390px tab regression addressed on branch tip; logo-centre Gate B still blocked on cross-origin canvas taint until server-side ink metadata or a same-origin logo fetch path lands. Not self-certified; CI + Gate B on published head are authority.
 
-**Tip sha:** `574361141dc90bd4aa67e02b6a9f787fbe0f4e72`
+**Tip sha:** (set at commit)

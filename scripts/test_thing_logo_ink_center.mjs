@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 
 import {
   inkBboxCenterYFromRgba,
+  inkScreenCenterY,
+  objectFitContainContentRect,
   thingLogoInkCenterBundleSnippet,
   verticalNudgePxForInkCenter,
+  verticalNudgePxForInkToScreenTarget,
 } from '../src/vacation/thing-logo-ink-center.mjs';
 import { patchThingLogoChipAlignment } from '../src/vacation/trek-live-product-patches.mjs';
 
@@ -44,7 +47,21 @@ const centeredNudge = verticalNudgePxForInkCenter({
 });
 assert.ok(Math.abs(centeredNudge) < 0.2);
 
+const imgRect = { top: 100, left: 50, width: 28, height: 28 };
+const content = objectFitContainContentRect(imgRect, topHeavy.width, topHeavy.height);
+const inkY = inkScreenCenterY({ inkCenterY: inkCy, naturalHeight: topHeavy.height, contentRect: content });
+assert.ok(inkY != null && inkY < imgRect.top + imgRect.height / 2);
+const toName = verticalNudgePxForInkToScreenTarget({
+  inkCenterY: inkCy,
+  naturalWidth: topHeavy.width,
+  naturalHeight: topHeavy.height,
+  imgRect,
+  targetScreenY: imgRect.top + 14,
+});
+assert.ok(toName > 0.5);
+
 const snippet = thingLogoInkCenterBundleSnippet();
+assert.match(snippet, /data-ts-list-row-name/);
 assert.match(snippet, /^function tsCenterThingLogoInk\(/);
 assert.match(snippet, /translateY/);
 
