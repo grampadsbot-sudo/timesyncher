@@ -89,8 +89,8 @@ export function assessGateBNycFixtureContract(shared = {}, options = {}) {
   const { profile = 'positive' } = options;
   const violations = [];
   const places = Array.isArray(shared.places) ? shared.places : [];
-  if (places.length !== 22) {
-    violations.push(`expected 22 places, got ${places.length}`);
+  if (places.length !== 76) {
+    violations.push(`expected 76 places, got ${places.length}`);
   }
 
   for (const place of places) {

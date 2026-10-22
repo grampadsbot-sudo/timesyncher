@@ -54,6 +54,11 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "ccabKey": "Hyatt House New York/Chelsea"
   },
   {
+    "name": "Motto by Hilton New York City Times Square",
+    "cat": "hotel",
+    "ccabKey": "Motto by Hilton New York City Times Square"
+  },
+  {
     "id": 620,
     "name": "New York Marriott Downtown",
     "cat": "hotel",
@@ -360,6 +365,40 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "ccabKey": "The Smith - Lincoln Square"
   }
 ];
+
+export function appendNycStagingListTabRows(rows, options = {}) {
+  const includeCategories = options.categories ?? ['hotel', 'flight', 'car', 'store', 'activity', 'restaurant'];
+  const rowIdentity = (row) => `${row.ccabKey || resolveNycCcabKey(row.name)}\0${row.name}`;
+  const seenRowIdentities = new Set(rows.map(rowIdentity));
+  const seenIds = new Set(rows.map((row) => row.id));
+  let nextFreeId = 617;
+  while (seenIds.has(nextFreeId)) nextFreeId += 1;
+  for (const listRow of NYC_STAGING_CAPTURE_LIST_ROWS) {
+    if (!includeCategories.includes(listRow.cat)) continue;
+    const identity = `${listRow.ccabKey}\0${listRow.name}`;
+    if (seenRowIdentities.has(identity)) continue;
+    seenRowIdentities.add(identity);
+    let id = listRow.id;
+    if (seenIds.has(id)) {
+      id = nextFreeId;
+      seenIds.add(id);
+      nextFreeId += 1;
+      while (seenIds.has(nextFreeId)) nextFreeId += 1;
+    } else {
+      seenIds.add(id);
+    }
+    rows.push({
+      day: 1,
+      time: '11:00',
+      name: listRow.name,
+      cat: listRow.cat,
+      id,
+      ccabKey: listRow.ccabKey,
+      listOnly: true,
+    });
+  }
+  return rows;
+}
 
 export function resolveNycCcabKey(displayName = '') {
   const name = String(displayName || '').trim();
