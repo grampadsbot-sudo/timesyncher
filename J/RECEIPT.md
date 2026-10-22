@@ -3,7 +3,7 @@
 **GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-612` — **page not found** (lane brief fetch failed 2026-10-22).
 
 **Start sha:** `c91b77c22315bfde71f4889786493c75e1c7d5fb`  
-**Tip sha:** _(host publish after local commit)_
+**Tip sha:** `49d48deb`
 
 ## Problem
 
