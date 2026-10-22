@@ -305,12 +305,28 @@ function shortLineFromSourceText(value = '', max = 120) {
   return text(row.split(/\s+/).slice(0, 10).join(' '), max);
 }
 
+function ccabFactText(sourceRecord = {}, place = {}) {
+  return text(sourceRecord.summary || sourceRecord.description || place.description || place.summary, 500);
+}
+
 function ccabNeighborhoodTagline(sourceRecord = {}, title = '') {
-  const row = text(sourceRecord.summary || sourceRecord.description, 500);
-  const neighborhood = row.match(/Neighborhood:\s*([^;]+)/i);
+  const neighborhood = ccabFactText(sourceRecord, {}).match(/Neighborhood:\s*([^;]+)/i);
   const name = text(title, 160);
   if (neighborhood && name) return text(`${name} in ${neighborhood[1]}`, 120);
   return '';
+}
+
+function descriptionWhenJudgeFails({
+  category = '',
+  title = '',
+  sourceRecord = {},
+  address = '',
+  place = {},
+  rawDescription = '',
+} = {}) {
+  const cat = text(category, 80).toLowerCase();
+  if ((cat === 'hotel' || cat === 'lodging') && /Neighborhood:\s*[^;]+/i.test(ccabFactText(sourceRecord, place))) return '';
+  return buildCategoryDescription({ category: cat, title, sourceRecord, address, rawDescription });
 }
 
 function sourcedShortSummary(place = {}, sourceRecord = {}, longDescription = '', title = '') {
@@ -339,7 +355,14 @@ export function enrichSearchPlace(place = {}) {
     4000,
   );
   if (!descriptionPassesDetailJudge(description, title)) {
-    description = '';
+    description = descriptionWhenJudgeFails({
+      category,
+      title: next.title,
+      sourceRecord,
+      address: next.address || '',
+      place: next,
+      rawDescription: sourcedLongDescription(next, sourceRecord),
+    });
   }
   const summary = sourcedShortSummary(next, sourceRecord, description, title);
   const explicitBannedZero = next.price === 0 || sourceRecord.price === 0;
@@ -408,16 +431,15 @@ export function enrichTripThing(thing = {}) {
   let description = '';
   if (descriptionPassesDetailJudge(sourcedLong, title)) {
     description = sourcedLong;
-  } else if (category !== 'hotel' && category !== 'lodging') {
-    description = buildCategoryDescription({
+  } else {
+    description = descriptionWhenJudgeFails({
       category,
       title: thing.title,
       sourceRecord,
       address: location.address || '',
+      place: { description: thing.description, summary: thing.summary },
       rawDescription: thing.description,
     });
-  } else {
-    description = text(thing.description, 4000);
   }
   let price = firstPrice(
     thing.price,

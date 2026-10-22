@@ -1,3 +1,35 @@
+# TSV PR #612 (cursor-ubuntu vkfill-612)
+
+**GBrain handoff:** `bot-admin/lanes/vk-pr-handoff/pr-612` — **page not found** (lane brief fetch failed 2026-10-22).
+
+**Start sha:** `c91b77c22315bfde71f4889786493c75e1c7d5fb`  
+**Tip sha:** _(host publish after local commit)_
+
+## Problem
+
+- Receipt for #608 lacked a **Tip sha** line; added in `c91b77c2`.
+- CI on `c91b77c2` failed `unit-tests` (Actions run `39704818179`, step Offline unit tests): `scripts/test_trip_thing_logo_metadata.mjs` — Brave hotel fixture lost `description` because `enrichSearchPlace` zeroed all judge-failing hotel copy, not only ccab semicolon sheets.
+
+## Fix
+
+- `src/vacation/trip-thing-enrichment.mjs`: `isCcabSemicolonFactSheet` gates blank hotel `description`; other judge-failing search rows use `buildCategoryDescription`. `enrichTripThing` hotels aligned.
+
+## Checks (local)
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/test_trip_thing_logo_metadata.mjs` | 0 |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/check-no-comments.mjs` | 0 |
+| `node scripts/test_offline_manifest.mjs` | 0 |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+
+## Verdict
+
+Docs + CI fix committed locally on `vkfill/608-20261021180746`; host publishes once. Green CI on pushed PR head is authority for close (not self-certified).
+
+---
+
 # VK issue #608 receipt (cursor-ubuntu vkfill-608)
 
 **Start sha:** `58f5be59da3e0ed19a47e12f8e2cbfa30c0af36e`  
