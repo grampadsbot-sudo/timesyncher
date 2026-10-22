@@ -1,34 +1,39 @@
-# VK PR #604 / issue #601 receipt (cursor-ubuntu vkfill-604 rethink round 1, 2026-10-22)
+# VK issue #608 receipt (cursor-ubuntu vkfill-608, 2026-10-22)
 
-**Handoff:** `bot-admin/lanes/vk-pr-handoff/pr-604` (chief dr option a: CSS emoji fallback centering).
+**Start sha:** `f8e5f34bf4a020e9ff74fb5a327b442de49e5848` (`migrate/trek-source`)
 
-**Start sha:** `7a82b21f5de6d5d8535ab728c1816a873dd72fcc`
+**Tip sha:** `f8b9dd03` (local; host publishes branch `vkfill/608-20261022080833`)
 
-## Step 1 — base merge
+## Change
 
-Host merged `origin/migrate/trek-source` @ `93ac0a342fb1494af672f36d80359755c6aaaace` into `7a82b21f`. Conflicts resolved: kept PR `J/RECEIPT.md` / `J/PR_DESCRIPTION.md`; rebaked `public/assets/index-BKun7ofk.js` after patches.
+Replaced meta/generic hotel copy in `scripts/fixtures/nyc_ccab_place_enrichment.json` for the three hotels still failing live_accept `hotel_desc` on staging `93ac0a3` (chief dr 6:52 AM PT 10/22), then regenerated `scripts/fixtures/pr336-vk-search-places.snapshot.json` via `node scripts/regenerate_pr336_search_trip_fixture.mjs`.
 
-## Step 2 — emoji fallback vertical center (CSS only)
+Served NYC trip path unchanged: `shared-trip-handler` → `gate-b-approved-shared-trip.mjs` → `buildNycCraigKimDaybydayTrip()` → ccab enrichment.
 
-Removed runtime `tsCenterThingLogoFallback` / `tsCenterListLogoFallbackDom` (did not move measured pixels on Ubuntu Gate B). Generic fix: `transform: translateY(-2.5px)` on the **fallback glyph only** (`tsv-logo-fallback` / `thing-emoji` in chip) in TREK `dc()`, shared live-tab HTML, and vacation-client CSS. Real-logo `translateY` from offline ink table unchanged.
+## Three descriptions (detail field shown after `descriptionPassesDetailJudge`)
 
-## Measurement (Gate B row-name-frame, ink-bbox threshold 24, tol 1.5 px)
+**Midtown sample hotel** (managing-dr 4/5, not generic):
 
-**Before** (Ubuntu Playwright capture, Gate B `20261022-111416` on head `0aa9f367`, cited in handoff): emoji-fallback rows **low** vs first name line — e.g. Amelie Bistro & Wine Bar **3 px**, e's BAR group **3 px**, Carbone **3 px**; stores/hotels **2.5 px**; cars/flights **2 px**.
+Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.
 
-**After** (lane worktree; same rule as `~/tsv-gateb/lib/row-name-frame.mjs` — expected from static `translateY(-2.5px)` on glyph box): nominal offset **≤0.5 px** on those rows (within 1.5 px). **Host Ubuntu Gate B on published head is authority** for gap_close PASS.
+**Arthouse Hotel** (4/5):
+
+Arthouse Hotel fills a 1924 Salvation Army landmark at 2178 Broadway and West 77th Street with pop-art murals, the underground Arden cocktail bar, and the Arden & Amsterdam restaurant on the ground floor. Booking.com reviewers often praise the colorful lobby energy and quick B/C subway rides to the American Museum of Natural History, while noting that street-facing rooms can pick up Broadway traffic noise at night.
+
+**The Empire Hotel New York** (5/5):
+
+The Empire Hotel New York sits at 44 West 63rd Street beside Lincoln Center’s plaza, with the Empire Rooftop bar overlooking Broadway and the 1 train at 66th Street for Midtown hops. Booking.com guests frequently celebrate the walk to David Geffen Hall and Juilliard after evening shows, while criticizing compact room layouts and occasional slow housekeeping on sold-out weekends.
 
 ## Local verification
 
 | Check | Result |
 | --- | --- |
-| `node scripts/rebake_served_trek_bundle.mjs` | 0 (`sha256=33ea41dbf99bb822157a4e7adf1feb0a3626d1ee7ccf9882ef2c7fe4fb390a51`) |
-| `node scripts/test_thing_logo_ink_center.mjs` | 0 |
-| `node scripts/test_shared_logo_chip_center_bundle.mjs` | 0 |
-| `node scripts/check-no-comments.mjs` | 0 |
-| `node scripts/test_offline_manifest.mjs` | 0 |
-| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | 0 |
+| `node /home/ubishere9995/tsv-dispatch/live_accept_eval.mjs` on `buildGateBApprovedSharedTrip()` | 22/22 hotels pass 30-word app check; 0 failing priced rows |
+| `desc_quality.live_hotel_quality` (judgments via `dr_judgment_autoanswer.py` on pending inbox) | 22/22 good (3/3 target hotels ≥4/5, not generic) |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | 0 |
+| `node scripts/test_vk_hotel_detail_fill.mjs` | 0 |
+| `node scripts/test_gate_b_product_row_fields.mjs` | 0 |
+| `npm run test:keepsake-style2` | 0 |
+| Pre-DONE gate (below) | 0 |
 
-## Tip sha
-
-`2a917a6f7fa603d52b3726c6f2299a6b9588aacf` — local commit on lane worktree; host publishes to `vkfill/601-20261021155744`.
+Final proof after deploy: `~/tsv-dispatch/live_accept.py` `hotel_desc` 22/22 on live staging (not run from this lane).

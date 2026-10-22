@@ -1,21 +1,21 @@
-Closes #601
+Closes #608
 
 ## Summary
 
-- Finish host merge of `migrate/trek-source` @ `93ac0a3` into `7a82b21f` (conflicts: J docs + rebaked TREK bundle).
-- Fix Gate B **gap_close** on emoji/placeholder logo chips: generic `translateY(-2.5px)` on the fallback glyph inside `dc()` (and matching live-tab / vacation-client CSS). Drops ineffective runtime `tsCenterThingLogoFallback` DOM nudge; per-URL favicon ink `translateY` for real logos unchanged.
+- Replace generic/meta hotel descriptions for **Midtown sample hotel**, **Arthouse Hotel**, and **The Empire Hotel New York** in the NYC ccab enrichment fixture (`nyc_ccab_place_enrichment.json`) with address-specific prose grounded in each property’s real location, amenities, and typical Booking.com praise/complaints.
+- Regenerate `pr336-vk-search-places.snapshot.json` so the offline-approved NYC shared trip (`buildGateBApprovedSharedTrip`) serves the updated copy on staging without a DB refill.
 
-## Checks (local)
+## Checks (local, tip `f8b9dd03`)
 
-- `node scripts/rebake_served_trek_bundle.mjs` — 0
-- `node scripts/test_thing_logo_ink_center.mjs` — 0
-- `node scripts/test_shared_logo_chip_center_bundle.mjs` — 0
-- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` — 0
+- `node scripts/regenerate_pr336_search_trip_fixture.mjs`
+- `node /home/ubishere9995/tsv-dispatch/live_accept_eval.mjs` on built shared trip: 22/22 hotels pass the 30-word detail judge; all hotels/flights/cars priced
+- `node scripts/test_nyc_budget_search_fill_prices.mjs`, `node scripts/test_vk_hotel_detail_fill.mjs`, `node scripts/test_gate_b_product_row_fields.mjs`, `npm run test:keepsake-style2`
+- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
 
 ## Left alone (scope)
 
-- Gate B scripts/thresholds, baselines, workflows, dependencies, flight-price data gaps noted on handoff.
+- Baselines, Gate B/capture scripts, workflows, dependencies, timeline rows 601–611 layout, `nyc-craig-kim-daybyday-positive-v1.mjs` (not the served staging path).
 
-## Handoff
+## Post-deploy
 
-- GBrain `bot-admin/lanes/vk-pr-handoff/pr-604` (chief dr option a, 2026-10-22). CI + Ubuntu Gate B structure on pushed head are authority.
+- `~/tsv-dispatch/live_accept.py` should report `hotel_desc` 22/22 on live staging.
