@@ -2,6 +2,8 @@ Closes #595
 
 ## What changed
 
+**Gate B coverage — budget dedupe + flight row titles (round 11)** — Trek budget `Mo` kept unpriced assignment copies over priced catalog rows; serve path now syncs assignment `place` snapshots from catalog and trek prefers `hasPrice` when deduping `Mo`. Flight list rows use full `mr(G)` titles so `gateb_coverage` name segments match fixture flight names. Canonical NYC capture names (incl. Romer apostrophe) from `nyc-vk-list-tab-rows.mjs`.
+
 **Gate B coverage — blank override prices (`92eda194`)** — Upstream `thingOverrides` sometimes carry `price: ""`, which made trek `bi()` return empty and hid Flights list + Budget amounts even when `place.price` was filled on serve. Strip blank override prices before bind, refresh zero `budget` API lines from computed F/H/C totals, and patch served trek `bi()` to fall through empty overrides to `place.price`.
 
 **BASE-MERGE (`cf1aaf21` + merge commit)** — Host merged `origin/migrate/trek-source` at `fb95a6306b16ea71cfc1adc6fc76a5779ec47403` into `cf1aaf21416c23c70823020c430bc77620baf374` (2026-10-22 cursor-ubuntu vkfill-599 BASE-MERGE round 5). Resolved conflicts in `J/PR_DESCRIPTION.md` and `J/RECEIPT.md` only; took base `public/assets/*.js` then `node scripts/rebake_served_trek_bundle.mjs` (base #614 hotel 390px ellipsis + #621 pr336 snapshot key guard).

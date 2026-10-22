@@ -1,4 +1,8 @@
 import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
+import {
+  NYC_CCAB_DISPLAY_ALIASES,
+  NYC_STAGING_CAPTURE_LIST_ROWS,
+} from '../../scripts/fixtures/nyc-vk-list-tab-rows.mjs';
 import { estimateSearchPlacePrice } from './trip-thing-enrichment.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
@@ -42,6 +46,51 @@ function dropBlankPriceField(target, key) {
   if (!target || typeof target !== 'object') return;
   const raw = target[key];
   if (raw === '' || raw === null) delete target[key];
+}
+
+const GATE_B_CAPTURE_NAME_BY_ID = new Map(
+  NYC_STAGING_CAPTURE_LIST_ROWS.map((row) => [String(row.id), row.ccabKey || row.name]),
+);
+
+function applyGateBCaptureCanonicalPlaceName(place = {}) {
+  const canon = GATE_B_CAPTURE_NAME_BY_ID.get(String(place.id));
+  if (canon) place.name = canon;
+  const alias = NYC_CCAB_DISPLAY_ALIASES[place.name];
+  if (alias) place.name = alias;
+}
+
+export function syncCatalogFieldsIntoAssignments(shared = {}) {
+  const places = Array.isArray(shared.places) ? shared.places : [];
+  const byId = new Map(places.map((place) => [String(place.id), place]));
+  const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object'
+    ? shared.thingOverrides
+    : {};
+  const assignments = shared.assignments && typeof shared.assignments === 'object'
+    ? shared.assignments
+    : null;
+  if (!assignments) return shared;
+  const nextAssignments = {};
+  for (const [bucket, rows] of Object.entries(assignments)) {
+    if (!Array.isArray(rows)) {
+      nextAssignments[bucket] = rows;
+      continue;
+    }
+    nextAssignments[bucket] = rows.map((row) => {
+      const id = String(row?.place_id ?? row?.place?.id ?? '');
+      const catalog = byId.get(id);
+      if (!catalog || !row?.place || typeof row.place !== 'object') return row;
+      const override = overrides[`place:${id}`] || {};
+      const price = override.price ?? catalog.price ?? row.place.price;
+      const place = {
+        ...row.place,
+        ...catalog,
+        name: catalog.name ?? row.place.name,
+      };
+      if (price !== undefined && price !== '' && price !== null) place.price = price;
+      return { ...row, place };
+    });
+  }
+  return { ...shared, assignments: nextAssignments };
 }
 
 function placeMetadata(place = {}) {
@@ -261,10 +310,11 @@ export function applyLiveAppListRowFields(shared = {}) {
     }
 
     Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
+    applyGateBCaptureCanonicalPlaceName(place);
 
     next.thingOverrides[key] = override;
   }
-  return next;
+  return syncCatalogFieldsIntoAssignments(next);
 }
 
 export function applyLiveAppTimelineSelections(shared = {}, selectedPlaceIds = []) {

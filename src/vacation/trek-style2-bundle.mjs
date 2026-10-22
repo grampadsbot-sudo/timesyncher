@@ -17,6 +17,7 @@ import {
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
+import { patchTrekBudgetRowDedupe } from './shared-trip-oe-list-row-patch.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
@@ -397,6 +398,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(MO_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
   }
+  patched = patchTrekBudgetRowDedupe(patched, { served });
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }

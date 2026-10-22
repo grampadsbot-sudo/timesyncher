@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 import { budgetHardcodedHits } from './shepherd-staging-smoke-map-lib.mjs';
 import { prepareSharedTripForLiveApp } from '../src/vacation/shared-trip-live-tab-lists.mjs';
+import { syncCatalogFieldsIntoAssignments } from '../src/vacation/shared-trip-live-app-fields.mjs';
+import { buildBudgetModel } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
 import { findLegacyMiscBucketLabelInVacationSource } from '../src/vacation/budget-legacy-label-source-scan.mjs';
 import { extractUpstreamMiscBucketLabel } from '../src/vacation/trek-budget-upstream-misc-patch.mjs';
@@ -253,6 +255,47 @@ assert.equal(blankHotelAmt.hasPrice, true);
 assert.equal(blankHotelAmt.amount, 960);
 const blankHotelBudgetLine = blankOverrideShared.budget.find((line) => line.name === 'Harbor Hotel');
 assert.equal(Number(blankHotelBudgetLine?.total_price), 960);
+
+const assignmentHotelId = 1201;
+const dayId = 9001;
+const assignmentShared = prepareSharedTripForLiveApp({
+  ...base,
+  days: [{ id: dayId, day_number: 1, date: '2027-03-10' }],
+  places: [{
+    id: assignmentHotelId,
+    name: 'Harbor Hotel',
+    category_name: 'Hotel',
+    category: { name: 'Hotel', icon: '🧳' },
+    price: 320,
+  }],
+  assignments: {
+    [String(dayId)]: [{
+      id: 1,
+      day_id: dayId,
+      order_index: 0,
+      place_id: assignmentHotelId,
+      place: {
+        id: assignmentHotelId,
+        name: 'Harbor Hotel',
+        category_name: 'Hotel',
+        price: '',
+      },
+    }],
+  },
+  thingOverrides: {
+    [`place:${assignmentHotelId}`]: { price: 320, category: 'hotel', stayDays: 3, dayIds: [dayId] },
+  },
+});
+const assignmentRow = assignmentShared.assignments[String(dayId)][0].place;
+assert.equal(assignmentRow.price, 320);
+const assignmentBudgetRow = buildBudgetModel(assignmentShared).rows.find(
+  (row) => String(row.place.id) === String(assignmentHotelId),
+);
+assert.equal(assignmentBudgetRow?.hasPrice, true);
+assert.equal(syncCatalogFieldsIntoAssignments({
+  places: [{ id: assignmentHotelId, name: 'Harbor Hotel', price: 320 }],
+  assignments: assignmentShared.assignments,
+}).assignments[String(dayId)][0].place.price, 320);
 
 const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);

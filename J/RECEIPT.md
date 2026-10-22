@@ -1,3 +1,37 @@
+# VK PR #599 / issue #595 — round 11 (Gate B price segmentation)
+
+**Start sha:** `4586949332be972c60ee5d6a0c51fbd683e57321`
+
+## Problem (Gate B `gateb_coverage` on capture `pr599-4586949`, fixture head `45869493`)
+
+Hotels list showed `$` for 22/23 rows but Budget showed `Add price` for 21/23 hotels because trek `Mo` deduped by place id and kept the first timeline copy without `bi()` price. Flights list failed coverage because `eu()` rendered airline short names (`Southwest`) while the checker segments on full fixture titles (`Southwest LAS → LGA …`). Romer Hell's Kitchen list price failed name match (ASCII vs fixture curly apostrophe).
+
+## Fix
+
+- `shared-trip-live-app-fields.mjs`: `syncCatalogFieldsIntoAssignments` + Gate B capture canonical names (`NYC_STAGING_CAPTURE_LIST_ROWS` / `NYC_CCAB_DISPLAY_ALIASES`).
+- `trek-style2-bundle.mjs` + `shared-trip-oe-list-row-patch.mjs`: after `MO_BUDGET` widen, prefer priced duplicate when building budget `Mo`; flight `eu()` first column uses full `mr(G)` title; rebaked `public/assets/index-BKun7ofk.js`.
+- `trek-live-product-patches.mjs`: flight row patch uses `Re` not short `ua`.
+- `scripts/test_shared_trip_api_budget_lines.mjs`: assignment embedded-place price sync regression.
+
+## Checks (local)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass |
+| `node scripts/test_shared_trip_api_budget_lines.mjs` | pass |
+| `node scripts/test_nyc_budget_search_fill_prices.mjs` | pass |
+| `node scripts/test_gate_b_product_row_fields.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=codex/ruling95-consolidated-logo node scripts/check-code-ratchet.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+
+**Tip sha:** `b341168b73adbfd17e0ae98fbd8555d72511d747`
+
+Gate B Ubuntu `gateb_coverage` not self-certified; host push + capture is authority.
+
+---
+
 # VK PR #599 / issue #595 — round 10 (Gate B F/H/C price coverage)
 
 **Start sha:** `d28086859f1d06aace8726d4711ec31240d7903d`
