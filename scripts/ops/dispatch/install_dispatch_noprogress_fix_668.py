@@ -17,6 +17,17 @@ TEST_LANE_AUTOFILL = "tests/test_lane_autofill.py"
 LOCK = Path.home() / "tsv-dispatch" / ".autofill.lock"
 DEFAULT_DISPATCH = Path.home() / "tsv-dispatch"
 TEST_CLASS_MARKER = "class NoProgressBackoff668"
+LIVE_SHA256_PREFIX = "a531dc641892"
+
+QUEUE_APPEND_RE = re.compile(
+    r"^(\s*)pr_rows\.append\(\(pr_sort_key\(pr,\s*(\w+)\),\s*row\)\)\s*$",
+    re.MULTILINE,
+)
+PR_SORT_KEY_DEF_RE = re.compile(r"def pr_sort_key\(pr,\s*(\w+)\):")
+LAUNCH_LANE_RE = re.compile(
+    r"^(\s*)launch_lane\((root,\s*lane,\s*item,\s*dry,\s*log)\)\s*$",
+    re.MULTILINE,
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -37,79 +48,88 @@ def ensure_import(text: str, module: str) -> str:
     line = "import %s\n" % module
     if line in text or ("from %s import" % module) in text:
         return text
+    future = "from __future__ import"
+    pos = text.find(future)
+    if pos != -1:
+        end = text.find("\n", pos)
+        if end != -1:
+            return text[: end + 1] + line + text[end + 1 :]
+    match = re.search(r'^(\s*import\s+\w+.*\n)+', text, re.MULTILINE)
+    if match:
+        insert_at = match.end()
+        return text[:insert_at] + line + text[insert_at:]
     idx = text.find("\n\n")
     if idx == -1:
         return line + text
     return text[: idx + 1] + line + text[idx + 1 :]
 
 
-def inject_pr_sort_key(text: str) -> str:
-    marker = "lane_autofill_noprogress_guards.pr_sort_key_tuple"
+def assert_live_anchors(text: str) -> None:
+    if not PR_SORT_KEY_DEF_RE.search(text):
+        raise SystemExit(
+            "lane_autofill.py: missing def pr_sort_key(pr, bad_checks) anchor for #668"
+        )
+    if not QUEUE_APPEND_RE.search(text):
+        raise SystemExit(
+            "lane_autofill.py: missing pr_rows.append((pr_sort_key(pr, bad), row)) anchor"
+        )
+    if not LAUNCH_LANE_RE.search(text):
+        raise SystemExit(
+            "lane_autofill.py: missing launch_lane(root, lane, item, dry, log) anchor"
+        )
+
+
+def inject_queue_builder(text: str) -> str:
+    marker = "lane_autofill_noprogress_guards.with_noprogress_sort"
     if marker in text:
         return text
     text = ensure_import(text, "lane_autofill_noprogress_guards")
-    pattern = r"def pr_sort_key\(([^)]*)\):\n(?:(?:    .+\n)+)"
-    match = re.search(pattern, text)
+    match = QUEUE_APPEND_RE.search(text)
     if not match:
-        raise SystemExit("lane_autofill.py: could not find pr_sort_key()")
-    arg = match.group(1).strip().split(",")[0].strip() or "pr_row"
+        raise SystemExit(
+            "lane_autofill.py: could not find pr_rows.append((pr_sort_key(pr, bad), row))"
+        )
+    indent = match.group(1)
+    bad_name = match.group(2)
     replacement = (
-        "def pr_sort_key(%s):\n"
-        "    recent = []\n"
-        "    if 'results_by_pr' in globals():\n"
-        "        number = None\n"
-        "        if isinstance(%s, dict):\n"
-        "            number = %s.get('number') or %s.get('pr')\n"
-        "        else:\n"
-        "            number = getattr(%s, 'number', None)\n"
-        "        if number is not None:\n"
-        "            recent = results_by_pr.get(number, ())\n"
-        "    return lane_autofill_noprogress_guards.pr_sort_key_tuple(%s, recent)\n\n"
-        % (arg, arg, arg, arg, arg, arg)
+        "%s_np_recent = lane_autofill_noprogress_guards.lane_results_for_pr(results, pr.get(\"number\"))\n"
+        "%slane_autofill_noprogress_guards.remember_pr_recent_results(pr.get(\"number\"), _np_recent)\n"
+        "%spr_rows.append((lane_autofill_noprogress_guards.with_noprogress_sort("
+        "pr_sort_key(pr, %s), row, _np_recent), row))\n"
+        % (indent, indent, indent, bad_name)
     )
     return text[: match.start()] + replacement + text[match.end() :]
 
 
 def inject_launch_skip(text: str) -> str:
-    marker = "lane_autofill_noprogress_guards.apply_noprogress_skip"
-    if marker in text:
+    if "apply_noprogress_skip(item, _np_recent, log)" in text:
         return text
     text = ensure_import(text, "lane_autofill_noprogress_guards")
+    match = LAUNCH_LANE_RE.search(text)
+    if not match:
+        raise SystemExit(
+            "lane_autofill.py: could not find launch_lane(root, lane, item, dry, log) for skip hook"
+        )
+    indent = match.group(1)
+    launch_args = match.group(2)
     hook = (
-        "        if lane_autofill_noprogress_guards.apply_noprogress_skip("
-        "pr_row, recent_results, log=logline):\n"
-        "            continue\n"
+        "%s_np_recent = lane_autofill_noprogress_guards.recent_for_pr(item.get(\"number\"))\n"
+        "%sif lane_autofill_noprogress_guards.apply_noprogress_skip(item, _np_recent, log):\n"
+        "%s    continue\n"
+        "%slaunch_lane(%s)\n"
+        % (indent, indent, indent + "    ", indent, launch_args)
     )
-    patterns = [
-        (
-            r"(for pr_row in queue:\n"
-            r"(?:    .+\n)*?"
-            r"(\s+)recent_results = )"
-        ),
-        (
-            r"(for pr_row in pr_queue:\n"
-            r"(?:    .+\n)*?"
-            r"(\s+)recent_results = )"
-        ),
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            indent = match.group(2)
-            insert = match.group(1) + hook.replace("        ", indent)
-            return text[: match.start()] + insert + text[match.end() :]
-    simple_patterns = [
-        r"(for pr_row in queue:\n)",
-        r"(for pr_row in pr_queue:\n)",
-    ]
-    for pattern in simple_patterns:
-        if re.search(pattern, text):
-            return re.sub(pattern, r"\1" + hook, text, count=1)
-    raise SystemExit("lane_autofill.py: could not find PR launch loop for no-progress skip")
+    original = match.group(0) + "\n"
+    if original not in text:
+        raise SystemExit("lane_autofill.py: launch_lane line anchor drifted")
+    return text.replace(original, hook, 1)
 
 
 def inject_lane_autofill(text: str) -> str:
-    text = inject_pr_sort_key(text)
+    if "with_noprogress_sort" in text and "apply_noprogress_skip(item, _np_recent, log)" in text:
+        return text
+    assert_live_anchors(text)
+    text = inject_queue_builder(text)
     text = inject_launch_skip(text)
     return text
 
@@ -130,7 +150,7 @@ def inject_test_lane_autofill(text: str) -> str:
     return text.rstrip() + block
 
 
-def install(root: Path, dry: bool) -> None:
+def install(root: Path, dry: bool, require_live_sha: bool) -> None:
     root = root.expanduser().resolve()
     if not root.is_dir():
         raise SystemExit("dispatch root missing: %s" % root)
@@ -141,7 +161,15 @@ def install(root: Path, dry: bool) -> None:
     actions.append(("copy", module_src, root / GUARD_MODULE))
     lane = root / LANE_AUTOFILL
     if lane.is_file():
-        actions.append(("patch", LANE_AUTOFILL, inject_lane_autofill(lane.read_text())))
+        lane_text = lane.read_text()
+        if require_live_sha:
+            digest = sha256_file(lane)
+            if not digest.startswith(LIVE_SHA256_PREFIX):
+                raise SystemExit(
+                    "lane_autofill.py sha256 mismatch: got %s want prefix %s"
+                    % (digest, LIVE_SHA256_PREFIX)
+                )
+        actions.append(("patch", LANE_AUTOFILL, inject_lane_autofill(lane_text)))
     else:
         actions.append(("skip-missing", LANE_AUTOFILL, None))
     test_path = root / TEST_LANE_AUTOFILL
@@ -155,6 +183,10 @@ def install(root: Path, dry: bool) -> None:
         for kind, name, payload in actions:
             print("%s %s" % (kind, name if isinstance(name, str) else name))
         print("sha256 %s %s" % (GUARD_MODULE, sha256_file(module_src)))
+        print(
+            "host install: python3 install_dispatch_noprogress_fix_668.py "
+            "--dispatch-root ~/tsv-dispatch --require-live-sha"
+        )
         return
     lock_path = LOCK if LOCK.parent.exists() else root / ".install-668.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,8 +216,13 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dispatch-root", default=str(DEFAULT_DISPATCH))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--require-live-sha",
+        action="store_true",
+        help="fail unless lane_autofill.py sha256 starts with %s" % LIVE_SHA256_PREFIX,
+    )
     args = parser.parse_args(argv)
-    install(Path(args.dispatch_root), dry=args.dry_run)
+    install(Path(args.dispatch_root), dry=args.dry_run, require_live_sha=args.require_live_sha)
     return 0
 
 

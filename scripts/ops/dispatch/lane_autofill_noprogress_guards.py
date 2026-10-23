@@ -14,9 +14,31 @@ LaneResult = Mapping
 PrRow = Mapping
 LogFn = Callable[[str], None]
 
+_recent_by_pr: MutableMapping[PrNum, tuple[LaneResult, ...]] = {}
+
 
 def _noop_log(_message: str) -> None:
     return None
+
+
+def clear_recent_cache() -> None:
+    _recent_by_pr.clear()
+
+
+def remember_pr_recent_results(pr_number: PrNum, recent: Sequence[LaneResult]) -> None:
+    try:
+        n = int(pr_number)
+    except (TypeError, ValueError):
+        return
+    _recent_by_pr[n] = tuple(recent)
+
+
+def recent_for_pr(pr_number: PrNum) -> tuple[LaneResult, ...]:
+    try:
+        n = int(pr_number)
+    except (TypeError, ValueError):
+        return ()
+    return _recent_by_pr.get(n, ())
 
 
 def requeue_token_id(token: str) -> str:
@@ -131,6 +153,26 @@ def is_priority_top(pr_row: PrRow) -> bool:
     return False
 
 
+def lane_results_for_pr(results: Iterable[LaneResult], pr_number: PrNum) -> list[LaneResult]:
+    try:
+        want = int(pr_number)
+    except (TypeError, ValueError):
+        return []
+    out: list[LaneResult] = []
+    for result in results or ():
+        for key in ("pr", "number", "pr_number"):
+            value = result.get(key)
+            if value is None:
+                continue
+            try:
+                if int(value) == want:
+                    out.append(result)
+                    break
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
 def results_for_token(
     recent_results: Sequence[LaneResult],
     token: str,
@@ -195,6 +237,18 @@ def pr_created_sort_value(pr_row: PrRow) -> tuple:
     return (created, number)
 
 
+def with_noprogress_sort(
+    base_key: tuple,
+    pr_row: PrRow,
+    recent_results: Sequence[LaneResult] | None = None,
+) -> tuple:
+    recent = recent_results or []
+    tier = pr_sort_tier(pr_row, recent)
+    if isinstance(base_key, tuple):
+        return (tier,) + base_key
+    return (tier, base_key)
+
+
 def pr_sort_key_tuple(
     pr_row: PrRow,
     recent_results: Sequence[LaneResult] | None = None,
@@ -211,12 +265,13 @@ def should_skip_launch(
 ) -> tuple[bool, str]:
     recent = recent_results or []
     if noprogress_backoff_active(pr_row, recent):
-        return True, "no-progress backoff (same requeue token, head unchanged or give-up twice)"
+        detail = "same requeue token, head unchanged or give-up twice"
+        return True, detail
     return False, ""
 
 
 def format_skip_log(pr_number: PrNum, reason: str) -> str:
-    return "lane-autofill: skip PR #%s %s" % (pr_number, reason)
+    return "skip #%s: no-progress backoff (%s)" % (pr_number, reason)
 
 
 def apply_noprogress_skip(

@@ -70,7 +70,7 @@ class NoProgressBackoff668(unittest.TestCase):
         logs = []
         self.assertTrue(g.apply_noprogress_skip(row, results, logs.append))
         self.assertEqual(len(logs), 1)
-        self.assertIn("skip PR #653", logs[0])
+        self.assertIn("skip #653", logs[0])
         self.assertIn("no-progress backoff", logs[0])
 
     def test_head_change_clears_backoff_and_allows_launch(self):
