@@ -58,9 +58,38 @@ export function dossierPageById(dossier = {}, id = '') {
   return match ? (dossier.pages || [])[Number(match[1]) - 1] || null : null;
 }
 
+export function reviewSetPageIdMap(dossier = {}) {
+  const map = new Map();
+  for (const row of dossier.reviewSet || []) {
+    const reviewId = String(row?.id || '').trim();
+    const pageId = String(row?.page || '').trim();
+    if (/^r\d+$/.test(reviewId) && /^p\d+$/.test(pageId)) map.set(reviewId, pageId);
+  }
+  return map;
+}
+
+export function resolveClaimCitationPages(dossier = {}, pageIds = []) {
+  const ids = Array.isArray(pageIds) ? pageIds : [];
+  if (!ids.length) return [];
+  const reviewPages = reviewSetPageIdMap(dossier);
+  const resolved = [];
+  for (const raw of ids) {
+    const token = String(raw || '').trim();
+    if (!token) return null;
+    if (/^p\d+$/.test(token)) resolved.push(token);
+    else if (/^r\d+$/.test(token)) {
+      const page = reviewPages.get(token);
+      if (!page) return null;
+      resolved.push(page);
+    } else return null;
+  }
+  return [...new Set(resolved)];
+}
+
 export function claimCitesKnownPages(dossier, claim) {
-  return Boolean(claim && norm(claim.text) && Array.isArray(claim.pages) && claim.pages.length
-    && claim.pages.every((id) => dossierPageById(dossier, id)));
+  const pages = resolveClaimCitationPages(dossier, claim?.pages);
+  return Boolean(claim && norm(claim.text) && pages && pages.length
+    && pages.every((id) => dossierPageById(dossier, id)));
 }
 
 export function claimsSupported(dossier, owner) {

@@ -626,6 +626,7 @@ export async function searchPlaces({
     env,
     fetchImpl,
     destination: dest || center?.label || locationText || '',
+    center: center?.lat != null && center?.lng != null ? { lat: center.lat, lng: center.lng } : null,
   });
   const eventLogos = await enrichSearchPlacesWithEventLogos(grokRatings.places, {
     env,

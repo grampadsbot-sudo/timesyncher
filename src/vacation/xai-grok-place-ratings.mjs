@@ -23,6 +23,7 @@ import {
   dossierPageId,
   prepareDossierFindings,
   fitDescriptionWords,
+  resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
 import { dossierForModel, logXaiUsage, promptChars } from './dossier-cost.mjs';
 import { dedupeReviews, extractionPrompt, extractReviewsByCode, finalizeReviewSet } from './dossier-review-extract.mjs';
@@ -98,14 +99,15 @@ export function collectDossierClaims(findings = {}) {
   return items;
 }
 
-function judgePrompt(dossier, items) {
+export function dossierJudgePrompt(dossier, items) {
   const ids = [...new Set(items.flatMap((item) => item.pages || []))];
   const slim = dossierForModel(dossier, { perPage: 1800, total: 24000 });
   const pages = ids.map((id) => ({ id, page: dossierPageById(slim, id) })).filter((row) => row.page)
     .map(({ id, page }) => ({ id, url: page.url, fetchedAt: page.fetchedAt, sha256: page.sha256, text: page.text }));
   return [
     'You are an independent fact checker. You did not write these claims.',
-    'For each claim, read ONLY the saved page text of the page ids it cites. supported:true only when those pages state or clearly imply the claim; paraphrase is fine, exact wording is not required.',
+    'Field text and claims are summaries in the writer\'s own words, not quotations. For each claim, read ONLY the saved page text of the page ids it cites.',
+    'supported:true when those pages support the claim\'s meaning (paraphrase and synonyms are fine). supported:false for facts not on the cited pages, wrong numbers, times, names, or contradictions—not because the claim uses different words than the page.',
     'Anything not backed by the cited pages (outside knowledge, other pages, exaggeration, invented numbers or details) is supported:false.',
     'Claims with kind "knownFor": supported:true ONLY when a cited page names that item as a signature, specialty, famous or best-known thing of THIS place. A page that merely lists it (an on-site bar, an amenity, a tenant or neighbouring restaurant) is supported:false.',
     'Claims with kind "knownFor" are also supported:false when the item is a broad phrase (dining, location, atmosphere, experience) rather than one specific dish, drink, service or product.',
@@ -116,7 +118,14 @@ function judgePrompt(dossier, items) {
 
 export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, timeoutMs, judgeImpl } = {}) {
   const items = collectDossierClaims(findings);
-  for (const item of items) { delete item.supported; delete item.judgeReason; }
+  for (const item of items) {
+    delete item.supported;
+    delete item.judgeReason;
+    if (Array.isArray(item.pages)) {
+      const resolved = resolveClaimCitationPages(dossier, item.pages);
+      if (resolved) item.pages = resolved;
+    }
+  }
   const ask = items.filter((item) => claimCitesKnownPages(dossier, item));
   for (const item of items) if (!ask.includes(item)) { item.supported = false; item.judgeReason = 'cites no saved dossier page'; }
   if (!ask.length) return { judged: 0, results: [] };
@@ -125,7 +134,7 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
     results = await judgeImpl(dossier, ask.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })));
   } else {
     const payload = await postXai(dossier, 'judge', env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
-      judgePrompt(dossier, ask), { env, fetchImpl, timeoutMs });
+      dossierJudgePrompt(dossier, ask), { env, fetchImpl, timeoutMs });
     try {
       results = JSON.parse(outputText(payload)).results;
     } catch {
@@ -183,12 +192,14 @@ async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImp
 export async function fetchXaiPlaceRatings(place = {}, {
   env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
-  dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(),
+  dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
 } = {}) {
   const key = dossierKey || thingEvidenceDossierKey(place);
   const persisted = key ? await loadThingEvidenceDossier(key, { env, storeImpl }) : null;
   const maxAgeExpired = persisted ? dossierNeedsRefresh(persisted, maxAgeMs, nowMs) : true;
-  const gathered = await gatherImpl(place, { env, fetchImpl, destination, searchImpl, resolveImpl });
+  const gathered = await gatherImpl(place, {
+    env, fetchImpl, destination, searchImpl, resolveImpl, center,
+  });
   const merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
   const changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
   const rebuildFields = persisted

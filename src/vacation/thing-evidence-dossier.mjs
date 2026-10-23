@@ -122,7 +122,7 @@ export function changedDossierPageUrls(before = [], after = []) {
 }
 
 export async function gatherThingEvidence(place = {}, {
-  destination = '', env = process.env, fetchImpl = globalThis.fetch,
+  destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
   searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
@@ -138,7 +138,10 @@ export async function gatherThingEvidence(place = {}, {
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official) urls.add(official);
   const topics = dossierSearchTopics(place).map((topic) => ({ topic, max: topic.review ? 5 : 8 }));
-  const bravePromise = braveImpl ? Promise.resolve(braveImpl(place, { destination, env, fetchImpl })).catch(() => ({ pages: [], attempts: [{ kind: 'brave', status: 'failed' }] })) : null;
+  const bravePromise = braveImpl
+    ? Promise.resolve(braveImpl(place, { destination, center, env, fetchImpl }))
+      .catch(() => ({ pages: [], attempts: [{ kind: 'brave', status: 'failed' }] }))
+    : null;
   const results = await Promise.all(topics.map(async ({ topic, max }) => {
     try {
       const result = await searchImpl(`${name} ${destination} ${topic.q}`.replace(/\s+/g, ' ').trim(),
