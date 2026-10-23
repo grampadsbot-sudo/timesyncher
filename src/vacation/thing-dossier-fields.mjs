@@ -4,7 +4,10 @@ import {
   HOURS_NOT_FOUND,
   NO_HAPPY_HOUR_FOUND,
 } from './dossier-hours-fields.mjs';
+import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+
+export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -421,6 +424,10 @@ export function applyDossierFields(record = {}, dossier = {}) {
       } else if (dossier.ratingMix && typeof dossier.ratingMix === 'object') {
         next.ratingMix = dossier.ratingMix;
       }
+      missing.delete('ratings');
+    }
+    applyDossierRatingsAndReviews(next, dossier);
+    if (next.googleRating || next.yelpRating || next.thirdPartyRating || next.otherRatingSites?.length) {
       missing.delete('ratings');
     }
   }

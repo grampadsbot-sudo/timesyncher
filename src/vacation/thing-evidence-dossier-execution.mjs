@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { hasDatabase, sql } from './db.mjs';
+import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
+import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import { loadThingEvidenceDossier, nycDaybydayDossierKey, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
 
@@ -53,6 +56,54 @@ export function normalizeDossierWorkerTargets(body = {}) {
     }
   }
   return null;
+}
+
+export async function listTripThingsMissingDossiers({
+  env = process.env,
+  storeImpl,
+  tripId = '',
+  limit = 200,
+  dbImpl,
+} = {}) {
+  if (!hasDatabase(env) && !dbImpl) {
+    return { ok: false, code: 'missing_database', targets: [] };
+  }
+  const db = dbImpl || sql(env);
+  const max = Math.max(1, Math.min(Number(limit) || 200, 500));
+  const rows = tripId
+    ? await db`
+      select tt.id, tt.trip_id, tt.category, tt.title, tt.description, tt.metadata, tt.location, tt.ratings, tt.source, t.destination
+      from trip_things tt
+      join trips t on t.id = tt.trip_id
+      where tt.trip_id = ${String(tripId).trim()}::uuid
+      order by tt.created_at asc
+      limit ${max}
+    `
+    : await db`
+      select tt.id, tt.trip_id, tt.category, tt.title, tt.description, tt.metadata, tt.location, tt.ratings, tt.source, t.destination
+      from trip_things tt
+      join trips t on t.id = tt.trip_id
+      order by tt.created_at desc
+      limit ${max}
+    `;
+  const targets = [];
+  for (const row of rows || []) {
+    const thing = thingRecordFromTripRow(row);
+    if (!thingWantsEvidenceCapture(thing)) continue;
+    const place = { id: row.id, trip_id: row.trip_id, title: row.title, category: row.category, sourceRecord: thing.sourceRecord };
+    const dossierKey = thingEvidenceDossierKey(place);
+    if (!dossierKey) continue;
+    const existing = await loadThingEvidenceDossier(dossierKey, { env, storeImpl });
+    if (existing?.pages?.length) continue;
+    targets.push({
+      tripId: row.trip_id,
+      placeId: row.id,
+      title: row.title,
+      category: row.category,
+      destination: String(row.destination || '').trim(),
+    });
+  }
+  return { ok: true, targets };
 }
 
 export async function runThingEvidenceDossierStagingTargets(targets = [], {

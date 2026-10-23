@@ -1,6 +1,7 @@
 import { requireWorkerAuth } from '../src/vacation/auth.mjs';
 import { readJson, sendJson } from '../src/vacation/http.mjs';
 import {
+  listTripThingsMissingDossiers,
   normalizeDossierWorkerTargets,
   runThingEvidenceDossierStagingTargets,
 } from '../src/vacation/thing-evidence-dossier-execution.mjs';
@@ -14,9 +15,21 @@ export default async function handler(req, res) {
     }
     const body = await readJson(req);
     const normalized = normalizeDossierWorkerTargets(body);
-    const targets = normalized?.length
-      ? normalized
-      : (body?.allMissing ? [] : PR336_GATE_B_XAI_PLACE_TARGETS);
+    let targets = normalized?.length ? normalized : null;
+    if (!targets?.length && body?.allMissing === true) {
+      const listed = await listTripThingsMissingDossiers({
+        env: process.env,
+        tripId: body.tripId ?? body.trip_id ?? '',
+        limit: body.limit,
+      });
+      if (!listed.ok) {
+        return sendJson(res, 503, listed);
+      }
+      targets = listed.targets;
+    }
+    if (!targets?.length) {
+      targets = body?.allMissing === true ? [] : PR336_GATE_B_XAI_PLACE_TARGETS;
+    }
     const result = await runThingEvidenceDossierStagingTargets(targets, {
       env: process.env,
       skipExisting: body?.allMissing === true,

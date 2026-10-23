@@ -5,6 +5,7 @@ import { lookupWindBackup } from './wind-backup.mjs';
 import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
+import { scheduleMissingEvidenceCapturesForTrip } from './thing-evidence-capture-trigger.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
 
 let sharedTripDatabase = null;
@@ -130,6 +131,13 @@ export async function intakeSharedResponse(shareToken, db = null) {
   const captured = applyCapturedLogos(presented);
   const withBudgetTargets = applyTripMetadataBudgetTargets(captured, trip);
   const withDossiers = await applyStoredDossiersToSharedTrip(withBudgetTargets, { env: process.env });
+  void scheduleMissingEvidenceCapturesForTrip({
+    trip,
+    things: mappedThings,
+    env: process.env,
+  }).catch((error) => {
+    logSharedTripFailure('thing_evidence_capture_schedule_failed', intakeShareSlug(trip.id), error);
+  });
   return finalizeServedSharedTripPayload(withDossiers);
 }
 
