@@ -1,0 +1,290 @@
+--- lane_autofill.py
++++ lane_autofill.py
+@@ -944,6 +944,119 @@
+         save_json(VKFILL_PUSHES_F, pushes)
+     except OSError:
+         pass
++
++
++
++LOW_GH_QUOTA_REMAINING = 800
++
++
++def read_vkfill_held_marker(n, root=D):
++    path = os.path.join(root, "auto-filler", "vkfill-held", str(n))
++    try:
++        with open(path) as marker_file:
++            fields = marker_file.read().split()
++        if len(fields) < 2:
++            return None
++        ref, tip = fields[0], fields[1]
++        sha = fields[2] if len(fields) >= 3 else ""
++        return dict(number=int(n), ref=ref, tip=tip, sha=sha, path=path)
++    except (OSError, ValueError):
++        return None
++
++
++def iter_vkfill_held_markers(root=D):
++    held_dir = os.path.join(root, "auto-filler", "vkfill-held")
++    if not os.path.isdir(held_dir):
++        return
++    for name in sorted(os.listdir(held_dir)):
++        if not name.isdigit():
++            continue
++        marker = read_vkfill_held_marker(int(name), root)
++        if marker:
++            yield marker
++
++
++def vkfill_held_push_due(marker, now, root=D, wt=None):
++    n, ref, tip, sha = marker["number"], marker["ref"], marker["tip"], marker.get("sha") or ""
++    if os.path.exists(os.path.join(root, "auto-filler", "push-now", str(n))):
++        return True
++    if not str(ref).startswith("vkfill/"):
++        return True
++    if wt:
++        run = lambda *a: subprocess.run(["git", "-C", wt] + list(a), capture_output=True, text=True, timeout=120)
++    else:
++        run = lambda *a: subprocess.run(["git"] + list(a), capture_output=True, text=True, timeout=120)
++    return vkfill_hold(n, ref, tip, sha, run, now) is None
++
++
++def _git_ls_remote_lines(ref):
++    branch = str(ref or "").strip()
++    if branch.startswith("refs/heads/"):
++        branch = branch[len("refs/heads/") :]
++    if not branch.startswith("vkfill/"):
++        return []
++    try:
++        r = subprocess.run(
++            ["git", "ls-remote", "https://github.com/%s.git" % REPO, "refs/heads/%s" % branch],
++            capture_output=True,
++            text=True,
++            timeout=60,
++        )
++        if r.returncode:
++            return []
++        return [line for line in r.stdout.splitlines() if line.strip()]
++    except (OSError, subprocess.TimeoutExpired):
++        return []
++
++
++def _remote_tip_matches_held(lines, held_sha, expected_ref=None):
++    held = str(held_sha or "").strip().lower()
++    if not re.fullmatch(r"[0-9a-f]{40}", held):
++        return False
++    branch = str(expected_ref or "").removeprefix("refs/heads/")
++    for line in lines or []:
++        parts = line.split()
++        if len(parts) != 2:
++            continue
++        tip, ref = parts
++        if branch and ref != "refs/heads/" + branch:
++            continue
++        if re.fullmatch(r"[0-9a-fA-F]{40}", tip) and tip.lower() == held:
++            return True
++    return False
++
++
++def maybe_clear_vkfill_held_remote_match(marker, dry, log, root=D):
++    lines = _git_ls_remote_lines(marker["ref"])
++    if not lines or not _remote_tip_matches_held(lines, marker.get("tip"), marker["ref"]):
++        return False
++    if not dry:
++        vkfill_mark(marker["number"], marker["ref"], marker["tip"], False, sha=marker.get("sha"))
++    log(
++        "vkfill-held #%d cleared: remote %s already at %s"
++        % (marker["number"], marker["ref"], (marker.get("tip") or "?")[:8])
++    )
++    return True
++
++
++def publish_due_held_on_low_quota(gh, now, dry, log, root=D):
++    """Low GitHub quota skips launches but still runs unpublished_results for overdue vkfill-held rounds."""
++    held_by_n = {m["number"]: m for m in iter_vkfill_held_markers(root)}
++    if not held_by_n:
++        return
++    due_results = []
++    for result in completed_results():
++        marker = held_by_n.get(result["number"])
++        if not marker:
++            continue
++        if maybe_clear_vkfill_held_remote_match(marker, dry, log, root):
++            continue
++        wt = result_worktree(result)
++        if not vkfill_held_push_due(marker, now, root, wt=wt):
++            continue
++        due_results.append(result)
++    if due_results:
++        unpublished_results(due_results, root, dry, now, log, gh=gh)
+ 
+ 
+ def publish_pr_round(n, wt, gh, dry, run):
+@@ -1828,8 +1941,14 @@
+             sys.exit(0)
+     state = load_json(STATE_F, {})
+     gh = CountingGH(GH())
+-    if core_remaining(gh) < 800 and not dry:
++    if core_remaining(gh) < LOW_GH_QUOTA_REMAINING and not dry:
++        publish_due_held_on_low_quota(gh, now, dry, lambda m: logline(m, dry))
+         logline("lane-autofill: skipped low GitHub quota", dry)
++        try:
++            fcntl.flock(lock_fd, fcntl.LOCK_UN)
++            lock_fd.close()
++        except Exception:
++            pass
+         return
+     open_issues = open_tsv_issues(gh)
+     res = pass_once(gh, now, dry, state=state, open_issues=open_issues, log=lambda m: logline(m, dry))
+--- tsv_stall_alarm.py
++++ tsv_stall_alarm.py
+@@ -172,6 +172,141 @@
+                 why = refused[0][-160:] if refused else "no START line in 10+ min"
+                 out.append(("launch:%s:%s:%s" % (lane, tag, stamp), "planned launch never started: %s %s at %s PT (%s)" % (lane, tag, m.group(1), why)))
+     return out
++
++
++VKFILL_HELD_DIR = D + "/auto-filler/vkfill-held"
++VKFILL_PUSHES_F = D + "/auto-filler/vkfill-last-push.json"
++VKFILL_BATCH_SECS = int(os.environ.get("VKFILL_BATCH_SECS") or 2700)
++
++
++def _read_vkfill_held_marker_file(path):
++    name = os.path.basename(path)
++    match = re.fullmatch(r"(\d+)(?:\.void-.+-alreadypushed)?", name)
++    if not match:
++        return None
++    n = int(match.group(1))
++    try:
++        with open(path) as marker_file:
++            fields = marker_file.read().split()
++    except OSError:
++        return None
++    if len(fields) < 2:
++        return None
++    ref, tip = fields[0], fields[1]
++    sha = fields[2] if len(fields) >= 3 else ""
++    return dict(number=n, ref=ref, tip=tip, sha=sha, path=path, name=name)
++
++
++def _ls_remote_vkfill_lines(ref):
++    import subprocess
++
++    branch = str(ref or "").strip()
++    if branch.startswith("refs/heads/"):
++        branch = branch[len("refs/heads/") :]
++    if not branch.startswith("vkfill/"):
++        return None
++    try:
++        r = subprocess.run(
++            ["git", "ls-remote", "https://github.com/%s.git" % REPO, "refs/heads/%s" % branch],
++            capture_output=True,
++            text=True,
++            timeout=60,
++        )
++        if r.returncode:
++            return None
++        return [line for line in r.stdout.splitlines() if line.strip()]
++    except (OSError, subprocess.TimeoutExpired):
++        return None
++
++
++def _remote_tip_has_held_sha(lines, held_sha, expected_ref=None):
++    held = str(held_sha or "").strip().lower()
++    if not re.fullmatch(r"[0-9a-f]{40}", held):
++        return False
++    branch = str(expected_ref or "").removeprefix("refs/heads/")
++    for line in lines or []:
++        parts = line.split()
++        if len(parts) != 2:
++            continue
++        tip, ref = parts
++        if branch and ref != "refs/heads/" + branch:
++            continue
++        if re.fullmatch(r"[0-9a-fA-F]{40}", tip) and tip.lower() == held:
++            return True
++    return False
++
++
++def vkfill_held_push_overdue(marker, now):
++    n, ref = marker["number"], marker["ref"]
++    if os.path.exists(D + "/auto-filler/push-now/%d" % n):
++        return True
++    if not str(ref).startswith("vkfill/"):
++        return False
++    try:
++        pushes = json.load(open(VKFILL_PUSHES_F))
++    except Exception:
++        pushes = {}
++    last = float((pushes or {}).get(ref) or 0)
++    if not last:
++        try:
++            last = os.path.getmtime(marker["path"])
++        except OSError:
++            return False
++    return (now - last) >= VKFILL_BATCH_SECS
++
++
++def vkfill_held_stall_checks(now, dry):
++    """Report overdue vkfill-held markers; clear only when ls-remote shows the held sha on the branch."""
++    import datetime as _dt
++
++    out = []
++    if not os.path.isdir(VKFILL_HELD_DIR):
++        return out
++    clock = _dt.datetime.now(PT).strftime("%Y-%m-%d %H:%M %Z")
++    for name in sorted(os.listdir(VKFILL_HELD_DIR)):
++        path = os.path.join(VKFILL_HELD_DIR, name)
++        if name.isdigit():
++            marker = _read_vkfill_held_marker_file(path)
++            if not marker:
++                continue
++            lines = _ls_remote_vkfill_lines(marker["ref"])
++            if lines and _remote_tip_has_held_sha(lines, marker["tip"], marker["ref"]):
++                if not dry:
++                    try:
++                        os.remove(path)
++                    except OSError:
++                        pass
++                log(
++                    "vkfill-held #%d remote matches %s; marker cleared"
++                    % (marker["number"], (marker["tip"] or "?")[:8])
++                )
++                continue
++            if not vkfill_held_push_overdue(marker, now):
++                continue
++            remote_note = "remote unknown" if lines is None else "remote tip not held sha"
++            out.append(
++                "held, push overdue #%d %s %s (%s at %s)"
++                % (marker["number"], marker["ref"], marker["tip"] or "?", remote_note, clock)
++            )
++            continue
++        if ".void-" in name and name.endswith("-alreadypushed"):
++            marker = _read_vkfill_held_marker_file(path)
++            if not marker:
++                parent = name.split(".void-", 1)[0]
++                if parent.isdigit():
++                    marker = _read_vkfill_held_marker_file(os.path.join(VKFILL_HELD_DIR, parent))
++            if not marker:
++                continue
++            lines = _ls_remote_vkfill_lines(marker["ref"])
++            if lines is None:
++                out.append("void-alreadypushed %s held sha unverified (ls-remote error at %s)" % (name, clock))
++            elif not _remote_tip_has_held_sha(lines, marker["tip"], marker["ref"]):
++                out.append(
++                    "void-alreadypushed %s unverified: remote %s differs from held result %s at %s"
++                    % (name, marker["ref"], marker["tip"] or "?", clock)
++                )
++    return out
++
+ 
+ 
+ CLAIMS = D + "/auto-filler/fix-claims"
+@@ -365,6 +500,7 @@
+             stuck.append("%s head unchanged %d min and NO round running (no lane process, no active cloud follow-up): %s" % (key, age // 60, desc[:250]))
+             e["idle_rung"] = True; log("%s idle %d min, no running round -> ring" % (key, age // 60))
+         seen[key] = e
++    stuck += vkfill_held_stall_checks(now, dry)
+     stuck += check_fix_claims(now, dry)
+     try: stuck += needs_craig_pass(g, prs, st, now, dry)
+     except NameError: pass
