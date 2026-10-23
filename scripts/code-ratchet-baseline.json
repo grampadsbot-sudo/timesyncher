@@ -1636,11 +1636,5 @@
     "file": "vacation-app.html",
     "symbol": "lines:872",
     "note": "existing; ratchet only shrinks"
-  },
-  {
-    "rule": "FILE-SIZE-500",
-    "file": "src/vacation/thing-dossier-fields.mjs",
-    "symbol": "lines:520",
-    "note": "existing; ratchet only shrinks"
   }
 ]

@@ -29,6 +29,7 @@ export function placeFromTarget(target = {}) {
     trip_id: target.tripId ?? target.trip_id ?? 99,
     title: target.title || target.name || target.ccabKey,
     name: target.name || target.title || target.ccabKey,
+    source: target.source || ccabRecord.source || 'trip_things',
     category,
     category_name: typeof category === 'object' ? category.name : (target.category_name || category),
     address: target.address || ccabRecord.address,

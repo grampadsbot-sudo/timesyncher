@@ -126,157 +126,6 @@ function claimUrls(dossier, owner) {
     .map((id) => dossierPageById(dossier, id)?.url).filter(Boolean))].join(',');
 }
 
-function pageHashBundle(pageByUrl, url = '') {
-  const urls = String(url || '').split(',').map((row) => row.trim()).filter(Boolean);
-  return urls.map((row) => pageByUrl.get(row)).filter(Boolean).join('|');
-}
-
-export function computeDossierFieldHashes(dossier = {}) {
-  const hashes = {};
-  const sources = {};
-  const pageByUrl = new Map((dossier.pages || []).map((page) => [page.url, page.sha256]));
-  const track = (field, claim) => {
-    if (!field || !claim?.url) return;
-    const hash = pageHashBundle(pageByUrl, claim.url);
-    if (!hash) return;
-    hashes[field] = hash;
-    sources[field] = claim.url;
-  };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
-    track(key, dossier.fields?.[key]);
-  }
-  track('rating', dossier.ratingEvidence);
-  for (const [index, item] of (dossier.knownFor || []).entries()) {
-    track(`knownFor:${index}`, item);
-  }
-  const reviewUrls = [...new Set([...(dossier.reviewExcerpts || []), ...(dossier.reviews || [])]
-    .flatMap((row) => String(row.url || '').split(',')).map((row) => row.trim()).filter(Boolean))];
-  if (reviewUrls.length && Array.isArray(dossier.reviews) && dossier.reviews.length === 4) {
-    const bundle = reviewUrls.map((url) => pageByUrl.get(url)).filter(Boolean).join('|');
-    if (bundle) {
-      hashes.reviews = bundle;
-      sources.reviews = reviewUrls.join(',');
-    }
-  }
-  return { hashes, sources };
-}
-
-export function dossierFieldHashesStale(persisted = {}, merged = {}) {
-  if (!persisted.fieldHashes || typeof persisted.fieldHashes !== 'object') return true;
-  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
-  return Object.entries(persisted.fieldHashes).some(([field, hash]) => {
-    const url = persisted.fieldSources?.[field];
-    if (!url) return true;
-    return pageHashBundle(pageByUrl, url) !== hash;
-  });
-}
-
-const DOSSIER_REBUILD_GROUPS = [
-  'summary',
-  'description',
-  'price',
-  'hours',
-  'happyHourDetails',
-  'rating',
-  'reviews',
-  'knownFor',
-  'itineraryNote',
-];
-
-export function dossierReviewsEvidenceFresh(persisted = {}, merged = {}) {
-  if (!persisted?.fieldHashes?.reviews) return false;
-  const url = persisted.fieldSources?.reviews;
-  if (!url) return false;
-  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
-  return pageHashBundle(pageByUrl, url) === persisted.fieldHashes.reviews;
-}
-
-export function dossierRebuildFields(persisted = {}, merged = {}, {
-  maxAgeExpired = false,
-  changedUrls = [],
-} = {}) {
-  const all = new Set(DOSSIER_REBUILD_GROUPS);
-  if (!persisted?.fieldHashes || maxAgeExpired) return all;
-  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
-  const changed = new Set(changedUrls);
-  const stale = new Set();
-  for (const [field, hash] of Object.entries(persisted.fieldHashes)) {
-    const url = persisted.fieldSources?.[field];
-    if (!url || pageHashBundle(pageByUrl, url) !== hash) {
-      if (field === 'reviews' || field.startsWith('knownFor:')) stale.add(field.startsWith('knownFor:') ? 'knownFor' : field);
-      else if (HAPPY_HOUR_SUBFIELDS.includes(field)) stale.add('happyHourDetails');
-      else stale.add(field);
-    }
-  }
-  for (const url of changed) {
-    for (const [field, source] of Object.entries(persisted.fieldSources || {})) {
-      const sources = String(source || '').split(',').map((row) => row.trim()).filter(Boolean);
-      if (sources.includes(url)) {
-        if (field === 'reviews') stale.add('reviews');
-        else if (field.startsWith('knownFor:')) stale.add('knownFor');
-        else if (HAPPY_HOUR_SUBFIELDS.includes(field)) stale.add('happyHourDetails');
-        else stale.add(field);
-      }
-    }
-  }
-  return stale;
-}
-
-export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuildFields = new Set(), place = {}) {
-  const fields = rebuildFields instanceof Set ? rebuildFields : new Set(rebuildFields);
-  if (!persisted || fields.size === 0) return built;
-  if (fields.size >= DOSSIER_REBUILD_GROUPS.length) return built;
-  const next = JSON.parse(JSON.stringify(persisted));
-  next.pages = built.pages;
-  next.attempts = built.attempts;
-  next.thing = built.thing || next.thing;
-  if (fields.has('knownFor')) next.knownFor = built.knownFor;
-  if (fields.has('rating')) {
-    next.rating = built.rating;
-    next.reviewsAvailable = built.reviewsAvailable;
-    next.ratingEvidence = built.ratingEvidence;
-    next.ratingMix = built.ratingMix;
-  }
-  if (fields.has('reviews')) {
-    const reviewReady = (dossier) => {
-      const reviews = Array.isArray(dossier?.reviews) ? dossier.reviews : [];
-      return reviews.length >= 4 && reviews.every((row) => claimsSupported({ ...dossier, pages: next.pages }, row));
-    };
-    const builtOk = reviewReady(built);
-    const persistedOk = reviewReady(persisted);
-    if (builtOk && Array.isArray(built.reviews) && built.reviews.length) {
-      next.reviews = built.reviews;
-      next.reviewExcerpts = built.reviewExcerpts;
-      next.reviewsRead = built.reviewsRead;
-      next.reviewSet = built.reviewSet;
-      next.reviewSources = built.reviewSources;
-    } else if (persistedOk && Array.isArray(persisted.reviews) && persisted.reviews.length) {
-      next.reviews = persisted.reviews;
-      next.reviewExcerpts = persisted.reviewExcerpts;
-      next.reviewsRead = persisted.reviewsRead;
-      next.reviewSet = persisted.reviewSet;
-      next.reviewSources = persisted.reviewSources;
-    } else {
-      next.reviews = Array.isArray(built.reviews) && built.reviews.length ? built.reviews : persisted.reviews;
-      next.reviewExcerpts = built.reviewExcerpts ?? persisted.reviewExcerpts;
-      next.reviewsRead = built.reviewsRead ?? persisted.reviewsRead;
-      next.reviewSet = built.reviewSet ?? persisted.reviewSet;
-      next.reviewSources = built.reviewSources ?? persisted.reviewSources;
-    }
-  }
-  next.fields = { ...(next.fields || {}) };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
-    if (!fields.has(key) && !(key.startsWith('happyHour') && fields.has('happyHourDetails'))) continue;
-    if (built.fields?.[key]) next.fields[key] = built.fields[key];
-    else delete next.fields[key];
-  }
-  if (fields.has('happyHourDetails')) {
-    if (built.fields?.happyHour) next.fields.happyHour = built.fields.happyHour;
-    else delete next.fields.happyHour;
-  }
-  return next;
-}
-
 export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
@@ -518,3 +367,11 @@ export function applyDossierFields(record = {}, dossier = {}) {
   next.xaiRatingsFetched = dossierReviewsValid(dossier);
   return writeDossierReviews(next, dossier, { useShortcomingMissing });
 }
+
+export {
+  computeDossierFieldHashes,
+  dossierFieldHashesStale,
+  dossierReviewsEvidenceFresh,
+  dossierRebuildFields,
+  mergeSelectiveDossierFindings,
+} from './thing-dossier-rebuild.mjs';
