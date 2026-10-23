@@ -32,6 +32,7 @@ export function stripDossierReviews(dossier = {}, place = {}) {
     reviewExcerpts: [],
     reviewsRead: 0,
     reviewSources: [],
+    reviewThemes: null,
     shortcomings,
   }, place);
 }
@@ -49,11 +50,8 @@ function reviewCitesIdentityPages(dossier = {}, place = {}, review = {}) {
   return true;
 }
 
-export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
-  if (!placeSupportsDossierReviews(place)) return false;
-  if (!dossier?.pages?.length) return false;
+export function dossierReviewsHaveInvalidContent(dossier = {}, place = {}) {
   const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  if (!reviews.length) return false;
   for (const review of reviews) {
     if (!claimsSupported(dossier, review)) return true;
     if (!reviewCitesIdentityPages(dossier, place, review)) return true;
@@ -61,6 +59,21 @@ export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
     if (pageNamesOtherVenue({ text: body, url: '' }, place)) return true;
   }
   return false;
+}
+
+export function dossierReviewsPassValidityGate(dossier = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place)) return true;
+  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
+  if (reviews.length < 4) return false;
+  return !dossierReviewsHaveInvalidContent(dossier, place);
+}
+
+export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place)) return false;
+  if (!dossier?.pages?.length) return false;
+  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
+  if (!reviews.length) return true;
+  return dossierReviewsHaveInvalidContent(dossier, place);
 }
 
 export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, place = {}, {
@@ -79,7 +92,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
   let merged = ensureBraveSnippetCitationPages({ ...persisted });
   beginDossierXaiUsageRun(merged, persisted);
-  if (!dossierReviewsNeedRebuild(merged, place) && dossierReviewsEvidenceFresh(persisted, merged)) {
+  if (dossierReviewsPassValidityGate(merged, place)) {
     return syncDossierRequiredShortcomings(merged, place);
   }
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');

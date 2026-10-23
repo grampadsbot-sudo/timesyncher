@@ -53,6 +53,7 @@ const badDossier = {
   })),
 };
 assert.equal(dossierReviewsNeedRebuild(badDossier, blueNote), true);
+assert.equal(dossierReviewsNeedRebuild({ pages: [good, dizzy], reviews: [] }, blueNote), true);
 
 const code = extractReviewsByCode({
   thing: 'Blue Note Jazz Club',

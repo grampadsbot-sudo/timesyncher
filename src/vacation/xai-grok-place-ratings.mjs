@@ -354,7 +354,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const supportsReviews = placeSupportsDossierReviews(place);
-  const needsReviewWriter = supportsReviews && rebuildFields.has('reviews');
+  const needsReviewWriter = supportsReviews && rebuildFields.has('reviews') && dossierReviewsNeedRebuild(merged, place);
   if (needsReviewWriter) {
     const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl, place });
     merged.reviewSet = extraction.set;

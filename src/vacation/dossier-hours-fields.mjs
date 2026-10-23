@@ -3,6 +3,22 @@ import { claimsSupported, dossierPageById } from './thing-dossier-fields.mjs';
 export const NO_HAPPY_HOUR_FOUND = 'No happy hour found';
 export const HOURS_NOT_FOUND = 'Hours not found';
 
+function normHours(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+export function hoursValueLooksValid(value = '') {
+  const v = normHours(value);
+  if (!v || v === HOURS_NOT_FOUND || v === '[object Object]') return false;
+  if (/click here|appetizing store|beyond\.?\s*$/i.test(v)) return false;
+  if (/\b(?:mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(v)) {
+    return !/\bmatinee\b.*\d{2}\s*PM\s*Click/i.test(v);
+  }
+  if (/\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i.test(v)) return true;
+  if (/\bopen(?:ing)?\s+(?:daily|at|\d)/i.test(v)) return true;
+  return v.length <= 64 && /\d/.test(v);
+}
+
 export const HAPPY_HOUR_SUBFIELDS = ['happyHourDays', 'happyHourTimes', 'happyHourDeals'];
 
 function norm(value) {

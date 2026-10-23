@@ -1,3 +1,4 @@
+import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 function scalarFieldValue(value) {
@@ -80,8 +81,14 @@ export function applyDossierRatingsAndReviews(record = {}, dossier = {}) {
       record.yelpRatingSourceUrl = url;
     }
   }
-  if (Array.isArray(dossier.reviewThemes) && dossier.reviewThemes.length) {
-    record.reviewThemes = [...dossier.reviewThemes];
+  if (placeSupportsDossierReviews({ category: record.category })) {
+    if (Array.isArray(dossier.reviewThemes) && dossier.reviewThemes.length) {
+      record.reviewThemes = [...dossier.reviewThemes];
+    } else if (dossier.reviewThemes && typeof dossier.reviewThemes === 'object') {
+      record.reviewThemes = { ...dossier.reviewThemes };
+    }
+  } else {
+    delete record.reviewThemes;
   }
   return record;
 }

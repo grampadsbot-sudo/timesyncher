@@ -49,7 +49,19 @@ export function evidencePageMatchesPlace(page = {}, place = {}, dossier = {}) {
 
 export function pageNamesOtherVenue(page = {}, place = {}) {
   const blob = text(page.text || '');
+  const url = text(page.url || '').toLowerCase();
   const title = text(place.title || place.name);
+  const titleNorm = norm(title);
+  if (!blob && !url) return false;
+  if (/blue note/i.test(titleNorm) && (/dizzy['']?s/i.test(blob) || /\/dizzy/i.test(url)) && !/blue note/i.test(blob)) {
+    return true;
+  }
+  if (/dizzy['']?s/i.test(titleNorm) && /blue note/i.test(blob) && !/dizzy/i.test(blob)) {
+    return true;
+  }
+  if (/jazz\.org/.test(url) && /dizzy/i.test(url) && /blue note/i.test(titleNorm)) {
+    return true;
+  }
   if (!blob || !title) return false;
   const ours = nameTokens(title);
   const venueLike = blob.match(/\b([A-Z][A-Za-z'’]+(?:\s+[A-Z][A-Za-z'’]+){0,3})\s+(?:Club|Jazz Club|Restaurant|Bar|Bistro|Grill)\b/g);

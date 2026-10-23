@@ -6,6 +6,8 @@ import {
 } from './dossier-hours-fields.mjs';
 import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { addressIsSpecific } from './dossier-evidence-hydrate.mjs';
+import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
@@ -442,6 +444,20 @@ export function applyDossierFields(record = {}, dossier = {}) {
         next.hours = HOURS_NOT_FOUND;
         continue;
       }
+      if (key === 'hours') {
+        const hoursVal = scalarFieldValue(claim.value ?? claim);
+        if (!hoursValueLooksValid(hoursVal)) {
+          missing.add('hours');
+          continue;
+        }
+      }
+      if (key === 'address') {
+        const addrVal = scalarFieldValue(claim.value ?? claim);
+        if (!addressIsSpecific(addrVal)) {
+          missing.add('address');
+          continue;
+        }
+      }
       if (key === 'happyHourDetails' && claim.explicitNone === true) {
         next.happyHourDetails = NO_HAPPY_HOUR_FOUND;
         next.happyHour = false;
@@ -451,7 +467,11 @@ export function applyDossierFields(record = {}, dossier = {}) {
       if (!claimsSupported(dossier, claim)) continue;
       if (key === 'price') next[key] = Number(claim.value);
       else if (['lat', 'lng'].includes(key)) next[key] = Number(claim.value);
-      else next[key] = scalarFieldValue(claim.value ?? claim);
+      else {
+        const scalar = scalarFieldValue(claim.value ?? claim);
+        if (key === 'happyHourDetails' && /^false$/i.test(scalar)) continue;
+        next[key] = scalar;
+      }
       missing.delete(key);
     }
     if (Array.isArray(dossier.knownFor) && dossier.knownFor.length) {
@@ -481,9 +501,10 @@ export function applyDossierFields(record = {}, dossier = {}) {
       missing.delete('ratings');
     }
   }
-  next.missingFields = useShortcomingMissing
-    ? [...new Set(dossier.shortcomings.map((s) => s.field).filter(Boolean))]
-    : [...missing];
+  next.missingFields = [...missing];
+  if (Array.isArray(next.dataShortcomings)) {
+    next.dataShortcomings = next.dataShortcomings.filter((row) => missing.has(row.field));
+  }
   next.xaiRatingsFetched = dossierReviewsValid(dossier);
   return writeDossierReviews(next, dossier, { useShortcomingMissing });
 }

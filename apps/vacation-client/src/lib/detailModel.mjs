@@ -224,7 +224,11 @@ export function detailItineraryNote(place, trip) {
 }
 
 export function detailHappyHour(override) {
-  return text(override.happyHourDetails);
+  const raw = text(override.happyHourDetails);
+  if (!raw || /^no happy hour found$/i.test(raw)) return '';
+  if (/^false$/i.test(raw)) return '';
+  if (String(override.happyHour ?? '').toLowerCase() === 'false' && !raw) return '';
+  return raw;
 }
 
 export function detailPriceLabel(place, trip, category) {

@@ -211,6 +211,8 @@ assert.match(bundle, /Itinerary note/);
 assert.match(bundle, /ha\(G\)\.itineraryNote/);
 assert.match(bundle, /It\(Dt\)==="bar"\)&&n\.jsxs\("label",\{style:Hn,children:\["Happy hour details"/);
 assert.match(bundle, /data-ts-detail-capture":"1"/);
+assert.match(bundle, /data-ts-detail-info-box":"address-hours"/);
+assert.match(bundle, /data-ts-detail-reviews":"1"/);
 assert.match(bundle, /tsDetailCapturePayload=Dt=>/);
 assert.doesNotMatch(bundle, /function tsDetailCapturePayload\(/);
 assert.match(bundle, /\[1,2,3,4\]\.filter\(G=>String\(Ps\(Dt,G\)\|\|""\)\.trim\(\)\)/);

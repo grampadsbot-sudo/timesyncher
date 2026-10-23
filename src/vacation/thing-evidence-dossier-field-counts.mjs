@@ -1,3 +1,4 @@
+import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 import { extractReviewsByCode } from './dossier-review-extract.mjs';
 import {
   MIN_REVIEWS_READ,
@@ -98,7 +99,7 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
     counts.hours = { status: 'ok' };
   } else {
     const hoursVal = hoursFromFields(dossier) || (regexHit(blob, /\b(?:mon|tue|wed|thu|fri|sat|sun)\b/i) ? 'detected' : '');
-    counts.hours = text(hoursVal) && hoursVal !== '[object Object]' ? { status: 'ok' } : { status: 'missing' };
+    counts.hours = hoursValueLooksValid(hoursVal) ? { status: 'ok' } : { status: 'missing' };
   }
 
   if (requiresHappyHourCapture(place)) {
