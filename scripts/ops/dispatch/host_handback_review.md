@@ -213,10 +213,13 @@ command prints source hashes and decisions only; the independent supervisor deci
 acceptance. Do not run the ordinary alarm CLI or install anything as this proof.
 
 The source alarm started from an older runtime preimage. Its bounded hook is tracked
-without importing unrelated newer runtime changes. The job directory contains
-`current-runtime-hook.patch` and `runtime-patch-hashes.json`, reviewed against the
-supplied current alarm while preserving its additional ownership logic. That patch
-is for isolated supervisor review only; never overwrite live runtime from this repo.
+without importing unrelated newer runtime changes. `install_host_handback_runtime.py`
+accepts exact alarm SHA-256 preimages `cd87…`, `fd1bf…`, and the current live
+`b0dc9828…` bytes (includes `claim_evidence` for fix-claim deadlines). The tracked
+`host-handback-runtime.patch` applies with `--fuzz=0` to each supported preimage;
+only `main`, `check_fix_claims`, and the added `cli` entry change.
+Exact current-preimage proof uses the host-supplied administrative artifact outside
+the source tree; no copied runtime fixture or scanner exemption is introduced.
 
 ## Offline verification and classification
 

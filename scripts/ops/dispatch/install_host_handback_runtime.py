@@ -23,10 +23,13 @@ MODULES = (
 ALARM_NAME = 'tsv_stall_alarm.py'
 CONFIG_NAME = 'host-handback-entrypoint.json'
 EXPECTED_ALARM_SHA256 = (
-    'cd87a62e90a737c53a15284b3ed531aad240ba3293dd4060397ab76f8f661163'
+    'b0dc9828bacec7a34772fa8922bbbd6f47f38eeed305db3663cc2d8e6d7cda8f'
 )
-SUPPORTED_ALARM_SHA256 = frozenset({EXPECTED_ALARM_SHA256,
-    'fd1bf6496cc724023362a6bc365c4cafbac08e151ef7f9711edbb078a1d75ba0'})
+SUPPORTED_ALARM_SHA256 = frozenset({
+    EXPECTED_ALARM_SHA256,
+    'cd87a62e90a737c53a15284b3ed531aad240ba3293dd4060397ab76f8f661163',
+    'fd1bf6496cc724023362a6bc365c4cafbac08e151ef7f9711edbb078a1d75ba0',
+})
 WORKTREE_SCOPE = '/home/ubishere9995/tsv-work/'
 
 
