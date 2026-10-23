@@ -32,7 +32,7 @@ assert.match(
 
 assert.match(
   servedBundle,
-  /bi=G=>ha\(G\)\.price\?\?G\.price\?\?ha\(G\)\.total_price\?\?G\.total_price\?\?""/,
+  /bi=G=>\{const h=ha\(G\),pick=\(\.\.\.xs\)=>/,
   'served bi() must read place prices and total prices for list and budget rows',
 );
 
@@ -102,12 +102,17 @@ for (const value of [undefined, null, {}, { thingOverrides: 'invalid' }]) {
 }
 assert.deepEqual(hydrate({ places: [{ id: 7, price: 225 }] }).overrides, { 'place:7': { price: 225 } });
 
-const priceExpression = servedBundle.match(/bi=(G=>ha\(G\)\.price[^;]*?),Vr=/);
-assert.ok(priceExpression, 'served price accessor must be executable');
-const priceFor = (thing, override = {}) => new Function('ha', `"use strict";return (${priceExpression[1]})`)(() => override)(thing);
+const priceStart = servedBundle.indexOf('bi=G=>{const h=ha(G),pick=');
+assert.ok(priceStart >= 0, 'served price accessor must be executable');
+const priceEnd = servedBundle.indexOf('},Vr=', priceStart);
+assert.ok(priceEnd > priceStart);
+const priceFn = servedBundle.slice(priceStart + 'bi='.length, priceEnd + 1);
+const priceFor = (thing, override = {}) => new Function('ha', `"use strict";return (${priceFn})`)(() => override)(thing);
 assert.equal(priceFor({ price: 300 }), 300);
 assert.equal(priceFor({ price: 300 }, { price: 450 }), 450);
 assert.equal(priceFor({ price: 300 }, { price: 0 }), 0);
+assert.equal(priceFor({ price: 518 }, { price: '' }), 518);
+assert.equal(priceFor({ price: 518 }, { price: '   ' }), 518);
 assert.equal(priceFor({ total_price: 375 }), 375);
 assert.equal(priceFor({}, { total_price: 275 }), 275);
 assert.equal(priceFor({}), '');

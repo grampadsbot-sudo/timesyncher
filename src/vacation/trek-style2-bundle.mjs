@@ -179,7 +179,7 @@ const CAR_FIELDS_PATCH = '(Mi(Dt)||ha(Dt).category==="car"||Dt.category==="car")
 
 const PE_EFFECT_NEEDLE = 'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})';
 const PE_EFFECT_SIMPLE = 'lf.getSharedTrip(r).then(G=>{A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
-const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||cur.price===""))cur.price=pr;ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
+const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
 
 const PRINT_HH_NEEDLE = 'ua=zi(G)?ha(G).happyHourDetails:""';
 const PRINT_HH_PATCH = 'ua=(ha(G).happyHour||zi(G))?(ha(G).happyHourDetails||""):""';
@@ -245,7 +245,7 @@ const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
 const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:zt(Xi)>0||/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 const BI_NEEDLE = 'bi=G=>ha(G).price??G.price??""';
-const BI_PATCH = 'bi=G=>ha(G).price??G.price??ha(G).total_price??G.total_price??""';
+const BI_PATCH = 'bi=G=>{const h=ha(G),pick=(...xs)=>{for(const x of xs){if(x==null||String(x).trim()==="")continue;return x}return""};return pick(h.price,G.price,h.total_price,G.total_price)}';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
@@ -397,7 +397,9 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   patched = applySharedLiveTabBundlePatches(patched, { served });
   if (patched.includes(BI_NEEDLE)) {
     patched = patched.replace(BI_NEEDLE, BI_PATCH);
-  } else if (served && !patched.includes(BI_PATCH)) {
+  } else if (patched.includes('bi=G=>ha(G).price??G.price??ha(G).total_price??G.total_price??""')) {
+    patched = patched.replace('bi=G=>ha(G).price??G.price??ha(G).total_price??G.total_price??""', BI_PATCH);
+  } else if (served && !patched.includes('pick(h.price,G.price,h.total_price,G.total_price)')) {
     throw new Error('shared trip bi() price patch did not apply');
   }
   patched = applyLiveProductPatches(patched, { served });
