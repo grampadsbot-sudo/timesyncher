@@ -115,9 +115,9 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 629,
-    "name": "The Manhattan Club",
+    "name": "Library Hotel by Library Hotel Collection",
     "cat": "hotel",
-    "ccabKey": "The Manhattan Club"
+    "ccabKey": "Library Hotel by Library Hotel Collection"
   },
   {
     "id": 630,

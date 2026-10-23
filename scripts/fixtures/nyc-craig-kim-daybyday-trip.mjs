@@ -444,7 +444,7 @@ function buildPayload() {
   for (const row of rows) {
     const day = days.find((d) => d.day_number === row.day);
     const kind = categories[row.cat];
-    const coords = row.id === 608 ? { lat: null, lng: null } : (NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 });
+    const coords = NYC_COORDS[row.id] || { lat: 40.774, lng: -73.982 };
     const place = {
       id: row.id,
       trip_id: 99,

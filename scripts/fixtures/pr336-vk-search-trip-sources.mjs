@@ -43,7 +43,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   605: 'Strand Book Store',
   606: 'Afternoon matinee show',
   607: 'Friend meetup at Bryant Park',
-  608: 'Midtown sample hotel',
+  608: 'The Manhattan Club',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Carbone',
   611: 'Jazz at Lincoln Center',
