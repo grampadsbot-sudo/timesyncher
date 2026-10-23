@@ -12,6 +12,7 @@ from pathlib import Path
 
 SOURCE = Path(__file__).resolve().parent
 GUARD_MODULE = "vkfill_batch_guards.py"
+STALL_GUARD_MODULE = "dispatch_stall_guards.py"
 LANE_AUTOFILL = "lane_autofill.py"
 STALL_ALARM = "tsv_stall_alarm.py"
 LOCK = Path.home() / "tsv-dispatch" / ".autofill.lock"
@@ -41,11 +42,11 @@ def ensure_import(text: str, module: str) -> str:
     return text[: idx + 1] + line + text[idx + 1 :]
 
 
-def inject_lane_autofill(text: str) -> str:
+def inject_lane_autofill(text: str) -> tuple[str, list[str]]:
+    notes: list[str] = []
     patched = text
     marker = "vkfill_batch_guards.may_void_held_as_alreadypushed"
     if marker not in patched:
-        patched = ensure_import(patched, "vkfill_batch_guards")
         retire_hook = (
             "        alreadypushed = vkfill_batch_guards.may_void_held_as_alreadypushed("
             "sha, branch, ls_remote_lines)\n"
@@ -63,12 +64,18 @@ def inject_lane_autofill(text: str) -> str:
         injected = False
         for pattern in patterns_retire:
             if re.search(pattern, patched):
+                patched = ensure_import(patched, "vkfill_batch_guards")
                 patched = re.sub(pattern, r"\1" + retire_hook + r"\2", patched, count=1)
                 injected = True
                 break
-        if not injected:
-            raise SystemExit(
-                "lane_autofill.py: could not find vkfill-held retire suffix assignment"
+        if not injected and "VKFILL_BATCH_662_SKIP_RETIRE_HOOK" not in patched:
+            notes.append(
+                "skip-retire-hook: no vkfill-held alreadypushed suffix assignment in lane_autofill.py"
+            )
+            patched = patched.replace(
+                "\n\n",
+                "\nVKFILL_BATCH_662_SKIP_RETIRE_HOOK = True\n\n",
+                1,
             )
 
     quota_marker = "publish_vkfill_batch(gh, dry)"
@@ -76,7 +83,7 @@ def inject_lane_autofill(text: str) -> str:
         quota_pos = patched.find("skipped low GitHub quota")
         publish_pos = patched.rfind("publish_vkfill_batch(gh, dry)", 0, quota_pos)
         if publish_pos != -1:
-            return patched
+            return patched, notes
     quota_hook = "        publish_vkfill_batch(gh, dry)\n"
     quota_patterns = [
         (
@@ -90,7 +97,7 @@ def inject_lane_autofill(text: str) -> str:
     ]
     for pattern in quota_patterns:
         if re.search(pattern, patched):
-            return re.sub(pattern, r"\1" + quota_hook + r"\2", patched, count=1)
+            return re.sub(pattern, r"\1" + quota_hook + r"\2", patched, count=1), notes
     raise SystemExit(
         "lane_autofill.py: could not find low GitHub quota early-return anchor"
     )
@@ -120,11 +127,14 @@ def install(root: Path, dry: bool) -> None:
     root = root.expanduser().resolve()
     if not root.is_dir():
         raise SystemExit("dispatch root missing: %s" % root)
-    module_src = SOURCE / GUARD_MODULE
-    if not module_src.is_file():
-        raise SystemExit("missing source module %s" % module_src)
+    for module_name in (GUARD_MODULE, STALL_GUARD_MODULE):
+        module_src = SOURCE / module_name
+        if not module_src.is_file():
+            raise SystemExit("missing source module %s" % module_src)
     actions = []
-    actions.append(("copy", module_src, root / GUARD_MODULE))
+    for module_name in (GUARD_MODULE, STALL_GUARD_MODULE):
+        actions.append(("copy", SOURCE / module_name, root / module_name))
+    lane_notes: list[str] = []
     for name, mutator in (
         (LANE_AUTOFILL, inject_lane_autofill),
         (STALL_ALARM, inject_stall_alarm),
@@ -133,12 +143,18 @@ def install(root: Path, dry: bool) -> None:
         if not target.is_file():
             actions.append(("skip-missing", name, None))
             continue
-        updated = mutator(target.read_text())
+        if name == LANE_AUTOFILL:
+            updated, lane_notes = mutator(target.read_text())
+        else:
+            updated = mutator(target.read_text())
         actions.append(("patch", name, updated))
     if dry:
         for kind, name, payload in actions:
             print("%s %s" % (kind, name if isinstance(name, str) else name))
-        print("sha256 %s %s" % (GUARD_MODULE, sha256_file(module_src)))
+        for note in lane_notes:
+            print(note)
+        for module_name in (GUARD_MODULE, STALL_GUARD_MODULE):
+            print("sha256 %s %s" % (module_name, sha256_file(SOURCE / module_name)))
         return
     lock_path = LOCK if LOCK.parent.exists() else root / ".install-662.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -159,6 +175,8 @@ def install(root: Path, dry: bool) -> None:
                 print("patched %s sha256=%s" % (name, sha256_file(root / name)))
             else:
                 print("skipped missing %s" % name)
+        for note in lane_notes:
+            print(note)
         print("backups: %s" % (", ".join(backups) if backups else "none"))
 
 

@@ -209,3 +209,48 @@ def rename_void_marker_name(
 ) -> str:
     suffix = void_marker_suffix(alreadypushed)
     return "%s.void-%s-%s" % (issue, stamp, suffix)
+
+
+def _held_marker_sha_branch(payload: Mapping) -> tuple[str, str]:
+    sha = held_entry_sha(payload)
+    branch = held_entry_branch(payload)
+    if not branch:
+        ref = str(payload.get("ref") or "").strip()
+        tip = str(payload.get("tip") or "").strip()
+        branch = ref or tip
+    return sha, branch
+
+
+def void_alreadypushed_marker_violations(
+    marker_name: str,
+    held_sha: str,
+    branch_ref: str,
+    ls_remote_lines: LsRemoteLines,
+) -> list[str]:
+    """Return human-readable violations when a void-alreadypushed marker was retired too early."""
+    if not void_alreadypushed_marker_invalid(
+        marker_name, held_sha, branch_ref, ls_remote_lines
+    ):
+        return []
+    return [
+        "invalid void-alreadypushed marker %s: remote %s lacks held sha %s"
+        % (marker_name, branch_ref or "?", held_sha or "?")
+    ]
+
+
+def scan_void_alreadypushed_markers(
+    held_entries: Iterable[tuple[str, Mapping]],
+    ls_remote_lines: LsRemoteLines,
+) -> list[str]:
+    """Flag vkfill-held/*.void-*-alreadypushed markers whose sha is not on the remote branch."""
+    violations: list[str] = []
+    for marker_name, payload in held_entries:
+        if not void_marker_name_is_alreadypushed(marker_name):
+            continue
+        sha, branch = _held_marker_sha_branch(payload)
+        violations.extend(
+            void_alreadypushed_marker_violations(
+                marker_name, sha, branch, ls_remote_lines
+            )
+        )
+    return violations
