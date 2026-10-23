@@ -194,6 +194,7 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
     'endTime',
     'totalPrice',
     'reputationNote',
+    'summarySourceUrls',
   ]) {
     if (record[key] != null && record[key] !== '') override[key] = record[key];
   }
@@ -201,6 +202,9 @@ function applyVkSearchSnapshotContractFields(search, place, override) {
     if (record[key]) place[key] = record[key];
   }
   if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (Array.isArray(record.summarySourceUrls) && record.summarySourceUrls.length) {
+    override.summarySourceUrls = record.summarySourceUrls.map((url) => text(url, 500)).filter(Boolean);
+  }
   if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
   for (let index = 1; index <= 4; index += 1) {
     for (const suffix of ['', 'Rating']) {
@@ -307,6 +311,7 @@ function applyCcabRowSearchFields(row, place, override) {
     'endTime',
     'totalPrice',
     'reputationNote',
+    'summarySourceUrls',
   ]) {
     if (record[key] != null && record[key] !== '') override[key] = record[key];
   }
@@ -314,6 +319,9 @@ function applyCcabRowSearchFields(row, place, override) {
     if (record[key]) place[key] = record[key];
   }
   if (Array.isArray(record.missingFields)) override.missingFields = record.missingFields;
+  if (Array.isArray(record.summarySourceUrls) && record.summarySourceUrls.length) {
+    override.summarySourceUrls = record.summarySourceUrls.map((url) => text(url, 500)).filter(Boolean);
+  }
   if (record.xaiRatingsFetched === false) override.xaiRatingsFetched = false;
   for (let index = 1; index <= 4; index += 1) {
     for (const suffix of ['', 'Rating']) {
