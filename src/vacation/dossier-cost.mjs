@@ -77,6 +77,69 @@ export function condenseText(text, name, { maxChars = 1800, want = 'both' } = {}
   return keep.sort((a, b) => a.index - b.index).map((row) => row.s).join(' ');
 }
 
+function pageIdsFromReviewSet(dossier = {}) {
+  const ids = new Set();
+  for (const row of dossier.reviewSet || []) {
+    const page = String(row.page || '').trim();
+    if (/^p\d+$/.test(page)) ids.add(page);
+    for (const token of row.pages || []) if (/^p\d+$/.test(String(token))) ids.add(String(token));
+  }
+  return ids;
+}
+
+export function dossierForReviewWriter(dossier = {}) {
+  const keepIds = pageIdsFromReviewSet(dossier);
+  const idxById = new Map((dossier.pages || []).map((page, index) => [`p${index + 1}`, page]));
+  let left = 10000;
+  const pages = [];
+  for (const id of [...keepIds].sort()) {
+    if (left <= 0) break;
+    const page = idxById.get(id);
+    if (!page) continue;
+    const text = page.via === 'brave' ? String(page.text || '').slice(0, 900)
+      : condenseText(page.text, dossier.thing, { maxChars: Math.min(750, left), want: 'reviews' });
+    left -= text.length;
+    const { braveReviews, braveRating, ...rest } = page;
+    pages.push({ id, ...rest, text });
+  }
+  if (!pages.length) {
+    return dossierForModel(dossier, { perPage: 700, total: 10000, want: 'reviews', reviewCap: 80, reviewWords: 55 });
+  }
+  return {
+    thing: dossier.thing,
+    pages,
+    reviewSet: (dossier.reviewSet || []).slice(0, 80).map((row) => ({
+      ...row,
+      text: String(row.text || '').split(/\s+/).slice(0, 55).join(' '),
+    })),
+    reviewsRead: dossier.reviewsRead,
+    fieldCounts: dossier.fieldCounts?.reviews ? { reviews: dossier.fieldCounts.reviews } : undefined,
+    knownFor: dossier.knownFor,
+    rating: dossier.rating,
+    reviewsAvailable: dossier.reviewsAvailable,
+  };
+}
+
+export function beginDossierXaiUsageRun(dossier = {}, persisted = {}) {
+  const prior = Array.isArray(persisted.xaiUsage) ? persisted.xaiUsage : [];
+  dossier.xaiUsage = [...prior];
+  dossier.xaiUsageRunStart = prior.length;
+  dossier.xaiUsd = Math.round(prior.reduce((sum, row) => sum + (row.usd || 0), 0) * 1e6) / 1e6;
+}
+
+export function commitDossierXaiUsageRun(dossier = {}, persisted = {}, meta = {}) {
+  const start = Number.isInteger(dossier.xaiUsageRunStart)
+    ? dossier.xaiUsageRunStart
+    : (persisted.xaiUsage?.length || 0);
+  const steps = (dossier.xaiUsage || []).slice(start);
+  const usd = Math.round(steps.reduce((sum, row) => sum + (row.usd || 0), 0) * 1e6) / 1e6;
+  const run = { at: new Date().toISOString(), usd, steps, ...meta };
+  dossier.xaiUsageRuns = [...(persisted.xaiUsageRuns || []), run];
+  delete dossier.xaiUsageRunStart;
+  dossier.xaiUsd = Math.round((dossier.xaiUsage || []).reduce((sum, row) => sum + (row.usd || 0), 0) * 1e6) / 1e6;
+  return run;
+}
+
 export function dossierForModel(dossier = {}, { perPage = 1800, total = 24000, want = 'both', reviewCap = 40, reviewWords = 60 } = {}) {
   let left = total;
   const pages = (dossier.pages || []).map((page) => {

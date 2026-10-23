@@ -182,6 +182,14 @@ const DOSSIER_REBUILD_GROUPS = [
   'itineraryNote',
 ];
 
+export function dossierReviewsEvidenceFresh(persisted = {}, merged = {}) {
+  if (!persisted?.fieldHashes?.reviews) return false;
+  const url = persisted.fieldSources?.reviews;
+  if (!url) return false;
+  const pageByUrl = new Map((merged.pages || []).map((page) => [page.url, page.sha256]));
+  return pageHashBundle(pageByUrl, url) === persisted.fieldHashes.reviews;
+}
+
 export function dossierRebuildFields(persisted = {}, merged = {}, {
   maxAgeExpired = false,
   changedUrls = [],

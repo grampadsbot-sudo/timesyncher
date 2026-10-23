@@ -301,3 +301,4 @@ scripts/test_gate_b_fixture_trip_dossier_overlay.mjs
 scripts/test_thing_evidence_dossier_worker_route.mjs
 scripts/test_dossier_evidence_hydrate_682.mjs
 scripts/test_dossier_reviews_identity_682.mjs
+scripts/test_dossier_cost_682.mjs

@@ -7,11 +7,13 @@ import {
   claimCitesKnownPages,
   claimsSupported,
   dossierPageById,
+  dossierReviewsEvidenceFresh,
   ensureBraveSnippetCitationPages,
   mergeSelectiveDossierFindings,
   prepareDossierFindings,
   resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
+import { beginDossierXaiUsageRun } from './dossier-cost.mjs';
 import { braveTopUpFieldsPending } from './thing-evidence-dossier-field-counts.mjs';
 import { topUpDossierFields } from './thing-evidence-dossier.mjs';
 
@@ -76,6 +78,10 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
 } = {}) {
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
   let merged = ensureBraveSnippetCitationPages({ ...persisted });
+  beginDossierXaiUsageRun(merged, persisted);
+  if (!dossierReviewsNeedRebuild(merged, place) && dossierReviewsEvidenceFresh(persisted, merged)) {
+    return syncDossierRequiredShortcomings(merged, place);
+  }
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');
   if (pending.length) {
     merged = await topUpImpl(merged, place, { env, fetchImpl, destination, onlyFields: pending });
@@ -85,8 +91,10 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   });
   merged.reviewSet = extraction.set;
   merged.reviewExtraction = extraction.stats;
-  const { findings } = await callDossierBuilder(merged, { env, fetchImpl, timeoutMs, buildImpl });
-  await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl });
+  const { findings } = await callDossierBuilder(merged, {
+    env, fetchImpl, timeoutMs, buildImpl, includeReviews: true, reviewsOnly: true,
+  });
+  await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl, skipReviewClaims: false });
   const built = prepareDossierFindings(merged, findings);
   const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']));
   return syncDossierRequiredShortcomings(final, place);
