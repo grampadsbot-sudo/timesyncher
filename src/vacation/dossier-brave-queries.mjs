@@ -2,8 +2,24 @@ function text(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+function categoryLabel(value = '') {
+  const raw = value;
+  if (raw && typeof raw === 'object') {
+    return text(raw.name || raw.category_name || raw.slug || raw.label);
+  }
+  return text(raw);
+}
+
 function categoryOf(place = {}) {
-  return text(place.category || place.sourceRecord?.category).toLowerCase();
+  const fromRecord = place.sourceRecord && typeof place.sourceRecord === 'object'
+    ? categoryLabel(place.sourceRecord.category || place.sourceRecord.category_name)
+    : '';
+  const direct = categoryLabel(place.category) || categoryLabel(place.category_name) || fromRecord;
+  if (direct) return direct.toLowerCase();
+  const title = text(place.title || place.name);
+  if (/\b(flight|airline)\b/i.test(title) || /\b(LAS|JFK|LGA|EWR)\b/.test(title)) return 'flight';
+  if (/\b(rental car|sedan|suv|opaque|priceline|hertz|avis)\b/i.test(title)) return 'car';
+  return '';
 }
 
 export function isBarOrRestaurant(place = {}) {
@@ -27,7 +43,8 @@ function isHotel(place = {}) {
 
 export function isFlightOrCarOrDecision(place = {}) {
   const cat = categoryOf(place);
-  return cat === 'flight' || cat === 'car' || cat === 'decision' || cat === 'note';
+  return cat === 'flight' || cat === 'car' || cat === 'decision' || cat === 'note'
+    || /^(transport|transportation|rental)$/.test(cat);
 }
 
 export function placeSupportsDossierReviews(place = {}) {

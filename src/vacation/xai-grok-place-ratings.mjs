@@ -12,7 +12,9 @@ import {
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
   dossierReviewsNeedRebuild,
+  dossierReviewsShouldRunWriter,
   rebuildDossierReviewsFromSavedEvidence,
+  stampReviewsEvidencePageHash,
   stripDossierReviews,
 } from './dossier-reviews-rebuild.mjs';
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
@@ -242,7 +244,7 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
 async function callDossierBuilder(dossier, {
   env, fetchImpl, timeoutMs, buildImpl, includeReviews = true, reviewsOnly = false,
 } = {}) {
-  if (buildImpl) return buildImpl(dossier);
+  if (buildImpl) return buildImpl(dossier, { reviewsOnly });
   const payload = await postXai(
     dossier,
     'builder',
@@ -277,6 +279,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const persisted = resolved.dossier;
   const deadline = timeBudgetMs > 0 ? Date.now() + timeBudgetMs : 0;
   const outOfTime = () => deadline > 0 && Date.now() >= deadline;
+  const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
   const gatherOpts = {
     env, fetchImpl, destination, resolveImpl, center,
   };
@@ -286,15 +289,15 @@ export async function fetchXaiPlaceRatings(place = {}, {
     beginDossierXaiUsageRun(merged, persisted);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
-    if (pendingTopUp.length) {
+    if (pendingTopUp.length && !outOfTime()) {
       merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });
     }
-    if (placeSupportsDossierReviews(place) && dossierReviewsNeedRebuild(merged, place)) {
-      merged = await rebuildDossierReviewsFromSavedEvidence(merged, place, {
+    if (placeSupportsDossierReviews(place) && dossierReviewsShouldRunWriter(persisted, merged, place) && !outOfTime()) {
+      merged = await rebuildDossierReviewsFromSavedEvidence(persisted, place, {
         env,
         fetchImpl,
         destination,
-        timeoutMs,
+        timeoutMs: remainingTimeoutMs(),
         buildImpl,
         judgeImpl,
         extractReviewsImpl,
@@ -302,6 +305,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         callDossierBuilder,
         judgeDossierFindings,
       });
+      stampReviewsEvidencePageHash(merged);
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
       merged.captureCheckpoint = 'done';
@@ -354,28 +358,35 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const supportsReviews = placeSupportsDossierReviews(place);
-  const needsReviewWriter = supportsReviews && rebuildFields.has('reviews') && dossierReviewsNeedRebuild(merged, place);
-  if (needsReviewWriter) {
-    const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl, place });
+  const needsReviewWriter = supportsReviews && rebuildFields.has('reviews')
+    && dossierReviewsShouldRunWriter(persisted, merged, place);
+  if (needsReviewWriter && !outOfTime()) {
+    const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs: remainingTimeoutMs(), extractReviewsImpl, place });
     merged.reviewSet = extraction.set;
     merged.reviewExtraction = extraction.stats;
     if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
   }
   const reviewsOnly = dossierBuilderReviewsOnly(rebuildFields);
+  if (outOfTime()) {
+    merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
+    if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
+  }
   const { payload, structuredText, findings } = await callDossierBuilder(merged, {
-    env, fetchImpl, timeoutMs, buildImpl, includeReviews: needsReviewWriter, reviewsOnly,
+    env, fetchImpl, timeoutMs: remainingTimeoutMs(), buildImpl, includeReviews: needsReviewWriter, reviewsOnly,
   });
   if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, {
-    env, fetchImpl, timeoutMs, judgeImpl, skipReviewClaims: !needsReviewWriter,
+    env, fetchImpl, timeoutMs: remainingTimeoutMs(), judgeImpl, skipReviewClaims: !needsReviewWriter,
   });
   const built = prepareDossierFindings(merged, findings);
   built.fieldCounts = computeDossierFieldCounts(built, place);
   if (built.fieldCounts.reviews?.count != null) built.reviewsRead = built.fieldCounts.reviews.count;
   built.missingFields = deriveMissingFieldsFromShortcomings(built.shortcomings);
   const final = persisted && !forceRefresh
-    ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
+    ? mergeSelectiveDossierFindings(persisted, built, rebuildFields, place)
     : built;
+  if (needsReviewWriter || rebuildFields.has('reviews')) stampReviewsEvidencePageHash(final);
   final.fieldCounts = computeDossierFieldCounts(final, place);
   if (final.fieldCounts.reviews?.count != null) final.reviewsRead = final.fieldCounts.reviews.count;
   final.missingFields = deriveMissingFieldsFromShortcomings(final.shortcomings);

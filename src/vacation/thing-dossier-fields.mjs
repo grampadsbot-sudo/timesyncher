@@ -222,7 +222,7 @@ export function dossierRebuildFields(persisted = {}, merged = {}, {
   return stale;
 }
 
-export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuildFields = new Set()) {
+export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuildFields = new Set(), place = {}) {
   const fields = rebuildFields instanceof Set ? rebuildFields : new Set(rebuildFields);
   if (!persisted || fields.size === 0) return built;
   if (fields.size >= DOSSIER_REBUILD_GROUPS.length) return built;
@@ -238,11 +238,31 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
     next.ratingMix = built.ratingMix;
   }
   if (fields.has('reviews')) {
-    next.reviews = built.reviews;
-    next.reviewExcerpts = built.reviewExcerpts;
-    next.reviewsRead = built.reviewsRead;
-    next.reviewSet = built.reviewSet;
-    next.reviewSources = built.reviewSources;
+    const reviewReady = (dossier) => {
+      const reviews = Array.isArray(dossier?.reviews) ? dossier.reviews : [];
+      return reviews.length >= 4 && reviews.every((row) => claimsSupported({ ...dossier, pages: next.pages }, row));
+    };
+    const builtOk = reviewReady(built);
+    const persistedOk = reviewReady(persisted);
+    if (builtOk && Array.isArray(built.reviews) && built.reviews.length) {
+      next.reviews = built.reviews;
+      next.reviewExcerpts = built.reviewExcerpts;
+      next.reviewsRead = built.reviewsRead;
+      next.reviewSet = built.reviewSet;
+      next.reviewSources = built.reviewSources;
+    } else if (persistedOk && Array.isArray(persisted.reviews) && persisted.reviews.length) {
+      next.reviews = persisted.reviews;
+      next.reviewExcerpts = persisted.reviewExcerpts;
+      next.reviewsRead = persisted.reviewsRead;
+      next.reviewSet = persisted.reviewSet;
+      next.reviewSources = persisted.reviewSources;
+    } else {
+      next.reviews = Array.isArray(built.reviews) && built.reviews.length ? built.reviews : persisted.reviews;
+      next.reviewExcerpts = built.reviewExcerpts ?? persisted.reviewExcerpts;
+      next.reviewsRead = built.reviewsRead ?? persisted.reviewsRead;
+      next.reviewSet = built.reviewSet ?? persisted.reviewSet;
+      next.reviewSources = built.reviewSources ?? persisted.reviewSources;
+    }
   }
   next.fields = { ...(next.fields || {}) };
   for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
@@ -486,6 +506,7 @@ export function applyDossierFields(record = {}, dossier = {}) {
       missing.delete('ratings');
     }
     applyDossierRatingsAndReviews(next, dossier);
+    if (!placeSupportsDossierReviews(next)) delete next.reviewThemes;
     if (next.googleRating || next.yelpRating || next.thirdPartyRating || next.otherRatingSites?.length) {
       missing.delete('ratings');
     }

@@ -8,6 +8,9 @@ function mergeOverride(base = {}, patch = {}) {
   for (const key of publicReviewFieldKeys()) {
     if (patch[key] === null) delete next[key];
   }
+  for (const key of ['address', 'phone', 'hours', 'reviewThemes']) {
+    if (patch[key] === null) delete next[key];
+  }
   if (Array.isArray(patch.missingFields) || Array.isArray(base.missingFields)) {
     next.missingFields = patch.missingFields || base.missingFields;
   }
@@ -29,7 +32,11 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
     const placeCtx = { ...place, title: place.name || place.title, sourceRecord: place.sourceRecord || current.sourceRecord };
     const normalized = normalizeDossierEvidence(dossier, placeCtx);
     const record = applyDossierFields({ ...(current.sourceRecord || {}), ...current }, normalized);
-    overrides[overrideKey] = mergeOverride(current, record);
+    const patch = { ...record };
+    if (record.missingFields?.includes('address')) patch.address = null;
+    if (record.missingFields?.includes('phone')) patch.phone = null;
+    if (!normalized.reviewThemes) patch.reviewThemes = null;
+    overrides[overrideKey] = mergeOverride(current, patch);
     if (record.description || record.longDetails) {
       place.description = record.longDetails || record.description || place.description;
     }

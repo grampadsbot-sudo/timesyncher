@@ -18,19 +18,22 @@ const OVERLAY_ENRICHMENT = JSON.parse(
   readFileSync(new URL('../../scripts/fixtures/pr336-gate-b-ccab-overlay.json', import.meta.url), 'utf8'),
 );
 
-function placeFromTarget(target = {}) {
+export function placeFromTarget(target = {}) {
   const ccabRecord = {
     ...(BASE_ENRICHMENT[target.ccabKey] || {}),
     ...(OVERLAY_ENRICHMENT[target.ccabKey] || {}),
   };
+  const category = target.category || ccabRecord.category || target.category_name || '';
   return {
     id: target.placeId ?? target.rowId ?? target.id,
     trip_id: target.tripId ?? target.trip_id ?? 99,
-    title: target.title || target.name,
-    category: target.category,
+    title: target.title || target.name || target.ccabKey,
+    name: target.name || target.title || target.ccabKey,
+    category,
+    category_name: typeof category === 'object' ? category.name : (target.category_name || category),
     address: target.address || ccabRecord.address,
     url: target.website || target.url || ccabRecord.website,
-    sourceRecord: { ...ccabRecord, ...(target.sourceRecord || {}) },
+    sourceRecord: { ...ccabRecord, category, ...(target.sourceRecord || {}) },
   };
 }
 
@@ -115,6 +118,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   fetchImpl,
   gatherImpl,
   buildImpl,
+  judgeImpl,
+  extractReviewsImpl,
   storeImpl,
   skipExisting = false,
   forceRefresh = false,
@@ -151,6 +156,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       fetchImpl,
       gatherImpl,
       buildImpl,
+      judgeImpl,
+      extractReviewsImpl,
       storeImpl,
       forceRefresh: refresh,
       timeBudgetMs: target.timeBudgetMs ?? timeBudgetMs,

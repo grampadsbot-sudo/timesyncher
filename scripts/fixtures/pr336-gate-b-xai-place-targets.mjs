@@ -51,9 +51,16 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   },
   {
     rowId: 611,
-    ccabKey: 'Jazz at Lincoln Center',
-    title: 'Jazz at Lincoln Center',
-    category: 'event',
-    destination: 'Lincoln Center, New York, NY',
+    ccabKey: 'Blue Note Jazz Club',
+    title: 'Blue Note Jazz Club',
+    category: 'attraction',
+    destination: 'Greenwich Village, New York, NY',
+  },
+  {
+    rowId: 609,
+    ccabKey: 'Priceline opaque Standard sedan',
+    title: 'Priceline opaque Standard sedan',
+    category: 'car',
+    destination: 'JFK Airport, New York, NY',
   },
 ];

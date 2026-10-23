@@ -115,9 +115,9 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
     const addressOk = addressIsSpecific(addressVal)
       || (regexHit(blob, /\d{1,5}\s+\w+\s+(?:st|street|ave|avenue|blvd|road)/i) && addressVal && addressIsSpecific(addressVal));
     counts.address = addressOk ? { status: 'ok' } : { status: 'missing' };
-    counts.phone = scalarFieldStatus(fields.phone?.value ?? fields.phone ?? (regexHit(blob, /\(\d{3}\)\s*\d{3}-\d{4}|\d{3}-\d{3}-\d{4}/) ? 'yes' : ''));
-    counts.website = scalarFieldStatus(fields.website?.value ?? fields.website ?? dossier.pages?.[0]?.url);
-    counts.neighborhood = scalarFieldStatus(fields.neighborhood?.value ?? fields.neighborhood);
+    counts.phone = { status: scalarFieldStatus(fields.phone?.value ?? fields.phone) };
+    counts.website = { status: scalarFieldStatus(fields.website?.value ?? fields.website ?? dossier.pages?.[0]?.url) };
+    counts.neighborhood = { status: scalarFieldStatus(fields.neighborhood?.value ?? fields.neighborhood) };
     const lat = fields.lat?.value ?? fields.lat ?? place.lat;
     const lng = fields.lng?.value ?? fields.lng ?? place.lng;
     counts.coordinates = lat != null && lng != null ? { status: 'ok' } : { status: 'missing' };

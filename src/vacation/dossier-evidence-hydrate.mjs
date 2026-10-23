@@ -184,6 +184,10 @@ export function hydrateScalarFieldsFromEvidence(dossier = {}, place = {}) {
   const extracted = extractContactFieldsFromBlob(blob);
   let next = { ...dossier };
   if (extracted.phone) next = setScalarField(next, 'phone', text(extracted.phone), firstPageIdForNeedle(next, extracted.phone));
+  const currentAddress = text(next.fields?.address?.value ?? next.fields?.address);
+  if (extracted.address && (!currentAddress || !addressIsSpecific(currentAddress) || fieldFailsIdentityCheck(next, place, 'address'))) {
+    next = setScalarField(next, 'address', text(extracted.address), firstPageIdForNeedle(next, extracted.address));
+  }
   if (extracted.hours && !next.fields?.hours) next = setScalarField(next, 'hours', text(extracted.hours), firstPageIdForNeedle(next, extracted.hours));
   if (extracted.website && !next.fields?.website) next = setScalarField(next, 'website', text(extracted.website), firstPageIdForNeedle(next, extracted.website));
   return next;

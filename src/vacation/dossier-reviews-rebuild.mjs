@@ -14,7 +14,7 @@ import {
   resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
 import { beginDossierXaiUsageRun } from './dossier-cost.mjs';
-import { braveTopUpFieldsPending } from './thing-evidence-dossier-field-counts.mjs';
+import { braveTopUpFieldsPending, recordFieldShortcoming } from './thing-evidence-dossier-field-counts.mjs';
 import { topUpDossierFields } from './thing-evidence-dossier.mjs';
 
 function text(value) {
@@ -76,6 +76,25 @@ export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
   return dossierReviewsHaveInvalidContent(dossier, place);
 }
 
+function dossierReviewsEvidencePageHash(dossier = {}) {
+  return (dossier.pages || []).map((page) => page.sha256).filter(Boolean).join('|');
+}
+
+export function stampReviewsEvidencePageHash(dossier = {}) {
+  const hash = dossierReviewsEvidencePageHash(dossier);
+  if (hash) dossier.reviewsEvidencePageHash = hash;
+  return dossier;
+}
+
+export function dossierReviewsShouldRunWriter(persisted = {}, merged = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place) || !merged?.pages?.length) return false;
+  if (dossierReviewsPassValidityGate(merged, place)) return false;
+  if (!dossierReviewsNeedRebuild(merged, place)) return false;
+  const hash = dossierReviewsEvidencePageHash(merged);
+  if (hash && persisted?.reviewsEvidencePageHash === hash) return false;
+  return true;
+}
+
 export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, place = {}, {
   env = process.env,
   fetchImpl = globalThis.fetch,
@@ -92,7 +111,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
   let merged = ensureBraveSnippetCitationPages({ ...persisted });
   beginDossierXaiUsageRun(merged, persisted);
-  if (dossierReviewsPassValidityGate(merged, place)) {
+  if (!dossierReviewsShouldRunWriter(persisted, merged, place)) {
     return syncDossierRequiredShortcomings(merged, place);
   }
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');
@@ -109,6 +128,14 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   });
   await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl, skipReviewClaims: false });
   const built = prepareDossierFindings(merged, findings);
-  const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']));
+  const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']), place);
+  stampReviewsEvidencePageHash(final);
+  if (!dossierReviewsPassValidityGate(final, place)) {
+    final.shortcomings = recordFieldShortcoming(
+      { shortcomings: final.shortcomings || [] },
+      'reviews',
+      final.reviews?.length ? 'representative reviews could not be verified from saved evidence' : 'limited number of reviews',
+    );
+  }
   return syncDossierRequiredShortcomings(final, place);
 }
