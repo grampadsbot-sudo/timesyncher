@@ -32,6 +32,12 @@ assert.match(
 
 assert.match(
   servedBundle,
+  /return\[Re\|\|ua,\(v=>\{const fareLbl=/,
+  'flight eu() must use the full itinerary title for Gate B list name lines',
+);
+
+assert.match(
+  servedBundle,
   /bi=G=>\{const h=ha\(G\),pick=\(\.\.\.xs\)=>/,
   'served bi() must read place prices and total prices for list and budget rows',
 );
@@ -101,6 +107,17 @@ for (const value of [undefined, null, {}, { thingOverrides: 'invalid' }]) {
   assert.deepEqual(hydrate(value).overrides, {});
 }
 assert.deepEqual(hydrate({ places: [{ id: 7, price: 225 }] }).overrides, { 'place:7': { price: 225 } });
+
+const dupNamePayload = {
+  places: [
+    { id: 45, name: 'Romer Hell\u2019s Kitchen' },
+    { id: 629, name: "Romer Hell's Kitchen", price: 425 },
+  ],
+  thingOverrides: {},
+};
+const dupHydrated = hydrate(dupNamePayload);
+assert.equal(dupHydrated.overrides['place:45'].price, 425);
+assert.equal(dupHydrated.overrides['place:629'].price, 425);
 
 const priceStart = servedBundle.indexOf('bi=G=>{const h=ha(G),pick=');
 assert.ok(priceStart >= 0, 'served price accessor must be executable');

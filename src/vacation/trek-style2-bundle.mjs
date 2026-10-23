@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
+import { applyMoBudgetPriceCoveragePatch, applyPeEffectPriceHydratePatch, MO_BUDGET_PATCH, PE_EFFECT_PATCH } from './trek-vk-price-coverage-patches.mjs';
 import {
   applyLiveProductPatches,
   applySharedLiveTabBundlePatches,
@@ -179,8 +180,6 @@ const CAR_FIELDS_PATCH = '(Mi(Dt)||ha(Dt).category==="car"||Dt.category==="car")
 
 const PE_EFFECT_NEEDLE = 'lf.getSharedTrip(r).then(G=>{A(G),G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object"?pe(G.thingOverrides):pe({}),me(!0),ge(!1)})';
 const PE_EFFECT_SIMPLE = 'lf.getSharedTrip(r).then(G=>{A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
-const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
-
 const PRINT_HH_NEEDLE = 'ua=zi(G)?ha(G).happyHourDetails:""';
 const PRINT_HH_PATCH = 'ua=(ha(G).happyHour||zi(G))?(ha(G).happyHourDetails||""):""';
 
@@ -243,7 +242,6 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:zt(Xi)>0||/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 const BI_NEEDLE = 'bi=G=>ha(G).price??G.price??""';
 const BI_PATCH = 'bi=G=>{const h=ha(G),pick=(...xs)=>{for(const x of xs){if(x==null||String(x).trim()==="")continue;return x}return""};return pick(h.price,G.price,h.total_price,G.total_price)}';
 
@@ -348,11 +346,10 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(CAR_FIELDS_NEEDLE)) {
     patched = patched.replace(CAR_FIELDS_NEEDLE, CAR_FIELDS_PATCH);
   }
-  if (patched.includes(PE_EFFECT_NEEDLE)) {
-    patched = patched.replace(PE_EFFECT_NEEDLE, PE_EFFECT_PATCH);
-  } else if (patched.includes(PE_EFFECT_SIMPLE)) {
-    patched = patched.replace(PE_EFFECT_SIMPLE, PE_EFFECT_PATCH);
-  }
+  patched = applyPeEffectPriceHydratePatch(patched, {
+    peEffectNeedle: PE_EFFECT_NEEDLE,
+    peEffectSimple: PE_EFFECT_SIMPLE,
+  });
   if (served) {
     if (patched.includes(HA_NEEDLE)) {
       patched = patched.replace(HA_NEEDLE, HA_PATCH);
@@ -406,9 +403,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (patched.includes(MO_BUDGET_NEEDLE)) {
-    patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
-  }
+  patched = applyMoBudgetPriceCoveragePatch(patched, MO_BUDGET_NEEDLE);
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
     patched = patched.replace(MAP_HEIGHT_NEEDLE, MAP_HEIGHT_PATCH);
   }
