@@ -14,11 +14,14 @@ assert.ok(fs.existsSync(modulePath), 'vkfill_batch_guards.py must exist');
 assert.ok(fs.existsSync(stallPath), 'dispatch_stall_guards.py must exist');
 assert.ok(fs.existsSync(installPath), 'install_dispatch_vkfill_batch_fix_662.py must exist');
 
-const unit = spawnSync('python3', ['-m', 'unittest', '-v', 'test_vkfill_batch_guards'], {
-  cwd: path.dirname(testPath),
-  encoding: 'utf8',
-});
-assert.equal(unit.status, 0, (unit.stderr || unit.stdout || 'unittest failed').trim());
+const dispatchDir = path.dirname(testPath);
+for (const moduleName of ['test_vkfill_batch_guards', 'test_vkfill_batch_install_662']) {
+  const unit = spawnSync('python3', ['-m', 'unittest', '-v', moduleName], {
+    cwd: dispatchDir,
+    encoding: 'utf8',
+  });
+  assert.equal(unit.status, 0, (unit.stderr || unit.stdout || moduleName).trim());
+}
 
 const compile = spawnSync(
   'python3',
@@ -27,4 +30,4 @@ const compile = spawnSync(
 );
 assert.equal(compile.status, 0, compile.stderr || compile.stdout);
 
-console.log('vkfill batch guards #662: %s', (unit.stdout || '').trim().split('\n').slice(-3).join(' | '));
+console.log('vkfill batch guards #662: ok');

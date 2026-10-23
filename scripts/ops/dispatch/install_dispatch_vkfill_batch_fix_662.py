@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import fcntl
 import hashlib
-import os
 import re
 import shutil
 import sys
@@ -13,7 +12,6 @@ from pathlib import Path
 
 SOURCE = Path(__file__).resolve().parent
 GUARD_MODULE = "vkfill_batch_guards.py"
-STALL_MODULE = "dispatch_stall_guards.py"
 LANE_AUTOFILL = "lane_autofill.py"
 STALL_ALARM = "tsv_stall_alarm.py"
 LOCK = Path.home() / "tsv-dispatch" / ".autofill.lock"
@@ -44,38 +42,58 @@ def ensure_import(text: str, module: str) -> str:
 
 
 def inject_lane_autofill(text: str) -> str:
+    patched = text
     marker = "vkfill_batch_guards.may_void_held_as_alreadypushed"
-    if marker in text:
-        return text
-    text = ensure_import(text, "vkfill_batch_guards")
-    void_hook = (
-        "        if not vkfill_batch_guards.may_void_held_as_alreadypushed("
-        "held_sha, branch_ref, ls_remote_lines, local_tip_sha=local_tip, "
-        "last_push_recorded_sha=last_push_sha):\n"
-        "            continue\n"
-    )
-    quota_hook = (
-        "    if skip_reason and vkfill_batch_guards.autofill_must_run_batch_push("
-        "skip_reason, vkfill_held_entries, time.time()):\n"
-        "        skip_reason = None\n"
-    )
-    patterns_void = [
-        r"(alreadypushed[^\n]*\n(?:[^\n]*\n){0,8}?\s+)(if [^\n]+:\n\s+)(os\.rename|shutil\.move)",
-    ]
-    for pattern in patterns_void:
-        if re.search(pattern, text):
-            return re.sub(pattern, r"\1" + void_hook + r"\2\3", text, count=1)
-    if "skipped low GitHub quota" in text or "low GitHub quota" in text:
-        text = re.sub(
-            r"(skip_reason\s*=\s*[^\n]*low GitHub quota[^\n]*\n)",
-            r"\1" + quota_hook,
-            text,
-            count=1,
+    if marker not in patched:
+        patched = ensure_import(patched, "vkfill_batch_guards")
+        retire_hook = (
+            "        alreadypushed = vkfill_batch_guards.may_void_held_as_alreadypushed("
+            "sha, branch, ls_remote_lines)\n"
         )
-    anchor = "def publish_vkfill_batch"
-    if anchor not in text and "vkfill-held" not in text:
-        raise SystemExit("lane_autofill.py: no vkfill batch hook anchor found")
-    return text
+        patterns_retire = [
+            (
+                r"(\s+)alreadypushed = [^\n]+\n"
+                r'(\s+suffix = "alreadypushed" if alreadypushed else "held"\n)'
+            ),
+            (
+                r"(\s+)alreadypushed = [^\n]+\n"
+                r"(\s+suffix = 'alreadypushed' if alreadypushed else 'held'\n)"
+            ),
+        ]
+        injected = False
+        for pattern in patterns_retire:
+            if re.search(pattern, patched):
+                patched = re.sub(pattern, r"\1" + retire_hook + r"\2", patched, count=1)
+                injected = True
+                break
+        if not injected:
+            raise SystemExit(
+                "lane_autofill.py: could not find vkfill-held retire suffix assignment"
+            )
+
+    quota_marker = "publish_vkfill_batch(gh, dry)"
+    if quota_marker in patched and "skipped low GitHub quota" in patched:
+        quota_pos = patched.find("skipped low GitHub quota")
+        publish_pos = patched.rfind("publish_vkfill_batch(gh, dry)", 0, quota_pos)
+        if publish_pos != -1:
+            return patched
+    quota_hook = "        publish_vkfill_batch(gh, dry)\n"
+    quota_patterns = [
+        (
+            r"(if core_remaining\(gh\) < 800 and not dry:\s*\n)"
+            r'(\s*logline\("lane-autofill: skipped low GitHub quota")'
+        ),
+        (
+            r"(if core_remaining\(gh\) < 800 and not dry:\s*\n)"
+            r"(\s*logline\('lane-autofill: skipped low GitHub quota')"
+        ),
+    ]
+    for pattern in quota_patterns:
+        if re.search(pattern, patched):
+            return re.sub(pattern, r"\1" + quota_hook + r"\2", patched, count=1)
+    raise SystemExit(
+        "lane_autofill.py: could not find low GitHub quota early-return anchor"
+    )
 
 
 def inject_stall_alarm(text: str) -> str:
@@ -84,24 +102,18 @@ def inject_stall_alarm(text: str) -> str:
         return text
     text = ensure_import(text, "vkfill_batch_guards")
     hook = (
+        "    vkfill_held_entries = load_vkfill_held_entries()\n"
         "    reason = vkfill_batch_guards.stall_alarm_reason("
         "vkfill_held_entries, time.time(), generic_reason=reason)\n"
     )
     patterns = [
-        r"(def stall_reason[^\n]+\n(?:[^\n]*\n)*?\s+reason\s*=\s*)",
-        r"(generic_reason\s*=\s*[^\n]+\n)",
+        r"(def stall_reason[^\n]+\n(?:[^\n]*\n)*?\s+reason\s*=\s*[^\n]+\n)(\s+return reason\n)",
+        r"(def stall_reason[^\n]+\n(?:[^\n]*\n)*?\s+reason\s*=\s*generic_reason\n)(\s+return reason\n)",
     ]
     for pattern in patterns:
         if re.search(pattern, text):
-            return re.sub(pattern, r"\1" + hook, text, count=1)
-    if "stall" not in text.lower():
-        raise SystemExit("tsv_stall_alarm.py: no stall reason hook anchor found")
-    return text + (
-        "\n\n"
-        "def _stall_reason_vkfill_662(vkfill_held_entries, reason):\n"
-        "    return vkfill_batch_guards.stall_alarm_reason("
-        "vkfill_held_entries, time.time(), generic_reason=reason)\n"
-    )
+            return re.sub(pattern, r"\1" + hook + r"\2", text, count=1)
+    raise SystemExit("tsv_stall_alarm.py: could not find stall_reason return hook")
 
 
 def install(root: Path, dry: bool) -> None:
@@ -109,16 +121,10 @@ def install(root: Path, dry: bool) -> None:
     if not root.is_dir():
         raise SystemExit("dispatch root missing: %s" % root)
     module_src = SOURCE / GUARD_MODULE
-    stall_src = SOURCE / STALL_MODULE
     if not module_src.is_file():
         raise SystemExit("missing source module %s" % module_src)
-    if not stall_src.is_file():
-        raise SystemExit("missing dependency %s" % stall_src)
     actions = []
     actions.append(("copy", module_src, root / GUARD_MODULE))
-    stall_dest = root / STALL_MODULE
-    if not stall_dest.is_file():
-        actions.append(("copy", stall_src, stall_dest))
     for name, mutator in (
         (LANE_AUTOFILL, inject_lane_autofill),
         (STALL_ALARM, inject_stall_alarm),
