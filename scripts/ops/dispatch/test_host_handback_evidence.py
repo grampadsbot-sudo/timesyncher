@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from host_handback_evidence import (ASSESSMENT, CanonicalCollector, EvidenceError,
-                                    HostReaders, authenticate_guarded_look_send,
+from host_handback_evidence import (ASSESSMENT, CanonicalCollector,
+                                    EvidenceError, HostReaders, authenticate_guarded_look_send,
                                     current_section, last_action, ownership)
 from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, EventError,
                                   produce_acceptance_event, produce_event, produce_resolution_event,
@@ -325,9 +325,228 @@ class HostFileBoundaries(unittest.TestCase):
             self.reader.running({566})
 
     def test_unknown_slot_cannot_disappear_silently(self):
-        (self.root / 'lanes/slots/unknown.slot').write_text('tag=unknown\npid=123\n')
+        (self.root / 'lanes/slots/unknown.slot').write_text(
+            'tag=unknown\npid=123\nhost=' + socket.gethostname() + '\n')
         with self.assertRaisesRegex(EvidenceError, 'canonical job mapping'):
             self.reader.running({566})
+
+    def _automatic_work_root(self):
+        work_root = self.root / 'tsv-work'
+        work_root.mkdir(parents=True, exist_ok=True)
+        return work_root
+
+    def automatic_vkfill_job(self, number=569, head=SHA, lane='codex-ubuntu', argv_wrong=None):
+        work_root = self._automatic_work_root()
+        job_dir = work_root / ('vkfill-%d-job' % number)
+        job_dir.mkdir(parents=True)
+        worktree = self.root / 'worktree'
+        worktree.mkdir(exist_ok=True)
+        (job_dir / 'worktree.txt').write_text(str(worktree) + '\n')
+        (job_dir / 'fingerprint.txt').write_text(head + '\n')
+        (job_dir / ('vkfill-%d-brief.md' % number)).write_text(
+            '# TSV PR #%d: test\n\n## Start commit\nStart from `%s`.\n' % (number, head))
+        self.reader._github_get = lambda path: ({'number': number, 'state': 'open', 'head': {'sha': head}}
+            if path.startswith('pulls/') else {'number': number, 'state': 'open', 'pull_request': {}})
+        self.reader.proc_root = self.root / 'synthetic-proc'
+        proc = self.reader.proc_root / '456'
+        proc.mkdir(parents=True)
+        (proc / 'cwd').symlink_to(worktree)
+        (proc / 'stat').write_text('456 (synthetic) ' + ' '.join(['1'] * 20))
+        tag = 'vkfill-%d' % number
+        argv_tag = 'other-tag' if argv_wrong == 'tag' else tag
+        argv_lane = 'cursor-ubuntu' if argv_wrong == 'lane' else lane
+        argv_job = str(self.root / 'foreign-job') if argv_wrong == 'jobdir' else str(job_dir)
+        argv_wt = str(self.root) if argv_wrong == 'cwd' else str(worktree)
+        cmd = ('%s/lanes/vk-lane-run.sh\0%s\0%s\0%s\0%s\0%s\0high\0'
+               % (self.root, argv_lane, argv_job, argv_tag, job_dir / ('vkfill-%d-brief.md' % number), argv_wt))
+        (proc / 'cmdline').write_bytes(cmd.encode())
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        import time
+        started = datetime.fromtimestamp(int(time.time()) - 10, ZoneInfo('America/Los_Angeles')).strftime('%Y-%m-%d %H:%M:%S %Z')
+        (self.reader.proc_root / 'stat').write_text('btime %d\n' % (int(time.time()) - 10))
+        (self.root / 'lanes' / 'slots' / ('%s-%s.slot' % (lane, tag))).write_text(
+            'tag=%s\nlane=%s\npid=456\nhost=%s\nstarted=%s\n' % (tag, lane, socket.gethostname(), started))
+        return proc, worktree, job_dir, tag
+
+    def test_live_automatic_vkfill_job_without_worker_registry(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job()
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                self.assertEqual(self.reader.running({569}, {569: SHA}), frozenset({569}))
+
+    def test_automatic_wrong_argv_tag_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job(argv_wrong='tag')
+            with self.assertRaisesRegex(EvidenceError, 'tag disagrees'):
+                self.reader.running({569})
+
+    def automatic_issue(self):
+        proc, wt, jd, tag = self.automatic_vkfill_job()
+        stamp = '2026-10-22T23:00:00Z'
+        (jd / 'fingerprint.txt').write_text(stamp + '\n')
+        (jd / 'vkfill-569-brief.md').write_text(
+            '# TSV issue #569: test\n\n## Start commit\nStart from `%s`. '
+            'That is the head of `migrate/trek-source` when this brief was written.\n\n'
+            '## Base branch policy\nBranch from `migrate/trek-source` at the start commit and open ONE '
+            'pull request into `migrate/trek-source`. Never merge or rebase any other branch into yours.\n' % SHA)
+        self.reader._github_get = lambda path: ({'status': 'identical', 'merge_base_commit': {'sha': SHA}}
+            if path.startswith('compare/') else {'number': 569, 'state': 'open', 'updated_at': stamp,
+            'labels': [{'name': 'base:migrate/trek-source'}]})
+        return proc, wt, jd, tag
+
+    def test_automatic_issue_timestamp_and_launch_sha_are_authenticated(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_issue()
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                self.assertEqual(self.reader.running({569}, {569: None}), frozenset({569}))
+
+    def test_automatic_issue_wrong_timestamp_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_issue()
+            (jd / 'fingerprint.txt').write_text('2026-10-22T22:00:00Z\n')
+            with self.assertRaisesRegex(EvidenceError, 'updated_at'):
+                self.reader.running({569})
+
+    def test_automatic_issue_wrong_start_sha_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_issue()
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout='b' * 40 + '\n')):
+                with self.assertRaisesRegex(EvidenceError, 'initial worktree HEAD'):
+                    self.reader.running({569})
+
+    def test_automatic_issue_wrong_base_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_issue()
+            brief = jd / 'vkfill-569-brief.md'
+            brief.write_text(brief.read_text().replace('migrate/trek-source', 'retired/base'))
+            with self.assertRaisesRegex(EvidenceError, 'authenticated issue'):
+                self.reader.running({569})
+
+    def test_automatic_issue_nonancestor_start_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_issue()
+            get = self.reader._github_get
+            self.reader._github_get = lambda p: {'status': 'diverged'} if p.startswith('compare/') else get(p)
+            with self.assertRaisesRegex(EvidenceError, 'authenticated base'):
+                self.reader.running({569})
+
+    def test_automatic_unknown_github_source_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_vkfill_job()
+            self.reader._github_get = None
+            with self.assertRaisesRegex(EvidenceError, 'authenticated GitHub source'):
+                self.reader.running({569})
+
+    def test_automatic_wrong_number_boundary_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            proc, _, jd, _ = self.automatic_vkfill_job()
+            wrong = jd.with_name('vkfill-5690-job')
+            jd.rename(wrong)
+            cmd = proc / 'cmdline'
+            cmd.write_bytes(cmd.read_bytes().replace(str(jd).encode(), str(wrong).encode()))
+            with self.assertRaisesRegex(EvidenceError, 'does not bind item'):
+                self.reader.running({569})
+
+    def test_automatic_wrong_slot_start_time_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_vkfill_job()
+            slot = next(self.root.glob('lanes/slots/*.slot'))
+            slot.write_text(slot.read_text().split('started=')[0] + 'started=2020-01-01 00:00:00 PST\n')
+            with self.assertRaisesRegex(EvidenceError, 'contradicts process start'):
+                self.reader.running({569})
+
+    def test_automatic_unknown_runner_source_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            proc, _, _, _ = self.automatic_vkfill_job()
+            cmd = proc / 'cmdline'
+            cmd.write_bytes(cmd.read_bytes().replace(str(self.root / 'lanes').encode(), b'/untrusted'))
+            with self.assertRaisesRegex(EvidenceError, 'runner source unknown'):
+                self.reader.running({569})
+
+    def test_automatic_tampered_start_commit_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_vkfill_job()
+            brief = jd / 'vkfill-569-brief.md'
+            brief.write_text(brief.read_text().replace(SHA, 'b' * 40))
+            with self.assertRaisesRegex(EvidenceError, 'different current head'):
+                self.reader.running({569})
+
+    def test_automatic_wrong_kind_brief_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_issue()
+            brief = jd / 'vkfill-569-brief.md'
+            brief.write_text(brief.read_text().replace('# TSV issue', '# TSV PR'))
+            with self.assertRaisesRegex(EvidenceError, 'item source mismatch'):
+                self.reader.running({569})
+
+    def test_unrelated_manual_registry_job_retains_scope_skip(self):
+        self.scoped_job()
+        slot = self.root / 'lanes/slots/job.slot'
+        slot.write_text('tag=synthetic-job\n')
+        self.assertEqual(self.reader.running({999}), frozenset())
+
+    def test_automatic_wrong_argv_lane_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job(argv_wrong='lane')
+            with self.assertRaisesRegex(EvidenceError, 'lane disagrees'):
+                self.reader.running({569})
+
+    def test_automatic_wrong_fingerprint_head_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job()
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                with self.assertRaisesRegex(EvidenceError, 'different current head'):
+                    self.reader.running({569}, {569: 'b' * 40})
+
+    def test_automatic_wrong_worktree_argv_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job(argv_wrong='cwd')
+            with self.assertRaisesRegex(EvidenceError, 'worktree disagrees'):
+                self.reader.running({569})
+
+    def test_automatic_missing_started_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job()
+            slot = next(self.root.glob('lanes/slots/*.slot'))
+            slot.write_text(slot.read_text().replace('started=', 'started_old='))
+            with self.assertRaisesRegex(EvidenceError, 'started time missing'):
+                self.reader.running({569})
+
+    def test_automatic_job_dir_outside_work_root_refuses(self):
+        work_root = self._automatic_work_root()
+        outside = self.root / 'outside' / 'vkfill-569-job'
+        outside.mkdir(parents=True)
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job()
+            proc = self.reader.proc_root / '456'
+            outside_wt = self.root / 'outside-wt'
+            outside_wt.mkdir()
+            (outside / 'worktree.txt').write_text(str(outside_wt) + '\n')
+            (outside / 'fingerprint.txt').write_text(SHA + '\n')
+            (outside / 'vkfill-569-brief.md').write_text('# brief\n')
+            (proc / 'cwd').unlink()
+            (proc / 'cwd').symlink_to(outside_wt)
+            cmd = ('%s/lanes/vk-lane-run.sh\0codex-ubuntu\0%s\0vkfill-569\0brief.md\0%s\0high\0'
+                   % (self.root, outside, outside_wt))
+            (proc / 'cmdline').write_bytes(cmd.encode())
+            with self.assertRaisesRegex(EvidenceError, 'outside work root'):
+                self.reader.running({569}, {569: SHA})
+
+    def test_automatic_pid_starttime_reuse_refuses(self):
+        work_root = self._automatic_work_root()
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', work_root):
+            self.automatic_vkfill_job()
+            with patch('host_handback_evidence.proc_starttime_jiffies', side_effect=['1', '1', '222']):
+                with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                    with self.assertRaisesRegex(EvidenceError, 'PID reused'):
+                        self.reader.running({569}, {569: SHA})
 
     def test_active_cloud_flag_without_binding_refuses(self):
         (self.root / 'rereview-state.json').write_text(json.dumps({'566': {'active': True}}))

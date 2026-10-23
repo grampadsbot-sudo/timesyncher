@@ -29,8 +29,23 @@ Only dated entries in the shared Action record supply action times, independent 
 head SHA; missing/unparseable action evidence is an error, not an empty budget.
 
 Scoped process checks read the existing `lane-worker-jobs.json`, lane slot files,
-`rereview-state.json` and `cursor-state.json`. Lane jobs need the actual PID, exact
-lane/tag argv, matching worktree, stable process start identity and current head.
+`rereview-state.json` and `cursor-state.json`. Manual lane jobs bind through
+`lane-worker-jobs.json`. Automatic `vkfill-N` jobs launched by `lane_autofill.py`
+authenticate from the live `vk-lane-run.sh` argv (lane, job dir, tag, worktree),
+`~/tsv-work/vkfill-*-job/{worktree,fingerprint}.txt`, slot `started=`, PID cwd,
+stable starttime, and an authenticated read-only GitHub item lookup. PR fingerprints must
+match the canonical PR head and exact launch-brief start commit. Issue fingerprints
+are canonical issue `updated_at` timestamps; their launch brief must name the exact
+issue and configured base, and the start commit must match the initial worktree HEAD
+reflog and a GitHub-authenticated ancestor of that base. This supports a moving base
+without rebinding the launch SHA. The implicit base mirrors the launcher
+(`cursor/jev-quality-r20-1128`) for identity only and grants no merge authority.
+The canonical argv brief path, runner source and exact job-number boundary are
+checked; `vkfill-5690` cannot bind `vkfill-569`. Slot started time must fall within
+120 seconds of the same live process start (the bounded host preflight), using
+Linux boot time and clock ticks. Unknown GitHub sources and all mismatches refuse.
+Unknown slot tags still fail closed before process reads. Lane jobs need the actual
+PID, exact lane/tag argv, matching worktree, stable process start identity and current head.
 An active `rereview-state.json` cloud flag or a non-finished `cursor-state.json`
 entry is authenticated read-only through the Cursor Cloud Agents API (same key route
 as `cursor_launch` / `idle_capacity`): the authenticated agent `latestRunId` is the

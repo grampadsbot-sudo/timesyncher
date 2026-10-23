@@ -38,6 +38,25 @@ LOOK_LOG = 'dispatch-%s.log'
 LOOK_KEYS = frozenset({'sent_at', 'sent_ms', 'sha', 'tag', 'media'})
 CURSOR_LIVE_RUN = frozenset({'RUNNING', 'CREATING'})
 CURSOR_TERMINAL_RUN = frozenset({'FINISHED', 'FAILED', 'CANCELLED', 'STOPPED', 'IDLE', 'EXPIRED'})
+VKFILL_TAG_RE = re.compile(r'^vkfill-(\d+)$')
+VKFILL_JOB_BASENAME_RE = re.compile(r'^vkfill-\d+(?:-\d{12}(?:\d{2})?)?(?:-\d+)?-job$')
+AUTOMATIC_WORK_ROOT = Path(os.path.expanduser(os.environ.get('TSV_WORK_ROOT', '~/tsv-work')))
+AUTOMATIC_DEFAULT_BASE = 'cursor/jev-quality-r20-1128'
+
+
+def lane_run_binding(argv):
+    """Return lane, job_dir, tag, worktree argv fields from a vk-lane-run.sh process."""
+    for index, part in enumerate(argv):
+        if not (part.endswith('/vk-lane-run.sh') or part == 'vk-lane-run.sh'):
+            continue
+        if index + 5 >= len(argv):
+            return None
+        return argv[index + 1], argv[index + 2], argv[index + 3], argv[index + 4], argv[index + 5]
+    return None
+
+
+def proc_starttime_jiffies(stat_bytes):
+    return stat_bytes.split(b') ', 1)[1].split()[19]
 
 
 def require(condition, reason):
@@ -185,7 +204,7 @@ class HostReaders:
     def __init__(self, root, proc_root='/proc', handback_event_root=None, handback_event_paths=None,
                  acceptance_event_root=None, acceptance_event_paths=None,
                  resolution_event_root=None, resolution_event_paths=None,
-                 host_observation_path=None, cursor_api_get=None):
+                 host_observation_path=None, cursor_api_get=None, github_get=None):
         self.root = Path(root)
         self.host_observation_path = host_observation_path
         self.proc_root = Path(proc_root)
@@ -196,6 +215,36 @@ class HostReaders:
         self.resolution_event_root = Path(resolution_event_root) if resolution_event_root else None
         self.resolution_event_paths = dict(resolution_event_paths or {})
         self._cursor_api_get = cursor_api_get
+        self._github_get = github_get
+
+    def automatic_item(self, number):
+        require(self._github_get is not None, 'automatic lane job requires authenticated GitHub source')
+        item = self._github_get('issues/%d' % number)
+        require(item.get('number') == number and item.get('state') == 'open',
+                'automatic lane item identity or state mismatch')
+        if 'pull_request' in item:
+            item = self._github_get('pulls/%d' % number)
+            require(item.get('number') == number and item.get('state') == 'open',
+                    'automatic lane PR identity or state mismatch')
+            return 'pr', item
+        require('head' not in item, 'automatic lane item source unknown')
+        return 'issue', item
+
+    def _validate_automatic_start_time(self, fields, stat_bytes):
+        boot = [line.split()[1] for line in (self.proc_root / 'stat').read_text().splitlines()
+                if line.startswith('btime ')]
+        require(len(boot) == 1, 'automatic lane boot time missing')
+        process_at = int(boot[0]) + int(proc_starttime_jiffies(stat_bytes)) / os.sysconf('SC_CLK_TCK')
+        raw = fields['started']
+        try:
+            stamp, zone = raw.rsplit(' ', 1)
+            parsed = datetime.strptime(stamp, '%Y-%m-%d %H:%M:%S').replace(tzinfo=PT)
+            require(parsed.tzname() == zone, 'automatic lane slot timezone mismatch')
+            started = parsed.timestamp()
+        except (ValueError, TypeError) as exc:
+            raise EvidenceError('automatic lane slot started time invalid') from exc
+        require(-1 <= started - process_at <= 120 and started <= time.time() + 1,
+                'automatic lane slot started time contradicts process start')
 
     def cursor_api_get(self, path):
         """Read-only Cursor Cloud Agents API (same key route as cursor_launch / idle_capacity)."""
@@ -400,6 +449,108 @@ class HostReaders:
     def json(self, relative):
         return json.loads((self.root / relative).read_text())
 
+    def _read_automatic_job_file(self, job_dir, name):
+        path = Path(job_dir) / name
+        require(path.is_file(), 'automatic lane job metadata missing %s' % name)
+        text = path.read_text().strip()
+        require(text, 'automatic lane job metadata empty %s' % name)
+        return text
+
+    def _authenticate_vkfill_job(self, fields, argv):
+        tag = fields.get('tag') or ''
+        match = VKFILL_TAG_RE.fullmatch(tag)
+        if not match:
+            return None
+        number = int(match.group(1))
+        binding = lane_run_binding(argv)
+        require(binding is not None,
+                'automatic lane slot lacks vk-lane-run argv binding: ' + tag)
+        runners = [part for part in argv if part.endswith('/vk-lane-run.sh') or part == 'vk-lane-run.sh']
+        require(len(runners) == 1 and Path(runners[0]).resolve() ==
+                (self.root / 'lanes/vk-lane-run.sh').resolve(),
+                'automatic lane process runner source unknown')
+        lane, job_dir, argv_tag, argv_brief, argv_worktree = binding
+        require(argv_tag == tag, 'automatic lane slot tag disagrees with process argv')
+        require(lane == fields.get('lane'), 'automatic lane slot lane disagrees with process argv')
+        require(fields.get('started'), 'automatic lane slot started time missing')
+        job_path = Path(job_dir).resolve(strict=True)
+        require(VKFILL_JOB_BASENAME_RE.fullmatch(job_path.name),
+                'automatic lane job dir name invalid: ' + job_path.name)
+        require(re.match(r'^vkfill-%d(?:-|$)' % number, job_path.name),
+                'automatic lane job dir does not bind item: ' + job_path.name)
+        try:
+            job_path.relative_to(AUTOMATIC_WORK_ROOT.resolve())
+        except ValueError:
+            raise EvidenceError('automatic lane job dir outside work root')
+        worktree = Path(self._read_automatic_job_file(job_path, 'worktree.txt')).resolve(strict=True)
+        fingerprint = self._read_automatic_job_file(job_path, 'fingerprint.txt')
+        argv_wt = Path(argv_worktree).resolve(strict=True)
+        require(worktree == argv_wt, 'automatic lane worktree disagrees with process argv')
+        brief_path = Path(argv_brief).resolve(strict=True)
+        require(brief_path == job_path / ('vkfill-%d-brief.md' % number),
+                'automatic lane argv brief does not bind canonical launch brief')
+        brief = brief_path.read_text()
+        kind, item = self.automatic_item(number)
+        titles = re.findall(r'^# TSV (PR|issue) #(\d+): .+$', brief, re.M)
+        require(titles == [('PR' if kind == 'pr' else 'issue', str(number))],
+                'automatic lane brief item source mismatch')
+        starts = re.findall(r'^## Start commit\nStart from `([0-9a-f]{40})`\.', brief, re.M)
+        require(len(starts) == 1, 'automatic lane brief start commit missing or ambiguous')
+        start_sha = starts[0]
+        if kind == 'pr':
+            head = (item.get('head') or {}).get('sha')
+            require(HEAD_RE.fullmatch(fingerprint) and fingerprint == head == start_sha,
+                    'live automatic job belongs to a different current head')
+        else:
+            require(re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ', fingerprint)
+                    and fingerprint == item.get('updated_at'),
+                    'automatic issue fingerprint differs from authenticated updated_at')
+            labels = sorted(x['name'][5:] for x in item.get('labels', [])
+                            if x.get('name', '').startswith('base:'))
+            require(len(labels) <= 1, 'automatic issue base labels ambiguous')
+            body_base = re.search(r'(?im)^\W*base(?:\s+branch)?\W*[:=]\s*`?([\w./-]+)`?',
+                                  item.get('body') or '')
+            base = labels[0] if labels else body_base.group(1) if body_base else AUTOMATIC_DEFAULT_BASE
+            policy = ('## Base branch policy\nBranch from `%s` at the start commit and open ONE '
+                      'pull request into `%s`. Never merge or rebase any other branch into yours.' % (base, base))
+            require(policy in brief and ('That is the head of `%s` when this brief was written.' % base) in brief,
+                    'automatic issue brief base disagrees with authenticated issue')
+            comparison = self._github_get('compare/%s...%s' % (
+                start_sha, urllib.parse.quote(base, safe='')))
+            require(comparison.get('status') in {'ahead', 'identical'} and
+                    (comparison.get('merge_base_commit') or {}).get('sha') == start_sha,
+                    'automatic issue launch SHA does not belong to authenticated base')
+            first = subprocess.run(['git', '--no-optional-locks', '-C', str(worktree),
+                                    'reflog', 'show', '--format=%H', 'HEAD'],
+                                   capture_output=True, text=True, timeout=10, check=True)
+            history = first.stdout.splitlines()
+            require(history and history[-1] == start_sha,
+                    'automatic issue launch SHA disagrees with initial worktree HEAD')
+        return {'item': number, 'worktree': str(worktree), 'job_dir': str(job_path),
+                'fingerprint': fingerprint, 'kind': kind, 'start_sha': start_sha,
+                'source': 'lane_autofill'}
+
+    def _resolve_lane_job_meta(self, jobs, fields, argv):
+        tag = fields.get('tag')
+        meta = jobs.get(tag) if tag else None
+        if isinstance(meta, dict):
+            return meta
+        return self._authenticate_vkfill_job(fields, argv)
+
+    def _validate_lane_process(self, fields, meta, argv, cwd):
+        worktree = Path(meta['worktree']).resolve(strict=True)
+        require(cwd == worktree or worktree in cwd.parents, 'live PID worktree contradicts job registry')
+        tag, lane = fields.get('tag'), fields.get('lane')
+        if meta.get('source') == 'lane_autofill':
+            binding = lane_run_binding(argv)
+            require(binding is not None, 'PID is not the exact registered lane job')
+            bind_lane, job_dir, bind_tag, _, _ = binding
+            require(bind_tag == tag and bind_lane == lane, 'PID is not the exact registered lane job')
+            require(str(Path(job_dir).resolve(strict=True)) == meta['job_dir'],
+                    'automatic lane job dir disagrees with authenticated metadata')
+        require(any(x.endswith('/vk-lane-run.sh') or x == 'vk-lane-run.sh' for x in argv)
+                and tag in argv and lane in argv, 'PID is not the exact registered lane job')
+
     def running(self, numbers, heads=None):
         jobs = self.json('lane-worker-jobs.json')
         require(isinstance(jobs, dict), 'invalid canonical lane job registry')
@@ -410,10 +561,11 @@ class HostReaders:
             if path.suffix != '.slot':
                 continue
             fields = dict(line.split('=', 1) for line in path.read_text().splitlines() if '=' in line)
-            meta = jobs.get(fields.get('tag'))
-            require(isinstance(meta, dict), 'slot has no canonical job mapping: ' + path.name)
-            identities = {meta.get('item'), meta.get('pr')} - {None}
-            if not identities & numbers:
+            tag = fields.get('tag') or ''
+            if tag not in jobs and not VKFILL_TAG_RE.fullmatch(tag):
+                raise EvidenceError('slot has no canonical job mapping: ' + path.name)
+            manual = jobs.get(tag)
+            if isinstance(manual, dict) and not ({manual.get('item'), manual.get('pr')} - {None}) & numbers:
                 continue
             require(fields.get('host') == socket.gethostname(), 'scoped slot belongs to a different host')
             pid = fields.get('pid', '')
@@ -423,16 +575,23 @@ class HostReaders:
                 before = (proc / 'stat').read_bytes()
                 argv = (proc / 'cmdline').read_bytes().decode().split('\0')
                 cwd = (proc / 'cwd').resolve(strict=True)
-                worktree = Path(meta['worktree']).resolve(strict=True)
-                require(cwd == worktree or worktree in cwd.parents, 'live PID worktree contradicts job registry')
-                require(any(x.endswith('/vk-lane-run.sh') or x == 'vk-lane-run.sh' for x in argv)
-                        and fields.get('tag') in argv and fields.get('lane') in argv,
-                        'PID is not the exact registered lane job')
-                require(before.split(b') ', 1)[1].split()[19] ==
-                        (proc / 'stat').read_bytes().split(b') ', 1)[1].split()[19], 'PID reused during collection')
+                meta = self._resolve_lane_job_meta(jobs, fields, argv)
+                require(isinstance(meta, dict), 'slot has no canonical job mapping: ' + path.name)
+                self._validate_lane_process(fields, meta, argv, cwd)
+                if meta.get('source') == 'lane_autofill':
+                    self._validate_automatic_start_time(fields, before)
+                require(proc_starttime_jiffies(before) == proc_starttime_jiffies((proc / 'stat').read_bytes()),
+                        'PID reused during collection')
+                identities = {meta.get('item'), meta.get('pr')} - {None}
+                if not identities & numbers:
+                    continue
                 expected = {heads[n] for n in identities if heads and heads.get(n)}
                 if expected:
-                    result = subprocess.run(['git', '--no-optional-locks', '-C', str(worktree), 'rev-parse', 'HEAD'],
+                    if meta.get('source') == 'lane_autofill' and meta.get('kind') == 'pr':
+                        require(expected == {meta['fingerprint']},
+                                'live automatic job belongs to a different current head')
+                    wt = Path(meta['worktree']).resolve(strict=True)
+                    result = subprocess.run(['git', '--no-optional-locks', '-C', str(wt), 'rev-parse', 'HEAD'],
                                             capture_output=True, text=True, timeout=10, check=True)
                     require(expected == {result.stdout.strip()}, 'live job belongs to a different current head')
             except FileNotFoundError as exc:
@@ -489,6 +648,8 @@ class HostReaders:
 class CanonicalCollector:
     def __init__(self, gh, repo, readers, clock=time.time):
         self.gh, self.repo, self.readers, self.clock = gh, repo, readers, clock
+        if isinstance(readers, HostReaders) and getattr(readers, '_github_get', None) is None:
+            readers._github_get = lambda path: gh.req('GET', '/repos/%s/%s' % (repo, path))
         self.started = clock()
         try:
             actor = gh.req('GET', '/user')
