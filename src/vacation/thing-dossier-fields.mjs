@@ -9,6 +9,7 @@ import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
+export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -61,6 +62,17 @@ export const NO_REVIEWS_FLAG = 'No reviews were found for this place.';
 
 export function dossierPageId(index) {
   return `p${index + 1}`;
+}
+
+export function publicReviewFieldKeys() {
+  const keys = [];
+  for (let i = 1; i <= 4; i += 1) {
+    for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Claims', 'Label', 'Composite', 'CompositeLabel']) {
+      keys.push(`review${i}${suffix}`);
+    }
+  }
+  keys.push('reviewsLabel', 'reviewSources', 'review_totals', 'reviewTotals');
+  return keys;
 }
 
 export function dossierPageById(dossier = {}, id = '') {
@@ -220,6 +232,8 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
     next.reviews = built.reviews;
     next.reviewExcerpts = built.reviewExcerpts;
     next.reviewsRead = built.reviewsRead;
+    next.reviewSet = built.reviewSet;
+    next.reviewSources = built.reviewSources;
   }
   next.fields = { ...(next.fields || {}) };
   for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
@@ -336,14 +350,11 @@ function scalarFieldValue(value) {
   return String(value).trim();
 }
 
-function clearPublicReviewFields(record = {}) {
-  for (let i = 1; i <= 4; i += 1) {
-    for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Label', 'Composite', 'CompositeLabel']) delete record[`review${i}${suffix}`];
+function clearPublicReviewFields(record = {}, { persistNull = false } = {}) {
+  for (const key of publicReviewFieldKeys()) {
+    if (persistNull) record[key] = null;
+    else delete record[key];
   }
-  delete record.reviewsLabel;
-  delete record.reviewSources;
-  delete record.review_totals;
-  delete record.reviewTotals;
 }
 
 export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingMissing = false } = {}) {
@@ -376,6 +387,18 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
       const limited = (dossier.shortcomings || []).some((s) => s.field === 'reviews' && /limited number of reviews/i.test(String(s.reason)));
       if (limited) missing.delete('reviews');
     }
+  }
+  if (!record.review1 && placeSupportsDossierReviews({ category: record.category })) {
+    clearPublicReviewFields(record, { persistNull: true });
+    if (!useShortcomingMissing) missing.add('reviews');
+    const shortcomings = Array.isArray(record.dataShortcomings) ? [...record.dataShortcomings] : [];
+    if (!shortcomings.some((row) => row.field === 'reviews')) {
+      shortcomings.push({
+        field: 'reviews',
+        reason: 'representative reviews could not be verified from saved evidence',
+      });
+    }
+    record.dataShortcomings = shortcomings;
   }
   if (!useShortcomingMissing) record.missingFields = [...missing];
   return record;

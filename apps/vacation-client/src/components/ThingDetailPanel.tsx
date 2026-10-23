@@ -94,6 +94,24 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
               {model.summary}
             </p>
           ) : null}
+          {model.addressHoursBox ? (
+            <div className="tsv-detail-info-box" data-ts-detail-info-box="address-hours">
+              {model.addressHoursBox.lines.map((line) => (
+                <p key={line.key} className="tsv-detail-field" data-ts-detail-field={line.key}>
+                  <strong>{line.label}:</strong> {line.value}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {model.phoneCallBox ? (
+            <a
+              className="tsv-detail-info-box tsv-detail-phone-box"
+              data-ts-detail-info-box="phone"
+              href={model.phoneCallBox.href}
+            >
+              <strong>Phone:</strong> {model.phoneCallBox.phone}
+            </a>
+          ) : null}
           {model.fieldRows.map((row) => (
             <p key={row.key} className="tsv-detail-field" data-ts-detail-field={row.key}>
               <strong>{row.label}:</strong>{' '}

@@ -1,10 +1,13 @@
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
-import { applyDossierFields } from './thing-dossier-fields.mjs';
+import { applyDossierFields, publicReviewFieldKeys } from './thing-dossier-fields.mjs';
 import { sharedTripDossierKeyForPlace } from './shared-trip-dossier-keys.mjs';
 import { loadDossiersByKeys, loadThingEvidenceDossier, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
 
 function mergeOverride(base = {}, patch = {}) {
   const next = { ...base, ...patch };
+  for (const key of publicReviewFieldKeys()) {
+    if (patch[key] === null) delete next[key];
+  }
   if (Array.isArray(patch.missingFields) || Array.isArray(base.missingFields)) {
     next.missingFields = patch.missingFields || base.missingFields;
   }

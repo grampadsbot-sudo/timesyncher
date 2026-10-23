@@ -1,5 +1,5 @@
 import { extractContactFieldsFromBlob } from './place-detail-extract.mjs';
-import { descriptionNamesThing, dossierPageId } from './thing-dossier-fields.mjs';
+import { descriptionNamesThing, dossierPageId, ensureBraveSnippetCitationPages } from './thing-dossier-fields.mjs';
 import {
   computeDossierFieldCounts,
   deriveMissingFieldsFromShortcomings,
@@ -236,7 +236,7 @@ export function normalizeDossierEvidence(dossier = {}, place = {}) {
       shortcomings,
     }, place);
   }
-  let next = stripMisattributedDossierFields(dossier, place);
+  let next = ensureBraveSnippetCitationPages(stripMisattributedDossierFields(dossier, place));
   next = hydrateScalarFieldsFromEvidence(next, place);
   next = seedBookingNarrativeFields(next, place);
   return syncDossierRequiredShortcomings(next, place);

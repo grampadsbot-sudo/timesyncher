@@ -1,4 +1,9 @@
-import { descriptionNamesThing, dossierPageId } from './thing-dossier-fields.mjs';
+import {
+  descriptionNamesThing,
+  dossierPageId,
+  dossierPageIdForUrl,
+  ensureBraveSnippetCitationPages,
+} from './thing-dossier-fields.mjs';
 import { evidencePageMatchesPlace, pageNamesOtherVenue } from './dossier-evidence-hydrate.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
 
@@ -44,16 +49,18 @@ function snippetMatchesPlace(snippet = '', url = '', place = {}, dossier = {}) {
 }
 
 export function extractReviewsByCode(dossier = {}, place = null) {
+  const rooted = ensureBraveSnippetCitationPages(dossier);
   const out = [];
-  for (const row of dossier.braveResults || []) {
+  for (const row of rooted.braveResults || []) {
     for (const snippet of row.snippets || []) {
       if (!looksLikeReview(snippet)) continue;
-      if (place && !snippetMatchesPlace(snippet, row.url, place, dossier)) continue;
-      out.push({ text: clip(snippet), page: '', method: 'code:brave-snippet', url: row.url, rating: row.rating || null });
+      if (place && !snippetMatchesPlace(snippet, row.url, place, rooted)) continue;
+      const page = dossierPageIdForUrl(rooted, row.url) || '';
+      out.push({ text: clip(snippet), page, method: 'code:brave-snippet', url: row.url, rating: row.rating || null });
     }
   }
-  (dossier.pages || []).forEach((page, index) => {
-    if (place && (!evidencePageMatchesPlace(page, place, dossier) || pageNamesOtherVenue(page, place))) return;
+  (rooted.pages || []).forEach((page, index) => {
+    if (place && (!evidencePageMatchesPlace(page, place, rooted) || pageNamesOtherVenue(page, place))) return;
     const id = dossierPageId(index);
     const text = String(page.text || '');
     if (page.via === 'brave' && Array.isArray(page.braveReviews)) {
@@ -132,8 +139,17 @@ export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [],
       return true;
     });
   const set = dedupeReviews([...codeItems, ...model]).map((r, i) => {
-    const url = pageFor(r.page)?.url || '';
-    return { id: `r${i + 1}`, ...r, pages: [r.page], url, source: reviewSourceHost(url), supported: true };
+    const pageId = r.page || dossierPageIdForUrl(dossier, r.url) || '';
+    const url = pageFor(pageId)?.url || r.url || '';
+    return {
+      id: `r${i + 1}`,
+      ...r,
+      page: pageId,
+      pages: pageId ? [pageId] : [],
+      url,
+      source: reviewSourceHost(url),
+      supported: true,
+    };
   });
   return set;
 }

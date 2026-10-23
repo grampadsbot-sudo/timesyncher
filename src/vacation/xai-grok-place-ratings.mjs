@@ -32,6 +32,7 @@ import {
   claimCitesKnownPages,
   dossierPageById,
   dossierPageId,
+  ensureBraveSnippetCitationPages,
   prepareDossierFindings,
   fitDescriptionWords,
   resolveClaimCitationPages,
@@ -174,7 +175,9 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
 }
 
 export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl, place = null } = {}) {
-  const code = dedupeReviews(extractReviewsByCode(dossier, place)).slice(0, 150);
+  const withSnippetPages = ensureBraveSnippetCitationPages(dossier);
+  if (withSnippetPages.pages !== dossier.pages) dossier.pages = withSnippetPages.pages;
+  const code = dedupeReviews(extractReviewsByCode(withSnippetPages, place)).slice(0, 150);
   let model = [];
   let keep = null;
   let status = 'skipped';

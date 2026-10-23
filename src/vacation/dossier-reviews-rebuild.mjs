@@ -7,6 +7,7 @@ import {
   claimCitesKnownPages,
   claimsSupported,
   dossierPageById,
+  ensureBraveSnippetCitationPages,
   mergeSelectiveDossierFindings,
   prepareDossierFindings,
   resolveClaimCitationPages,
@@ -74,7 +75,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   topUpImpl = topUpDossierFields,
 } = {}) {
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
-  let merged = { ...persisted };
+  let merged = ensureBraveSnippetCitationPages({ ...persisted });
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');
   if (pending.length) {
     merged = await topUpImpl(merged, place, { env, fetchImpl, destination, onlyFields: pending });
