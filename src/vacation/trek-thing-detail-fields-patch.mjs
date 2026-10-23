@@ -5,7 +5,7 @@ const RR_ITINERARY_CHAIN = 'rr=G=>ha(G).itineraryNote??ha(G).itinerary_note??ha(
 const RR_LIST_PATCH_BROKEN =
   'rr=G=>{const pick=t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;return""};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}';
 const RR_LIST_PATCH_LEGACY = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
-const RR_LIST_PATCH = `rr=G=>{const h=ha(G);const cat=String(h.category||h.category_name||"").toLowerCase();const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const norm=n=>String(n||"").replace(/\\s+/g," ").trim();if(cat==="hotel"||cat.includes("lodging")){const ld=norm(h.longDetails||h.details||h.description);if(wc(ld)>=30)return ld;}const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(h.itineraryNote??h.itinerary_note)||pick(h.summary??"")||""}`;
+const RR_LIST_PATCH = `rr=G=>{const h=ha(G);const cat=String(h.category||h.category_name||"").toLowerCase();const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const norm=n=>String(n||"").replace(/\\s+/g," ").trim();if(cat==="hotel"||cat.includes("lodging")){const ld=norm(h.longDetails||h.details||h.description);if(wc(ld)>=30)return ld;}const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
 
 const ZI_NEEDLE = 'zi=G=>It(G)==="restaurant"';
 const ZI_PATCH = 'zi=G=>{const c=It(G);return c==="restaurant"||c==="bar"}';
