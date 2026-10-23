@@ -1,5 +1,4 @@
 import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
-import { estimateSearchPlacePrice } from './trip-thing-enrichment.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
@@ -156,17 +155,7 @@ export function applyLiveAppListRowFields(shared = {}) {
       if (!text(place.logoUrl)) place.logoUrl = logoUrl;
     }
 
-    let price = priceFromRecords(place, override, source);
-    if (price == null && ['flight', 'hotel', 'car'].includes(category)) {
-      const estimated = estimateSearchPlacePrice({
-        category,
-        title: place.name || place.title,
-        description: place.description || override.longDetails || override.details || '',
-        summary: override.summary || source?.summary || '',
-        sourceRecord: source && typeof source === 'object' ? source : {},
-      });
-      price = parsePrice(estimated);
-    }
+    const price = priceFromRecords(place, override, source);
     const keepPriceOnPlaceOnly = provenanceBlocksSourcedPrice(override, place);
     if (price != null) {
       if (place.price == null || place.price === '') place.price = price;
