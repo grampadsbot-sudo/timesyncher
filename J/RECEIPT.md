@@ -1,3 +1,7 @@
+# PR #660 fix-it — Gate B tab capture (2026-10-23)
+
+GBrain handoff page `bot-admin/lanes/vk-pr-handoff/pr-660` was not found at session start (`page_not_found`).
+
 # Issue #641 — cursor-ubuntu vkfill-641 (2026-10-23)
 
 **Start sha:** `5ee5bb95586ab1d588b3dba7d2d116054f0296b7`

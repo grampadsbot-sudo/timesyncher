@@ -26,7 +26,7 @@ assert.match(
 
 assert.match(
   servedBundle,
-  /typeof \(z=bi\(G\)\)==="number"&&Number\.isFinite\(z\)/,
+  /\(\(Nr\)=>typeof Nr==="number"&&Number\.isFinite\(Nr\)/,
   'flight eu() must format numeric bi() fares for list price column',
 );
 

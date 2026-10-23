@@ -363,7 +363,7 @@ const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|Ameri
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_RN_NEEDLE = 'Rn=((Xr=(sr=String(bi(G)||"").match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
-const FLIGHT_EU_RN_PATCH = 'Rn=((Xr=(sr=(typeof (z=bi(G))==="number"&&Number.isFinite(z)?"$"+Math.round(z):String(z||"")).match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
+const FLIGHT_EU_RN_PATCH = 'Rn=((Xr=(sr=((Nr)=>typeof Nr==="number"&&Number.isFinite(Nr)?"$"+Math.round(Nr):String(Nr||""))(bi(G)).match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
