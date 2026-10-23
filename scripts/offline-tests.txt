@@ -297,3 +297,5 @@ scripts/test_dossier_round5.mjs
 scripts/test_thing_evidence_dossier_682.mjs
 scripts/test_apply_dossier_ratings_copy.mjs
 scripts/test_thing_evidence_capture_trigger.mjs
+scripts/test_gate_b_fixture_trip_dossier_overlay.mjs
+scripts/test_thing_evidence_dossier_worker_route.mjs

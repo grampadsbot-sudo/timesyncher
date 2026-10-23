@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { hasDatabase, sql } from './db.mjs';
+import { NYC_GATE_B_TRIP_ID } from './shared-trip-dossier-keys.mjs';
 import { computeDossierFieldHashes } from './thing-dossier-fields.mjs';
 import { dossierPagesVerified } from './thing-evidence-dossier.mjs';
 
@@ -160,10 +161,14 @@ export function thingEvidenceDossierKey(place = {}) {
   return '';
 }
 
-export function nycDaybydayDossierKey(rowId) {
+function nycDaybydayDossierKey(rowId) {
   const id = Number(rowId);
   if (!Number.isInteger(id) || id <= 0) return '';
   return `nyc-daybyday:${id}`;
+}
+
+export function tripPlaceDossierKey(tripId, placeId) {
+  return thingEvidenceDossierKey({ trip_id: tripId, id: placeId });
 }
 
 export async function loadThingEvidenceDossier(dossierKey, { env = process.env, storeImpl } = {}) {
@@ -173,6 +178,20 @@ export async function loadThingEvidenceDossier(dossierKey, { env = process.env, 
   const dossier = await store.getDossier(key);
   if (!dossier || !dossierPagesVerified(dossier)) return dossier;
   return dossier;
+}
+
+export async function loadThingEvidenceDossierResolved(key, { env = process.env, storeImpl, placeId = null } = {}) {
+  const primary = await loadThingEvidenceDossier(key, { env, storeImpl });
+  if (primary?.pages?.length) return { dossier: primary, dossierKey: key };
+  const id = Number(placeId);
+  if (Number.isInteger(id) && id > 0) {
+    const legacyKey = nycDaybydayDossierKey(id);
+    if (legacyKey && legacyKey !== key) {
+      const legacy = await loadThingEvidenceDossier(legacyKey, { env, storeImpl });
+      if (legacy?.pages?.length) return { dossier: legacy, dossierKey: key, legacyKey };
+    }
+  }
+  return { dossier: primary, dossierKey: key };
 }
 
 export async function saveThingEvidenceDossier(dossierKey, dossier, { env = process.env, storeImpl } = {}) {
@@ -201,17 +220,34 @@ function readStoredDossierSync(dossierKey, env = process.env) {
 export async function loadDossiersByKeys(keyByPlaceId = {}, { env = process.env, storeImpl } = {}) {
   const out = {};
   for (const [placeId, dossierKey] of Object.entries(keyByPlaceId)) {
-    const dossier = await loadThingEvidenceDossier(dossierKey, { env, storeImpl });
-    if (dossier) out[placeId] = dossier;
+    const { dossier } = await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId });
+    if (dossier?.pages?.length) out[placeId] = dossier;
   }
   return out;
 }
 
-export function loadNycDaybydayDossiersFromDisk(placeIds = [], env = process.env) {
+export function loadTripPlaceDossiersFromDisk(placeIds = [], tripId = NYC_GATE_B_TRIP_ID, env = process.env) {
   const out = {};
   for (const placeId of placeIds) {
-    const dossier = readStoredDossierSync(nycDaybydayDossierKey(placeId), env);
-    if (dossier) out[placeId] = dossier;
+    let dossier = readStoredDossierSync(tripPlaceDossierKey(tripId, placeId), env);
+    if (!dossier?.pages?.length) {
+      dossier = readStoredDossierSync(nycDaybydayDossierKey(placeId), env);
+    }
+    if (dossier?.pages?.length) out[placeId] = dossier;
+  }
+  return out;
+}
+
+export async function loadTripPlaceDossiersFromStore(placeIds = [], {
+  tripId = NYC_GATE_B_TRIP_ID,
+  env = process.env,
+  storeImpl,
+} = {}) {
+  const out = {};
+  for (const placeId of placeIds) {
+    const key = tripPlaceDossierKey(tripId, placeId);
+    const { dossier } = await loadThingEvidenceDossierResolved(key, { env, storeImpl, placeId });
+    if (dossier?.pages?.length) out[placeId] = dossier;
   }
   return out;
 }

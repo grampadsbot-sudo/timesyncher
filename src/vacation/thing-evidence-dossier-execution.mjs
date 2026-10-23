@@ -4,8 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { hasDatabase, sql } from './db.mjs';
 import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
-import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
-import { loadThingEvidenceDossier, nycDaybydayDossierKey, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
+import { dossierCaptureComplete, fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
+import {
+  loadThingEvidenceDossier,
+  loadThingEvidenceDossierResolved,
+  thingEvidenceDossierKey,
+} from './thing-evidence-dossier-store.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('../../scripts/fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -113,6 +117,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   buildImpl,
   storeImpl,
   skipExisting = false,
+  forceRefresh = false,
+  timeBudgetMs = 52000,
 } = {}) {
   if (!env.XAI_API_KEY && !buildImpl) {
     return { ok: false, code: 'missing_xai_api_key', results: [] };
@@ -120,22 +126,25 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   const results = [];
   for (const target of targets) {
     const place = placeFromTarget(target);
-    const dossierKey = target.dossierKey
-      || (target.rowId ? nycDaybydayDossierKey(target.rowId) : thingEvidenceDossierKey(place));
-    if (skipExisting && dossierKey) {
-      const existing = await loadThingEvidenceDossier(dossierKey, { env, storeImpl });
-      if (existing?.pages?.length) {
-        results.push({
-          rowId: target.rowId ?? place.id,
-          dossierKey,
-          skipped: 'existing_dossier',
-          pageCount: existing.pages.length,
-          reviewsRead: existing.reviewsRead || 0,
-        });
-        continue;
-      }
+    const dossierKey = target.dossierKey || thingEvidenceDossierKey(place);
+    const refresh = forceRefresh || target.forceRefresh === true;
+    const { dossier: existing } = await loadThingEvidenceDossierResolved(dossierKey, {
+      env,
+      storeImpl,
+      placeId: place.id,
+    });
+    const pagesBefore = existing?.pages?.length || 0;
+    if ((skipExisting || !refresh) && !refresh && dossierCaptureComplete(existing)) {
+      results.push({
+        rowId: target.rowId ?? place.id,
+        dossierKey,
+        skipped: 'existing_dossier',
+        pageCount: pagesBefore,
+        reviewsRead: existing.reviewsRead || 0,
+      });
+      continue;
     }
-    const { parsed } = await fetchXaiPlaceRatings(place, {
+    const { parsed, skipped, partial, checkpoint } = await fetchXaiPlaceRatings(place, {
       destination: target.destination,
       dossierKey,
       env,
@@ -143,11 +152,18 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       gatherImpl,
       buildImpl,
       storeImpl,
+      forceRefresh: refresh,
+      timeBudgetMs: target.timeBudgetMs ?? timeBudgetMs,
     });
+    const after = parsed?.evidenceDossier?.pages?.length || 0;
     results.push({
       rowId: target.rowId ?? place.id,
       dossierKey,
-      pageCount: parsed.evidenceDossier?.pages?.length || 0,
+      skipped: skipped ? 'existing_dossier' : undefined,
+      partial: partial === true,
+      checkpoint: checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
+      pageCount: after,
+      pagesAdded: refresh ? after : Math.max(0, after - pagesBefore),
       reviewsRead: parsed.evidenceDossier?.reviewsRead || 0,
     });
   }

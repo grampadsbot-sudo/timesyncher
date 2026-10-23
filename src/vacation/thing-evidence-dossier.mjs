@@ -5,6 +5,7 @@ import { extractTavily } from './poi-search.mjs';
 import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
 import { braveDossierQueryStages, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
 import {
+  braveTopUpFieldsPending,
   computeDossierFieldCounts,
   fieldsNeedingCapture,
   recordFieldShortcoming,
@@ -210,11 +211,15 @@ export async function gatherBraveEvidenceForQueries(queries = [], place = {}, op
 export async function topUpDossierFields(dossier = {}, place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
+  onlyFields = null,
 } = {}) {
   const options = { env, fetchImpl, resolveImpl, extractImpl };
   let merged = { ...dossier };
   merged.fieldCounts = computeDossierFieldCounts(merged, place);
-  const needs = fieldsNeedingCapture(merged.fieldCounts, place);
+  const needs = Array.isArray(onlyFields) && onlyFields.length
+    ? onlyFields
+    : braveTopUpFieldsPending(merged, place);
+  if (!needs.length) return merged;
   let shortcomings = Array.isArray(merged.shortcomings) ? [...merged.shortcomings] : [];
   for (const field of needs) {
     let filled = false;

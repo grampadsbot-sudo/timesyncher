@@ -103,6 +103,13 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
   return counts;
 }
 
+const BUILDER_ONLY_CAPTURE_FIELDS = new Set([
+  'summary',
+  'description',
+  'itineraryNote',
+  'knownFor',
+]);
+
 export function fieldsNeedingCapture(counts = {}, place = {}) {
   const out = [];
   for (const [field, row] of Object.entries(counts)) {
@@ -114,6 +121,20 @@ export function fieldsNeedingCapture(counts = {}, place = {}) {
     return out.filter((f) => !['reviews', 'address', 'phone', 'hours', 'website', 'happyHour', 'coordinates'].includes(f));
   }
   return out;
+}
+
+function fieldsNeedingBraveTopUp(counts = {}, place = {}) {
+  return fieldsNeedingCapture(counts, place).filter((field) => !BUILDER_ONLY_CAPTURE_FIELDS.has(field));
+}
+
+function topUpAttemptsExhausted(dossier = {}, field = '') {
+  const row = (dossier.shortcomings || []).find((s) => s.field === field);
+  return Boolean(row && Array.isArray(row.attempts) && row.attempts.length >= 3);
+}
+
+export function braveTopUpFieldsPending(dossier = {}, place = {}) {
+  const counts = computeDossierFieldCounts(dossier, place);
+  return fieldsNeedingBraveTopUp(counts, place).filter((field) => !topUpAttemptsExhausted(dossier, field));
 }
 
 export function deriveMissingFieldsFromShortcomings(shortcomings = []) {

@@ -10,11 +10,12 @@ import {
   topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
 import {
+  braveTopUpFieldsPending,
   computeDossierFieldCounts,
   deriveMissingFieldsFromShortcomings,
 } from './thing-evidence-dossier-field-counts.mjs';
 import {
-  loadThingEvidenceDossier,
+  loadThingEvidenceDossierResolved,
   saveThingEvidenceDossier,
   thingEvidenceDossierKey,
 } from './thing-evidence-dossier-store.mjs';
@@ -205,24 +206,46 @@ async function callDossierBuilder(dossier, { env, fetchImpl, timeoutMs, buildImp
   return { payload, structuredText, findings };
 }
 
+export function dossierCaptureComplete(dossier = {}) {
+  return Boolean(dossier?.pages?.length && dossier.fields && Object.keys(dossier.fields).length);
+}
+
 export async function fetchXaiPlaceRatings(place = {}, {
   env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
-  forceRefresh = false,
+  forceRefresh = false, timeBudgetMs = 0,
 } = {}) {
   const key = dossierKey || thingEvidenceDossierKey(place);
-  const persisted = key ? await loadThingEvidenceDossier(key, { env, storeImpl }) : null;
+  const resolved = key
+    ? await loadThingEvidenceDossierResolved(key, { env, storeImpl, placeId: place.id ?? place.placeId })
+    : { dossier: null, dossierKey: key };
+  const persisted = resolved.dossier;
+  const deadline = timeBudgetMs > 0 ? Date.now() + timeBudgetMs : 0;
+  const outOfTime = () => deadline > 0 && Date.now() >= deadline;
   const gatherOpts = {
     env, fetchImpl, destination, resolveImpl, center,
   };
   let merged;
   if (persisted?.pages?.length && !forceRefresh) {
-    merged = await topUpDossierFields(persisted, place, gatherOpts);
+    merged = { ...persisted };
+    const pendingTopUp = braveTopUpFieldsPending(merged, place);
+    if (pendingTopUp.length) {
+      merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });
+    }
+  } else if (persisted?.pages?.length && forceRefresh) {
+    const gathered = await gatherImpl(place, gatherOpts);
+    merged = mergeDossierPages(persisted, gathered);
+    merged.fieldCounts = computeDossierFieldCounts(merged, place);
   } else {
     const gathered = await gatherImpl(place, gatherOpts);
-    merged = persisted && forceRefresh ? mergeDossierPages(persisted, gathered) : gathered;
+    merged = gathered;
     merged.fieldCounts = computeDossierFieldCounts(merged, place);
+    merged.captureCheckpoint = 'after_gather';
+    if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    if (outOfTime()) {
+      return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
+    }
   }
   merged.fieldCounts = computeDossierFieldCounts(merged, place);
   if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
@@ -238,12 +261,18 @@ export async function fetchXaiPlaceRatings(place = {}, {
     && persisted.fields
     && Object.keys(persisted.fields).length;
   if (skipBuilder) {
+    merged.captureCheckpoint = 'done';
     if (key && merged !== persisted) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+    return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
   }
   if (!merged.pages.length) {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+  }
+  if (outOfTime()) {
+    merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
+    if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl });
   merged.reviewSet = extraction.set;
@@ -265,6 +294,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   if (final.fieldCounts.reviews?.count != null) final.reviewsRead = final.fieldCounts.reviews.count;
   final.missingFields = deriveMissingFieldsFromShortcomings(final.shortcomings);
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
+  final.captureCheckpoint = 'done';
   final.xaiUsage = merged.xaiUsage || [];
   final.xaiUsd = merged.xaiUsd || 0;
   final.fullPageChars = promptChars(merged);

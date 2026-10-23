@@ -1,4 +1,5 @@
 import { applyDossierFields } from './thing-dossier-fields.mjs';
+import { sharedTripDossierKeyForPlace } from './shared-trip-dossier-keys.mjs';
 import { loadDossiersByKeys, loadThingEvidenceDossier, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
 
 function mergeOverride(base = {}, patch = {}) {
@@ -33,7 +34,7 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
 export async function applyStoredDossiersToSharedTrip(shared = {}, {
   env = process.env,
   storeImpl,
-  dossierKeyForPlace = (place) => thingEvidenceDossierKey(place),
+  dossierKeyForPlace = (place) => sharedTripDossierKeyForPlace(place, shared),
 } = {}) {
   const keyByPlaceId = {};
   for (const place of Array.isArray(shared?.places) ? shared.places : []) {

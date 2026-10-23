@@ -32,7 +32,9 @@ export default async function handler(req, res) {
     }
     const result = await runThingEvidenceDossierStagingTargets(targets, {
       env: process.env,
-      skipExisting: body?.allMissing === true,
+      skipExisting: body?.forceRefresh !== true,
+      forceRefresh: body?.forceRefresh === true,
+      timeBudgetMs: Number(body?.timeBudgetMs) > 0 ? Number(body.timeBudgetMs) : 52000,
     });
     return sendJson(res, result.ok ? 200 : 503, result);
   } catch (error) {
