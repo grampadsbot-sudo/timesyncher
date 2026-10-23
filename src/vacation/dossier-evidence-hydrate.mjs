@@ -223,10 +223,11 @@ export function syncDossierRequiredShortcomings(dossier = {}, place = {}) {
 
 export function normalizeDossierEvidence(dossier = {}, place = {}) {
   if (!placeSupportsDossierReviews(place)) {
-    const shortcomings = (Array.isArray(dossier.shortcomings) ? dossier.shortcomings : [])
+    let next = seedBookingNarrativeFields(dossier, place);
+    const shortcomings = (Array.isArray(next.shortcomings) ? next.shortcomings : [])
       .filter((row) => row.field !== 'reviews');
     return syncDossierRequiredShortcomings({
-      ...dossier,
+      ...next,
       reviews: [],
       reviewSet: [],
       reviewExcerpts: [],
