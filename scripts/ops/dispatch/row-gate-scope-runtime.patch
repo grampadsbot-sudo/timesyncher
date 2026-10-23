@@ -1,0 +1,25 @@
+--- a/lanes/vk-lane-run.sh
++++ b/lanes/vk-lane-run.sh
+@@ -153,6 +153,14 @@
+ # could not run) -> DONE withheld, loud log, never published.
+ ROWCHK="$HOME/tsv-dispatch/bin/vk-live-row-check.sh"
+ if [ -f "$D/$TAG-DONE.hold" ] && [[ "$TAG" =~ ^vkfill-([0-9]+)$ ]]; then
++  SCOPE_RC=0
++  python3 "$HOME/tsv-dispatch/bin/row_gate_scope.py" "$WD" > "$D/$TAG-row-scope.json" || SCOPE_RC=$?
++  if [ "$SCOPE_RC" = 10 ]; then
++    echo "$(ts) ROWCHECK-NOT-RUN $LANE $TAG: backend-only diff; no app rowfix authorized" | tee -a "$LOG"
++  elif [ "$SCOPE_RC" != 0 ]; then
++    echo "$(ts) ROWCHECK-NORUN $LANE $TAG: changed-path scope unavailable; DONE withheld" | tee -a "$LOG"
++    rc=4; ROWBLOCK=1
++  else
+   rr=0
+   while :; do
+     "$ROWCHK" "$WD" "$D/rowcheck-$rr" "${VK_ISSUE:-}" >/dev/null 2>&1; rrc=$?
+@@ -172,6 +180,7 @@
+     run_lane "$FIXB"; hold_done
+     [ -f "$D/$TAG-DONE.hold" ] || { echo "$(ts) ROWCHECK-GIVEUP $LANE $TAG: no DONE after row fix round; NOT published" | tee -a "$LOG"; rc=5; ROWBLOCK=1; break; }
+   done
++  fi
+ fi
+ [ -z "${ROWBLOCK:-}" ] && unhold_done   # every host gate passed (or non-PR tag): DONE becomes visible
+ # publish 10/21: a PR round that passed the gate is pushed now (fast-forward only); workers still never push
