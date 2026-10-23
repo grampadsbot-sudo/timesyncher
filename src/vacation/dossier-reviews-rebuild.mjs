@@ -1,19 +1,16 @@
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import {
-  evidencePageMatchesPlace,
   pageNamesOtherVenue,
   syncDossierRequiredShortcomings,
 } from './dossier-evidence-hydrate.mjs';
 import {
   claimCitesKnownPages,
   claimsSupported,
-  descriptionNamesThing,
   dossierPageById,
   mergeSelectiveDossierFindings,
   prepareDossierFindings,
   resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
-import { reviewGrounded } from './dossier-review-extract.mjs';
 import { braveTopUpFieldsPending } from './thing-evidence-dossier-field-counts.mjs';
 import { topUpDossierFields } from './thing-evidence-dossier.mjs';
 
@@ -39,12 +36,12 @@ export function stripDossierReviews(dossier = {}, place = {}) {
 function reviewCitesIdentityPages(dossier = {}, place = {}, review = {}) {
   const pages = resolveClaimCitationPages(dossier, review?.claims?.flatMap((c) => c.pages) || review.pages || []);
   if (!pages?.length) return false;
+  const body = text(review.text || review.claims?.[0]?.text);
+  if (body && pageNamesOtherVenue({ text: body, url: '' }, place)) return false;
   for (const id of pages) {
     const page = dossierPageById(dossier, id);
     if (!page) return false;
-    if (!evidencePageMatchesPlace(page, place, dossier) || pageNamesOtherVenue(page, place)) return false;
-    const body = text(review.text || review.claims?.[0]?.text);
-    if (body && !reviewGrounded(body.replace(/…$/, ''), page.text || '')) return false;
+    if (pageNamesOtherVenue(page, place)) return false;
   }
   return true;
 }
@@ -53,14 +50,11 @@ export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
   if (!placeSupportsDossierReviews(place)) return false;
   if (!dossier?.pages?.length) return false;
   const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  if (reviews.length !== 4) return reviews.length > 0;
+  if (!reviews.length) return false;
   for (const review of reviews) {
     if (!claimsSupported(dossier, review)) return true;
     if (!reviewCitesIdentityPages(dossier, place, review)) return true;
     const body = text(review.text);
-    if (!descriptionNamesThing(body, dossier.thing || place.title) && !descriptionNamesThing(body, place.title)) {
-      return true;
-    }
     if (pageNamesOtherVenue({ text: body, url: '' }, place)) return true;
   }
   return false;
