@@ -1,21 +1,27 @@
-Closes #608
+blocked: #641, #643, and #644 are still OPEN on `migrate/trek-source`. Issue #645 must not run VK text rollout until those merge (sequence #641 → #643/#644 → #645). This draft records the blocker only; no dossier batch or staging fill was executed.
 
-## Summary
+Closes #645
 
-- Replace generic/meta hotel descriptions for **Midtown sample hotel**, **Arthouse Hotel**, and **The Empire Hotel New York** in the NYC ccab enrichment fixture (`nyc_ccab_place_enrichment.json`) with address-specific prose grounded in each property’s real location, amenities, and typical Booking.com praise/complaints.
-- Regenerate `pr336-vk-search-places.snapshot.json` so the offline-approved NYC shared trip (`buildGateBApprovedSharedTrip`) serves the updated copy on staging without a DB refill.
+## What changed
 
-## Checks (local, tip `f8b9dd03`)
+- Prepended issue #645 blocker receipt to `J/RECEIPT.md` with checkable GitHub issue states and start sha `5ee5bb95586ab1d588b3dba7d2d116054f0296b7`.
+- No application code, fixtures, workflows, dependencies, or offline test manifest changes.
 
-- `node scripts/regenerate_pr336_search_trip_fixture.mjs`
-- `node /home/ubishere9995/tsv-dispatch/live_accept_eval.mjs` on built shared trip: 22/22 hotels pass the 30-word detail judge; all hotels/flights/cars priced
-- `node scripts/test_nyc_budget_search_fill_prices.mjs`, `node scripts/test_vk_hotel_detail_fill.mjs`, `node scripts/test_gate_b_product_row_fields.mjs`, `npm run test:keepsake-style2`
-- Pre-DONE: `node scripts/check-no-comments.mjs`, `node scripts/test_offline_manifest.mjs`, `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`
+## Checks run
+
+| Command | Result |
+| --- | --- |
+| `gh issue view 641 --json state` | OPEN |
+| `gh issue view 643 --json state` | OPEN |
+| `gh issue view 644 --json state` | OPEN |
+| `git rev-parse HEAD` | `5ee5bb95586ab1d588b3dba7d2d116054f0296b7` |
+
+Pre-DONE gates were not required for receipt-only documentation; no new test files.
 
 ## Left alone (scope)
 
-- Baselines, Gate B/capture scripts, workflows, dependencies, timeline rows 601–611 layout, `nyc-craig-kim-daybyday-positive-v1.mjs` (not the served staging path).
+Full #645 acceptance (evidence files in DB for every live staging Thing, descriptions, reviews, hours, happy hours, price estimates, xAI budget logging, `live_accept` on live staging, CI green, Gate B) waits until #641, #643, and #644 land. Baselines, Gate B config, deploy config, and package locks were not touched.
 
-## Post-deploy
+## Unblock path
 
-- `~/tsv-dispatch/live_accept.py` should report `hotel_desc` 22/22 on live staging.
+Re-launch or continue this lane after #641, #643, and #644 are merged into `migrate/trek-source`, then implement rollout reusing saved evidence files per the issue body and `skills/vk-thing-data-contract/skill`.
