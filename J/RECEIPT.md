@@ -1,3 +1,30 @@
+# Issue #645 — blocked (2026-10-23)
+
+**Start sha:** `5ee5bb95586ab1d588b3dba7d2d116054f0296b7` (matches `migrate/trek-source` at lane launch)
+
+## Blocker
+
+Issue #645 depends on #641, #643, and #644. Per issue body and sequence (#641 → #643/#644 → #645), this lane stops here with **no product or dossier rollout code** until all three dependencies are merged into `migrate/trek-source`.
+
+| Issue | State (GitHub API 2026-10-23) | Title |
+| --- | --- | --- |
+| #641 | OPEN | VK reviews: map review-set ids to dossier pages for claim support, meaning-based description judge, Brave coverage (round 5 findings) |
+| #643 | OPEN | VK hours + happy hours built from each Thing's evidence file, every claim supported |
+| #644 | OPEN | VK price estimate built from each Thing's evidence file, labelled as an estimate (never blocks) |
+
+Commands: `gh issue view 641 --json state` → OPEN; same for 643 and 644.
+
+## Work performed
+
+- Confirmed branch `cursor/tsv-645-vk-text-rollout-to-all-things-on-the-live-staging-trip-evidence-file-description-review-1350` is at start sha with no ahead commits.
+- No evidence-file batch, xAI spend, staging DB writes, or renderer changes (blocked).
+
+## Not claimed
+
+- Green CI on a functional #645 head, Gate B PASS, `live_accept` on live staging, per-Thing xAI costs, or merge eligibility.
+
+---
+
 # PR #632 / issue #631 — cursor-ubuntu pass (2026-10-22)
 
 **Start sha:** `bb8be14dc9a34ac54148f804136f4f34f89a68e5`
