@@ -9,13 +9,14 @@ import { prepareTimelineReplay } from './timeline-replay.mjs';
 import { dayCaptureShotNames, mergeDayTimelines } from './day-traversal.mjs';
 import {
   DOM_TILE_EVAL,
+  appendLogoShotFromCapture,
   buildLogoShotRecord,
   buildTileShotRecord,
   isMapTileUrl,
   isPublicLogoImageUrl,
+  LOGO_PASSIVE_OBSERVER_INIT,
   logoRequestRecord,
   summarizeImageHosts,
-  sanitizePublicImageUrl,
   tileRequestRecord,
 } from './passive-acquisition.mjs';
 const [,, outdir] = process.argv;
@@ -156,6 +157,10 @@ async function recordRegions(page, shot, full) {
 
           price_box: priceEl && visible(priceEl) ? box(priceEl.getBoundingClientRect()) : null,
           text: (li.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 200),
+          row_instance: window.__tsLogoPassiveRowInstance ? window.__tsLogoPassiveRowInstance(li) : null,
+          place_id: li.getAttribute('data-place-id') || null,
+          thing_id: li.getAttribute('data-thing-id') || null,
+          summary_src: li.getAttribute('data-summary-src') || null,
         };
       });
       const pageErrors = [...document.querySelectorAll('[data-ts-trip-map-error], [role=alert]')].filter(visible).map((e) => (e.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 160)).filter(Boolean).slice(0, 6);
@@ -241,6 +246,7 @@ async function recordRegions(page, shot, full) {
       const result = { ok: true, full, viewport: [vw, vh], struct, map: mapEl ? { box: box(mapEl.getBoundingClientRect()) } : null, row_selector: rowSel, icon_selector: iconSel, rows, row_count: rowEls.length, icons, icon_count: icons.length, rows_bottom: rows.length ? Math.max(...rows.map((g) => g.box[1] + g.box[3])) : null, items, sort: sortBtns, doc_width: document.documentElement.scrollWidth };
 
       for (const measure of baselineProbes) measure();
+      result.passive_logo_events = window.__tsLogoPassiveEvents ? window.__tsLogoPassiveEvents.splice(0) : [];
       return result;
     }, [ROW_SEL, ICON_SEL, full]);
   } catch (e) { regions[shot] = { ok: false, error: String(e.message || e).split('\n')[0] }; }
@@ -248,7 +254,7 @@ async function recordRegions(page, shot, full) {
 
 const T0 = Date.now();
 const tileLog = { requests: [], shots: [] };
-const logoLog = { requests: [], shots: [] };
+const logoLog = { requests: [], shots: [], events: [] };
 function watchTiles(page, w) {
   page.on('response', async (resp) => {
     try {
@@ -377,12 +383,8 @@ async function recordTileShot(page, w, shot) {
   } catch (e) { void e; }
 }
 function recordLogoShot(w, shot) {
-  const domLogos = (regions[shot]?.items || []).filter((row) => row.img).map((row) => ({
-    row_cat: row.cat, url: sanitizePublicImageUrl(row.img.src),
-    rect: row.img.box, natural: row.img.natural, loaded: row.img.loaded,
-    visible: row.img.visible,
-  }));
-  logoLog.shots.push(buildLogoShotRecord({ shot, w, t: Date.now() - T0, domLogos }));
+  appendLogoShotFromCapture({ w, t0: T0, shot, logoLog, regionItems: regions[shot]?.items, rawEvents: regions[shot]?.passive_logo_events });
+  if (regions[shot]) delete regions[shot].passive_logo_events;
 }
 
 const browser = await chromium.launch();
@@ -391,6 +393,7 @@ try {
   for (const [w, h] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: 'reduce', locale: 'en-US', timezoneId: 'America/Los_Angeles' });
     const page = await ctx.newPage();
+    await page.addInitScript({ content: LOGO_PASSIVE_OBSERVER_INIT });
     watchTiles(page, w);
     watchLogos(page, w);
 
@@ -476,7 +479,7 @@ manifest.tile_hosts = tileSum;
 manifest.logo_hosts = logoSum;
 if (tileLog.shots.length && !tileLog.requests.some((q) => q.status === 200)) manifest.notes.push('no map tile came back 200 in this capture (see tile-log.json)');
 fs.writeFileSync(path.join(outdir, 'tile-log.json'), JSON.stringify({ base: BASE, requests: tileLog.requests, shots: tileLog.shots, summary: tileSum }, null, 1));
-fs.writeFileSync(path.join(outdir, 'logo-log.json'), JSON.stringify({ base: BASE, requests: logoLog.requests, shots: logoLog.shots, summary: logoSum }, null, 1));
+fs.writeFileSync(path.join(outdir, 'logo-log.json'), JSON.stringify({ base: BASE, requests: logoLog.requests, events: logoLog.events, shots: logoLog.shots, summary: logoSum }, null, 1));
 manifest.finished = new Date().toISOString();
 fs.writeFileSync(path.join(outdir, 'capture-manifest.json'), JSON.stringify(manifest, null, 2));
 fs.writeFileSync(path.join(outdir, 'capture-regions.json'), JSON.stringify(regions, null, 1));
