@@ -43,8 +43,8 @@ assert.doesNotMatch(
 
 assert.match(
   servedBundle,
-  /tsScore\(G\)>tsScore\(prev\)\)m\.set\(k,G\)/,
-  'hotels catalog must dedupe by normalized name before Oe() rows',
+  /kn=ze\.length\?Po\.filter\(G=>ze\.includes\(En\(G\)\)\):Po/,
+  'hotels catalog must keep upstream kn= Po filter without dedupe patch',
 );
 
 assert.match(

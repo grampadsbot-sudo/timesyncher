@@ -21,16 +21,3 @@ export function applyMoBudgetPriceCoveragePatch(patched, moBudgetNeedle) {
   return js;
 }
 
-const HOTELS_KN_CATALOG_NEEDLE = 'kn=ze.length?Po.filter(G=>ze.includes(En(G))):Po';
-const HOTELS_KN_CATALOG_PATCH = 'kn=(()=>{const rows=ze.length?Po.filter(G=>ze.includes(En(G))):Po;const tsNm=G=>String(mr(G)||G.name||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase(),tsDesc=G=>String(Co(G)||rr(G)||Fl(G)||"").trim(),tsScore=G=>{let s=0;if(String(_l(G)||"").trim())s+=4;if(Ds(G))s+=3;const d=tsDesc(G);if(d)s+=Math.min(d.length,120);if(/\\$?\\d/.test(String(bi(G)||"")))s+=6;return s;},m=new Map();for(const G of rows){const k=tsNm(G);if(!k)continue;const prev=m.get(k);if(!prev||tsScore(G)>tsScore(prev))m.set(k,G);}return Array.from(m.values());})()';
-
-export function applyHotelsTabCatalogDedupePatch(js = '', options = {}) {
-  const served = options.served === true;
-  let out = String(js || '');
-  if (out.includes(HOTELS_KN_CATALOG_NEEDLE)) {
-    out = out.replace(HOTELS_KN_CATALOG_NEEDLE, HOTELS_KN_CATALOG_PATCH);
-  } else if (served && !out.includes('tsScore(G)>tsScore(prev))m.set(k,G)')) {
-    throw new Error('served shared Hotels catalog missing kn= Po filter anchor');
-  }
-  return out;
-}

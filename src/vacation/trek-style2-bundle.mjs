@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
-import { applyHotelsTabCatalogDedupePatch, applyMoBudgetPriceCoveragePatch, applyPeEffectPriceHydratePatch, MO_BUDGET_PATCH, PE_EFFECT_PATCH } from './trek-vk-price-coverage-patches.mjs';
+import { applyMoBudgetPriceCoveragePatch, applyPeEffectPriceHydratePatch, MO_BUDGET_PATCH, PE_EFFECT_PATCH } from './trek-vk-price-coverage-patches.mjs';
 import {
   applyLiveProductPatches,
   applySharedLiveTabBundlePatches,
@@ -392,7 +392,6 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
-  patched = applyHotelsTabCatalogDedupePatch(patched, { served });
   if (patched.includes(BI_NEEDLE)) {
     patched = patched.replace(BI_NEEDLE, BI_PATCH);
   } else if (patched.includes('bi=G=>ha(G).price??G.price??ha(G).total_price??G.total_price??""')) {
