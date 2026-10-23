@@ -27,4 +27,15 @@ assert.match(committed, /data-ts-day-map":"1"/);
 assert.match(committed, /gpe,\{center:Ia,zoom:11/);
 assert.match(committed, /a\.tile\.opentopomap\.org/);
 
+const singleTimeGuard = 'ua.time&&!ua.endTime&&!ua.isConflict?';
+const originalTimeCell = 'n.jsxs("div",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?"#b91c1c":ua.time?"#111827":"#9ca3af",textAlign:"right",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):"",ua.endTime?n.jsxs(n.Fragment,{children:[n.jsx("br",{}),n.jsx("span",{style:{fontWeight:500,color:ua.isConflict?"#ef4444":"#9ca3af"},children:Yo(ua.endTime)})]}):null]})';
+assert.equal(committed.split(singleTimeGuard).length - 1, 1);
+assert.equal(committed.split(originalTimeCell).length - 1, 1);
+const singleTimeStart = committed.indexOf(singleTimeGuard);
+const singleTimeBranch = committed.slice(singleTimeStart, committed.indexOf(originalTimeCell, singleTimeStart));
+assert.match(singleTimeBranch, /fontSize:11,fontWeight:700/);
+assert.match(singleTimeBranch, /whiteSpace:"nowrap",alignSelf:"baseline"/);
+assert.doesNotMatch(singleTimeBranch, /padding|margin|top|transform|position|lineHeight/i);
+assert.match(committed, /\}:\{paddingTop:1,alignSelf:ua\.time&&!ua\.endTime\?"baseline":"start"\},children:\[ua\.isConflict/);
+
 console.log('itinerary fresh day-by-day bundle checks passed');
