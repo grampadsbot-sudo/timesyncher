@@ -84,8 +84,8 @@ export async function braveLocalEvidence(place = {}, {
   const lookupQuery = intakeLodgingLookupQuery(name, destination) || name;
   let rows = [];
   const searchCenter = destinationCenter(place, center);
-  try {
-    if (searchCenter) {
+  if (searchCenter) {
+    try {
       const params = new URLSearchParams({
         q: lookupQuery,
         latitude: String(searchCenter.lat),
@@ -95,15 +95,21 @@ export async function braveLocalEvidence(place = {}, {
       });
       rows = (await braveGet(`/local/place_search?${params}`, key, fetchImpl))?.results || [];
       attempts.push({ kind: 'brave', step: 'place_search', status: 'ok', results: rows.length });
+    } catch (error) {
+      const reason = String(error?.message || '').slice(0, 40);
+      attempts.push({ kind: 'brave', step: 'place_search', status: 'failed', error: reason });
+      if (reason !== 'brave_http_404') return { pages: [], attempts };
     }
-    if (!pickBraveLocation(rows, name)) {
+  }
+  if (!pickBraveLocation(rows, name)) {
+    try {
       const params = new URLSearchParams({ q: lookupQuery, result_filter: 'locations', count: '8' });
       rows = (await braveGet(`/web/search?${params}`, key, fetchImpl))?.locations?.results || [];
       attempts.push({ kind: 'brave', step: 'local_search', status: 'ok', results: rows.length });
+    } catch (error) {
+      attempts.push({ kind: 'brave', step: 'local_search', status: 'failed', error: String(error?.message || '').slice(0, 40) });
+      return { pages: [], attempts };
     }
-  } catch (error) {
-    attempts.push({ kind: 'brave', step: 'search', status: 'failed', error: String(error?.message || '').slice(0, 40) });
-    return { pages: [], attempts };
   }
   const hit = pickBraveLocation(rows, name);
   if (!hit) {

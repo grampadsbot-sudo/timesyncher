@@ -160,6 +160,67 @@ await judgeDossierFindings({ pages: goodPages }, contradictJudge, {
 assert.equal(contradictJudge.description.claims[0].supported, false, 'contradicted claims fail the judge');
 assert.match(dossierJudgePrompt({ pages: goodPages }, [{ text: 'paraphrase ok', pages: ['p1'] }]), /meaning|paraphrase/i);
 
+const round5Cases = [
+  {
+    thing: 'Arthouse Hotel New York City',
+    pages: [page('https://www.arthousehotelnyc.com/',
+      'On Manhattan’s Upper West Side, making the most of your living space is the ultimate luxury, and our rooms, suites and lofts merge private apartment-style savviness with all of the amenities you expect from a boutique hotel. Arthouse Hotel New York City features three on-site restaurants and bars, including the Prohibition speakeasy-style Arthouse Bar, Northern Italian fare at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.')],
+    reviewSet: [],
+    claim: 'p1 states rooms merge private apartment-style features with boutique hotel amenities and lists on-site restaurants including Serafina and RedFarm.',
+    citations: ['p1'],
+    resolved: ['p1'],
+    contradiction: 'Arthouse Hotel New York City has no on-site restaurants or bars.',
+  },
+  {
+    thing: 'Rosa Mexicano - Lincoln Center',
+    pages: [
+      page('https://www.yelp.com/brands/rosa-mexicano',
+        'Service was attentive, atmosphere was great, and the tableside guacamole never disappoints!'),
+      page('https://www.facebook.com/fb-answers/rosa-mexicano-lincoln-center-reviews',
+        'If you’re looking for Mexican food right by Lincoln Center, it’s a popular spot for a pre-show dinner with friendly service. The guacamole is delicious!'),
+    ],
+    reviewSet: [{ id: 'r7', page: 'p1' }, { id: 'r8', page: 'p2' }],
+    claim: 'r7 and r8 from reviewSet praise the tableside guacamole and friendly service for pre-show dining.',
+    citations: ['r7', 'r8'],
+    resolved: ['p1', 'p2'],
+    contradiction: 'Rosa Mexicano reviewers disliked the guacamole and described unfriendly service.',
+  },
+];
+for (const regression of round5Cases) {
+  const claims = [
+    { text: regression.claim, pages: regression.citations },
+    { text: regression.contradiction, pages: regression.citations },
+    { text: regression.claim, pages: ['p1', 'r999'], supported: true },
+  ];
+  const findings = { description: { claims } };
+  let judgeCalls = 0;
+  await judgeDossierFindings(regression, findings, {
+    env: { XAI_API_KEY: 'unit-test', XAI_PLACE_SEARCH_MODEL: 'dossier-test-model' },
+    fetchImpl: async (_url, init) => {
+      judgeCalls += 1;
+      const prompt = JSON.parse(init.body).input[0].content;
+      assert.ok(prompt.includes("support the claim's meaning (paraphrase and synonyms are fine)"));
+      assert.ok(prompt.includes('wrong numbers, times, names, or contradictions'));
+      const payload = JSON.parse(prompt.split('\n').at(-1));
+      assert.equal(payload.claims.length, 2, 'unresolvable review ids must never reach the judge');
+      assert.equal(payload.claims[0].text, regression.claim);
+      assert.deepEqual(payload.claims[0].pages, regression.resolved);
+      assert.deepEqual(payload.pages.map((p) => p.id), regression.resolved);
+      assert.ok(payload.pages.every((p) => p.text && p.sha256));
+      return { ok: true, json: async () => ({ output_text: JSON.stringify({ results: [
+        { id: 'c1', supported: true, reason: 'The cited pages support the paraphrased meaning.' },
+        { id: 'c2', supported: false, reason: 'The claim contradicts the cited pages.' },
+      ] }) }) };
+    },
+  });
+  assert.equal(judgeCalls, 1);
+  assert.equal(claims[0].supported, true, `${regression.thing}: accept a paraphrased supported claim`);
+  assert.deepEqual(claims[0].pages, regression.resolved);
+  assert.equal(claims[1].supported, false, `${regression.thing}: reject a contradiction`);
+  assert.equal(claims[2].supported, false, 'a valid page must not rescue an unresolvable review id');
+  assert.equal(claims[2].judgeReason, 'cites no saved dossier page');
+}
+
 const record = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: built });
 assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings fetched');
 assert.ok(record.review1, 'representative review text must land on the record');
