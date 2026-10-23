@@ -5,7 +5,10 @@ import {
 import {
   changedDossierPageUrls,
   DEFAULT_DOSSIER_MAX_AGE_MS,
+  dossierHasHappyHourPageEvidence,
+  dossierHasHoursPageEvidence,
   dossierNeedsRefresh,
+  gatherSupplementalHoursEvidence,
   gatherThingEvidence,
   mergeDossierPages,
 } from './thing-evidence-dossier.mjs';
@@ -16,6 +19,7 @@ import {
 } from './thing-evidence-dossier-store.mjs';
 import {
   applyDossierFields,
+  dossierGapRebuildFields,
   dossierRebuildFields,
   mergeSelectiveDossierFindings,
   claimCitesKnownPages,
@@ -211,11 +215,31 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const gathered = await gatherImpl(place, {
     env, fetchImpl, destination, searchImpl, resolveImpl, center,
   });
-  const merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
-  const changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
+  let merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
+  let changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
   const rebuildFields = persisted
     ? dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls })
     : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor']);
+  for (const field of dossierGapRebuildFields(persisted, place)) rebuildFields.add(field);
+
+  const wantHoursPages = rebuildFields.has('hours') && !dossierHasHoursPageEvidence(merged);
+  const cat = String(place.category || place.sourceRecord?.category || '').toLowerCase();
+  const wantHappyPages = rebuildFields.has('happyHourDetails')
+    && /restaurant|bar/.test(cat)
+    && !dossierHasHappyHourPageEvidence(merged);
+  if (wantHoursPages || wantHappyPages) {
+    const supplement = await gatherSupplementalHoursEvidence(place, merged, {
+      env, fetchImpl, destination, searchImpl, resolveImpl,
+      wantHours: wantHoursPages,
+      wantHappyHour: wantHappyPages,
+    });
+    if (supplement.pages?.length) {
+      const beforePages = merged.pages || [];
+      merged = mergeDossierPages(merged, supplement);
+      changedUrls = [...changedUrls, ...changedDossierPageUrls(beforePages, merged.pages || [])];
+      for (const field of dossierGapRebuildFields(persisted, place)) rebuildFields.add(field);
+    }
+  }
   const skipBuilder = persisted
     && !maxAgeExpired
     && rebuildFields.size === 0

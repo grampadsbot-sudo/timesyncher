@@ -52,7 +52,7 @@ const baseText = `Riverside Bistro review page. ${quote}. Published average 4.5 
 const reviewBodies = Array.from({ length: 20 }, (_, index) =>
   `Review ${index + 1}: ${quote} with extra guest detail about pacing value and repeat visits this season.`);
 
-function goodPages(descriptionExtra = ' Menu lists happy hour oysters until six pm.') {
+function goodPages(descriptionExtra = ' Open Tue–Sun 5pm–midnight. Menu lists happy hour oysters until six pm.') {
   return [
     page(urlA, `${baseText}${descriptionExtra}`),
     page(urlB, reviewBodies.join(' ')),
@@ -67,6 +67,10 @@ const findings = {
     claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
   },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
+  hours: { value: 'Tue–Sun 5pm–midnight', claims: [{ text: 'open Tue–Sun 5pm–midnight', pages: ['p1'], supported: true }] },
+  happyHourDays: { value: 'Mon–Fri', claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }] },
+  happyHourTimes: { value: 'until 6pm', claims: [{ text: 'until six pm', pages: ['p1'], supported: true }] },
+  happyHourDeals: { value: 'happy hour oysters', claims: [{ text: 'happy hour oysters', pages: ['p1'], supported: true }] },
   knownFor: [{ item: 'margherita', claims: [{ text: 'margherita is the signature pie', pages: ['p3'], supported: true }] }],
   reviewExcerpts: reviewBodies.map((body) => ({ text: body, pages: ['p2'], supported: true })),
   reviews: [

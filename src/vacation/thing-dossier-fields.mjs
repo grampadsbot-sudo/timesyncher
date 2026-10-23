@@ -165,6 +165,25 @@ const DOSSIER_REBUILD_GROUPS = [
   'knownFor',
 ];
 
+export function dossierGapRebuildFields(persisted = {}, place = {}) {
+  const gaps = new Set();
+  if (!persisted?.fields || typeof persisted.fields !== 'object') return gaps;
+  const hours = persisted.fields.hours;
+  if (!hours || hours.gap === true) gaps.add('hours');
+  const cat = String(
+    place.category
+    || place.sourceRecord?.category
+    || place.sourceRecord?.category_name
+    || '',
+  ).toLowerCase();
+  if (cat === 'restaurant' || cat === 'bar') {
+    const hh = persisted.fields.happyHourDetails;
+    if (!hh) gaps.add('happyHourDetails');
+    else if (!hh.explicitNone && !norm(hh.value)) gaps.add('happyHourDetails');
+  }
+  return gaps;
+}
+
 export function dossierRebuildFields(persisted = {}, merged = {}, {
   maxAgeExpired = false,
   changedUrls = [],
