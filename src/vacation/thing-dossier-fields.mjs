@@ -4,8 +4,31 @@ import {
   HOURS_NOT_FOUND,
   NO_HAPPY_HOUR_FOUND,
 } from './dossier-hours-fields.mjs';
+import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { isLodgingStay } from './intake-lodging-stay.mjs';
+import { transportKind } from './intake-transport-kind.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 import { buildPriceEstimateFromEvidence } from './thing-evidence-price-estimate.mjs';
+import { normalizeThingType } from './timeline-icons.mjs';
+
+const TRAVEL_SOURCED_PRICE_CATEGORIES = new Set(['hotel', 'flight', 'car']);
+
+function dossierTravelCategory(record = {}) {
+  const transportRecord = {
+    category: record.category || record.category_name,
+    category_name: record.category_name,
+    title: record.title || record.name,
+    name: record.name || record.title,
+    source: record.source,
+    metadata: record.metadata,
+  };
+  const kind = transportKind(transportRecord);
+  if (kind === 'flight') return 'flight';
+  if (kind === 'car' && !isLodgingStay(transportRecord)) return 'car';
+  const resolved = normalizeThingType(record.category_name || record.category);
+  if (resolved === 'hotel') return 'hotel';
+  return resolved || 'other';
+}
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -366,6 +389,14 @@ export function writeDossierReviews(record = {}, dossier = {}) {
 }
 
 export function applyDossierFields(record = {}, dossier = {}) {
+  const travelCategory = dossierTravelCategory(record);
+  const preserveTravelPrice = TRAVEL_SOURCED_PRICE_CATEGORIES.has(travelCategory);
+  const priorPrice = preserveTravelPrice ? record.price : undefined;
+  const priorPriceUnit = preserveTravelPrice ? record.priceUnit : undefined;
+  const placeName = record.title || record.name || dossier.thing || '';
+  const priorLongDetails = travelCategory === 'hotel'
+    ? norm(record.longDetails || record.description || '')
+    : '';
   const next = { ...record, evidenceDossier: dossier };
   const missing = new Set(next.missingFields || []);
   for (const key of ['summary', 'description', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
@@ -395,6 +426,16 @@ export function applyDossierFields(record = {}, dossier = {}) {
       missing.delete(key);
     }
     if (next.description) next.longDetails = next.description;
+    if (travelCategory === 'hotel' && priorLongDetails) {
+      const candidate = norm(next.longDetails || next.description || '');
+      const priorOk = descriptionPassesDetailJudge(priorLongDetails, placeName);
+      const candidateOk = candidate && descriptionPassesDetailJudge(candidate, placeName);
+      if ((!candidate || !candidateOk) && priorOk) {
+        next.longDetails = priorLongDetails;
+        next.description = priorLongDetails;
+        missing.delete('description');
+      }
+    }
     if (next.happyHourDetails && next.happyHourDetails !== NO_HAPPY_HOUR_FOUND) next.happyHour = true;
     if (dossier.fields?.happyHour?.value === false) next.happyHour = false;
     const priceEstimate = buildPriceEstimateFromEvidence(dossier);
@@ -403,6 +444,9 @@ export function applyDossierFields(record = {}, dossier = {}) {
     if (priceEstimate.amount != null && priceEstimate.amount > 0) {
       next.price = priceEstimate.amount;
       if (priceEstimate.unit) next.priceUnit = priceEstimate.unit;
+    } else if (preserveTravelPrice && priorPrice != null && priorPrice !== '') {
+      next.price = priorPrice;
+      if (priorPriceUnit) next.priceUnit = priorPriceUnit;
     }
     if (dossier.ratingEvidence && cited(dossier, dossier.ratingEvidence)) {
       next.thirdPartyRating = String(dossier.rating);

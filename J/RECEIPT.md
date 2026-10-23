@@ -1,3 +1,39 @@
+# PR #650 / issue #644 — cursor-ubuntu vkfill-650 round (2026-10-23, auto round 4)
+
+**Start sha:** `33a0039d39f60c1ebd02faa8c0edb8bbf8025d17`
+
+## Outcome
+
+Source-ready for host publication (commit + push). Not CI green, run10 live acceptance, or Gate B 32/32 on staging capture.
+
+## Changes this round
+
+- **`thing-dossier-fields.mjs` (`applyDossierFields`):** Evidence dossier overlay no longer strips VK-sourced nightly/fare prices on hotel/flight/car Things when the evidence price estimator has no supported amount (fixes Gate B `blank_price` on hotels/flights/budget after stored-dossier apply). Hotels also keep prior `longDetails` when a dossier refresh would replace them with copy that fails `descriptionPassesDetailJudge` (targets `hotel_description_judge` regressions on live NYC capture).
+- **`scripts/test_thing_evidence_dossier.mjs`:** Regression for hotel/flight price preservation and shared-trip overlay path.
+
+## Local verification (worktree `33a0039d` + uncommitted diff)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_thing_evidence_dossier.mjs` | pass |
+| `node scripts/test_thing_evidence_price_estimate.mjs` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node apps/vacation-client/test/detail.unit.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass (851 files) |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
+| `node scripts/test_gate_b_capture_pre_data_check.mjs` | pass |
+
+## Uncommitted for host
+
+- `src/vacation/thing-dossier-fields.mjs`
+- `scripts/test_thing_evidence_dossier.mjs`
+- `J/RECEIPT.md` (this section)
+
+Host: single commit on `cursor/tsv-644-vk-price-estimate-built-from-each-thing-s-evidence-file-labelled-as-an-estimate-never-blo-ff9f`, push, CI, staging Gate B + run10 semantic price acceptance.
+
+---
+
 # PR #650 / issue #644 — cursor-ubuntu vkfill-650 round (2026-10-23)
 
 **Start sha:** `ba29d7f4e44bb7df4f24b6b0139cfbd92837f410`
