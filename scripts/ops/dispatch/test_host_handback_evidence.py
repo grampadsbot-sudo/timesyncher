@@ -383,18 +383,37 @@ class HostFileBoundaries(unittest.TestCase):
             with self.assertRaisesRegex(EvidenceError, 'tag disagrees'):
                 self.reader.running({569})
 
-    def automatic_issue(self):
+    def _write_issue_launch_identity(self, jd, stamp, body='', base='migrate/trek-source', number=569):
+        import hashlib
+        import json
+        record = {
+            'version': 1,
+            'kind': 'issue',
+            'number': number,
+            'issue_updated_at': stamp,
+            'body_sha256': hashlib.sha256(body.encode()).hexdigest(),
+            'base': base,
+            'start_sha': SHA,
+        }
+        (jd / 'launch-identity.json').write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+
+    def automatic_issue(self, body='', updated_at=None, extra_labels=None):
         proc, wt, jd, tag = self.automatic_vkfill_job()
         stamp = '2026-10-22T23:00:00Z'
+        live_updated = updated_at if updated_at is not None else stamp
         (jd / 'fingerprint.txt').write_text(stamp + '\n')
         (jd / 'vkfill-569-brief.md').write_text(
             '# TSV issue #569: test\n\n## Start commit\nStart from `%s`. '
             'That is the head of `migrate/trek-source` when this brief was written.\n\n'
             '## Base branch policy\nBranch from `migrate/trek-source` at the start commit and open ONE '
             'pull request into `migrate/trek-source`. Never merge or rebase any other branch into yours.\n' % SHA)
+        self._write_issue_launch_identity(jd, stamp, body=body)
+        labels = [{'name': 'base:migrate/trek-source'}]
+        if extra_labels:
+            labels.extend(extra_labels)
+        issue = {'number': 569, 'state': 'open', 'updated_at': live_updated, 'body': body, 'labels': labels}
         self.reader._github_get = lambda path: ({'status': 'identical', 'merge_base_commit': {'sha': SHA}}
-            if path.startswith('compare/') else {'number': 569, 'state': 'open', 'updated_at': stamp,
-            'labels': [{'name': 'base:migrate/trek-source'}]})
+            if path.startswith('compare/') else issue)
         return proc, wt, jd, tag
 
     def test_automatic_issue_timestamp_and_launch_sha_are_authenticated(self):
@@ -407,7 +426,43 @@ class HostFileBoundaries(unittest.TestCase):
         with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
             _, _, jd, _ = self.automatic_issue()
             (jd / 'fingerprint.txt').write_text('2026-10-22T22:00:00Z\n')
-            with self.assertRaisesRegex(EvidenceError, 'updated_at'):
+            with self.assertRaisesRegex(EvidenceError, 'job fingerprint'):
+                self.reader.running({569})
+
+    def test_automatic_issue_missing_launch_identity_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_issue()
+            (jd / 'launch-identity.json').unlink()
+            with self.assertRaisesRegex(EvidenceError, 'launch identity proof missing'):
+                self.reader.running({569})
+
+    def test_automatic_issue_benign_updated_at_change_accepts(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_issue(updated_at='2026-10-23T03:34:23Z',
+                                 extra_labels=[{'name': 'status:ready'}])
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                self.assertEqual(self.reader.running({569}, {569: None}), frozenset({569}))
+
+    def test_automatic_issue_body_change_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            self.automatic_issue(body='')
+            stamp = '2026-10-22T23:00:00Z'
+            issue = {'number': 569, 'state': 'open', 'updated_at': stamp, 'body': 'tampered body',
+                     'labels': [{'name': 'base:migrate/trek-source'}]}
+            self.reader._github_get = lambda path: ({'status': 'identical', 'merge_base_commit': {'sha': SHA}}
+                if path.startswith('compare/') else issue)
+            with patch('host_handback_evidence.subprocess.run', return_value=Mock(stdout=SHA + '\n')):
+                with self.assertRaisesRegex(EvidenceError, 'body disagrees'):
+                    self.reader.running({569})
+
+    def test_automatic_issue_launch_identity_tamper_refuses(self):
+        with patch('host_handback_evidence.AUTOMATIC_WORK_ROOT', self._automatic_work_root()):
+            _, _, jd, _ = self.automatic_issue()
+            import json
+            data = json.loads((jd / 'launch-identity.json').read_text())
+            data['body_sha256'] = 'a' * 64
+            (jd / 'launch-identity.json').write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
+            with self.assertRaisesRegex(EvidenceError, 'body disagrees'):
                 self.reader.running({569})
 
     def test_automatic_issue_wrong_start_sha_refuses(self):

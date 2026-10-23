@@ -34,10 +34,16 @@ Scoped process checks read the existing `lane-worker-jobs.json`, lane slot files
 authenticate from the live `vk-lane-run.sh` argv (lane, job dir, tag, worktree),
 `~/tsv-work/vkfill-*-job/{worktree,fingerprint}.txt`, slot `started=`, PID cwd,
 stable starttime, and an authenticated read-only GitHub item lookup. PR fingerprints must
-match the canonical PR head and exact launch-brief start commit. Issue fingerprints
-are canonical issue `updated_at` timestamps; their launch brief must name the exact
-issue and configured base, and the start commit must match the initial worktree HEAD
-reflog and a GitHub-authenticated ancestor of that base. This supports a moving base
+match the canonical PR head and exact launch-brief start commit. Issue jobs also require
+`launch-identity.json` beside `fingerprint.txt` (written by `lane_autofill.launch_lane`;
+see `host_handback_lane_autofill_launch_identity.patch`). The job fingerprint remains the
+launch-time `updated_at` copied into `fingerprint.txt`; the launch-identity record binds
+that timestamp, launch `start_sha`, configured `base`, and `body_sha256`. Live GitHub issue
+`updated_at` may move after benign label/comment activity; authentication then requires the
+current body hash and configured base to still match the launch proof. Jobs launched before
+that producer ships have no launch proof and fail closed. Their launch brief must still name
+the exact issue and configured base, and the start commit must match the initial worktree
+HEAD reflog and a GitHub-authenticated ancestor of that base. This supports a moving base
 without rebinding the launch SHA. The implicit base mirrors the launcher
 (`cursor/jev-quality-r20-1128`) for identity only and grants no merge authority.
 The canonical argv brief path, runner source and exact job-number boundary are

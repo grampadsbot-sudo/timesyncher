@@ -22,6 +22,7 @@ from host_handback_events import (EVENT_VERSION, EVENT_VERSION_REGISTERED, Event
 from host_handback_observation import (ObservationError, load_observation,
                                        locate_current_section, validate_observation_path,
                                        verify_assessment_observation, verify_item_observation)
+from host_handback_launch_identity import authenticate_issue_launch_identity
 from host_handback_review import (ACCEPT_RE, BLOCKER_RE, HOST_RE, Evidence,
                                  EvidenceError, ReviewScan, _time, snapshot_key)
 
@@ -502,15 +503,8 @@ class HostReaders:
             require(HEAD_RE.fullmatch(fingerprint) and fingerprint == head == start_sha,
                     'live automatic job belongs to a different current head')
         else:
-            require(re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ', fingerprint)
-                    and fingerprint == item.get('updated_at'),
-                    'automatic issue fingerprint differs from authenticated updated_at')
-            labels = sorted(x['name'][5:] for x in item.get('labels', [])
-                            if x.get('name', '').startswith('base:'))
-            require(len(labels) <= 1, 'automatic issue base labels ambiguous')
-            body_base = re.search(r'(?im)^\W*base(?:\s+branch)?\W*[:=]\s*`?([\w./-]+)`?',
-                                  item.get('body') or '')
-            base = labels[0] if labels else body_base.group(1) if body_base else AUTOMATIC_DEFAULT_BASE
+            base = authenticate_issue_launch_identity(
+                job_path, number, fingerprint, start_sha, item, AUTOMATIC_DEFAULT_BASE)
             policy = ('## Base branch policy\nBranch from `%s` at the start commit and open ONE '
                       'pull request into `%s`. Never merge or rebase any other branch into yours.' % (base, base))
             require(policy in brief and ('That is the head of `%s` when this brief was written.' % base) in brief,

@@ -1,0 +1,25 @@
+--- a/lane_autofill.py
++++ b/lane_autofill.py
+@@ -1464,6 +1464,22 @@
+         target.write(item_fingerprint(item) + "\n")
+     with open(os.path.join(job_dir, "worktree.txt"), "w") as target:
+         target.write(wt + "\n")
++    if item["kind"] == "issue":
++        it = item["issue"]
++        base = issue_worktree_base(item)
++        start_sha = subprocess.check_output(["git", "--no-optional-locks", "-C", wt, "rev-parse", "HEAD"], text=True).strip()
++        record = {
++            "version": 1,
++            "kind": "issue",
++            "number": n,
++            "issue_updated_at": item_fingerprint(item),
++            "body_sha256": hashlib.sha256((it.get("body") or "").encode()).hexdigest(),
++            "base": base,
++            "start_sha": start_sha,
++        }
++        with open(os.path.join(job_dir, "launch-identity.json"), "w") as target:
++            json.dump(record, target, indent=2, sort_keys=True)
++            target.write("\n")
+     env = os.environ.copy()
+     if lane == "codex-ubuntu":
+         env["VK_HOST_PUBLICATION_ONLY"] = "1"
