@@ -294,3 +294,4 @@ scripts/test_dossier_hours_happy_hour.mjs
 scripts/test_thing_evidence_dossier.mjs
 scripts/test_dossier_refresh_integration.mjs
 scripts/test_dossier_round5.mjs
+scripts/test_thing_evidence_dossier_682.mjs

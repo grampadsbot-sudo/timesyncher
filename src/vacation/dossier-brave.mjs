@@ -74,6 +74,76 @@ async function braveGet(path, key, fetchImpl) {
   return response.json();
 }
 
+function starFromSnippet(snippet = '') {
+  const m = String(snippet).match(/(\d(?:\.\d)?)\s*(?:\/\s*5|out of 5|stars?)/i);
+  return m ? Number(m[1]) : null;
+}
+
+export function normalizeBraveWebResults(payload = {}, query = '') {
+  const web = payload?.web?.results || payload?.results || [];
+  const out = [];
+  for (const row of web) {
+    const url = String(row.url || row.link || '').trim();
+    if (!/^https?:\/\//.test(url)) continue;
+    const title = String(row.title || '').trim();
+    const snippets = [
+      String(row.description || row.snippet || '').trim(),
+      ...(Array.isArray(row.extra_snippets) ? row.extra_snippets.map((s) => String(s || '').trim()) : []),
+    ].filter(Boolean);
+    const rating = starFromSnippet(snippets.join(' '));
+    out.push({ url, title, snippets, rating, query });
+  }
+  return out;
+}
+
+export async function braveWebSearch(query, { env = process.env, fetchImpl = globalThis.fetch, count = 8 } = {}) {
+  const key = braveSubscriptionKey(env);
+  if (!key || !String(query || '').trim()) return { results: [], attempts: [{ kind: 'brave', step: 'web_search', status: key ? 'no_query' : 'missing_key', query }] };
+  try {
+    const params = new URLSearchParams({ q: String(query).trim(), count: String(count) });
+    const payload = await braveGet(`/web/search?${params}`, key, fetchImpl);
+    const results = normalizeBraveWebResults(payload, query);
+    return {
+      results,
+      attempts: [{ kind: 'brave', step: 'web_search', status: 'ok', query, results: results.length }],
+    };
+  } catch (error) {
+    return {
+      results: [],
+      attempts: [{ kind: 'brave', step: 'web_search', status: 'failed', query, error: String(error?.message || '').slice(0, 60) }],
+    };
+  }
+}
+
+export async function runBraveQueries(queries = [], options = {}) {
+  const pages = [];
+  const attempts = [];
+  const braveResults = [];
+  const seen = new Set();
+  for (const row of queries) {
+    const query = typeof row === 'string' ? row : row.query;
+    const { results, attempts: att } = await braveWebSearch(query, options);
+    attempts.push(...att);
+    for (const hit of results) {
+      if (seen.has(hit.url)) continue;
+      seen.add(hit.url);
+      braveResults.push(hit);
+      const snippetText = [hit.title, ...hit.snippets].filter(Boolean).join('\n');
+      if (snippetText.trim()) {
+        pages.push({
+          url: hit.url,
+          fetchedAt: new Date().toISOString(),
+          text: snippetText.slice(0, 12000),
+          via: 'brave-snippet',
+          sha256: createHash('sha256').update(snippetText).digest('hex'),
+          braveSnippet: true,
+        });
+      }
+    }
+  }
+  return { pages, attempts, braveResults };
+}
+
 export async function braveLocalEvidence(place = {}, {
   destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
 } = {}) {

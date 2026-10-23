@@ -1,8 +1,14 @@
 import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
-import { extractTavily, searchTavily } from './poi-search.mjs';
-import { braveLocalEvidence } from './dossier-brave.mjs';
+import { extractTavily } from './poi-search.mjs';
+import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
+import { braveDossierQueryStages, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
+import {
+  computeDossierFieldCounts,
+  fieldsNeedingCapture,
+  recordFieldShortcoming,
+} from './thing-evidence-dossier-field-counts.mjs';
 
 function publicAddress(address) {
   if (isIP(address) === 6) return /^2[0-9a-f]{3}:/i.test(address);
@@ -60,28 +66,28 @@ function pageText(body, type) {
     .join('\n').replace(/[ \t]+/g, ' ').trim();
 }
 
-const DOSSIER_MAX_PAGES = 40;
-const DOSSIER_PAGE_CHARS = 12000;
+export const DOSSIER_MAX_PAGES = 40;
+export const DOSSIER_PAGE_CHARS = 12000;
+const REVIEW_PAGE_CHARS = 40000;
 
-function dossierSearchTopics(place = {}) {
-  const category = String(place.category || place.sourceRecord?.category || '').toLowerCase();
-  const topics = [
-    { q: 'official website menu prices opening hours happy hour' },
-    { q: 'articles known for signature' },
-    { q: 'reviews', review: true },
-    { q: 'yelp reviews', review: true },
-    { q: 'tripadvisor reviews', review: true },
-    { q: 'google reviews', review: true },
-    { q: 'reddit', review: true },
-    { q: 'eater OR infatuation OR timeout review', review: true },
-  ];
-  if (/book/.test(category)) topics.push({ q: 'goodreads reviews', review: true });
-  if (/hotel|lodg|stay|inn/.test(category)) topics.push({ q: 'booking.com OR expedia guest reviews', review: true });
-  return topics;
-}
+const REVIEW_HOST_RE = /yelp\.|tripadvisor\.|google\.|opentable\.|booking\.com/i;
 
 export function reviewSourceHost(url = '') {
   try { return new URL(url).hostname.replace(/^(www|m|en)\./, ''); } catch { return ''; }
+}
+
+function isReviewUrl(url = '') {
+  return REVIEW_HOST_RE.test(reviewSourceHost(url));
+}
+
+function pageCharLimit(url = '') {
+  return isReviewUrl(url) ? REVIEW_PAGE_CHARS : DOSSIER_PAGE_CHARS;
+}
+
+function blockedPageText(text = '') {
+  const n = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!n || n.length < 40) return true;
+  return /captcha|access denied|enable javascript|bot detection|verify you are human/i.test(n);
 }
 
 export const DEFAULT_DOSSIER_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -103,12 +109,23 @@ export function dossierNeedsRefresh(dossier = {}, maxAgeMs = DEFAULT_DOSSIER_MAX
 export function mergeDossierPages(persisted = {}, gathered = {}) {
   const byUrl = new Map((persisted.pages || []).map((page) => [page.url, page]));
   for (const page of gathered.pages || []) byUrl.set(page.url, page);
+  const braveResults = [...(persisted.braveResults || [])];
+  const seenBrave = new Set(braveResults.map((r) => r.url));
+  for (const row of gathered.braveResults || []) {
+    if (!seenBrave.has(row.url)) {
+      seenBrave.add(row.url);
+      braveResults.push(row);
+    }
+  }
   return {
     ...persisted,
     ...gathered,
     thing: gathered.thing || persisted.thing,
     pages: [...byUrl.values()],
     attempts: [...(persisted.attempts || []), ...(gathered.attempts || [])],
+    braveResults,
+    fieldCounts: gathered.fieldCounts || persisted.fieldCounts,
+    shortcomings: gathered.shortcomings || persisted.shortcomings,
   };
 }
 
@@ -121,78 +138,155 @@ export function changedDossierPageUrls(before = [], after = []) {
   return changed;
 }
 
+async function fetchEvidencePage(url, {
+  fetchImpl, resolveImpl, extractImpl, env, attempts, existingUrls,
+}) {
+  if (existingUrls.has(url)) return null;
+  let via = 'direct';
+  let text = '';
+  let finalUrl = url;
+  try {
+    const response = await pageResponse(url, { fetchImpl, resolveImpl });
+    text = pageText(response.body, response.type);
+    finalUrl = response.url;
+    if (!text || blockedPageText(text)) throw new Error('evidence_page_empty');
+    attempts.push({ kind: 'page', url, status: 'ok', via: 'direct', method: 'direct' });
+  } catch (error) {
+    attempts.push({ kind: 'page', url, status: 'failed', via: 'direct', method: 'direct', error: String(error?.message || '').slice(0, 40) });
+    try {
+      const rows = await extractImpl([url], { env, fetchImpl });
+      const row = rows?.[0];
+      text = String(row?.rawContent || '').replace(/\s+/g, ' ').trim();
+      if (!text || blockedPageText(text)) throw new Error('tavily_empty');
+      via = 'tavily-extract';
+      finalUrl = row.url || url;
+      attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
+    } catch (extractError) {
+      attempts.push({ kind: 'page', url, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', error: String(extractError?.message || '').slice(0, 40) });
+      return null;
+    }
+  }
+  const limit = pageCharLimit(finalUrl);
+  const clipped = text.slice(0, limit);
+  return {
+    url: finalUrl,
+    fetchedAt: new Date().toISOString(),
+    text: clipped,
+    via,
+    sha256: createHash('sha256').update(clipped).digest('hex'),
+  };
+}
+
+async function materializeBraveHits(braveBundle = {}, options = {}) {
+  const dossier = { pages: [...(braveBundle.pages || [])], attempts: [...(braveBundle.attempts || [])], braveResults: [...(braveBundle.braveResults || [])] };
+  const urls = new Set();
+  for (const row of dossier.braveResults) if (row.url) urls.add(row.url);
+  const existing = new Set(dossier.pages.map((p) => p.url));
+  for (const url of urls) {
+    if (dossier.pages.length >= DOSSIER_MAX_PAGES) break;
+    if (existing.has(url)) continue;
+    const page = await fetchEvidencePage(url, { ...options, attempts: dossier.attempts, existingUrls: existing });
+    if (page) {
+      dossier.pages.push(page);
+      existing.add(page.url);
+    }
+  }
+  return dossier;
+}
+
+function stageQueries(place, destination) {
+  const flat = [];
+  for (const stage of braveDossierQueryStages(place, destination)) {
+    for (const query of stage.queries) flat.push({ query, stage: stage.stage, review: stage.review === true });
+  }
+  return flat;
+}
+
+export async function gatherBraveEvidenceForQueries(queries = [], place = {}, options = {}) {
+  const braveBundle = await runBraveQueries(queries.map((q) => q.query || q), options);
+  return materializeBraveHits(braveBundle, options);
+}
+
+export async function topUpDossierFields(dossier = {}, place = {}, {
+  destination = '', env = process.env, fetchImpl = globalThis.fetch,
+  resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
+} = {}) {
+  const options = { env, fetchImpl, resolveImpl, extractImpl };
+  let merged = { ...dossier };
+  merged.fieldCounts = computeDossierFieldCounts(merged, place);
+  const needs = fieldsNeedingCapture(merged.fieldCounts, place);
+  let shortcomings = Array.isArray(merged.shortcomings) ? [...merged.shortcomings] : [];
+  for (const field of needs) {
+    let filled = false;
+    for (let attempt = 0; attempt < 3 && !filled; attempt += 1) {
+      const queries = topUpQueriesForField(field, place, destination, attempt);
+      if (!queries.length) break;
+      const gathered = await gatherBraveEvidenceForQueries(queries, place, options);
+      merged = mergeDossierPages(merged, gathered);
+      merged.fieldCounts = computeDossierFieldCounts(merged, place);
+      const status = merged.fieldCounts[field]?.status;
+      filled = status === 'ok';
+      const att = gathered.attempts?.[gathered.attempts.length - 1] || {};
+      if (!filled) {
+        shortcomings = recordFieldShortcoming(
+          { shortcomings },
+          field,
+          field === 'reviews' && merged.fieldCounts.reviews?.status === 'short'
+            ? 'limited number of reviews'
+            : 'still missing after brave top-up',
+          { query: queries[0].query, via: att.via || 'brave', result: att.status || 'no_change' },
+        );
+      }
+    }
+    if (!filled && field === 'reviews' && (merged.fieldCounts.reviews?.count || 0) > 0) {
+      shortcomings = recordFieldShortcoming(
+        { shortcomings },
+        field,
+        'limited number of reviews',
+        { query: '', via: 'code-count', result: String(merged.fieldCounts.reviews.count) },
+      );
+    }
+  }
+  merged.shortcomings = shortcomings;
+  merged.missingFields = shortcomings.map((s) => s.field);
+  return merged;
+}
+
 export async function gatherThingEvidence(place = {}, {
   destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
-  searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
+  resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
-  const dossier = { thing: name, pages: [], attempts: [], reviewsRead: 0, knownFor: [] };
-  const urls = new Set();
-  const raw = new Map();
-  const addPage = (url, text, via) => {
-    if (!text || dossier.pages.some((page) => page.url === url)) return;
-    dossier.pages.push({ url, fetchedAt: new Date().toISOString(), text, via,
-      sha256: createHash('sha256').update(text).digest('hex') });
-  };
+  const options = { env, fetchImpl, resolveImpl, extractImpl };
+  const queries = stageQueries(place, destination);
+  let dossier = await gatherBraveEvidenceForQueries(queries, place, options);
+  dossier.thing = name;
+  dossier.knownFor = dossier.knownFor || [];
+  dossier.reviewsRead = 0;
+
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
-  if (official) urls.add(official);
-  const topics = dossierSearchTopics(place).map((topic) => ({ topic, max: topic.review ? 5 : 8 }));
-  const bravePromise = braveImpl
-    ? Promise.resolve(braveImpl(place, { destination, center, env, fetchImpl }))
-      .catch(() => ({ pages: [], attempts: [{ kind: 'brave', status: 'failed' }] }))
-    : null;
-  const results = await Promise.all(topics.map(async ({ topic, max }) => {
+  if (official && dossier.pages.length < DOSSIER_MAX_PAGES) {
+    const page = await fetchEvidencePage(String(official), {
+      ...options, attempts: dossier.attempts, existingUrls: new Set(dossier.pages.map((p) => p.url)),
+    });
+    if (page) dossier.pages.push(page);
+  }
+
+  if (braveImpl) {
     try {
-      const result = await searchImpl(`${name} ${destination} ${topic.q}`.replace(/\s+/g, ' ').trim(),
-        { env, fetchImpl, maxResults: max, searchDepth: 'advanced', includeRawContent: true });
-      dossier.attempts.push({ kind: 'search', topic: topic.q, status: 'ok' });
-      return result.results || [];
+      const brave = await braveImpl(place, { destination, center, env, fetchImpl });
+      dossier.attempts.push(...(brave.attempts || []));
+      for (const page of brave.pages || []) {
+        if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
+      }
     } catch {
-      dossier.attempts.push({ kind: 'search', topic: topic.q, status: 'failed' });
-      return [];
-    }
-  }));
-  for (const rows of results) {
-    for (const row of rows) {
-      if (!row.url || urls.size >= DOSSIER_MAX_PAGES) continue;
-      urls.add(row.url);
-      if (row.rawContent && !raw.has(row.url)) raw.set(row.url, row.rawContent);
+      dossier.attempts.push({ kind: 'brave', step: 'local', status: 'failed' });
     }
   }
-  const missing = [...urls].filter((url) => !raw.has(url));
-  if (missing.length) {
-    try {
-      for (const row of await extractImpl(missing, { env, fetchImpl })) if (!raw.has(row.url)) raw.set(row.url, row.rawContent);
-      dossier.attempts.push({ kind: 'extract', status: 'ok', urls: missing.length });
-    } catch {
-      dossier.attempts.push({ kind: 'extract', status: 'failed', urls: missing.length });
-    }
-  }
-  for (const url of urls) {
-    const text = String(raw.get(url) || '').replace(/\s+/g, ' ').trim().slice(0, DOSSIER_PAGE_CHARS);
-    if (text) {
-      addPage(url, text, 'tavily');
-      dossier.attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily' });
-      continue;
-    }
-    try {
-      const response = await pageResponse(url, { fetchImpl, resolveImpl });
-      const text = pageText(response.body, response.type);
-      if (!text) throw new Error('evidence_page_empty');
-      if (!dossier.pages.some((page) => page.url === response.url)) dossier.pages.push({
-        url: response.url, fetchedAt: new Date().toISOString(), text: text.slice(0, DOSSIER_PAGE_CHARS),
-        sha256: createHash('sha256').update(text.slice(0, DOSSIER_PAGE_CHARS)).digest('hex'),
-      });
-      dossier.attempts.push({ kind: 'page', url, status: 'ok' });
-    } catch {
-      dossier.attempts.push({ kind: 'page', url, status: 'failed' });
-    }
-  }
-  if (bravePromise) {
-    const brave = await bravePromise;
-    dossier.attempts.push(...(brave.attempts || []));
-    for (const page of brave.pages || []) if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
-  }
+
+  dossier.fieldCounts = computeDossierFieldCounts(dossier, place);
+  dossier.missingFields = fieldsNeedingCapture(dossier.fieldCounts, place);
+  dossier.shortcomings = [];
   return dossier;
 }

@@ -6,6 +6,9 @@ function mergeOverride(base = {}, patch = {}) {
   if (Array.isArray(patch.missingFields) || Array.isArray(base.missingFields)) {
     next.missingFields = patch.missingFields || base.missingFields;
   }
+  if (Array.isArray(patch.dataShortcomings) || Array.isArray(base.dataShortcomings)) {
+    next.dataShortcomings = patch.dataShortcomings || base.dataShortcomings;
+  }
   return next;
 }
 

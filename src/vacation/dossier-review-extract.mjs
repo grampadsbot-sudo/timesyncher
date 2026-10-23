@@ -33,6 +33,13 @@ function looksLikeReview(text) {
 
 export function extractReviewsByCode(dossier = {}) {
   const out = [];
+  for (const row of dossier.braveResults || []) {
+    for (const snippet of row.snippets || []) {
+      if (looksLikeReview(snippet)) {
+        out.push({ text: clip(snippet), page: '', method: 'code:brave-snippet', url: row.url, rating: row.rating || null });
+      }
+    }
+  }
   (dossier.pages || []).forEach((page, index) => {
     const id = dossierPageId(index);
     const text = String(page.text || '');
@@ -91,7 +98,7 @@ export function extractionPrompt(dossier = {}, codeItems = []) {
 export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [], keepIds = null) {
   const core = tokens(String(dossier.thing || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
   const keep = Array.isArray(keepIds) ? new Set(keepIds.map(String)) : null;
-  codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || (keep ? keep.has(`k${i + 1}`)
+  codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || c.method === 'code:brave-snippet' || (keep ? keep.has(`k${i + 1}`)
     : tokens(pageFor0(dossier, c.page)?.text || '').join(' ').includes(core)));
   const pageFor = (id) => { const m = /^p(\d+)$/.exec(String(id || '')); return m ? dossier.pages?.[Number(m[1]) - 1] : null; };
   const model = (Array.isArray(modelItems) ? modelItems : []).filter((r) => r && typeof r.text === 'string')

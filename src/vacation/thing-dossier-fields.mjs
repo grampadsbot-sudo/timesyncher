@@ -125,7 +125,7 @@ export function computeDossierFieldHashes(dossier = {}) {
     hashes[field] = hash;
     sources[field] = claim.url;
   };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS]) {
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
     track(key, dossier.fields?.[key]);
   }
   track('rating', dossier.ratingEvidence);
@@ -163,6 +163,7 @@ const DOSSIER_REBUILD_GROUPS = [
   'rating',
   'reviews',
   'knownFor',
+  'itineraryNote',
 ];
 
 export function dossierRebuildFields(persisted = {}, merged = {}, {
@@ -217,7 +218,7 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
     next.reviewsRead = built.reviewsRead;
   }
   next.fields = { ...(next.fields || {}) };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS]) {
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
     if (!fields.has(key) && !(key.startsWith('happyHour') && fields.has('happyHourDetails'))) continue;
     if (built.fields?.[key]) next.fields[key] = built.fields[key];
     else delete next.fields[key];
@@ -239,7 +240,8 @@ export function prepareDossierFindings(dossier, findings = {}) {
     .filter((item) => claimCitesKnownPages(dossier, item) && item.supported === true)
     .map((item) => ({ ...item, url: claimUrls(dossier, { claims: [item] }) }));
   next.reviewExcerpts = [...new Map(excerpts.map((item) => [norm(item.text), item])).values()];
-  next.reviewsRead = next.reviewExcerpts.length;
+  const codeReviewCount = Number(dossier.fieldCounts?.reviews?.count);
+  next.reviewsRead = Number.isFinite(codeReviewCount) ? codeReviewCount : next.reviewExcerpts.length;
   next.reviewSources = [...new Set(next.reviewExcerpts.flatMap((item) => String(item.url || '').split(','))
     .map(reviewSourceHost).filter(Boolean))];
   const braveRating = (dossier.pages || []).find((page) => page.via === 'brave' && page.braveRating)?.braveRating;
@@ -260,9 +262,10 @@ export function prepareDossierFindings(dossier, findings = {}) {
       && rating.starMix.every((n) => Number.isInteger(n) && n >= 0)
       && rating.starMix.reduce((a, b) => a + b, 0) === count) next.ratingMix = rating.starMix;
   }
-  for (const key of ['summary', 'description', 'price']) {
+  for (const key of ['summary', 'description', 'price', 'itineraryNote']) {
     const claim = findings[key];
     if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
+    if (key === 'itineraryNote' && norm(claim.value).length > 280) continue;
     if (key === 'price') {
       const value = Number(claim.value);
       if (!(value > 0) || !norm(claim.unit)) continue;
@@ -323,18 +326,25 @@ function dossierReviewsValid(dossier = {}) {
   return verdict && Math.abs(total / 4 - dossier.rating) <= 0.5;
 }
 
+function scalarFieldValue(value) {
+  if (value == null) return '';
+  if (typeof value === 'object') return String(value.value ?? value.text ?? '').trim();
+  return String(value).trim();
+}
+
 export function writeDossierReviews(record = {}, dossier = {}) {
   for (let i = 1; i <= 4; i += 1) {
     for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Label', 'Composite', 'CompositeLabel']) delete record[`review${i}${suffix}`];
   }
   delete record.reviewsLabel;
-  const missing = new Set(record.missingFields || []);
+  const missing = new Set(Array.isArray(dossier.shortcomings) ? dossier.shortcomings.map((s) => s.field) : (record.missingFields || []));
   missing.add('reviews');
   const valid = dossierReviewsValid(dossier);
   if (valid || dossierReviewsWritable(dossier)) {
+    const readCount = Number(dossier.fieldCounts?.reviews?.count ?? dossier.reviewsRead ?? 0);
     record.reviewsLabel = valid && dossierReviewBreadthOk(dossier)
-      ? `Representative review written from ${dossier.reviewsRead} reviews`
-      : limitedReviewsLabel(dossier.reviewsRead || 0);
+      ? `Representative review written from ${readCount} reviews`
+      : limitedReviewsLabel(readCount);
     dossier.reviews.forEach((review, index) => {
       const key = `review${index + 1}`;
       record[key] = review.text;
@@ -345,6 +355,10 @@ export function writeDossierReviews(record = {}, dossier = {}) {
       record[`${key}CompositeLabel`] = record.reviewsLabel;
     });
     if (valid) missing.delete('reviews');
+    else if (dossierReviewsWritable(dossier)) {
+      const limited = (dossier.shortcomings || []).some((s) => s.field === 'reviews' && /limited number of reviews/i.test(String(s.reason)));
+      if (limited) missing.delete('reviews');
+    }
   }
   record.missingFields = [...missing];
   return record;
@@ -352,18 +366,24 @@ export function writeDossierReviews(record = {}, dossier = {}) {
 
 export function applyDossierFields(record = {}, dossier = {}) {
   const next = { ...record, evidenceDossier: dossier };
-  const missing = new Set(next.missingFields || []);
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
+  const missing = new Set(Array.isArray(dossier.shortcomings) ? dossier.shortcomings.map((s) => s.field) : (next.missingFields || []));
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings', 'itineraryNote']) missing.add(key);
   for (const key of ['summary', 'description', 'longDetails', 'details', 'price', 'hours', 'happyHourDetails',
     'happyHour', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'googleRating', 'googleReviewCount',
     'googleRatingSourceUrl', 'yelpRating', 'yelpReviewCount', 'yelpRatingSourceUrl', 'thirdPartyRating',
-    'thirdPartyReviewCount', 'thirdPartySource', 'ratingCount', 'ratingMix', 'otherRatingSites', 'reviewThemes', 'websiteFlavour']) delete next[key];
+    'thirdPartyReviewCount', 'thirdPartySource', 'ratingCount', 'ratingMix', 'otherRatingSites', 'reviewThemes',
+    'websiteFlavour', 'itineraryNote', 'address', 'phone', 'website', 'neighborhood', 'lat', 'lng', 'knownFor',
+    'reviewSources', 'dataShortcomings']) delete next[key];
   next.summarySourceUrls = [];
+  if (Array.isArray(dossier.shortcomings) && dossier.shortcomings.length) {
+    next.dataShortcomings = dossier.shortcomings;
+  }
   if (dossierPagesVerified(dossier)) {
     next.summarySourceUrls = dossier.pages.map((page) => page.url);
     for (const [key, claim] of Object.entries(dossier.fields || {})) {
       if (key === 'happyHour') continue;
-      const scalarKeys = ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS];
+      const scalarKeys = ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote',
+        'address', 'phone', 'website', 'neighborhood', 'lat', 'lng', ...HAPPY_HOUR_SUBFIELDS];
       if (!scalarKeys.includes(key)) continue;
       if (key === 'hours' && claim.gap === true) {
         next.hours = HOURS_NOT_FOUND;
@@ -376,8 +396,17 @@ export function applyDossierFields(record = {}, dossier = {}) {
         continue;
       }
       if (!claimsSupported(dossier, claim)) continue;
-      next[key] = key === 'price' ? Number(claim.value) : claim.value;
+      if (key === 'price') next[key] = Number(claim.value);
+      else if (['lat', 'lng'].includes(key)) next[key] = Number(claim.value);
+      else next[key] = scalarFieldValue(claim.value ?? claim);
       missing.delete(key);
+    }
+    if (Array.isArray(dossier.knownFor) && dossier.knownFor.length) {
+      next.knownFor = dossier.knownFor.map((row) => row.item).filter(Boolean);
+      missing.delete('knownFor');
+    }
+    if (Array.isArray(dossier.reviewSources) && dossier.reviewSources.length) {
+      next.reviewSources = [...dossier.reviewSources];
     }
     if (next.description) next.longDetails = next.description;
     if (next.price) next.priceUnit = dossier.fields.price.unit;

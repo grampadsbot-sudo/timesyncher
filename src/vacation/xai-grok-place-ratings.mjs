@@ -5,10 +5,14 @@ import {
 import {
   changedDossierPageUrls,
   DEFAULT_DOSSIER_MAX_AGE_MS,
-  dossierNeedsRefresh,
   gatherThingEvidence,
   mergeDossierPages,
+  topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
+import {
+  computeDossierFieldCounts,
+  deriveMissingFieldsFromShortcomings,
+} from './thing-evidence-dossier-field-counts.mjs';
 import {
   loadThingEvidenceDossier,
   saveThingEvidenceDossier,
@@ -76,6 +80,7 @@ function dossierPrompt(dossier) {
     'Hours: return hours as {value, claims} when opening hours appear on a saved page; each claim cites the page id that states those days/times. Omit hours when no page lists hours.',
     'Happy hour: return happyHourDays, happyHourTimes, and happyHourDeals as separate {value, claims} when a saved page states them; each claim cites its page id. Omit a subfield when that detail is missing. When no saved page mentions happy hour, set happyHourFound:false and omit happy-hour subfields—never invent happy hour.',
     'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
+    'Itinerary note: return itineraryNote as {value, claims} — one cited line (<=280 characters) for the trip itinerary row: what to do or order here, not just the place name.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
     'reviewSet in the JSON below is the full deduplicated set of reviews and opinions already extracted from these pages (each has id, page, text); its size is the real count read. Do not return reviewExcerpts.',
@@ -93,7 +98,7 @@ function dossierPrompt(dossier) {
 export function collectDossierClaims(findings = {}) {
   const items = [];
   const add = (claim) => { if (claim && typeof claim === 'object') items.push(claim); };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'happyHourDays', 'happyHourTimes', 'happyHourDeals']) {
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'itineraryNote']) {
     (findings[key]?.claims || []).forEach((claim) => {
       if (claim && typeof claim === 'object') {
         if (['hours', 'happyHourDays', 'happyHourTimes', 'happyHourDeals'].includes(key)) claim.kind = key;
@@ -204,20 +209,31 @@ export async function fetchXaiPlaceRatings(place = {}, {
   env = process.env, fetchImpl = globalThis.fetch, destination = '', timeoutMs = 120000,
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
+  forceRefresh = false,
 } = {}) {
   const key = dossierKey || thingEvidenceDossierKey(place);
   const persisted = key ? await loadThingEvidenceDossier(key, { env, storeImpl }) : null;
-  const maxAgeExpired = persisted ? dossierNeedsRefresh(persisted, maxAgeMs, nowMs) : true;
-  const gathered = await gatherImpl(place, {
-    env, fetchImpl, destination, searchImpl, resolveImpl, center,
-  });
-  const merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
+  const gatherOpts = {
+    env, fetchImpl, destination, resolveImpl, center,
+  };
+  let merged;
+  if (persisted?.pages?.length && !forceRefresh) {
+    merged = await topUpDossierFields(persisted, place, gatherOpts);
+  } else {
+    const gathered = await gatherImpl(place, gatherOpts);
+    merged = persisted && forceRefresh ? mergeDossierPages(persisted, gathered) : gathered;
+    merged.fieldCounts = computeDossierFieldCounts(merged, place);
+  }
+  merged.fieldCounts = computeDossierFieldCounts(merged, place);
+  if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
+  merged.missingFields = deriveMissingFieldsFromShortcomings(merged.shortcomings);
+
   const changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
   const rebuildFields = persisted
-    ? dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls })
-    : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor']);
+    ? dossierRebuildFields(persisted, merged, { maxAgeExpired: false, changedUrls })
+    : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor', 'itineraryNote']);
   const skipBuilder = persisted
-    && !maxAgeExpired
+    && !forceRefresh
     && rebuildFields.size === 0
     && persisted.fields
     && Object.keys(persisted.fields).length;
@@ -232,15 +248,22 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl });
   merged.reviewSet = extraction.set;
   merged.reviewExtraction = extraction.stats;
+  if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
   const { payload, structuredText, findings } = await callDossierBuilder(merged, {
     env, fetchImpl, timeoutMs, buildImpl,
   });
   if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl });
   const built = prepareDossierFindings(merged, findings);
-  const final = persisted && !maxAgeExpired
+  built.fieldCounts = computeDossierFieldCounts(built, place);
+  if (built.fieldCounts.reviews?.count != null) built.reviewsRead = built.fieldCounts.reviews.count;
+  built.missingFields = deriveMissingFieldsFromShortcomings(built.shortcomings);
+  const final = persisted && !forceRefresh
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
     : built;
+  final.fieldCounts = computeDossierFieldCounts(final, place);
+  if (final.fieldCounts.reviews?.count != null) final.reviewsRead = final.fieldCounts.reviews.count;
+  final.missingFields = deriveMissingFieldsFromShortcomings(final.shortcomings);
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
   final.xaiUsage = merged.xaiUsage || [];
   final.xaiUsd = merged.xaiUsd || 0;
