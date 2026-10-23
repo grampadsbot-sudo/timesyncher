@@ -4,7 +4,11 @@ import {
   mergeStoredCcabNarrativeIntoOverride,
   shouldMergeStoredCcabOnFixtureReplay,
 } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
+import { applyProductKeepsakeOverrides } from './keepsake-product-overrides.mjs';
+import { applyThingPresentation } from './intake-shared-trip.mjs';
 import { applyLiveAppListRowFields } from './shared-trip-live-app-fields.mjs';
+import { syncSharedTripApiBudget } from './shared-trip-api-budget.mjs';
+import { applyThingDetailOverrides } from './thing-detail-fields.mjs';
 
 export const GATEB_FIXTURE_REPLAY_SLUG = 'gateb-fixture-replay';
 
@@ -16,6 +20,12 @@ function travelCategory(place = {}) {
   const cat = String(place.category_name || place.category?.name || place.category || '').toLowerCase();
   if (cat === 'hotel' || cat === 'flight') return cat;
   if (cat === 'car' || cat.includes('car') || cat === 'rental car') return 'car';
+  if (cat === 'transport') {
+    const name = String(place.name || '').toLowerCase();
+    if (/\bflight\b|→|airlines|jetblue|southwest|delta|united|american|las-|jfk|lga|ewr/.test(name)) {
+      return 'flight';
+    }
+  }
   return '';
 }
 
@@ -35,7 +45,7 @@ function pruneDuplicateTravelPlaces(shared = {}) {
   for (const place of places) {
     const cat = travelCategory(place);
     if (!cat) continue;
-    const key = `${normName(place.name)}\0${cat}`;
+    const key = normName(place.name);
     const override = thingOverrides[`place:${place.id}`] || {};
     const score = rowPrice(place, override);
     const id = Number(place.id) || 0;
@@ -94,8 +104,13 @@ function enrichFixtureReplayServedTrip(shared = {}) {
       ? mergeStoredCcabNarrativeIntoOverride(place, withIdentity)
       : withIdentity;
   }
-  const enriched = applyLiveAppListRowFields({ ...shared, places, thingOverrides });
-  return pruneDuplicateTravelPlaces(enriched);
+  const bound = { ...shared, places, thingOverrides };
+  const deduped = pruneDuplicateTravelPlaces(bound);
+  let served = applyThingPresentation(deduped);
+  served = applyThingDetailOverrides(served);
+  served = applyProductKeepsakeOverrides(served);
+  served = applyLiveAppListRowFields(served);
+  return syncSharedTripApiBudget(served);
 }
 
 export function prepareFixtureReplaySharedTrip(bytes) {

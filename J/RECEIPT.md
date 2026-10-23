@@ -1,39 +1,45 @@
-# PR #653 / issue #641 — cursor-ubuntu handback (Gate B coverage round 3)
+# PR #653 / issue #641 — cursor-ubuntu handback (Gate B coverage round 4)
 
-Actual starting HEAD: `f55e29f4578473fc6db1339de6aa92e3df4ff036` (verified before edits).
+Actual starting HEAD: `6452bca8f1ea31e88f9496779b2212eeb7fda42e` (verified before edits).
 
-## What changed (uncommitted for host)
+## Root cause (gateb_coverage on `7c3b2d42`)
 
-Gate B `gateb_coverage.check` on `pr653-7c3b2d4` (`7c3b2d4291196c003ce1c24dc1320c06c08033b6`) failed travel prices, budget prices, and hotel description quality. Prior host commits `8a30b075` (fixture replay + CCAB price wiring) and `f55e29f` (hotel list `rr()` + wrapped hotel summaries) address the named failures; this pass fixes a regression in `test_gate_b_product_row_fields.mjs` introduced when `rr()` was refactored to `h.itineraryNote` instead of `ha(G).itineraryNote` in the fallback pick chain.
+Capture harness serves `prepareFixtureReplaySharedTrip` payload (not live API). Two defects explained `pr653-7c3b2d4` price/budget failures on top of prior `8a30b075` / `f55e29f` / `6452bca` UI work:
 
-Patch (this pass):
+1. **Duplicate flight rows** — NYC base fixture still carries legacy `Transport` rows (ids 13–22) with the same names as snapshot `flight` rows (650+). UI listed the unpriced transport row first; `gateb_coverage` segments body text by name and saw no `$` on the first segment → `price flights-* list: 16/16 … have no price`.
+2. **Budget tab** — replay path never ran `syncSharedTripApiBudget`, so capture payload lacked priced `budget[]` lines → `price budget-*: 21/23 hotels …`.
 
-- `src/vacation/trek-thing-detail-fields-patch.mjs` — keep hotel `longDetails` preference via `h=ha(G)`; restore `ha(G).itineraryNote` / `ha(G).summary` in the clipped pick fallback so the live detail bundle still matches the gate-b product row contract.
+Hotel description quality failures on `7c3b2d2` remain addressed by `f55e29f` / `6452bca` (`rr()` longDetails + `ha(G)` pick chain); needs fresh capture to verify.
 
-Already on branch HEAD from host (`8a30b075`, `f55e29f`): `shared-trip-fixture-replay.mjs`, budget `priceText`, flight `eu()` titles, `build_head_fixture.py` travel dedupe, hotel summary wrapping in `shared-trip-oe-list-row-patch.mjs`.
+## Patch (uncommitted for host)
 
-## Local verification (tree at `f55e29f` + above edit)
+| File | Change |
+| --- | --- |
+| `src/vacation/shared-trip-fixture-replay.mjs` | Treat flight-like `Transport` as travel; dedupe travel by normalized name on raw fixture prices (before live price estimation); then presentation/detail/keepsake/list-field enrichment + `syncSharedTripApiBudget`. |
+| `scripts/ops/dispatch/build_head_fixture.py` | Same travel dedupe rules when merging pr336 snapshot into `nyc-shared.json`. |
+| `scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs` | Regression: transport+flight name collision drops legacy row and emits budget lines. |
+
+## Local verification (`6452bca` + above diff)
 
 | Command | Result |
 | --- | --- |
-| `npm ci` (repo root) | pass |
-| `npm ci` (`apps/vacation-client`) | pass |
-| `node scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs` | pass (76 rows, 39 priced travel) |
+| `node scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs` | pass |
 | `node scripts/test_gate_b_product_row_fields.mjs` | pass |
-| `node scripts/test_gate_b_live_tab_logo_rows.mjs` | pass |
-| `node scripts/test_shared_site_budget_tab.mjs` | pass |
-| `node scripts/test_vk_hotel_detail_fill.mjs` | pass |
+| `node scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs` (replay dedupe on `head-6452bca.json`) | 1 flight row, 95 budget lines |
 | `node scripts/check-no-comments.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
-| `python3 scripts/ops/dispatch/test_capture_payload_binding.py` | 4 OK |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
 
-Not run here: `test_capture_fixture_replay_harness.mjs` (blocked: stale `capture-producer-roots` worktree registration under `~/tsv-dispatch/pr-src`), full CI, fresh Gate B capture on new head, `gateb_coverage.check` after re-capture, Keepsake QA, live #641 acceptance (`run10` / `ev641a.txt`).
+Not run: Playwright `scripts/ops/capture/capture.mjs` (no `playwright` in repo `node_modules`), fresh `gateb_coverage.check` on `pr653-<newhead7>`, CI, Keepsake QA, live #641 acceptance.
+
+Pre-existing on `6452bca`: `node scripts/test_shared_trip_api_budget_lines.mjs` fails at line 96 (`gateAllowed.has(0)`); unchanged by this pass.
 
 ## Host publication
 
 Uncommitted files:
 
-- `src/vacation/trek-thing-detail-fields-patch.mjs`
+- `src/vacation/shared-trip-fixture-replay.mjs`
+- `scripts/ops/dispatch/build_head_fixture.py`
+- `scripts/test_nyc_gateb_snapshot_staging_list_prices.mjs`
 
-Host: commit on `vkfill/641-20261022210748`, rebuild head fixture (`build_head_fixture.py`), re-capture with producer at published head, run `gateb_coverage.check` on `pr653-<newhead7>`.
+Host: commit on `vkfill/641-20261022210748`, rebuild head fixture + budget via `build_head_fixture.py` + `fill_budget`, re-capture at published head, run `gateb_coverage.check` on `pr653-<newhead7>`.

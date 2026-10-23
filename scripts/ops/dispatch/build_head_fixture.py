@@ -15,6 +15,10 @@ def _travel_cat(place):
     cat = str(place.get("category_name") or place.get("category") or "").lower()
     if cat in ("hotel", "flight", "car", "cars", "rental car"):
         return "car" if "car" in cat or cat == "rental car" else cat
+    if cat == "transport":
+        name = str(place.get("name") or "").lower()
+        if re.search(r"\bflight\b|→|airlines|jetblue|southwest|delta|united|american|las-|jfk|lga|ewr", name):
+            return "flight"
     return ""
 
 def _row_price(place, override):
@@ -37,7 +41,7 @@ def prune_duplicate_travel_places(fx):
         cat = _travel_cat(place)
         if not cat:
             continue
-        key = (_norm_name(place.get("name")), cat)
+        key = _norm_name(place.get("name"))
         pid = int(place.get("id") or 0)
         ov = overrides.get("place:%s" % pid) or overrides.get(str(pid)) or {}
         score = (_row_price(place, ov), pid)
@@ -90,6 +94,10 @@ def build(base_fixture, snapshot, out):
         cat = str(place.get("category_name") or place.get("category") or "").lower()
         if cat in ("hotel", "flight", "car", "cars", "rental car"):
             return "car" if "car" in cat or cat == "rental car" else cat
+        if cat == "transport":
+            name = str(place.get("name") or "").lower()
+            if re.search(r"\bflight\b|→|airlines|jetblue|southwest|delta|united|american|las-|jfk|lga|ewr", name):
+                return "flight"
         return ""
 
     def row_price(place, override):
@@ -110,7 +118,7 @@ def build(base_fixture, snapshot, out):
             cat = travel_cat(place)
             if not cat:
                 continue
-            key = (norm_name(place.get("name")), cat)
+            key = norm_name(place.get("name"))
             pid = int(place.get("id") or 0)
             ov = overrides.get("place:%s" % pid) or overrides.get(str(pid)) or {}
             score = (row_price(place, ov), pid)
