@@ -4,7 +4,31 @@ import {
   HOURS_NOT_FOUND,
   NO_HAPPY_HOUR_FOUND,
 } from './dossier-hours-fields.mjs';
+import { descriptionPassesDetailJudge } from './thing-detail-fields.mjs';
+import { isLodgingStay } from './intake-lodging-stay.mjs';
+import { transportKind } from './intake-transport-kind.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { buildPriceEstimateFromEvidence } from './thing-evidence-price-estimate.mjs';
+import { normalizeThingType } from './timeline-icons.mjs';
+
+const TRAVEL_SOURCED_PRICE_CATEGORIES = new Set(['hotel', 'flight', 'car']);
+
+function dossierTravelCategory(record = {}) {
+  const transportRecord = {
+    category: record.category || record.category_name,
+    category_name: record.category_name,
+    title: record.title || record.name,
+    name: record.name || record.title,
+    source: record.source,
+    metadata: record.metadata,
+  };
+  const kind = transportKind(transportRecord);
+  if (kind === 'flight') return 'flight';
+  if (kind === 'car' && !isLodgingStay(transportRecord)) return 'car';
+  const resolved = normalizeThingType(record.category_name || record.category);
+  if (resolved === 'hotel') return 'hotel';
+  return resolved || 'other';
+}
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -102,6 +126,19 @@ export function claimsSupported(dossier, owner) {
   const claims = owner?.claims;
   return Array.isArray(claims) && claims.length > 0
     && claims.every((claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true);
+}
+
+function supportedFieldClaims(dossier, owner) {
+  return (owner?.claims || []).filter(
+    (claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true,
+  );
+}
+
+function scalarFieldClaimsOk(dossier, owner, key) {
+  const supported = supportedFieldClaims(dossier, owner);
+  if (!supported.length) return false;
+  if (key === 'description') return true;
+  return supported.length === (owner?.claims || []).length;
 }
 
 function claimUrls(dossier, owner) {
@@ -262,14 +299,15 @@ export function prepareDossierFindings(dossier, findings = {}) {
   }
   for (const key of ['summary', 'description', 'price']) {
     const claim = findings[key];
-    if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
+    if (!claim || !norm(claim.value) || !scalarFieldClaimsOk(dossier, claim, key)) continue;
+    const claims = supportedFieldClaims(dossier, claim);
     if (key === 'price') {
       const value = Number(claim.value);
       if (!(value > 0) || !norm(claim.unit)) continue;
     }
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !descriptionNamesThing(claim.value, dossier.thing))) continue;
-    next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
+    next.fields[key] = { ...claim, claims, url: claimUrls(dossier, { claims }) };
     if (key === 'description' && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
@@ -351,9 +389,17 @@ export function writeDossierReviews(record = {}, dossier = {}) {
 }
 
 export function applyDossierFields(record = {}, dossier = {}) {
+  const travelCategory = dossierTravelCategory(record);
+  const preserveTravelPrice = TRAVEL_SOURCED_PRICE_CATEGORIES.has(travelCategory);
+  const priorPrice = preserveTravelPrice ? record.price : undefined;
+  const priorPriceUnit = preserveTravelPrice ? record.priceUnit : undefined;
+  const placeName = record.title || record.name || dossier.thing || '';
+  const priorLongDetails = travelCategory === 'hotel'
+    ? norm(record.longDetails || record.description || '')
+    : '';
   const next = { ...record, evidenceDossier: dossier };
   const missing = new Set(next.missingFields || []);
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
+  for (const key of ['summary', 'description', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
   for (const key of ['summary', 'description', 'longDetails', 'details', 'price', 'hours', 'happyHourDetails',
     'happyHour', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'googleRating', 'googleReviewCount',
     'googleRatingSourceUrl', 'yelpRating', 'yelpReviewCount', 'yelpRatingSourceUrl', 'thirdPartyRating',
@@ -363,7 +409,7 @@ export function applyDossierFields(record = {}, dossier = {}) {
     next.summarySourceUrls = dossier.pages.map((page) => page.url);
     for (const [key, claim] of Object.entries(dossier.fields || {})) {
       if (key === 'happyHour') continue;
-      const scalarKeys = ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS];
+      const scalarKeys = ['summary', 'description', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS];
       if (!scalarKeys.includes(key)) continue;
       if (key === 'hours' && claim.gap === true) {
         next.hours = HOURS_NOT_FOUND;
@@ -375,14 +421,33 @@ export function applyDossierFields(record = {}, dossier = {}) {
         missing.delete('happyHourDetails');
         continue;
       }
-      if (!claimsSupported(dossier, claim)) continue;
-      next[key] = key === 'price' ? Number(claim.value) : claim.value;
+      if (!scalarFieldClaimsOk(dossier, claim, key)) continue;
+      next[key] = claim.value;
       missing.delete(key);
     }
     if (next.description) next.longDetails = next.description;
-    if (next.price) next.priceUnit = dossier.fields.price.unit;
+    if (travelCategory === 'hotel' && priorLongDetails) {
+      const candidate = norm(next.longDetails || next.description || '');
+      const priorOk = descriptionPassesDetailJudge(priorLongDetails, placeName);
+      const candidateOk = candidate && descriptionPassesDetailJudge(candidate, placeName);
+      if ((!candidate || !candidateOk) && priorOk) {
+        next.longDetails = priorLongDetails;
+        next.description = priorLongDetails;
+        missing.delete('description');
+      }
+    }
     if (next.happyHourDetails && next.happyHourDetails !== NO_HAPPY_HOUR_FOUND) next.happyHour = true;
     if (dossier.fields?.happyHour?.value === false) next.happyHour = false;
+    const priceEstimate = buildPriceEstimateFromEvidence(dossier);
+    next.priceEstimateLabel = priceEstimate.label;
+    next.priceEstimateCitations = priceEstimate.citations;
+    if (priceEstimate.amount != null && priceEstimate.amount > 0) {
+      next.price = priceEstimate.amount;
+      if (priceEstimate.unit) next.priceUnit = priceEstimate.unit;
+    } else if (preserveTravelPrice && priorPrice != null && priorPrice !== '') {
+      next.price = priorPrice;
+      if (priorPriceUnit) next.priceUnit = priorPriceUnit;
+    }
     if (dossier.ratingEvidence && cited(dossier, dossier.ratingEvidence)) {
       next.thirdPartyRating = String(dossier.rating);
       next.thirdPartyReviewCount = String(dossier.reviewsAvailable);

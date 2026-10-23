@@ -19,6 +19,8 @@ import {
   saveThingEvidenceDossier,
   useThingEvidenceDossierStore,
 } from '../src/vacation/thing-evidence-dossier-store.mjs';
+import { applyStoredDossiersToSharedTripSync } from '../src/vacation/shared-trip-dossier-overlay.mjs';
+import { descriptionPassesDetailJudge } from '../src/vacation/thing-detail-fields.mjs';
 import { enrichPlaceRecordWithXaiRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
 
 function page(url, text) {
@@ -112,6 +114,68 @@ const rejected = prepareDossierFindings(
 assert.equal(rejected.fields.summary, undefined, 'judge-unsupported summary must be omitted');
 assert.equal(rejected.fields.hours, undefined, 'claim citing no page must fail');
 assert.equal(rejected.fields.price, undefined, 'claim citing an unknown page must fail');
+
+const vanguardDesc = 'Village Vanguard anchors Greenwich Village jazz with a basement listening room, long-running Monday nights, and a booking pace that rewards advance tickets while the room keeps its tight sightlines, historic set lists, and the kind of close-up acoustic mix that regulars quote in every review thread online.';
+const mixedDescription = prepareDossierFindings(
+  { thing: 'Village Vanguard', pages: goodPages, attempts: [] },
+  {
+    description: {
+      value: vanguardDesc,
+      claims: [
+        { text: 'Cover charges typically range from $25-$50', pages: ['p3'], supported: false },
+        { text: 'Monday night sets are a signature booking', pages: ['p1'], supported: true },
+      ],
+    },
+  },
+);
+assert.ok(mixedDescription.fields.description, 'one unsupported description claim must not blank the field');
+assert.equal(mixedDescription.fields.description.claims.length, 1);
+assert.equal(mixedDescription.fields.description.claims[0].supported, true);
+const appliedVanguard = applyDossierFields({}, mixedDescription);
+assert.ok(appliedVanguard.description.startsWith(vanguardDesc));
+
+const hotelProse = 'Arthouse Hotel fills a 1924 Salvation Army landmark at 2178 Broadway with art-forward guest rooms, strong Upper West Side subway access, and a rooftop lounge that guests mention in repeat booking threads online.';
+const hotelBareDossier = prepareDossierFindings(
+  { thing: 'Arthouse Hotel', pages: goodPages, attempts: [] },
+  {
+    summary: {
+      value: 'Arthouse Hotel pairs bold lobby art with walkable Broadway access and compact guest rooms that trade square footage for location near Lincoln Center shows.',
+      claims: [{ text: 'bold lobby art', pages: ['p1'], supported: true }],
+    },
+  },
+);
+const appliedHotel = applyDossierFields({
+  category: 'hotel',
+  title: 'Arthouse Hotel',
+  price: 508,
+  longDetails: hotelProse,
+}, hotelBareDossier);
+assert.equal(appliedHotel.price, 508, 'dossier without evidence price must keep sourced hotel nightly rate');
+assert.equal(descriptionPassesDetailJudge(appliedHotel.longDetails, 'Arthouse Hotel'), true);
+
+const flightBareDossier = prepareDossierFindings(
+  { thing: 'JetBlue BOS-JFK', pages: goodPages, attempts: [] },
+  {},
+);
+const appliedFlight = applyDossierFields({
+  category: 'flight',
+  title: 'JetBlue BOS-JFK',
+  price: 164,
+}, flightBareDossier);
+assert.equal(appliedFlight.price, 164, 'dossier overlay must keep sourced flight fare');
+
+const sharedWithHotel = {
+  places: [{ id: 900, name: 'Arthouse Hotel', category_name: 'Hotel' }],
+  thingOverrides: {
+    'place:900': { category: 'hotel', price: 508, longDetails: hotelProse, sourceRecord: { price: 508, longDetails: hotelProse } },
+  },
+};
+const overlaid = applyStoredDossiersToSharedTripSync(sharedWithHotel, {
+  900: hotelBareDossier,
+});
+assert.equal(overlaid.thingOverrides['place:900'].price, 508);
+assert.equal(descriptionPassesDetailJudge(overlaid.thingOverrides['place:900'].longDetails, 'Arthouse Hotel'), true);
+
 const noReviews = prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, { ...findings, reviewExcerpts: [] });
 assert.ok(noReviews.fields.description, 'no reviews must not fail the description');
 assert.match(noReviews.fields.description.value, /\nNo reviews were found for this place\.$/);

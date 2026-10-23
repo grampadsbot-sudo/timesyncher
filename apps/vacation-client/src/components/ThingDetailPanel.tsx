@@ -79,9 +79,15 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
           </div>
         </header>
         <div className="tsv-detail-body">
-          {model.priceLabel ? (
+          {model.priceLine ? (
             <p className="tsv-detail-price" data-ts-detail-field="price">
-              <strong>Price:</strong> {model.priceLabel}
+              {model.priceHeading === 'Price estimate unavailable' ? (
+                <strong>{model.priceHeading}</strong>
+              ) : (
+                <>
+                  <strong>{model.priceHeading}:</strong> {model.priceLabel}
+                </>
+              )}
             </p>
           ) : null}
           {model.ratingLines.map((line) => (

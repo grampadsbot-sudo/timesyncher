@@ -288,5 +288,6 @@ scripts/test_verify_vacation_layout_self_check.mjs
 scripts/test_verify_skill_no_vercel.mjs
 scripts/test_dossier_hours_happy_hour.mjs
 scripts/test_thing_evidence_dossier.mjs
+scripts/test_thing_evidence_price_estimate.mjs
 scripts/test_dossier_refresh_integration.mjs
 scripts/test_dossier_round5.mjs

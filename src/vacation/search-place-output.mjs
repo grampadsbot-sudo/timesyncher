@@ -1,5 +1,6 @@
 import { enrichSearchPlace } from './trip-thing-enrichment.mjs';
 import { reviewThemesDistinctCount, xaiDossierReviewPath, xaiThemesReviewPath } from './xai-grok-place-ratings-helpers.mjs';
+import { priceEstimateAcknowledged } from './thing-evidence-price-estimate.mjs';
 
 const SEARCH_PRODUCT_CATEGORIES = new Set([
   'hotel',
@@ -343,7 +344,7 @@ export function searchPlaceOutputViolations(place = {}) {
   violations.push(...bannedTextViolations('summary', summary));
   violations.push(...bannedTextViolations('description', description));
   violations.push(...titleViolations(place));
-  if (price == null) violations.push('missing_price');
+  if (price == null && !priceEstimateAcknowledged(place)) violations.push('missing_price');
   else if (price === 0) violations.push('banned_price_zero');
   if (!logoUrl) violations.push('missing_logoUrl');
 
