@@ -64,7 +64,8 @@ const reviewsDossier = {
 };
 const reviewCounts = computeDossierFieldCounts(reviewsDossier, { title: 'Sample Bistro', category: 'restaurant' });
 assert.equal(reviewCounts.reviews.status, 'ok');
-const applied = applyDossierFields({}, { ...reviewsDossier, shortcomings: [] });
+const syncedReviews = normalizeDossierEvidence(reviewsDossier, { title: 'Sample Bistro', category: 'restaurant' });
+const applied = applyDossierFields({}, syncedReviews);
 assert.equal(applied.missingFields.includes('reviews'), false);
 
 assert.equal(requiresHappyHourCapture({ title: 'Blue Note Jazz Club', category: 'restaurant' }), false);

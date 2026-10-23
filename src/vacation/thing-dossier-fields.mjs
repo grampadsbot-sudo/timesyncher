@@ -335,12 +335,15 @@ function scalarFieldValue(value) {
   return String(value).trim();
 }
 
-export function writeDossierReviews(record = {}, dossier = {}) {
+export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingMissing = false } = {}) {
   for (let i = 1; i <= 4; i += 1) {
     for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Label', 'Composite', 'CompositeLabel']) delete record[`review${i}${suffix}`];
   }
   delete record.reviewsLabel;
-  const missing = new Set();
+  const missing = useShortcomingMissing
+    ? new Set()
+    : new Set(Array.isArray(record.missingFields) ? record.missingFields : []);
+  if (!useShortcomingMissing) missing.add('reviews');
   const valid = dossierReviewsValid(dossier);
   if (valid || dossierReviewsWritable(dossier)) {
     const readCount = Number(dossier.fieldCounts?.reviews?.count ?? dossier.reviewsRead ?? 0);
@@ -362,12 +365,19 @@ export function writeDossierReviews(record = {}, dossier = {}) {
       if (limited) missing.delete('reviews');
     }
   }
+  if (!useShortcomingMissing) record.missingFields = [...missing];
   return record;
 }
 
 export function applyDossierFields(record = {}, dossier = {}) {
   const next = { ...record, evidenceDossier: dossier };
-  const missing = new Set();
+  const useShortcomingMissing = Array.isArray(dossier.shortcomings) && dossier.shortcomings.length > 0;
+  const missing = new Set(
+    useShortcomingMissing ? dossier.shortcomings.map((s) => s.field).filter(Boolean) : [],
+  );
+  if (!useShortcomingMissing) {
+    for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings', 'itineraryNote']) missing.add(key);
+  }
   for (const key of ['summary', 'description', 'longDetails', 'details', 'price', 'hours', 'happyHourDetails',
     'happyHour', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'googleRating', 'googleReviewCount',
     'googleRatingSourceUrl', 'yelpRating', 'yelpReviewCount', 'yelpRatingSourceUrl', 'thirdPartyRating',
@@ -428,9 +438,9 @@ export function applyDossierFields(record = {}, dossier = {}) {
       missing.delete('ratings');
     }
   }
-  next.missingFields = Array.isArray(dossier.shortcomings)
+  next.missingFields = useShortcomingMissing
     ? [...new Set(dossier.shortcomings.map((s) => s.field).filter(Boolean))]
-    : (Array.isArray(dossier.missingFields) ? dossier.missingFields : []);
+    : [...missing];
   next.xaiRatingsFetched = dossierReviewsValid(dossier);
-  return writeDossierReviews(next, dossier);
+  return writeDossierReviews(next, dossier, { useShortcomingMissing });
 }
