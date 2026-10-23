@@ -1,44 +1,7 @@
-# Issue #641 — cursor-ubuntu vkfill-641 (2026-10-23)
+# Exact live-runtime port of merged #665 passive observer
 
-**Start sha:** `5ee5bb95586ab1d588b3dba7d2d116054f0296b7`
+Source #665 head4d328f77b43f6bb844021cb14efa25add681ad94 is merged, but its capture source differs from installed runtime for unrelated prechecks/replay/traversal. Its full zero-fuzz patch refuses5/7capturehunks. Host narrowed to passive observer imports, row identity, event drain, init and serialization only; screenshot/measurement/wait calls remain byte-identical in sequence. No checker, render, fixture, timeout or baseline change.
 
-## Outcome
+Staged capture and passive module syntax pass. Actual Chromium first/second real image events retained, query material stripped, saved/recommendation rows isolated. Runtime preimages capture7865a7bfd893404ac2f4c6580e8d5aa29ece31821554717efb6f0ece4ff64f77 and passive828baf99aa0240ddfb911556c312e37e3cef75150bcf907447a08578f7b46f3b. Candidate capture84f03df8198c7912a92a52605e53ff787c99dc5f7fc73547e39aea6c17df76f9 and passive10746223bc660ed93f94f2de1c12cd5c57c0d37260e03dc39c184b4318725349. Passive module is unchanged from merged #665. This minimal runtime patch has zero context to avoid copying unrelated runtime routing constants into source.
 
-Source-ready for host publication; uncommitted. Not a green-CI, live run10, or merge claim.
-
-## Changes
-
-### a) Review claims: `rN` → dossier `pN`
-
-- `thing-dossier-fields.mjs`: `reviewSetPageIdMap`, `resolveClaimCitationPages`; `claimCitesKnownPages` resolves review-set ids via `dossier.reviewSet[].page`.
-- `xai-grok-place-ratings.mjs`: `judgeDossierFindings` rewrites claim `pages` to resolved `pN` before the cite gate and judge. Unresolvable `r` ids still fail.
-
-### b) Meaning-based judge
-
-- `dossierJudgePrompt` (exported): summaries are not quotations; pass on meaning/paraphrase; fail on unsupported facts, wrong numbers/times/names, or contradictions.
-- `scripts/test_thing_evidence_dossier.mjs`: review-set resolution + paraphrase path to judge + contradicted claim fail + prompt assertion.
-
-### c) Brave coverage (round 5 findings)
-
-**Investigation** (`~/run10-20261022/out5`, start `5ee5bb9` deploy): 9/10 Things had `brave` `local_search` `results: 0` then `match: no_match`; only Rosa Mexicano got locations + a Brave page (rating only, 0 embedded reviews). Harness `call5.py` passes `destination: New York` with **no lat/lng** on places, so dossier Brave never ran `place_search` until a center exists. Production VK rows from Brave place search carry coordinates on `sourceRecord` / `coordinates[]`, but `placeCoords` only read flat `lat`/`lng`.
-
-**Fixes in code**
-
-- `dossier-brave.mjs`: read coords via `bravePoint` (same as place search); `intakeLodgingLookupQuery(name, destination)` for Brave queries; `place_search` when place, trip `metadata.destinationCenter`, or search `center` is available; thread `center` from `gatherThingEvidence` / `fetchXaiPlaceRatings` / `place-search` enrich.
-
-**Left alone:** Brave plan limits, Tavily dedup, and harness still lacking trip `destinationCenter` (host may pass center on dossier-run API for run10).
-
-## Local verification (start `5ee5bb9` + uncommitted diff)
-
-| Command | Result |
-| --- | --- |
-| `node scripts/test_thing_evidence_dossier.mjs` | pass |
-| `node scripts/test_dossier_round5.mjs` | pass |
-| `node scripts/test_dossier_refresh_integration.mjs` | pass |
-| `node scripts/check-no-comments.mjs` | pass (847 files) |
-| `node scripts/test_offline_manifest.mjs` | pass |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
-
-## Host-owned
-
-Commit, push once, open PR into `migrate/trek-source` with `Closes #641`, CI, run10 live acceptance, Gate B if required.
+Source bot-admin/receipts/gpt-manager-pass-20261023-0700. No product/Gate B rerun, cap reset, merge or deploy. #590 still requires actual future normal-capture row/event correlation; observer proof is not product-logo acceptance.
