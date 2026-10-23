@@ -69,6 +69,19 @@ class RuntimeInstall(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_installed_runtime_contains_launch_identity_consumer(self):
+        result = run_install(self.runtime, config=PROOF_CONFIG, apply=True)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        probe = subprocess.run([
+            sys.executable, '-I', '-c',
+            "import sys; sys.path.insert(0, sys.argv[1]); "
+            "from host_handback_launch_identity import issue_body_sha256; "
+            "assert issue_body_sha256('launch body') == "
+            "'57e49e7161139e75eab0f928d46540db0e947cda76e1accf0afb4ae89854e0f6'",
+            str(self.runtime),
+        ], capture_output=True, text=True)
+        self.assertEqual(probe.returncode, 0, probe.stderr or probe.stdout)
+
     def test_check_accepts_preimage_sha(self):
         result = run_install(self.runtime)
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)

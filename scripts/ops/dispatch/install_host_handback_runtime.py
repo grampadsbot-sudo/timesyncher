@@ -13,6 +13,7 @@ from pathlib import Path
 SOURCE = Path(__file__).resolve().parent
 PATCH = SOURCE / 'host-handback-runtime.patch'
 MODULES = (
+    'host_handback_launch_identity.py',
     'host_handback_observation.py',
     'host_handback_entrypoint.py',
     'host_handback_events.py',
@@ -24,6 +25,8 @@ CONFIG_NAME = 'host-handback-entrypoint.json'
 EXPECTED_ALARM_SHA256 = (
     'cd87a62e90a737c53a15284b3ed531aad240ba3293dd4060397ab76f8f661163'
 )
+SUPPORTED_ALARM_SHA256 = frozenset({EXPECTED_ALARM_SHA256,
+    'fd1bf6496cc724023362a6bc365c4cafbac08e151ef7f9711edbb078a1d75ba0'})
 WORKTREE_SCOPE = '/home/ubishere9995/tsv-work/'
 
 
@@ -73,7 +76,7 @@ def check_runtime(runtime_root):
     if not alarm.is_file():
         raise SystemExit('missing runtime alarm: %s' % alarm)
     digest = sha256_file(alarm)
-    if digest != EXPECTED_ALARM_SHA256:
+    if digest not in SUPPORTED_ALARM_SHA256:
         raise SystemExit('runtime alarm sha256 mismatch (got %s, need %s)' % (digest, EXPECTED_ALARM_SHA256))
     if not PATCH.is_file():
         raise SystemExit('missing install patch: %s' % PATCH)
