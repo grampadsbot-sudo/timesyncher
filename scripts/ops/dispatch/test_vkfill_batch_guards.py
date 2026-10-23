@@ -55,9 +55,24 @@ class QuotaSkipAndStall(unittest.TestCase):
 
     def test_stall_alarm_reports_held_push_overdue(self):
         now = 2_000_000_000.0
-        held = [{"n": 653, "push_due": now - 1}]
+        held = [
+            {
+                "n": 653,
+                "push_due": now - 1,
+                "branch": "vkfill/641-20261022210748",
+                "sha": "43dcbeae8fe9097bf2a4e63c0e64655ff7509c43",
+            }
+        ]
         reason = g.stall_alarm_reason(held, now, generic_reason="PR stalled 45m")
-        self.assertEqual(reason, "held, push overdue: #653")
+        self.assertEqual(
+            reason,
+            "held, push overdue vkfill/641-20261022210748 43dcbeae8fe9097bf2a4e63c0e64655ff7509c43",
+        )
+
+    def test_publish_before_quota_skip_without_log_line(self):
+        now = 1_700_000_000.0
+        held = [{"pr": 653, "push_due": now - 1}]
+        self.assertTrue(g.autofill_should_publish_before_quota_skip(held, now))
 
 
 if __name__ == "__main__":

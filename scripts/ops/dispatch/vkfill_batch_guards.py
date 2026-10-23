@@ -123,6 +123,22 @@ def held_entry_issue(entry: Mapping) -> IssueNum | None:
     return None
 
 
+def held_entry_branch(entry: Mapping) -> str:
+    for key in ("branch", "ref", "head_ref", "publish_branch", "vkfill_branch"):
+        value = entry.get(key)
+        if value:
+            return str(value).strip()
+    return ""
+
+
+def held_entry_sha(entry: Mapping) -> str:
+    for key in ("sha", "held_sha", "tip", "publish_sha", "commit"):
+        value = entry.get(key)
+        if value:
+            return normalize_git_sha(value)
+    return ""
+
+
 def overdue_held_pushes(
     held_entries: Iterable[Mapping],
     now: float,
@@ -146,6 +162,13 @@ def autofill_must_run_batch_push(
     return bool(overdue_held_pushes(held_entries, now))
 
 
+def autofill_should_publish_before_quota_skip(
+    held_entries: Iterable[Mapping],
+    now: float,
+) -> bool:
+    return bool(overdue_held_pushes(held_entries, now))
+
+
 def stall_alarm_reason(
     held_entries: Iterable[Mapping],
     now: float,
@@ -156,9 +179,27 @@ def stall_alarm_reason(
         return generic_reason
     labels = []
     for entry in overdue:
-        issue = held_entry_issue(entry)
-        labels.append("#%s" % issue if issue is not None else "?")
-    return "held, push overdue: %s" % ", ".join(labels)
+        branch = held_entry_branch(entry) or "?"
+        sha = held_entry_sha(entry) or "?"
+        labels.append("%s %s" % (branch, sha))
+    return "held, push overdue %s" % ", ".join(labels)
+
+
+def void_marker_name_is_alreadypushed(name: str) -> bool:
+    text = str(name or "")
+    return ".void-" in text and text.endswith("-alreadypushed")
+
+
+def void_alreadypushed_marker_invalid(
+    marker_name: str,
+    held_sha: str,
+    branch_ref: str,
+    ls_remote_lines: LsRemoteLines,
+) -> bool:
+    """True when a voided alreadypushed marker should not have been retired that way."""
+    if not void_marker_name_is_alreadypushed(marker_name):
+        return False
+    return not may_void_held_as_alreadypushed(held_sha, branch_ref, ls_remote_lines)
 
 
 def rename_void_marker_name(
