@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
 import { openRouterProviderSpread, openRouterTier1CompactReasoningSpread } from './openrouter-tier-provider.mjs';
 export const REPLY_RULES_SLUG = 'bot-admin/skills/time-syncher/vacation-app-reply-rules';
 export const DIALOG_TEST_FINGERPRINT = 'TS-DIALOG-FINGERPRINT-20260924-bar2';
@@ -460,6 +461,23 @@ function normalizeDecisions(body) {
 
 export async function postJevDecisions({ payload, apiKey, fetchImpl = fetch, title = 'TimeSyncher Vacation POI', timeoutMs = 20000 } = {}) {
   return fetchImpl(DEFAULT_JEV_DECISIONS_URL, { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', accept: 'application/json', 'HTTP-Referer': 'https://timesyncher.com', 'X-Title': title }, body: JSON.stringify(payload), signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 20000)) });
+}
+
+export { XAI_PLACE_SEARCH_MODEL_ENV } from '../src/vacation/provider-env.mjs';
+
+export function xaiGrokPlaceSearchModelId(env = process.env) {
+  return xaiPlaceSearchModelId(env);
+}
+
+export async function postXaiPlaceRatingsResponses({ payload, apiKey, fetchImpl = fetch, timeoutMs = 120000 } = {}) {
+  const key = text(apiKey, 500);
+  if (!key) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'XAI_API_KEY_MISSING' });
+  return fetchImpl('https://api.x.ai/v1/responses', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(Math.max(1, Number(timeoutMs) || 120000)),
+  });
 }
 
 export async function jevPrecall({ customerTurn, stage, gate, screen, session, env = process.env } = {}) {

@@ -276,3 +276,8 @@ scripts/test_saved_place_icon_boundary.mjs
 scripts/test_dispatch_stall_guards_649.mjs
 scripts/test_dispatch_vkfill_batch_guards_662.mjs
 scripts/test_dispatch_noprogress_guards_668.mjs
+scripts/test_dossier_hours_happy_hour.mjs
+scripts/test_dossier_refresh_integration.mjs
+scripts/test_dossier_round5.mjs
+scripts/test_thing_evidence_dossier.mjs
+scripts/test_vk_682_brave_review_code_count.mjs
