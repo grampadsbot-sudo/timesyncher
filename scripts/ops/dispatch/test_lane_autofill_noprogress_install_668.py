@@ -30,7 +30,8 @@ class HostFixtureInstall668(unittest.TestCase):
         text = lane.read_text()
         self.assertIn("with_noprogress_sort", text)
         self.assertIn("remember_pr_recent_results", text)
-        self.assertIn("apply_noprogress_skip", text)
+        self.assertIn("apply_noprogress_skip(item, _np_recent, log)", text)
+        self.assertIn("if launch_lane(root, lane, item, dry, log):", text)
         self.assertIn("recent_for_pr", text)
         self.assertNotIn("pr_sort_key_tuple", text)
 
@@ -41,6 +42,12 @@ class HostFixtureInstall668(unittest.TestCase):
         out = buf.getvalue()
         self.assertIn("patch lane_autofill.py", out)
         self.assertIn("host install:", out)
+
+    def test_install_dry_run_raises_no_system_exit(self):
+        try:
+            installer.install(self.root, dry=True, require_live_sha=False)
+        except SystemExit as exc:
+            self.fail("install dry-run must not SystemExit: %s" % exc)
 
     def test_installer_idempotent(self):
         lane = self.root / "lane_autofill.py"
@@ -125,7 +132,7 @@ class HostFixtureBehavior668(unittest.TestCase):
         def log(msg, dry=False):
             logs.append(msg)
 
-        launched = host.fill_lanes_round_robin("/tmp", ["lane-a"], queue, results, False, log)
+        launched = host.simulate_autofill_pass("/tmp", ["lane-a"], queue, False, log)
         self.assertEqual(launched, [])
         self.assertEqual(len(logs), 1)
         self.assertIn("skip #653", logs[0])

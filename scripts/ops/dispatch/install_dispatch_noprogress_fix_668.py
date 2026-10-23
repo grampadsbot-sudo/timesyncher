@@ -25,7 +25,7 @@ QUEUE_APPEND_RE = re.compile(
 )
 PR_SORT_KEY_DEF_RE = re.compile(r"def pr_sort_key\(pr,\s*(\w+)\):")
 LAUNCH_LANE_RE = re.compile(
-    r"^(\s*)launch_lane\((root,\s*lane,\s*item,\s*dry,\s*log)\)\s*$",
+    r"^(\s*)if\s+launch_lane\((root,\s*lane,\s*item,\s*dry,\s*log)\):\s*$",
     re.MULTILINE,
 )
 
@@ -75,7 +75,7 @@ def assert_live_anchors(text: str) -> None:
         )
     if not LAUNCH_LANE_RE.search(text):
         raise SystemExit(
-            "lane_autofill.py: missing launch_lane(root, lane, item, dry, log) anchor"
+            "lane_autofill.py: missing if launch_lane(root, lane, item, dry, log): anchor"
         )
 
 
@@ -108,7 +108,7 @@ def inject_launch_skip(text: str) -> str:
     match = LAUNCH_LANE_RE.search(text)
     if not match:
         raise SystemExit(
-            "lane_autofill.py: could not find launch_lane(root, lane, item, dry, log) for skip hook"
+            "lane_autofill.py: could not find if launch_lane(root, lane, item, dry, log): for skip hook"
         )
     indent = match.group(1)
     launch_args = match.group(2)
@@ -116,12 +116,12 @@ def inject_launch_skip(text: str) -> str:
         "%s_np_recent = lane_autofill_noprogress_guards.recent_for_pr(item.get(\"number\"))\n"
         "%sif lane_autofill_noprogress_guards.apply_noprogress_skip(item, _np_recent, log):\n"
         "%s    continue\n"
-        "%slaunch_lane(%s)\n"
+        "%sif launch_lane(%s):\n"
         % (indent, indent, indent + "    ", indent, launch_args)
     )
     original = match.group(0) + "\n"
     if original not in text:
-        raise SystemExit("lane_autofill.py: launch_lane line anchor drifted")
+        raise SystemExit("lane_autofill.py: if launch_lane(...) line anchor drifted")
     return text.replace(original, hook, 1)
 
 

@@ -35,16 +35,30 @@ def build_pr_queue(open_prs, bad_by_pr, results, now, log):
 
 
 def launch_lane(root, lane, item, dry, log):
-    return item.get("number")
+    return True
 
 
-def fill_lanes_round_robin(root, lanes, queue, results, dry, log):
-    launched = []
+def simulate_autofill_pass(root, order, queue, dry, log):
+    """Mirror live nested fill_lanes_round_robin closure (no args, nonlocal qpos)."""
+    free_by_lane = {lane: 1 for lane in order}
     qpos = 0
-    while qpos < len(queue) and lanes:
-        item = queue[qpos]
-        qpos += 1
-        lane = lanes[qpos % len(lanes)]
-        launch_lane(root, lane, item, dry, log)
-        launched.append(item["number"])
+    launches = 0
+    launched = []
+
+    def fill_lanes_round_robin():
+        nonlocal qpos, launches
+        while qpos < len(queue) and any(free_by_lane.get(l, 0) > 0 for l in order):
+            for lane in order:
+                if free_by_lane.get(lane, 0) <= 0:
+                    continue
+                if qpos >= len(queue):
+                    break
+                item = queue[qpos]
+                qpos += 1
+                if launch_lane(root, lane, item, dry, log):
+                    launches += 1
+                    free_by_lane[lane] -= 1
+                    launched.append(item["number"])
+
+    fill_lanes_round_robin()
     return launched
