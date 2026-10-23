@@ -3,6 +3,13 @@ import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { extractTavily, searchTavily } from './poi-search.mjs';
 import { braveLocalEvidence } from './dossier-brave.mjs';
+import {
+  dossierHasHappyHourPageEvidence,
+  dossierHasHoursPageEvidence,
+  supplementalHoursSearchTopics,
+} from './dossier-hours-evidence.mjs';
+
+export { dossierHasHappyHourPageEvidence, dossierHasHoursPageEvidence };
 
 function publicAddress(address) {
   if (isIP(address) === 6) return /^2[0-9a-f]{3}:/i.test(address);
@@ -193,6 +200,88 @@ export async function gatherThingEvidence(place = {}, {
     const brave = await bravePromise;
     dossier.attempts.push(...(brave.attempts || []));
     for (const page of brave.pages || []) if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
+  }
+  return dossier;
+}
+
+async function fetchDossierPageUrl(url, { fetchImpl, resolveImpl }) {
+  const response = await pageResponse(url, { fetchImpl, resolveImpl });
+  const text = pageText(response.body, response.type);
+  if (!text) throw new Error('evidence_page_empty');
+  const slice = text.slice(0, DOSSIER_PAGE_CHARS);
+  return {
+    url: response.url,
+    fetchedAt: new Date().toISOString(),
+    text: slice,
+    sha256: createHash('sha256').update(slice).digest('hex'),
+  };
+}
+
+export async function gatherSupplementalHoursEvidence(place = {}, existingDossier = {}, {
+  destination = '', env = process.env, fetchImpl = globalThis.fetch,
+  searchImpl = searchTavily, resolveImpl = lookup, extractImpl = extractTavily,
+  wantHours = true, wantHappyHour = false,
+} = {}) {
+  const name = String(place.title || place.name || '').trim();
+  if (!name) throw new Error('evidence_thing_name_required');
+  const knownUrls = new Set((existingDossier.pages || []).map((page) => page.url).filter(Boolean));
+  const dossier = { thing: name, pages: [], attempts: [] };
+  const urls = new Set();
+  const raw = new Map();
+  const roomLeft = () => Math.max(0, DOSSIER_MAX_PAGES - knownUrls.size - dossier.pages.length);
+
+  const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
+  if (official && !knownUrls.has(official) && roomLeft() > 0) urls.add(official);
+
+  const topics = supplementalHoursSearchTopics(place, { wantHours, wantHappyHour });
+  const results = await Promise.all(topics.map(async ({ q, max }) => {
+    try {
+      const result = await searchImpl(`${name} ${destination} ${q}`.replace(/\s+/g, ' ').trim(),
+        { env, fetchImpl, maxResults: max, searchDepth: 'advanced', includeRawContent: true });
+      dossier.attempts.push({ kind: 'search', topic: q, status: 'ok', supplement: 'hours' });
+      return result.results || [];
+    } catch {
+      dossier.attempts.push({ kind: 'search', topic: q, status: 'failed', supplement: 'hours' });
+      return [];
+    }
+  }));
+  for (const rows of results) {
+    for (const row of rows) {
+      if (!row.url || knownUrls.has(row.url) || urls.has(row.url) || roomLeft() <= urls.size) continue;
+      urls.add(row.url);
+      if (row.rawContent && !raw.has(row.url)) raw.set(row.url, row.rawContent);
+    }
+  }
+  const missing = [...urls].filter((url) => !raw.has(url));
+  if (missing.length) {
+    try {
+      for (const row of await extractImpl(missing, { env, fetchImpl })) {
+        if (!raw.has(row.url)) raw.set(row.url, row.rawContent);
+      }
+      dossier.attempts.push({ kind: 'extract', status: 'ok', urls: missing.length, supplement: 'hours' });
+    } catch {
+      dossier.attempts.push({ kind: 'extract', status: 'failed', urls: missing.length, supplement: 'hours' });
+    }
+  }
+  for (const url of urls) {
+    const cached = String(raw.get(url) || '').replace(/\s+/g, ' ').trim().slice(0, DOSSIER_PAGE_CHARS);
+    if (cached) {
+      dossier.pages.push({
+        url,
+        fetchedAt: new Date().toISOString(),
+        text: cached,
+        via: 'tavily',
+        sha256: createHash('sha256').update(cached).digest('hex'),
+      });
+      dossier.attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily', supplement: 'hours' });
+      continue;
+    }
+    try {
+      dossier.pages.push(await fetchDossierPageUrl(url, { fetchImpl, resolveImpl }));
+      dossier.attempts.push({ kind: 'page', url, status: 'ok', supplement: 'hours' });
+    } catch {
+      dossier.attempts.push({ kind: 'page', url, status: 'failed', supplement: 'hours' });
+    }
   }
   return dossier;
 }
