@@ -356,9 +356,10 @@ const CAR_DAY_LOOP_PATCH = 'for(const wn of zt){if(Mi(wn)&&Ds(wn)){const tsCarDa
 
 const FLIGHT_EU_NEEDLE = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
 const FLIGHT_EU_NEEDLE_TBD = 'return[ua,Rn,Pn!=null&&Pn.start?Yo(Pn.start):"Depart TBD",Pn!=null&&Pn.end?Yo(Pn.end):"Arrive TBD"]},Qo=({item:G})=>';
-const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
-const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
-const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_PRICE_EXPR = 'Rn||(Re=>typeof Re=="number"&&Number.isFinite(Re)?"$"+Math.round(Re).toLocaleString():String(Re||"").trim())(bi(G))';
+const FLIGHT_EU_PATCH = 'return[ua,(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")(String(ha(G).fareDirection||ha(G).tripType||ha(G).pricingType||"").trim().toLowerCase());const price=' + FLIGHT_PRICE_EXPR + ';if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):"",Pn!=null&&Pn.end?Yo(Pn.end):""]},Qo=({item:G})=>';
+const FLIGHT_EU_FARE_AMT_NEEDLE_DOLLAR = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
+const FLIGHT_EU_FARE_AMT_PATCH = 'const price=' + FLIGHT_PRICE_EXPR + ';if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
 const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
@@ -463,8 +464,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && js.includes('Southwest)\u0008/i')) {
     throw new Error('flight airline regex patch did not apply');
   }
-  if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE)) {
-    js = js.replace(FLIGHT_EU_FARE_AMT_NEEDLE, FLIGHT_EU_FARE_AMT_PATCH);
+  if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE_DOLLAR) && !js.includes('Number.isFinite(Re)')) {
+    js = js.replace(FLIGHT_EU_FARE_AMT_NEEDLE_DOLLAR, FLIGHT_EU_FARE_AMT_PATCH);
   } else if (served && js.includes('const price=Rn||String(bi(G)||"").trim();return fareLbl') && !js.includes('const amt=/^\\$/.test(price)')) {
     throw new Error('flight fare dollar patch did not apply');
   }
@@ -472,7 +473,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
   else if (js.includes(FLIGHT_EU_NEEDLE_BAD)) {
     js = js.replace(/return\[\(v=>[\s\S]*?\}\)\(\),ua,Pn!=null&&Pn\.start\?Yo\(Pn\.start\):"",Pn!=null&&Pn\.end\?Yo\(Pn\.end\):""\]\},Qo=\(\{item:G\}\)=>/, FLIGHT_EU_PATCH);
-  } else if (served && !js.includes('return[ua,(v=>{const fareLbl')) {
+  } else if (served && (!js.includes('return[ua,(v=>{const fareLbl') || !js.includes('Number.isFinite(Re)?"$"+Math.round(Re).toLocaleString()'))) {
     throw new Error('flight fare direction row patch did not apply');
   }
   if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {
