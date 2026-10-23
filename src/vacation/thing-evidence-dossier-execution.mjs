@@ -4,12 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import { nycDaybydayDossierKey } from './thing-evidence-dossier-store.mjs';
 
-const NYC_TRIP_CENTER = { lat: 40.758, lng: -73.9855 };
-
 function tripCenterForTarget(target = {}) {
   if (target.center?.lat != null && target.center?.lng != null) return target.center;
-  const dest = String(target.destination || '');
-  if (/new york/i.test(dest)) return NYC_TRIP_CENTER;
   return null;
 }
 

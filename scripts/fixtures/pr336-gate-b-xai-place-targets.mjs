@@ -1,3 +1,4 @@
+export const PR336_NYC_TRIP_CENTER = { lat: 40.758, lng: -73.9855 };
 
 export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   {
@@ -6,6 +7,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: "Zabar's",
     category: 'store',
     destination: 'New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 603,
@@ -13,6 +15,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Hotel Belleclaire Central Park',
     category: 'hotel',
     destination: 'Upper West Side, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 604,
@@ -20,6 +23,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Statue of Liberty walking tour',
     category: 'event',
     destination: 'Battery Park, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 605,
@@ -27,6 +31,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Strand Book Store',
     category: 'store',
     destination: 'New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 606,
@@ -34,6 +39,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Afternoon matinee show',
     category: 'event',
     destination: 'Times Square, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 607,
@@ -41,6 +47,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Friend meetup at Bryant Park',
     category: 'event',
     destination: 'Midtown Manhattan, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 610,
@@ -48,6 +55,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Carbone',
     category: 'restaurant',
     destination: 'Greenwich Village, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
   {
     rowId: 611,
@@ -55,5 +63,6 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
     title: 'Jazz at Lincoln Center',
     category: 'event',
     destination: 'Lincoln Center, New York, NY',
+    center: PR336_NYC_TRIP_CENTER,
   },
 ];
