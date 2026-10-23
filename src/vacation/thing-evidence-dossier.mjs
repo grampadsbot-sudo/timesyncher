@@ -4,6 +4,7 @@ import { isIP } from 'node:net';
 import { extractTavily } from './poi-search.mjs';
 import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
 import { braveDossierQueryStages, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
+import { normalizeDossierEvidence, syncDossierRequiredShortcomings } from './dossier-evidence-hydrate.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -214,8 +215,7 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
   onlyFields = null,
 } = {}) {
   const options = { env, fetchImpl, resolveImpl, extractImpl };
-  let merged = { ...dossier };
-  merged.fieldCounts = computeDossierFieldCounts(merged, place);
+  let merged = normalizeDossierEvidence({ ...dossier }, place);
   const needs = Array.isArray(onlyFields) && onlyFields.length
     ? onlyFields
     : braveTopUpFieldsPending(merged, place);
@@ -228,7 +228,7 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
       if (!queries.length) break;
       const gathered = await gatherBraveEvidenceForQueries(queries, place, options);
       merged = mergeDossierPages(merged, gathered);
-      merged.fieldCounts = computeDossierFieldCounts(merged, place);
+      merged = normalizeDossierEvidence(merged, place);
       const status = merged.fieldCounts[field]?.status;
       filled = status === 'ok';
       const att = gathered.attempts?.[gathered.attempts.length - 1] || {};
@@ -253,7 +253,7 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
     }
   }
   merged.shortcomings = shortcomings;
-  merged.missingFields = shortcomings.map((s) => s.field);
+  merged = syncDossierRequiredShortcomings(merged, place);
   return merged;
 }
 

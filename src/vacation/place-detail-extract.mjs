@@ -142,7 +142,7 @@ function buildSummaryFromResults({
   return { summary, summarySourceUrls };
 }
 
-function extractContactFieldsFromBlob(blob = '') {
+export function extractContactFieldsFromBlob(blob = '') {
   const fields = {};
   const phone = blob.match(/(?:\+1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}/);
   if (phone) fields.phone = phone[0];

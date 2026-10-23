@@ -9,6 +9,7 @@ import {
   mergeDossierPages,
   topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
+import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -228,7 +229,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   };
   let merged;
   if (persisted?.pages?.length && !forceRefresh) {
-    merged = { ...persisted };
+    merged = normalizeDossierEvidence({ ...persisted }, place);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
     if (pendingTopUp.length) {
       merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });

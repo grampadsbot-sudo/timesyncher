@@ -12,6 +12,15 @@ export function isBarOrRestaurant(place = {}) {
     || cat === 'restaurant' || cat === 'bar';
 }
 
+export function requiresHappyHourCapture(place = {}) {
+  if (!isBarOrRestaurant(place)) return false;
+  const cat = categoryOf(place);
+  if (/jazz|music|club|nightclub|concert|venue|theater|theatre|matinee|show|cabaret/.test(cat)) return false;
+  const title = text(place.title || place.name);
+  if (/jazz club|nightclub|music hall|concert hall|cabaret|matinee|theatre|theater/i.test(title)) return false;
+  return true;
+}
+
 function isHotel(place = {}) {
   return /hotel|lodg|stay|inn|resort|hostel|motel/.test(categoryOf(place));
 }
@@ -59,11 +68,14 @@ export function braveDossierQueryStages(place = {}, destination = '') {
       queries: [`${q} hours open close`, `${q} opening hours today`],
     },
   ];
-  if (isBarOrRestaurant(place)) {
+  if (requiresHappyHourCapture(place)) {
     stages.push({
       stage: 'happyHour',
       queries: [`${q} happy hour deals times`, `${q} site:yelp.com happy hour`],
     });
+  }
+  if (isFlightOrCarOrDecision(place)) {
+    return stages.filter((stage) => !['hours', 'happyHour', 'reviews', 'price'].includes(stage.stage));
   }
   stages.push({
     stage: 'contact',

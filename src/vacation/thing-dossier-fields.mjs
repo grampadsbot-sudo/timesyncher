@@ -340,8 +340,7 @@ export function writeDossierReviews(record = {}, dossier = {}) {
     for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Label', 'Composite', 'CompositeLabel']) delete record[`review${i}${suffix}`];
   }
   delete record.reviewsLabel;
-  const missing = new Set(Array.isArray(dossier.shortcomings) ? dossier.shortcomings.map((s) => s.field) : (record.missingFields || []));
-  missing.add('reviews');
+  const missing = new Set();
   const valid = dossierReviewsValid(dossier);
   if (valid || dossierReviewsWritable(dossier)) {
     const readCount = Number(dossier.fieldCounts?.reviews?.count ?? dossier.reviewsRead ?? 0);
@@ -363,14 +362,12 @@ export function writeDossierReviews(record = {}, dossier = {}) {
       if (limited) missing.delete('reviews');
     }
   }
-  record.missingFields = [...missing];
   return record;
 }
 
 export function applyDossierFields(record = {}, dossier = {}) {
   const next = { ...record, evidenceDossier: dossier };
-  const missing = new Set(Array.isArray(dossier.shortcomings) ? dossier.shortcomings.map((s) => s.field) : (next.missingFields || []));
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings', 'itineraryNote']) missing.add(key);
+  const missing = new Set();
   for (const key of ['summary', 'description', 'longDetails', 'details', 'price', 'hours', 'happyHourDetails',
     'happyHour', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'googleRating', 'googleReviewCount',
     'googleRatingSourceUrl', 'yelpRating', 'yelpReviewCount', 'yelpRatingSourceUrl', 'thirdPartyRating',
@@ -431,7 +428,9 @@ export function applyDossierFields(record = {}, dossier = {}) {
       missing.delete('ratings');
     }
   }
-  next.missingFields = [...missing];
+  next.missingFields = Array.isArray(dossier.shortcomings)
+    ? [...new Set(dossier.shortcomings.map((s) => s.field).filter(Boolean))]
+    : (Array.isArray(dossier.missingFields) ? dossier.missingFields : []);
   next.xaiRatingsFetched = dossierReviewsValid(dossier);
   return writeDossierReviews(next, dossier);
 }

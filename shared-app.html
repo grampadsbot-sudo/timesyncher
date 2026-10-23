@@ -156,9 +156,17 @@
         -webkit-overflow-scrolling: touch;
       }
       html[data-ts-trip] footer[data-build-stamp="1"] {
-        position: static !important;
-        flex: 0 0 auto;
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        flex: none;
         margin: 0;
+        pointer-events: none;
+      }
+      html[data-ts-trip] body {
+        padding-bottom: 24px !important;
       }
       /* SITE: day timeline photo speech-bubble pointer must not clip */
       [data-ts-day-timeline="1"],

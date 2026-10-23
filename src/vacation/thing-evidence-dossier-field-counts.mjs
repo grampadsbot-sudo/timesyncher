@@ -5,7 +5,19 @@ import {
   descriptionNamesThing,
 } from './thing-dossier-fields.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
-import { isBarOrRestaurant, isFlightOrCarOrDecision } from './dossier-brave-queries.mjs';
+import {
+  isBarOrRestaurant,
+  isFlightOrCarOrDecision,
+  requiresHappyHourCapture,
+} from './dossier-brave-queries.mjs';
+
+function addressIsSpecific(value = '') {
+  const v = text(value);
+  if (!v) return false;
+  if (/\d{1,5}\s+\S/.test(v)) return true;
+  if (/,\s*[A-Z]{2}\b/.test(v) && /\d{5}/.test(v)) return true;
+  return false;
+}
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -20,6 +32,12 @@ function pageBlob(dossier = {}) {
 }
 
 function reviewStats(dossier = {}) {
+  const written = Array.isArray(dossier.reviews)
+    ? dossier.reviews.filter((r) => text(r.text).length >= 20)
+    : [];
+  if (written.length >= 4) {
+    return { count: Math.max(written.length, dossier.reviewsRead || written.length), sources: 3, status: 'ok' };
+  }
   const code = extractReviewsByCode(dossier);
   const braveSnippet = (dossier.braveResults || []).filter((r) => text(r.snippet).length >= 20);
   const count = code.length + braveSnippet.length;
@@ -76,10 +94,14 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
   counts.price = (Number(priceVal) > 0 || text(fields.priceLevel) || regexHit(blob, /\$\d+/))
     ? { status: 'ok' } : { status: 'missing' };
 
-  const hoursVal = hoursFromFields(dossier) || (regexHit(blob, /\b(?:mon|tue|wed|thu|fri|sat|sun)\b/i) ? 'detected' : '');
-  counts.hours = text(hoursVal) && hoursVal !== '[object Object]' ? { status: 'ok' } : { status: 'missing' };
+  if (exempt || /car/.test(text(place.category))) {
+    counts.hours = { status: 'ok' };
+  } else {
+    const hoursVal = hoursFromFields(dossier) || (regexHit(blob, /\b(?:mon|tue|wed|thu|fri|sat|sun)\b/i) ? 'detected' : '');
+    counts.hours = text(hoursVal) && hoursVal !== '[object Object]' ? { status: 'ok' } : { status: 'missing' };
+  }
 
-  if (isBarOrRestaurant(place)) {
+  if (requiresHappyHourCapture(place)) {
     const hh = text(fields.happyHourDetails?.value ?? fields.happyHourDetails)
       || [fields.happyHourDays, fields.happyHourTimes, fields.happyHourDeals].map((r) => text(r?.value ?? r)).filter(Boolean).join(' ');
     counts.happyHour = hh ? { status: 'ok' } : { status: 'missing' };
@@ -88,7 +110,10 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
   counts.knownFor = Array.isArray(dossier.knownFor) && dossier.knownFor.length ? { status: 'ok' } : { status: 'missing' };
 
   if (!exempt) {
-    counts.address = scalarFieldStatus(fields.address?.value ?? fields.address ?? (regexHit(blob, /\d{1,5}\s+\w+\s+(?:st|street|ave|avenue|blvd|road)/i) ? 'yes' : ''));
+    const addressVal = text(fields.address?.value ?? fields.address);
+    const addressOk = addressIsSpecific(addressVal)
+      || (regexHit(blob, /\d{1,5}\s+\w+\s+(?:st|street|ave|avenue|blvd|road)/i) && addressVal && addressIsSpecific(addressVal));
+    counts.address = addressOk ? { status: 'ok' } : { status: 'missing' };
     counts.phone = scalarFieldStatus(fields.phone?.value ?? fields.phone ?? (regexHit(blob, /\(\d{3}\)\s*\d{3}-\d{4}|\d{3}-\d{3}-\d{4}/) ? 'yes' : ''));
     counts.website = scalarFieldStatus(fields.website?.value ?? fields.website ?? dossier.pages?.[0]?.url);
     counts.neighborhood = scalarFieldStatus(fields.neighborhood?.value ?? fields.neighborhood);

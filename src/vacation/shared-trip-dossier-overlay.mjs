@@ -1,3 +1,4 @@
+import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { applyDossierFields } from './thing-dossier-fields.mjs';
 import { sharedTripDossierKeyForPlace } from './shared-trip-dossier-keys.mjs';
 import { loadDossiersByKeys, loadThingEvidenceDossier, thingEvidenceDossierKey } from './thing-evidence-dossier-store.mjs';
@@ -22,7 +23,9 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
     if (!dossier?.pages?.length) continue;
     const overrideKey = `place:${place.id}`;
     const current = overrides[overrideKey] || {};
-    const record = applyDossierFields({ ...(current.sourceRecord || {}), ...current }, dossier);
+    const placeCtx = { ...place, title: place.name || place.title, sourceRecord: place.sourceRecord || current.sourceRecord };
+    const normalized = normalizeDossierEvidence(dossier, placeCtx);
+    const record = applyDossierFields({ ...(current.sourceRecord || {}), ...current }, normalized);
     overrides[overrideKey] = mergeOverride(current, record);
     if (record.description || record.longDetails) {
       place.description = record.longDetails || record.description || place.description;
