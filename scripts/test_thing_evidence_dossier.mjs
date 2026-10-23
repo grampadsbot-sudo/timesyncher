@@ -20,6 +20,10 @@ import {
   useThingEvidenceDossierStore,
 } from '../src/vacation/thing-evidence-dossier-store.mjs';
 import { enrichPlaceRecordWithXaiRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
+import {
+  resolveBatchTripCenter,
+  tripCenterForTarget,
+} from '../src/vacation/thing-evidence-dossier-execution.mjs';
 
 function page(url, text) {
   const body = text.trim();
@@ -335,5 +339,25 @@ const loaded = await loadThingEvidenceDossier('test:roundtrip');
 assert.equal(loaded.thing, 'Riverside Bistro');
 assert.equal(loaded.pages.length, 3);
 useThingEvidenceDossierStore(null);
+
+assert.deepEqual(
+  tripCenterForTarget({ center: { lat: 1, lng: 2 } }, { lat: 9, lng: 9 }),
+  { lat: 1, lng: 2 },
+);
+assert.deepEqual(
+  tripCenterForTarget({ trip: { metadata: { destinationCenter: { lat: 3, lng: 4 } } } }, null),
+  { lat: 3, lng: 4 },
+);
+assert.deepEqual(
+  resolveBatchTripCenter(
+    [{ ccabKey: 'a' }, { ccabKey: 'b' }],
+    (target) => (target.ccabKey === 'a' ? { lat: 40, lng: -74 } : { lat: 42, lng: -72 }),
+  ),
+  { lat: 41, lng: -73 },
+);
+assert.deepEqual(
+  tripCenterForTarget({ ccabKey: 'a' }, { lat: 41, lng: -73 }),
+  { lat: 41, lng: -73 },
+);
 
 console.log('test_thing_evidence_dossier: ok');
