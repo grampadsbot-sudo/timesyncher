@@ -65,8 +65,7 @@ try {
 }
 if (stagingPayload) {
   const stagingResult = await gateBCapturePreDataCheck(stagingPayload);
-  assert.equal(stagingResult.pass, false, 'refreshed staging fixture must fail until #608 data fix');
-  assert.ok(stagingResult.failures.length > 0);
+  assert.equal(stagingResult.pass, true, JSON.stringify(stagingResult.failures?.slice(0, 5)));
   const meta = stagingPayload.trip?.metadata?.gateBNycFixturePull;
   assert.ok(meta?.sourceSha, 'fixture must record sourceSha');
   assert.ok(meta?.pulledAt, 'fixture must record pulledAt');
