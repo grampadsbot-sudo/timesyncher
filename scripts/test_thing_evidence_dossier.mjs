@@ -120,13 +120,45 @@ const unsupportedReview = JSON.parse(JSON.stringify(findings));
 unsupportedReview.reviews[1].claims[0].supported = false;
 const badReview = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, unsupportedReview) });
 assert.equal(badReview.review1, undefined, 'any unsupported review claim fails reviews');
-const { judgeDossierFindings } = await import('../src/vacation/xai-grok-place-ratings.mjs');
+const { judgeDossierFindings, dossierJudgePrompt } = await import('../src/vacation/xai-grok-place-ratings.mjs');
 const toJudge = { summary: { value: 'x', claims: [{ text: 'a', pages: ['p1'] }, { text: 'b', pages: [] }] } };
 let asked = [];
 await judgeDossierFindings({ pages: goodPages }, toJudge, { judgeImpl: async (_d, items) => { asked = items; return [{ id: 'c1', supported: true }]; } });
 assert.equal(asked.length, 1, 'judge is asked only about claims citing saved pages');
 assert.equal(toJudge.summary.claims[0].supported, true);
 assert.equal(toJudge.summary.claims[1].supported, false);
+
+const { resolveClaimCitationPages } = await import('../src/vacation/thing-dossier-fields.mjs');
+const reviewDossier = {
+  pages: goodPages,
+  reviewSet: [{ id: 'r1', page: 'p2', text: 'guests loved the negroni list' }, { id: 'r2', page: 'p3', text: 'slow service on saturday' }],
+};
+assert.deepEqual(resolveClaimCitationPages(reviewDossier, ['r1', 'r2']), ['p2', 'p3']);
+assert.equal(resolveClaimCitationPages(reviewDossier, ['r9']), null);
+const reviewClaimJudge = {
+  description: { value: 'x', claims: [{ text: 'Guests praise the negroni program', pages: ['r1'] }] },
+};
+let reviewAsked = [];
+await judgeDossierFindings(reviewDossier, reviewClaimJudge, {
+  judgeImpl: async (_d, items) => {
+    reviewAsked = items;
+    return [{ id: 'c1', supported: true, reason: 'meaning supported' }];
+  },
+});
+assert.deepEqual(reviewAsked[0].pages, ['p2'], 'review-set ids resolve to dossier page ids before the judge');
+assert.equal(reviewClaimJudge.description.claims[0].supported, true);
+const contradictJudge = {
+  description: { value: 'x', claims: [{ text: 'The hotel has no bar', pages: ['p1'] }] },
+};
+await judgeDossierFindings({ pages: goodPages }, contradictJudge, {
+  judgeImpl: async (_d, items) => items.map((item, index) => ({
+    id: `c${index + 1}`,
+    supported: false,
+    reason: 'contradicts the cited page',
+  })),
+});
+assert.equal(contradictJudge.description.claims[0].supported, false, 'contradicted claims fail the judge');
+assert.match(dossierJudgePrompt({ pages: goodPages }, [{ text: 'paraphrase ok', pages: ['p1'] }]), /meaning|paraphrase/i);
 
 const record = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: built });
 assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings fetched');
