@@ -10,150 +10,103 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-function parseAmount(raw) {
-  const match = String(raw || '').match(/([\d,]+(?:\.\d+)?)/);
-  if (!match) return null;
-  const n = Number(match[1].replace(/,/g, ''));
-  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
-}
+const DOLLAR_AMOUNT = String.raw`\$\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?(?!\d|[.,]\d)`;
 
-const TIER_TYPICAL = {
-  $: 15,
-  $$: 42,
-  $$$: 78,
-  $$$$: 140,
-};
+function parseAmount(raw) {
+  const amount = Number(raw.replace(/[$,\s]/g, ''));
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
 
 function tierFromText(body = '') {
-  const row = text(body, 8000);
-  const explicit = row.match(/(?:price\s*(?:level|range)|cost)[:\s]*(\${1,4})\b/i);
-  if (explicit && TIER_TYPICAL[explicit[1]]) return explicit[1];
-  const moderate = row.match(/\b(moderate|mid[- ]range|inexpensive|expensive|very expensive)\b/i);
-  if (moderate) {
-    const word = moderate[1].toLowerCase();
-    if (word.includes('very expensive')) return '$$$$';
-    if (word.includes('expensive')) return '$$$';
-    if (word.includes('moderate') || word.includes('mid')) return '$$';
-    if (word.includes('inexpensive')) return '$';
+  const explicit = body.match(/\b(?:price\s*(?:level|range)|cost)[:\s]*(\${1,4})(?!\$|\s*\d)/i);
+  const standalone = body.match(/(?:^|\s)(\${2,4})(?!\$|\s*\d)(?=\s|$|[;,.])/);
+  return explicit?.[1] || standalone?.[1] || null;
+}
+
+function priceContext(body, start, end) {
+  const before = body.slice(Math.max(0, start - 90), start);
+  const after = body.slice(end, end + 60);
+  const suffix = after.match(/^\s*(?:(?:per[\s-]+|\/\s*)(person|night)\b|(?:tickets?|admission|entr[ée]es?|cover)\b)/i);
+  const prefix = /\b(?:entr[ée]es?|tickets?|admission|cover(?:\s+charges?)?)\b[^\d$;.!?]{0,60}$/i.test(before);
+  if (!suffix && !prefix) return null;
+  return {
+    unit: suffix?.[1]?.toLowerCase() === 'night' ? 'per night' : 'per person',
+    typical: /\b(?:typical|average)\b[^\d$;.!?]{0,60}$/i.test(before),
+  };
+}
+
+function pricesFromText(body) {
+  const prices = [];
+  const ranges = [];
+  for (const match of body.matchAll(new RegExp(`(${DOLLAR_AMOUNT})\\s*[-–]\\s*(${DOLLAR_AMOUNT})`, 'g'))) {
+    const end = match.index + match[0].length;
+    ranges.push([match.index, end]);
+    const context = priceContext(body, match.index, end);
+    const low = parseAmount(match[1]);
+    const high = parseAmount(match[2]);
+    if (!context || low == null || high == null || high < low) continue;
+    prices.push({
+      ...context,
+      amount: (low + high) / 2,
+      range: true,
+      text: `${match[1]}–${match[2]} ${context.unit}`,
+    });
   }
-  const standalone = row.match(/\b(\${2,4})\b(?!\s*(?:per|\/|night|person))/);
-  if (standalone && TIER_TYPICAL[standalone[1]]) return standalone[1];
-  return null;
-}
-
-function rangeFromText(body = '') {
-  const row = text(body, 8000);
-  const range = row.match(/\$\s*([\d,]+)\s*[-–]\s*\$?\s*([\d,]+)(?:\s*(?:per person|\/person|each|per night|\/night))?/i);
-  if (!range) return null;
-  const low = parseAmount(range[1]);
-  const high = parseAmount(range[2]);
-  if (low == null || high == null || high < low) return null;
-  const unit = /\bnight\b/i.test(range[0]) ? 'per night' : 'per person';
-  return { low, high, unit, text: `$${low}–$${high} ${unit}` };
-}
-
-function singleFromText(body = '') {
-  const row = text(body, 8000);
-  const from = row.match(/\b(?:from|starting at|average|typical|entrees?|tickets?|admission)\s*(?:at|from|around|about)?\s*\$?\s*([\d,]+)(?:\s*(?:per person|\/person|each|per night|\/night))?/i);
-  if (!from) return null;
-  const amount = parseAmount(from[1]);
-  if (amount == null) return null;
-  const unit = /\bnight\b/i.test(from[0]) ? 'per night' : 'per person';
-  return { amount, unit, text: `$${amount} ${unit}` };
-}
-
-function citePages(citations, pageId, signal) {
-  if (!pageId) return;
-  citations.push({ pageId, signal: text(signal, 240) });
-}
-
-function uniquePageIds(ids = []) {
-  return [...new Set(ids.map((id) => text(id, 8)).filter(Boolean))];
+  for (const match of body.matchAll(new RegExp(DOLLAR_AMOUNT, 'g'))) {
+    if (ranges.some(([start, end]) => match.index >= start && match.index < end)) continue;
+    const context = priceContext(body, match.index, match.index + match[0].length);
+    const amount = parseAmount(match[0]);
+    if (!context || amount == null) continue;
+    prices.push({ ...context, amount, range: false, text: `${match[0]} ${context.unit}` });
+  }
+  return prices;
 }
 
 export function buildPriceEstimateFromEvidence(dossier = {}) {
-  const citations = [];
   const priceField = dossier.fields?.price;
-  if (priceField && claimsSupported(dossier, priceField) && Number(priceField.value) > 0) {
-    const pageIds = uniquePageIds((priceField.claims || []).flatMap((claim) => claim.pages || []));
-    pageIds.forEach((pageId) => citePages(citations, pageId, 'evidence price claim'));
-    const unit = text(priceField.unit || 'per person', 80);
-    const amount = Math.round(Number(priceField.value));
-    const cite = pageIds.length ? ` (${pageIds.join(', ')})` : '';
-    const body = `$${amount} ${unit}${cite}`;
-    return {
-      available: true,
-      label: `${PRICE_ESTIMATE_PREFIX}: ${body}`,
-      amount,
-      unit,
-      tier: null,
-      citations,
-    };
-  }
-
+  const supportedPrice = claimsSupported(dossier, priceField);
+  const claimedPages = new Set((priceField?.claims || []).flatMap((claim) => claim.pages || []));
+  const prices = [];
   let bestTier = null;
-  let bestRange = null;
-  let bestSingle = null;
 
-  for (let index = 0; index < (dossier.pages || []).length; index += 1) {
-    const page = dossier.pages[index];
+  for (const [index, page] of (dossier.pages || []).entries()) {
     const pageId = dossierPageId(index);
-    const body = page?.text || '';
+    const body = String(page?.text || '');
     const tier = tierFromText(body);
-    if (tier && (!bestTier || tier.length > bestTier.tier.length)) {
-      bestTier = { tier, pageId };
-      citePages(citations, pageId, `price tier ${tier}`);
-    }
-    const range = rangeFromText(body);
-    if (range && (!bestRange || range.high - range.low > bestRange.high - bestRange.low)) {
-      bestRange = { ...range, pageId };
-      citePages(citations, pageId, 'price range on page');
-    }
-    const single = singleFromText(body);
-    if (single && (!bestSingle || single.amount > bestSingle.amount)) {
-      bestSingle = { ...single, pageId };
-      citePages(citations, pageId, 'listed price on page');
+    if (tier && !bestTier) bestTier = { tier, pageId };
+    for (const price of pricesFromText(body)) {
+      prices.push({
+        ...price,
+        pageId,
+        tier,
+        claimed: supportedPrice && claimedPages.has(pageId) && !price.range
+          && price.amount === Number(priceField.value),
+      });
     }
   }
 
-  if (bestRange) {
-    const cite = ` (${bestRange.pageId})`;
-    const body = `${bestRange.text}${cite}`;
-    const amount = Math.round((bestRange.low + bestRange.high) / 2);
+  prices.sort((a, b) => Number(b.typical) - Number(a.typical)
+    || Number(b.claimed) - Number(a.claimed) || Number(b.range) - Number(a.range));
+  const best = prices[0];
+  if (best) {
     return {
       available: true,
-      label: `${PRICE_ESTIMATE_PREFIX}: ${body}`,
-      amount,
-      unit: bestRange.unit,
-      tier: bestTier?.tier || null,
-      citations,
-    };
-  }
-
-  if (bestSingle) {
-    const cite = ` (${bestSingle.pageId})`;
-    const body = `${bestSingle.text}${cite}`;
-    return {
-      available: true,
-      label: `${PRICE_ESTIMATE_PREFIX}: ${body}`,
-      amount: bestSingle.amount,
-      unit: bestSingle.unit,
-      tier: bestTier?.tier || null,
-      citations,
+      label: `${PRICE_ESTIMATE_PREFIX}: ${best.text} (${best.pageId})`,
+      amount: best.amount,
+      unit: best.unit,
+      tier: best.tier,
+      citations: [{ pageId: best.pageId, signal: text(best.text, 240) }],
     };
   }
 
   if (bestTier) {
-    const typical = TIER_TYPICAL[bestTier.tier];
-    const cite = ` (${bestTier.pageId})`;
-    const body = `${bestTier.tier} (typical ~$${typical} per person)${cite}`;
     return {
       available: true,
-      label: `${PRICE_ESTIMATE_PREFIX}: ${body}`,
-      amount: typical,
-      unit: 'per person',
+      label: `${PRICE_ESTIMATE_PREFIX}: ${bestTier.tier} (${bestTier.pageId})`,
+      amount: null,
+      unit: null,
       tier: bestTier.tier,
-      citations,
+      citations: [{ pageId: bestTier.pageId, signal: `price tier ${bestTier.tier}` }],
     };
   }
 

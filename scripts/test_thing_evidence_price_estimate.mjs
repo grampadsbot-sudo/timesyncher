@@ -50,6 +50,69 @@ assert.equal(tierOnly.citations[0].pageId, 'p1');
 const unavailable = buildPriceEstimateFromEvidence({ pages: [page('https://example.com/x', 'No pricing mentioned here.')] });
 assert.equal(unavailable.label, PRICE_ESTIMATE_UNAVAILABLE);
 
+assert.equal(tierOnly.amount, null);
+assert.doesNotMatch(tierOnly.label, /42/);
+
+const parserCases = [
+  ['first edition from 1944 for $200', null],
+  ['Founded in 1960, this shop has no price list.', null],
+  ['Tickets from 25 per person; price level moderate.', null],
+  ['A taco costs $7.00.', null],
+  ['Books cost $1 each.', null],
+  ['A taco costs $ 7.00.', null],
+  ['Tickets cost $0 per person.', null],
+  ['Entrees from $7.00 per person.', 7, '$7.00'],
+  ['Entrees from $72.35 per person.', 72.35, '$72.35'],
+  ['Rooms from $1,234.56 per night.', 1234.56, '$1,234.56'],
+  ['Tickets cost $7.00–$12.50 per person.', 9.75, '$7.00–$12.50'],
+  ['Tickets from 1944 for $200.', null],
+  ['Tickets from $7.001 per person.', null],
+  ['Tickets from $1,23 per person.', null],
+  ['A first edition costs $200. Admission is discussed elsewhere.', null],
+  ['Tickets cost $200. Typical tickets cost $25.', 25, '$25'],
+  ['Tickets cost $25. Tickets cost $200.', 25, '$25'],
+  ['Cover charges range from $25–$40.', 32.5, '$25–$40'],
+];
+for (const [body, amount, label] of parserCases) {
+  const estimate = buildPriceEstimateFromEvidence({ pages: [page('https://example.com/pricing', body)] });
+  assert.equal(estimate.amount, amount, body);
+  if (amount == null) {
+    assert.equal(estimate.label, PRICE_ESTIMATE_UNAVAILABLE, body);
+    assert.deepEqual(estimate.citations, [], body);
+  } else {
+    assert.ok(estimate.label.includes(label), body);
+    assert.deepEqual(estimate.citations.map((row) => row.pageId), ['p1'], body);
+  }
+}
+
+const acrossPages = buildPriceEstimateFromEvidence({ pages: [
+  page('https://example.com/special', 'Tickets cost $200.'),
+  page('https://example.com/typical', 'Typical tickets cost $25.'),
+] });
+assert.equal(acrossPages.amount, 25);
+assert.deepEqual(acrossPages.citations.map((row) => row.pageId), ['p2']);
+
+const falseClaim = buildPriceEstimateFromEvidence({
+  pages: [page('https://example.com/claim', 'First edition from 1944 for $200. A taco costs $7.00.')],
+  fields: { price: { value: 7235, unit: 'per person', claims: [
+    { text: 'Typical price $7235 per person', pages: ['p1'], supported: true },
+  ] } },
+});
+assert.equal(falseClaim.label, PRICE_ESTIMATE_UNAVAILABLE);
+assert.deepEqual(falseClaim.citations, []);
+
+const wrongCitation = buildPriceEstimateFromEvidence({
+  pages: [
+    page('https://example.com/claim', 'No pricing mentioned here.'),
+    page('https://example.com/tickets', 'Tickets cost $25.'),
+  ],
+  fields: { price: { value: 25, unit: 'per person', claims: [
+    { text: 'Tickets cost $25', pages: ['p1'], supported: true },
+  ] } },
+});
+assert.equal(wrongCitation.amount, 25);
+assert.deepEqual(wrongCitation.citations.map((row) => row.pageId), ['p2']);
+
 const applied = applyDossierFields({}, dossierWithClaim);
 assert.match(applied.priceEstimateLabel, new RegExp(`^${PRICE_ESTIMATE_PREFIX}:`));
 assert.equal(applied.price, 32);
