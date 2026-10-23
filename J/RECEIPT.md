@@ -1,44 +1,5 @@
-# Issue #641 — cursor-ubuntu vkfill-641 (2026-10-23)
+# #671 host-reviewed coverage slice
 
-**Start sha:** `5ee5bb95586ab1d588b3dba7d2d116054f0296b7`
+Base d510520afc1fc504a01913d5e45ec6beec1ea191 migrate/trek-source. Exact live coverage preimage eafd0a25ce1ebd8b87afd32910fdf423d32ce5af84e93e823a7ee54da1cf7cc6. Patch changes only _segments: normalize equivalent apostrophe characters in header matching while preserving all original canonical keys, item counts and first-segment behavior. Does not merge duplicate rows, borrow another row price, deduplicate fixture names or change thresholds.
 
-## Outcome
-
-Source-ready for host publication; uncommitted. Not a green-CI, live run10, or merge claim.
-
-## Changes
-
-### a) Review claims: `rN` → dossier `pN`
-
-- `thing-dossier-fields.mjs`: `reviewSetPageIdMap`, `resolveClaimCitationPages`; `claimCitesKnownPages` resolves review-set ids via `dossier.reviewSet[].page`.
-- `xai-grok-place-ratings.mjs`: `judgeDossierFindings` rewrites claim `pages` to resolved `pN` before the cite gate and judge. Unresolvable `r` ids still fail.
-
-### b) Meaning-based judge
-
-- `dossierJudgePrompt` (exported): summaries are not quotations; pass on meaning/paraphrase; fail on unsupported facts, wrong numbers/times/names, or contradictions.
-- `scripts/test_thing_evidence_dossier.mjs`: review-set resolution + paraphrase path to judge + contradicted claim fail + prompt assertion.
-
-### c) Brave coverage (round 5 findings)
-
-**Investigation** (`~/run10-20261022/out5`, start `5ee5bb9` deploy): 9/10 Things had `brave` `local_search` `results: 0` then `match: no_match`; only Rosa Mexicano got locations + a Brave page (rating only, 0 embedded reviews). Harness `call5.py` passes `destination: New York` with **no lat/lng** on places, so dossier Brave never ran `place_search` until a center exists. Production VK rows from Brave place search carry coordinates on `sourceRecord` / `coordinates[]`, but `placeCoords` only read flat `lat`/`lng`.
-
-**Fixes in code**
-
-- `dossier-brave.mjs`: read coords via `bravePoint` (same as place search); `intakeLodgingLookupQuery(name, destination)` for Brave queries; `place_search` when place, trip `metadata.destinationCenter`, or search `center` is available; thread `center` from `gatherThingEvidence` / `fetchXaiPlaceRatings` / `place-search` enrich.
-
-**Left alone:** Brave plan limits, Tavily dedup, and harness still lacking trip `destinationCenter` (host may pass center on dossier-run API for run10).
-
-## Local verification (start `5ee5bb9` + uncommitted diff)
-
-| Command | Result |
-| --- | --- |
-| `node scripts/test_thing_evidence_dossier.mjs` | pass |
-| `node scripts/test_dossier_round5.mjs` | pass |
-| `node scripts/test_dossier_refresh_integration.mjs` | pass |
-| `node scripts/check-no-comments.mjs` | pass (847 files) |
-| `node scripts/test_offline_manifest.mjs` | pass |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
-
-## Host-owned
-
-Commit, push once, open PR into `migrate/trek-source` with `Closes #641`, CI, run10 live acceptance, Gate B if required.
+Host six focused cases pass including both canonical spellings, genuinely absent price, next-row price and duplicate first-unpriced row. Actual saved #660 a8dac27 capture at both390/1280:23/23hotel list and23/23hotel Budget names match prices, unchanged denominator23. Every unrelated AST unchanged. No new capture/model call, product data change, Gate B PASS, merge or deploy claimed. The unsafe worker price-only screenshot exception is rejected and uninstalled; #660 remains held on #671. Source bot-admin/receipts/gpt-manager-pass-20261023-0700.
