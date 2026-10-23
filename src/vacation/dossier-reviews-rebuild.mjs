@@ -50,7 +50,7 @@ function reviewCitesIdentityPages(dossier = {}, place = {}, review = {}) {
   return true;
 }
 
-export function dossierReviewsHaveInvalidContent(dossier = {}, place = {}) {
+function dossierReviewsHaveInvalidContent(dossier = {}, place = {}) {
   const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
   for (const review of reviews) {
     if (!claimsSupported(dossier, review)) return true;

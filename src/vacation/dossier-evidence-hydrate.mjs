@@ -1,3 +1,4 @@
+import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 import { extractContactFieldsFromBlob } from './place-detail-extract.mjs';
 import { descriptionNamesThing, dossierPageId, ensureBraveSnippetCitationPages } from './thing-dossier-fields.mjs';
 import {
@@ -80,6 +81,18 @@ export function addressIsSpecific(value = '') {
   if (!v) return false;
   if (/\d{1,5}\s+\S/.test(v)) return true;
   if (/,\s*[A-Z]{2}\b/.test(v) && /\d{5}/.test(v)) return true;
+  return false;
+}
+
+function scalarFieldValue(value) {
+  if (value == null) return '';
+  if (typeof value === 'object') return text(value.value ?? value.text);
+  return text(value);
+}
+
+export function dossierScalarClaimRejected(key = '', claim = {}) {
+  if (key === 'hours') return !hoursValueLooksValid(scalarFieldValue(claim?.value ?? claim));
+  if (key === 'address') return !addressIsSpecific(scalarFieldValue(claim?.value ?? claim));
   return false;
 }
 

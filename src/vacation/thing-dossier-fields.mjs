@@ -6,8 +6,7 @@ import {
 } from './dossier-hours-fields.mjs';
 import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
-import { addressIsSpecific } from './dossier-evidence-hydrate.mjs';
-import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
+import { dossierScalarClaimRejected } from './dossier-evidence-hydrate.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
@@ -444,19 +443,9 @@ export function applyDossierFields(record = {}, dossier = {}) {
         next.hours = HOURS_NOT_FOUND;
         continue;
       }
-      if (key === 'hours') {
-        const hoursVal = scalarFieldValue(claim.value ?? claim);
-        if (!hoursValueLooksValid(hoursVal)) {
-          missing.add('hours');
-          continue;
-        }
-      }
-      if (key === 'address') {
-        const addrVal = scalarFieldValue(claim.value ?? claim);
-        if (!addressIsSpecific(addrVal)) {
-          missing.add('address');
-          continue;
-        }
+      if (dossierScalarClaimRejected(key, claim)) {
+        missing.add(key);
+        continue;
       }
       if (key === 'happyHourDetails' && claim.explicitNone === true) {
         next.happyHourDetails = NO_HAPPY_HOUR_FOUND;
