@@ -37,6 +37,51 @@ const brave = await braveLocalEvidence({ title: 'Arthouse Hotel' }, { destinatio
 assert.equal(brave.pages.length, 1);
 assert.ok(calls[0].includes('result_filter=locations') && calls[1].includes('ids=abc'));
 
+for (const [location, center] of [
+  [{ sourceRecord: { coordinates: [40.78, -73.98] } }, null],
+  [{ coordinates: [[40.78, -73.98]] }, null],
+  [{ metadata: { destinationCenter: { lat: 40.78, lng: -73.98 } } }, null],
+  [{}, { lat: 40.78, lng: -73.98 }],
+]) {
+  const localCalls = [];
+  const local = await braveLocalEvidence({ title: 'Arthouse Hotel', ...location }, {
+    destination: 'New York', center, env: { BRAVE_SEARCH_API_KEY: 'k' },
+    fetchImpl: async (url) => {
+      localCalls.push(new URL(url));
+      return url.includes('/local/place_search')
+        ? { ok: true, json: async () => ({ results: [{ id: 'abc', title: 'Arthouse Hotel' }] }) }
+        : await fake(url);
+    },
+  });
+  assert.equal(local.pages.length, 1);
+  assert.equal(localCalls[0].pathname, '/res/v1/local/place_search');
+  assert.equal(localCalls[0].searchParams.get('q'), 'Arthouse Hotel, New York');
+  assert.equal(localCalls[0].searchParams.get('latitude'), '40.78');
+  assert.equal(localCalls[0].searchParams.get('longitude'), '-73.98');
+}
+
+const fallbackCalls = [];
+const fallback = await braveLocalEvidence({ title: 'Arthouse Hotel', lat: 40.78, lng: -73.98 }, {
+  destination: 'New York', env: { BRAVE_SEARCH_API_KEY: 'k' },
+  fetchImpl: async (url) => {
+    fallbackCalls.push(new URL(url).pathname);
+    return url.includes('/local/place_search') ? { ok: false, status: 404 } : await fake(url);
+  },
+});
+assert.equal(fallback.pages.length, 1, 'an unavailable place_search endpoint must still try web locations');
+assert.deepEqual(fallbackCalls, ['/res/v1/local/place_search', '/res/v1/web/search', '/res/v1/local/pois']);
+assert.ok(fallback.attempts.some((a) => a.step === 'place_search' && a.error === 'brave_http_404'));
+
+for (const status of [401, 403, 429]) {
+  let requests = 0;
+  const denied = await braveLocalEvidence({ title: 'Arthouse Hotel', lat: 40.78, lng: -73.98 }, {
+    env: { BRAVE_SEARCH_API_KEY: 'k' }, fetchImpl: async () => { requests += 1; return { ok: false, status }; },
+  });
+  assert.equal(requests, 1, 'authentication and rate-limit errors must stop without another request');
+  assert.equal(denied.pages.length, 0);
+  assert.equal(denied.attempts[0].error, `brave_http_${status}`);
+}
+
 const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel' }, {
   destination: 'NYC', env: {},
   searchImpl: async () => ({ results: [{ url: 'https://a.example/arthouse', rawContent: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }] }),
@@ -49,6 +94,7 @@ const code = extractReviewsByCode(dossier).filter((r) => r.method === 'code:brav
 assert.equal(code.length, 2);
 const set = finalizeReviewSet(dossier, code, [], []);
 assert.equal(set.length, 2);
+assert.deepEqual(set.map((r) => [r.page, r.pages]), code.map((r) => [r.page, [r.page]]));
 
 const built = prepareDossierFindings({ ...dossier, reviewSet: set }, {});
 assert.equal(built.rating, 4.5);
@@ -61,6 +107,8 @@ const slim = dossierForModel({ thing: 'Arthouse Hotel', pages: [{ url: 'u', text
 assert.equal(slim.pages.length, 2);
 assert.ok(slim.pages[0].text.length <= 500);
 assert.equal(slim.pages[1].braveReviews, undefined);
+const slimReviews = dossierForModel({ ...dossier, reviewSet: set }).reviewSet;
+assert.deepEqual(slimReviews.map((r) => [r.id, r.page]), set.map((r) => [r.id, r.page]));
 
 const model = xaiGrokPlaceSearchModelId({ XAI_PLACE_SEARCH_MODEL: 'dossier-test-model' });
 assert.equal(xaiCallUsd(model, { input_tokens: 100000, output_tokens: 100000 }).usd, 0.375);

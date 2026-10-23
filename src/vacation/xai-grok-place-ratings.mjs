@@ -19,6 +19,7 @@ import {
   dossierRebuildFields,
   mergeSelectiveDossierFindings,
   claimCitesKnownPages,
+  claimsSupported,
   dossierPageById,
   dossierPageId,
   prepareDossierFindings,
@@ -161,6 +162,49 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
   return { judged: ask.length, results };
 }
 
+export function descriptionNeedsClaimRepair(dossier, findings = {}) {
+  const desc = findings.description;
+  if (!desc?.value || !Array.isArray(desc.claims) || !desc.claims.length) return false;
+  const supported = desc.claims.filter((claim) => claim.supported === true && claimCitesKnownPages(dossier, claim));
+  if (!supported.length) return false;
+  return supported.length < desc.claims.length || !claimsSupported(dossier, desc);
+}
+
+export function descriptionRepairPrompt(dossier, supportedClaims = []) {
+  const slim = dossierForModel(dossierWithPageIds(dossier), { perPage: 1200, total: 12000 });
+  return [
+    'Rewrite the place description using ONLY the supported factual claims below and the cited saved pages.',
+    'Use your own words (not copied phrases). Name the place exactly. Target 70-110 words; under 40 or over 120 is discarded.',
+    'Return JSON {"value":"...","claims":[{"text":"one short fact","pages":["p1"],"supported":true}]} with one claim per fact you rely on, each citing saved page ids.',
+    JSON.stringify({ thing: dossier.thing, supportedClaims, pages: slim.pages }),
+  ].join('\n');
+}
+
+export async function repairDescriptionFromSupportedClaims(dossier, findings, {
+  env = process.env, fetchImpl, timeoutMs, repairImpl,
+} = {}) {
+  const desc = findings.description;
+  const supportedClaims = (desc?.claims || []).filter((claim) => claim.supported === true && claimCitesKnownPages(dossier, claim));
+  if (!supportedClaims.length) return { repaired: false };
+  let next;
+  if (repairImpl) {
+    next = await repairImpl(dossier, supportedClaims);
+  } else {
+    const payload = await postXai(dossier, 'description_repair', env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
+      descriptionRepairPrompt(dossier, supportedClaims), { env, fetchImpl, timeoutMs });
+    try {
+      next = JSON.parse(outputText(payload));
+    } catch {
+      next = null;
+    }
+  }
+  if (!next?.value || !Array.isArray(next.claims) || !next.claims.length) return { repaired: false };
+  next.value = fitDescriptionWords(next.value);
+  for (const claim of next.claims) claim.supported = true;
+  findings.description = next;
+  return { repaired: true };
+}
+
 export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl } = {}) {
   const code = dedupeReviews(extractReviewsByCode(dossier)).slice(0, 150);
   let model = [];
@@ -174,7 +218,7 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
       const slim = dossierForModel({ ...dossier, pages: (dossier.pages || []).map((p) => (p.via === 'brave' ? { ...p, text: '' } : p)) },
         { perPage: 1500, total: 16000, want: 'reviews' });
       const payload = await postXai(dossier, 'extract', env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
-        extractionPrompt(slim, code.slice(0, 60)), { env, fetchImpl, timeoutMs });
+        extractionPrompt(slim, code.slice(0, 90)), { env, fetchImpl, timeoutMs });
       const out = JSON.parse(outputText(payload));
       model = out.reviews || [];
       keep = Array.isArray(out.keep) ? out.keep : null;
@@ -237,6 +281,13 @@ export async function fetchXaiPlaceRatings(place = {}, {
   });
   if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl });
+  let descriptionRepair = { repaired: false };
+  if (descriptionNeedsClaimRepair(merged, findings)) {
+    descriptionRepair = await repairDescriptionFromSupportedClaims(merged, findings, { env, fetchImpl, timeoutMs });
+    if (descriptionRepair.repaired) {
+      await judgeDossierFindings(merged, { description: findings.description }, { env, fetchImpl, timeoutMs, judgeImpl });
+    }
+  }
   const built = prepareDossierFindings(merged, findings);
   const final = persisted && !maxAgeExpired
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields)
@@ -245,7 +296,10 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsage = merged.xaiUsage || [];
   final.xaiUsd = merged.xaiUsd || 0;
   final.fullPageChars = promptChars(merged);
-  return { payload, structuredText, judge, findings, extraction: extraction.stats, xaiUsage: final.xaiUsage, xaiUsd: final.xaiUsd, parsed: { evidenceDossier: final } };
+  return {
+    payload, structuredText, judge, findings, descriptionRepair, extraction: extraction.stats,
+    xaiUsage: final.xaiUsage, xaiUsd: final.xaiUsd, parsed: { evidenceDossier: final },
+  };
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {

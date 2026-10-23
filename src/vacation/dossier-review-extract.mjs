@@ -2,7 +2,7 @@ import { dossierPageId } from './thing-dossier-fields.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 const MAX_WORDS = 80;
-const OPINION = /\b(i|we|my|our|us|me|great|good|bad|terrible|amazing|awesome|loved?|recommend|avoid|worst|best|excellent|disappointing|friendly|rude|delicious|overpriced|worth|clean|dirty|noisy)\b/i;
+const OPINION = /\b(i|we|my|our|us|me|great|good|bad|terrible|amazing|awesome|incredible|loved?|recommend|avoid|worst|best|excellent|disappointing|friendly|rude|delicious|overpriced|worth|clean|dirty|noisy)\b/i;
 const MARKERS = [
   /\bDate of (?:stay|visit|experience):?\s*\w+\s+\d{4}\b/gi,
   /\b(?:Written|Reviewed|Visited|Stayed)\s+(?:in\s+)?\w+\s+\d{1,2},?\s*\d{4}\b/gi,
@@ -14,6 +14,16 @@ const MARKERS = [
 
 const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 const tokens = (s) => norm(s).toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+const REVIEW_SITE_HOST = /(?:^|\.)((?:yelp|tripadvisor|google|trustpilot|booking|expedia|opentable|resy|hotels|facebook)\.)/i;
+
+export function reviewAggregatorHost(url = '') {
+  try {
+    const host = new URL(url).hostname.replace(/^(www|m|en)\./, '');
+    return REVIEW_SITE_HOST.test(host) ? host : '';
+  } catch {
+    return '';
+  }
+}
 const grams = (s, n = 3) => { const t = tokens(s); const out = new Set(); for (let i = 0; i + n <= t.length; i += 1) out.add(t.slice(i, i + n).join(' ')); return out; };
 const clip = (s) => { const w = norm(s).split(' '); return w.length > MAX_WORDS ? `${w.slice(0, MAX_WORDS).join(' ')}…` : norm(s); };
 
@@ -43,6 +53,13 @@ export function extractReviewsByCode(dossier = {}) {
       let body = m[1];
       try { body = JSON.parse(`"${m[1]}"`); } catch { body = m[1]; }
       if (looksLikeReview(body)) out.push({ text: clip(body), page: id, method: 'code:jsonld' });
+    }
+    for (const m of text.matchAll(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/g)) {
+      let body = m[1];
+      try { body = JSON.parse(`"${m[1]}"`); } catch { body = m[1]; }
+      if (reviewAggregatorHost(page.url) && looksLikeReview(body)) {
+        out.push({ text: clip(body), page: id, method: 'code:jsonld-desc' });
+      }
     }
     const cuts = [];
     for (const re of MARKERS) for (const m of text.matchAll(re)) cuts.push(m.index, m.index + m[0].length);
@@ -88,12 +105,28 @@ export function extractionPrompt(dossier = {}, codeItems = []) {
   ].join('\n');
 }
 
+function codeReviewKeeps(dossier, item, core, keep, index, pageFor) {
+  if (item.method === 'code:brave' || item.method === 'code:jsonld-desc') return true;
+  if (keep?.has(`k${index + 1}`)) return true;
+  const page = pageFor(item.page);
+  const pageText = tokens(page?.text || '').join(' ');
+  const reviewText = tokens(item.text || '').join(' ');
+  const onReviewSite = Boolean(reviewAggregatorHost(page?.url || ''));
+  const grounded = page && looksLikeReview(item.text)
+    && reviewGrounded(String(item.text || '').replace(/…$/, ''), page.text || '');
+  if (onReviewSite && grounded) return true;
+  if (!keep) {
+    if (!core || pageText.includes(core) || reviewText.includes(core)) return true;
+    return grounded;
+  }
+  return false;
+}
+
 export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [], keepIds = null) {
   const core = tokens(String(dossier.thing || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
   const keep = Array.isArray(keepIds) ? new Set(keepIds.map(String)) : null;
-  codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || (keep ? keep.has(`k${i + 1}`)
-    : tokens(pageFor0(dossier, c.page)?.text || '').join(' ').includes(core)));
   const pageFor = (id) => { const m = /^p(\d+)$/.exec(String(id || '')); return m ? dossier.pages?.[Number(m[1]) - 1] : null; };
+  codeItems = codeItems.filter((c, i) => codeReviewKeeps(dossier, c, core, keep, i, pageFor));
   const model = (Array.isArray(modelItems) ? modelItems : []).filter((r) => r && typeof r.text === 'string')
     .map((r) => ({ text: clip(r.text), page: String(r.page || ''), rating: Number.isInteger(r.rating) ? r.rating : null, method: 'model' }))
     .filter((r) => { const p = pageFor(r.page); return p && looksLikeReview(r.text) && reviewGrounded(r.text.replace(/…$/, ''), p.text); });

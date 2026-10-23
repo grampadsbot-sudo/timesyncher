@@ -20,6 +20,10 @@ import {
   useThingEvidenceDossierStore,
 } from '../src/vacation/thing-evidence-dossier-store.mjs';
 import { enrichPlaceRecordWithXaiRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
+import {
+  resolveBatchTripCenter,
+  tripCenterForTarget,
+} from '../src/vacation/thing-evidence-dossier-execution.mjs';
 
 function page(url, text) {
   const body = text.trim();
@@ -160,6 +164,67 @@ await judgeDossierFindings({ pages: goodPages }, contradictJudge, {
 assert.equal(contradictJudge.description.claims[0].supported, false, 'contradicted claims fail the judge');
 assert.match(dossierJudgePrompt({ pages: goodPages }, [{ text: 'paraphrase ok', pages: ['p1'] }]), /meaning|paraphrase/i);
 
+const round5Cases = [
+  {
+    thing: 'Arthouse Hotel New York City',
+    pages: [page('https://www.arthousehotelnyc.com/',
+      'On Manhattan’s Upper West Side, making the most of your living space is the ultimate luxury, and our rooms, suites and lofts merge private apartment-style savviness with all of the amenities you expect from a boutique hotel. Arthouse Hotel New York City features three on-site restaurants and bars, including the Prohibition speakeasy-style Arthouse Bar, Northern Italian fare at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.')],
+    reviewSet: [],
+    claim: 'p1 states rooms merge private apartment-style features with boutique hotel amenities and lists on-site restaurants including Serafina and RedFarm.',
+    citations: ['p1'],
+    resolved: ['p1'],
+    contradiction: 'Arthouse Hotel New York City has no on-site restaurants or bars.',
+  },
+  {
+    thing: 'Rosa Mexicano - Lincoln Center',
+    pages: [
+      page('https://www.yelp.com/brands/rosa-mexicano',
+        'Service was attentive, atmosphere was great, and the tableside guacamole never disappoints!'),
+      page('https://www.facebook.com/fb-answers/rosa-mexicano-lincoln-center-reviews',
+        'If you’re looking for Mexican food right by Lincoln Center, it’s a popular spot for a pre-show dinner with friendly service. The guacamole is delicious!'),
+    ],
+    reviewSet: [{ id: 'r7', page: 'p1' }, { id: 'r8', page: 'p2' }],
+    claim: 'r7 and r8 from reviewSet praise the tableside guacamole and friendly service for pre-show dining.',
+    citations: ['r7', 'r8'],
+    resolved: ['p1', 'p2'],
+    contradiction: 'Rosa Mexicano reviewers disliked the guacamole and described unfriendly service.',
+  },
+];
+for (const regression of round5Cases) {
+  const claims = [
+    { text: regression.claim, pages: regression.citations },
+    { text: regression.contradiction, pages: regression.citations },
+    { text: regression.claim, pages: ['p1', 'r999'], supported: true },
+  ];
+  const findings = { description: { claims } };
+  let judgeCalls = 0;
+  await judgeDossierFindings(regression, findings, {
+    env: { XAI_API_KEY: 'unit-test', XAI_PLACE_SEARCH_MODEL: 'dossier-test-model' },
+    fetchImpl: async (_url, init) => {
+      judgeCalls += 1;
+      const prompt = JSON.parse(init.body).input[0].content;
+      assert.ok(prompt.includes("support the claim's meaning (paraphrase and synonyms are fine)"));
+      assert.ok(prompt.includes('wrong numbers, times, names, or contradictions'));
+      const payload = JSON.parse(prompt.split('\n').at(-1));
+      assert.equal(payload.claims.length, 2, 'unresolvable review ids must never reach the judge');
+      assert.equal(payload.claims[0].text, regression.claim);
+      assert.deepEqual(payload.claims[0].pages, regression.resolved);
+      assert.deepEqual(payload.pages.map((p) => p.id), regression.resolved);
+      assert.ok(payload.pages.every((p) => p.text && p.sha256));
+      return { ok: true, json: async () => ({ output_text: JSON.stringify({ results: [
+        { id: 'c1', supported: true, reason: 'The cited pages support the paraphrased meaning.' },
+        { id: 'c2', supported: false, reason: 'The claim contradicts the cited pages.' },
+      ] }) }) };
+    },
+  });
+  assert.equal(judgeCalls, 1);
+  assert.equal(claims[0].supported, true, `${regression.thing}: accept a paraphrased supported claim`);
+  assert.deepEqual(claims[0].pages, regression.resolved);
+  assert.equal(claims[1].supported, false, `${regression.thing}: reject a contradiction`);
+  assert.equal(claims[2].supported, false, 'a valid page must not rescue an unresolvable review id');
+  assert.equal(claims[2].judgeReason, 'cites no saved dossier page');
+}
+
 const record = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: built });
 assert.equal(record.xaiRatingsFetched, true, 'verified dossier must mark ratings fetched');
 assert.ok(record.review1, 'representative review text must land on the record');
@@ -208,6 +273,38 @@ const long = Array.from({ length: 13 }, (_, i) => `Sentence ${i} has exactly ten
 const fit = F4.fitDescriptionWords(long);
 assert.ok(F4.fitDescriptionWords(long).split(/\s+/).length <= 120 && fit.endsWith('.'), 'trim to <=120 words at a sentence end');
 
+const yelpPage = page('https://www.yelp.com/biz/carbone-new-york', 'Carbone is impossible to book. guest_one • 2y ago The spicy rigatoni was incredible and service felt polished throughout the long meal. guest_two • 1y ago Overpriced pasta but the atmosphere is electric before theater.');
+const redditPage = page('https://www.reddit.com/r/foodnyc/x', 'thread about other restaurants only, no carbone name here. user_a • 1y ago I loved the spicy rigatoni here and would return again soon.');
+const yelpCode = [{
+  text: 'The spicy rigatoni was incredible and service felt polished throughout the long meal.',
+  page: 'p1',
+  method: 'code:marker',
+}];
+const keepOnlyReddit = X4.finalizeReviewSet({ thing: 'Carbone', pages: [yelpPage, redditPage] }, yelpCode, [], ['k99']);
+assert.ok(keepOnlyReddit.length >= 1, 'review-aggregator code reviews stay when model keep omits them');
+assert.ok(keepOnlyReddit.some((r) => r.source === 'yelp.com'), 'yelp-sourced reviews count toward breadth');
+
+const partialDesc = {
+  description: {
+    value: 'Zabar\'s is a legendary Upper West Side market known for smoked fish, appetizing counters, and prepared foods that draw neighborhood regulars and tourists alike through its bustling aisles every morning.',
+    claims: [
+      { text: 'p1 describes smoked fish and appetizing counters', pages: ['p1'], supported: true },
+      { text: 'p1 says thriving for over 90 years with excellent food and service', pages: ['p1'], supported: false },
+    ],
+  },
+};
+const { descriptionNeedsClaimRepair, repairDescriptionFromSupportedClaims } = await import('../src/vacation/xai-grok-place-ratings.mjs');
+assert.equal(descriptionNeedsClaimRepair({ pages: goodPages }, partialDesc), true);
+const repaired = await repairDescriptionFromSupportedClaims({ thing: "Zabar's", pages: goodPages }, partialDesc, {
+  repairImpl: async () => ({
+    value: "Zabar's anchors the Upper West Side with smoked fish, appetizing counters, and prepared foods that regulars and tourists grab from busy aisles each morning while the store keeps its classic market energy alive and the prepared-food counters stay crowded from open to close.",
+    claims: [{ text: 'p1 lists smoked fish and appetizing counters', pages: ['p1'], supported: true }],
+  }),
+});
+assert.equal(repaired.repaired, true);
+const zBuilt = prepareDossierFindings({ thing: "Zabar's", pages: goodPages, attempts: [], reviewSet: [] }, partialDesc);
+assert.ok(zBuilt.fields.description?.value, 'supported-only description rewrite must land on dossier fields');
+
 const empty = enrichPlaceRecordWithXaiRatings({ review1: 'stale' }, { evidenceDossier: { thing: 'Empty', pages: [], attempts: [] } });
 assert.ok(empty.missingFields.includes('reviews'));
 assert.ok(empty.missingFields.includes('ratings'));
@@ -242,5 +339,25 @@ const loaded = await loadThingEvidenceDossier('test:roundtrip');
 assert.equal(loaded.thing, 'Riverside Bistro');
 assert.equal(loaded.pages.length, 3);
 useThingEvidenceDossierStore(null);
+
+assert.deepEqual(
+  tripCenterForTarget({ center: { lat: 1, lng: 2 } }, { lat: 9, lng: 9 }),
+  { lat: 1, lng: 2 },
+);
+assert.deepEqual(
+  tripCenterForTarget({ trip: { metadata: { destinationCenter: { lat: 3, lng: 4 } } } }, null),
+  { lat: 3, lng: 4 },
+);
+assert.deepEqual(
+  resolveBatchTripCenter(
+    [{ ccabKey: 'a' }, { ccabKey: 'b' }],
+    (target) => (target.ccabKey === 'a' ? { lat: 40, lng: -74 } : { lat: 42, lng: -72 }),
+  ),
+  { lat: 41, lng: -73 },
+);
+assert.deepEqual(
+  tripCenterForTarget({ ccabKey: 'a' }, { lat: 41, lng: -73 }),
+  { lat: 41, lng: -73 },
+);
 
 console.log('test_thing_evidence_dossier: ok');
