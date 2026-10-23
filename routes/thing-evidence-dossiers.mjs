@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
     const result = await runThingEvidenceDossierStagingTargets(targets, {
       env: process.env,
-      skipExisting: body?.forceRefresh !== true,
+      skipExisting: body?.skipExisting === true,
       forceRefresh: body?.forceRefresh === true,
       timeBudgetMs: Number(body?.timeBudgetMs) > 0 ? Number(body.timeBudgetMs) : 52000,
     });

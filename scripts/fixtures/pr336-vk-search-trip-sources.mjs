@@ -54,14 +54,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   616: 'Whole Foods Market Columbus Circle',
 };
 
-export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([
-  608,
-  602,
-  605,
-  606,
-  610,
-  611,
-]);
+export const GATE_B_INCOMPLETE_CONTRACT_ROW_IDS = new Set([608]);
 
 export function buildPr336GateBRegenerateRows() {
   return buildNycCraigKimDaybydayFixtureRows();

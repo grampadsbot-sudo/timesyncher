@@ -134,7 +134,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       placeId: place.id,
     });
     const pagesBefore = existing?.pages?.length || 0;
-    if ((skipExisting || !refresh) && !refresh && dossierCaptureComplete(existing)) {
+    if (!refresh && skipExisting && dossierCaptureComplete(existing)) {
       results.push({
         rowId: target.rowId ?? place.id,
         dossierKey,

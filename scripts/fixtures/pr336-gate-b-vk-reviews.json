@@ -29,7 +29,15 @@
       ]
     },
     "websiteFlavour": "Family-owned gourmet emporium since 1934 at 80th & Broadway; specializes in hand-sliced smoked fish, artisanal cheeses from around the world, custom-roasted coffees (e.g., Special Blend, Z-Peat), fresh-baked bagels, babka, rugelach; deli classics like pastrami; extensive kitchenware/housewares upstairs; cafe; gift baskets and online shopping for iconic NYC treats.",
-    "xaiRatingsFetched": true
+    "xaiRatingsFetched": true,
+    "review1": "The lox counter still feels like a classic UWS ritual on busy mornings when you want hand-sliced nova and a real bagel without turning it into a tourist stop.",
+    "review2": "Babka and rugelach from the bakery case make easy gifts, though checkout lines stack up fast when weekend crowds hit the narrow aisles.",
+    "review3": "Coffee beans and specialty cheeses turn a quick errand into a browse, and the upstairs housewares section is its own rabbit hole for locals.",
+    "review4": "Prices can sting on premium items, and service varies by counter, but the prepared foods counter remains a reliable stop before Central Park picnics.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "4"
   },
   "Motto by Hilton New York City Times Square": {
     "googleRating": "3.9",
@@ -169,7 +177,15 @@
       ]
     },
     "websiteFlavour": "Landmark independent bookstore since 1927 with over 18 miles of new, used & rare books, bookish gifts, tote bags, literary events; bustling East Village vibe with multiple floors including rare book room.",
-    "xaiRatingsFetched": true
+    "xaiRatingsFetched": true,
+    "review1": "Getting lost in the stacks is half the fun, especially when rare editions turn up beside discounted paperbacks on the upper floors near Broadway.",
+    "review2": "The tote bags and literary gifts are iconic souvenirs, though some novelty stickers feel overpriced compared with the used-book bargains downstairs.",
+    "review3": "Staff can be brisk during rush hours, yet the store still feels like a living landmark when author events pack the main floor on weekends.",
+    "review4": "Eighteen miles of shelves is not marketing fluff; plan extra time if you care about hunting first editions or obscure art monographs.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "5"
   },
   "Afternoon matinee show": {
     "googleRating": "4.5",
@@ -197,7 +213,15 @@
       ]
     },
     "websiteFlavour": "TKTS Discount Booths offer same-day tickets to Broadway and Off-Broadway shows at 20% to 50% off regular prices for an affordable theatre experience.",
-    "xaiRatingsFetched": true
+    "xaiRatingsFetched": true,
+    "review1": "Same-day matinee discounts can be a steal when the board lists a show you already wanted, even after the service charge is included in the final price.",
+    "review2": "Staff at the Times Square booth stay patient explaining seat locations, which helps when you are juggling multiple show options under time pressure.",
+    "review3": "Lines stretch around the plaza on rainy holiday weekends, so arrive early if you need a specific matinee time for a tight dinner reservation afterward.",
+    "review4": "Hit-or-miss availability is part of the game; popular titles sell out fast, but the savings still beat full box office when you are flexible.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "3",
+    "review4Rating": "4"
   },
   "Friend meetup at Bryant Park": {
     "googleRating": "4.7",
@@ -310,7 +334,15 @@
       ]
     },
     "websiteFlavour": "The original Carbone on Thompson Street is a celebrated Italian-American spot with charismatic tuxedoed service, mid-century glam design (burgundy banquettes, gold accents, art), and a menu of elevated red-sauce classics inspired by Little Italy and the founders' heritage. Signatures include spicy rigatoni vodka and tableside Caesar; reservations via Resy or site, corkage available, dressy code.",
-    "xaiRatingsFetched": true
+    "xaiRatingsFetched": true,
+    "review1": "The spicy rigatoni vodka still earns the hype when the room is buzzing, and the tuxedoed servers keep the old-school glamour feeling intentional rather than kitsch.",
+    "review2": "Tableside Caesar is a show in itself, though the check adds up quickly once cocktails and shared pastas land for a table of four.",
+    "review3": "Snagging a reservation takes persistence, and walk-ins should expect a long wait even on weeknights when the dining room is fully committed.",
+    "review4": "Some guests find the prices steep for red-sauce classics, yet the pacing and bread service still feel polished on a special-occasion night out.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "4",
+    "review4Rating": "3"
   },
   "Jazz at Lincoln Center": {
     "googleRating": "4.6",
@@ -340,6 +372,14 @@
       ]
     },
     "websiteFlavour": "Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
-    "xaiRatingsFetched": true
+    "xaiRatingsFetched": true,
+    "review1": "The Central Park views from the room stay stunning during the late set, especially when the band leans into classic standards with a tight rhythm section.",
+    "review2": "Musicianship is consistently strong, though cover charges and drink minimums can make a short set feel expensive compared with smaller Village clubs.",
+    "review3": "Service is warm and formal without being stiff, and the room feels upscale enough for a date night after Lincoln Center performances.",
+    "review4": "Food is hit-or-miss for the price point, so many regulars treat dinner as optional and focus on the music and skyline backdrop instead.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "3"
   }
 }

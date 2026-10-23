@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 
 import handler from '../routes/thing-evidence-dossiers.mjs';
 import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
+import { computeDossierFieldHashes } from '../src/vacation/thing-dossier-fields.mjs';
 import {
   tripPlaceDossierKey,
   useThingEvidenceDossierStore,
@@ -38,14 +39,21 @@ const target = {
   destination: 'New York, NY',
 };
 
+const dossierKey = tripPlaceDossierKey(99, 610);
+
 const complete = {
   thing: 'Carbone',
   pages: [page('https://example.com/a', 'review text ' + 'word '.repeat(50))],
   attempts: [],
-  fields: { summary: { value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas.', claims: [{ text: 'Italian', pages: ['p1'], supported: true }] } },
+  fields: {
+    summary: {
+      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas.',
+      claims: [{ text: 'Italian', pages: ['p1'], supported: true }],
+    },
+  },
   captureCheckpoint: 'done',
 };
-await store.putDossier(tripPlaceDossierKey(99, 610), complete);
+await store.putDossier(dossierKey, complete);
 useThingEvidenceDossierStore(store);
 process.env.TIMESYNCHER_WORKER_TOKEN = 'test';
 process.env.XAI_API_KEY = 'test';
@@ -66,22 +74,69 @@ const first = await runThingEvidenceDossierStagingTargets([target], {
 assert.equal(first.results[0].skipped, 'existing_dossier');
 assert.equal(gatherCalls, 0);
 
-const second = await runThingEvidenceDossierStagingTargets([target], {
+const badReviews = {
+  thing: 'Carbone',
+  pages: [page('https://example.com/a', 'Carbone guests praise the spicy rigatoni and warm service every night. '.repeat(8))],
+  attempts: [],
+  fields: complete.fields,
+  reviews: [{
+    text: 'This Carbone review cites missing pages and should trigger a saved-evidence rebuild with enough words to qualify.',
+    rating: 5,
+    claims: [{ text: 'missing', pages: ['p99'], supported: true }],
+  }],
+  captureCheckpoint: 'done',
+};
+await store.putDossier(dossierKey, badReviews);
+
+let buildCalls = 0;
+const rebuildOpts = {
   env: { XAI_API_KEY: 'test' },
   storeImpl: store,
-  skipExisting: true,
-  gatherImpl: async () => { gatherCalls += 1; return { pages: [] }; },
-  buildImpl: async () => ({ payload: {}, structuredText: '{}', findings: {} }),
-});
-assert.equal(second.results[0].skipped, 'existing_dossier');
+  skipExisting: false,
+  gatherImpl: async () => {
+    gatherCalls += 1;
+    throw new Error('gather must not run for saved complete dossier');
+  },
+  buildImpl: async () => {
+    buildCalls += 1;
+    return { payload: {}, structuredText: '{}', findings: { reviews: [] } };
+  },
+  judgeImpl: async () => [],
+  extractReviewsImpl: async () => ({ reviews: [], keep: [] }),
+};
+
+const rebuildRun = await runThingEvidenceDossierStagingTargets([target], rebuildOpts);
+assert.ok(buildCalls >= 1, 'default fill must run fetch path and invoke dossier builder for bad saved reviews');
+assert.ok(rebuildRun.results[0].pageCount >= 1);
 assert.equal(gatherCalls, 0);
+
+const stable = {
+  thing: 'Carbone',
+  pages: badReviews.pages,
+  attempts: [],
+  fields: complete.fields,
+  reviews: [{
+    text: 'Carbone spicy rigatoni lived up to the hype and the service felt polished through a long Friday dinner service with friends.',
+    rating: 5,
+    claims: [{ text: 'spicy rigatoni', pages: ['p1'], supported: true }],
+  }],
+  reviewsRead: 12,
+  captureCheckpoint: 'done',
+};
+const { hashes, sources } = computeDossierFieldHashes(stable);
+await store.putDossier(dossierKey, { ...stable, fieldHashes: hashes, fieldSources: sources });
+
+buildCalls = 0;
+const noopRun = await runThingEvidenceDossierStagingTargets([target], rebuildOpts);
+assert.equal(noopRun.results[0].skipped, 'existing_dossier', 'second fill should no-op when hashes and reviews are fresh');
+assert.equal(buildCalls, 0);
 
 let json = null;
 await handler({
   method: 'POST',
   headers: { authorization: 'Bearer test', 'content-type': 'application/json' },
   async *[Symbol.asyncIterator]() {
-    yield Buffer.from(JSON.stringify({ targets: [target] }));
+    yield Buffer.from(JSON.stringify({ targets: [target], skipExisting: true }));
   },
 }, {
   statusCode: 0,
