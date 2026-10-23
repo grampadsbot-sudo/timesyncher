@@ -105,6 +105,19 @@ export function claimsSupported(dossier, owner) {
     && claims.every((claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true);
 }
 
+function supportedFieldClaims(dossier, owner) {
+  return (owner?.claims || []).filter(
+    (claim) => claimCitesKnownPages(dossier, claim) && claim.supported === true,
+  );
+}
+
+function scalarFieldClaimsOk(dossier, owner, key) {
+  const supported = supportedFieldClaims(dossier, owner);
+  if (!supported.length) return false;
+  if (key === 'description') return true;
+  return supported.length === (owner?.claims || []).length;
+}
+
 function claimUrls(dossier, owner) {
   return [...new Set((owner?.claims || []).flatMap((claim) => claim.pages || [])
     .map((id) => dossierPageById(dossier, id)?.url).filter(Boolean))].join(',');
@@ -263,14 +276,15 @@ export function prepareDossierFindings(dossier, findings = {}) {
   }
   for (const key of ['summary', 'description', 'price']) {
     const claim = findings[key];
-    if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
+    if (!claim || !norm(claim.value) || !scalarFieldClaimsOk(dossier, claim, key)) continue;
+    const claims = supportedFieldClaims(dossier, claim);
     if (key === 'price') {
       const value = Number(claim.value);
       if (!(value > 0) || !norm(claim.unit)) continue;
     }
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !descriptionNamesThing(claim.value, dossier.thing))) continue;
-    next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
+    next.fields[key] = { ...claim, claims, url: claimUrls(dossier, { claims }) };
     if (key === 'description' && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
@@ -376,7 +390,7 @@ export function applyDossierFields(record = {}, dossier = {}) {
         missing.delete('happyHourDetails');
         continue;
       }
-      if (!claimsSupported(dossier, claim)) continue;
+      if (!scalarFieldClaimsOk(dossier, claim, key)) continue;
       next[key] = claim.value;
       missing.delete(key);
     }

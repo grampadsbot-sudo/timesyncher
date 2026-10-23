@@ -1,3 +1,44 @@
+# PR #650 / issue #644 — cursor-ubuntu vkfill-650 round (2026-10-23)
+
+**Start sha:** `ba29d7f4e44bb7df4f24b6b0139cfbd92837f410`
+
+## Outcome
+
+Source-ready for host publication (commit + push). Not CI green, run10 live acceptance, or Gate B 32/32.
+
+## Changes this round
+
+- **`thing-dossier-fields.mjs`:** Description (and apply path) keeps the field when at least one cited claim is judge-supported; unsupported claims are dropped from the stored `claims` list instead of blanking the whole description (Village Vanguard / chief-dr §3).
+- **Price parser** (`thing-evidence-price-estimate.mjs`): unchanged on start head; `scripts/test_thing_evidence_price_estimate.mjs` already covers literal `$`, decimals, year false positives, and typical-over-max.
+- **`scripts/test_thing_evidence_dossier.mjs`:** Regression for mixed supported/unsupported description claims.
+
+## Local verification (worktree `ba29d7f4` + uncommitted diff)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/test_thing_evidence_dossier.mjs` | pass |
+| `node scripts/test_thing_evidence_price_estimate.mjs` | pass |
+| `node scripts/test_vk_search_place_output_contract.mjs` | pass |
+| `node apps/vacation-client/test/detail.unit.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | pass (851 files) |
+| `node scripts/test_offline_manifest.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass (0 fail) |
+| `gateBCapturePreDataCheck(scripts/fixtures/gate-b-nyc-shared-staging.json)` | pass (0 blank_price / hotel_description_judge) |
+
+## Gate B failures named in brief (hotels/flights budget list prices, hotel description quality)
+
+Not reproduced against repo fixture `scripts/fixtures/gate-b-nyc-shared-staging.json` at this head (pre-data check 0 failures). Those auto-round lines target live staging capture on build `ba29d7f4` / `745d594d`; fixing them here would require staging trip rebake or harness edits (out of scope: no fixture hard-code, no Gate B script edits).
+
+## Uncommitted for host
+
+- `src/vacation/thing-dossier-fields.mjs`
+- `scripts/test_thing_evidence_dossier.mjs`
+- `J/RECEIPT.md` (this section)
+
+Host: single commit on `cursor/tsv-644-vk-price-estimate-built-from-each-thing-s-evidence-file-labelled-as-an-estimate-never-blo-ff9f`, push, CI, run10 semantic price acceptance.
+
+---
+
 # PR #650 / issue #644 — cursor-ubuntu vkfill-650 (2026-10-23)
 
 **Start sha:** `745d594de0a21fa62274b169959de3036fa04135`

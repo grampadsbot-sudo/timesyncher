@@ -112,6 +112,25 @@ const rejected = prepareDossierFindings(
 assert.equal(rejected.fields.summary, undefined, 'judge-unsupported summary must be omitted');
 assert.equal(rejected.fields.hours, undefined, 'claim citing no page must fail');
 assert.equal(rejected.fields.price, undefined, 'claim citing an unknown page must fail');
+
+const vanguardDesc = 'Village Vanguard anchors Greenwich Village jazz with a basement listening room, long-running Monday nights, and a booking pace that rewards advance tickets while the room keeps its tight sightlines, historic set lists, and the kind of close-up acoustic mix that regulars quote in every review thread online.';
+const mixedDescription = prepareDossierFindings(
+  { thing: 'Village Vanguard', pages: goodPages, attempts: [] },
+  {
+    description: {
+      value: vanguardDesc,
+      claims: [
+        { text: 'Cover charges typically range from $25-$50', pages: ['p3'], supported: false },
+        { text: 'Monday night sets are a signature booking', pages: ['p1'], supported: true },
+      ],
+    },
+  },
+);
+assert.ok(mixedDescription.fields.description, 'one unsupported description claim must not blank the field');
+assert.equal(mixedDescription.fields.description.claims.length, 1);
+assert.equal(mixedDescription.fields.description.claims[0].supported, true);
+const appliedVanguard = applyDossierFields({}, mixedDescription);
+assert.ok(appliedVanguard.description.startsWith(vanguardDesc));
 const noReviews = prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, { ...findings, reviewExcerpts: [] });
 assert.ok(noReviews.fields.description, 'no reviews must not fail the description');
 assert.match(noReviews.fields.description.value, /\nNo reviews were found for this place\.$/);
