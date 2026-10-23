@@ -1,0 +1,29 @@
+--- a/capture.mjs
++++ b/capture.mjs
+@@ -9,0 +10,2 @@
++  appendLogoShotFromCapture,
++  LOGO_PASSIVE_OBSERVER_INIT,
+@@ -163,0 +166,4 @@
++          row_instance: window.__tsLogoPassiveRowInstance ? window.__tsLogoPassiveRowInstance(li) : null,
++          place_id: li.getAttribute('data-place-id') || null,
++          thing_id: li.getAttribute('data-thing-id') || null,
++          summary_src: li.getAttribute('data-summary-src') || null,
+@@ -251,0 +258 @@
++      result.passive_logo_events = window.__tsLogoPassiveEvents ? window.__tsLogoPassiveEvents.splice(0) : [];
+@@ -261 +268 @@
+-const logoLog = { requests: [], shots: [] };
++const logoLog = { requests: [], shots: [], events: [] };
+@@ -343,6 +350,2 @@
+-  const domLogos = (regions[shot]?.items || []).filter((row) => row.img).map((row) => ({
+-    row_cat: row.cat, url: sanitizePublicImageUrl(row.img.src),
+-    rect: row.img.box, natural: row.img.natural, loaded: row.img.loaded,
+-    visible: row.img.visible,
+-  }));
+-  logoLog.shots.push(buildLogoShotRecord({ shot, w, t: Date.now() - T0, domLogos }));
++  appendLogoShotFromCapture({ w, t0: T0, shot, logoLog, regionItems: regions[shot]?.items, rawEvents: regions[shot]?.passive_logo_events });
++  if (regions[shot]) delete regions[shot].passive_logo_events;
+@@ -356,0 +360 @@
++    await page.addInitScript({ content: LOGO_PASSIVE_OBSERVER_INIT });
+@@ -438 +442 @@
+-fs.writeFileSync(path.join(outdir, 'logo-log.json'), JSON.stringify({ base: BASE, requests: logoLog.requests, shots: logoLog.shots, summary: logoSum }, null, 1));
++fs.writeFileSync(path.join(outdir, 'logo-log.json'), JSON.stringify({ base: BASE, requests: logoLog.requests, events: logoLog.events, shots: logoLog.shots, summary: logoSum }, null, 1));
