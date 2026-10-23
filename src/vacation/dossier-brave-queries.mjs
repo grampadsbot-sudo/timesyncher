@@ -30,6 +30,10 @@ export function isFlightOrCarOrDecision(place = {}) {
   return cat === 'flight' || cat === 'car' || cat === 'decision' || cat === 'note';
 }
 
+export function placeSupportsDossierReviews(place = {}) {
+  return !isFlightOrCarOrDecision(place);
+}
+
 function baseQuery(place = {}, destination = '') {
   const name = text(place.title || place.name);
   const dest = text(destination);

@@ -1,4 +1,5 @@
-import { dossierPageId } from './thing-dossier-fields.mjs';
+import { descriptionNamesThing, dossierPageId } from './thing-dossier-fields.mjs';
+import { evidencePageMatchesPlace, pageNamesOtherVenue } from './dossier-evidence-hydrate.mjs';
 import { reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 const MAX_WORDS = 80;
@@ -31,16 +32,28 @@ function looksLikeReview(text) {
   return n >= 8 && n <= 400 && OPINION.test(text);
 }
 
-export function extractReviewsByCode(dossier = {}) {
+const REVIEW_HOST_RE = /yelp\.|tripadvisor\.|google\.|opentable\.|booking\.com/i;
+
+function snippetMatchesPlace(snippet = '', url = '', place = {}, dossier = {}) {
+  if (!place?.title && !place?.name) return true;
+  const page = { text: snippet, url };
+  if (pageNamesOtherVenue(page, place)) return false;
+  if (descriptionNamesThing(snippet, dossier.thing || place.title || place.name)) return true;
+  if (REVIEW_HOST_RE.test(url || '') && evidencePageMatchesPlace(page, place, dossier)) return true;
+  return evidencePageMatchesPlace(page, place, dossier);
+}
+
+export function extractReviewsByCode(dossier = {}, place = null) {
   const out = [];
   for (const row of dossier.braveResults || []) {
     for (const snippet of row.snippets || []) {
-      if (looksLikeReview(snippet)) {
-        out.push({ text: clip(snippet), page: '', method: 'code:brave-snippet', url: row.url, rating: row.rating || null });
-      }
+      if (!looksLikeReview(snippet)) continue;
+      if (place && !snippetMatchesPlace(snippet, row.url, place, dossier)) continue;
+      out.push({ text: clip(snippet), page: '', method: 'code:brave-snippet', url: row.url, rating: row.rating || null });
     }
   }
   (dossier.pages || []).forEach((page, index) => {
+    if (place && (!evidencePageMatchesPlace(page, place, dossier) || pageNamesOtherVenue(page, place))) return;
     const id = dossierPageId(index);
     const text = String(page.text || '');
     if (page.via === 'brave' && Array.isArray(page.braveReviews)) {
@@ -95,15 +108,29 @@ export function extractionPrompt(dossier = {}, codeItems = []) {
   ].join('\n');
 }
 
-export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [], keepIds = null) {
-  const core = tokens(String(dossier.thing || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
+export function finalizeReviewSet(dossier = {}, codeItems = [], modelItems = [], keepIds = null, place = null) {
+  const core = tokens(String(dossier.thing || place?.title || '').split(/\s+[-–—|:]\s+/)[0]).filter((w) => w !== 'the').join(' ');
   const keep = Array.isArray(keepIds) ? new Set(keepIds.map(String)) : null;
-  codeItems = codeItems.filter((c, i) => c.method === 'code:brave' || c.method === 'code:brave-snippet' || (keep ? keep.has(`k${i + 1}`)
-    : tokens(pageFor0(dossier, c.page)?.text || '').join(' ').includes(core)));
+  codeItems = codeItems.filter((c, i) => {
+    if (c.method === 'code:brave-snippet' && place) {
+      return snippetMatchesPlace(c.text, c.url, place, dossier);
+    }
+    if (c.method === 'code:brave' || c.method === 'code:brave-snippet') return true;
+    if (keep?.has(`k${i + 1}`)) return true;
+    const p = pageFor0(dossier, c.page);
+    if (place && p && (!evidencePageMatchesPlace(p, place, dossier) || pageNamesOtherVenue(p, place))) return false;
+    return tokens(p?.text || '').join(' ').includes(core);
+  });
   const pageFor = (id) => { const m = /^p(\d+)$/.exec(String(id || '')); return m ? dossier.pages?.[Number(m[1]) - 1] : null; };
   const model = (Array.isArray(modelItems) ? modelItems : []).filter((r) => r && typeof r.text === 'string')
     .map((r) => ({ text: clip(r.text), page: String(r.page || ''), rating: Number.isInteger(r.rating) ? r.rating : null, method: 'model' }))
-    .filter((r) => { const p = pageFor(r.page); return p && looksLikeReview(r.text) && reviewGrounded(r.text.replace(/…$/, ''), p.text); });
+    .filter((r) => {
+      const p = pageFor(r.page);
+      if (!p || !looksLikeReview(r.text) || !reviewGrounded(r.text.replace(/…$/, ''), p.text)) return false;
+      if (place && (!evidencePageMatchesPlace(p, place, dossier) || pageNamesOtherVenue(p, place))) return false;
+      if (place && !descriptionNamesThing(r.text, dossier.thing || place.title)) return false;
+      return true;
+    });
   const set = dedupeReviews([...codeItems, ...model]).map((r, i) => {
     const url = pageFor(r.page)?.url || '';
     return { id: `r${i + 1}`, ...r, pages: [r.page], url, source: reviewSourceHost(url), supported: true };

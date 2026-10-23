@@ -11,6 +11,11 @@ import {
 } from './thing-evidence-dossier.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
+  dossierReviewsNeedRebuild,
+  rebuildDossierReviewsFromSavedEvidence,
+} from './dossier-reviews-rebuild.mjs';
+import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
   deriveMissingFieldsFromShortcomings,
@@ -168,8 +173,8 @@ export async function judgeDossierFindings(dossier, findings, { env, fetchImpl, 
   return { judged: ask.length, results };
 }
 
-export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl } = {}) {
-  const code = dedupeReviews(extractReviewsByCode(dossier)).slice(0, 150);
+export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl, place = null } = {}) {
+  const code = dedupeReviews(extractReviewsByCode(dossier, place)).slice(0, 150);
   let model = [];
   let keep = null;
   let status = 'skipped';
@@ -190,7 +195,7 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
   } catch {
     status = 'failed';
   }
-  const set = finalizeReviewSet(dossier, code, model, keep);
+  const set = finalizeReviewSet(dossier, code, model, keep, place);
   return { set, stats: { code: code.length, codeKept: keep ? keep.length : null, model: Array.isArray(model) ? model.length : 0, kept: set.length, status } };
 }
 
@@ -234,6 +239,23 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (pendingTopUp.length) {
       merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });
     }
+    if (placeSupportsDossierReviews(place) && dossierReviewsNeedRebuild(merged, place)) {
+      merged = await rebuildDossierReviewsFromSavedEvidence(merged, place, {
+        env,
+        fetchImpl,
+        destination,
+        timeoutMs,
+        buildImpl,
+        judgeImpl,
+        extractReviewsImpl,
+        extractDossierReviews,
+        callDossierBuilder,
+        judgeDossierFindings,
+      });
+      if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+      merged.captureCheckpoint = 'done';
+      return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
+    }
   } else if (persisted?.pages?.length && forceRefresh) {
     const gathered = await gatherImpl(place, gatherOpts);
     merged = mergeDossierPages(persisted, gathered);
@@ -275,7 +297,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
-  const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl });
+  const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs, extractReviewsImpl, place });
   merged.reviewSet = extraction.set;
   merged.reviewExtraction = extraction.stats;
   if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;

@@ -5,6 +5,7 @@ import {
   NO_HAPPY_HOUR_FOUND,
 } from './dossier-hours-fields.mjs';
 import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
+import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
@@ -335,11 +336,22 @@ function scalarFieldValue(value) {
   return String(value).trim();
 }
 
-export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingMissing = false } = {}) {
+function clearPublicReviewFields(record = {}) {
   for (let i = 1; i <= 4; i += 1) {
     for (const suffix of ['', 'Rating', 'Source', 'Url', 'Cites', 'Label', 'Composite', 'CompositeLabel']) delete record[`review${i}${suffix}`];
   }
   delete record.reviewsLabel;
+  delete record.reviewSources;
+  delete record.review_totals;
+  delete record.reviewTotals;
+}
+
+export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingMissing = false } = {}) {
+  if (!placeSupportsDossierReviews({ category: record.category })) {
+    clearPublicReviewFields(record);
+    return record;
+  }
+  clearPublicReviewFields(record);
   const missing = useShortcomingMissing
     ? new Set()
     : new Set(Array.isArray(record.missingFields) ? record.missingFields : []);
