@@ -72,6 +72,8 @@ function dossierSearchTopics(place = {}) {
     { q: 'yelp reviews', review: true },
     { q: 'tripadvisor reviews', review: true },
     { q: 'google reviews', review: true },
+    { q: 'trustpilot reviews', review: true },
+    { q: 'opentable OR resy reviews', review: true },
     { q: 'reddit', review: true },
     { q: 'eater OR infatuation OR timeout review', review: true },
   ];

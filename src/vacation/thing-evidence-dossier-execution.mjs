@@ -4,6 +4,15 @@ import { fileURLToPath } from 'node:url';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import { nycDaybydayDossierKey } from './thing-evidence-dossier-store.mjs';
 
+const NYC_TRIP_CENTER = { lat: 40.758, lng: -73.9855 };
+
+function tripCenterForTarget(target = {}) {
+  if (target.center?.lat != null && target.center?.lng != null) return target.center;
+  const dest = String(target.destination || '');
+  if (/new york/i.test(dest)) return NYC_TRIP_CENTER;
+  return null;
+}
+
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('../../scripts/fixtures/nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
 );
@@ -27,6 +36,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       ...(BASE_ENRICHMENT[target.ccabKey] || {}),
       ...(OVERLAY_ENRICHMENT[target.ccabKey] || {}),
     };
+    const center = tripCenterForTarget(target);
     const place = {
       id: target.rowId,
       trip_id: 99,
@@ -34,10 +44,14 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       category: target.category,
       address: ccabRecord.address,
       url: ccabRecord.website,
+      lat: ccabRecord.lat ?? ccabRecord.latitude,
+      lng: ccabRecord.lng ?? ccabRecord.longitude,
+      metadata: center ? { destinationCenter: center } : undefined,
       sourceRecord: ccabRecord,
     };
     const { parsed } = await fetchXaiPlaceRatings(place, {
       destination: target.destination,
+      center,
       dossierKey: nycDaybydayDossierKey(target.rowId),
       env,
       fetchImpl,

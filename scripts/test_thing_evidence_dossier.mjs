@@ -269,6 +269,38 @@ const long = Array.from({ length: 13 }, (_, i) => `Sentence ${i} has exactly ten
 const fit = F4.fitDescriptionWords(long);
 assert.ok(F4.fitDescriptionWords(long).split(/\s+/).length <= 120 && fit.endsWith('.'), 'trim to <=120 words at a sentence end');
 
+const yelpPage = page('https://www.yelp.com/biz/carbone-new-york', 'Carbone is impossible to book. guest_one • 2y ago The spicy rigatoni was incredible and service felt polished throughout the long meal. guest_two • 1y ago Overpriced pasta but the atmosphere is electric before theater.');
+const redditPage = page('https://www.reddit.com/r/foodnyc/x', 'thread about other restaurants only, no carbone name here. user_a • 1y ago I loved the spicy rigatoni here and would return again soon.');
+const yelpCode = [{
+  text: 'The spicy rigatoni was incredible and service felt polished throughout the long meal.',
+  page: 'p1',
+  method: 'code:marker',
+}];
+const keepOnlyReddit = X4.finalizeReviewSet({ thing: 'Carbone', pages: [yelpPage, redditPage] }, yelpCode, [], ['k99']);
+assert.ok(keepOnlyReddit.length >= 1, 'review-aggregator code reviews stay when model keep omits them');
+assert.ok(keepOnlyReddit.some((r) => r.source === 'yelp.com'), 'yelp-sourced reviews count toward breadth');
+
+const partialDesc = {
+  description: {
+    value: 'Zabar\'s is a legendary Upper West Side market known for smoked fish, appetizing counters, and prepared foods that draw neighborhood regulars and tourists alike through its bustling aisles every morning.',
+    claims: [
+      { text: 'p1 describes smoked fish and appetizing counters', pages: ['p1'], supported: true },
+      { text: 'p1 says thriving for over 90 years with excellent food and service', pages: ['p1'], supported: false },
+    ],
+  },
+};
+const { descriptionNeedsClaimRepair, repairDescriptionFromSupportedClaims } = await import('../src/vacation/xai-grok-place-ratings.mjs');
+assert.equal(descriptionNeedsClaimRepair({ pages: goodPages }, partialDesc), true);
+const repaired = await repairDescriptionFromSupportedClaims({ thing: "Zabar's", pages: goodPages }, partialDesc, {
+  repairImpl: async () => ({
+    value: "Zabar's anchors the Upper West Side with smoked fish, appetizing counters, and prepared foods that regulars and tourists grab from busy aisles each morning while the store keeps its classic market energy alive and the prepared-food counters stay crowded from open to close.",
+    claims: [{ text: 'p1 lists smoked fish and appetizing counters', pages: ['p1'], supported: true }],
+  }),
+});
+assert.equal(repaired.repaired, true);
+const zBuilt = prepareDossierFindings({ thing: "Zabar's", pages: goodPages, attempts: [], reviewSet: [] }, partialDesc);
+assert.ok(zBuilt.fields.description?.value, 'supported-only description rewrite must land on dossier fields');
+
 const empty = enrichPlaceRecordWithXaiRatings({ review1: 'stale' }, { evidenceDossier: { thing: 'Empty', pages: [], attempts: [] } });
 assert.ok(empty.missingFields.includes('reviews'));
 assert.ok(empty.missingFields.includes('ratings'));
