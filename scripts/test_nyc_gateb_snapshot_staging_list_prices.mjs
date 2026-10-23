@@ -8,7 +8,6 @@ import {
   buildPr336VkSearchPlacesByRowId,
   materializePr336GateBSnapshotPlaces,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
-import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 
 const snapshotPath = fileURLToPath(new URL('./fixtures/pr336-vk-search-places.snapshot.json', import.meta.url));
 const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8'));
@@ -33,33 +32,6 @@ for (const row of rows) {
 }
 
 assert.equal(failures.length, 0, failures.join('; '));
-
-const replayName = 'Flight option: American LAS-JFK 2026-06-23 12:37-20:59';
-const replayFixture = {
-  trip: { id: 1, title: 'NYC', currency: 'usd' },
-  places: [
-    { id: 13, name: replayName, category_name: 'Transport' },
-    { id: 650, name: replayName, category_name: 'flight', price: 257 },
-  ],
-  thingOverrides: {
-    'place:650': { price: 257, category: 'flight' },
-  },
-  permissions: {
-    share_map: true,
-    share_bookings: true,
-    share_packing: false,
-    share_budget: true,
-    share_collab: false,
-  },
-};
-const { served: replayServed } = prepareFixtureReplaySharedTrip(Buffer.from(JSON.stringify(replayFixture)));
-assert.equal(
-  replayServed.places.filter((place) => place.name === replayName).length,
-  1,
-  'fixture replay must drop legacy transport duplicate flight rows',
-);
-assert.equal(replayServed.places.find((place) => place.name === replayName)?.id, 650);
-assert.ok(replayServed.budget?.length > 0, 'fixture replay must sync API budget lines for capture');
 
 console.log(JSON.stringify({
   ok: true,

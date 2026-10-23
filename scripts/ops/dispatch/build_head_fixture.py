@@ -6,65 +6,7 @@ rows 601-611 can never bind to it. This adds the head's own snapshot rows (the o
 scripts/regenerate_pr336_search_trip_fixture.mjs, i.e. the GATE_B_ROWS render) to the places list and to thingOverrides,
 keyed by row id, so _capture_payload_faults can compare the capture against that same snapshot.
 Nothing is relaxed here: the fault checks and vk_contract_check.py run unchanged on the result."""
-import json, os, re, subprocess, sys, tempfile
-
-def _norm_name(name):
-    return re.sub(r"\s+", " ", str(name or "").replace("\u2019", "'")).strip().lower()
-
-def _travel_cat(place):
-    cat = str(place.get("category_name") or place.get("category") or "").lower()
-    if cat in ("hotel", "flight", "car", "cars", "rental car"):
-        return "car" if "car" in cat or cat == "rental car" else cat
-    if cat == "transport":
-        name = str(place.get("name") or "").lower()
-        if re.search(r"\bflight\b|→|airlines|jetblue|southwest|delta|united|american|las-|jfk|lga|ewr", name):
-            return "flight"
-    return ""
-
-def _row_price(place, override):
-    for raw in (override.get("price"), place.get("price")):
-        if raw is None or raw == "":
-            continue
-        if isinstance(raw, (int, float)) and raw > 0:
-            return float(raw)
-        m = re.search(r"\d", str(raw))
-        if m:
-            return 1.0
-    return 0.0
-
-def prune_duplicate_travel_places(fx):
-    """Drop legacy base rows when a later snapshot row shares the same travel name (Gate B coverage names)."""
-    places = fx.get("places") or []
-    overrides = fx.get("thingOverrides") or {}
-    travel = {}
-    for place in places:
-        cat = _travel_cat(place)
-        if not cat:
-            continue
-        key = _norm_name(place.get("name"))
-        pid = int(place.get("id") or 0)
-        ov = overrides.get("place:%s" % pid) or overrides.get(str(pid)) or {}
-        score = (_row_price(place, ov), pid)
-        prev = travel.get(key)
-        if prev is None or score > prev[0]:
-            travel[key] = (score, place)
-    keep_ids = {p.get("id") for p in places if not _travel_cat(p)}
-    keep_ids.update(p.get("id") for _, p in travel.values())
-    drop = {p.get("id") for p in places if p.get("id") not in keep_ids}
-    if not drop:
-        return fx
-    fx["places"] = [p for p in places if p.get("id") not in drop]
-    for pid in drop:
-        overrides.pop("place:%s" % pid, None)
-        overrides.pop(str(pid), None)
-    fx["thingOverrides"] = overrides
-    return fx
-
-def normalize_place_names(fx):
-    for place in fx.get("places") or []:
-        if place.get("name"):
-            place["name"] = str(place["name"]).replace("\u2019", "'")
-    return fx
+import json, os, subprocess, sys, tempfile
 
 def fill_budget(fixture, checkout, script_text, out):
     """Set budget[] to what `checkout`'s own syncSharedTripApiBudget() computes for `fixture` (claude-code 2026-10-14, #385 wiring).
@@ -87,56 +29,6 @@ def fill_budget(fixture, checkout, script_text, out):
     return out
 
 def build(base_fixture, snapshot, out):
-    def norm_name(name):
-        return re.sub(r"\s+", " ", str(name or "").replace("\u2019", "'")).strip().lower()
-
-    def travel_cat(place):
-        cat = str(place.get("category_name") or place.get("category") or "").lower()
-        if cat in ("hotel", "flight", "car", "cars", "rental car"):
-            return "car" if "car" in cat or cat == "rental car" else cat
-        if cat == "transport":
-            name = str(place.get("name") or "").lower()
-            if re.search(r"\bflight\b|→|airlines|jetblue|southwest|delta|united|american|las-|jfk|lga|ewr", name):
-                return "flight"
-        return ""
-
-    def row_price(place, override):
-        for raw in (override.get("price"), place.get("price")):
-            if raw is None or raw == "":
-                continue
-            if isinstance(raw, (int, float)) and raw > 0:
-                return float(raw)
-            if re.search(r"\d", str(raw)):
-                return 1.0
-        return 0.0
-
-    def prune_duplicate_travel_places(fx):
-        places = fx.get("places") or []
-        overrides = fx.get("thingOverrides") or {}
-        travel = {}
-        for place in places:
-            cat = travel_cat(place)
-            if not cat:
-                continue
-            key = norm_name(place.get("name"))
-            pid = int(place.get("id") or 0)
-            ov = overrides.get("place:%s" % pid) or overrides.get(str(pid)) or {}
-            score = (row_price(place, ov), pid)
-            prev = travel.get(key)
-            if prev is None or score > prev[0]:
-                travel[key] = (score, place)
-        keep_ids = {p.get("id") for p in places if not travel_cat(p)}
-        keep_ids.update(p.get("id") for _, p in travel.values())
-        drop = {p.get("id") for p in places if p.get("id") not in keep_ids}
-        if not drop:
-            return fx
-        fx["places"] = [p for p in places if p.get("id") not in drop]
-        for pid in drop:
-            overrides.pop("place:%s" % pid, None)
-            overrides.pop(str(pid), None)
-        fx["thingOverrides"] = overrides
-        return fx
-
     with open(base_fixture) as fh: fx = json.load(fh)
     with open(snapshot) as fh: snap = json.load(fh)
     if not isinstance(snap, dict) or not snap: raise ValueError("data snapshot is empty or not an object")
@@ -162,7 +54,6 @@ def build(base_fixture, snapshot, out):
                                                    "sourceRecord", "externalId", "source", "url", "address", "category") if k in src}
     fx["places"] = places
     fx["thingOverrides"] = overrides
-    fx = prune_duplicate_travel_places(fx)
     with open(out, "w") as fh:
         json.dump(fx, fh, ensure_ascii=False, indent=1); fh.write("\n")
     return out

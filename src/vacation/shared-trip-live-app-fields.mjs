@@ -1,4 +1,3 @@
-import { mergeStoredCcabNarrativeIntoOverride } from '../../scripts/fixtures/pr336-vk-search-trip-sources.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 import { flightFieldsFromBlob } from './place-detail-extract.mjs';
 import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
@@ -234,8 +233,6 @@ export function applyLiveAppListRowFields(shared = {}) {
     if (override.timeline == null && source?.timeline != null) {
       override.timeline = !!source.timeline;
     }
-
-    Object.assign(override, mergeStoredCcabNarrativeIntoOverride(place, override));
 
     next.thingOverrides[key] = override;
   }
