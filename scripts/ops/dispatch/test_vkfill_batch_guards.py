@@ -74,6 +74,13 @@ class QuotaSkipAndStall(unittest.TestCase):
         held = [{"pr": 653, "push_due": now - 1}]
         self.assertTrue(g.autofill_should_publish_before_quota_skip(held, now))
 
+    def test_scan_skips_valid_void_marker_when_remote_matches(self):
+        held = "43dcbeae8fe9097bf2a4e63c0e64655ff7509c43"
+        lines = ["%s\trefs/heads/vkfill/641-20261022210748" % held]
+        name = "653.void-20261023-0112-alreadypushed"
+        payload = {"branch": "vkfill/641-20261022210748", "sha": held}
+        self.assertEqual(g.scan_void_alreadypushed_markers([(name, payload)], lines), [])
+
 
 if __name__ == "__main__":
     unittest.main()
