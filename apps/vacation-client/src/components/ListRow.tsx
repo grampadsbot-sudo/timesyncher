@@ -93,7 +93,7 @@ export function ListRow({
           <button type="button" className="tsv-row-main tsv-row-flight-main" onClick={() => onOpen(place)}>
             <LogoChip place={place} trip={trip} />
             <span className="tsv-row-name" data-ts-list-row-name="1">
-              {name}
+              <strong>{name}</strong>
             </span>
             {price ? (
               <span className="tsv-row-price" data-ts-flight-price="1">
@@ -135,7 +135,7 @@ export function ListRow({
             <span className="tsv-row-car-head">
               <LogoChip place={place} trip={trip} />
               <span className="tsv-row-name" data-ts-list-row-name="1">
-                {name}
+                <strong>{name}</strong>
               </span>
               {subtitle ? <span className="tsv-row-car-sub">{subtitle}</span> : null}
             </span>
@@ -170,7 +170,7 @@ export function ListRow({
         <button type="button" className="tsv-row-main" onClick={() => onOpen(place)}>
           <LogoChip place={place} trip={trip} />
           <span className="tsv-row-name" data-ts-list-row-name="1">
-            {name}
+            <strong>{name}</strong>
           </span>
           {price ? <span className="tsv-row-price">{price}</span> : null}
           {note ? <span className="tsv-row-hotel-note">{note}</span> : null}
