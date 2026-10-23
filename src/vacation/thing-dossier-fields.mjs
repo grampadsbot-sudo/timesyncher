@@ -1,3 +1,9 @@
+import {
+  applyHoursAndHappyHourFindings,
+  HAPPY_HOUR_SUBFIELDS,
+  HOURS_NOT_FOUND,
+  NO_HAPPY_HOUR_FOUND,
+} from './dossier-hours-fields.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 import { buildPriceEstimateFromEvidence } from './thing-evidence-price-estimate.mjs';
 
@@ -59,9 +65,38 @@ export function dossierPageById(dossier = {}, id = '') {
   return match ? (dossier.pages || [])[Number(match[1]) - 1] || null : null;
 }
 
+export function reviewSetPageIdMap(dossier = {}) {
+  const map = new Map();
+  for (const row of dossier.reviewSet || []) {
+    const reviewId = String(row?.id || '').trim();
+    const pageId = String(row?.page || '').trim();
+    if (/^r\d+$/.test(reviewId) && /^p\d+$/.test(pageId)) map.set(reviewId, pageId);
+  }
+  return map;
+}
+
+export function resolveClaimCitationPages(dossier = {}, pageIds = []) {
+  const ids = Array.isArray(pageIds) ? pageIds : [];
+  if (!ids.length) return [];
+  const reviewPages = reviewSetPageIdMap(dossier);
+  const resolved = [];
+  for (const raw of ids) {
+    const token = String(raw || '').trim();
+    if (!token) return null;
+    if (/^p\d+$/.test(token)) resolved.push(token);
+    else if (/^r\d+$/.test(token)) {
+      const page = reviewPages.get(token);
+      if (!page) return null;
+      resolved.push(page);
+    } else return null;
+  }
+  return [...new Set(resolved)];
+}
+
 export function claimCitesKnownPages(dossier, claim) {
-  return Boolean(claim && norm(claim.text) && Array.isArray(claim.pages) && claim.pages.length
-    && claim.pages.every((id) => dossierPageById(dossier, id)));
+  const pages = resolveClaimCitationPages(dossier, claim?.pages);
+  return Boolean(claim && norm(claim.text) && pages && pages.length
+    && pages.every((id) => dossierPageById(dossier, id)));
 }
 
 export function claimsSupported(dossier, owner) {
@@ -91,7 +126,7 @@ export function computeDossierFieldHashes(dossier = {}) {
     hashes[field] = hash;
     sources[field] = claim.url;
   };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS]) {
     track(key, dossier.fields?.[key]);
   }
   track('rating', dossier.ratingEvidence);
@@ -144,13 +179,19 @@ export function dossierRebuildFields(persisted = {}, merged = {}, {
     const url = persisted.fieldSources?.[field];
     if (!url || pageHashBundle(pageByUrl, url) !== hash) {
       if (field === 'reviews' || field.startsWith('knownFor:')) stale.add(field.startsWith('knownFor:') ? 'knownFor' : field);
+      else if (HAPPY_HOUR_SUBFIELDS.includes(field)) stale.add('happyHourDetails');
       else stale.add(field);
     }
   }
   for (const url of changed) {
     for (const [field, source] of Object.entries(persisted.fieldSources || {})) {
       const sources = String(source || '').split(',').map((row) => row.trim()).filter(Boolean);
-      if (sources.includes(url)) stale.add(field === 'reviews' ? 'reviews' : field.startsWith('knownFor:') ? 'knownFor' : field);
+      if (sources.includes(url)) {
+        if (field === 'reviews') stale.add('reviews');
+        else if (field.startsWith('knownFor:')) stale.add('knownFor');
+        else if (HAPPY_HOUR_SUBFIELDS.includes(field)) stale.add('happyHourDetails');
+        else stale.add(field);
+      }
     }
   }
   return stale;
@@ -177,10 +218,14 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
     next.reviewsRead = built.reviewsRead;
   }
   next.fields = { ...(next.fields || {}) };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
-    if (!fields.has(key)) continue;
+  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS]) {
+    if (!fields.has(key) && !(key.startsWith('happyHour') && fields.has('happyHourDetails'))) continue;
     if (built.fields?.[key]) next.fields[key] = built.fields[key];
     else delete next.fields[key];
+  }
+  if (fields.has('happyHourDetails')) {
+    if (built.fields?.happyHour) next.fields.happyHour = built.fields.happyHour;
+    else delete next.fields.happyHour;
   }
   return next;
 }
@@ -216,7 +261,7 @@ export function prepareDossierFindings(dossier, findings = {}) {
       && rating.starMix.every((n) => Number.isInteger(n) && n >= 0)
       && rating.starMix.reduce((a, b) => a + b, 0) === count) next.ratingMix = rating.starMix;
   }
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails']) {
+  for (const key of ['summary', 'description', 'price']) {
     const claim = findings[key];
     if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
     if (key === 'price') {
@@ -231,6 +276,11 @@ export function prepareDossierFindings(dossier, findings = {}) {
       next.fields[key].noReviewsFlag = true;
     }
   }
+  const reviewHosts = /yelp|tripadvisor|google\.|reddit|facebook|instagram/i;
+  const officialUrl = (dossier.pages || []).find((page) => page.url && !reviewHosts.test(page.url))?.url
+    || dossier.pages?.[0]?.url
+    || '';
+  applyHoursAndHappyHourFindings(next, dossier, findings, { officialUrl });
   const raw = Array.isArray(findings.reviews) ? findings.reviews : [];
   const tenPoint = raw.length && raw.every((r) => Number(r?.rating) <= 10) && raw.some((r) => Number(r?.rating) > 5);
   next.reviews = raw.map((review) => {
@@ -313,12 +363,26 @@ export function applyDossierFields(record = {}, dossier = {}) {
   if (dossierPagesVerified(dossier)) {
     next.summarySourceUrls = dossier.pages.map((page) => page.url);
     for (const [key, claim] of Object.entries(dossier.fields || {})) {
-      if (!['summary', 'description', 'hours', 'happyHourDetails'].includes(key) || !claimsSupported(dossier, claim)) continue;
+      if (key === 'happyHour') continue;
+      const scalarKeys = ['summary', 'description', 'hours', 'happyHourDetails', ...HAPPY_HOUR_SUBFIELDS];
+      if (!scalarKeys.includes(key)) continue;
+      if (key === 'hours' && claim.gap === true) {
+        next.hours = HOURS_NOT_FOUND;
+        continue;
+      }
+      if (key === 'happyHourDetails' && claim.explicitNone === true) {
+        next.happyHourDetails = NO_HAPPY_HOUR_FOUND;
+        next.happyHour = false;
+        missing.delete('happyHourDetails');
+        continue;
+      }
+      if (!claimsSupported(dossier, claim)) continue;
       next[key] = claim.value;
       missing.delete(key);
     }
     if (next.description) next.longDetails = next.description;
-    if (next.happyHourDetails) next.happyHour = true;
+    if (next.happyHourDetails && next.happyHourDetails !== NO_HAPPY_HOUR_FOUND) next.happyHour = true;
+    if (dossier.fields?.happyHour?.value === false) next.happyHour = false;
     const priceEstimate = buildPriceEstimateFromEvidence(dossier);
     next.priceEstimateLabel = priceEstimate.label;
     next.priceEstimateCitations = priceEstimate.citations;
