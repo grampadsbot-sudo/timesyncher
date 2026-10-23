@@ -30,6 +30,88 @@ assert.match(
   'flight eu() must format numeric bi() fares for list price column',
 );
 
+assert.match(
+  servedBundle,
+  /bi=G=>ha\(G\)\.price\?\?G\.price\?\?ha\(G\)\.total_price\?\?G\.total_price\?\?""/,
+  'served bi() must read place prices and total prices for list and budget rows',
+);
+
+assert.match(
+  servedBundle,
+  /p\.price\?\?p\.total_price/,
+  'shared trip hydrate must copy place prices into thingOverrides',
+);
+
+const hydrateStart = servedBundle.indexOf('lf.getSharedTrip(r).then(');
+assert.ok(hydrateStart >= 0);
+const hydrateEnd = servedBundle.indexOf(';me(!0);ge(!1)})', hydrateStart);
+assert.ok(hydrateEnd > hydrateStart);
+const hydrateExpression = servedBundle.slice(hydrateStart + 'lf.getSharedTrip(r).then('.length, hydrateEnd) + ';me(!0);ge(!1)}';
+
+function hydrate(payload) {
+  const state = {};
+  const apply = new Function('A', 'pe', 'me', 'ge', `"use strict";return (${hydrateExpression})`)(
+    (value) => { state.shared = value; },
+    (value) => { state.overrides = value; },
+    (value) => { state.loaded = value; },
+    (value) => { state.loading = value; },
+  );
+  apply(payload);
+  assert.equal(state.loaded, true);
+  assert.equal(state.loading, false);
+  return state;
+}
+
+const payload = {
+  thingOverrides: {
+    'place:1': { price: 450, story: 'Saved memory', timeline: true },
+    'place:2': { price: '', category: 'hotel' },
+    'place:3': { price: 0 },
+    'place:4': { price: '$125 per night' },
+    'reservation:9': { price: 275 },
+    __budgetTargets: { overall: 1500 },
+    __keepsakePrintSettings: { maps: false },
+  },
+  places: [
+    { id: 1, price: 300 },
+    { id: 2, price: 190 },
+    { id: 3, price: 100 },
+    { id: 4, price: 200 },
+    { id: 5, total_price: 375 },
+    { id: 6, price: 0 },
+    null,
+    { price: 900 },
+  ],
+};
+const originalPayload = structuredClone(payload);
+const hydrated = hydrate(payload);
+assert.deepEqual(payload, originalPayload, 'hydration must not mutate the API payload or saved overrides');
+assert.equal(hydrated.shared.thingOverrides, hydrated.overrides);
+assert.deepEqual(hydrated.overrides['place:1'], originalPayload.thingOverrides['place:1']);
+assert.deepEqual(hydrated.overrides['place:2'], { price: 190, category: 'hotel' });
+assert.deepEqual(hydrated.overrides['place:3'], { price: 0 });
+assert.deepEqual(hydrated.overrides['place:4'], { price: '$125 per night' });
+assert.deepEqual(hydrated.overrides['place:5'], { price: 375 });
+assert.deepEqual(hydrated.overrides['place:6'], { price: 0 });
+for (const key of ['reservation:9', '__budgetTargets', '__keepsakePrintSettings']) {
+  assert.deepEqual(hydrated.overrides[key], originalPayload.thingOverrides[key]);
+}
+assert.equal(Object.hasOwn(hydrated.overrides, 'place:undefined'), false);
+for (const value of [undefined, null, {}, { thingOverrides: 'invalid' }]) {
+  assert.deepEqual(hydrate(value).overrides, {});
+}
+assert.deepEqual(hydrate({ places: [{ id: 7, price: 225 }] }).overrides, { 'place:7': { price: 225 } });
+
+const priceExpression = servedBundle.match(/bi=(G=>ha\(G\)\.price[^;]*?),Vr=/);
+assert.ok(priceExpression, 'served price accessor must be executable');
+const priceFor = (thing, override = {}) => new Function('ha', `"use strict";return (${priceExpression[1]})`)(() => override)(thing);
+assert.equal(priceFor({ price: 300 }), 300);
+assert.equal(priceFor({ price: 300 }, { price: 450 }), 450);
+assert.equal(priceFor({ price: 300 }, { price: 0 }), 0);
+assert.equal(priceFor({ total_price: 375 }), 375);
+assert.equal(priceFor({}, { total_price: 275 }), 275);
+assert.equal(priceFor({}), '');
+
 const romerRow = buildNycCraigKimDaybydayFixtureRows().find((row) => row.id === 629);
 assert.ok(romerRow, "Romer Hell's Kitchen list row must stay on fixture id 629");
 assert.equal(
