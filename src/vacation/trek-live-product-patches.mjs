@@ -7,7 +7,6 @@ import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
-
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
 const LIST_LOGO_NEEDLE = '_l=G=>{if(qr(G))return pDe;const Re=ha(G);return Re.logoUrl||Re.iconUrl||G.logoUrl||oi(cc(G))}';
@@ -362,6 +361,8 @@ const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!p
 const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
 const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
+const FLIGHT_EU_RN_NEEDLE = 'Rn=((Xr=(sr=String(bi(G)||"").match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
+const FLIGHT_EU_RN_PATCH = 'Rn=((Xr=(sr=((Nr)=>typeof Nr==="number"&&Number.isFinite(Nr)?"$"+Math.round(Nr):String(Nr||""))(bi(G)).match(/\\$\\s?\\d[\\d,]*/))==null?void 0:sr[0])==null?void 0:Xr.replace(/\\s+/g,""))||""';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
@@ -463,6 +464,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   } else if (served && js.includes('Southwest)\u0008/i')) {
     throw new Error('flight airline regex patch did not apply');
   }
+  if (js.includes(FLIGHT_EU_RN_NEEDLE)) js = js.replace(FLIGHT_EU_RN_NEEDLE, FLIGHT_EU_RN_PATCH);
   if (js.includes(FLIGHT_EU_FARE_AMT_NEEDLE)) {
     js = js.replace(FLIGHT_EU_FARE_AMT_NEEDLE, FLIGHT_EU_FARE_AMT_PATCH);
   } else if (served && js.includes('const price=Rn||String(bi(G)||"").trim();return fareLbl') && !js.includes('const amt=/^\\$/.test(price)')) {
@@ -472,7 +474,8 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   else if (js.includes(FLIGHT_EU_NEEDLE_TBD)) js = js.replace(FLIGHT_EU_NEEDLE_TBD, FLIGHT_EU_PATCH);
   else if (js.includes(FLIGHT_EU_NEEDLE_BAD)) {
     js = js.replace(/return\[\(v=>[\s\S]*?\}\)\(\),ua,Pn!=null&&Pn\.start\?Yo\(Pn\.start\):"",Pn!=null&&Pn\.end\?Yo\(Pn\.end\):""\]\},Qo=\(\{item:G\}\)=>/, FLIGHT_EU_PATCH);
-  } else if (served && !js.includes('return[ua,(v=>{const fareLbl')) {
+  }
+  if (served && !js.includes('return[ua,(v=>{const fareLbl')) {
     throw new Error('flight fare direction row patch did not apply');
   }
   if (js.includes('children:di.hasPrice?Re(di.amount):"Add price"') && !js.includes('Xi==="car"?"Cars"')) {

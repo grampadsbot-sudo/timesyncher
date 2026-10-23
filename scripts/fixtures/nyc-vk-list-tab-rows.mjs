@@ -376,7 +376,8 @@ export function appendNycStagingListTabRows(rows, options = {}) {
   while (seenIds.has(nextFreeId)) nextFreeId += 1;
   for (const listRow of NYC_STAGING_CAPTURE_LIST_ROWS) {
     if (!includeCategories.includes(listRow.cat)) continue;
-    const identity = `${listRow.ccabKey}\0${listRow.name}`;
+    const ccabKey = resolveNycCcabKey(listRow.ccabKey || listRow.name);
+    const identity = `${ccabKey}\0${listRow.name}`;
     if (seenRowIdentities.has(identity)) continue;
     seenRowIdentities.add(identity);
     let id = listRow.id;
@@ -394,7 +395,7 @@ export function appendNycStagingListTabRows(rows, options = {}) {
       name: listRow.name,
       cat: listRow.cat,
       id,
-      ccabKey: listRow.ccabKey,
+      ccabKey,
       listOnly: true,
     });
   }
