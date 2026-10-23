@@ -21,7 +21,9 @@ const repo = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const captureSrc = fs.readFileSync(path.join(repo, 'scripts/ops/capture/capture.mjs'), 'utf8');
 
 assert.match(captureSrc, /watchLogos/);
-assert.doesNotMatch(captureSrc, /await recordLogoShot/);
+assert.match(captureSrc, /recordLogoShot\(w,/);
+assert.match(captureSrc, /addInitScript\(\{ content: LOGO_PASSIVE_OBSERVER_INIT \}\)/);
+assert.match(captureSrc, /logoLog\.events/);
 assert.doesNotMatch(captureSrc, /page.evaluate\(DOM_LOGO_EVAL/);
 assert.equal(sanitizePublicImageUrl('https://secret@example.com/logo.png'), null);
 assert.equal(sanitizePublicImageUrl('http://127.0.0.1/logo.png'), null);

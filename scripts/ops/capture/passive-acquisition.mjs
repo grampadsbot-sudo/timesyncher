@@ -130,9 +130,236 @@ export function buildTileShotRecord({
   };
 }
 
-export function buildLogoShotRecord({ shot, w, t, domLogos }) {
-  return { shot, w, t_ms: t, logos: domLogos };
+export function buildLogoShotRecord({ shot, w, t, domLogos, logo_event_links = null }) {
+  const rec = { shot, w, t_ms: t, logos: domLogos };
+  if (logo_event_links) rec.logo_event_links = logo_event_links;
+  return rec;
 }
+
+export function logoRowIdentityFromRowData({
+  rowInstance = null,
+  placeId = null,
+  thingId = null,
+  cat = null,
+  hasLogo = null,
+  logoSrc = null,
+  name = null,
+} = {}) {
+  const place_id = placeId ? String(placeId).trim() : null;
+  const thing_id = thingId ? String(thingId).trim() : null;
+  const row_cat = cat ? String(cat).trim() : null;
+  const has_logo = hasLogo == null || hasLogo === '' ? null : String(hasLogo);
+  const logo_src = logoSrc ? sanitizePublicImageUrl(String(logoSrc).trim()) : null;
+  const row_name = name ? String(name).replace(/\s+/g, ' ').trim().slice(0, 80) : null;
+  if (!place_id && !thing_id && !row_cat && has_logo == null && !logo_src && !row_name) return null;
+  return { row_instance: rowInstance || null, place_id, thing_id, row_cat, has_logo, logo_src, row_name };
+}
+
+export function logoRowKindFromRowData({ summarySrc = null, hasLogo = null, listRow = false } = {}) {
+  const summary = summarySrc ? String(summarySrc).trim() : null;
+  if (summary === 'thing') return 'saved';
+  const hl = hasLogo == null || hasLogo === '' ? null : String(hasLogo);
+  if (listRow && hl === '1') return 'recommendation';
+  return null;
+}
+
+export function logoRowIdentityKey(identity) {
+  if (!identity) return null;
+  if (identity.row_instance) return `node:${identity.row_instance}`;
+  if (identity.thing_id) return `thing:${identity.thing_id}`;
+  if (identity.place_id) return `place:${identity.place_id}`;
+  const parts = [
+    identity.row_cat || '',
+    identity.has_logo ?? '',
+    identity.logo_src || '',
+    identity.row_name || '',
+  ];
+  if (parts.every((p) => !p)) return null;
+  return `row:${parts.join('|')}`;
+}
+
+export function sanitizeLogoPassiveBrowserEvent(raw, sanitizeUrl = sanitizePublicImageUrl) {
+  if (!raw || typeof raw !== 'object') return null;
+  const identity = logoRowIdentityFromRowData({
+    rowInstance: raw.identity?.row_instance,
+    placeId: raw.identity?.place_id,
+    thingId: raw.identity?.thing_id,
+    cat: raw.identity?.cat ?? raw.identity?.row_cat,
+    hasLogo: raw.identity?.has_logo,
+    logoSrc: raw.identity?.logo_src,
+    name: raw.identity?.name ?? raw.identity?.row_name,
+  });
+  if (!identity) return null;
+  const url = sanitizeUrl(raw.url || '');
+  const initial_src = sanitizeUrl(raw.initial_src || raw.url || '');
+  const row_kind = raw.row_kind === 'saved' || raw.row_kind === 'recommendation' ? raw.row_kind : null;
+  return {
+    type: raw.type === 'error' ? 'error' : 'load',
+    wall_ms: Number.isFinite(raw.wall_ms) ? raw.wall_ms : null,
+    t_ms: Number.isFinite(raw.t_ms) ? raw.t_ms : null,
+    url,
+    initial_src: initial_src || url,
+    natural: Array.isArray(raw.natural) ? [Number(raw.natural[0]) || 0, Number(raw.natural[1]) || 0] : null,
+    complete: Boolean(raw.complete),
+    identity,
+    row_kind,
+  };
+}
+
+export function logoPassiveEventRecord({ w, t0, browserEvent }) {
+  const body = sanitizeLogoPassiveBrowserEvent(browserEvent);
+  if (!body) return null;
+  const rec = { w, ...body, t_ms: body.wall_ms != null ? body.wall_ms - t0 : body.t_ms != null ? body.t_ms : Date.now() - t0 };
+  return rec;
+}
+
+export function correlateLogoPassiveEventsToShotRows({ domLogos, events, w, shot_t_ms = Infinity }) {
+  const links = [];
+  for (let i = 0; i < domLogos.length; i++) {
+    const row = domLogos[i];
+    const key = logoRowIdentityKey(row.row_identity);
+    if (!key) {
+      links.push({ row_index: i, event_indexes: [], identity_key: null });
+      continue;
+    }
+    const event_indexes = [];
+    for (let j = 0; j < events.length; j++) {
+      const ev = events[j];
+      if (w != null && ev.w !== w) continue;
+      if (!row.row_kind || ev.row_kind !== row.row_kind) continue;
+      if (ev.t_ms != null && ev.t_ms > shot_t_ms) continue;
+      const evKey = logoRowIdentityKey(ev.identity);
+      if (evKey && evKey === key) event_indexes.push(j);
+    }
+    links.push({ row_index: i, event_indexes, identity_key: key });
+  }
+  return links;
+}
+
+function domLogosFromCaptureRegionItems(items) {
+  return (items || []).filter((row) => row.img).map((row) => {
+    const row_identity = logoRowIdentityFromRowData({
+      rowInstance: row.row_instance,
+      placeId: row.place_id,
+      thingId: row.thing_id,
+      cat: row.cat,
+      hasLogo: row.has_logo,
+      logoSrc: row.logo_src,
+      name: row.name,
+    });
+    const row_kind = logoRowKindFromRowData({
+      summarySrc: row.summary_src,
+      hasLogo: row.has_logo,
+      listRow: true,
+    });
+    return {
+      row_cat: row.cat,
+      url: sanitizePublicImageUrl(row.img.src),
+      rect: row.img.box,
+      natural: row.img.natural,
+      loaded: row.img.loaded,
+      visible: row.img.visible,
+      row_identity,
+      row_kind,
+    };
+  });
+}
+
+export function appendLogoShotFromCapture({ w, t0, shot, logoLog, regionItems, rawEvents }) {
+  for (const raw of rawEvents || []) {
+    const rec = logoPassiveEventRecord({ w, t0, browserEvent: raw });
+    if (rec) logoLog.events.push(rec);
+  }
+  const t = Date.now() - t0;
+  const domLogos = domLogosFromCaptureRegionItems(regionItems);
+  const logo_event_links = correlateLogoPassiveEventsToShotRows({
+    domLogos, events: logoLog.events, w, shot_t_ms: t,
+  });
+  logoLog.shots.push(buildLogoShotRecord({ shot, w, t, domLogos, logo_event_links }));
+}
+
+export const DRAIN_LOGO_PASSIVE_EVENTS_EVAL = `(() => {
+  const q = window.__tsLogoPassiveEvents || [];
+  return q.splice(0, q.length);
+})()`;
+
+export const LOGO_PASSIVE_OBSERVER_INIT = `(() => {
+  if (window.__tsLogoPassiveInstalled) return;
+  window.__tsLogoPassiveInstalled = true;
+  const MAX = 800;
+  const events = [];
+  let observedEvents = 0;
+  const rowInstances = new WeakMap();
+  let nextRowInstance = 0;
+  window.__tsLogoPassiveRowInstance = (row) => {
+    if (!rowInstances.has(row)) rowInstances.set(row, String(++nextRowInstance));
+    return rowInstances.get(row);
+  };
+  window.__tsLogoPassiveEvents = events;
+  const rowIdentity = (li) => {
+    if (!li) return null;
+    const place_id = li.getAttribute('data-place-id') || li.dataset.placeId || null;
+    const thing_id = li.getAttribute('data-thing-id') || li.dataset.thingId || null;
+    const row_cat = li.dataset.thingCategory || li.getAttribute('data-thing-category') || null;
+    const has_logo = li.dataset.hasLogo ?? li.getAttribute('data-has-logo') ?? null;
+    const logo_src = (li.dataset.logoSrc ?? li.getAttribute('data-logo-src') ?? '') || null;
+    const nameEl = li.querySelector('[data-ts-list-row-name]');
+    const row_name = nameEl ? (nameEl.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 80) : null;
+    if (!place_id && !thing_id && !row_cat && (has_logo == null || has_logo === '') && !logo_src && !row_name) return null;
+    return {
+      row_instance: window.__tsLogoPassiveRowInstance(li),
+      place_id,
+      thing_id,
+      row_cat,
+      has_logo: has_logo == null || has_logo === '' ? null : String(has_logo),
+      logo_src: logo_src ? String(logo_src).slice(0, 200) : null,
+      row_name,
+    };
+  };
+  const rowKind = (li) => {
+    if (!li) return null;
+    const summarySrc = li.getAttribute('data-summary-src') || li.dataset.summarySrc || null;
+    if (summarySrc === 'thing' || li.querySelector('[data-summary-stored="1"]')) return 'saved';
+    if (li.hasAttribute('data-list-row') && String(li.dataset.hasLogo ?? li.getAttribute('data-has-logo') ?? '') === '1') {
+      return 'recommendation';
+    }
+    return null;
+  };
+  const isLogoRowImg = (img) => {
+    if (!img || img.tagName !== 'IMG') return false;
+    if (img.closest('.leaflet-container')) return false;
+    const chip = img.closest('[data-ts-logo-chip]');
+    const li = img.closest('li[data-list-row]');
+    if (chip && li) return true;
+    return Boolean(li && img.classList.contains('tiny-logo'));
+  };
+  const pushEvent = (type, img) => {
+    if (!isLogoRowImg(img)) return;
+    const li = img.closest('li[data-list-row]');
+    const identity = rowIdentity(li);
+    if (!identity) return;
+    if (observedEvents >= MAX) return;
+    observedEvents++;
+    const rawUrl = img.currentSrc || img.src || '';
+    events.push({
+      type,
+      wall_ms: performance.timeOrigin + performance.now(),
+      t_ms: Math.round(performance.now()),
+      url: rawUrl.slice(0, 500),
+      initial_src: (img.getAttribute('src') || '').slice(0, 500),
+      natural: [img.naturalWidth, img.naturalHeight],
+      complete: img.complete,
+      identity,
+      row_kind: rowKind(li),
+    });
+  };
+  document.addEventListener('load', (e) => {
+    if (e.target && e.target.tagName === 'IMG') pushEvent('load', e.target);
+  }, true);
+  document.addEventListener('error', (e) => {
+    if (e.target && e.target.tagName === 'IMG') pushEvent('error', e.target);
+  }, true);
+})();`;
 
 export const DOM_TILE_EVAL = `(() => {
   const imgs = [...document.querySelectorAll('.leaflet-container img.leaflet-tile')];

@@ -94,6 +94,7 @@ scripts/test_offline_manifest.mjs
 scripts/test_same_selection_capture.mjs
 scripts/test_capture_acquisition.mjs
 scripts/test_passive_acquisition_evidence.mjs
+scripts/test_passive_logo_events.mjs
 scripts/test_gate_b_capture_pre_data_check.mjs
 scripts/test_capture_fixture_replay_harness.mjs
 scripts/test_onboarding_welcome_precheck.mjs
