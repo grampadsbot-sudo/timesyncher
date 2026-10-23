@@ -32,8 +32,19 @@ assert.match(
 
 assert.match(
   servedBundle,
+  /return\[ua,\(v=>\{const fareLbl/,
+  'flight eu() must keep airline short name on list title row',
+);
+assert.doesNotMatch(
+  servedBundle,
   /return\[Re\|\|ua,\(v=>\{const fareLbl=/,
-  'flight eu() must use the full itinerary title for Gate B list name lines',
+  'flight eu() must not swap list title to full itinerary string',
+);
+
+assert.match(
+  servedBundle,
+  /tsScore\(G\)>tsScore\(prev\)\)m\.set\(k,G\)/,
+  'hotels catalog must dedupe by normalized name before Oe() rows',
 );
 
 assert.match(

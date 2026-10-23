@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { assertServedBundleClean, rewriteAppConfigCallers, stripCannedBundle, stripServedQaCopy, SERVED_SO, SO_ORIGIN_NEEDLE } from '../../scripts/strip-served-trek-bundle.mjs';
-import { applyMoBudgetPriceCoveragePatch, applyPeEffectPriceHydratePatch, MO_BUDGET_PATCH, PE_EFFECT_PATCH } from './trek-vk-price-coverage-patches.mjs';
+import { applyHotelsTabCatalogDedupePatch, applyMoBudgetPriceCoveragePatch, applyPeEffectPriceHydratePatch, MO_BUDGET_PATCH, PE_EFFECT_PATCH } from './trek-vk-price-coverage-patches.mjs';
 import {
   applyLiveProductPatches,
   applySharedLiveTabBundlePatches,
@@ -392,6 +392,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
+  patched = applyHotelsTabCatalogDedupePatch(patched, { served });
   if (patched.includes(BI_NEEDLE)) {
     patched = patched.replace(BI_NEEDLE, BI_PATCH);
   } else if (patched.includes('bi=G=>ha(G).price??G.price??ha(G).total_price??G.total_price??""')) {
@@ -669,7 +670,8 @@ export function assertPatchedStyleTwo(source = '') {
   if (!js.includes('tsPad=(rows)=>rows')) {
     throw new Error('Live tabs must return the trip rows only.');
   }
-  const servedSharedHotelsCars = js.includes('vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))')
+  const servedSharedHotelsCars = js.includes('tsScore(G)>tsScore(prev))m.set(k,G)')
+    && js.includes('vi(kn,"hotels").map((G,Re)=>Oe(G,"hotel",Re===0))')
     && js.includes('vi(bc,"cars").map(G=>Oe(G))')
     && !js.includes('tsSharedLiveTabListMount');
   if (servedSharedHotelsCars) {

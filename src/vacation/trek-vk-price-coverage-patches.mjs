@@ -2,12 +2,14 @@ const MO_BUDGET_ROW = '{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:zt(Xi)>0||/
 const MO_BUDGET_PATCH_PREV = `Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),${MO_BUDGET_ROW}])).values())`;
 export const MO_BUDGET_PATCH = `Mo=Array.from((()=>{const raw=[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean);const priced=Xi=>zt(Xi)>0||/\\$?\\d/.test(String(bi(Xi)||""));const norm=Xi=>String(mr(Xi)||Xi.name||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase();const nmPriced=new Set(raw.filter(priced).map(norm).filter(Boolean));const rows=raw.filter(Xi=>priced(Xi)||!nmPriced.has(norm(Xi)));const m=new Map();for(const Xi of rows)m.set(Qt(Xi),${MO_BUDGET_ROW});return m;})().values())`;
 const PE_EFFECT_PATCH_PREV = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
-export const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};const tsNm=n=>String(n||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase(),tsVal=v=>v!=null&&String(v).trim()!=="";for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}const tsBest=new Map();for(const p of (G!=null&&G.places)||[]){if(!p)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?ov[k]:{};const pr=cur.price??p.price??p.total_price;if(tsVal(pr)){const nm=tsNm(p.name);if(nm&&!tsBest.has(nm))tsBest.set(nm,pr);}}for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};if(!tsVal(cur.price)&&tsBest.has(tsNm(p.name)))cur.price=tsBest.get(tsNm(p.name));ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
+const PE_EFFECT_PATCH_V1 = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};const tsNm=n=>String(n||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase(),tsVal=v=>v!=null&&String(v).trim()!=="";for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}const tsBest=new Map();for(const p of (G!=null&&G.places)||[]){if(!p)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?ov[k]:{};const pr=cur.price??p.price??p.total_price;if(tsVal(pr)){const nm=tsNm(p.name);if(nm&&!tsBest.has(nm))tsBest.set(nm,pr);}}for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};if(!tsVal(cur.price)&&tsBest.has(tsNm(p.name)))cur.price=tsBest.get(tsNm(p.name));ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
+export const PE_EFFECT_PATCH = 'lf.getSharedTrip(r).then(G=>{const ov=(G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?{...G.thingOverrides}:{};const tsNm=n=>String(n||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase(),tsVal=v=>v!=null&&String(v).trim()!=="",tsKeys=(p,cur)=>{const keys=new Set();const add=v=>{const k=tsNm(v);if(k)keys.add(k);};add(p.name);add(cur.ccabKey);add(cur.externalId);add(p.external_id);add(p.externalId);return keys;};for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};const pr=p.price??p.total_price??cur.price;if(pr!=null&&pr!==""&&(cur.price==null||String(cur.price).trim()===""))cur.price=pr;ov[k]=cur;}const tsBest=new Map();for(const p of (G!=null&&G.places)||[]){if(!p)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?ov[k]:{};const pr=cur.price??p.price??p.total_price;if(!tsVal(pr))continue;for(const key of tsKeys(p,cur))if(!tsBest.has(key))tsBest.set(key,pr);}for(const p of (G!=null&&G.places)||[]){if(!p||p.id==null)continue;const k="place:"+p.id,cur=ov[k]&&typeof ov[k]==="object"?{...ov[k]}:{};if(!tsVal(cur.price)){for(const key of tsKeys(p,cur)){if(tsBest.has(key)){cur.price=tsBest.get(key);break;}}}ov[k]=cur;}G=G==null?G:{...G,thingOverrides:ov};A(G);pe((G!=null&&G.thingOverrides&&typeof G.thingOverrides=="object")?G.thingOverrides:{});me(!0);ge(!1)})';
 
 export function applyPeEffectPriceHydratePatch(patched, needles) {
   let js = patched;
   if (js.includes(needles.peEffectNeedle)) js = js.replace(needles.peEffectNeedle, PE_EFFECT_PATCH);
   else if (js.includes(needles.peEffectSimple)) js = js.replace(needles.peEffectSimple, PE_EFFECT_PATCH);
+  else if (js.includes(PE_EFFECT_PATCH_V1)) js = js.replace(PE_EFFECT_PATCH_V1, PE_EFFECT_PATCH);
   else if (js.includes(PE_EFFECT_PATCH_PREV)) js = js.replace(PE_EFFECT_PATCH_PREV, PE_EFFECT_PATCH);
   return js;
 }
@@ -19,9 +21,16 @@ export function applyMoBudgetPriceCoveragePatch(patched, moBudgetNeedle) {
   return js;
 }
 
-export function applyFlightEuGateBListTitlePatch(js = '') {
-  if (js.includes('return[ua,(v=>{const fareLbl') && !js.includes('return[Re||ua,(v=>{const fareLbl')) {
-    return js.replace('return[ua,(v=>{const fareLbl', 'return[Re||ua,(v=>{const fareLbl');
+const HOTELS_KN_CATALOG_NEEDLE = 'kn=ze.length?Po.filter(G=>ze.includes(En(G))):Po';
+const HOTELS_KN_CATALOG_PATCH = 'kn=(()=>{const rows=ze.length?Po.filter(G=>ze.includes(En(G))):Po;const tsNm=G=>String(mr(G)||G.name||"").replace(/[\\u2019\']/g,"\'").trim().toLowerCase(),tsDesc=G=>String(Co(G)||rr(G)||Fl(G)||"").trim(),tsScore=G=>{let s=0;if(String(_l(G)||"").trim())s+=4;if(Ds(G))s+=3;const d=tsDesc(G);if(d)s+=Math.min(d.length,120);if(/\\$?\\d/.test(String(bi(G)||"")))s+=6;return s;},m=new Map();for(const G of rows){const k=tsNm(G);if(!k)continue;const prev=m.get(k);if(!prev||tsScore(G)>tsScore(prev))m.set(k,G);}return Array.from(m.values());})()';
+
+export function applyHotelsTabCatalogDedupePatch(js = '', options = {}) {
+  const served = options.served === true;
+  let out = String(js || '');
+  if (out.includes(HOTELS_KN_CATALOG_NEEDLE)) {
+    out = out.replace(HOTELS_KN_CATALOG_NEEDLE, HOTELS_KN_CATALOG_PATCH);
+  } else if (served && !out.includes('tsScore(G)>tsScore(prev))m.set(k,G)')) {
+    throw new Error('served shared Hotels catalog missing kn= Po filter anchor');
   }
-  return js;
+  return out;
 }
