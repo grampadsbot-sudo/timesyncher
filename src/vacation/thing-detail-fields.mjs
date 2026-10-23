@@ -334,7 +334,7 @@ export function missingDetailFieldsForCategory(fields = {}, category = 'other') 
     need('website');
     need('longDetails', 'description');
     if (!descriptionPassesDetailJudge(fields.longDetails, fields.title)) missing.push('description_judge');
-    if (!text(fields.price) && !text(fields.priceLevel)) missing.push('price');
+    if (!text(fields.price) && !text(fields.priceLevel) && !text(fields.priceEstimateLabel)) missing.push('price');
     need('googleReviewCount', 'google_review_count');
     need('summary');
     if (wordCount(fields.summary) < 30 || !descriptionPassesDetailJudge(fields.summary, fields.title)) {

@@ -16,6 +16,8 @@ const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
   'Reviews usually created to be representative of all reviews found.';
 const XAI_REPRESENTATIVE_REVIEW_MIN_WORDS = 12;
+const PRICE_ESTIMATE_PREFIX = 'Estimated price';
+const PRICE_ESTIMATE_UNAVAILABLE = 'Price estimate unavailable';
 
 function text(value) {
   return String(value ?? '').trim();
@@ -227,16 +229,45 @@ export function detailHappyHour(override) {
   return text(override.happyHourDetails);
 }
 
-export function detailPriceLabel(place, trip, category) {
-  const cat = text(category).toLowerCase();
+function detailPriceEstimateLine(place, trip, category) {
   const override = overrideFor(trip, place);
-  if (cat === 'flight') return flightPriceDisplay(place, trip);
-  if (cat === 'hotel') return hotelPriceDisplay(place, trip);
-  if (cat === 'car') return carPriceDisplay(place, trip);
+  const source = sourceRecord(place, override);
+  const estimateLabel = text(override.priceEstimateLabel || source.priceEstimateLabel);
+  if (estimateLabel) return estimateLabel;
+  const cat = text(category).toLowerCase();
+  if (cat === 'flight') {
+    const fare = flightPriceDisplay(place, trip);
+    return fare ? `${PRICE_ESTIMATE_PREFIX}: ${fare}` : '';
+  }
+  if (cat === 'hotel') {
+    const nightly = hotelPriceDisplay(place, trip);
+    return nightly ? `${PRICE_ESTIMATE_PREFIX}: ${nightly} per night` : '';
+  }
+  if (cat === 'car') {
+    const rental = carPriceDisplay(place, trip);
+    return rental ? `${PRICE_ESTIMATE_PREFIX}: ${rental}` : '';
+  }
   const price = numericPrice(place, trip);
-  if (price != null) return formatUsd(price, tripCurrency(trip));
+  if (price != null) return `${PRICE_ESTIMATE_PREFIX}: ${formatUsd(price, tripCurrency(trip))}`;
   const level = text(override.priceLevel || override.price_level);
-  return level;
+  if (level) return `${PRICE_ESTIMATE_PREFIX}: ${level}`;
+  return '';
+}
+
+export function detailPriceLabel(place, trip, category) {
+  const line = detailPriceEstimateLine(place, trip, category);
+  if (!line) return '';
+  if (line.startsWith(`${PRICE_ESTIMATE_PREFIX}:`)) {
+    return line.slice(`${PRICE_ESTIMATE_PREFIX}:`.length).trim();
+  }
+  return line;
+}
+
+function detailPriceHeading(line = '') {
+  if (!text(line)) return '';
+  if (line === PRICE_ESTIMATE_UNAVAILABLE) return PRICE_ESTIMATE_UNAVAILABLE;
+  if (line.startsWith(`${PRICE_ESTIMATE_PREFIX}:`)) return PRICE_ESTIMATE_PREFIX;
+  return 'Price';
 }
 
 export function detailRatingLines(override) {
@@ -418,7 +449,14 @@ export function buildDetailViewModel(place, trip) {
     summary: detailSummary(place, trip),
     itineraryNote: detailItineraryNote(place, trip),
     happyHourDetails: detailHappyHour(override),
-    priceLabel: detailPriceLabel(place, trip, category),
+    ...(() => {
+      const priceLine = detailPriceEstimateLine(place, trip, category);
+      return {
+        priceLine,
+        priceLabel: detailPriceLabel(place, trip, category),
+        priceHeading: detailPriceHeading(priceLine),
+      };
+    })(),
     ratingLines: detailRatingLines(override),
     reviews: detailReviews(override, category),
     reviewFootnote:

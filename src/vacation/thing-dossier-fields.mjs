@@ -1,4 +1,5 @@
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
+import { buildPriceEstimateFromEvidence } from './thing-evidence-price-estimate.mjs';
 
 function norm(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -303,7 +304,7 @@ export function writeDossierReviews(record = {}, dossier = {}) {
 export function applyDossierFields(record = {}, dossier = {}) {
   const next = { ...record, evidenceDossier: dossier };
   const missing = new Set(next.missingFields || []);
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
+  for (const key of ['summary', 'description', 'hours', 'happyHourDetails', 'ratings']) missing.add(key);
   for (const key of ['summary', 'description', 'longDetails', 'details', 'price', 'hours', 'happyHourDetails',
     'happyHour', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'googleRating', 'googleReviewCount',
     'googleRatingSourceUrl', 'yelpRating', 'yelpReviewCount', 'yelpRatingSourceUrl', 'thirdPartyRating',
@@ -312,13 +313,19 @@ export function applyDossierFields(record = {}, dossier = {}) {
   if (dossierPagesVerified(dossier)) {
     next.summarySourceUrls = dossier.pages.map((page) => page.url);
     for (const [key, claim] of Object.entries(dossier.fields || {})) {
-      if (!['summary', 'description', 'price', 'hours', 'happyHourDetails'].includes(key) || !claimsSupported(dossier, claim)) continue;
-      next[key] = key === 'price' ? Number(claim.value) : claim.value;
+      if (!['summary', 'description', 'hours', 'happyHourDetails'].includes(key) || !claimsSupported(dossier, claim)) continue;
+      next[key] = claim.value;
       missing.delete(key);
     }
     if (next.description) next.longDetails = next.description;
-    if (next.price) next.priceUnit = dossier.fields.price.unit;
     if (next.happyHourDetails) next.happyHour = true;
+    const priceEstimate = buildPriceEstimateFromEvidence(dossier);
+    next.priceEstimateLabel = priceEstimate.label;
+    next.priceEstimateCitations = priceEstimate.citations;
+    if (priceEstimate.amount != null && priceEstimate.amount > 0) {
+      next.price = priceEstimate.amount;
+      if (priceEstimate.unit) next.priceUnit = priceEstimate.unit;
+    }
     if (dossier.ratingEvidence && cited(dossier, dossier.ratingEvidence)) {
       next.thirdPartyRating = String(dossier.rating);
       next.thirdPartyReviewCount = String(dossier.reviewsAvailable);

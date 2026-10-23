@@ -49,6 +49,8 @@ export type DetailViewModel = {
   itineraryNote: string;
   happyHourDetails: string;
   priceLabel: string;
+  priceLine: string;
+  priceHeading: string;
   ratingLines: Array<{ id: string; text: string; label?: string }>;
   reviews: Array<{
     index: number;
