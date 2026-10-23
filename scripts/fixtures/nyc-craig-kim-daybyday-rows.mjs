@@ -113,11 +113,11 @@ export function buildNycCraigKimDaybydayTimelineRows() {
     {
       day: 1,
       time: '11:00',
-      name: 'Midtown sample hotel',
+      name: 'The Manhattan Club',
       cat: 'hotel',
       id: 608,
       listOnly: true,
-      ccabKey: 'Midtown sample hotel',
+      ccabKey: 'The Manhattan Club',
     },
     {
       day: 1,

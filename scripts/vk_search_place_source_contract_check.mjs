@@ -133,8 +133,8 @@ assert.equal(listHotel?.lng, -73.984, 'row 608 day-by-day place carries ccab coo
 assert.equal(listHotelOverride.price, 386, 'row 608 list-only hotel must carry sourced nightly price');
 assert.match(
   String(listHotelOverride.summary || ''),
-  /Midtown|suite-style/i,
-  'row 608 summary must describe the list-only Midtown hotel',
+  /Manhattan Club|suite-style|Central Park/i,
+  'row 608 summary must describe the list-only Manhattan Club hotel',
 );
 
 console.log('vk_search_place_source_contract_check: passed');

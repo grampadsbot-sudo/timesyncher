@@ -493,17 +493,17 @@
   },
   "608": {
     "source": "brave",
-    "title": "Midtown sample hotel",
+    "title": "The Manhattan Club",
     "category": "hotel",
     "lat": 40.7549,
     "lng": -73.984,
     "address": "200 West 56th Street, New York, NY 10019",
     "url": "https://www.manhattanclub.com/",
-    "externalId": "Midtown sample hotel",
+    "externalId": "The Manhattan Club",
     "sourceRecord": {
       "category": "hotel",
-      "description": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.",
-      "summary": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-sty",
+      "description": "The Manhattan Club occupies residential floors at 200 West 56th Street, offering apartment-style suites with kitchenettes, separate living areas, and on-site fitness between Seventh Avenue and Broadway. Booking.com reviewers frequently highlight spacious layouts for week-long stays near Carnegie Hall, Columbus Circle shops, and Central Park South, with housekeeping and front-desk staff credited for handling extended visits. Common gripes focus on busy elevators during peak check-in and a members-club intake process that feels less like a traditional hotel lobby—attributes that appeal to groups who want more room to spread out in Midtown.",
+      "summary": "The Manhattan Club occupies residential floors at 200 West 56th Street, offering apartment-style suites with kitchenette",
       "price": 386,
       "website": "https://www.manhattanclub.com/",
       "logoUrl": "https://www.manhattanclub.com/favicon.ico",
@@ -522,14 +522,15 @@
       "review4": "Lobby and elevator can run busy on weekend arrivals; plan extra time.",
       "review4Source": "Booking.com",
       "summarySourceUrls": [
-        "https://www.manhattanclub.com/"
+        "https://www.manhattanclub.com/",
+        "https://www.booking.com/hotel/us/the-manhattan-club.html"
       ],
       "source": "brave",
       "url": "https://www.manhattanclub.com/",
-      "longDetails": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in."
+      "longDetails": "The Manhattan Club occupies residential floors at 200 West 56th Street, offering apartment-style suites with kitchenettes, separate living areas, and on-site fitness between Seventh Avenue and Broadway. Booking.com reviewers frequently highlight spacious layouts for week-long stays near Carnegie Hall, Columbus Circle shops, and Central Park South, with housekeeping and front-desk staff credited for handling extended visits. Common gripes focus on busy elevators during peak check-in and a members-club intake process that feels less like a traditional hotel lobby—attributes that appeal to groups who want more room to spread out in Midtown."
     },
-    "description": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.",
-    "summary": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-sty",
+    "description": "The Manhattan Club occupies residential floors at 200 West 56th Street, offering apartment-style suites with kitchenettes, separate living areas, and on-site fitness between Seventh Avenue and Broadway. Booking.com reviewers frequently highlight spacious layouts for week-long stays near Carnegie Hall, Columbus Circle shops, and Central Park South, with housekeeping and front-desk staff credited for handling extended visits. Common gripes focus on busy elevators during peak check-in and a members-club intake process that feels less like a traditional hotel lobby—attributes that appeal to groups who want more room to spread out in Midtown.",
+    "summary": "The Manhattan Club occupies residential floors at 200 West 56th Street, offering apartment-style suites with kitchenette",
     "price": 386,
     "logoUrl": "https://www.manhattanclub.com/favicon.ico"
   },
@@ -1024,28 +1025,29 @@
     "category": "hotel",
     "lat": null,
     "lng": null,
-    "address": "Upper West Side, New York, NY",
+    "address": "201 West 79th Street, New York, NY 10024",
     "url": "https://www.thelucernehotel.com/",
     "externalId": "Hotel Lucerne",
     "sourceRecord": {
       "category": "hotel",
-      "description": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, and Booking.com reviewers highlight comfortable beds and a walkable location near the American Museum of Natural History. Hotel Lucerne is a strong candidate when you want full-service amenities without leaving the UWS.",
-      "summary": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, a",
+      "description": "The Lucerne Hotel at 201 West 79th Street is a landmark pre-war building on the Upper West Side, with Nice Matin restaurant and a well-stocked bar on site. Booking.com reviewers consistently praise comfortable beds, polished front-desk service, and the short walk to the American Museum of Natural History and Central Park West. Lower scores often mention compact bathrooms and occasional street noise on lower Broadway-facing rooms, yet couples and families still choose the Lucerne for full-service dining without leaving the UWS.",
+      "summary": "The Lucerne Hotel at 201 West 79th Street is a landmark pre-war building on the Upper West Side, with Nice Matin restaur",
       "price": 530,
       "website": "https://www.thelucernehotel.com/",
       "logoUrl": "https://www.thelucernehotel.com/favicon.ico",
       "lat": null,
       "lng": null,
-      "address": "Upper West Side, New York, NY",
+      "address": "201 West 79th Street, New York, NY 10024",
       "summarySourceUrls": [
-        "https://www.thelucernehotel.com/"
+        "https://www.thelucernehotel.com/",
+        "https://www.booking.com/hotel/us/lucerne.html"
       ],
       "source": "brave",
       "url": "https://www.thelucernehotel.com/",
-      "longDetails": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, and Booking.com reviewers highlight comfortable beds and a walkable location near the American Museum of Natural History. Hotel Lucerne is a strong candidate when you want full-service amenities without leaving the UWS."
+      "longDetails": "The Lucerne Hotel at 201 West 79th Street is a landmark pre-war building on the Upper West Side, with Nice Matin restaurant and a well-stocked bar on site. Booking.com reviewers consistently praise comfortable beds, polished front-desk service, and the short walk to the American Museum of Natural History and Central Park West. Lower scores often mention compact bathrooms and occasional street noise on lower Broadway-facing rooms, yet couples and families still choose the Lucerne for full-service dining without leaving the UWS."
     },
-    "description": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, and Booking.com reviewers highlight comfortable beds and a walkable location near the American Museum of Natural History. Hotel Lucerne is a strong candidate when you want full-service amenities without leaving the UWS.",
-    "summary": "The Lucerne Hotel on the Upper West Side pairs classic pre-war architecture with a popular on-site restaurant and bar, a",
+    "description": "The Lucerne Hotel at 201 West 79th Street is a landmark pre-war building on the Upper West Side, with Nice Matin restaurant and a well-stocked bar on site. Booking.com reviewers consistently praise comfortable beds, polished front-desk service, and the short walk to the American Museum of Natural History and Central Park West. Lower scores often mention compact bathrooms and occasional street noise on lower Broadway-facing rooms, yet couples and families still choose the Lucerne for full-service dining without leaving the UWS.",
+    "summary": "The Lucerne Hotel at 201 West 79th Street is a landmark pre-war building on the Upper West Side, with Nice Matin restaur",
     "price": 530,
     "logoUrl": "https://www.thelucernehotel.com/favicon.ico"
   },
@@ -1148,28 +1150,29 @@
     "category": "hotel",
     "lat": null,
     "lng": null,
-    "address": "Times Square, New York, NY",
+    "address": "1535 Broadway, New York, NY 10036",
     "url": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
     "externalId": "New York Marriott Marquis",
     "sourceRecord": {
       "category": "hotel",
-      "description": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, making it a flagship option for first-time NYC visitors. Marriott Marquis reviews praise the central location and club-level upgrades, with noise from the square as the main trade-off for staying in the middle of the action.",
-      "summary": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, ma",
+      "description": "New York Marriott Marquis fills a full block of Times Square at 1535 Broadway, with the View revolving restaurant on the upper floors and indoor access to Broadway theaters below. Marriott.com and Booking.com reviewers give high marks for the unbeatable theater-district location, M Club lounge upgrades, and housekeepers who keep the high-rise moving on sold-out weekends. Common complaints cite tight standard rooms, late-night noise from the square, and crowded elevators during conventions—trade-offs many first-time visitors accept to sleep steps from show time.",
+      "summary": "New York Marriott Marquis fills a full block of Times Square at 1535 Broadway, with the View revolving restaurant on the",
       "price": 345,
       "website": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
       "logoUrl": "https://www.marriott.com/favicon.ico",
       "lat": null,
       "lng": null,
-      "address": "Times Square, New York, NY",
+      "address": "1535 Broadway, New York, NY 10036",
       "summarySourceUrls": [
-        "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
+        "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
+        "https://www.booking.com/hotel/us/new-york-marriott-marquis.html"
       ],
       "source": "brave",
       "url": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
-      "longDetails": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, making it a flagship option for first-time NYC visitors. Marriott Marquis reviews praise the central location and club-level upgrades, with noise from the square as the main trade-off for staying in the middle of the action."
+      "longDetails": "New York Marriott Marquis fills a full block of Times Square at 1535 Broadway, with the View revolving restaurant on the upper floors and indoor access to Broadway theaters below. Marriott.com and Booking.com reviewers give high marks for the unbeatable theater-district location, M Club lounge upgrades, and housekeepers who keep the high-rise moving on sold-out weekends. Common complaints cite tight standard rooms, late-night noise from the square, and crowded elevators during conventions—trade-offs many first-time visitors accept to sleep steps from show time."
     },
-    "description": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, making it a flagship option for first-time NYC visitors. Marriott Marquis reviews praise the central location and club-level upgrades, with noise from the square as the main trade-off for staying in the middle of the action.",
-    "summary": "New York Marriott Marquis rises over Times Square with a revolving restaurant and direct access to Broadway theaters, ma",
+    "description": "New York Marriott Marquis fills a full block of Times Square at 1535 Broadway, with the View revolving restaurant on the upper floors and indoor access to Broadway theaters below. Marriott.com and Booking.com reviewers give high marks for the unbeatable theater-district location, M Club lounge upgrades, and housekeepers who keep the high-rise moving on sold-out weekends. Common complaints cite tight standard rooms, late-night noise from the square, and crowded elevators during conventions—trade-offs many first-time visitors accept to sleep steps from show time.",
+    "summary": "New York Marriott Marquis fills a full block of Times Square at 1535 Broadway, with the View revolving restaurant on the",
     "price": 345,
     "logoUrl": "https://www.marriott.com/favicon.ico"
   },
@@ -1275,28 +1278,29 @@
     "category": "hotel",
     "lat": null,
     "lng": null,
-    "address": "Hell’s Kitchen, New York, NY",
+    "address": "851 Eighth Avenue, New York, NY 10019",
     "url": "https://www.romerhotels.com/hells-kitchen/",
     "externalId": "Romer Hell’s Kitchen",
     "sourceRecord": {
       "category": "hotel",
-      "description": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers. Booking.com guests describe Romer Hell's Kitchen as a calmer alternative to giant Times Square towers while keeping Restaurant Row and the N/Q/R/W lines within a few blocks.",
-      "summary": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers.",
+      "description": "Romer Hell's Kitchen sits at 851 Eighth Avenue near West 52nd Street, with Neighborhood Café for morning coffee and the So & So's piano bar for supper-club dinners after Broadway shows. Booking.com and Google reviewers praise attentive front-desk staff, rain showers, and modern king rooms that feel quieter than giant Times Square towers, while Restaurant Row and the N/Q/R/W subway are a short walk away. Guests who wanted larger work desks or club-lounge perks sometimes mark value down a notch, yet theater fans and couples often pick Romer for a boutique Hell's Kitchen base.",
+      "summary": "Romer Hell's Kitchen sits at 851 Eighth Avenue near West 52nd Street, with Neighborhood Café for morning coffee and the ",
       "price": 425,
       "website": "https://www.romerhotels.com/hells-kitchen/",
       "logoUrl": "https://www.romerhotels.com/favicon.ico",
       "lat": null,
       "lng": null,
-      "address": "Hell’s Kitchen, New York, NY",
+      "address": "851 Eighth Avenue, New York, NY 10019",
       "summarySourceUrls": [
-        "https://www.romerhotels.com/hells-kitchen/"
+        "https://www.romerhotels.com/hells-kitchen/",
+        "https://www.booking.com/hotel/us/romer-hell-39-s-kitchen.html"
       ],
       "source": "brave",
       "url": "https://www.romerhotels.com/hells-kitchen/",
-      "longDetails": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers. Booking.com guests describe Romer Hell's Kitchen as a calmer alternative to giant Times Square towers while keeping Restaurant Row and the N/Q/R/W lines within a few blocks."
+      "longDetails": "Romer Hell's Kitchen sits at 851 Eighth Avenue near West 52nd Street, with Neighborhood Café for morning coffee and the So & So's piano bar for supper-club dinners after Broadway shows. Booking.com and Google reviewers praise attentive front-desk staff, rain showers, and modern king rooms that feel quieter than giant Times Square towers, while Restaurant Row and the N/Q/R/W subway are a short walk away. Guests who wanted larger work desks or club-lounge perks sometimes mark value down a notch, yet theater fans and couples often pick Romer for a boutique Hell's Kitchen base."
     },
-    "description": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers. Booking.com guests describe Romer Hell's Kitchen as a calmer alternative to giant Times Square towers while keeping Restaurant Row and the N/Q/R/W lines within a few blocks.",
-    "summary": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers.",
+    "description": "Romer Hell's Kitchen sits at 851 Eighth Avenue near West 52nd Street, with Neighborhood Café for morning coffee and the So & So's piano bar for supper-club dinners after Broadway shows. Booking.com and Google reviewers praise attentive front-desk staff, rain showers, and modern king rooms that feel quieter than giant Times Square towers, while Restaurant Row and the N/Q/R/W subway are a short walk away. Guests who wanted larger work desks or club-lounge perks sometimes mark value down a notch, yet theater fans and couples often pick Romer for a boutique Hell's Kitchen base.",
+    "summary": "Romer Hell's Kitchen sits at 851 Eighth Avenue near West 52nd Street, with Neighborhood Café for morning coffee and the ",
     "price": 425,
     "logoUrl": "https://www.romerhotels.com/favicon.ico"
   },
@@ -1566,34 +1570,35 @@
   },
   "639": {
     "source": "brave",
-    "title": "The Manhattan Club",
+    "title": "Library Hotel by Library Hotel Collection",
     "category": "hotel",
     "lat": null,
     "lng": null,
-    "address": "Central Park / Midtown, New York, NY",
-    "url": "https://www.manhattanclub.com/",
-    "externalId": "The Manhattan Club",
+    "address": "299 Madison Avenue, New York, NY 10017",
+    "url": "https://www.libraryhotel.com/",
+    "externalId": "Library Hotel by Library Hotel Collection",
     "sourceRecord": {
       "category": "hotel",
-      "description": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.com guests often book it for longer Midtown stays. Manhattan Club reviews mention residential floors, easy Columbus Circle transit, and the trade-off of a members-club check-in process versus a traditional hotel lobby.",
-      "summary": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.",
-      "price": 386,
-      "website": "https://www.manhattanclub.com/",
-      "logoUrl": "https://www.manhattanclub.com/favicon.ico",
+      "description": "Library Hotel by Library Hotel Collection sits at 299 Madison Avenue beside the New York Public Library, with ten guest floors themed around the Dewey Decimal System and a rooftop writer's den for quiet reading. Booking.com reviewers praise the intimate scale, complimentary wine hour, and Midtown East location a few blocks from Bryant Park and Grand Central Terminal. Critical notes mention narrow elevator waits and premium pricing for the boutique footprint, yet literature lovers and business travelers often book it for curated rooms and a calmer alternative to massive Times Square towers.",
+      "summary": "Library Hotel by Library Hotel Collection sits at 299 Madison Avenue beside the New York Public Library, with ten guest ",
+      "price": 412,
+      "website": "https://www.libraryhotel.com/",
+      "logoUrl": "https://www.libraryhotel.com/favicon.ico",
       "lat": null,
       "lng": null,
-      "address": "Central Park / Midtown, New York, NY",
+      "address": "299 Madison Avenue, New York, NY 10017",
       "summarySourceUrls": [
-        "https://www.manhattanclub.com/"
+        "https://www.libraryhotel.com/",
+        "https://www.booking.com/hotel/us/library.html"
       ],
       "source": "brave",
-      "url": "https://www.manhattanclub.com/",
-      "longDetails": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.com guests often book it for longer Midtown stays. Manhattan Club reviews mention residential floors, easy Columbus Circle transit, and the trade-off of a members-club check-in process versus a traditional hotel lobby."
+      "url": "https://www.libraryhotel.com/",
+      "longDetails": "Library Hotel by Library Hotel Collection sits at 299 Madison Avenue beside the New York Public Library, with ten guest floors themed around the Dewey Decimal System and a rooftop writer's den for quiet reading. Booking.com reviewers praise the intimate scale, complimentary wine hour, and Midtown East location a few blocks from Bryant Park and Grand Central Terminal. Critical notes mention narrow elevator waits and premium pricing for the boutique footprint, yet literature lovers and business travelers often book it for curated rooms and a calmer alternative to massive Times Square towers."
     },
-    "description": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.com guests often book it for longer Midtown stays. Manhattan Club reviews mention residential floors, easy Columbus Circle transit, and the trade-off of a members-club check-in process versus a traditional hotel lobby.",
-    "summary": "The Manhattan Club provides suite-style rooms near Central Park South with kitchenettes and living space, and Booking.",
-    "price": 386,
-    "logoUrl": "https://www.manhattanclub.com/favicon.ico"
+    "description": "Library Hotel by Library Hotel Collection sits at 299 Madison Avenue beside the New York Public Library, with ten guest floors themed around the Dewey Decimal System and a rooftop writer's den for quiet reading. Booking.com reviewers praise the intimate scale, complimentary wine hour, and Midtown East location a few blocks from Bryant Park and Grand Central Terminal. Critical notes mention narrow elevator waits and premium pricing for the boutique footprint, yet literature lovers and business travelers often book it for curated rooms and a calmer alternative to massive Times Square towers.",
+    "summary": "Library Hotel by Library Hotel Collection sits at 299 Madison Avenue beside the New York Public Library, with ten guest ",
+    "price": 412,
+    "logoUrl": "https://www.libraryhotel.com/favicon.ico"
   },
   "640": {
     "source": "brave",

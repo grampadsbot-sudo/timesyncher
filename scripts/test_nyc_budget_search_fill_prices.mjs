@@ -30,7 +30,7 @@ const gateBRows = [
   { id: 601, name: 'JetBlue LAS → JFK', cat: 'flight' },
   { id: 602, name: "Zabar's", cat: 'store' },
   { id: 603, name: 'Motto by Hilton New York City Times Square', cat: 'hotel' },
-  { id: 608, name: 'Midtown sample hotel', cat: 'hotel' },
+  { id: 608, name: 'The Manhattan Club', cat: 'hotel' },
   { id: 609, name: 'Priceline opaque Standard sedan', cat: 'car' },
   { id: 610, name: 'Carbone', cat: 'restaurant' },
   { id: 611, name: 'Jazz at Lincoln Center', cat: 'activity' },
