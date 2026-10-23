@@ -6,6 +6,7 @@ import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
+import { GATEB_FIXTURE_REPLAY_SLUG } from './shared-trip-fixture-replay.mjs';
 
 let sharedTripDatabase = null;
 
@@ -197,6 +198,12 @@ function sendSlugMiss(res, shareToken) {
 
 async function respondSharedTripGet(req, res, shareToken) {
   try {
+    if (String(shareToken || '') === GATEB_FIXTURE_REPLAY_SLUG) {
+      return sendJson(res, 404, vacationAppErrorBody({
+        code: 'gateb_fixture_replay_requires_capture_harness',
+        error: 'Gate B fixture replay is only served through the capture harness',
+      }));
+    }
     const local = await intakeSharedResponse(shareToken);
     if (local) return sendJson(res, 200, local);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
@@ -290,3 +297,4 @@ export default async function handler(req, res) {
 }
 
 export { cleanText };
+export { prepareFixtureReplaySharedTrip } from './shared-trip-fixture-replay.mjs';
