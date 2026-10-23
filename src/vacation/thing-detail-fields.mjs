@@ -77,6 +77,37 @@ function copyIfBlank(target, key, ...values) {
   }
 }
 
+function formatHoursValue(value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'string') return text(value, 800);
+  if (typeof value !== 'object') return text(value, 800);
+  const dayRows = [];
+  const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  for (const day of dayNames) {
+    const row = value[day] ?? value[day.slice(0, 3)];
+    if (row == null || row === '') continue;
+    const label = day.slice(0, 3);
+    if (typeof row === 'string') dayRows.push(`${label}: ${text(row, 80)}`);
+    else if (Array.isArray(row)) dayRows.push(`${label}: ${row.map((part) => text(part, 40)).filter(Boolean).join(', ')}`);
+    else if (typeof row === 'object') {
+      const open = text(row.open || row.opens || row.from, 40);
+      const close = text(row.close || row.closes || row.to, 40);
+      if (open || close) dayRows.push(`${label}: ${[open, close].filter(Boolean).join('–')}`);
+    }
+  }
+  if (dayRows.length) return text(dayRows.join('; '), 800);
+  const open = text(value.open || value.opens, 80);
+  const close = text(value.close || value.closes, 80);
+  if (open || close) return text([open, close].filter(Boolean).join('–'), 800);
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized && serialized !== '{}' && !/\[object Object\]/.test(serialized)) return text(serialized, 800);
+  } catch {
+    return '';
+  }
+  return '';
+}
+
 function copyReview(target, index, quote, sourceLabel, rating) {
   const key = `review${index}`;
   const sourceKey = `review${index}Source`;
@@ -160,7 +191,9 @@ export function detailFieldsFromPlace(place = {}, thing = {}) {
   const address = text(place.address || thing.address || record.address, 240);
   const phone = text(record.phone || record.telephone || place.phone, 80);
   const website = text(place.url || record.url || record.website, 500);
-  const hours = text(record.hours || record.openingHours || record.opening_hours, 800);
+  const hours = formatHoursValue(record.hours)
+    || formatHoursValue(record.openingHours)
+    || formatHoursValue(record.opening_hours);
   const priceLevel = text(record.priceLevel || record.price_level || place.priceLevel, 40);
   const price = place.price ?? record.price ?? thing.price;
   const googleRating = text(record.googleRating, 40);

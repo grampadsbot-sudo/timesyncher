@@ -30,3 +30,9 @@ export function missingSearchKeys(processEnv = process.env) {
   if (!String(providerEnv.brave || '').trim()) missing.push(String(providerEnv.braveName || 'brave'));
   return missing;
 }
+
+export const XAI_PLACE_SEARCH_MODEL_ENV = 'XAI_PLACE_SEARCH_MODEL';
+
+export function xaiPlaceSearchModelId(processEnv = process.env) {
+  return String(processEnv[XAI_PLACE_SEARCH_MODEL_ENV] || 'grok-4.3').trim();
+}
