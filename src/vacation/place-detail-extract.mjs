@@ -142,8 +142,18 @@ function buildSummaryFromResults({
   return { summary, summarySourceUrls };
 }
 
-function extractContactFieldsFromBlob(blob = '') {
+function extractStreetAddressFromBlob(blob = '') {
+  const textBlob = text(blob, 120000);
+  const labeled = textBlob.match(/\b(\d{1,5}\s+(?:[A-Za-z0-9'.-]+\s+){0,6}(?:Street|St|Avenue|Ave|Broadway|Boulevard|Blvd|Road|Rd|Way|Place|Pl|Lane|Ln)(?:\s*(?:,#?\s*\d+)?)?,\s*(?:New York|Manhattan|Brooklyn),\s*NY(?:\s+\d{5})?)\b/i);
+  if (labeled) return text(labeled[1], 200);
+  const plain = textBlob.match(/\b(\d{1,5}\s+[A-Za-z0-9'.-]+\s+(?:Street|St|Avenue|Ave|Broadway|Boulevard|Blvd)(?:,\s*New York,\s*NY\s*\d{5})?)\b/i);
+  return plain ? text(plain[1], 200) : '';
+}
+
+export function extractContactFieldsFromBlob(blob = '') {
   const fields = {};
+  const address = extractStreetAddressFromBlob(blob);
+  if (address) fields.address = address;
   const phone = blob.match(/(?:\+1[\s.-]?)?(?:\(\d{3}\)|\d{3})[\s.-]\d{3}[\s.-]\d{4}/);
   if (phone) fields.phone = phone[0];
   const website = blob.match(/https?:\/\/[^\s"'<>]+/i);

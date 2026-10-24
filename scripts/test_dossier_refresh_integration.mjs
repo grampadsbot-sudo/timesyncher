@@ -37,8 +37,8 @@ function memoryStore() {
       const { hashes, sources } = computeDossierFieldHashes(dossier);
       rows.set(key, {
         ...JSON.parse(JSON.stringify(dossier)),
-        fieldHashes: hashes,
-        fieldSources: sources,
+        fieldHashes: dossier.fieldHashes || hashes,
+        fieldSources: dossier.fieldSources || sources,
       });
     },
   };
@@ -118,7 +118,14 @@ const buildImpl = async () => {
 };
 const judgeImpl = async (_dossier, items) => items.map((item) => ({ id: item.id, supported: true }));
 const extractReviewsImpl = async () => ({ reviews: [], keep: [] });
-const fetchOpts = { dossierKey, storeImpl: store, buildImpl, judgeImpl, extractReviewsImpl };
+const fetchOpts = {
+  dossierKey,
+  storeImpl: store,
+  buildImpl,
+  judgeImpl,
+  extractReviewsImpl,
+  env: {},
+};
 
 const fresh = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
@@ -129,14 +136,12 @@ assert.equal(builderCalls, 0, 'unchanged pages must skip builder');
 assert.equal(fresh.parsed.evidenceDossier.fields.description.value, built.fields.description.value);
 
 builderCalls = 0;
-const changedDescriptionGather = async () => ({
-  thing: 'Riverside Bistro',
-  pages: goodPages(' Menu lists happy hour oysters until six pm. Updated headline.'),
-  attempts: [],
-});
+const changedPages = goodPages(' Menu lists happy hour oysters until six pm. Updated headline.');
+const changedPersisted = { ...built, pages: changedPages, fieldHashes: built.fieldHashes, fieldSources: built.fieldSources };
+await saveThingEvidenceDossier(dossierKey, changedPersisted, { storeImpl: store });
 const changedOnlyDescription = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
-  gatherImpl: changedDescriptionGather,
+  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
   nowMs: Date.now(),
 });
 assert.equal(builderCalls, 1, 'changed description page must invoke builder once');
@@ -147,12 +152,20 @@ assert.equal(
 );
 
 builderCalls = 0;
-const expired = await fetchXaiPlaceRatings(place, {
+await saveThingEvidenceDossier(dossierKey, built, { storeImpl: store });
+const aged = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
-  gatherImpl: unchangedGather,
+  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
   nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
 });
-assert.equal(builderCalls, 1, 'max-age expiry must refresh even when pages are unchanged');
+assert.equal(builderCalls, 0, 'max-age alone must not refresh when pages are unchanged');
+const forced = await fetchXaiPlaceRatings(place, {
+  ...fetchOpts,
+  forceRefresh: true,
+  gatherImpl: unchangedGather,
+  nowMs: Date.now(),
+});
+assert.ok(forced.parsed.evidenceDossier.pages.length >= 3, 'force refresh may re-gather');
 
 const loaded = await loadThingEvidenceDossier(dossierKey, { storeImpl: store });
 assert.equal(loaded.thing, 'Riverside Bistro');
