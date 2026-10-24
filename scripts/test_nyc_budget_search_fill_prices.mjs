@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import { buildBudgetModel, budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
+import { readFileSync } from 'node:fs';
+import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -100,5 +102,16 @@ for (const row of gateBRows) {
   const place = searchPlaces[row.id];
   assert.ok(place?.price != null && place.price !== 0, `search fill price on place ${row.id}`);
 }
+
+const nycFixturePath = process.env.TSV_CAPTURE_FIXTURE
+  || '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
+const { served: replayServed } = prepareFixtureReplaySharedTrip(readFileSync(nycFixturePath));
+const replayBudget = buildBudgetModel(replayServed);
+const replayMissing = replayBudget.rows.filter((row) => !row.hasPrice);
+assert.deepEqual(
+  replayMissing.map((row) => row.name),
+  [],
+  `Gate B NYC fixture replay must price every budget row, missing: ${replayMissing.map((row) => row.name).join(', ')}`,
+);
 
 console.log('NYC budget search fill price tests passed');

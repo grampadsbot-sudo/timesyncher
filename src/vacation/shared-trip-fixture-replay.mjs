@@ -39,9 +39,14 @@ function enrichFixtureReplayServedTrip(shared = {}) {
     const key = `place:${place.id}`;
     const override = { ...(thingOverrides[key] || {}) };
     const withIdentity = bindPr336GateBCanonicalIdentity(place.id, place, override);
-    thingOverrides[key] = shouldMergeStoredCcabOnFixtureReplay(place, withIdentity)
+    const merged = shouldMergeStoredCcabOnFixtureReplay(place, withIdentity)
       ? mergeStoredCcabNarrativeIntoOverride(place, withIdentity)
       : withIdentity;
+    thingOverrides[key] = merged;
+    const mergedPrice = merged?.price ?? withIdentity.price;
+    if (mergedPrice != null && (place.price == null || place.price === '')) {
+      place.price = mergedPrice;
+    }
   }
   return finalizeServedSharedTripPayload({ ...shared, places, thingOverrides });
 }

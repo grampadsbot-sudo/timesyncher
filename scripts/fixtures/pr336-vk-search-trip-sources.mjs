@@ -2,8 +2,13 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { enrichSearchPlace } from '../../src/vacation/trip-thing-enrichment.mjs';
+import { descriptionPassesDetailJudge } from '../../src/vacation/thing-detail-fields.mjs';
 import { buildNycCraigKimDaybydayFixtureRows } from './nyc-craig-kim-daybyday-rows.mjs';
-import { NYC_STAGING_CAPTURE_LIST_ROWS, resolveNycCcabKey } from './nyc-vk-list-tab-rows.mjs';
+import {
+  NYC_CCAB_DISPLAY_ALIASES,
+  NYC_STAGING_CAPTURE_LIST_ROWS,
+  resolveNycCcabKey,
+} from './nyc-vk-list-tab-rows.mjs';
 
 const BASE_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./nyc_ccab_place_enrichment.json', import.meta.url), 'utf8'),
@@ -66,6 +71,22 @@ function text(value, max = 4000) {
 
 function narrativeWordCount(value) {
   return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function normalizeGateBPlaceName(name = '') {
+  return text(name).replace(/\u2019/g, "'");
+}
+
+function gateBListRowNameMatches(placeName = '', rowName = '') {
+  const placeNorm = normalizeGateBPlaceName(placeName);
+  const rowNorm = normalizeGateBPlaceName(rowName);
+  if (!placeNorm || !rowNorm) return false;
+  if (placeNorm === rowNorm) return true;
+  const aliasFromRow = NYC_CCAB_DISPLAY_ALIASES[rowName];
+  if (aliasFromRow && normalizeGateBPlaceName(aliasFromRow) === placeNorm) return true;
+  const aliasFromPlace = NYC_CCAB_DISPLAY_ALIASES[placeName];
+  if (aliasFromPlace && normalizeGateBPlaceName(aliasFromPlace) === rowNorm) return true;
+  return false;
 }
 
 function enrichmentHit(ccabKey = '') {
@@ -184,7 +205,7 @@ function gateBRowForFixturePlace(place = {}) {
   const name = text(place.name || place.title);
   const byId = NYC_STAGING_CAPTURE_LIST_ROWS.find((row) => row.id === place.id);
   if (byId) return byId;
-  return NYC_STAGING_CAPTURE_LIST_ROWS.find((row) => text(row.name) === name) || null;
+  return NYC_STAGING_CAPTURE_LIST_ROWS.find((row) => gateBListRowNameMatches(name, row.name)) || null;
 }
 
 export function enrichListRowFromStoredCcab(place = {}, override = {}, categoryHint = '') {
@@ -201,9 +222,17 @@ export function enrichListRowFromStoredCcab(place = {}, override = {}, categoryH
   }));
 }
 
+function applyEnrichedPrice(place = {}, override = {}, enriched = {}) {
+  if (enriched.price == null) return;
+  if (override.price == null) override.price = enriched.price;
+  if (place.price == null || place.price === '') place.price = enriched.price;
+}
+
 export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) {
+  const placeName = text(place.name || place.title || override.title);
   const existing = text(override.longDetails || override.details || override.description);
-  if (narrativeWordCount(existing) >= 30) return override;
+  const narrativeSufficient = narrativeWordCount(existing) >= 30
+    && descriptionPassesDetailJudge(existing, placeName);
   const enriched = enrichListRowFromStoredCcab(
     place,
     override,
@@ -220,12 +249,13 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
       record.description ||
       record.summary,
   );
-  if (details) {
+  if (!narrativeSufficient && details) {
     next.longDetails = details;
     if (!text(next.details)) next.details = details;
     if (!text(next.description)) next.description = details;
     const placeDesc = text(place.description);
-    if (!placeDesc || narrativeWordCount(placeDesc) < 30) {
+    if (!placeDesc || narrativeWordCount(placeDesc) < 30
+      || !descriptionPassesDetailJudge(placeDesc, placeName)) {
       place.description = details;
     }
   }
@@ -256,6 +286,7 @@ export function mergeStoredCcabNarrativeIntoOverride(place = {}, override = {}) 
     }
   }
   if (next.price == null && enriched.price != null) next.price = enriched.price;
+  applyEnrichedPrice(place, next, enriched);
   if (!next.logoUrl && enriched.logoUrl) next.logoUrl = enriched.logoUrl;
   if (!next.sourceRecord || typeof next.sourceRecord !== 'object') {
     next.sourceRecord = { ...record };
