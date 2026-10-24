@@ -37,6 +37,16 @@ export function placeFromTarget(target = {}) {
     ...(OVERLAY_ENRICHMENT[target.ccabKey] || {}),
   };
   const category = target.category || ccabRecord.category || target.category_name || '';
+  const suppliedRecord = target.sourceRecord || {};
+  const chosenUrl = target.website || target.url
+    || suppliedRecord.website || suppliedRecord.url
+    || ccabRecord.website;
+  const sourceRecord = {
+    ...ccabRecord,
+    category,
+    ...suppliedRecord,
+    ...(chosenUrl ? { website: chosenUrl, url: chosenUrl } : {}),
+  };
   return {
     id: target.placeId ?? target.rowId ?? target.id,
     trip_id: target.tripId ?? target.trip_id ?? 99,
@@ -46,8 +56,8 @@ export function placeFromTarget(target = {}) {
     category,
     category_name: typeof category === 'object' ? category.name : (target.category_name || category),
     address: target.address || ccabRecord.address,
-    url: target.website || target.url || ccabRecord.website,
-    sourceRecord: { ...ccabRecord, category, ...(target.sourceRecord || {}) },
+    url: chosenUrl,
+    sourceRecord,
   };
 }
 
