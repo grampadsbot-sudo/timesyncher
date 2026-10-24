@@ -63,20 +63,11 @@ assert.match(bundle, /Oa=Array\.from\(new Set\(tn\.map\(G=>En\(G\)\)\.filter\(Bo
 assert.doesNotMatch(bundle, /\$n=gt\.filter\(/);
 assert.doesNotMatch(bundle, /ci=ot\.filter\(/);
 
-const flight = { id: 1, name: 'Jet' };
-const hotelRow = { id: 2, name: 'Inn' };
-const car = { id: 3, name: 'Hertz' };
-const cafe = { id: 4, name: 'Cafe' };
-const shop = { id: 5, name: 'Tiffany' };
-const rest = { id: 6, name: 'Museum' };
-const offTimeline = [flight, hotelRow, car, cafe, shop, rest];
-const Qt = (item) => `place:${item.id}`;
-const budgetIds = [...new Map([].concat([flight], [hotelRow], [car], [cafe], [shop], [rest]).filter(Boolean).map((item) => [Qt(item), item])).keys()];
-assert.deepEqual(budgetIds.sort(), offTimeline.map(Qt).sort());
-assert.match(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
+assert.match(bundle, /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)/);
+assert.doesNotMatch(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(bundle, /Xi==="car"\?"Cars"/);
-assert.doesNotMatch(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
+assert.match(bundle, /data-ts-budget-row":"1"/);
 assert.match(bundle, /data-logo-src":Xr/);
 assert.match(bundle, /data-ts-timeline-icon":"1"/);
 
-console.log('shared tab filter chips and budget union ok');
+console.log('shared tab filter chips and budget timeline rows ok');
