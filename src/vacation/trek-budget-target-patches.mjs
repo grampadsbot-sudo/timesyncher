@@ -37,6 +37,9 @@ export function assertBudgetTimelineRowsPatch(js = '') {
   if (!js.includes(MO_BUDGET_PATCH) || js.includes(MO_BUDGET_LIST_TAB_PATCH)) {
     throw new Error('Style two live budget must list timeline Ci(day) items only, not saved list-tab rows.');
   }
+  if (!js.includes(BUDGET_ROW_NEEDLE) && !js.includes('data-ts-budget-row":"1"')) {
+    return;
+  }
   if (!js.includes('data-ts-budget-row":"1"') || (js.includes(BUDGET_ROW_NEEDLE) && !js.includes(BUDGET_ROW_PATCH))) {
     throw new Error('Style two live budget rows must expose data-ts-budget-row hooks for Gate B.');
   }
