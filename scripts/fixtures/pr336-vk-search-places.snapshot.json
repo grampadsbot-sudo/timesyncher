@@ -641,13 +641,16 @@
     "address": "131 W 3rd St, New York, NY 10012",
     "externalId": "Blue Note Jazz Club",
     "sourceRecord": {
-      "category": "music",
-      "description": "Primary Blue Note room listing for NYC jazz nights; table service and cover vary by show. Price: $55 typical table minimum snippet; Status: candidate only.",
-      "summary": "Blue Note room listing; Price: $55 typical table minimum snippet.",
+      "category": "event",
+      "description": "Google lists Blue Note Jazz Club around 4.5/5 with thousands of ratings. Greenwich Village jazz room at 131 W 3rd St; table service and cover vary by show (bluenotejazz.com). Covers often run about $40–$65 depending on the act; Price: $55 per person table-minimum planning estimate before tax, tip, and drinks.",
+      "summary": "Google lists Blue Note Jazz Club around 4.",
       "price": 55,
       "lat": 40.7301,
       "lng": -74.001,
       "address": "131 W 3rd St, New York, NY 10012",
+      "itineraryNote": "Greenwich Village jazz club; reserve or arrive early for weekend sets.",
+      "googleRating": "4.5",
+      "googleReviewCount": "8500",
       "identityProvenance": {
         "approvedDisplayTitle": "Blue Note Jazz Club",
         "ccabKey": "Blue Note Jazz Club",
@@ -655,15 +658,15 @@
         "reason": "Gate B event row resolves to the Greenwich Village club at bluenotejazz.com, not JALC Dizzy's."
       },
       "source": "brave",
-      "longDetails": "Primary Blue Note room listing for NYC jazz nights; table service and cover vary by show. Price: $55 typical table minimum snippet; Status: candidate only.",
+      "longDetails": "Google lists Blue Note Jazz Club around 4.5/5 with thousands of ratings. Greenwich Village jazz room at 131 W 3rd St; table service and cover vary by show (bluenotejazz.com). Covers often run about $40–$65 depending on the act; Price: $55 per person table-minimum planning estimate before tax, tip, and drinks.",
       "logoSearchBlocked": "no_official_website_found",
       "missingFields": [
         "logoUrl"
       ],
       "url": ""
     },
-    "description": "Primary Blue Note room listing for NYC jazz nights; table service and cover vary by show. Price: $55 typical table minimum snippet; Status: candidate only.",
-    "summary": "Blue Note room listing; Price: $55 typical table minimum snippet.",
+    "description": "Google lists Blue Note Jazz Club around 4.5/5 with thousands of ratings. Greenwich Village jazz room at 131 W 3rd St; table service and cover vary by show (bluenotejazz.com). Covers often run about $40–$65 depending on the act; Price: $55 per person table-minimum planning estimate before tax, tip, and drinks.",
+    "summary": "Google lists Blue Note Jazz Club around 4.",
     "price": 55,
     "url": ""
   },
