@@ -1,7 +1,7 @@
 import { XA_STATIC_MAP_TILE_NEEDLE, XA_STATIC_MAP_TILE_PATCH } from './trek-day-by-day-map-patches.mjs';
 import { patchSharedTripOeListRows } from './shared-trip-oe-list-row-patch.mjs';
 import { patchBudgetSavedTargetsOnly } from './trek-budget-target-patches.mjs';
-import { patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
+import { patchPrintTimelineUntimedTbd, patchSharedLayoutOverflow, patchSharedTabRowOverflow } from './trek-shared-layout-patches.mjs';
 import { patchSharedLiveTimelineRowUi, TIMELINE_ICON_NEEDLE } from './trek-timeline-live-row-patches.mjs';
 import { tripMapInitialViewBundleSnippet } from './trip-map-initial-view.mjs';
 import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
@@ -444,6 +444,7 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('car pickup/drop-off day timeline patch did not apply');
   }
   js = patchSharedLayoutOverflow(js, { served });
+  js = patchPrintTimelineUntimedTbd(js, { served });
   const FLIGHT_EU_NEEDLE_BAD = 'return[(v=>{const fareLbl=(w=>w.includes("round")?"round trip":w.includes("one")?"one-way":"")';
   if (js.includes(FLIGHT_EU_AIRLINE_NEEDLE)) {
     js = js.replace(FLIGHT_EU_AIRLINE_NEEDLE, FLIGHT_EU_AIRLINE_PATCH);

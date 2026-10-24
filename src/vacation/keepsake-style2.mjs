@@ -369,7 +369,8 @@ function dailyPageHtml(model, dayBlock, origin) {
     : '';
   const rows = dayBlock.items.map((item, index) => {
     const type = item.resolved.isFlight ? 'flight' : item.resolved.type;
-    return `<div class="time-row" data-icon-type="${esc(type)}" data-thing-id="${esc(item.place.id || '')}"><div class="time">${esc(item.time)}${item.endTime ? `<br /><span class="end-time">${esc(item.endTime)}</span>` : ''}</div><div class="timeline-rail">${timelineDotHtml(item.place, item.override)}${index < dayBlock.items.length - 1 ? '<div class="timeline-line"></div>' : ''}</div><div class="timeline-title">${esc(item.title)}</div>${rowThumbHtml(item, origin)}</div>`;
+    const timeLabel = item.time ? esc(item.time) : 'TBD';
+    return `<div class="time-row" data-icon-type="${esc(type)}" data-thing-id="${esc(item.place.id || '')}"><div class="time">${timeLabel}${item.endTime ? `<br /><span class="end-time">${esc(item.endTime)}</span>` : ''}</div><div class="timeline-rail">${timelineDotHtml(item.place, item.override)}${index < dayBlock.items.length - 1 ? '<div class="timeline-line"></div>' : ''}</div><div class="timeline-title">${esc(item.title)}</div>${rowThumbHtml(item, origin)}</div>`;
   }).join('');
 
   const details = dayBlock.items.map((item) => {

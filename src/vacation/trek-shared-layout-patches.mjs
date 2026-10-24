@@ -9,9 +9,30 @@ const DAY_PILL_ROW_PATCH = 'display:"flex",gap:6,overflowX:"auto",paddingBottom:
 const DAY_TIMELINE_GRID_NEEDLE = 'display:"grid",gridTemplateColumns:"74px 22px 1fr",gap:10,alignItems:"start"';
 const DAY_TIMELINE_GRID_PATCH = 'display:"grid",gridTemplateColumns:"minmax(52px,64px) 22px minmax(0,1fr)",gap:8,alignItems:"start",minWidth:0,maxWidth:"100%"';
 const DAY_TIMELINE_TIME_NEEDLE = 'n.jsxs("div",{style:{fontSize:11,fontWeight:700,color:ua.isConflict?"#b91c1c":ua.time?"#111827":"#9ca3af",textAlign:"right",paddingTop:Zn?8:2},children:[ua.time?Yo(ua.time):';
-const DAY_TIMELINE_TIME_SINGLE_LINE = 'ua.time&&!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:"#111827",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:Yo(ua.time)}):';
+const DAY_TIMELINE_TIME_SINGLE_LINE_PRIOR = 'ua.time&&!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:"#111827",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:Yo(ua.time)}):';
+const DAY_TIMELINE_TIME_SINGLE_LINE = '!ua.endTime&&!ua.isConflict?n.jsx("div",{"data-ts-timeline-time":"1",style:{fontSize:11,fontWeight:700,color:ua.time?"#111827":"#9ca3af",textAlign:"right",whiteSpace:"nowrap",alignSelf:"baseline"},children:ua.time?Yo(ua.time):("T"+"BD")}):';
+const DAY_TIMELINE_TIME_EMPTY_NEEDLE = '[ua.time?Yo(ua.time):"",ua.endTime';
+const DAY_TIMELINE_TIME_EMPTY_PATCH = '[ua.time?Yo(ua.time):("T"+"BD"),ua.endTime';
 const DAY_TIMELINE_TITLE_WRAP_NEEDLE = '}:{paddingTop:1},children:[ua.isConflict&&n.jsxs(';
-const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:ua.time&&!ua.endTime?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
+const DAY_TIMELINE_TITLE_WRAP_BASELINE_PRIOR = '}:{paddingTop:1,alignSelf:ua.time&&!ua.endTime?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
+const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:!ua.endTime&&!ua.isConflict?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
+
+const PRINT_TIME_NEEDLES = [
+  ['<div class="time">${_i.time?an(Yo(_i.time)):""}${_i.endTime?', '<div class="time">${_i.time?an(Yo(_i.time)):("T"+"BD")}${_i.endTime?'],
+  ['<div class="time">${Zn.time?an(Yo(Zn.time)):""}${Zn.endTime?', '<div class="time">${Zn.time?an(Yo(Zn.time)):("T"+"BD")}${Zn.endTime?'],
+];
+
+export function patchPrintTimelineUntimedTbd(source = '', options = {}) {
+  const served = options.served === true;
+  let js = String(source || '');
+  for (const [needle, patch] of PRINT_TIME_NEEDLES) {
+    if (js.includes(needle)) js = js.replace(needle, patch);
+  }
+  if (served && (!js.includes('Zn.time?an(Yo(Zn.time)):("T"+"BD")') || !js.includes('_i.time?an(Yo(_i.time)):("T"+"BD")'))) {
+    throw new Error('print timeline must show TBD when a row has no start time');
+  }
+  return js;
+}
 
 export function patchSharedTabRowOverflow(source = '', options = {}) {
   const served = options.served === true;
@@ -45,12 +66,21 @@ export function patchSharedLayoutOverflow(source = '', options = {}) {
   else if (served && js.includes('gridTemplateColumns:"74px 22px 1fr"')) {
     throw new Error('shared day timeline grid overflow patch did not apply');
   }
-  if (js.includes(DAY_TIMELINE_TIME_NEEDLE) && !js.includes(DAY_TIMELINE_TIME_SINGLE_LINE)) {
+  if (js.includes(DAY_TIMELINE_TIME_SINGLE_LINE_PRIOR)) {
+    js = js.replace(DAY_TIMELINE_TIME_SINGLE_LINE_PRIOR, DAY_TIMELINE_TIME_SINGLE_LINE);
+  } else if (js.includes(DAY_TIMELINE_TIME_NEEDLE) && !js.includes(DAY_TIMELINE_TIME_SINGLE_LINE)) {
     js = js.replace(DAY_TIMELINE_TIME_NEEDLE, DAY_TIMELINE_TIME_SINGLE_LINE + DAY_TIMELINE_TIME_NEEDLE);
   } else if (served && !js.includes(DAY_TIMELINE_TIME_SINGLE_LINE)) {
     throw new Error('day timeline single-line time patch did not apply');
   }
-  if (js.includes(DAY_TIMELINE_TITLE_WRAP_NEEDLE)) {
+  if (js.includes(DAY_TIMELINE_TIME_EMPTY_NEEDLE)) {
+    js = js.replace(DAY_TIMELINE_TIME_EMPTY_NEEDLE, DAY_TIMELINE_TIME_EMPTY_PATCH);
+  } else if (served && js.includes('[ua.time?Yo(ua.time):"",ua.endTime')) {
+    throw new Error('day timeline untimed TBD patch did not apply');
+  }
+  if (js.includes(DAY_TIMELINE_TITLE_WRAP_BASELINE_PRIOR)) {
+    js = js.replace(DAY_TIMELINE_TITLE_WRAP_BASELINE_PRIOR, DAY_TIMELINE_TITLE_WRAP_BASELINE);
+  } else if (js.includes(DAY_TIMELINE_TITLE_WRAP_NEEDLE)) {
     js = js.replace(DAY_TIMELINE_TITLE_WRAP_NEEDLE, DAY_TIMELINE_TITLE_WRAP_BASELINE);
   } else if (served && !js.includes(DAY_TIMELINE_TITLE_WRAP_BASELINE)) {
     throw new Error('day timeline title baseline patch did not apply');
