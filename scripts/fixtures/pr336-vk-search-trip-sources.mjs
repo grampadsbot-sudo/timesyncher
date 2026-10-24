@@ -29,10 +29,6 @@ export const GATE_B_DISPLAY_TITLE_ALIASES = {
     title: 'Priceline opaque Standard sedan',
     ccabKey: 'Priceline opaque JFK — Standard sedan',
   },
-  611: {
-    title: 'Blue Note Jazz Club',
-    ccabKey: 'Jazz at Lincoln Center',
-  },
 };
 
 export const NYC_GATE_B_ROW_CCAB_KEYS = {
@@ -46,7 +42,7 @@ export const NYC_GATE_B_ROW_CCAB_KEYS = {
   608: 'The Manhattan Club',
   609: 'Priceline opaque JFK — Standard sedan',
   610: 'Carbone',
-  611: 'Jazz at Lincoln Center',
+  611: 'Blue Note Jazz Club',
   612: 'Chelsea Market',
   613: "Macy's Herald Square",
   614: 'MoMA Design Store - 53rd Street',
@@ -145,7 +141,7 @@ function lookupCcabRecord(ccabKey) {
 }
 
 export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey }) {
-  const ccabKey = resolveNycCcabKey(rowCcabKey || NYC_GATE_B_ROW_CCAB_KEYS[id] || name);
+  const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[id] || rowCcabKey || name);
   let ccabRecord = lookupCcabRecord(ccabKey);
   if (!ccabRecord) {
     throw new Error(`missing ccab search source for gate-b row ${id} (${name})`);
@@ -158,17 +154,6 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
         ccabKey: 'Priceline opaque JFK — Standard sedan',
         evidenceUrl: 'https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp',
         reason: 'Opaque JFK card hides the supplier; display title matches the Priceline Standard sedan class on the sourced card.',
-      },
-    };
-  }
-  if (id === 611) {
-    ccabRecord = {
-      ...ccabRecord,
-      identityProvenance: {
-        approvedDisplayTitle: 'Blue Note Jazz Club',
-        ccabKey: 'Jazz at Lincoln Center',
-        evidenceUrl: 'https://jazz.org/dizzys/',
-        reason: 'Gate B timeline keeps the Blue Note Jazz Club label while ccab enrichment is keyed to Jazz at Lincoln Center.',
       },
     };
   }
@@ -230,7 +215,7 @@ export function assertGateBRowProvenance(rows = [], placesById = {}) {
   const failures = [];
   for (const row of rows) {
     const place = placesById[row.id];
-    const ccabKey = resolveNycCcabKey(row.ccabKey || NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.name);
+    const ccabKey = resolveNycCcabKey(NYC_GATE_B_ROW_CCAB_KEYS[row.id] || row.ccabKey || row.name);
     const alias = GATE_B_DISPLAY_TITLE_ALIASES[row.id];
     if (!place || !ccabKey) {
       failures.push(`row ${row.id}: missing place or ccab key`);
