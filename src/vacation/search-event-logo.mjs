@@ -8,6 +8,15 @@ function text(value, max = 4000) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function publicUrl(value = '') {
+  try {
+    const parsed = new URL(text(value, 1000));
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 function hostname(value = '') {
   try {
     return new URL(text(value, 500)).hostname.replace(/^www\./i, '').toLowerCase();
@@ -121,7 +130,11 @@ export async function enrichSearchPlaceEventLogo(place = {}, {
     category: 'event',
     website: pickOfficialWebsite({}, place),
   });
-  const website = pickOfficialWebsite(extracted, place);
+  const firstResultWebsite = text(
+    mergedResults.map((row) => publicUrl(row?.url)).find(Boolean),
+    500,
+  );
+  const website = pickOfficialWebsite(extracted, place) || firstResultWebsite;
   const logoUrl = logoUrlFromSearchPlace(
     {
       ...place,

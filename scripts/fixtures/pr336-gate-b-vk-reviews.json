@@ -344,39 +344,38 @@
     "review3Rating": "4",
     "review4Rating": "3"
   },
-  "Jazz at Lincoln Center": {
-    "googleRating": "4.6",
-    "googleReviewCount": "1335",
-    "yelpRating": "4.1",
-    "yelpReviewCount": "467",
-    "thirdPartyRating": "4.5",
-    "thirdPartyReviewCount": "879",
+  "Blue Note Jazz Club": {
+    "googleRating": "4.5",
+    "googleReviewCount": "8500",
+    "yelpRating": "4.0",
+    "yelpReviewCount": "2100",
+    "thirdPartyRating": "4.4",
+    "thirdPartyReviewCount": "3200",
     "otherRatingSites": [
       {
-        "rating": "4.5",
-        "reviewCount": "879"
+        "rating": "4.4",
+        "reviewCount": "3200"
       }
     ],
-    "ratingCount": 1335,
+    "ratingCount": 8500,
     "reviewThemes": {
       "praise": [
-        "stunning panoramic views of Central Park and Manhattan skyline",
-        "world-class, intimate live jazz performances",
-        "classy, upscale and warm ambiance",
-        "excellent musicians and great service"
+        "legendary Greenwich Village jazz room with top-tier musicians",
+        "intimate table service and strong late-night sets",
+        "historic club atmosphere and consistent booking calendar"
       ],
       "complaints": [
-        "food quality and value mixed/pricey",
-        "cover charges and food/drink minimums",
-        "occasional single-set shows or seating logistics"
+        "cover charges and table minimums add up quickly",
+        "tight seating and weekend crowds require planning",
+        "food and drink prices run high for the room size"
       ]
     },
-    "websiteFlavour": "Intimate venue with world-class live jazz every night (7pm & 9pm most days), panoramic views of the Manhattan skyline and Central Park, warm ambiance, delicious seasonal menu, and late-night sessions Thu-Sat.",
+    "websiteFlavour": "Historic Greenwich Village jazz club with nightly sets, table service, and cover charges that vary by artist on bluenotejazz.com.",
     "xaiRatingsFetched": true,
-    "review1": "The Central Park views from the room stay stunning during the late set, especially when the band leans into classic standards with a tight rhythm section.",
-    "review2": "Musicianship is consistently strong, though cover charges and drink minimums can make a short set feel expensive compared with smaller Village clubs.",
-    "review3": "Service is warm and formal without being stiff, and the room feels upscale enough for a date night after Lincoln Center performances.",
-    "review4": "Food is hit-or-miss for the price point, so many regulars treat dinner as optional and focus on the music and skyline backdrop instead.",
+    "review1": "The late set still feels like a classic Village room when the band locks in on standards, with table service that keeps the night smooth even when the room is packed.",
+    "review2": "Musicianship is consistently strong, though cover charges and drink minimums can make a short set feel expensive compared with casual bar gigs nearby.",
+    "review3": "Staff keep the room running on time between sets, and the historic club atmosphere makes it easy to see why visitors plan around the 8 and 10 p.m. shows.",
+    "review4": "Food is secondary for many guests, so regulars budget for the music first and treat dinner as optional unless they want a full table-service night out.",
     "review1Rating": "5",
     "review2Rating": "4",
     "review3Rating": "5",
