@@ -53,9 +53,9 @@ assert.equal(detailHappyHour(restaurantOverride), restaurantModel.happyHourDetai
 assert.equal(detailReviewTotalsLine(restaurantOverride), restaurantModel.reviewTotalsLine);
 
 assert.deepEqual(detailRatingLines(restaurantOverride), [
-  { id: 'google', text: '4.6 on Google (820 reviews)' },
-  { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
-  { id: 'third', text: 'Other ratings: 4.6' },
+  { id: 'google', ratingValue: 4.6, suffix: 'on Google (820 reviews)' },
+  { id: 'yelp', ratingValue: 4.4, suffix: 'on Yelp (410 reviews)' },
+  { id: 'third', ratingValue: 4.6, suffix: 'Other ratings' },
 ]);
 assert.deepEqual(
   detailRatingLines({
@@ -63,7 +63,7 @@ assert.deepEqual(
     thirdPartyReviewCount: '15,309',
     source: 'Tripadvisor',
   }),
-  [{ id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' }],
+  [{ id: 'third', ratingValue: 4.7, suffix: 'Other ratings (15,309 reviews)' }],
 );
 assert.deepEqual(
   detailRatingLines({
@@ -76,11 +76,12 @@ assert.deepEqual(
     source: 'Tripadvisor',
   }),
   [
-    { id: 'google', text: '4.6 on Google (820 reviews)' },
-    { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
-    { id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' },
+    { id: 'google', ratingValue: 4.6, suffix: 'on Google (820 reviews)' },
+    { id: 'yelp', ratingValue: 4.4, suffix: 'on Yelp (410 reviews)' },
+    { id: 'third', ratingValue: 4.7, suffix: 'Other ratings (15,309 reviews)' },
   ],
 );
+assert.equal(restaurantModel.reviews[0].ratingValue, 4.8);
 assert.equal(
   detailReviewTotalsLine({
     review_totals: { count: 15309, average: 4.7, sources: ['Tripadvisor'] },
@@ -148,5 +149,7 @@ const flightRows = detailFieldRows(flightTrip.places[0], flightTrip);
 assert.ok(flightRows.some((row) => row.key === 'airline'));
 assert.equal(detailReviews(flightTrip.thingOverrides['place:2'], 'flight').length, 0);
 assert.equal(buildDetailViewModel(flightTrip.places[0], flightTrip).priceLabel, '$248 one-way');
+
+await import('./ratingStars.unit.mjs');
 
 console.log('vacation-client detail unit checks passed');

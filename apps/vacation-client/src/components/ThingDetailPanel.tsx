@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
+import { StarRating } from './StarRating';
 
 type Props = {
   place: SharedPlace;
@@ -86,7 +87,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
           ) : null}
           {model.ratingLines.map((line) => (
             <p key={line.id} className="tsv-detail-rating" data-ts-detail-field="rating">
-              {line.text}
+              <StarRating value={line.ratingValue} className="tsv-detail-rating-stars" />
+              {line.suffix ? <span className="tsv-rating-suffix">{line.suffix}</span> : null}
             </p>
           ))}
           {model.summary ? (
@@ -127,8 +129,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                         {review.compositeLabel}
                       </p>
                     ) : null}
-                    {review.rating ? (
-                      <div className="tsv-review-stars">{review.rating} ★</div>
+                    {review.ratingValue != null ? (
+                      <StarRating value={review.ratingValue} className="tsv-review-stars" />
                     ) : null}
                     <p>{review.text}</p>
                   </li>
@@ -139,9 +141,12 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                   {model.reviewFootnote}
                 </p>
               ) : null}
-              {model.reviewTotalsLine ? (
+              {model.reviewTotalsCount && model.reviewTotalsRating != null ? (
                 <p className="tsv-detail-review-totals" data-ts-detail-review-totals="1">
-                  {model.reviewTotalsLine}
+                  Based on {model.reviewTotalsCount} reviews, avg{' '}
+                  <StarRating value={model.reviewTotalsRating} className="tsv-inline-stars" />
+                  {' '}
+                  (other ratings)
                 </p>
               ) : null}
             </section>
