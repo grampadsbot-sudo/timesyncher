@@ -11,6 +11,7 @@ import {
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { parseRatingNumber } from './ratingStars.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
@@ -239,34 +240,37 @@ export function detailPriceLabel(place, trip, category) {
   return level;
 }
 
+function pushRatingLine(lines, id, ratingRaw, suffix) {
+  const ratingValue = parseRatingNumber(ratingRaw);
+  if (ratingValue == null) return;
+  lines.push({ id, ratingValue, suffix: text(suffix) });
+}
+
 export function detailRatingLines(override) {
   const lines = [];
-  const googleRating = text(override.googleRating);
   const googleCount = text(override.googleReviewCount);
-  if (googleRating) {
-    lines.push({
-      id: 'google',
-      text: googleCount ? `${googleRating} on Google (${googleCount} reviews)` : `${googleRating} on Google`,
-    });
-  }
-  const yelpRating = text(override.yelpRating);
+  pushRatingLine(
+    lines,
+    'google',
+    override.googleRating,
+    googleCount ? `on Google (${googleCount} reviews)` : 'on Google',
+  );
   const yelpCount = text(override.yelpReviewCount);
-  if (yelpRating) {
-    lines.push({
-      id: 'yelp',
-      text: yelpCount ? `${yelpRating} on Yelp (${yelpCount} reviews)` : `${yelpRating} on Yelp`,
-    });
-  }
+  pushRatingLine(
+    lines,
+    'yelp',
+    override.yelpRating,
+    yelpCount ? `on Yelp (${yelpCount} reviews)` : 'on Yelp',
+  );
   const explicitThird = text(override.thirdPartyRating);
   const fallbackRating = text(override.rating);
-  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
+  const googlePresent = parseRatingNumber(override.googleRating) != null;
+  const yelpPresent = parseRatingNumber(override.yelpRating) != null;
+  const thirdRating = explicitThird || (!googlePresent && !yelpPresent ? fallbackRating : '');
   const thirdCount = text(override.thirdPartyReviewCount || override.count);
   if (thirdRating) {
-    const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
-    lines.push({
-      id: 'third',
-      text: `Other ratings: ${value}`,
-    });
+    const suffix = thirdCount ? `Other ratings (${thirdCount} reviews)` : 'Other ratings';
+    pushRatingLine(lines, 'third', thirdRating, suffix);
   }
   return lines;
 }
@@ -278,10 +282,11 @@ export function detailReviews(override, category) {
   for (let index = 1; index <= 4; index += 1) {
     if (!reviewIsComplete(override, index)) continue;
     const compositeLabel = reviewCompositeLabel(override, index);
+    const ratingRaw = text(override[`review${index}Rating`]);
     reviews.push({
       index,
       text: text(override[`review${index}`]),
-      rating: text(override[`review${index}Rating`]),
+      ratingValue: parseRatingNumber(ratingRaw),
       source: text(override[`review${index}Source`]),
       compositeLabel,
     });
@@ -426,6 +431,8 @@ export function buildDetailViewModel(place, trip) {
         ? REPRESENTATIVE_REVIEWS_FOOTNOTE
         : '',
     reviewTotalsLine: detailReviewTotalsLine(override),
+    reviewTotalsRating: detailReviewTotals(override)?.average ?? null,
+    reviewTotalsCount: detailReviewTotals(override)?.count ?? null,
     summarySourceUrls: detailSummarySourceUrls(override),
     fieldRows: detailFieldRows(place, trip),
   };

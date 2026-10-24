@@ -1120,9 +1120,47 @@ button.tsv-timeline-link {
   padding: 10px 12px;
 }
 
+.tsv-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.tsv-star-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.tsv-star {
+  display: block;
+  flex-shrink: 0;
+}
+
+.tsv-detail-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tsv-rating-suffix {
+  color: #cbd5e1;
+}
+
 .tsv-review-stars {
-  font-weight: 800;
   margin-bottom: 6px;
+}
+
+.tsv-inline-stars {
+  vertical-align: -2px;
+}
+
+.tsv-row-rating-wrap {
+  grid-column: 1 / -1;
 }
 
 .tsv-review-composite {
