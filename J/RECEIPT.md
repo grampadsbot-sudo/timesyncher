@@ -1,40 +1,45 @@
-# Issue #672 — Hotels tab duplicate rows (cursor-ubuntu vkfill-672)
+# PR #694 / issue #672 — Hotels dedupe + Gate B price/description (cursor-ubuntu)
 
-**Start HEAD:** `0d59c90f1e0df726691ad9e9646b9f30505012c1` (`migrate/trek-source`)
+**Start HEAD:** `6f14d98c104bf223640d4cf156e25f972b1b44bc`
+
+## Root cause (Gate B auto round 1 on 6f14d98c)
+
+Hotels tab dedupe kept timeline twins but `ha(G)` returned sparse `thingOverrides` only (`tsFillOv` with no `tsPf` spec returned `base||{}`), so `bi(G)`, `rr(G)`, and list summaries ignored catalog `place` fields (price, summary, longDetails). Flights and budget rows use the same `ha()` / `bi()` chain.
 
 ## Change
 
-NYC Hotels tab rendered each hotel twice when the trip had twin catalog + timeline place rows (`Po` / `kn`). Served bundle now dedupes `kn` by normalized hotel name before `vi(kn,"hotels").map(...Oe...)`, preferring timeline rows (`Ds(G)`) and logo rows, then folding description, price, and logo from the dropped twin via `tsFold`.
+1. **`tsFillOv`** — when no product-field spec matches, merge non-empty `thing` place fields into overrides (summary, longDetails, itinerary note, price, logo) before `ha()` reads them.
+2. **`rr()` list rows** — fall back to `G.summary` / `G.description` / `G.longDetails` after override picks.
+3. **Hotels `kn` dedupe** — stronger twin fold (longDetails, price from `G.price` / `bi(g)`), better scoring on place text.
 
-- `src/vacation/trek-vk-price-coverage-patches.mjs` — `applyHotelsTabCatalogDedupePatch`
-- `src/vacation/trek-style2-bundle.mjs` — invoke patch after shared live-tab patches
-- `public/assets/index-BKun7ofk.js` — rebaked (`sha256=fdd16357beb8699e48dc4ba903aab297cd39821070d77509c27d0d8e16675792`)
-- `scripts/test_shared_hotels_tab_catalog_dedupe.mjs` — bundle contract
-- `scripts/offline-tests.txt` — register new test
+## Files
 
-## Verification (this worktree)
+- `src/vacation/trek-style2-bundle.mjs` — `tsFillOv` / `fillThing`
+- `src/vacation/trek-thing-detail-fields-patch.mjs` — `rr()` place fallback
+- `src/vacation/trek-vk-price-coverage-patches.mjs` — `tsFold` / `tsScore`
+- `public/assets/index-BKun7ofk.js` — rebaked (`sha256=6a3235d4db05c1439deb66432a7e789a0104cfb39b4fb0fb06b0cefa9396a742`)
+- `scripts/test_shared_hotels_tab_catalog_dedupe.mjs` — contract asserts
+
+## Verification (worktree)
 
 | Command | Result |
 | --- | --- |
 | `node scripts/rebake_served_trek_bundle.mjs` | pass (sha above) |
 | `node scripts/test_shared_hotels_tab_catalog_dedupe.mjs` | pass |
 | `node scripts/test_offline_manifest.mjs` | pass (296 offline) |
-| `node scripts/check-no-comments.mjs` | **blocked** — `apps/vacation-client/node_modules/typescript` missing in lane env |
-| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | (run on host) |
-| `node scripts/test_served_trek_bundle.mjs` | **blocked** — `@neondatabase/serverless` missing (`npm ci` on host) |
+| `node scripts/test_keepsake_style2.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | **blocked** — missing `apps/vacation-client/node_modules/typescript` (host `npm ci` in vacation-client) |
 
-## Uncommitted files (host publication only)
+## Uncommitted (host publication only)
 
 - `public/assets/index-BKun7ofk.js`
-- `scripts/offline-tests.txt`
 - `scripts/test_shared_hotels_tab_catalog_dedupe.mjs`
 - `src/vacation/trek-style2-bundle.mjs`
+- `src/vacation/trek-thing-detail-fields-patch.mjs`
 - `src/vacation/trek-vk-price-coverage-patches.mjs`
+- `J/RECEIPT.md`
 
 ## Not claimed
 
-CI green, Gate B PASS, merge, deploy — host pipeline.
-
-## Scope left alone
-
-#659/#660 price-hydrate and budget `Mo` dedupe (separate PRs). Baselines, Gate B scripts, workflows, `package.json`.
+CI green, Gate B 32/32 structure+data on new head, merge — host pipeline after push.

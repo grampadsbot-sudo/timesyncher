@@ -4,7 +4,7 @@ const RR_NEEDLE = 'rr=G=>ha(G).summary??""';
 const RR_ITINERARY_CHAIN = 'rr=G=>ha(G).itineraryNote??ha(G).itinerary_note??ha(G).summary??""';
 const RR_LIST_PATCH_BROKEN =
   'rr=G=>{const pick=t=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const w=s.split(" ").filter(Boolean);if(w.length<=20)return s;if(/^Documented .+ option/i.test(s))return s;return""};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}';
-const RR_LIST_PATCH = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
+const RR_LIST_PATCH = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||pick(G.summary??G.description??G.longDetails??"")||""}`;
 
 const ZI_NEEDLE = 'zi=G=>It(G)==="restaurant"';
 const ZI_PATCH = 'zi=G=>{const c=It(G);return c==="restaurant"||c==="bar"}';

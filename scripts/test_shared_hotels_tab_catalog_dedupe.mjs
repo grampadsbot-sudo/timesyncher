@@ -22,6 +22,16 @@ assert.match(
   /tsFold=\(w,g\)=>/,
   'hotels catalog dedupe must fold description, price and logo from twin rows',
 );
+assert.match(
+  servedBundle,
+  /if\(!spec\)\{return fillThing\(\{\.\.\.\(base\|\|\{\}\)\}\)\}/,
+  'ha() must merge catalog place fields when thingOverrides lack summary, price, or longDetails',
+);
+assert.match(
+  servedBundle,
+  /pick\(G\.summary\?\?G\.description\?\?G\.longDetails\?\?""\)/,
+  'list row summary must fall back to merged place fields after twin fold',
+);
 assert.doesNotMatch(
   servedBundle,
   /kn=ze\.length\?Po\.filter\(G=>ze\.includes\(En\(G\)\)\):Po,tsPad/,
