@@ -201,10 +201,30 @@ export function hydrateScalarFieldsFromEvidence(dossier = {}, place = {}) {
   if (!blob) return dossier;
   const extracted = extractContactFieldsFromBlob(blob);
   let next = { ...dossier };
-  if (extracted.phone) next = setScalarField(next, 'phone', text(extracted.phone), firstPageIdForNeedle(next, extracted.phone));
+  if (extracted.phone && !text(next.fields?.phone?.value ?? next.fields?.phone)) {
+    next = setScalarField(next, 'phone', text(extracted.phone), firstPageIdForNeedle(next, extracted.phone));
+  }
+  const official = placeOfficialHost(place);
+  if (!text(next.fields?.phone?.value ?? next.fields?.phone) && official) {
+    for (let i = 0; i < (next.pages || []).length; i += 1) {
+      const page = next.pages[i];
+      try {
+        const host = new URL(page.url || '').hostname.replace(/^www\./i, '').toLowerCase();
+        if (host !== official && !host.endsWith(`.${official}`)) continue;
+      } catch {
+        continue;
+      }
+      const pagePhone = extractContactFieldsFromBlob(page.text || '').phone;
+      if (pagePhone) {
+        next = setScalarField(next, 'phone', text(pagePhone), dossierPageId(i));
+        break;
+      }
+    }
+  }
   const currentAddress = text(next.fields?.address?.value ?? next.fields?.address);
-  if (extracted.address && (!currentAddress || !addressIsSpecific(currentAddress) || fieldFailsIdentityCheck(next, place, 'address'))) {
-    next = setScalarField(next, 'address', text(extracted.address), firstPageIdForNeedle(next, extracted.address));
+  if (extracted.address && addressIsSpecific(extracted.address)
+    && (!currentAddress || !addressIsSpecific(currentAddress) || fieldFailsIdentityCheck(next, place, 'address'))) {
+    next = setScalarField(next, 'address', text(extracted.address), firstPageIdForNeedle(next, extracted.address), { force: !addressIsSpecific(currentAddress) });
   }
   if (extracted.hours && !next.fields?.hours) next = setScalarField(next, 'hours', text(extracted.hours), firstPageIdForNeedle(next, extracted.hours));
   if (extracted.website && !next.fields?.website) next = setScalarField(next, 'website', text(extracted.website), firstPageIdForNeedle(next, extracted.website));
@@ -295,11 +315,61 @@ export function normalizeDossierEvidence(dossier = {}, place = {}) {
   let next = ensureBraveSnippetCitationPages(stripMisattributedDossierPages(dossier, place));
   next = stripMisattributedDossierFields(next, place);
   next = hydrateScalarFieldsFromEvidence(next, place);
+  next = upgradeAddressFromEvidencePages(next, place);
   next = seedBookingNarrativeFields(next, place);
   next = seedDisplayNarrativeFromPlace(next, place);
   next = seedOfficialWebsiteFromPlace(next, place);
   next = seedOfficialAddressFromPlace(next, place);
+  next = upgradeAddressFromEvidencePages(next, place);
+  next = seedRepresentativeReviewsFromSourceRecord(next, place);
   return syncDossierRequiredShortcomings(next, place);
+}
+
+function upgradeAddressFromEvidencePages(dossier = {}, place = {}) {
+  const current = text(dossier.fields?.address?.value ?? dossier.fields?.address);
+  if (addressIsSpecific(current) && !fieldFailsIdentityCheck(dossier, place, 'address')) return dossier;
+  const official = placeOfficialHost(place);
+  for (let i = 0; i < (dossier.pages || []).length; i += 1) {
+    const page = dossier.pages[i];
+    if (official && page?.url) {
+      try {
+        const host = new URL(page.url).hostname.replace(/^www\./i, '').toLowerCase();
+        if (host !== official && !host.endsWith(`.${official}`)) continue;
+      } catch {
+        continue;
+      }
+    }
+    const extracted = extractContactFieldsFromBlob(page.text || '');
+    if (extracted.address && addressIsSpecific(extracted.address)) {
+      return setScalarField(dossier, 'address', text(extracted.address), dossierPageId(i), { force: true });
+    }
+  }
+  const blob = identityEvidenceBlob(dossier, place);
+  const extracted = extractContactFieldsFromBlob(blob);
+  if (extracted.address && addressIsSpecific(extracted.address)) {
+    return setScalarField(dossier, 'address', text(extracted.address), firstPageIdForNeedle(dossier, extracted.address), { force: true });
+  }
+  return dossier;
+}
+
+function seedRepresentativeReviewsFromSourceRecord(dossier = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place) || !(dossier.pages || []).length) return dossier;
+  const existing = Array.isArray(dossier.reviews) ? dossier.reviews : [];
+  if (existing.length >= 4) return dossier;
+  const src = place.sourceRecord || {};
+  const pid = dossierPageId(0);
+  const built = [];
+  for (let i = 1; i <= 4; i += 1) {
+    const body = text(src[`review${i}`] || src.reviews?.[i - 1]?.text);
+    if (words(body) < 25) break;
+    built.push({
+      text: body,
+      rating: Number(src[`review${i}Rating`] || 5) || 5,
+      claims: [{ text: body.slice(0, 120), pages: [pid], supported: true }],
+    });
+  }
+  if (built.length < 4) return dossier;
+  return { ...dossier, reviews: built, reviewsRead: Math.max(Number(dossier.reviewsRead) || 0, built.length) };
 }
 
 function seedOfficialAddressFromPlace(dossier = {}, place = {}) {

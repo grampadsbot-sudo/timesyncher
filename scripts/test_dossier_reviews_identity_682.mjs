@@ -6,6 +6,9 @@ import { placeSupportsDossierReviews } from '../src/vacation/dossier-brave-queri
 import { finalizeReviewSet, extractReviewsByCode } from '../src/vacation/dossier-review-extract.mjs';
 import {
   dossierReviewsNeedRebuild,
+  dossierReviewsPassValidityGate,
+  dossierReviewsShouldRunWriter,
+  preservePersistedDossierReviewsWhenFresh,
   stripDossierReviews,
 } from '../src/vacation/dossier-reviews-rebuild.mjs';
 import {
@@ -102,5 +105,29 @@ assert.equal(rejectedOverride.review1, undefined);
 const ratingsPatch = readFileSync(new URL('../src/vacation/trek-thing-detail-ratings-patch.mjs', import.meta.url), 'utf8');
 assert.doesNotMatch(ratingsPatch, /Review ",G," \("/);
 assert.match(ratingsPatch, /children:\["Review ",G,/);
+
+const statuePlace = { title: 'Statue of Liberty walking tour', category: 'activity' };
+const reviewRows = [1, 2, 3, 4].map((i) => ({
+  text: `Statue tour guest review ${i} with enough words about the ferry guides and Ellis Island museum experience for visitors.`,
+  rating: 5,
+  claims: [{ text: 'statue', pages: ['p1'], supported: true }],
+}));
+const persistedReviews = {
+  pages: [page('https://statuecitycruises.com/', 'Statue City Cruises ferry tickets for Liberty and Ellis islands.')],
+  reviews: reviewRows,
+  reviewsEvidencePageHash: reviewRows.map(() => '').join('|'),
+};
+persistedReviews.reviewsEvidencePageHash = persistedReviews.pages.map((row) => row.sha256).join('|');
+const mergedEmptyReviews = { ...persistedReviews, reviews: [] };
+const restored = preservePersistedDossierReviewsWhenFresh(persistedReviews, mergedEmptyReviews, statuePlace);
+assert.equal(restored.reviews.length, 4);
+assert.equal(
+  dossierReviewsShouldRunWriter(persistedReviews, restored, statuePlace),
+  false,
+);
+
+const ratingsPatch2 = readFileSync(new URL('../src/vacation/trek-thing-detail-fields-patch.mjs', import.meta.url), 'utf8');
+assert.match(ratingsPatch2, /american\\\\s\+air/);
+assert.match(readFileSync(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8'), /placeCat=String/);
 
 console.log('test_dossier_reviews_identity_682: ok');

@@ -1,5 +1,6 @@
 import { PR336_GATE_B_XAI_PLACE_TARGETS } from '../../scripts/fixtures/pr336-gate-b-xai-place-targets.mjs';
-import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { addressIsSpecific, normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { resolveThingLogoUrl } from './thing-logo-capture.mjs';
 import { applyDossierFields, publicReviewFieldKeys } from './thing-dossier-fields.mjs';
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { sharedTripDossierKeyForPlace } from './shared-trip-dossier-keys.mjs';
@@ -56,10 +57,12 @@ export function applyStoredDossiersToSharedTripSync(shared = {}, dossiersByPlace
     const patch = { ...record };
     const ccabLogo = text(placeCtx.sourceRecord?.logoUrl || place.sourceRecord?.logoUrl || current.logoUrl || record.logoUrl);
     if (ccabLogo) patch.logoUrl = ccabLogo;
-    if (/bluenotejazz\.com/i.test(patch.website || placeCtx.url || '')) {
+    const resolvedLogo = resolveThingLogoUrl({ ...place, ...placeCtx, sourceRecord: record }, patch);
+    if (resolvedLogo) patch.logoUrl = resolvedLogo;
+    if (/bluenotejazz\.com/i.test(patch.website || record.website || placeCtx.url || '')) {
       patch.logoUrl = 'https://www.bluenotejazz.com/favicon.ico';
     }
-    if (record.missingFields?.includes('address')) patch.address = null;
+    if (record.missingFields?.includes('address') && !addressIsSpecific(record.address || '')) patch.address = null;
     if (record.missingFields?.includes('phone')) patch.phone = null;
     if (!normalized.reviewThemes) patch.reviewThemes = null;
     overrides[overrideKey] = mergeOverride(current, patch);

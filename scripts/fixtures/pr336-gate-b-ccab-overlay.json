@@ -90,6 +90,9 @@
     "summary": "Micro-room Motto by Hilton near Times Square."
   },
   "Hotel Belleclaire Central Park": {
+    "address": "2175 Broadway, New York, NY 10024",
+    "website": "https://www.hotelbelleclaire.com/",
+    "logoUrl": "https://www.hotelbelleclaire.com/favicon.ico",
     "thirdPartyRating": "8.4",
     "thirdPartyReviewCount": "4906",
     "thirdPartySource": "Booking.com"

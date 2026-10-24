@@ -105,4 +105,20 @@ const storeApplied = applyDossierFields({ category: 'store', ...storePlace.sourc
 assert.ok(text(storeApplied.longDetails).includes('Zabar'));
 assert.equal(storeApplied.missingFields.includes('description'), false);
 
+const bellePlace = {
+  title: 'Hotel Belleclaire Central Park',
+  category: 'hotel',
+  website: 'https://www.hotelbelleclaire.com/',
+  address: 'Upper West Side, New York, NY',
+};
+const belleDossier = normalizeDossierEvidence({
+  thing: bellePlace.title,
+  pages: [page('https://www.hotelbelleclaire.com/', 'Hotel Belleclaire at 2175 Broadway, New York, NY 10024. Call 212-362-7700.')],
+  fields: {
+    address: { value: 'Upper West Side, New York, NY', claims: [{ text: 'uws', pages: ['p1'], supported: true }] },
+  },
+}, bellePlace);
+const belleApplied = applyDossierFields({ address: bellePlace.address, category: 'hotel' }, belleDossier);
+assert.match(belleApplied.address || '', /2175\s+Broadway/i);
+
 console.log('test_dossier_evidence_hydrate_682: ok');

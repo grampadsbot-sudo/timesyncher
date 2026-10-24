@@ -12,7 +12,9 @@ import {
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
   dossierReviewsNeedRebuild,
+  dossierReviewsPassValidityGate,
   dossierReviewsShouldRunWriter,
+  preservePersistedDossierReviewsWhenFresh,
   rebuildDossierReviewsFromSavedEvidence,
   stampReviewsEvidencePageHash,
   stripDossierReviews,
@@ -242,6 +244,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   try {
   if (persisted?.pages?.length && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
+    merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     const pagesChanged = (persisted.pages || []).length !== (merged.pages || []).length
       || changedDossierPageUrls(persisted.pages || [], merged.pages || []).length > 0;

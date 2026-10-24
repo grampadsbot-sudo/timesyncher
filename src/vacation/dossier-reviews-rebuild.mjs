@@ -102,6 +102,10 @@ function dossierRepresentativeReviewsUnchanged(persisted = {}, merged = {}) {
 
 export function dossierReviewsShouldRunWriter(persisted = {}, merged = {}, place = {}) {
   if (!placeSupportsDossierReviews(place) || !merged?.pages?.length) return false;
+  const pageHash = dossierReviewsEvidencePageHash(merged);
+  if (dossierReviewsPassValidityGate(persisted, place) && persisted.reviewsEvidencePageHash === pageHash) {
+    return false;
+  }
   if (dossierReviewsPassValidityGate(merged, place)) return false;
   if (dossierReviewsPassValidityGate(persisted, place) && dossierRepresentativeReviewsUnchanged(persisted, merged)) {
     return false;
@@ -115,6 +119,24 @@ export function dossierReviewsShouldRunWriter(persisted = {}, merged = {}, place
     return false;
   }
   return true;
+}
+
+export function preservePersistedDossierReviewsWhenFresh(persisted = {}, merged = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place) || !persisted?.pages?.length) return merged;
+  const pageHash = dossierReviewsEvidencePageHash(merged);
+  if (!dossierReviewsPassValidityGate(persisted, place) || persisted.reviewsEvidencePageHash !== pageHash) {
+    return merged;
+  }
+  if (dossierReviewsPassValidityGate(merged, place)) return merged;
+  return {
+    ...merged,
+    reviews: persisted.reviews,
+    reviewSet: persisted.reviewSet,
+    reviewExtraction: persisted.reviewExtraction,
+    reviewsRead: persisted.reviewsRead,
+    reviewSources: persisted.reviewSources,
+    reviewsEvidencePageHash: persisted.reviewsEvidencePageHash,
+  };
 }
 
 export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, place = {}, {
