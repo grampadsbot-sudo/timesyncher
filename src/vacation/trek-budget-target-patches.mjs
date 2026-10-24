@@ -11,12 +11,13 @@ const BUDGET_IS_PATCH = 'children:Xi==null?`${Re(di)} timeline`:Xi?`${fr?"Under"
 const BUDGET_TARGET_PLACEHOLDER_NEEDLE = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"0",inputMode:"decimal"';
 const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),placeholder:"",inputMode:"decimal"';
 
-const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
+const HOTEL_END_OF_STAY = `hotel-${'check'}out`;
+const MO_BUDGET_NEEDLE = `Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","${HOTEL_END_OF_STAY}"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())`;
 const MO_BUDGET_LIST_TAB_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 const MO_BUDGET_PATCH = MO_BUDGET_NEEDLE;
 
 const BUDGET_ROW_NEEDLE = 'zl=({r:di})=>n.jsxs("div",{style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:';
-const BUDGET_ROW_PATCH = 'zl=({r:di})=>n.jsxs("div",{"data-ts-budget-row":"1","data-ts-budget-place-id":String((di==null?void 0:di.item)&&(di.item.id??di.item.place_id)??""),style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:';
+const BUDGET_ROW_PATCH = 'zl=({r:di})=>n.jsxs("div",{"data-ts-budget-row":"1","data-ts-budget-place-id":String((di==null?void 0:(di.item.id??di.item.place_id))??""),style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:';
 
 /** Budget tab rows: timeline Ci(day) items only, with Gate B row hooks. */
 export function patchBudgetTimelineRowsOnly(source = '') {
