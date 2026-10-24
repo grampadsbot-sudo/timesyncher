@@ -139,6 +139,16 @@ async function closeThingDetailIfOpen(page) {
 async function readSelectedTagsFromThingDetail(page, fieldLabel) {
   return page.evaluate((labelText) => {
     const tags = [];
+    if (labelText === 'Restaurant tags / chips') {
+      const chipRoot = document.querySelector('[data-ts-restaurant-tag-chips]');
+      if (chipRoot) {
+        for (const chip of chipRoot.querySelectorAll('[data-ts-restaurant-tag-chip]')) {
+          const text = String(chip.textContent || '').replace(/\s+/g, ' ').trim();
+          if (text) tags.push(text);
+        }
+        return tags;
+      }
+    }
     for (const label of document.querySelectorAll('label')) {
       if (!String(label.textContent || '').includes(labelText)) continue;
       const root = label.parentElement || label;

@@ -52,6 +52,7 @@ scripts/test_served_customer_copy_no_internal_terms.mjs
 scripts/test_shared_tab_category_css_blast_radius.mjs
 scripts/test_trip_map_initial_view_site.mjs
 scripts/test_trip_site_no_hotel_brand_list.mjs
+scripts/test_restaurant_detail_tags_dropdown.mjs
 scripts/test_restaurant_list_tags.mjs
 scripts/test_product_gaps_staging.mjs
 scripts/test_provider_env.mjs
