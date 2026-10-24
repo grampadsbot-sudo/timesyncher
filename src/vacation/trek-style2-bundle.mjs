@@ -17,6 +17,7 @@ import {
 } from './trek-live-product-patches.mjs';
 import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-detail-patches.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
+import { applyHotelsTabCatalogDedupePatch } from './trek-vk-price-coverage-patches.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
@@ -225,7 +226,7 @@ const AREA_NAME_MATCHER = /,aa=G=>\{const Re=Ot\(G\);return[\s\S]*?\},ha=G=>/;
 const AREA_NAME_MATCHER_PATCH = ',aa=()=>"",ha=G=>';
 
 const HA_NEEDLE = 'ha=G=>le[Qt(G)]||{},Sn=';
-const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));if(!spec)return base||{};const next={...base||{}};const blank=v=>!String(v||"").trim();if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return next},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
+const HA_PATCH = `tsPf=${productFieldsLiteral()}.map(row=>({...row,match:new RegExp(row.match,"i")})),tsFillOv=(base,thing)=>{const names=[thing&&(thing.name||thing.title),base&&base.title].map(v=>String(v||"")).filter(Boolean);const spec=tsPf.find(row=>names.some(n=>row.match.test(n)));const blank=v=>!String(v??"").trim();const fromThing=thing||{};const fillThing=(next)=>{const put=(k,...vals)=>{if(!blank(next[k]))return;for(const v of vals){if(!blank(v)){next[k]=v;return}}};put("summary",fromThing.summary,fromThing.description);put("longDetails",fromThing.longDetails);put("itineraryNote",fromThing.itineraryNote,fromThing.itinerary_note);put("itinerary_note",fromThing.itineraryNote,fromThing.itinerary_note);put("price",fromThing.price,fromThing.total_price);put("logoUrl",fromThing.logoUrl,fromThing.iconUrl);return next};if(!spec){return fillThing({...(base||{})})}const next={...base||{}};if(blank(next.summary)&&spec.summary)next.summary=spec.summary;if(spec.happyHour===true||next.happyHour==null&&spec.happyHour!=null)next.happyHour=spec.happyHour;if(blank(next.happyHourDetails)&&spec.happyHourDetails)next.happyHourDetails=spec.happyHourDetails;if(blank(next.longDetails)&&spec.longDetails)next.longDetails=spec.longDetails;if(next.timeline==null)next.timeline=!0;return fillThing(next)},ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=`;
 const HH_CHECK_NEEDLE = 'checked:!!ha(Dt).happyHour,onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
 const HH_CHECK_PATCH = 'checked:!!(ha(Dt).happyHour||tsPf.some(row=>row.happyHour===true&&row.match.test(String(Dt.name||Dt.title||"")))),onChange:G=>Xa(Dt,"happyHour",G.target.checked)})," Happy hour"';
 const HH_DETAILS_NEEDLE = 'value:ha(Dt).happyHourDetails??"",onChange:G=>Xa(Dt,"happyHourDetails",G.target.value)';
@@ -390,6 +391,7 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
     patched = patched.replace(MN_CATEGORY_NEEDLE, MN_CATEGORY_PATCH);
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
+  patched = applyHotelsTabCatalogDedupePatch(patched, { served });
   patched = applyLiveProductPatches(patched, { served });
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);

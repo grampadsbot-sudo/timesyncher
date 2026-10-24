@@ -1,5 +1,45 @@
-# #671 host-reviewed coverage slice
+# PR #694 / issue #672 — Hotels dedupe + Gate B price/description (cursor-ubuntu)
 
-Base d510520afc1fc504a01913d5e45ec6beec1ea191 migrate/trek-source. Exact live coverage preimage eafd0a25ce1ebd8b87afd32910fdf423d32ce5af84e93e823a7ee54da1cf7cc6. Patch changes only _segments: normalize equivalent apostrophe characters in header matching while preserving all original canonical keys, item counts and first-segment behavior. Does not merge duplicate rows, borrow another row price, deduplicate fixture names or change thresholds.
+**Start HEAD:** `6f14d98c104bf223640d4cf156e25f972b1b44bc`
 
-Host six focused cases pass including both canonical spellings, genuinely absent price, next-row price and duplicate first-unpriced row. Actual saved #660 a8dac27 capture at both390/1280:23/23hotel list and23/23hotel Budget names match prices, unchanged denominator23. Every unrelated AST unchanged. No new capture/model call, product data change, Gate B PASS, merge or deploy claimed. The unsafe worker price-only screenshot exception is rejected and uninstalled; #660 remains held on #671. Source bot-admin/receipts/gpt-manager-pass-20261023-0700.
+## Root cause (Gate B auto round 1 on 6f14d98c)
+
+Hotels tab dedupe kept timeline twins but `ha(G)` returned sparse `thingOverrides` only (`tsFillOv` with no `tsPf` spec returned `base||{}`), so `bi(G)`, `rr(G)`, and list summaries ignored catalog `place` fields (price, summary, longDetails). Flights and budget rows use the same `ha()` / `bi()` chain.
+
+## Change
+
+1. **`tsFillOv`** — when no product-field spec matches, merge non-empty `thing` place fields into overrides (summary, longDetails, itinerary note, price, logo) before `ha()` reads them.
+2. **`rr()` list rows** — fall back to `G.summary` / `G.description` / `G.longDetails` after override picks.
+3. **Hotels `kn` dedupe** — stronger twin fold (longDetails, price from `G.price` / `bi(g)`), better scoring on place text.
+
+## Files
+
+- `src/vacation/trek-style2-bundle.mjs` — `tsFillOv` / `fillThing`
+- `src/vacation/trek-thing-detail-fields-patch.mjs` — `rr()` place fallback
+- `src/vacation/trek-vk-price-coverage-patches.mjs` — `tsFold` / `tsScore`
+- `public/assets/index-BKun7ofk.js` — rebaked (`sha256=6a3235d4db05c1439deb66432a7e789a0104cfb39b4fb0fb06b0cefa9396a742`)
+- `scripts/test_shared_hotels_tab_catalog_dedupe.mjs` — contract asserts
+
+## Verification (worktree)
+
+| Command | Result |
+| --- | --- |
+| `node scripts/rebake_served_trek_bundle.mjs` | pass (sha above) |
+| `node scripts/test_shared_hotels_tab_catalog_dedupe.mjs` | pass |
+| `node scripts/test_offline_manifest.mjs` | pass (296 offline) |
+| `node scripts/test_keepsake_style2.mjs` | pass |
+| `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` | pass |
+| `node scripts/check-no-comments.mjs` | **blocked** — missing `apps/vacation-client/node_modules/typescript` (host `npm ci` in vacation-client) |
+
+## Uncommitted (host publication only)
+
+- `public/assets/index-BKun7ofk.js`
+- `scripts/test_shared_hotels_tab_catalog_dedupe.mjs`
+- `src/vacation/trek-style2-bundle.mjs`
+- `src/vacation/trek-thing-detail-fields-patch.mjs`
+- `src/vacation/trek-vk-price-coverage-patches.mjs`
+- `J/RECEIPT.md`
+
+## Not claimed
+
+CI green, Gate B 32/32 structure+data on new head, merge — host pipeline after push.
