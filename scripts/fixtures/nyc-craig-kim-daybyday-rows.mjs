@@ -33,7 +33,7 @@ export function buildNycCraigKimDaybydayTimelineRows() {
       name: 'Blue Note Jazz Club',
       cat: 'activity',
       id: 611,
-      ccabKey: 'Blue Note Jazz Club',
+      ccabKey: 'Jazz at Lincoln Center',
     },
     {
       day: 2,
