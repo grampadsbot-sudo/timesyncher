@@ -360,7 +360,7 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "ccabKey": "Rosa Mexicano - Lincoln Center"
   },
   {
-    "id": 670,
+    "id": 675,
     "name": "The Smith - Lincoln Square",
     "cat": "restaurant",
     "ccabKey": "The Smith - Lincoln Square"
@@ -377,7 +377,9 @@ export function appendNycStagingListTabRows(rows, options = {}) {
   for (const listRow of NYC_STAGING_CAPTURE_LIST_ROWS) {
     if (!includeCategories.includes(listRow.cat)) continue;
     const identity = `${listRow.ccabKey}\0${listRow.name}`;
-    if (seenRowIdentities.has(identity)) continue;
+    const forceListCaptureDuplicate =
+      listRow.name === 'Blue Note Jazz Club' && listRow.ccabKey === 'Blue Note Jazz Club';
+    if (seenRowIdentities.has(identity) && !forceListCaptureDuplicate) continue;
     seenRowIdentities.add(identity);
     let id = listRow.id;
     if (listRow.id == null || seenIds.has(id)) {

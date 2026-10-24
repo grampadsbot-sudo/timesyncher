@@ -1,9 +1,7 @@
 import { createHash } from 'node:crypto';
 
 import { productThingCategory } from '../../src/vacation/keepsake-product-overrides.mjs';
-import { buildNycCraigKimDaybydayFixtureRows } from '../fixtures/nyc-craig-kim-daybyday-rows.mjs';
-
-const GATE_B_NYC_PLACE_COUNT = buildNycCraigKimDaybydayFixtureRows().length;
+import { GATE_B_NYC_REQUIRED_PLACE_COUNT } from '../fixtures/gate-b-nyc-place-count.mjs';
 
 const MIN_SUMMARY_WORDS = 30;
 
@@ -92,8 +90,8 @@ export function assessGateBNycFixtureContract(shared = {}, options = {}) {
   const { profile = 'positive' } = options;
   const violations = [];
   const places = Array.isArray(shared.places) ? shared.places : [];
-  if (places.length !== GATE_B_NYC_PLACE_COUNT) {
-    violations.push(`expected ${GATE_B_NYC_PLACE_COUNT} places, got ${places.length}`);
+  if (places.length !== GATE_B_NYC_REQUIRED_PLACE_COUNT) {
+    violations.push(`expected ${GATE_B_NYC_REQUIRED_PLACE_COUNT} places, got ${places.length}`);
   }
 
   for (const place of places) {

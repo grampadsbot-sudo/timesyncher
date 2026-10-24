@@ -28,6 +28,13 @@ const FIXTURE = JSON.parse(
 const TARGET_IDS = new Set([601, 602, 603, 604, 605, 606, 607, 609, 610, 611]);
 const targets = PR336_GATE_B_XAI_PLACE_TARGETS.filter((row) => TARGET_IDS.has(row.rowId));
 
+const belleclaireFixture = FIXTURE.places.find((p) => p.id === 603);
+assert.match(
+  belleclaireFixture?.address || '',
+  /2175\s+Broadway/i,
+  'live regression fixture place 603 address must include 2175 Broadway before fill',
+);
+
 function writerFindings(dossier = {}) {
   const name = dossier.thing || 'this place';
   const pageId = dossier.pages?.length ? 'p1' : 'p1';
