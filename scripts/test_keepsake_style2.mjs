@@ -587,7 +587,7 @@ const aeFixture = [
   'Qn.map(G=>Oe(G)),Qn.length===0',
   'Gn.map(G=>Oe(G)),Gn.length===0',
   'ki.map(G=>Oe(G))',
-  'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())',
+  'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
   'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',
@@ -722,8 +722,7 @@ assert.doesNotMatch(minimumsSource, /\b(?:KEEPSAKE_LIST_FILL|BIG_ISLAND_LIST_FIL
 assert.match(patchedAe, /Re\.includes\("restaurant"\)\?"restaurant":Re\.includes\("hotel"\)\|\|Re\.includes\("lodging"\)\|\|Re\.includes\("accommodation"\)\|\|Re\.includes\("resort"\)\?"hotel":Re\.includes\("car"\)\|\|Re\.includes\("rental"\)\?"car"/);
 assert.match(patchedAe, /tsPad=\(rows\)=>rows/);
 assert.doesNotMatch(patchedAe, /__tsLiveFill:1/);
-assert.match(patchedAe, /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)/);
-assert.doesNotMatch(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
+assert.match(patchedAe, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
 assert.match(patchedAe, /height:dn\?420:300,marginBottom:12/);
 assert.doesNotMatch(patchedAe, /height:dn\?900:300,marginBottom:12/);
 assert.match(patchedAe, /tsPad\(Qn\)\.length===0/);

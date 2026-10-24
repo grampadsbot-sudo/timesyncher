@@ -57,7 +57,7 @@ export function placeOnTripTimeline(shared = {}, place = {}) {
 
 /**
  * Live Budget tab row membership: legacy catalog totals when no timeline scope exists;
- * otherwise day-assigned non-car places only (matches TREK Mo from Ci(day) rows).
+ * otherwise day-assigned non-car places only (API/scrape; live Mo uses list-tab catalog union).
  */
 export function placeIncludedInLiveBudgetRows(shared = {}, place = {}, override = null, category = '') {
   const row = override || placeOverride(shared, place);

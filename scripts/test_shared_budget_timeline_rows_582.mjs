@@ -86,8 +86,8 @@ const upstream = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:public/assets/
   maxBuffer: 25 * 1024 * 1024,
 });
 const bundle = renderServedTrekBundle(upstream.toString('utf8'));
-assert.match(bundle, /Mo=Array\.from\(new Map\(Qa\.flatMap\(di=>Ci\(di\)\)/);
-assert.doesNotMatch(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
+assert.match(bundle, /\[\]\.concat\(rs,Po,bc,Oc,Fs,Cc\)/);
+assert.doesNotMatch(bundle, /\(Gt\|\|\[\]\)\.filter\(Xi=>Xi&&Ds\(Xi\)&&!Mi\(Xi\)\)/);
 assert.match(bundle, /data-ts-budget-row":"1"/);
 
 console.log('shared budget timeline rows #582 passed');
