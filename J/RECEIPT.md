@@ -1,6 +1,6 @@
 # VK fill #693 — lane receipt
 
-- **HANDOFF**: `bot-admin/lanes/vk-pr-handoff/pr-693` not found (page_not_found); verified via brief.
+- **HANDOFF**: `gbrain get bot-admin/lanes/vk-pr-handoff/pr-693` → page_not_found (2026-10-24 CI fix-it round); verified via brief.
 - **Start HEAD**: `5f2e93723c12d7348651314df6ba8cbb8191ff73`
 - **Gate B diagnosis (rounds on e306be60 / 5f2e9372)**: Pre-merge capture uses `replay_producer_head` from `~/tsv-dispatch/sanctioned-replay-producer-head` (`1141d5ce833b3648b18f114a95ede1af4b03c265` at lane start). That producer leaves 26/63 NYC fixture-replay budget rows unpriced and hotel list summaries on generic neighborhood templates (managing-dr description quality ~2/23). Producer `5f2e93723c12d7348651314df6ba8cbb8191ff73` prices all rows and serves ccab narratives (verified: `node scripts/test_nyc_budget_search_fill_prices.mjs`).
 

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 
 import { buildBudgetModel, budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
-import { readFileSync } from 'node:fs';
-import { prepareFixtureReplaySharedTrip } from '../src/vacation/shared-trip-fixture-replay.mjs';
+import { fileURLToPath } from 'node:url';
+import { loadFixtureReplaySharedTripFromPath } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -103,9 +103,14 @@ for (const row of gateBRows) {
   assert.ok(place?.price != null && place.price !== 0, `search fill price on place ${row.id}`);
 }
 
-const nycFixturePath = process.env.TSV_CAPTURE_FIXTURE
-  || '/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json';
-const { served: replayServed } = prepareFixtureReplaySharedTrip(readFileSync(nycFixturePath));
+const defaultNycFixturePath = fileURLToPath(
+  new URL('./fixtures/gate-b-nyc-shared-staging.json', import.meta.url),
+);
+const replayResult = loadFixtureReplaySharedTripFromPath(
+  process.env.TSV_CAPTURE_FIXTURE || defaultNycFixturePath,
+);
+assert.ok(replayResult, 'NYC fixture replay payload must load');
+const replayServed = replayResult.served;
 const replayBudget = buildBudgetModel(replayServed);
 const replayMissing = replayBudget.rows.filter((row) => !row.hasPrice);
 assert.deepEqual(
