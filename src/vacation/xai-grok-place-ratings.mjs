@@ -49,6 +49,15 @@ import {
   promptChars,
 } from './dossier-cost.mjs';
 import { dedupeReviews, extractionPrompt, extractReviewsByCode, finalizeReviewSet } from './dossier-review-extract.mjs';
+import {
+  postDossierXai,
+  xaiHttpErrorResumable,
+} from './xai-dossier-http.mjs';
+import { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
+import { dossierPersistedFillIsNoOp, saveResumablePartial } from './xai-dossier-fill-state.mjs';
+
+export { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
+export { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
 
 export {
   parseXaiStructuredPayload,
@@ -58,26 +67,6 @@ export {
   xaiThemesReviewPath,
   reviewThemesDistinctCount,
 } from './xai-grok-place-ratings-helpers.mjs';
-
-const ESCALATE_STEPS = new Set(['builder']);
-
-async function postXai(dossier, step, model, content, { env, fetchImpl, timeoutMs }) {
-  const base = { model, input: [{ role: 'user', content }], text: { format: { type: 'json_object' } } };
-  const effort = env.XAI_DOSSIER_REASONING_EFFORT || (ESCALATE_STEPS.has(step) ? '' : 'none');
-  let response = await postXaiPlaceRatingsResponses({ apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs,
-    payload: effort ? { ...base, reasoning: { effort } } : base });
-  if (effort && response.status === 400) {
-    response = await postXaiPlaceRatingsResponses({ apiKey: env.XAI_API_KEY, fetchImpl, timeoutMs, payload: base });
-  }
-  if (!response.ok) {
-    logXaiUsage(dossier, step, model, {});
-    throw new Error(`dossier_${step === 'builder' ? 'builder' : step}_http_${response.status}`);
-  }
-  const payload = await response.json();
-  const row = logXaiUsage(dossier, step, model, payload);
-  row.promptChars = content.length;
-  return payload;
-}
 
 function outputText(payload) {
   if (typeof payload.output_text === 'string') return payload.output_text;
@@ -139,45 +128,8 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
   return lines.join('\n');
 }
 
-export function collectDossierClaims(findings = {}) {
-  const items = [];
-  const add = (claim) => { if (claim && typeof claim === 'object') items.push(claim); };
-  for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'happyHourDays', 'happyHourTimes', 'happyHourDeals', 'itineraryNote']) {
-    (findings[key]?.claims || []).forEach((claim) => {
-      if (claim && typeof claim === 'object') {
-        if (['hours', 'happyHourDays', 'happyHourTimes', 'happyHourDeals'].includes(key)) claim.kind = key;
-        add(claim);
-      }
-    });
-  }
-  for (const row of findings.hoursCandidates || []) (row?.claims || []).forEach((claim) => {
-    if (claim && typeof claim === 'object') { claim.kind = 'hours'; add(claim); }
-  });
-  for (const item of findings.knownFor || []) (item?.claims || []).forEach((claim) => { if (claim && typeof claim === 'object') { claim.kind = 'knownFor'; claim.item = item.item; add(claim); } });
-  for (const review of findings.reviews || []) (review?.claims || []).forEach(add);
-  return items;
-}
-
-export function dossierJudgePrompt(dossier, items) {
-  const ids = [...new Set(items.flatMap((item) => item.pages || []))];
-  const slim = dossierForModel(dossier, { perPage: 1800, total: 24000 });
-  const pages = ids.map((id) => ({ id, page: dossierPageById(slim, id) })).filter((row) => row.page)
-    .map(({ id, page }) => ({ id, url: page.url, fetchedAt: page.fetchedAt, sha256: page.sha256, text: page.text }));
-  return [
-    'You are an independent fact checker. You did not write these claims.',
-    'Field text and claims are summaries in the writer\'s own words, not quotations. For each claim, read ONLY the saved page text of the page ids it cites.',
-    'supported:true when those pages support the claim\'s meaning (paraphrase and synonyms are fine). supported:false for facts not on the cited pages, wrong numbers, times, names, or contradictions—not because the claim uses different words than the page.',
-    'Anything not backed by the cited pages (outside knowledge, other pages, exaggeration, invented numbers or details) is supported:false.',
-    'Claims with kind "knownFor": supported:true ONLY when a cited page names that item as a signature, specialty, famous or best-known thing of THIS place. A page that merely lists it (an on-site bar, an amenity, a tenant or neighbouring restaurant) is supported:false.',
-    'Claims with kind "knownFor" are also supported:false when the item is a broad phrase (dining, location, atmosphere, experience) rather than one specific dish, drink, service or product.',
-    'Claims with kind hours, happyHourDays, happyHourTimes, or happyHourDeals: supported:false when cited pages state different days, times, or offers than the claim, even if both mention happy hour or hours.',
-    'Return JSON {"results":[{"id":"c1","supported":true,"reason":"..."}]} with one result per claim.',
-    JSON.stringify({ claims: items.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })), pages }),
-  ].join('\n');
-}
-
 export async function judgeDossierFindings(dossier, findings, {
-  env, fetchImpl, timeoutMs, judgeImpl, skipReviewClaims = false,
+  env, fetchImpl, timeoutMs, deadline = 0, judgeImpl, skipReviewClaims = false,
 } = {}) {
   const judgedFindings = skipReviewClaims ? { ...findings, reviews: [] } : findings;
   const items = collectDossierClaims(judgedFindings);
@@ -196,8 +148,8 @@ export async function judgeDossierFindings(dossier, findings, {
   if (judgeImpl) {
     results = await judgeImpl(dossier, ask.map((item, index) => ({ id: `c${index + 1}`, text: item.text, pages: item.pages, ...(item.kind ? { kind: item.kind, item: item.item } : {}) })));
   } else {
-    const payload = await postXai(dossier, 'judge', env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
-      dossierJudgePrompt(dossier, ask), { env, fetchImpl, timeoutMs });
+    const payload = await postDossierXai(dossier, 'judge', env.XAI_DOSSIER_JUDGE_MODEL || xaiGrokPlaceSearchModelId(env),
+      dossierJudgePrompt(dossier, ask), { env, fetchImpl, timeoutMs, deadline });
     try {
       results = JSON.parse(outputText(payload)).results;
     } catch {
@@ -213,7 +165,9 @@ export async function judgeDossierFindings(dossier, findings, {
   return { judged: ask.length, results };
 }
 
-export async function extractDossierReviews(dossier, { env = process.env, fetchImpl, timeoutMs, extractReviewsImpl, place = null } = {}) {
+export async function extractDossierReviews(dossier, {
+  env = process.env, fetchImpl, timeoutMs, deadline = 0, extractReviewsImpl, place = null,
+} = {}) {
   const withSnippetPages = ensureBraveSnippetCitationPages(dossier);
   if (withSnippetPages.pages !== dossier.pages) dossier.pages = withSnippetPages.pages;
   const code = dedupeReviews(extractReviewsByCode(withSnippetPages, place)).slice(0, 150);
@@ -227,8 +181,8 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
     } else if (env.XAI_API_KEY) {
       const slim = dossierForModel({ ...dossier, pages: (dossier.pages || []).map((p) => (p.via === 'brave' ? { ...p, text: '' } : p)) },
         { perPage: 1500, total: 16000, want: 'reviews' });
-      const payload = await postXai(dossier, 'extract', env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
-        extractionPrompt(slim, code.slice(0, 60)), { env, fetchImpl, timeoutMs });
+      const payload = await postDossierXai(dossier, 'extract', env.XAI_DOSSIER_EXTRACT_MODEL || xaiGrokPlaceSearchModelId(env),
+        extractionPrompt(slim, code.slice(0, 60)), { env, fetchImpl, timeoutMs, deadline });
       const out = JSON.parse(outputText(payload));
       model = out.reviews || [];
       keep = Array.isArray(out.keep) ? out.keep : null;
@@ -242,15 +196,15 @@ export async function extractDossierReviews(dossier, { env = process.env, fetchI
 }
 
 async function callDossierBuilder(dossier, {
-  env, fetchImpl, timeoutMs, buildImpl, includeReviews = true, reviewsOnly = false,
+  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false,
 } = {}) {
   if (buildImpl) return buildImpl(dossier, { reviewsOnly });
-  const payload = await postXai(
+  const payload = await postDossierXai(
     dossier,
     'builder',
     xaiGrokPlaceSearchModelId(env),
     dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly }),
-    { env, fetchImpl, timeoutMs },
+    { env, fetchImpl, timeoutMs, deadline },
   );
   const structuredText = outputText(payload);
   let findings;
@@ -283,11 +237,18 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const gatherOpts = {
     env, fetchImpl, destination, resolveImpl, center,
   };
+  const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   let merged;
+  try {
   if (persisted?.pages?.length && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
-    beginDossierXaiUsageRun(merged, persisted);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
+    const changedUrlsEarly = changedDossierPageUrls(persisted.pages || [], merged.pages || []);
+    if (dossierPersistedFillIsNoOp(persisted, merged, place, { changedUrls: changedUrlsEarly })) {
+      merged.captureCheckpoint = 'done';
+      return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
+    }
+    beginDossierXaiUsageRun(merged, persisted);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
     if (pendingTopUp.length && !outOfTime()) {
       merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });
@@ -298,6 +259,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         fetchImpl,
         destination,
         timeoutMs: remainingTimeoutMs(),
+        deadline,
         buildImpl,
         judgeImpl,
         extractReviewsImpl,
@@ -309,7 +271,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
       merged.captureCheckpoint = 'done';
-      return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
+      return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
     }
   } else if (persisted?.pages?.length && forceRefresh) {
     const gathered = await gatherImpl(place, gatherOpts);
@@ -361,7 +323,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const needsReviewWriter = supportsReviews && rebuildFields.has('reviews')
     && dossierReviewsShouldRunWriter(persisted, merged, place);
   if (needsReviewWriter && !outOfTime()) {
-    const extraction = await extractDossierReviews(merged, { env, fetchImpl, timeoutMs: remainingTimeoutMs(), extractReviewsImpl, place });
+    const extraction = await extractDossierReviews(merged, { ...xaiOpts(), extractReviewsImpl, place });
     merged.reviewSet = extraction.set;
     merged.reviewExtraction = extraction.stats;
     if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
@@ -373,11 +335,11 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const { payload, structuredText, findings } = await callDossierBuilder(merged, {
-    env, fetchImpl, timeoutMs: remainingTimeoutMs(), buildImpl, includeReviews: needsReviewWriter, reviewsOnly,
+    ...xaiOpts(), buildImpl, includeReviews: needsReviewWriter, reviewsOnly,
   });
   if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
   const judge = await judgeDossierFindings(merged, findings, {
-    env, fetchImpl, timeoutMs: remainingTimeoutMs(), judgeImpl, skipReviewClaims: !needsReviewWriter,
+    ...xaiOpts(), judgeImpl, skipReviewClaims: !needsReviewWriter,
   });
   const built = prepareDossierFindings(merged, findings);
   built.fieldCounts = computeDossierFieldCounts(built, place);
@@ -411,6 +373,19 @@ export async function fetchXaiPlaceRatings(place = {}, {
     xaiUsd: final.xaiUsd || 0,
     parsed: { evidenceDossier: final },
   };
+  } catch (error) {
+    if (error?.resumable && xaiHttpErrorResumable(error.status)) {
+      return saveResumablePartial(merged || persisted, persisted, {
+        key,
+        env,
+        storeImpl,
+        place,
+        rateLimitStep: error.step || 'xai',
+        checkpoint: (merged || persisted)?.captureCheckpoint,
+      });
+    }
+    throw error;
+  }
 }
 
 export function enrichPlaceRecordWithXaiRatings(record = {}, parsed = {}) {

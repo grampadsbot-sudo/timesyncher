@@ -100,6 +100,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   fetchImpl = globalThis.fetch,
   destination = '',
   timeoutMs = 120000,
+  deadline = 0,
   buildImpl,
   judgeImpl,
   extractReviewsImpl,
@@ -119,14 +120,16 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
     merged = await topUpImpl(merged, place, { env, fetchImpl, destination, onlyFields: pending });
   }
   const extraction = await extractDossierReviews(merged, {
-    env, fetchImpl, timeoutMs, extractReviewsImpl, place,
+    env, fetchImpl, timeoutMs, deadline, extractReviewsImpl, place,
   });
   merged.reviewSet = extraction.set;
   merged.reviewExtraction = extraction.stats;
   const { findings } = await callDossierBuilder(merged, {
-    env, fetchImpl, timeoutMs, buildImpl, includeReviews: true, reviewsOnly: true,
+    env, fetchImpl, timeoutMs, deadline, buildImpl, includeReviews: true, reviewsOnly: true,
   });
-  await judgeDossierFindings(merged, findings, { env, fetchImpl, timeoutMs, judgeImpl, skipReviewClaims: false });
+  await judgeDossierFindings(merged, findings, {
+    env, fetchImpl, timeoutMs, deadline, judgeImpl, skipReviewClaims: false,
+  });
   const built = prepareDossierFindings(merged, findings);
   const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']), place);
   stampReviewsEvidencePageHash(final);

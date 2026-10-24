@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { hasDatabase, sql } from './db.mjs';
 import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
+import { xaiHttpErrorResumable } from './xai-dossier-http.mjs';
 import { dossierCaptureComplete, fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
   loadThingEvidenceDossier,
@@ -150,29 +151,61 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       });
       continue;
     }
-    const { parsed, skipped, partial, checkpoint } = await fetchXaiPlaceRatings(place, {
-      destination: target.destination,
-      dossierKey,
-      env,
-      fetchImpl,
-      gatherImpl,
-      buildImpl,
-      judgeImpl,
-      extractReviewsImpl,
-      storeImpl,
-      forceRefresh: refresh,
-      timeBudgetMs: target.timeBudgetMs ?? timeBudgetMs,
-    });
+    let fetchResult;
+    try {
+      fetchResult = await fetchXaiPlaceRatings(place, {
+        destination: target.destination,
+        dossierKey,
+        env,
+        fetchImpl,
+        gatherImpl,
+        buildImpl,
+        judgeImpl,
+        extractReviewsImpl,
+        storeImpl,
+        forceRefresh: refresh,
+        timeBudgetMs: target.timeBudgetMs ?? timeBudgetMs,
+      });
+    } catch (error) {
+      if (error?.resumable) {
+        results.push({
+          rowId: target.rowId ?? place.id,
+          dossierKey,
+          partial: true,
+          resumable: true,
+          rateLimited: xaiHttpErrorResumable(error.status),
+          rateLimitStep: error.step,
+          error: error.message,
+          pageCount: pagesBefore,
+          pagesAdded: 0,
+          reviewsRead: existing?.reviewsRead || 0,
+        });
+        continue;
+      }
+      throw error;
+    }
+    const {
+      parsed,
+      skipped,
+      partial,
+      resumable,
+      rateLimited,
+      rateLimitStep,
+      checkpoint,
+    } = fetchResult;
     const after = parsed?.evidenceDossier?.pages?.length || 0;
     results.push({
       rowId: target.rowId ?? place.id,
       dossierKey,
       skipped: skipped ? 'existing_dossier' : undefined,
       partial: partial === true,
+      resumable: resumable === true,
+      rateLimited: rateLimited === true,
+      rateLimitStep,
       checkpoint: checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
       pageCount: after,
       pagesAdded: refresh ? after : Math.max(0, after - pagesBefore),
-      reviewsRead: parsed.evidenceDossier?.reviewsRead || 0,
+      reviewsRead: fetchResult.parsed?.evidenceDossier?.reviewsRead || 0,
     });
   }
   return { ok: true, results };

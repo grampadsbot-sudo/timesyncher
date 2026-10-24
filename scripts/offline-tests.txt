@@ -304,3 +304,4 @@ scripts/test_dossier_reviews_identity_682.mjs
 scripts/test_dossier_cost_682.mjs
 scripts/test_dossier_staging_fixes_682.mjs
 scripts/test_live_shared_gate_b_fill_regression_682.mjs
+scripts/test_xai_dossier_retry_682.mjs
