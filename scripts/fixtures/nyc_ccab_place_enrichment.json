@@ -801,8 +801,8 @@
     "description": "Primary Blue Note room listing for NYC jazz nights; table service and cover vary by show. Price: $55 typical table minimum snippet; Status: candidate only.",
     "summary": "Blue Note room listing; Price: $55 typical table minimum snippet.",
     "price": 55,
-    "website": "https://www.bluenote.net/jazz-club-new-york/",
-    "logoUrl": "https://www.bluenote.net/favicon.ico",
+    "website": "https://www.bluenotejazz.com/",
+    "logoUrl": "https://www.bluenotejazz.com/favicon.ico",
     "lat": 40.7301,
     "lng": -74.001,
     "address": "131 W 3rd St, New York, NY 10012"

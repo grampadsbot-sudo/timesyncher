@@ -80,18 +80,40 @@ function dossierReviewsEvidencePageHash(dossier = {}) {
   return (dossier.pages || []).map((page) => page.sha256).filter(Boolean).join('|');
 }
 
-export function stampReviewsEvidencePageHash(dossier = {}) {
+export function stampReviewsEvidencePageHash(dossier = {}, place = {}) {
   const hash = dossierReviewsEvidencePageHash(dossier);
-  if (hash) dossier.reviewsEvidencePageHash = hash;
+  if (hash && dossierReviewsPassValidityGate(dossier, place)) {
+    dossier.reviewsEvidencePageHash = hash;
+  } else if (!dossierReviewsPassValidityGate(dossier, place)) {
+    delete dossier.reviewsEvidencePageHash;
+  }
   return dossier;
+}
+
+function dossierRepresentativeReviewsUnchanged(persisted = {}, merged = {}) {
+  const a = Array.isArray(persisted.reviews) ? persisted.reviews : [];
+  const b = Array.isArray(merged.reviews) ? merged.reviews : [];
+  if (a.length !== b.length || !a.length) return false;
+  return a.every((row, index) => {
+    const other = b[index] || {};
+    return text(row.text) === text(other.text) && Number(row.rating) === Number(other.rating);
+  });
 }
 
 export function dossierReviewsShouldRunWriter(persisted = {}, merged = {}, place = {}) {
   if (!placeSupportsDossierReviews(place) || !merged?.pages?.length) return false;
   if (dossierReviewsPassValidityGate(merged, place)) return false;
+  if (dossierReviewsPassValidityGate(persisted, place) && dossierRepresentativeReviewsUnchanged(persisted, merged)) {
+    return false;
+  }
   if (!dossierReviewsNeedRebuild(merged, place)) return false;
   const hash = dossierReviewsEvidencePageHash(merged);
-  if (hash && persisted?.reviewsEvidencePageHash === hash) return false;
+  if (hash && persisted?.reviewsEvidencePageHash === hash && dossierReviewsPassValidityGate(persisted, place)) {
+    return false;
+  }
+  if (dossierReviewsPassValidityGate(persisted, place) && dossierRepresentativeReviewsUnchanged(persisted, merged)) {
+    return false;
+  }
   return true;
 }
 
@@ -132,7 +154,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   });
   const built = prepareDossierFindings(merged, findings);
   const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']), place);
-  stampReviewsEvidencePageHash(final);
+  stampReviewsEvidencePageHash(final, place);
   if (!dossierReviewsPassValidityGate(final, place)) {
     final.shortcomings = recordFieldShortcoming(
       { shortcomings: final.shortcomings || [] },

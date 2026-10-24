@@ -4,7 +4,8 @@ import { createHash } from 'node:crypto';
 
 import handler from '../routes/thing-evidence-dossiers.mjs';
 import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
-import { computeDossierFieldHashes } from '../src/vacation/thing-dossier-fields.mjs';
+import { computeDossierFieldHashes } from '../src/vacation/thing-dossier-rebuild.mjs';
+import { stampReviewsEvidencePageHash } from '../src/vacation/dossier-reviews-rebuild.mjs';
 import {
   tripPlaceDossierKey,
   useThingEvidenceDossierStore,
@@ -26,7 +27,12 @@ const store = {
     return this.rows.get(key) || null;
   },
   async putDossier(key, dossier) {
-    this.rows.set(key, JSON.parse(JSON.stringify(dossier)));
+    const { hashes, sources } = computeDossierFieldHashes(dossier);
+    this.rows.set(key, {
+      ...JSON.parse(JSON.stringify(dossier)),
+      fieldHashes: hashes,
+      fieldSources: sources,
+    });
   },
 };
 
@@ -43,16 +49,41 @@ const dossierKey = tripPlaceDossierKey(99, 610);
 
 const complete = {
   thing: 'Carbone',
-  pages: [page('https://example.com/a', 'review text ' + 'word '.repeat(50))],
+  pages: [page('https://example.com/a', 'Carbone spicy rigatoni and warm service ' + 'word '.repeat(40))],
   attempts: [],
   fields: {
     summary: {
-      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas.',
+      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas and nightly service.',
       claims: [{ text: 'Italian', pages: ['p1'], supported: true }],
     },
+    description: {
+      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas, tableside flair, and a lively dining room for special occasions.',
+      claims: [{ text: 'Carbone', pages: ['p1'], supported: true }],
+    },
+    itineraryNote: {
+      value: 'Book Carbone ahead for a Greenwich Village dinner.',
+      claims: [{ text: 'Carbone', pages: ['p1'], supported: true }],
+    },
+    price: { value: 48, unit: 'per person', claims: [{ text: '48', pages: ['p1'], supported: true }] },
+    hours: { value: 'Mon-Sun 5pm-11pm', claims: [{ text: '5pm', pages: ['p1'], supported: true }] },
   },
+  reviews: [1, 2, 3, 4].map((i) => ({
+    text: `Carbone guest review ${i} with enough words about pasta, service, and the overall dinner experience here.`,
+    rating: 5,
+    claims: [{ text: 'pasta', pages: ['p1'], supported: true }],
+  })),
+  reviewsRead: 12,
   captureCheckpoint: 'done',
 };
+const completeHashes = computeDossierFieldHashes(complete);
+const stamped = stampReviewsEvidencePageHash({
+  ...complete,
+  fieldHashes: completeHashes.hashes,
+  fieldSources: completeHashes.sources,
+}, { title: 'Carbone', category: 'restaurant' });
+complete.fieldHashes = completeHashes.hashes;
+complete.fieldSources = completeHashes.sources;
+complete.reviewsEvidencePageHash = stamped.reviewsEvidencePageHash;
 await store.putDossier(dossierKey, complete);
 useThingEvidenceDossierStore(store);
 process.env.TIMESYNCHER_WORKER_TOKEN = 'test';

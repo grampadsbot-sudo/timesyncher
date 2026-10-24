@@ -5,7 +5,9 @@ import { hasDatabase, sql } from './db.mjs';
 import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
 import { xaiHttpErrorResumable } from './xai-dossier-http.mjs';
-import { dossierCaptureComplete, fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
+import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
+import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
   loadThingEvidenceDossier,
   loadThingEvidenceDossierResolved,
@@ -18,6 +20,16 @@ const BASE_ENRICHMENT = JSON.parse(
 const OVERLAY_ENRICHMENT = JSON.parse(
   readFileSync(new URL('../../scripts/fixtures/pr336-gate-b-ccab-overlay.json', import.meta.url), 'utf8'),
 );
+
+let dossierFillTestImpls = null;
+
+export function __setDossierFillTestImpls(impls = null) {
+  dossierFillTestImpls = impls;
+}
+
+function getDossierFillTestImpls() {
+  return dossierFillTestImpls || {};
+}
 
 export function placeFromTarget(target = {}) {
   const ccabRecord = {
@@ -127,6 +139,13 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   forceRefresh = false,
   timeBudgetMs = 52000,
 } = {}) {
+  const testImpls = env.TIMESYNCHER_DOSSIER_TEST_IMPLS === '1' ? getDossierFillTestImpls() : {};
+  fetchImpl = fetchImpl || testImpls.fetchImpl;
+  gatherImpl = gatherImpl || testImpls.gatherImpl;
+  buildImpl = buildImpl || testImpls.buildImpl;
+  judgeImpl = judgeImpl || testImpls.judgeImpl;
+  extractReviewsImpl = extractReviewsImpl || testImpls.extractReviewsImpl;
+  storeImpl = storeImpl || testImpls.storeImpl;
   if (!env.XAI_API_KEY && !buildImpl) {
     return { ok: false, code: 'missing_xai_api_key', results: [] };
   }
@@ -141,15 +160,18 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       placeId: place.id,
     });
     const pagesBefore = existing?.pages?.length || 0;
-    if (!refresh && skipExisting && dossierCaptureComplete(existing)) {
-      results.push({
-        rowId: target.rowId ?? place.id,
-        dossierKey,
-        skipped: 'existing_dossier',
-        pageCount: pagesBefore,
-        reviewsRead: existing.reviewsRead || 0,
-      });
-      continue;
+    if (!refresh && skipExisting && existing?.pages?.length) {
+      const normalized = normalizeDossierEvidence({ ...existing }, place);
+      if (dossierPersistedFillIsNoOp(existing, normalized, place)) {
+        results.push({
+          rowId: target.rowId ?? place.id,
+          dossierKey,
+          skipped: 'existing_dossier',
+          pageCount: pagesBefore,
+          reviewsRead: existing.reviewsRead || 0,
+        });
+        continue;
+      }
     }
     let fetchResult;
     try {

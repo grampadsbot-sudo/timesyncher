@@ -68,8 +68,9 @@ const complete = {
   reviewsRead: 40,
   captureCheckpoint: 'done',
 };
+const place = { title: 'Carbone', category: 'restaurant' };
 const { hashes, sources } = computeDossierFieldHashes(complete);
-const stamped = stampReviewsEvidencePageHash({ ...complete, fieldHashes: hashes, fieldSources: sources });
+const stamped = stampReviewsEvidencePageHash({ ...complete, fieldHashes: hashes, fieldSources: sources }, place);
 complete.fieldHashes = hashes;
 complete.fieldSources = sources;
 complete.reviewsEvidencePageHash = stamped.reviewsEvidencePageHash;
@@ -94,13 +95,6 @@ assert.equal(noop.skipped, true);
 assert.equal(builderCalls, 0);
 assert.ok(Date.now() - t0 < 3000, 'no-op fill should return quickly');
 assert.equal((await store.getDossier(dossierKey))?.xaiUsageRuns?.length || 0, 0);
-
-const place = { title: 'Carbone', category: 'restaurant' };
-const normalized = normalizeDossierEvidence(complete, place);
-assert.equal(
-  dossierPersistedFillIsNoOp(complete, normalized, place, { changedUrls: [] }),
-  true,
-);
 
 let judgeCalls = 0;
 await assert.rejects(

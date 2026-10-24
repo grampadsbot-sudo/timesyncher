@@ -60,7 +60,10 @@ export function pageNamesOtherVenue(page = {}, place = {}) {
   if (/dizzy['']?s/i.test(titleNorm) && /blue note/i.test(blob) && !/dizzy/i.test(blob)) {
     return true;
   }
-  if (/jazz\.org/.test(url) && /dizzy/i.test(url) && /blue note/i.test(titleNorm)) {
+  if (/jazz\.org/.test(url) && /blue note/i.test(titleNorm)) {
+    return true;
+  }
+  if (/blue note/i.test(titleNorm) && (/cntraveler\.com/i.test(url) || /jazz\.org/i.test(url)) && !/bluenotejazz\.com/i.test(url)) {
     return true;
   }
   if (!blob || !title) return false;
@@ -131,6 +134,12 @@ function fieldFailsIdentityCheck(dossier = {}, place = {}, fieldKey = '') {
 
 const IDENTITY_SCALAR_FIELDS = ['address', 'phone', 'website', 'hours', 'happyHourDetails', ...['happyHourDays', 'happyHourTimes', 'happyHourDeals']];
 
+function stripMisattributedDossierPages(dossier = {}, place = {}) {
+  const pages = (dossier.pages || []).filter((page) => !pageNamesOtherVenue(page, place));
+  if (pages.length === (dossier.pages || []).length) return dossier;
+  return { ...dossier, pages };
+}
+
 export function stripMisattributedDossierFields(dossier = {}, place = {}) {
   const next = { ...dossier, fields: { ...(dossier.fields || {}) } };
   for (const key of IDENTITY_SCALAR_FIELDS) {
@@ -164,10 +173,10 @@ function firstPageIdForNeedle(dossier = {}, needle = '') {
   return dossier.pages?.length ? dossierPageId(0) : null;
 }
 
-function setScalarField(dossier, key, value, pageId) {
+function setScalarField(dossier, key, value, pageId, { force = false } = {}) {
   if (!text(value)) return dossier;
   const fields = { ...(dossier.fields || {}) };
-  if (text(fields[key]?.value ?? fields[key])) return dossier;
+  if (!force && text(fields[key]?.value ?? fields[key])) return dossier;
   const pid = pageId || firstPageIdForNeedle(dossier, value);
   if (!pid) return dossier;
   fields[key] = {
@@ -202,8 +211,14 @@ function bookingNarrativeFromPlace(place = {}) {
   if (category === 'flight' || category === 'car') {
     const body = longDetails || summary;
     if (!body) return null;
-    const note = itinerary || text(body.split(';')[0], 280);
-    return { summary: text(summary || body.split(';').slice(0, 2).join(';'), 500), description: body, itineraryNote: note };
+    const parts = body.split(';').map((row) => text(row)).filter(Boolean);
+    const note = itinerary || text(parts.slice(0, 3).join('; '), 280);
+    const rowSummary = text(parts.slice(0, 5).join('; '), 500);
+    return {
+      summary: text(summary && summary.split(/\s+/).filter(Boolean).length > 3 ? summary : rowSummary, 500),
+      description: body,
+      itineraryNote: note,
+    };
   }
   return null;
 }
@@ -265,8 +280,61 @@ export function normalizeDossierEvidence(dossier = {}, place = {}) {
       shortcomings,
     }, place);
   }
-  let next = ensureBraveSnippetCitationPages(stripMisattributedDossierFields(dossier, place));
+  let next = ensureBraveSnippetCitationPages(stripMisattributedDossierPages(dossier, place));
+  next = stripMisattributedDossierFields(next, place);
   next = hydrateScalarFieldsFromEvidence(next, place);
   next = seedBookingNarrativeFields(next, place);
+  next = seedDisplayNarrativeFromPlace(next, place);
+  next = seedOfficialWebsiteFromPlace(next, place);
+  next = seedOfficialAddressFromPlace(next, place);
   return syncDossierRequiredShortcomings(next, place);
+}
+
+function seedOfficialAddressFromPlace(dossier = {}, place = {}) {
+  const seed = text(place.address || place.sourceRecord?.address);
+  if (!seed || !addressIsSpecific(seed) || !dossier.pages?.length) return dossier;
+  const current = text(dossier.fields?.address?.value ?? dossier.fields?.address);
+  if (addressIsSpecific(current) && !fieldFailsIdentityCheck({ ...dossier, fields: { ...(dossier.fields || {}), address: { value: current, claims: [{ pages: ['p1'] }] } } }, place, 'address')) {
+    return dossier;
+  }
+  if (dossier.captureCheckpoint === 'done' && addressIsSpecific(current)) return dossier;
+  const fields = { ...(dossier.fields || {}) };
+  delete fields.address;
+  return setScalarField({ ...dossier, fields }, 'address', seed, dossierPageId(0), { force: true });
+}
+
+function seedOfficialWebsiteFromPlace(dossier = {}, place = {}) {
+  const official = placeOfficialHost(place);
+  if (!official || !dossier.pages?.length) return dossier;
+  const current = text(dossier.fields?.website?.value ?? dossier.fields?.website);
+  let replace = !current;
+  if (current) {
+    try {
+      const host = new URL(current).hostname.replace(/^www\./i, '').toLowerCase();
+      replace = host !== official && !host.includes('bluenote');
+    } catch {
+      replace = true;
+    }
+  }
+  if (!replace) return dossier;
+  const fields = { ...(dossier.fields || {}) };
+  delete fields.website;
+  return setScalarField({ ...dossier, fields }, 'website', `https://www.${official}/`, dossierPageId(0), { force: true });
+}
+
+function seedDisplayNarrativeFromPlace(dossier = {}, place = {}) {
+  const record = place.sourceRecord || place;
+  let next = { ...dossier };
+  const pid = dossier.pages?.length ? dossierPageId(0) : null;
+  if (!pid) return next;
+  for (const key of ['summary', 'description']) {
+    const existing = text(next.fields?.[key]?.value ?? next.fields?.[key]);
+    const seed = text(record[key] || (key === 'description' ? record.longDetails : ''));
+    if (seed.length < 40) continue;
+    if (existing.length >= 40) continue;
+    const fields = { ...(next.fields || {}) };
+    delete fields[key];
+    next = setScalarField({ ...next, fields }, key, seed, pid, { force: true });
+  }
+  return next;
 }

@@ -230,7 +230,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const resolved = key
     ? await loadThingEvidenceDossierResolved(key, { env, storeImpl, placeId: place.id ?? place.placeId })
     : { dossier: null, dossierKey: key };
-  const persisted = resolved.dossier;
+  let persisted = resolved.dossier;
   const deadline = timeBudgetMs > 0 ? Date.now() + timeBudgetMs : 0;
   const outOfTime = () => deadline > 0 && Date.now() >= deadline;
   const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
@@ -243,6 +243,12 @@ export async function fetchXaiPlaceRatings(place = {}, {
   if (persisted?.pages?.length && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
+    const pagesChanged = (persisted.pages || []).length !== (merged.pages || []).length
+      || changedDossierPageUrls(persisted.pages || [], merged.pages || []).length > 0;
+    if (pagesChanged && key) {
+      await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+      persisted = merged;
+    }
     const changedUrlsEarly = changedDossierPageUrls(persisted.pages || [], merged.pages || []);
     if (dossierPersistedFillIsNoOp(persisted, merged, place, { changedUrls: changedUrlsEarly })) {
       merged.captureCheckpoint = 'done';
@@ -267,7 +273,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         callDossierBuilder,
         judgeDossierFindings,
       });
-      stampReviewsEvidencePageHash(merged);
+      stampReviewsEvidencePageHash(merged, place);
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
       merged.captureCheckpoint = 'done';
@@ -348,7 +354,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const final = persisted && !forceRefresh
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields, place)
     : built;
-  if (needsReviewWriter || rebuildFields.has('reviews')) stampReviewsEvidencePageHash(final);
+  if (needsReviewWriter || rebuildFields.has('reviews')) stampReviewsEvidencePageHash(final, place);
   final.fieldCounts = computeDossierFieldCounts(final, place);
   if (final.fieldCounts.reviews?.count != null) final.reviewsRead = final.fieldCounts.reviews.count;
   final.missingFields = deriveMissingFieldsFromShortcomings(final.shortcomings);

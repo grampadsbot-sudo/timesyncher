@@ -35,6 +35,11 @@ function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
 export function pickFlightListRowSummaryText(value = '') {
   const s = text(value);
   if (!s) return '';
+  if (/^Airline:/i.test(s) && s.includes(';')) {
+    const parts = s.split(';').map((row) => text(row)).filter(Boolean);
+    const line = clipText(parts.slice(0, 5).join('; '), LIST_ROW_SHORT_MAX);
+    if (wordCount(line) >= LIST_ROW_MIN_WORDS) return line;
+  }
   if (wordCount(s) <= 20) return s;
   if (/^Documented .+ option/i.test(s)) return s;
   const line = shortLineFromStoredSummary(s);

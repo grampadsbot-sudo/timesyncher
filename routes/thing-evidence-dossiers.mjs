@@ -31,7 +31,10 @@ export default async function handler(req, res) {
       targets = body?.allMissing === true ? [] : PR336_GATE_B_XAI_PLACE_TARGETS;
     }
     const result = await runThingEvidenceDossierStagingTargets(targets, {
-      env: process.env,
+      env: {
+        ...process.env,
+        ...(body?.enableTestImpls === true ? { TIMESYNCHER_DOSSIER_TEST_IMPLS: '1' } : {}),
+      },
       skipExisting: body?.skipExisting === true,
       forceRefresh: body?.forceRefresh === true,
       timeBudgetMs: Number(body?.timeBudgetMs) > 0 ? Number(body.timeBudgetMs) : 52000,

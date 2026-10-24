@@ -51,7 +51,7 @@ export const PR336_GATE_B_XAI_PLACE_TARGETS = [
   },
   {
     rowId: 611,
-    ccabKey: 'Jazz at Lincoln Center',
+    ccabKey: 'Blue Note Jazz Club',
     title: 'Blue Note Jazz Club',
     category: 'event',
     destination: 'Greenwich Village, New York, NY',

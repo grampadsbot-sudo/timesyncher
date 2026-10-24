@@ -143,7 +143,9 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
   for (const key of ['summary', 'description', 'price', 'hours', 'happyHourDetails', 'itineraryNote', ...HAPPY_HOUR_SUBFIELDS]) {
     if (!fields.has(key) && !(key.startsWith('happyHour') && fields.has('happyHourDetails'))) continue;
     if (built.fields?.[key]) next.fields[key] = built.fields[key];
-    else delete next.fields[key];
+    else if (persisted.fields?.[key] && claimsSupported({ ...next, pages: next.pages }, persisted.fields[key])) {
+      next.fields[key] = persisted.fields[key];
+    } else delete next.fields[key];
   }
   if (fields.has('happyHourDetails')) {
     if (built.fields?.happyHour) next.fields.happyHour = built.fields.happyHour;
