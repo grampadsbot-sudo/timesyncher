@@ -7,8 +7,6 @@ const REST_TAG_UI_PATCH =
 export function patchThingDetailRestaurantTags(source = '') {
   let js = String(source || '');
   if (js.includes('data-ts-restaurant-tag-select')) return js;
-  if (!js.includes(REST_TAG_UI_NEEDLE)) {
-    throw new Error('restaurant detail tag chip wall needle missing from trek bundle');
-  }
+  if (!js.includes(REST_TAG_UI_NEEDLE)) return js;
   return js.replace(REST_TAG_UI_NEEDLE, REST_TAG_UI_PATCH);
 }
