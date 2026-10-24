@@ -32,16 +32,55 @@ function pageBlob(dossier = {}) {
   return (dossier.pages || []).map((p) => p.text || '').join('\n');
 }
 
+const REVIEW_OPINION = /\b(?:excellent|great|good|bad|terrible|amazing|awesome|loved?|recommend|disappointing|friendly|rude|delicious|overpriced|worth|stars?|rated|rating)\b/i;
+
+function reviewTextKey(value) {
+  const key = text(value).toLowerCase();
+  return key.length >= 20 ? key : '';
+}
+
+function uniqueReviewRows(rows, read) {
+  const seen = new Set();
+  const out = [];
+  for (const row of rows) {
+    const key = reviewTextKey(read(row));
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
+}
+
+function singularSnippetReview(row = {}) {
+  const topic = text(row.topic).toLowerCase();
+  if (topic && topic !== 'review' && topic !== 'reviews') return '';
+  const snippet = text(row.snippet);
+  if (!reviewTextKey(snippet) || !REVIEW_OPINION.test(snippet)) return '';
+  return snippet;
+}
+
 function reviewStats(dossier = {}) {
-  const written = Array.isArray(dossier.reviews)
-    ? dossier.reviews.filter((r) => text(r.text).length >= 20)
-    : [];
+  const written = uniqueReviewRows(Array.isArray(dossier.reviews) ? dossier.reviews : [], (row) => row?.text);
   if (written.length >= 4) {
     return { count: Math.max(written.length, dossier.reviewsRead || written.length), sources: 3, status: 'ok' };
   }
-  const code = extractReviewsByCode(dossier);
-  const braveSnippet = (dossier.braveResults || []).filter((r) => text(r.snippet).length >= 20);
-  const count = code.length + braveSnippet.length;
+  const seen = new Set(written.map((row) => reviewTextKey(row.text)));
+  const code = [];
+  for (const row of extractReviewsByCode(dossier)) {
+    const key = reviewTextKey(row?.text);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    code.push(row);
+  }
+  const braveSnippet = [];
+  for (const row of dossier.braveResults || []) {
+    const snippet = singularSnippetReview(row);
+    const key = reviewTextKey(snippet);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    braveSnippet.push(row);
+  }
+  const count = seen.size;
   const hosts = new Set([
     ...code.map((r) => reviewSourceHost((dossier.pages || []).find((p, i) => `p${i + 1}` === r.page)?.url)),
     ...braveSnippet.map((r) => reviewSourceHost(r.url)),

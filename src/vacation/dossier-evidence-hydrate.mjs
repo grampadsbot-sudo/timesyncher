@@ -108,8 +108,51 @@ export function dossierScalarClaimRejected(key = '', claim = {}) {
   return false;
 }
 
-function claimPageIds(claim = {}) {
-  return Array.isArray(claim?.pages) ? claim.pages : [];
+function claimPageIds(field = {}) {
+  const ids = [];
+  if (Array.isArray(field?.pages)) ids.push(...field.pages);
+  for (const claim of Array.isArray(field?.claims) ? field.claims : []) {
+    if (Array.isArray(claim?.pages)) ids.push(...claim.pages);
+  }
+  return [...new Set(ids.map((id) => text(id)).filter((id) => /^p\d+$/.test(id)))];
+}
+
+function rewritePageToken(id, remap) {
+  const token = text(id);
+  if (!/^p\d+$/.test(token)) return token;
+  return remap.get(token) || '';
+}
+
+function rewritePageList(ids, remap) {
+  const next = [];
+  for (const id of Array.isArray(ids) ? ids : []) {
+    const mapped = rewritePageToken(id, remap);
+    if (mapped) next.push(mapped);
+  }
+  return next;
+}
+
+function rewriteCitedNode(node, remap) {
+  if (!node || typeof node !== 'object') return node;
+  const next = { ...node };
+  if (Array.isArray(node.pages)) next.pages = rewritePageList(node.pages, remap);
+  if (Array.isArray(node.claims)) next.claims = node.claims.map((claim) => rewriteCitedNode(claim, remap));
+  if (typeof node.page === 'string') {
+    const mapped = rewritePageToken(node.page, remap);
+    if (mapped) next.page = mapped;
+    else if (/^p\d+$/.test(text(node.page))) delete next.page;
+  }
+  return next;
+}
+
+function rewriteDossierCitations(dossier, remap) {
+  const fields = {};
+  for (const [key, field] of Object.entries(dossier.fields || {})) fields[key] = rewriteCitedNode(field, remap);
+  const next = { ...dossier, fields };
+  for (const key of ['reviews', 'reviewSet', 'reviewExcerpts', 'knownFor']) {
+    if (Array.isArray(dossier[key])) next[key] = dossier[key].map((row) => rewriteCitedNode(row, remap));
+  }
+  return next;
 }
 
 function fieldFailsIdentityCheck(dossier = {}, place = {}, fieldKey = '') {
@@ -144,9 +187,21 @@ function fieldFailsIdentityCheck(dossier = {}, place = {}, fieldKey = '') {
 const IDENTITY_SCALAR_FIELDS = ['address', 'phone', 'website', 'hours', 'happyHourDetails', ...['happyHourDays', 'happyHourTimes', 'happyHourDeals']];
 
 function stripMisattributedDossierPages(dossier = {}, place = {}) {
-  const pages = (dossier.pages || []).filter((page) => !pageNamesOtherVenue(page, place));
-  if (pages.length === (dossier.pages || []).length) return dossier;
-  return { ...dossier, pages };
+  const original = Array.isArray(dossier.pages) ? dossier.pages : [];
+  const kept = [];
+  const remap = new Map();
+  let dropped = false;
+  original.forEach((page, index) => {
+    const oldId = dossierPageId(index);
+    if (pageNamesOtherVenue(page, place)) {
+      dropped = true;
+      return;
+    }
+    remap.set(oldId, dossierPageId(kept.length));
+    kept.push(page);
+  });
+  if (!dropped) return dossier;
+  return rewriteDossierCitations({ ...dossier, pages: kept }, remap);
 }
 
 export function stripMisattributedDossierFields(dossier = {}, place = {}) {
@@ -312,8 +367,8 @@ export function normalizeDossierEvidence(dossier = {}, place = {}) {
       shortcomings,
     }, place);
   }
-  let next = ensureBraveSnippetCitationPages(stripMisattributedDossierPages(dossier, place));
-  next = stripMisattributedDossierFields(next, place);
+  let next = stripMisattributedDossierFields(dossier, place);
+  next = ensureBraveSnippetCitationPages(stripMisattributedDossierPages(next, place));
   next = hydrateScalarFieldsFromEvidence(next, place);
   next = upgradeAddressFromEvidencePages(next, place);
   next = seedBookingNarrativeFields(next, place);
@@ -321,7 +376,6 @@ export function normalizeDossierEvidence(dossier = {}, place = {}) {
   next = seedOfficialWebsiteFromPlace(next, place);
   next = seedOfficialAddressFromPlace(next, place);
   next = upgradeAddressFromEvidencePages(next, place);
-  next = seedRepresentativeReviewsFromSourceRecord(next, place);
   return syncDossierRequiredShortcomings(next, place);
 }
 
@@ -350,26 +404,6 @@ function upgradeAddressFromEvidencePages(dossier = {}, place = {}) {
     return setScalarField(dossier, 'address', text(extracted.address), firstPageIdForNeedle(dossier, extracted.address), { force: true });
   }
   return dossier;
-}
-
-function seedRepresentativeReviewsFromSourceRecord(dossier = {}, place = {}) {
-  if (!placeSupportsDossierReviews(place) || !(dossier.pages || []).length) return dossier;
-  const existing = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  if (existing.length >= 4) return dossier;
-  const src = place.sourceRecord || {};
-  const pid = dossierPageId(0);
-  const built = [];
-  for (let i = 1; i <= 4; i += 1) {
-    const body = text(src[`review${i}`] || src.reviews?.[i - 1]?.text);
-    if (words(body) < 25) break;
-    built.push({
-      text: body,
-      rating: Number(src[`review${i}Rating`] || 5) || 5,
-      claims: [{ text: body.slice(0, 120), pages: [pid], supported: true }],
-    });
-  }
-  if (built.length < 4) return dossier;
-  return { ...dossier, reviews: built, reviewsRead: Math.max(Number(dossier.reviewsRead) || 0, built.length) };
 }
 
 function seedOfficialAddressFromPlace(dossier = {}, place = {}) {
