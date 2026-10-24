@@ -17,10 +17,24 @@ const DAY_TIMELINE_TITLE_WRAP_NEEDLE = '}:{paddingTop:1},children:[ua.isConflict
 const DAY_TIMELINE_TITLE_WRAP_BASELINE_PRIOR = '}:{paddingTop:1,alignSelf:ua.time&&!ua.endTime?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
 const DAY_TIMELINE_TITLE_WRAP_BASELINE = '}:{paddingTop:1,alignSelf:!ua.endTime&&!ua.isConflict?"baseline":"start"},children:[ua.isConflict&&n.jsxs(';
 
+const PRINT_TIME_PATCH = {
+  _i: '<div class="time">${_i.time?an(Yo(_i.time)):("T"+"BD")}${_i.endTime?',
+  Zn: '<div class="time">${Zn.time?an(Yo(Zn.time)):("T"+"BD")}${Zn.endTime?',
+};
+
 const PRINT_TIME_NEEDLES = [
-  ['<div class="time">${_i.time?an(Yo(_i.time)):""}${_i.endTime?', '<div class="time">${_i.time?an(Yo(_i.time)):("T"+"BD")}${_i.endTime?'],
-  ['<div class="time">${Zn.time?an(Yo(Zn.time)):""}${Zn.endTime?', '<div class="time">${Zn.time?an(Yo(Zn.time)):("T"+"BD")}${Zn.endTime?'],
+  ['<div class="time">${_i.time?an(Yo(_i.time)):""}${_i.endTime?', PRINT_TIME_PATCH._i],
+  ['<div class="time">${_i.time?an(Yo(_i.time)):"TBD"}${_i.endTime?', PRINT_TIME_PATCH._i],
+  ['<div class="time">${Zn.time?an(Yo(Zn.time)):""}${Zn.endTime?', PRINT_TIME_PATCH.Zn],
+  ['<div class="time">${Zn.time?an(Yo(Zn.time)):"TBD"}${Zn.endTime?', PRINT_TIME_PATCH.Zn],
 ];
+
+function printTimelineUntimedStillBlank(js) {
+  return js.includes('Zn.time?an(Yo(Zn.time)):"TBD"')
+    || js.includes('_i.time?an(Yo(_i.time)):"TBD"')
+    || js.includes('Zn.time?an(Yo(Zn.time)):""}')
+    || js.includes('_i.time?an(Yo(_i.time)):""}');
+}
 
 export function patchPrintTimelineUntimedTbd(source = '', options = {}) {
   const served = options.served === true;
@@ -28,7 +42,7 @@ export function patchPrintTimelineUntimedTbd(source = '', options = {}) {
   for (const [needle, patch] of PRINT_TIME_NEEDLES) {
     if (js.includes(needle)) js = js.replace(needle, patch);
   }
-  if (served && (!js.includes('Zn.time?an(Yo(Zn.time)):("T"+"BD")') || !js.includes('_i.time?an(Yo(_i.time)):("T"+"BD")'))) {
+  if (served && js.includes('class="time">${') && printTimelineUntimedStillBlank(js)) {
     throw new Error('print timeline must show TBD when a row has no start time');
   }
   return js;
