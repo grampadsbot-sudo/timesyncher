@@ -161,6 +161,17 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
       },
     };
   }
+  if (id === 611) {
+    ccabRecord = {
+      ...ccabRecord,
+      identityProvenance: {
+        approvedDisplayTitle: 'Blue Note Jazz Club',
+        ccabKey: 'Blue Note Jazz Club',
+        evidenceUrl: text(ccabRecord.website, 500) || 'https://www.bluenotejazz.com/',
+        reason: 'Gate B event row resolves to the Greenwich Village club at bluenotejazz.com, not JALC Dizzy\'s.',
+      },
+    };
+  }
   const alias = GATE_B_DISPLAY_TITLE_ALIASES[id];
   const displayTitle = alias?.title || name;
   return enrichSearchPlace(rawSearchPlaceFromCcab({
