@@ -1,4 +1,5 @@
 import { HAPPY_HOUR_SUBFIELDS } from './dossier-hours-fields.mjs';
+import { recordFieldShortcoming } from './thing-evidence-dossier-field-counts.mjs';
 import { claimsSupported } from './thing-dossier-fields.mjs';
 
 function pageHashBundle(pageByUrl, url = '') {
@@ -113,30 +114,46 @@ export function mergeSelectiveDossierFindings(persisted = {}, built = {}, rebuil
     next.ratingMix = built.ratingMix;
   }
   if (fields.has('reviews')) {
-    const reviewReady = (dossier) => {
+    const supportedReviews = (dossier) => {
       const reviews = Array.isArray(dossier?.reviews) ? dossier.reviews : [];
-      return reviews.length >= 4 && reviews.every((row) => claimsSupported({ ...dossier, pages: next.pages }, row));
+      return reviews.filter((row) => claimsSupported({ ...dossier, pages: next.pages }, row));
     };
-    const builtOk = reviewReady(built);
-    const persistedOk = reviewReady(persisted);
-    if (builtOk && Array.isArray(built.reviews) && built.reviews.length) {
+    const ready = (dossier, supported) => supported.length >= 4
+      && supported.length === (Array.isArray(dossier?.reviews) ? dossier.reviews.length : 0);
+    const builtSupported = supportedReviews(built);
+    const persistedSupported = supportedReviews(persisted);
+    const builtOk = ready(built, builtSupported);
+    const persistedOk = ready(persisted, persistedSupported);
+    if (builtOk) {
       next.reviews = built.reviews;
       next.reviewExcerpts = built.reviewExcerpts;
       next.reviewsRead = built.reviewsRead;
       next.reviewSet = built.reviewSet;
       next.reviewSources = built.reviewSources;
-    } else if (persistedOk && Array.isArray(persisted.reviews) && persisted.reviews.length) {
+      delete next.reviewsEvidencePageHash;
+    } else if (persistedOk) {
       next.reviews = persisted.reviews;
       next.reviewExcerpts = persisted.reviewExcerpts;
       next.reviewsRead = persisted.reviewsRead;
       next.reviewSet = persisted.reviewSet;
       next.reviewSources = persisted.reviewSources;
     } else {
-      next.reviews = Array.isArray(built.reviews) && built.reviews.length ? built.reviews : persisted.reviews;
+      next.reviews = builtSupported.length ? builtSupported : persistedSupported;
       next.reviewExcerpts = built.reviewExcerpts ?? persisted.reviewExcerpts;
       next.reviewsRead = built.reviewsRead ?? persisted.reviewsRead;
       next.reviewSet = built.reviewSet ?? persisted.reviewSet;
       next.reviewSources = built.reviewSources ?? persisted.reviewSources;
+      delete next.reviewsEvidencePageHash;
+      const kept = Array.isArray(next.reviews) ? next.reviews : [];
+      const droppedUnsupported = (Array.isArray(built.reviews) ? built.reviews.length : 0) > builtSupported.length;
+      const limited = (next.shortcomings || []).some((row) => row.field === 'reviews' && /limited number of reviews/i.test(String(row.reason || '')));
+      if (droppedUnsupported && kept.length > 0 && kept.length < 4 && !limited) {
+        next.shortcomings = recordFieldShortcoming(
+          { shortcomings: next.shortcomings || [] },
+          'reviews',
+          'representative reviews could not be verified from saved evidence',
+        );
+      }
     }
   }
   next.fields = { ...(next.fields || {}) };

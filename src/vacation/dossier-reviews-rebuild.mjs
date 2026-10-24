@@ -1,25 +1,19 @@
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import {
-  pageNamesOtherVenue,
+  dossierReviewsNeedRebuild,
+  dossierReviewsPassValidityGate,
   syncDossierRequiredShortcomings,
 } from './dossier-evidence-hydrate.mjs';
 import {
-  claimCitesKnownPages,
-  claimsSupported,
-  dossierPageById,
-  dossierReviewsEvidenceFresh,
   ensureBraveSnippetCitationPages,
   mergeSelectiveDossierFindings,
   prepareDossierFindings,
-  resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
 import { beginDossierXaiUsageRun } from './dossier-cost.mjs';
 import { braveTopUpFieldsPending, recordFieldShortcoming } from './thing-evidence-dossier-field-counts.mjs';
 import { topUpDossierFields } from './thing-evidence-dossier.mjs';
 
-function text(value) {
-  return String(value ?? '').replace(/\s+/g, ' ').trim();
-}
+export { dossierReviewsNeedRebuild, dossierReviewsPassValidityGate } from './dossier-evidence-hydrate.mjs';
 
 export function stripDossierReviews(dossier = {}, place = {}) {
   if (placeSupportsDossierReviews(place)) return dossier;
@@ -37,45 +31,6 @@ export function stripDossierReviews(dossier = {}, place = {}) {
   }, place);
 }
 
-function reviewCitesIdentityPages(dossier = {}, place = {}, review = {}) {
-  const pages = resolveClaimCitationPages(dossier, review?.claims?.flatMap((c) => c.pages) || review.pages || []);
-  if (!pages?.length) return false;
-  const body = text(review.text || review.claims?.[0]?.text);
-  if (body && pageNamesOtherVenue({ text: body, url: '' }, place)) return false;
-  for (const id of pages) {
-    const page = dossierPageById(dossier, id);
-    if (!page) return false;
-    if (pageNamesOtherVenue(page, place)) return false;
-  }
-  return true;
-}
-
-function dossierReviewsHaveInvalidContent(dossier = {}, place = {}) {
-  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  for (const review of reviews) {
-    if (!claimsSupported(dossier, review)) return true;
-    if (!reviewCitesIdentityPages(dossier, place, review)) return true;
-    const body = text(review.text);
-    if (pageNamesOtherVenue({ text: body, url: '' }, place)) return true;
-  }
-  return false;
-}
-
-export function dossierReviewsPassValidityGate(dossier = {}, place = {}) {
-  if (!placeSupportsDossierReviews(place)) return true;
-  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  if (reviews.length < 4) return false;
-  return !dossierReviewsHaveInvalidContent(dossier, place);
-}
-
-export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
-  if (!placeSupportsDossierReviews(place)) return false;
-  if (!dossier?.pages?.length) return false;
-  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
-  if (!reviews.length) return true;
-  return dossierReviewsHaveInvalidContent(dossier, place);
-}
-
 function dossierReviewsEvidencePageHash(dossier = {}) {
   return (dossier.pages || []).map((page) => page.sha256).filter(Boolean).join('|');
 }
@@ -90,35 +45,20 @@ export function stampReviewsEvidencePageHash(dossier = {}, place = {}) {
   return dossier;
 }
 
-function dossierRepresentativeReviewsUnchanged(persisted = {}, merged = {}) {
-  const a = Array.isArray(persisted.reviews) ? persisted.reviews : [];
-  const b = Array.isArray(merged.reviews) ? merged.reviews : [];
-  if (a.length !== b.length || !a.length) return false;
-  return a.every((row, index) => {
-    const other = b[index] || {};
-    return text(row.text) === text(other.text) && Number(row.rating) === Number(other.rating);
-  });
+function explicitRepresentativeFailure(dossier = {}) {
+  return (Array.isArray(dossier.shortcomings) ? dossier.shortcomings : []).some((row) =>
+    row?.field === 'reviews' && /could not be verified/i.test(String(row.reason || '')));
 }
 
 export function dossierReviewsShouldRunWriter(persisted = {}, merged = {}, place = {}) {
   if (!placeSupportsDossierReviews(place) || !merged?.pages?.length) return false;
   const pageHash = dossierReviewsEvidencePageHash(merged);
-  if (dossierReviewsPassValidityGate(persisted, place) && persisted.reviewsEvidencePageHash === pageHash) {
+  if (pageHash && persisted?.reviewsEvidencePageHash === pageHash && dossierReviewsPassValidityGate(persisted, place)) {
     return false;
   }
   if (dossierReviewsPassValidityGate(merged, place)) return false;
-  if (dossierReviewsPassValidityGate(persisted, place) && dossierRepresentativeReviewsUnchanged(persisted, merged)) {
-    return false;
-  }
-  if (!dossierReviewsNeedRebuild(merged, place)) return false;
-  const hash = dossierReviewsEvidencePageHash(merged);
-  if (hash && persisted?.reviewsEvidencePageHash === hash && dossierReviewsPassValidityGate(persisted, place)) {
-    return false;
-  }
-  if (dossierReviewsPassValidityGate(persisted, place) && dossierRepresentativeReviewsUnchanged(persisted, merged)) {
-    return false;
-  }
-  return true;
+  if (explicitRepresentativeFailure(merged)) return true;
+  return dossierReviewsNeedRebuild(merged, place);
 }
 
 export function preservePersistedDossierReviewsWhenFresh(persisted = {}, merged = {}, place = {}) {

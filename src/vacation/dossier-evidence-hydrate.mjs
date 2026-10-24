@@ -1,6 +1,6 @@
 import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 import { extractContactFieldsFromBlob } from './place-detail-extract.mjs';
-import { descriptionNamesThing, dossierPageId, ensureBraveSnippetCitationPages } from './thing-dossier-fields.mjs';
+import { claimsSupported, descriptionNamesThing, dossierPageById, dossierPageId, ensureBraveSnippetCitationPages, resolveClaimCitationPages } from './thing-dossier-fields.mjs';
 import {
   computeDossierFieldCounts,
   deriveMissingFieldsFromShortcomings,
@@ -325,11 +325,34 @@ function seedBookingNarrativeFields(dossier = {}, place = {}) {
   return next;
 }
 
+function reviewContentInvalid(dossier, place, review) {
+  if (!claimsSupported(dossier, review)) return true;
+  const cited = resolveClaimCitationPages(dossier, review.claims.flatMap((item) => item.pages));
+  const body = text(review.text || review.claims[0]?.text);
+  if (body && pageNamesOtherVenue({ text: body, url: '' }, place)) return true;
+  return cited.some((id) => pageNamesOtherVenue(dossierPageById(dossier, id), place));
+}
+
+export function dossierReviewsPassValidityGate(dossier = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place)) return true;
+  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
+  return reviews.length >= 4 && !reviews.some((review) => reviewContentInvalid(dossier, place, review));
+}
+
+export function dossierReviewsNeedRebuild(dossier = {}, place = {}) {
+  if (!placeSupportsDossierReviews(place) || !dossier?.pages?.length) return false;
+  const reviews = Array.isArray(dossier.reviews) ? dossier.reviews : [];
+  if (!reviews.length) return true;
+  return reviews.some((review) => reviewContentInvalid(dossier, place, review));
+}
+
 export function syncDossierRequiredShortcomings(dossier = {}, place = {}) {
   const counts = computeDossierFieldCounts(dossier, place);
   const pending = new Set(fieldsNeedingCapture(counts, place));
+  const reviewsUnverified = placeSupportsDossierReviews(place) && !dossierReviewsPassValidityGate(dossier, place);
   let shortcomings = Array.isArray(dossier.shortcomings) ? [...dossier.shortcomings] : [];
   shortcomings = shortcomings.filter((row) => {
+    if (row.field === 'reviews' && reviewsUnverified && counts.reviews?.status === 'ok') return true;
     const status = counts[row.field]?.status;
     return status && status !== 'ok';
   });
@@ -344,12 +367,14 @@ export function syncDossierRequiredShortcomings(dossier = {}, place = {}) {
         : 'required field still missing after evidence pass',
     );
   }
-  return {
+  const next = {
     ...dossier,
     fieldCounts: counts,
     shortcomings,
     missingFields: deriveMissingFieldsFromShortcomings(shortcomings),
   };
+  if (reviewsUnverified) delete next.reviewsEvidencePageHash;
+  return next;
 }
 
 export function normalizeDossierEvidence(dossier = {}, place = {}) {
