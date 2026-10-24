@@ -24,7 +24,7 @@ assert.match(grid, /display:"grid",gridTemplateColumns:"[^"]+",gap:\d+,alignItem
 const cell = singleLine.match(/^!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1",style:\{([^}]*)\},children:ua\.time\?Yo\(ua\.time\):\("T"\+"BD"\)\}\):$/);
 assert.ok(cell, 'single-line time cell is marked and shows TBD when start time is missing');
 assert.match(cell[1], /(^|,)alignSelf:"baseline"(,|$)/, 'time cell sits on the grid row baseline');
-assert.match(cell[1], /fontSize:11,fontWeight:700/, 'time text keeps the two-line cell font');
+assert.match(cell[1], /fontSize:11,fontWeight:ua\.time\?700:500/, 'timed rows stay bold; untimed TBD matches reference weight');
 assert.match(cell[1], /textAlign:"right"/, 'time stays right aligned');
 assert.match(cell[1], /whiteSpace:"nowrap"/, 'single-line time never wraps');
 assert.match(cell[1], /color:ua\.time\?"#111827":"#9ca3af"/, 'untimed rows keep the muted time color');
@@ -65,7 +65,9 @@ const untimed = render({ time: '', isConflict: false });
 assert.equal(untimed.props['data-ts-timeline-time'], '1', 'row with no time uses the baseline cell');
 assert.equal(untimed.props.style.alignSelf, 'baseline', 'untimed row is baseline aligned');
 assert.equal(untimed.props.children, 'TBD', 'row with no time shows TBD via concat');
+assert.equal(untimed.props.style.fontWeight, 500, 'untimed TBD uses reference weight');
 assert.equal(untimed.props.style.color, '#9ca3af', 'untimed row keeps the muted time color');
+assert.equal(single.props.style.fontWeight, 700, 'timed single-line rows stay bold');
 assert.equal(wrapAlign({ time: '', isConflict: false }), 'baseline', 'untimed title wrapper is baseline aligned');
 
 assert.equal(patchSharedLayoutOverflow(bundle, { served: true }), bundle, 'patch is idempotent on the served bundle');
