@@ -1,5 +1,5 @@
-# #671 host-reviewed coverage slice
+# VK fill #693 — see host receipt
 
-Base d510520afc1fc504a01913d5e45ec6beec1ea191 migrate/trek-source. Exact live coverage preimage eafd0a25ce1ebd8b87afd32910fdf423d32ce5af84e93e823a7ee54da1cf7cc6. Patch changes only _segments: normalize equivalent apostrophe characters in header matching while preserving all original canonical keys, item counts and first-segment behavior. Does not merge duplicate rows, borrow another row price, deduplicate fixture names or change thresholds.
+Host publication receipt: `/home/ubishere9995/tsv-work/vkfill-693-20261024153815-job/J/RECEIPT.md`
 
-Host six focused cases pass including both canonical spellings, genuinely absent price, next-row price and duplicate first-unpriced row. Actual saved #660 a8dac27 capture at both390/1280:23/23hotel list and23/23hotel Budget names match prices, unchanged denominator23. Every unrelated AST unchanged. No new capture/model call, product data change, Gate B PASS, merge or deploy claimed. The unsafe worker price-only screenshot exception is rejected and uninstalled; #660 remains held on #671. Source bot-admin/receipts/gpt-manager-pass-20261023-0700.
+Start HEAD: `e306be6027aff35fa8f54cf68d891f3dceb96b87`. Outcome: `SOURCE_READY` (uncommitted fixture-replay + PR336 merge for Gate B prices/descriptions).
