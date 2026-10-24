@@ -17,6 +17,15 @@ function norm(value) {
   return text(value).toLowerCase();
 }
 
+function words(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
+function placeNarrativeBody(place = {}) {
+  const record = place.sourceRecord || {};
+  return text(record.longDetails || record.details || record.description || place.description);
+}
+
 function nameTokens(title = '') {
   const stop = new Set(['the', 'club', 'jazz', 'restaurant', 'bar', 'cafe', 'nyc', 'new', 'york', 'city', 'at', 'and']);
   return norm(title).split(/\s+/).filter((t) => t.length > 2 && !stop.has(t));
@@ -205,22 +214,25 @@ export function hydrateScalarFieldsFromEvidence(dossier = {}, place = {}) {
 function bookingNarrativeFromPlace(place = {}) {
   const record = place.sourceRecord || {};
   const category = norm(place.category || record.category);
-  const longDetails = text(record.longDetails || record.details || record.description || place.description);
+  const body = placeNarrativeBody(place);
   const summary = text(record.summary || place.summary);
   const itinerary = text(record.itineraryNote || record.itinerary_note);
   if (category === 'flight' || category === 'car') {
-    const body = longDetails || summary;
-    if (!body) return null;
-    const parts = body.split(';').map((row) => text(row)).filter(Boolean);
+    const flightBody = body || summary;
+    if (!flightBody) return null;
+    const parts = flightBody.split(';').map((row) => text(row)).filter(Boolean);
     const note = itinerary || text(parts.slice(0, 3).join('; '), 280);
     const rowSummary = text(parts.slice(0, 5).join('; '), 500);
     return {
-      summary: text(summary && summary.split(/\s+/).filter(Boolean).length > 3 ? summary : rowSummary, 500),
-      description: body,
+      summary: text(summary && words(summary) > 3 ? summary : rowSummary, 500),
+      description: flightBody,
       itineraryNote: note,
     };
   }
-  return null;
+  if (!body || words(body) < 40) return null;
+  const seed = { description: body };
+  if (words(summary) >= 30) seed.summary = summary;
+  return seed;
 }
 
 function seedBookingNarrativeFields(dossier = {}, place = {}) {
@@ -329,7 +341,7 @@ function seedDisplayNarrativeFromPlace(dossier = {}, place = {}) {
   if (!pid) return next;
   for (const key of ['summary', 'description']) {
     const existing = text(next.fields?.[key]?.value ?? next.fields?.[key]);
-    const seed = text(record[key] || (key === 'description' ? record.longDetails : ''));
+    const seed = text(record[key] || (key === 'description' ? (record.longDetails || record.details) : ''));
     if (seed.length < 40) continue;
     if (existing.length >= 40) continue;
     const fields = { ...(next.fields || {}) };

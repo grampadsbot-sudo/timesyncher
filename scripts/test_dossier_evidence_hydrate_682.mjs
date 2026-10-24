@@ -86,4 +86,23 @@ const flightPlace = {
 const seeded = normalizeDossierEvidence({ pages: [page('https://aa.com', 'booking')], fields: {} }, flightPlace);
 assert.ok(text(seeded.fields.description?.value).includes('LAS-JFK'));
 
+const zabarsBody =
+  "Google lists Zabar's around 4.5/5. Iconic UWS specialty market and prepared-food counter; fixture copy for offline Gate B only. "
+  + 'Plan a morning stop for bagels, smoked fish, and pantry staples before a Central Park walk. Price: $25 basket floor; Status: candidate only.';
+const storePlace = {
+  title: "Zabar's",
+  category: 'store',
+  sourceRecord: { longDetails: zabarsBody, details: zabarsBody },
+};
+const storeDossier = normalizeDossierEvidence({
+  thing: "Zabar's",
+  pages: [page('https://zabar.com/', 'Zabar specialty foods Upper West Side market')],
+  fields: {},
+  shortcomings: [],
+}, storePlace);
+assert.equal(computeDossierFieldCounts(storeDossier, storePlace).description.status, 'ok');
+const storeApplied = applyDossierFields({ category: 'store', ...storePlace.sourceRecord }, storeDossier);
+assert.ok(text(storeApplied.longDetails).includes('Zabar'));
+assert.equal(storeApplied.missingFields.includes('description'), false);
+
 console.log('test_dossier_evidence_hydrate_682: ok');

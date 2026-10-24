@@ -12,8 +12,12 @@ import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier
 export { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
 export { dossierPageIdForUrl, ensureBraveSnippetCitationPages } from './dossier-brave-snippet-pages.mjs';
 
+function text(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
 function norm(value) {
-  return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return text(value).toLowerCase();
 }
 
 function nameKey(value) {
@@ -283,6 +287,7 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
 }
 
 export function applyDossierFields(record = {}, dossier = {}) {
+  const narrativeFallback = text(record.longDetails || record.details);
   const next = { ...record, evidenceDossier: dossier };
   const useShortcomingMissing = Array.isArray(dossier.shortcomings) && dossier.shortcomings.length > 0;
   const missing = new Set(
@@ -359,6 +364,15 @@ export function applyDossierFields(record = {}, dossier = {}) {
     if (next.googleRating || next.yelpRating || next.thirdPartyRating || next.otherRatingSites?.length) {
       missing.delete('ratings');
     }
+  }
+  if (
+    narrativeFallback.split(/\s+/).filter(Boolean).length >= 40
+    && !text(next.description)
+    && !text(next.longDetails)
+  ) {
+    next.description = narrativeFallback;
+    next.longDetails = narrativeFallback;
+    missing.delete('description');
   }
   next.missingFields = [...missing];
   if (Array.isArray(next.dataShortcomings)) {
