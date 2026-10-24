@@ -16,18 +16,16 @@ const start = bundle.indexOf(GUARD);
 const twoLineAt = bundle.indexOf(TWO_LINE_CELL, start);
 const singleLine = bundle.slice(start, twoLineAt);
 assert.ok(singleLine.endsWith(':'), 'single-line branch falls through to the two-line cell');
-assert.ok(singleLine.length < 400, 'single-line branch sits directly before the two-line cell');
+assert.ok(singleLine.length < 700, 'single-line branch sits directly before the two-line cell');
 
 const grid = bundle.slice(bundle.lastIndexOf('n.jsxs("div",{style:{', start), start);
 assert.match(grid, /display:"grid",gridTemplateColumns:"[^"]+",gap:\d+,alignItems:"start"/, 'time cell and title wrapper share one grid row');
 
-const cell = singleLine.match(/^ua\.time&&!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1",style:\{([^}]*)\},children:Yo\(ua\.time\)\}\):$/);
-assert.ok(cell, 'single-line time cell is marked and holds only the time text');
-assert.match(cell[1], /(^|,)alignSelf:"baseline"(,|$)/, 'time cell sits on the grid row baseline');
-assert.match(cell[1], /fontSize:11,fontWeight:700/, 'time text keeps the two-line cell font');
-assert.match(cell[1], /textAlign:"right"/, 'time stays right aligned');
-assert.match(cell[1], /whiteSpace:"nowrap"/, 'single-line time never wraps');
-assert.doesNotMatch(cell[1], /padding|margin|top|transform|position|lineHeight/i, 'no pixel nudges: the baseline comes from layout');
+assert.match(
+  singleLine,
+  /^ua\.time&&!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1",style:\{textAlign:"right",alignSelf:"baseline",whiteSpace:"nowrap"\},children:n\.jsx\("span",\{style:\{fontSize:13,fontWeight:600,lineHeight:"1\.15",color:"#111827"\},children:n\.jsx\("span",\{style:\{fontSize:11,fontWeight:700\},children:Yo\(ua\.time\)\}\)\}\)\}\):$/,
+  'single-line time cell uses the title strut line box',
+);
 
 const wrap = bundle.match(/style:ua\.isConflict\?\{([^}]*)\}:\{paddingTop:1,alignSelf:(ua\.time&&!ua\.endTime\?"baseline":"start")\},children:\[ua\.isConflict&&n\.jsxs\(/);
 assert.ok(wrap, 'title wrapper joins the baseline group on single-line rows');
@@ -47,7 +45,7 @@ const wrapAlign = (row) => new Function('ua', `return ${wrap[2]}`)(row);
 const single = render({ time: '12:00', isConflict: false });
 assert.equal(single.props['data-ts-timeline-time'], '1', 'single-line row renders the baseline cell');
 assert.equal(single.props.style.alignSelf, 'baseline', 'single-line time is baseline aligned');
-assert.equal(single.props.children, 'fmt:12:00', 'single-line row shows the formatted time');
+assert.equal(single.props.children.props.children.props.children, 'fmt:12:00', 'single-line row shows the formatted time');
 assert.equal(wrapAlign({ time: '12:00', isConflict: false }), 'baseline', 'single-line title wrapper is baseline aligned');
 
 const twoLine = render({ time: '05:05', endTime: '15:45', isConflict: false });

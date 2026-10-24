@@ -88,6 +88,7 @@ scripts/test_screenshot_journey_pdf.mjs
 scripts/test_timeline_icons.mjs
 scripts/test_timeline_conflict_label_wrap.mjs
 scripts/test_timeline_single_line_time.mjs
+scripts/test_timeline_single_line_time_chrome.mjs
 scripts/test_travel_base_required.mjs
 scripts/test_vacation_app_shell.mjs
 scripts/test_vacation_app_provider_env_route.mjs
