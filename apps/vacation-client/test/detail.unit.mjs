@@ -13,6 +13,12 @@ import {
   detailSummary,
   safeHttpUrl,
 } from '../src/lib/detailModel.mjs';
+import {
+  buildStarRatingStates,
+  parseStarRating,
+  roundStarRatingToHalf,
+  starRatingAccessibilityLabel,
+} from '../src/lib/starRatingModel.mjs';
 import { buildEnrichedDetailSharedTrip } from './fixtures/enriched-detail-shared-trip.mjs';
 
 function wordCount(value) {
@@ -25,6 +31,17 @@ function wordCount(value) {
 assert.equal(safeHttpUrl('https://example.com/path'), 'https://example.com/path');
 assert.equal(safeHttpUrl('javascript:alert(1)'), null);
 assert.equal(safeHttpUrl('example.com'), null);
+
+assert.equal(parseStarRating('0'), null);
+assert.equal(buildStarRatingStates(0), null);
+assert.equal(roundStarRatingToHalf(3.2), 3);
+assert.deepEqual(buildStarRatingStates(3.2), ['full', 'full', 'full', 'empty', 'empty']);
+assert.equal(roundStarRatingToHalf(4.5), 4.5);
+assert.deepEqual(buildStarRatingStates(4.5), ['full', 'full', 'full', 'full', 'half']);
+assert.equal(roundStarRatingToHalf(5), 5);
+assert.deepEqual(buildStarRatingStates(5), ['full', 'full', 'full', 'full', 'full']);
+assert.equal(starRatingAccessibilityLabel(4.5), '4.5 out of 5 stars');
+assert.equal(starRatingAccessibilityLabel(5), '5 out of 5 stars');
 
 const enrichedTrip = finalizeServedSharedTripPayload(buildEnrichedDetailSharedTrip());
 const restaurant = enrichedTrip.places.find((place) => /Harbor Room/i.test(place.name || ''));
@@ -53,9 +70,9 @@ assert.equal(detailHappyHour(restaurantOverride), restaurantModel.happyHourDetai
 assert.equal(detailReviewTotalsLine(restaurantOverride), restaurantModel.reviewTotalsLine);
 
 assert.deepEqual(detailRatingLines(restaurantOverride), [
-  { id: 'google', text: '4.6 on Google (820 reviews)' },
-  { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
-  { id: 'third', text: 'Other ratings: 4.6' },
+  { id: 'google', value: 4.6, caption: 'on Google (820 reviews)' },
+  { id: 'yelp', value: 4.4, caption: 'on Yelp (410 reviews)' },
+  { id: 'third', value: 4.6, caption: 'Other ratings' },
 ]);
 assert.deepEqual(
   detailRatingLines({
@@ -63,7 +80,7 @@ assert.deepEqual(
     thirdPartyReviewCount: '15,309',
     source: 'Tripadvisor',
   }),
-  [{ id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' }],
+  [{ id: 'third', value: 4.7, caption: 'Other ratings (15,309 reviews)' }],
 );
 assert.deepEqual(
   detailRatingLines({
@@ -76,11 +93,12 @@ assert.deepEqual(
     source: 'Tripadvisor',
   }),
   [
-    { id: 'google', text: '4.6 on Google (820 reviews)' },
-    { id: 'yelp', text: '4.4 on Yelp (410 reviews)' },
-    { id: 'third', text: 'Other ratings: 4.7 (15,309 reviews)' },
+    { id: 'google', value: 4.6, caption: 'on Google (820 reviews)' },
+    { id: 'yelp', value: 4.4, caption: 'on Yelp (410 reviews)' },
+    { id: 'third', value: 4.7, caption: 'Other ratings (15,309 reviews)' },
   ],
 );
+assert.equal(restaurantModel.reviews[0].ratingValue, 4.8);
 assert.equal(
   detailReviewTotalsLine({
     review_totals: { count: 15309, average: 4.7, sources: ['Tripadvisor'] },

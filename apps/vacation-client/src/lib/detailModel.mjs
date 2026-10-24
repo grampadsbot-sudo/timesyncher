@@ -11,6 +11,7 @@ import {
   placeName,
   tabCategoryKey,
 } from './listTabModel.mjs';
+import { parseStarRating } from './starRatingModel.mjs';
 
 const REVIEW_SOURCES = new Set(['Google', 'Yelp', 'TripAdvisor']);
 export const REPRESENTATIVE_REVIEWS_FOOTNOTE =
@@ -241,31 +242,34 @@ export function detailPriceLabel(place, trip, category) {
 
 export function detailRatingLines(override) {
   const lines = [];
-  const googleRating = text(override.googleRating);
   const googleCount = text(override.googleReviewCount);
-  if (googleRating) {
+  const googleValue = parseStarRating(override.googleRating);
+  if (googleValue != null) {
     lines.push({
       id: 'google',
-      text: googleCount ? `${googleRating} on Google (${googleCount} reviews)` : `${googleRating} on Google`,
+      value: googleValue,
+      caption: googleCount ? `on Google (${googleCount} reviews)` : 'on Google',
     });
   }
-  const yelpRating = text(override.yelpRating);
   const yelpCount = text(override.yelpReviewCount);
-  if (yelpRating) {
+  const yelpValue = parseStarRating(override.yelpRating);
+  if (yelpValue != null) {
     lines.push({
       id: 'yelp',
-      text: yelpCount ? `${yelpRating} on Yelp (${yelpCount} reviews)` : `${yelpRating} on Yelp`,
+      value: yelpValue,
+      caption: yelpCount ? `on Yelp (${yelpCount} reviews)` : 'on Yelp',
     });
   }
   const explicitThird = text(override.thirdPartyRating);
   const fallbackRating = text(override.rating);
-  const thirdRating = explicitThird || (!googleRating && !yelpRating ? fallbackRating : '');
+  const thirdRaw = explicitThird || (!googleValue && !yelpValue ? fallbackRating : '');
+  const thirdValue = parseStarRating(thirdRaw);
   const thirdCount = text(override.thirdPartyReviewCount || override.count);
-  if (thirdRating) {
-    const value = thirdCount ? `${thirdRating} (${thirdCount} reviews)` : thirdRating;
+  if (thirdValue != null) {
     lines.push({
       id: 'third',
-      text: `Other ratings: ${value}`,
+      value: thirdValue,
+      caption: thirdCount ? `Other ratings (${thirdCount} reviews)` : 'Other ratings',
     });
   }
   return lines;
@@ -281,7 +285,7 @@ export function detailReviews(override, category) {
     reviews.push({
       index,
       text: text(override[`review${index}`]),
-      rating: text(override[`review${index}Rating`]),
+      ratingValue: parseStarRating(override[`review${index}Rating`]),
       source: text(override[`review${index}Source`]),
       compositeLabel,
     });

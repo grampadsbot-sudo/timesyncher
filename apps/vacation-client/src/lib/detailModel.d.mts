@@ -20,14 +20,14 @@ export function detailHappyHour(override: Record<string, unknown>): string;
 export function detailPriceLabel(place: SharedPlace, trip: SharedTripPayload, category: string): string;
 export function detailRatingLines(
   override: Record<string, unknown>,
-): Array<{ id: string; text: string; label?: string }>;
+): Array<{ id: string; value: number; caption?: string }>;
 export function detailReviews(
   override: Record<string, unknown>,
   category: string,
 ): Array<{
   index: number;
   text: string;
-  rating?: string;
+  ratingValue?: number | null;
   source?: string;
   compositeLabel?: string;
 }>;
@@ -49,11 +49,11 @@ export type DetailViewModel = {
   itineraryNote: string;
   happyHourDetails: string;
   priceLabel: string;
-  ratingLines: Array<{ id: string; text: string; label?: string }>;
+  ratingLines: Array<{ id: string; value: number; caption?: string }>;
   reviews: Array<{
     index: number;
     text: string;
-    rating?: string;
+    ratingValue?: number | null;
     source?: string;
     compositeLabel?: string;
   }>;
