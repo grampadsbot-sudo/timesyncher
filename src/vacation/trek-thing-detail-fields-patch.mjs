@@ -23,6 +23,12 @@ const HH_CHECK_PATCH = '}),(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:{...H
 const HH_DETAILS_NEEDLE = '}),zi(Dt)&&n.jsxs("label",{style:Hn,children:["Happy hour details",n.jsx("textarea",{value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value),placeholder:"Recent/current happy-hour offer, menu items, discount, days/times, caveats, and source note",style:{...ur,minHeight:84}})]}),Zi(Dt)&&n.jsxs("div"';
 const HH_DETAILS_PATCH = '}),(zi(Dt)||It(Dt)==="bar")&&n.jsxs("label",{style:Hn,children:["Happy hour details",n.jsx("textarea",{value:(ha(Dt).happyHourDetails||(tsPf.find(row=>row.match.test(String(Dt.name||Dt.title||"")))||{}).happyHourDetails||""),onChange:G=>Xa(Dt,"happyHourDetails",G.target.value),placeholder:"Recent/current happy-hour offer, menu items, discount, days/times, caveats, and source note",style:{...ur,minHeight:84}})]}),Zi(Dt)&&n.jsxs("div"';
 
+export const RESTAURANT_DETAIL_TAG_CHIPS_NEEDLE =
+  'zi(Dt)&&n.jsxs("label",{style:Hn,children:["Restaurant tags / chips",n.jsx("input",{value:_t(Dt),onChange:G=>Ua(Dt,G.target.value),placeholder:"Italian, Michelin-starred, Romantic / Date Night",style:De}),n.jsx("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:4},children:ot.map(G=>{const Re=or(Dt).includes(G);return n.jsx("button",{type:"button",onClick:()=>jn(Dt,G),style:{border:"1px solid #e5e7eb",background:Re?"#111827":"white",color:Re?"white":"#6b7280",borderRadius:999,padding:"5px 8px",fontSize:10,fontWeight:800,cursor:"pointer"},children:G},G)})})]})';
+
+const RESTAURANT_DETAIL_TAG_CHIPS_PATCH =
+  'zi(Dt)&&(Ce?n.jsxs("label",{style:Hn,children:["Restaurant tags / chips",n.jsx("select",{"aria-label":"Restaurant tags",multiple:!0,value:or(Dt),onChange:G=>{const zt=Array.from(G.target.selectedOptions).map(ua=>ua.value);Xa(Dt,"restaurantTags",zt)},style:{...De,width:"100%",minHeight:88,marginTop:4},children:ot.map(G=>n.jsx("option",{value:G,children:G},G))}),or(Dt).length?n.jsx("div",{"data-ts-restaurant-tag-chips":"1",style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:4},children:or(Dt).map(G=>n.jsx("button",{type:"button",tabIndex:-1,style:{border:"1px solid #e5e7eb",background:"#111827",color:"white",borderRadius:999,padding:"5px 8px",fontSize:10,fontWeight:800,cursor:"default"},children:G},G))}):null]}):or(Dt).length?n.jsxs("label",{style:Hn,children:["Restaurant tags / chips",n.jsx("div",{"data-ts-restaurant-tag-chips":"1",style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:4},children:or(Dt).map(G=>n.jsx("button",{type:"button",tabIndex:-1,disabled:!0,style:{border:"1px solid #e5e7eb",background:"#111827",color:"white",borderRadius:999,padding:"5px 8px",fontSize:10,fontWeight:800,cursor:"default"},children:G},G))})]}):null)';
+
 export function patchThingDetailFields(source = '') {
   let js = String(source || '');
   if (js.includes(RR_LIST_PATCH_BROKEN)) js = js.replace(RR_LIST_PATCH_BROKEN, RR_LIST_PATCH);
@@ -37,5 +43,8 @@ export function patchThingDetailFields(source = '') {
   }
   if (js.includes(HH_CHECK_NEEDLE)) js = js.replace(HH_CHECK_NEEDLE, HH_CHECK_PATCH);
   if (js.includes(HH_DETAILS_NEEDLE)) js = js.replace(HH_DETAILS_NEEDLE, HH_DETAILS_PATCH);
+  if (js.includes(RESTAURANT_DETAIL_TAG_CHIPS_NEEDLE)) {
+    js = js.replace(RESTAURANT_DETAIL_TAG_CHIPS_NEEDLE, RESTAURANT_DETAIL_TAG_CHIPS_PATCH);
+  }
   return js;
 }

@@ -6,6 +6,9 @@ import { readFile } from 'node:fs/promises';
 import { OTHER_THINGS_BUCKET } from '../src/vacation/budget-bucket-keys.mjs';
 import { renderServedTrekBundle } from '../src/vacation/trek-style2-bundle.mjs';
 import {
+  RESTAURANT_DETAIL_TAG_CHIPS_NEEDLE,
+} from '../src/vacation/trek-thing-detail-fields-patch.mjs';
+import {
   BUDGET_BUCKET_CLASSIFIER_PATCH,
   BUDGET_CATEGORIES_PATCH,
   extractUpstreamMiscBucketLabel,
@@ -63,6 +66,14 @@ assert.equal(Sn('', { id: 1, name: 'Sample Venue', source: { neighborhood: 'Samp
 const areaSelect = sliceBetween(rendered, '["Area",n.jsx("select"', 'Ke.map(G=>n.jsx("option"');
 assert.match(areaSelect, /value:En\(Dt\)/);
 assert.equal(areaSelect.includes('selected'), false);
+
+assert.doesNotMatch(
+  rendered,
+  new RegExp(RESTAURANT_DETAIL_TAG_CHIPS_NEEDLE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+);
+assert.match(rendered, /"aria-label":"Restaurant tags",multiple:!0,value:or\(Dt\)/);
+assert.match(rendered, /data-ts-restaurant-tag-chips/);
+assert.doesNotMatch(rendered, /Restaurant tags \/ chips",n\.jsx\("input",\{value:_t\(Dt\)/);
 
 const committed = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.equal(rendered, committed);
