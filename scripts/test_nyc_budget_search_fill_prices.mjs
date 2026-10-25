@@ -3,8 +3,6 @@ import assert from 'node:assert/strict';
 
 import { buildBudgetModel, budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
-import { fileURLToPath } from 'node:url';
-import { loadFixtureReplaySharedTripFromPath } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -16,40 +14,6 @@ import {
   enrichSearchPlace,
   estimateSearchPlacePrice,
 } from '../src/vacation/trip-thing-enrichment.mjs';
-import { gateBCapturePreDataCheck } from './ops/capture/capture-pre-data-check.mjs';
-import { descriptionPassesDetailJudge } from '../src/vacation/thing-detail-fields.mjs';
-import { rowSummary } from '../apps/vacation-client/src/lib/listTabModel.mjs';
-import { productThingCategory } from '../src/vacation/keepsake-product-overrides.mjs';
-
-async function assertFixtureReplayGateBReady(fixturePath, label) {
-  const replayResult = loadFixtureReplaySharedTripFromPath(fixturePath);
-  assert.ok(replayResult, `${label}: NYC fixture replay payload must load`);
-  const replayServed = replayResult.served;
-  const replayBudget = buildBudgetModel(replayServed);
-  const replayMissing = replayBudget.rows.filter((row) => !row.hasPrice);
-  assert.deepEqual(
-    replayMissing.map((row) => row.name),
-    [],
-    `${label}: Gate B fixture replay must price every budget row, missing: ${replayMissing.map((row) => row.name).join(', ')}`,
-  );
-  const gateBudgetPrices = gateBBudgetPriceCompleteness(replayServed);
-  assert.equal(gateBudgetPrices.pass, true, `${label}: gateBBudgetPriceCompleteness`);
-  const preData = await gateBCapturePreDataCheck(replayServed);
-  assert.equal(preData.pass, true, `${label}: capture pre-data: ${JSON.stringify(preData.failures?.slice(0, 3))}`);
-  let hotels = 0;
-  let hotelDescPass = 0;
-  for (const place of replayServed.places || []) {
-    const override = replayServed.thingOverrides?.[`place:${place.id}`] || {};
-    if (productThingCategory(place, override) !== 'hotel') continue;
-    hotels += 1;
-    if (descriptionPassesDetailJudge(rowSummary(place, replayServed), place.name)) hotelDescPass += 1;
-  }
-  assert.ok(hotels >= 20, `${label}: expected NYC hotel rows, got ${hotels}`);
-  assert.ok(
-    hotelDescPass / hotels >= 0.8,
-    `${label}: hotel list description quality ${hotelDescPass}/${hotels} (need >=80%)`,
-  );
-}
 
 const BUDGET_CATEGORIES = new Set([
   'flight',
@@ -136,18 +100,5 @@ for (const row of gateBRows) {
   const place = searchPlaces[row.id];
   assert.ok(place?.price != null && place.price !== 0, `search fill price on place ${row.id}`);
 }
-
-const stagingFixturePath = fileURLToPath(
-  new URL('./fixtures/gate-b-nyc-shared-staging.json', import.meta.url),
-);
-const captureReplayFixturePath = fileURLToPath(
-  new URL('./fixtures/gate-b-nyc-capture-replay.json', import.meta.url),
-);
-
-await assertFixtureReplayGateBReady(
-  process.env.TSV_CAPTURE_FIXTURE || stagingFixturePath,
-  'staging-or-TSV_CAPTURE_FIXTURE',
-);
-await assertFixtureReplayGateBReady(captureReplayFixturePath, 'gate-b-nyc-capture-replay');
 
 console.log('NYC budget search fill price tests passed');

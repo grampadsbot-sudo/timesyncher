@@ -33,6 +33,8 @@ assert.equal(safeHttpUrl('javascript:alert(1)'), null);
 assert.equal(safeHttpUrl('example.com'), null);
 
 assert.equal(parseStarRating('0'), null);
+assert.equal(parseStarRating(-2), null);
+assert.equal(parseStarRating('-2'), null);
 assert.equal(buildStarRatingStates(0), null);
 assert.equal(roundStarRatingToHalf(3.2), 3);
 assert.deepEqual(buildStarRatingStates(3.2), ['full', 'full', 'full', 'empty', 'empty']);
