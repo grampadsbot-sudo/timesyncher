@@ -6,22 +6,29 @@ const TS_DETAIL_CAPTURE_BODY = 'const d=ha(Dt)||{};const cat=String(It(Dt)||"").
 
 const TS_DETAIL_CAPTURE_MISPLACED = `function tsDetailCapturePayload(Dt){${TS_DETAIL_CAPTURE_BODY}}`;
 
+const HA_BODY = 'ha=G=>{const o=tsFillOv(le[Qt(G)]||{},G);return{...G,...o}}';
 const HA_SCOPE_NEEDLE = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=(G,Re)=>{';
-const HA_SCOPE_PATCH = `ha=G=>tsFillOv(le[Qt(G)]||{},G),tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=(G,Re)=>{`;
+const HA_SCOPE_PATCH = `${HA_BODY},tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=(G,Re)=>{`;
 const HA_SCOPE_NEEDLE_BEFORE_SN = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=';
-const HA_SCOPE_PATCH_BEFORE_SN = `ha=G=>tsFillOv(le[Qt(G)]||{},G),tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=`;
+const HA_SCOPE_PATCH_BEFORE_SN = `${HA_BODY},tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=`;
+const HA_MERGE_NEEDLE = `${HA_BODY},tsDetailCapturePayload=Dt=>{`;
+const HA_LEGACY_NEEDLE = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),tsDetailCapturePayload=Dt=>{';
 
 export function patchThingDetailCapture(source = '') {
   let js = String(source || '');
   if (js.includes(TS_DETAIL_CAPTURE_MISPLACED)) {
     js = js.replace(TS_DETAIL_CAPTURE_MISPLACED, '');
   }
-  if (!js.includes('tsDetailCapturePayload=Dt=>{')) {
+  if (js.includes(HA_LEGACY_NEEDLE)) {
+    js = js.replace(HA_LEGACY_NEEDLE, `${HA_BODY},tsDetailCapturePayload=Dt=>{`);
+  } else if (!js.includes('tsDetailCapturePayload=Dt=>{')) {
     if (js.includes(HA_SCOPE_NEEDLE)) {
       js = js.replace(HA_SCOPE_NEEDLE, HA_SCOPE_PATCH);
     } else if (js.includes(HA_SCOPE_NEEDLE_BEFORE_SN)) {
       js = js.replace(HA_SCOPE_NEEDLE_BEFORE_SN, HA_SCOPE_PATCH_BEFORE_SN);
     }
+  } else if (!js.includes(HA_MERGE_NEEDLE)) {
+    js = js.replace(/ha=G=>tsFillOv\(le\[Qt\(G\)\]\|\|\{\},G\),tsDetailCapturePayload=Dt=>/g, `${HA_BODY},tsDetailCapturePayload=Dt=>`);
   }
   if (js.includes(DETAIL_PANEL_NEEDLE)) {
     js = js.replace(DETAIL_PANEL_NEEDLE, DETAIL_PANEL_PATCH);
