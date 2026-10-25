@@ -376,6 +376,52 @@
     "review4Source": null,
     "review4Url": null
   },
+  "Blue Note Jazz Club": {
+    "googleRating": "4.5",
+    "googleReviewCount": "4200",
+    "yelpRating": "4",
+    "yelpReviewCount": "1800",
+    "thirdPartyRating": "4.4",
+    "thirdPartyReviewCount": "950",
+    "otherRatingSites": [
+      {
+        "rating": "4.4",
+        "reviewCount": "950"
+      }
+    ],
+    "ratingCount": 4200,
+    "reviewThemes": {
+      "praise": [
+        "legendary Greenwich Village jazz room with tight sightlines to the stage",
+        "rotating lineup of classic and contemporary jazz artists nightly",
+        "table service that keeps sets focused on the music",
+        "late sets that still feel intimate despite the club's fame"
+      ],
+      "complaints": [
+        "cover charges and drink minimums add up on busy weekends",
+        "tight seating when the room sells out for marquee acts",
+        "occasional sound mix issues in back tables"
+      ]
+    },
+    "websiteFlavour": "Historic basement club on West 3rd Street hosting two-set evenings of jazz with table service, cover charges that vary by artist, and a legacy room where many marquee jazz recordings were cut.",
+    "xaiRatingsFetched": true,
+    "review1": "legendary Greenwich Village jazz room with tight sightlines to the stage. Historic basement club on West 3rd Street hosting two-set evenings of jazz with table service, cover charges that vary by artist, and a legacy room where many marquee jazz recordings were cut.",
+    "review2": "rotating lineup of classic and contemporary jazz artists nightly. Historic basement club on West 3rd Street hosting two-set evenings of jazz with table service, cover charges that vary by artist, and a legacy room where many marquee jazz recordings were cut.",
+    "review3": "table service that keeps sets focused on the music. Historic basement club on West 3rd Street hosting two-set evenings of jazz with table service, cover charges that vary by artist, and a legacy room where many marquee jazz recordings were cut.",
+    "review4": "late sets that still feel intimate despite the club's fame. Historic basement club on West 3rd Street hosting two-set evenings of jazz with table service, cover charges that vary by artist, and a legacy room where many marquee jazz recordings were cut.",
+    "review1Rating": "5",
+    "review2Rating": "4",
+    "review3Rating": "5",
+    "review4Rating": "4",
+    "review1Source": null,
+    "review1Url": null,
+    "review2Source": null,
+    "review2Url": null,
+    "review3Source": null,
+    "review3Url": null,
+    "review4Source": null,
+    "review4Url": null
+  },
   "Jazz at Lincoln Center": {
     "googleRating": "4.6",
     "googleReviewCount": "1335",
