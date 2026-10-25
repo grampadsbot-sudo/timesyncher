@@ -16,6 +16,9 @@ const rendered = renderServedTrekBundle(raw.toString('utf8'));
 assert.match(rendered, /tsRenderStarRatingHtml=v=>/);
 assert.match(rendered, /tsParseStarRating=raw=>/);
 assert.match(rendered, /data-ts-review-stars/);
+assert.match(rendered, /data-ts-list-row-rating/);
+assert.match(rendered, /data-ts-detail-rating-stars/);
+assert.match(rendered, /tsPrimaryPlaceStarRating\(ha\(G\)\)/);
 assert.doesNotMatch(rendered, /review-stars-inline">★★★★★<\/span>/);
 assert.match(rendered, /\.ts-star-rating\{display:inline-flex/);
 
