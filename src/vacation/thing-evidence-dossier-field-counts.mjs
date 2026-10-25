@@ -121,7 +121,7 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
   }
 
   const summaryVal = text(fields.summary?.value ?? fields.summary);
-  counts.summary = summaryVal && words(summaryVal) >= 30 && descriptionNamesThing(summaryVal, dossier.thing)
+  counts.summary = summaryVal && words(summaryVal) >= 12 && descriptionNamesThing(summaryVal, dossier.thing)
     ? { status: 'ok' } : { status: 'missing' };
 
   const descVal = text(

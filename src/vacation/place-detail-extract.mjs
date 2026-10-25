@@ -150,6 +150,14 @@ function extractStreetAddressFromBlob(blob = '') {
   return plain ? text(plain[1], 200) : '';
 }
 
+export function extractNeighborhoodFromBlob(blob = '') {
+  const textBlob = text(blob, 120000);
+  const labeled = textBlob.match(/\bNeighborhood:\s*([^;\n.]{3,80})/i);
+  if (labeled) return text(labeled[1], 80);
+  const borough = textBlob.match(/\b(Upper West Side|Upper East Side|Greenwich Village|East Village|West Village|SoHo|TriBeCa|Tribeca|Hell's Kitchen|Midtown|Financial District|Williamsburg|Brooklyn Heights|Harlem|Chelsea|Flatiron|NoHo|Nolita|Lower East Side)\b/i);
+  return borough ? text(borough[1], 80) : '';
+}
+
 export function extractContactFieldsFromBlob(blob = '') {
   const fields = {};
   const address = extractStreetAddressFromBlob(blob);

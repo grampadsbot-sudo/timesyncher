@@ -1,5 +1,5 @@
 import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
-import { extractContactFieldsFromBlob } from './place-detail-extract.mjs';
+import { extractContactFieldsFromBlob, extractNeighborhoodFromBlob } from './place-detail-extract.mjs';
 import { claimsSupported, descriptionNamesThing, dossierPageById, dossierPageId, ensureBraveSnippetCitationPages, resolveClaimCitationPages } from './thing-dossier-fields.mjs';
 import {
   computeDossierFieldCounts,
@@ -283,6 +283,22 @@ export function hydrateScalarFieldsFromEvidence(dossier = {}, place = {}) {
   }
   if (extracted.hours && !next.fields?.hours) next = setScalarField(next, 'hours', text(extracted.hours), firstPageIdForNeedle(next, extracted.hours));
   if (extracted.website && !next.fields?.website) next = setScalarField(next, 'website', text(extracted.website), firstPageIdForNeedle(next, extracted.website));
+  const neighborhood = extractNeighborhoodFromBlob(blob)
+    || text(place.neighborhood || place.area || place.sourceRecord?.neighborhood || place.sourceRecord?.area);
+  if (neighborhood && !text(next.fields?.neighborhood?.value ?? next.fields?.neighborhood)) {
+    next = setScalarField(next, 'neighborhood', neighborhood, firstPageIdForNeedle(next, neighborhood));
+  }
+  const lat = Number(place.lat ?? place.sourceRecord?.lat ?? place.sourceRecord?.latitude);
+  const lng = Number(place.lng ?? place.sourceRecord?.lng ?? place.sourceRecord?.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    const coordPage = next.pages?.length ? dossierPageId(0) : 'p1';
+    if (!text(next.fields?.lat?.value ?? next.fields?.lat)) {
+      next = setScalarField(next, 'lat', String(lat), coordPage);
+    }
+    if (!text(next.fields?.lng?.value ?? next.fields?.lng)) {
+      next = setScalarField(next, 'lng', String(lng), coordPage);
+    }
+  }
   return next;
 }
 

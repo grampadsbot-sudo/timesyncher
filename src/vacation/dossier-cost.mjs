@@ -1,4 +1,5 @@
 import { xaiGrokPlaceSearchModelId } from '../../scripts/vacation-app-reply-rules.mjs';
+import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 
 const PLACE_SEARCH_RATE_ROW = { input: 1.25, cached: 0.2, output: 2.5, longInput: 2.5, longCached: 0.4, longOutput: 5 };
 const rateByModelKey = new Map();
@@ -100,7 +101,7 @@ export function dossierForReviewWriter(dossier = {}) {
       : condenseText(page.text, dossier.thing, { maxChars: Math.min(750, left), want: 'reviews' });
     left -= text.length;
     const { braveReviews, braveRating, ...rest } = page;
-    pages.push({ id, ...rest, text });
+    pages.push({ id, ...rest, text, ...(braveRating ? { braveRating } : {}) });
   }
   if (!pages.length) {
     return dossierForModel(dossier, { perPage: 700, total: 10000, want: 'reviews', reviewCap: 80, reviewWords: 55 });
@@ -140,6 +141,36 @@ export function commitDossierXaiUsageRun(dossier = {}, persisted = {}, meta = {}
   return run;
 }
 
+function scalarFieldValue(field) {
+  if (field == null) return '';
+  if (typeof field === 'object') return String(field.value ?? field.text ?? '').trim();
+  return String(field).trim();
+}
+
+export function dossierBuilderEvidenceHints(dossier = {}) {
+  const hints = {};
+  const hours = scalarFieldValue(dossier.fields?.hours);
+  if (hoursValueLooksValid(hours)) hints.hours = hours;
+  const neighborhood = scalarFieldValue(dossier.fields?.neighborhood);
+  if (neighborhood) hints.neighborhood = neighborhood;
+  const lat = Number(scalarFieldValue(dossier.fields?.lat));
+  const lng = Number(scalarFieldValue(dossier.fields?.lng));
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    hints.lat = lat;
+    hints.lng = lng;
+  }
+  const pageRatings = (dossier.pages || [])
+    .filter((page) => page.braveRating?.quote && page.braveRating?.average && page.braveRating?.count)
+    .map((page) => ({
+      url: page.url,
+      average: page.braveRating.average,
+      count: page.braveRating.count,
+      quote: page.braveRating.quote,
+    }));
+  if (pageRatings.length) hints.pageRatings = pageRatings;
+  return Object.keys(hints).length ? hints : undefined;
+}
+
 export function dossierForModel(dossier = {}, { perPage = 1800, total = 24000, want = 'both', reviewCap = 40, reviewWords = 60 } = {}) {
   let left = total;
   const pages = (dossier.pages || []).map((page) => {
@@ -147,7 +178,7 @@ export function dossierForModel(dossier = {}, { perPage = 1800, total = 24000, w
       : condenseText(page.text, dossier.thing, { maxChars: Math.min(perPage, Math.max(0, left)), want });
     left -= text.length;
     const { braveReviews, braveRating, ...rest } = page;
-    return { ...rest, text };
+    return { ...rest, text, ...(braveRating ? { braveRating } : {}) };
   });
   const out = { ...dossier, pages };
   delete out.xaiUsage;
@@ -155,6 +186,8 @@ export function dossierForModel(dossier = {}, { perPage = 1800, total = 24000, w
   if (Array.isArray(dossier.reviewSet)) {
     out.reviewSet = dossier.reviewSet.slice(0, reviewCap).map((r) => ({ ...r, text: String(r.text || '').split(/\s+/).slice(0, reviewWords).join(' ') }));
   }
+  const hints = dossierBuilderEvidenceHints(dossier);
+  if (hints) out.evidenceHints = hints;
   return out;
 }
 

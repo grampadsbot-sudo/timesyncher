@@ -130,6 +130,23 @@ function claimUrls(dossier, owner) {
     .map((id) => dossierPageById(dossier, id)?.url).filter(Boolean))].join(',');
 }
 
+const RATING_QUOTE_MARK = /\b(?:stars?|rated|rating|reviews?|out of|\/\s*5)\b/i;
+
+export function ratingQuoteSupportsAggregate(quote = '', average, count) {
+  const q = norm(quote);
+  if (!q || q.length < 6 || !RATING_QUOTE_MARK.test(q)) return false;
+  const avg = Number(average);
+  const cnt = Number(count);
+  if (!(avg > 0) || !(Number.isInteger(cnt) && cnt > 0)) return false;
+  const avgEsc = String(avg).replace('.', '\\.');
+  if (!new RegExp(`(^|[^\\d.])${avgEsc}([^\\d.]|$)`).test(q)) return false;
+  const digits = String(cnt);
+  const compact = q.replace(/,/g, '');
+  if (!compact.includes(digits)) return false;
+  if (/\b\d{3}[\s.-]\d{3}[\s.-]\d{4}\b/.test(q) && !/\breviews?\b/i.test(q)) return false;
+  return true;
+}
+
 export function prepareDossierFindings(dossier, findings = {}) {
   const next = { ...dossier, fields: {}, reviews: [], knownFor: [], reviewsRead: 0 };
   if (!dossierPagesVerified(dossier)) return next;
@@ -153,8 +170,7 @@ export function prepareDossierFindings(dossier, findings = {}) {
   const scale = Number(rating?.scaleMax);
   if (cited(dossier, rating) && average > 0 && [5, 10].includes(scale) && average <= scale
     && Number.isInteger(count) && count > 0
-    && norm(rating.quote).includes(String(average))
-    && norm(rating.quote).replace(/,/g, '').includes(String(count))) {
+    && ratingQuoteSupportsAggregate(rating.quote, average, count)) {
     next.rating = average * 5 / scale;
     next.reviewsAvailable = count;
     next.ratingEvidence = rating;
@@ -162,7 +178,7 @@ export function prepareDossierFindings(dossier, findings = {}) {
       && rating.starMix.every((n) => Number.isInteger(n) && n >= 0)
       && rating.starMix.reduce((a, b) => a + b, 0) === count) next.ratingMix = rating.starMix;
   }
-  for (const key of ['summary', 'description', 'price', 'itineraryNote']) {
+  for (const key of ['summary', 'description', 'price', 'itineraryNote', 'neighborhood']) {
     const claim = findings[key];
     if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
     if (key === 'itineraryNote' && norm(claim.value).length > 280) continue;
@@ -177,6 +193,12 @@ export function prepareDossierFindings(dossier, findings = {}) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
     }
+  }
+  for (const key of ['lat', 'lng']) {
+    const claim = findings[key];
+    const value = Number(claim?.value ?? claim);
+    if (!Number.isFinite(value) || !claimsSupported(dossier, claim)) continue;
+    next.fields[key] = { ...claim, value, url: claimUrls(dossier, claim) };
   }
   const reviewHosts = /yelp|tripadvisor|google\.|reddit|facebook|instagram/i;
   const officialUrl = (dossier.pages || []).find((page) => page.url && !reviewHosts.test(page.url))?.url
