@@ -1,3 +1,7 @@
+# PR #703 Gate B fix-it (2026-10-25)
+
+GBrain handoff page `bot-admin/lanes/vk-pr-handoff/pr-703` was not found at session start (`page_not_found`); work followed the inline PR handoff instead.
+
 # #671 host-reviewed coverage slice
 
 Base d510520afc1fc504a01913d5e45ec6beec1ea191 migrate/trek-source. Exact live coverage preimage eafd0a25ce1ebd8b87afd32910fdf423d32ce5af84e93e823a7ee54da1cf7cc6. Patch changes only _segments: normalize equivalent apostrophe characters in header matching while preserving all original canonical keys, item counts and first-segment behavior. Does not merge duplicate rows, borrow another row price, deduplicate fixture names or change thresholds.
