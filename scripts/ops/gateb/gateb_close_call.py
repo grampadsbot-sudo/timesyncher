@@ -156,3 +156,27 @@ def merge_close_call_verdict(pixel_verdict: str, adjudication: tuple[bool, str])
     if ok:
         return {"verdict": "PASS", "close_call": "price-only", "reason": reason, "was": base}
     return {"verdict": base or "FAIL", "close_call": "fail", "reason": reason}
+
+
+def apply_compare_override(
+    screen: str,
+    ratio: float | None,
+    vision_why: str | None,
+    *,
+    size_changed: bool = False,
+    base_items=None,
+    cand_items=None,
+) -> dict | None:
+    ok, reason = adjudicate_price_compare(
+        screen,
+        ratio,
+        base_items or [],
+        cand_items or [],
+        vision_why,
+        size_changed=size_changed,
+    )
+    if not ok:
+        return None
+    merged = merge_close_call_verdict("FAIL", (True, reason))
+    merged["vision_price_only"] = True
+    return merged

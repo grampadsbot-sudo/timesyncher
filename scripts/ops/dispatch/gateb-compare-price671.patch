@@ -1,0 +1,77 @@
+--- a/gateb_compare.py
++++ b/gateb_compare.py
+@@ -18,6 +18,8 @@
+ import argparse, base64, json, os, subprocess, sys, time, urllib.request, shutil
+ 
+ HERE = os.path.dirname(os.path.realpath(__file__))
++sys.path.insert(0, HERE)
++import gateb_close_call
+ # Close-call judge (Craig 3:41 PM PT 10/7: off gemini-2.5-flash-lite, which OpenRouter retires Oct 20).
+ # Advisory only: it runs ONLY for close calls (pass_max < ratio < fail_min); a pixelmatch FAIL or size/aspect FAIL
+ # never reaches it. Price-capped, single model, no paid fallback: any error / no provider under the cap -> UNSURE
+@@ -85,7 +87,19 @@
+     except Exception as e:
+         return "UNSURE", "vision error: " + type(e).__name__
+ 
+-def compare(name, base, cand, out, a):
++def screen_items(capture_dir, screen):
++    if not capture_dir or not os.path.isdir(capture_dir):
++        return []
++    path = os.path.join(capture_dir, "capture-regions.json")
++    if not os.path.isfile(path):
++        return []
++    try:
++        reg = json.load(open(path))
++        return list((reg.get(screen) or {}).get("items") or [])
++    except Exception:
++        return []
++
++def compare(name, base, cand, out, a, cand_dir=None, base_capture_dir=None):
+     stem = name[:-4]
+     r = {"file": name}
+     (bw, bh), (cw, ch) = size(base), size(cand)
+@@ -120,8 +134,22 @@
+         v, why = vision(sbs)
+         r["vision"] = {"model": VISION_MODEL, "verdict": v, "why": why, "cost_usd": LAST_USAGE.get("cost"),
+                        "provider": LAST_USAGE.get("provider")}
+-        r.update(verdict={"PASS": "PASS", "FAIL": "FAIL"}.get(v, "NEEDS_JUDGMENT"),
+-                 reason="close call (%.4f; %d px in %s cluster(s), largest %s); vision %s: %s" % (m["ratio"], m["mismatched"], m.get("clusters"), m.get("largest_cluster"), v, why))
++        verdict = {"PASS": "PASS", "FAIL": "FAIL"}.get(v, "NEEDS_JUDGMENT")
++        reason = "close call (%.4f; %d px in %s cluster(s), largest %s); vision %s: %s" % (
++            m["ratio"], m["mismatched"], m.get("clusters"), m.get("largest_cluster"), v, why)
++        if verdict != "PASS":
++            size_changed = (bw, bh) != (cw, ch)
++            base_items = screen_items(base_capture_dir, name)
++            cand_items = screen_items(cand_dir, name)
++            override = gateb_close_call.apply_compare_override(
++                name, m["ratio"], why, size_changed=size_changed, base_items=base_items, cand_items=cand_items)
++            if override:
++                verdict = override["verdict"]
++                reason = override["reason"]
++                r["close_call"] = override.get("close_call")
++                if override.get("vision_price_only"):
++                    r["vision"]["price_only_override"] = True
++        r.update(verdict=verdict, reason=reason)
+     return r
+ 
+ def gh_token():
+@@ -160,7 +188,10 @@
+     ap.add_argument("--force", action="store_true", help="screen-check a PR even if it touches no UI/render files")
+     ap.add_argument("--data-snapshot", help="VK data pre-check: run skills/vk-thing-data-contract over this fixture JSON first; "
+                     "a failure is a DATA fault (no compare, no kickback, no fix-it to the coder)")
++    ap.add_argument("--base-capture", help="capture dir with capture-regions.json for the baseline (list price-only close calls)")
+     a = ap.parse_args()
++    base_capture_dir = a.base_capture or os.environ.get("GATEB_BASE_CAPTURE")
++    cand_dir = a.candidates if os.path.isdir(a.candidates) else None
+     if a.data_snapshot:
+         # VK data pre-check (vk-thing-data-contract): a field failing the contract stops the screen check here.
+         chk = sh(sys.executable, "-I", os.path.join(HERE, "..", "tsv-dispatch", "vk_contract_check.py"), a.data_snapshot)
+@@ -186,7 +217,7 @@
+     run = time.strftime("%Y%m%d-%H%M%S")
+     out = a.out or os.path.join(HERE, "runs", run); os.makedirs(out, exist_ok=True)
+     prs, missing = pairs(a.baselines, a.candidates)
+-    rows = [compare(n, b, c, out, a) for n, b, c in prs]
++    rows = [compare(n, b, c, out, a, cand_dir=cand_dir, base_capture_dir=base_capture_dir) for n, b, c in prs]
+     vs = [r["verdict"] for r in rows]
+     overall = ("NEEDS_JUDGMENT" if not rows else "FAIL" if "FAIL" in vs
+                else "NEEDS_JUDGMENT" if "NEEDS_JUDGMENT" in vs else "PASS")

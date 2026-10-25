@@ -103,6 +103,32 @@ class GatebPrice671HarnessTests(unittest.TestCase):
         self.assertEqual(merged["verdict"], "PASS")
         self.assertEqual(merged["close_call"], "price-only")
 
+    def test_apply_compare_override_pr660_budget_messages(self) -> None:
+        cases = (
+            (0.000457, "The 'Trip total' amount has changed from $69,436 to $131,257."),
+            (0.00258, "There are significant changes in the pricing data and 'Add price' buttons throughout the itinerary sections."),
+            (0.009022, "The trip budget and individual item prices have changed significantly, resulting in widespread differences across the entire page."),
+        )
+        for ratio, why in cases:
+            override = gateb_close_call.apply_compare_override(
+                "budget-390.png", ratio, why, size_changed=False, base_items=[], cand_items=[]
+            )
+            self.assertIsNotNone(override, why)
+            self.assertEqual(override["verdict"], "PASS")
+            self.assertEqual(override["close_call"], "price-only")
+
+    def test_apply_compare_override_returns_none_on_layout(self) -> None:
+        self.assertIsNone(
+            gateb_close_call.apply_compare_override(
+                "budget-1280.png",
+                0.005,
+                "logo chip missing on hotel row",
+                size_changed=False,
+                base_items=[],
+                cand_items=[],
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
