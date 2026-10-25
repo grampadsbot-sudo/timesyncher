@@ -1,0 +1,17 @@
+{
+  "fetchedAt": "2026-10-25T12:00:00.000Z",
+  "rowId": 611,
+  "ccabKey": "Blue Note Jazz Club",
+  "title": "Blue Note Jazz Club",
+  "query": "Blue Note Jazz Club New York official website",
+  "tavilyResponse": {
+    "query": "Blue Note Jazz Club New York official website",
+    "results": [
+      {
+        "title": "Blue Note Jazz Club New York",
+        "url": "https://www.bluenote.net/jazz-club-new-york/",
+        "content": "Official Blue Note Jazz Club site at https://www.bluenote.net/jazz-club-new-york/ lists nightly jazz sets at 131 W 3rd St in Greenwich Village."
+      }
+    ]
+  }
+}
