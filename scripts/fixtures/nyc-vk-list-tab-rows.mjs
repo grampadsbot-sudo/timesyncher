@@ -91,7 +91,7 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
   },
   {
     "id": 625,
-    "name": "Romer Hell's Kitchen",
+    "name": "Romer Hell\u2019s Kitchen",
     "cat": "hotel",
     "ccabKey": "Romer Hell's Kitchen"
   },
