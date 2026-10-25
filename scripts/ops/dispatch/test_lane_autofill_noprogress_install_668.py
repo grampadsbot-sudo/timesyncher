@@ -1,6 +1,7 @@
 import io
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -59,6 +60,29 @@ class HostFixtureInstall668(unittest.TestCase):
         bad = "def pr_sort_key(pr, bad_checks):\n    return (0,)\n"
         with self.assertRaises(SystemExit):
             installer.inject_lane_autofill(bad)
+
+    def test_installed_guard_imports_from_plain_dispatch_copy(self):
+        plain = Path(tempfile.mkdtemp(prefix="dispatch-668-plain-"))
+        try:
+            shutil.copy2(
+                Path(__file__).resolve().parent / installer.GUARD_MODULE,
+                plain / installer.GUARD_MODULE,
+            )
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    "import lane_autofill_noprogress_guards as m; "
+                    "assert m.lane_results_for_pr([653, {'pr': 653}], 653)",
+                ],
+                cwd=str(plain),
+                env={**os.environ, "PYTHONPATH": ""},
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr or proc.stdout)
+        finally:
+            shutil.rmtree(plain, ignore_errors=True)
 
 
 class HostFixtureBehavior668(unittest.TestCase):

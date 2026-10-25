@@ -86,6 +86,22 @@ class NoProgressBackoff668(unittest.TestCase):
         skip, _reason = g.should_skip_launch(row, results)
         self.assertFalse(skip)
 
+    def test_lane_results_for_pr_skips_non_dict_live_shapes(self):
+        head = "021b6867aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        token = "auto round 3 tier 1 aaa1111"
+        mixed = [
+            653,
+            None,
+            {"pr": 653, "requeue_token": token, "head_sha": head, "summary": "lane done"},
+            (653, "stale"),
+            {"number": 653, "requeue_token": token, "head_sha": head, "summary": "second"},
+            660,
+        ]
+        matched = g.lane_results_for_pr(mixed, 653)
+        self.assertEqual(len(matched), 2)
+        self.assertEqual(matched[0]["summary"], "lane done")
+        self.assertEqual(g.lane_results_for_pr(mixed, 660), [])
+
 
 if __name__ == "__main__":
     unittest.main()

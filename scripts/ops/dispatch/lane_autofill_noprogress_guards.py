@@ -7,9 +7,17 @@ from __future__ import annotations
 import re
 from typing import Callable, Iterable, Mapping, MutableMapping, Sequence
 
-from vkfill_batch_guards import normalize_git_sha
-
 PrNum = int
+
+
+def normalize_git_sha(value) -> str:
+    text = str(value or "").strip().lower()
+    if text.startswith("sha"):
+        text = text[3:].strip()
+    if not text:
+        return ""
+    return text[:40]
+
 LaneResult = Mapping
 PrRow = Mapping
 LogFn = Callable[[str], None]
@@ -160,6 +168,8 @@ def lane_results_for_pr(results: Iterable[LaneResult], pr_number: PrNum) -> list
         return []
     out: list[LaneResult] = []
     for result in results or ():
+        if not isinstance(result, dict):
+            continue
         for key in ("pr", "number", "pr_number"):
             value = result.get(key)
             if value is None:
