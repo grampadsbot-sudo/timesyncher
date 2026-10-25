@@ -587,7 +587,7 @@ const aeFixture = [
   'Qn.map(G=>Oe(G)),Qn.length===0',
   'Gn.map(G=>Oe(G)),Gn.length===0',
   'ki.map(G=>Oe(G))',
-  'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())',
+  'Mo=(()=>{const by=new Map;for(const Xi of[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean)){const key=String(mr(Xi)||"").trim().toLowerCase().replace(/[\u2018\u2019\u02bc]/g,"\'");const row={item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))};const prev=by.get(key);if(!prev||(!prev.hasPrice&&row.hasPrice)||(prev.hasPrice===row.hasPrice&&row.amount>prev.amount))by.set(key,row)}return Array.from(by.values())})()',
   'height:dn?900:300,marginBottom:12',
   'ha=G=>le[Qt(G)]||{},Sn=',
   'getSharedTrip:e=>Rt.get(`/shared/${e}`,{params:{_ts:Date.now()},headers:{"Cache-Control":"no-cache"}}).then(t=>t.data)',

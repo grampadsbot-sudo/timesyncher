@@ -13,7 +13,7 @@ const BUDGET_TARGET_PLACEHOLDER_PATCH = 'onChange:fr=>zr(Xi,go,fr.target.value),
 
 const HOTEL_END_OF_STAY = `hotel-${'check'}out`;
 const MO_BUDGET_NEEDLE = `Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","${HOTEL_END_OF_STAY}"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())`;
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_PATCH = 'Mo=(()=>{const by=new Map;for(const Xi of[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean)){const key=String(mr(Xi)||"").trim().toLowerCase().replace(/[\u2018\u2019\u02bc]/g,"\'");const row={item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))};const prev=by.get(key);if(!prev||(!prev.hasPrice&&row.hasPrice)||(prev.hasPrice===row.hasPrice&&row.amount>prev.amount))by.set(key,row)}return Array.from(by.values())})()';
 
 const BUDGET_ROW_NEEDLE = 'zl=({r:di})=>n.jsxs("div",{style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:';
 const BUDGET_ROW_PATCH = 'zl=({r:di})=>n.jsxs("div",{"data-ts-budget-row":"1","data-ts-budget-place-id":String((di==null?void 0:(di.item.id??di.item.place_id))??""),style:{display:"flex",justifyContent:"space-between",gap:10,padding:"4px 0 4px 12px",fontSize:11,color:"#6b7280"},children:';
@@ -31,7 +31,11 @@ export function patchBudgetListTabCatalogRows(source = '') {
 }
 
 export function assertBudgetListTabCatalogPatch(js = '') {
-  if (!js.includes(MO_BUDGET_PATCH) || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')) {
+  if (
+    !js.includes('[].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean)')
+    || !js.includes('const by=new Map')
+    || js.includes('(Gt||[]).filter(Xi=>Xi&&Ds(Xi)&&!Mi(Xi))')
+  ) {
     throw new Error('Style two live budget must list every tab item, including cars and off-timeline rows.');
   }
   if (!js.includes(BUDGET_ROW_NEEDLE) && !js.includes('data-ts-budget-row":"1"')) {

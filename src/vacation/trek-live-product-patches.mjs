@@ -330,7 +330,10 @@ const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type|
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
 const OE_LIST_LOGO_WRAP_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
-const OE_LIST_LOGO_WRAP_PATCH = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
+const OE_LIST_LOGO_WRAP_PATCH = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",minHeight:28},children:n.jsx("span",{"data-ts-list-row-name-line":"1",style:{lineHeight:1},children:Zn})})';
+const OE_LIST_LOGO_WRAP_PLAIN_LINE_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:n.jsx("span",{"data-ts-list-row-name-line":"1",children:Zn})})';
+const OE_LIST_LOGO_WRAP_MARKER_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})';
+const OE_LIST_LOGO_WRAP_INLINE_BLOCK_NEEDLE = 'children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:n.jsx("span",{"data-ts-list-row-name-line":"1",style:{display:"inline-block",maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})})';
 const NR_VIDEO_THUMB_NEEDLE = 'gr.kind==="video"?gr.thumbnailUrl&&gr.thumbnailUrl!==gr.url?n.jsx("img",{src:gr.thumbnailUrl,alt:"",loading:"lazy",style:{width:"100%",height:"100%",objectFit:"cover"}}):n.jsx("video",{src:gr.url,muted:!0,preload:"metadata",style:{width:"100%",height:"100%",objectFit:"cover"}})';
 const NR_VIDEO_THUMB_PATCH = 'gr.kind==="video"?n.jsx("img",{src:Hc(gr.url),alt:"",loading:"lazy",className:"print-media-qr","data-row-video-qr":"1",style:{width:"100%",height:"100%",objectFit:"contain",background:"#fff"}})';
 
@@ -355,7 +358,7 @@ const FLIGHT_EU_FARE_AMT_NEEDLE = 'const price=Rn||String(bi(G)||"").trim();if(!
 const FLIGHT_EU_FARE_AMT_PATCH = 'const price=Rn||String(bi(G)||"").trim();if(!price||!/[\\d]/.test(String(price)))return"$";const amt=/^\\$/.test(String(price))?String(price):"$"+String(price).replace(/^\\$/,"");return fareLbl?`${amt} ${fareLbl}`.trim():amt})(),Pn!=null&&Pn.start?Yo(Pn.start):""';
 const FLIGHT_EU_AIRLINE_NEEDLE = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re.split(/\\s+/)[0]||"Airline"';
 const FLIGHT_EU_AIRLINE_NEEDLE_ROW = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\u0008/i))==null?void 0:Zn[1])||Re||"Airline"';
-const FLIGHT_EU_AIRLINE_PATCH = 'ua=((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
+const FLIGHT_EU_AIRLINE_PATCH = 'ua=/^Flight option:/i.test(Re)?Re:((Zn=Re.match(/^(JetBlue|United|Delta|American|Southwest)\\b/i))==null?void 0:Zn[1])||Re||"Airline"';
 
 export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
   const served = options.served === true;
@@ -411,7 +414,10 @@ export function applySharedLiveTabBundlePatches(patched = '', options = {}) {
     throw new Error('live tab row summary must read stored rr() only');
   }
   if (js.includes(OE_LIST_LOGO_WRAP_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
-  else if (served && !js.includes('data-ts-list-row-name":"1",style:{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})')) {
+  else if (js.includes(OE_LIST_LOGO_WRAP_INLINE_BLOCK_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_INLINE_BLOCK_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
+  else if (js.includes(OE_LIST_LOGO_WRAP_PLAIN_LINE_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_PLAIN_LINE_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
+  else if (js.includes(OE_LIST_LOGO_WRAP_MARKER_NEEDLE)) js = js.replace(OE_LIST_LOGO_WRAP_MARKER_NEEDLE, OE_LIST_LOGO_WRAP_PATCH);
+  else if (served && !js.includes('data-ts-list-row-name-line":"1",style:{lineHeight:1},children:Zn})')) {
     throw new Error('live tab list-row name marker patch did not apply');
   }
   if (js.includes(CAR_TIMELINE_CHECKBOX_NEEDLE)) {

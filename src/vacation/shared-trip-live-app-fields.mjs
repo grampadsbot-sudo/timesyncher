@@ -5,6 +5,10 @@ function text(value) {
   return String(value || '').trim();
 }
 
+function wordCount(value) {
+  return text(value).split(/\s+/).filter(Boolean).length;
+}
+
 function sourceObject(...rows) {
   for (const row of rows) {
     if (row && typeof row === 'object' && !Array.isArray(row)) return row;
@@ -184,6 +188,17 @@ export function applyLiveAppListRowFields(shared = {}) {
       copyIfBlank(override, 'checkOutTime', source?.checkOutTime, source?.check_out_time);
       if (source?.stayDays != null && override.stayDays == null) {
         override.stayDays = source.stayDays;
+      }
+      const summaryNow = firstPresent(override.summary, place.summary, source?.summary);
+      const richDetails = firstPresent(
+        place.description,
+        override.description,
+        source?.description,
+        override.longDetails,
+        pickLongDetails(place, override, source),
+      );
+      if (richDetails && wordCount(richDetails) >= 25 && wordCount(richDetails) > wordCount(summaryNow) + 8) {
+        override.summary = richDetails;
       }
     }
 
