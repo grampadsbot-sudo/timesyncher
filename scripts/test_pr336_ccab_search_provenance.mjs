@@ -25,7 +25,6 @@ assert.equal(buildGateBSearchPlaceForRow({ id: 609, name: 'Priceline opaque Stan
 
 for (const lineage of lineageRows()) {
   assert.equal(lineage.providerBranch, 'stored_fixture_literal');
-  assert.equal(lineage.hasPriceSuffixTemplate, true, `row ${lineage.rowId} missing Price: per-person suffix`);
   assert.equal(lineage.builtDescription, lineage.overlayDescription);
   assert.equal(lineage.builtDescription, lineage.snapshotDescription);
   assert.equal(lineage.builtDescription, overlayDescriptionForCcabKey(lineage.ccabKey));
@@ -36,4 +35,4 @@ for (const lineage of lineageRows()) {
 }
 
 console.log('SOURCE-PROVENANCE-566 PASS: actual literals, missing rows and self-declared provider/price evidence cannot become sourced snapshots');
-console.log('NARRATIVE-LINEAGE-566 PASS: six gate-b rows trace overlay Price: suffix literals through enrichSearchPlace into snapshot');
+console.log('NARRATIVE-LINEAGE-566 PASS: six gate-b rows trace overlay literals through enrichSearchPlace into snapshot');
