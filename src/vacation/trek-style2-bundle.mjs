@@ -242,7 +242,8 @@ const IT_CATEGORY_NEEDLE = 'It=G=>Mn(ha(G).category??Fn(G))';
 const IT_CATEGORY_PATCH = 'It=G=>Mn(ha(G).category??(typeof G.category==="string"?G.category:G.category&&G.category.name)??G.category_name??Fn(G))';
 
 const MO_BUDGET_NEEDLE = 'Mo=Array.from(new Map(Qa.flatMap(di=>Ci(di)).filter(di=>(di==null?void 0:di.item)&&!["travel","travel-to-thing","transport","hotel-wake","hotel-sleep","hotel-checkout"].includes(di.type)).map(di=>{const Xi=di.item;return[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}]})).values())';
-const MO_BUDGET_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
+const MO_BUDGET_PATCH = 'Mo=(()=>{const seen=new Map();for(const r of Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())){const k=Bs(mr(r.item));const prev=seen.get(k);if(!prev||(!prev.hasPrice&&r.hasPrice))seen.set(k,r)}return[...seen.values()]})()';
+const MO_BUDGET_PLAIN_PATCH = 'Mo=Array.from(new Map([].concat(rs,Po,bc,Oc,Fs,Cc).filter(Boolean).map(Xi=>[Qt(Xi),{item:Xi,bucket:ua(Xi),amount:zt(Xi),hasPrice:/\\$?\\d/.test(String(bi(Xi)||""))}])).values())';
 
 const MAP_HEIGHT_NEEDLE = 'height:dn?900:300,marginBottom:12';
 const MAP_HEIGHT_PATCH = 'height:dn?420:300,marginBottom:12';
@@ -394,7 +395,9 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
-  if (patched.includes(MO_BUDGET_NEEDLE)) {
+  if (patched.includes(MO_BUDGET_PLAIN_PATCH)) {
+    patched = patched.replace(MO_BUDGET_PLAIN_PATCH, MO_BUDGET_PATCH);
+  } else if (patched.includes(MO_BUDGET_NEEDLE)) {
     patched = patched.replace(MO_BUDGET_NEEDLE, MO_BUDGET_PATCH);
   }
   if (patched.includes(MAP_HEIGHT_NEEDLE)) {
