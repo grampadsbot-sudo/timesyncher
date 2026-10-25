@@ -22,6 +22,7 @@ assert.deepEqual(buildStarRatingStates(5), ['full', 'full', 'full', 'full', 'ful
 const html = renderStarRatingHtml(4);
 assert.match(html, /ts-star-rating/);
 assert.match(html, /aria-label="4 out of 5 stars"/);
+assert.match(html, /fill="#f59e0b"/);
 assert.doesNotMatch(html, />\s*4\s*</);
 assert.equal(renderStarRatingHtml(0), '');
 

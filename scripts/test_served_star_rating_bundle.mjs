@@ -19,6 +19,13 @@ assert.match(rendered, /data-ts-review-stars/);
 assert.match(rendered, /data-ts-list-row-rating/);
 assert.match(rendered, /data-ts-detail-rating-stars/);
 assert.match(rendered, /tsPrimaryPlaceStarRating\(ha\(G\)\)/);
+assert.match(rendered, /fill="#f59e0b"/);
+const oeIdx = rendered.indexOf('Oe=(G,Re,zt=!1)=>');
+assert.ok(oeIdx >= 0, 'Oe list row renderer missing');
+const oeBody = rendered.slice(oeIdx, oeIdx + 1400);
+const varsIdx = oeBody.indexOf('tsRowRating=tsPrimaryPlaceStarRating');
+const srIdx = oeBody.indexOf('sr=n.jsxs');
+assert.ok(varsIdx >= 0 && srIdx >= 0 && varsIdx < srIdx, 'tsRowRating must be declared before sr= in Oe()');
 assert.doesNotMatch(rendered, /review-stars-inline">★★★★★<\/span>/);
 assert.match(rendered, /\.ts-star-rating\{display:inline-flex/);
 

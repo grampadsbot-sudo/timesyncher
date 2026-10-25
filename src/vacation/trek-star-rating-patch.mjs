@@ -12,11 +12,14 @@ const LR_PATCH =
 const LR_V2_NEEDLE =
   'Lr=G=>[1,2,3,4].map(Re=>{const body=String(Ps(G,Re)||"").trim();if(!body)return "";const stars=tsRenderStarRatingHtml(No(G,`review${Re}Rating`));if(!stars)return "";const ua=body.replace(/^[⭐★☆️\\s]+/,"").replace(/^\\(?\\s*\\d+(?:\\.\\d+)?\\s*stars?\\s*\\)?[:\\-–—]?\\s*/i,"").replace(/^[⭐★☆️\\s]+/,"").trim();return`<div class="review">${stars} ${an(ua)}</div>`}).filter(Boolean).join("")';
 
-const OE_ROW_PREP_NEEDLE =
-  'Xr=fo(G);const tsRowLogo=_l(G),tsRowHasLogo=tsRowLogo?"1":"0";return Sa?';
+const OE_ROW_VARS_NEEDLE = 'Pn=(Mi(G),Rn),Zn=';
+const OE_ROW_VARS_PATCH =
+  'Pn=(Mi(G),Rn),tsRowRating=tsPrimaryPlaceStarRating(ha(G)),tsRowStars=tsRenderStarRatingHtml(tsRowRating),Zn=';
 
-const OE_ROW_PREP_PATCH =
+const OE_ROW_PREP_BROKEN_NEEDLE =
   'Xr=fo(G);const tsRowLogo=_l(G),tsRowHasLogo=tsRowLogo?"1":"0",tsRowRating=tsPrimaryPlaceStarRating(ha(G)),tsRowStars=tsRenderStarRatingHtml(tsRowRating);return Sa?';
+
+const OE_ROW_PREP_BROKEN_PATCH = 'Xr=fo(G);const tsRowLogo=_l(G),tsRowHasLogo=tsRowLogo?"1":"0";return Sa?';
 
 const OE_ROW_TITLE_NEEDLE =
   'sr=n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"28px minmax(0, 1fr)",gap:9,alignItems:"center",width:"100%",minWidth:0},children:[n.jsx(dc,{item:G}),n.jsx("span",{"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Zn})]})';
@@ -58,8 +61,11 @@ export function patchStarRatings(source = '') {
   } else if (js.includes(LR_V2_NEEDLE)) {
     js = js.replace(LR_V2_NEEDLE, LR_PATCH);
   }
-  if (js.includes(OE_ROW_PREP_NEEDLE)) {
-    js = js.replace(OE_ROW_PREP_NEEDLE, OE_ROW_PREP_PATCH);
+  if (js.includes(OE_ROW_PREP_BROKEN_NEEDLE)) {
+    js = js.replace(OE_ROW_PREP_BROKEN_NEEDLE, OE_ROW_PREP_BROKEN_PATCH);
+  }
+  if (js.includes(OE_ROW_VARS_NEEDLE)) {
+    js = js.replace(OE_ROW_VARS_NEEDLE, OE_ROW_VARS_PATCH);
   }
   if (js.includes(OE_ROW_TITLE_NEEDLE)) {
     js = js.replace(OE_ROW_TITLE_NEEDLE, OE_ROW_TITLE_PATCH);

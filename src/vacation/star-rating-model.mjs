@@ -63,14 +63,17 @@ function escapeHtmlAttr(value) {
     .replace(/</g, '&lt;');
 }
 
+const STAR_GOLD_FILL = '#f59e0b';
+const STAR_EMPTY_FILL = '#e5e7eb';
+
 function starSvgMarkup(state, clipId) {
   if (state === 'full') {
-    return `<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="${STAR_PATH}" fill="currentColor"/></svg>`;
+    return `<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="${STAR_PATH}" fill="${STAR_GOLD_FILL}"/></svg>`;
   }
   if (state === 'empty') {
-    return `<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="${STAR_PATH}" fill="currentColor"/></svg>`;
+    return `<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="${STAR_PATH}" fill="${STAR_EMPTY_FILL}"/></svg>`;
   }
-  return `<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="${clipId}"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="${STAR_PATH}" fill="currentColor"/><path class="ts-star-half-full" d="${STAR_PATH}" fill="currentColor" clip-path="url(#${clipId})"/></svg>`;
+  return `<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="${clipId}"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="${STAR_PATH}" fill="${STAR_EMPTY_FILL}"/><path class="ts-star-half-full" d="${STAR_PATH}" fill="${STAR_GOLD_FILL}" clip-path="url(#${clipId})"/></svg>`;
 }
 
 export function renderStarRatingHtml(value, { size = 16, idPrefix = 'ts-star' } = {}) {
@@ -96,7 +99,7 @@ export function trekStarRatingBundleInject() {
     `tsStarRatingStates=v=>{const r=tsRoundStarRatingHalf(v);if(r==null)return null;const s=[];let x=r;for(let i=0;i<5;i+=1){if(x>=1){s.push("full");x-=1;}else if(x>=0.5){s.push("half");x-=0.5;}else s.push("empty");}return s;}`,
     `tsStarRatingAria=v=>{const r=tsRoundStarRatingHalf(v);if(r==null)return "";const d=Number.isInteger(r)?String(r):r.toFixed(1);return d+" out of 5 stars";}`,
     `tsStarPath='${path}'`,
-    `tsStarSvg=(state,id)=>state==="full"?'<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="currentColor"/></svg>':state==="empty"?'<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="currentColor"/></svg>':'<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="'+id+'"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="'+tsStarPath+'" fill="currentColor"/><path class="ts-star-half-full" d="'+tsStarPath+'" fill="currentColor" clip-path="url(#'+id+')"/></svg>'`,
+    `tsStarSvg=(state,id)=>state==="full"?'<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#f59e0b"/></svg>':state==="empty"?'<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#e5e7eb"/></svg>':'<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="'+id+'"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="'+tsStarPath+'" fill="#e5e7eb"/><path class="ts-star-half-full" d="'+tsStarPath+'" fill="#f59e0b" clip-path="url(#'+id+')"/></svg>'`,
     `tsRenderStarRatingHtml=v=>{const st=tsStarRatingStates(v);if(!st)return "";const label=String(tsStarRatingAria(v)).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");return '<span class="ts-star-rating" role="img" aria-label="'+label+'" title="'+label+'">'+st.map((state,index)=>tsStarSvg(state,"tsb"+index)).join("")+"</span>";}`,
     `tsPrimaryPlaceStarRating=d=>{for(const k of["googleRating","yelpRating","thirdPartyRating","rating"]){const p=tsParseStarRating(d[k]);if(p!=null)return p;}return null;}`,
   ].join(',');
