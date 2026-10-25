@@ -221,6 +221,8 @@ export function syncSharedTripApiBudget(shared = {}) {
   const visible = visibleAmountSet(rows, shared);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
+  const coveredPlaces = new Set(lines.map((line) => String(line.place_id ?? '')));
+  const coveredIds = new Set(lines.map((line) => String(line.id)));
   const covered = new Set(
     lines
       .map((line) => Number(line.total_price))
@@ -229,16 +231,21 @@ export function syncSharedTripApiBudget(shared = {}) {
 
   let sortOrder = lines.length;
   for (const row of rows) {
-    if (covered.has(row.amount)) continue;
+    const id = intId(`${tripId}:budget:place:${row.place.id}`);
+    const placeId = String(row.place.id);
+    if (coveredPlaces.has(placeId) || coveredIds.has(String(id))) continue;
     lines.push({
-      id: intId(`${tripId}:budget:place:${row.place.id}`),
+      id,
       trip_id: tripId,
+      place_id: row.place.id,
       category: row.bucket,
       name: text(row.place.name || row.place.title) || 'Trip item',
       total_price: row.amount,
       note: '',
       sort_order: sortOrder,
     });
+    coveredPlaces.add(placeId);
+    coveredIds.add(String(id));
     covered.add(row.amount);
     sortOrder += 1;
   }
