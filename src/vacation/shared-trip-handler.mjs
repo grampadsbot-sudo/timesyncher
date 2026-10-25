@@ -6,6 +6,13 @@ import { applyCapturedLogos } from './thing-logo-capture.mjs';
 import { applyTripMetadataBudgetTargets } from './shared-trip-api-budget.mjs';
 import { applyStoredDossiersToSharedTrip } from './shared-trip-dossier-overlay.mjs';
 import { finalizeServedSharedTripPayload } from './shared-trip-served-page.mjs';
+import { readFileSync } from 'node:fs';
+
+import {
+  GATEB_FIXTURE_REPLAY_SLUG,
+  loadFixtureReplaySharedTripFromPath,
+  prepareFixtureReplaySharedTrip,
+} from './shared-trip-fixture-replay.mjs';
 
 let sharedTripDatabase = null;
 
@@ -137,6 +144,15 @@ function sharedPayloadHasPlaces(payload) {
   return Boolean(payload && Array.isArray(payload.places) && payload.places.length > 0);
 }
 
+async function gatebFixtureReplaySharedResponse(shareToken) {
+  if (String(shareToken || '') !== GATEB_FIXTURE_REPLAY_SLUG) return null;
+  const fixturePath = String(process.env.TSV_CAPTURE_FIXTURE || '').trim();
+  if (!fixturePath) return null;
+  const fromPath = loadFixtureReplaySharedTripFromPath(fixturePath);
+  if (fromPath?.served) return fromPath.served;
+  return prepareFixtureReplaySharedTrip(readFileSync(fixturePath)).served;
+}
+
 async function offlineApprovedSharedResponse(shareToken) {
   const mod = await import(new URL('../../scripts/fixtures/gate-b-approved-shared-trip.mjs', import.meta.url).href);
   if (String(shareToken || '') !== mod.GATE_B_APPROVED_SHARED_SLUG) return null;
@@ -201,6 +217,8 @@ async function respondSharedTripGet(req, res, shareToken) {
     if (local) return sendJson(res, 200, local);
     if (String(shareToken || '').startsWith('intake-')) return sendSlugMiss(res, shareToken);
 
+    const gatebReplay = await gatebFixtureReplaySharedResponse(shareToken);
+    if (gatebReplay) return sendJson(res, 200, gatebReplay);
     const offline = await offlineApprovedSharedResponse(shareToken);
     if (offline) return sendJson(res, 200, offline);
     if (cleanText(process.env.TIMESYNCHER_TREK_PUBLIC_BASE_URL)) {
