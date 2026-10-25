@@ -53,6 +53,54 @@ function cited(dossier, claim) {
     && dossier.pages.some((page) => page.url === claim.url && norm(page.text).includes(norm(claim.quote)));
 }
 
+function ratingEvidencePage(dossier = {}, claim = {}) {
+  const url = String(claim?.url || '').trim();
+  if (!url) return null;
+  return (dossier.pages || []).find((page) => page.url === url) || null;
+}
+
+function ratingDecimalInText(pageText = '', average, scaleMax = 5) {
+  const avg = Number(average);
+  const scale = Number(scaleMax) || 5;
+  if (!Number.isFinite(avg) || avg <= 0 || !Number.isFinite(scale) || scale <= 0) return false;
+  const onFive = scale === 5 ? avg : (avg / scale) * 5;
+  const rounded = Math.round(onFive * 10) / 10;
+  if (!Number.isFinite(rounded) || rounded <= 0) return false;
+  const compact = norm(pageText).replace(/,/g, '');
+  const whole = String(Math.round(rounded));
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-9) {
+    return new RegExp(`(?<!\\d)${whole}(?!\\d)`, 'i').test(compact);
+  }
+  const [intPart, fracPart] = rounded.toFixed(1).split('.');
+  return new RegExp(`(?<!\\d)${intPart}\\.${fracPart}(?!\\d)`, 'i').test(compact);
+}
+
+function ratingCountInText(pageText = '', count) {
+  const parsed = Number(count);
+  if (!Number.isInteger(parsed) || parsed <= 0) return true;
+  const compact = norm(pageText).replace(/,/g, '');
+  return compact.includes(String(parsed));
+}
+
+export function ratingClaimSupported(dossier = {}, claim = {}) {
+  if (!claim || typeof claim !== 'object') return false;
+  const page = ratingEvidencePage(dossier, claim);
+  if (!page || !String(page.text || '').trim() || !String(page.fetchedAt || '').trim()) return false;
+  if (cited(dossier, claim)) return true;
+  const average = Number(claim.average);
+  const scale = Number(claim.scaleMax) || 5;
+  if (!Number.isFinite(average) || average <= 0 || ![5, 10].includes(scale) || average > scale) return false;
+  return ratingDecimalInText(page.text, average, scale) && ratingCountInText(page.text, claim.count);
+}
+
+export function formatPublishedRating(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 5) return '';
+  const rounded = Math.round(parsed * 10) / 10;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded));
+  return rounded.toFixed(1);
+}
+
 export const NO_REVIEWS_FLAG = 'No reviews were found for this place.';
 
 export function dossierPageId(index) {
@@ -244,15 +292,13 @@ export function prepareDossierFindings(dossier, findings = {}) {
     .map(reviewSourceHost).filter(Boolean))];
   const braveRating = (dossier.pages || []).find((page) => page.via === 'brave' && page.braveRating)?.braveRating;
   const writerRating = findings.rating;
-  const writerOk = writerRating && cited(dossier, writerRating);
+  const writerOk = writerRating && ratingClaimSupported(dossier, writerRating);
   const rating = writerOk || !braveRating ? writerRating : { ...braveRating, provider: 'brave' };
   const average = Number(rating?.average);
   const count = Number(rating?.count);
   const scale = Number(rating?.scaleMax);
-  if (cited(dossier, rating) && average > 0 && [5, 10].includes(scale) && average <= scale
-    && Number.isInteger(count) && count > 0
-    && norm(rating.quote).includes(String(average))
-    && norm(rating.quote).replace(/,/g, '').includes(String(count))) {
+  if (ratingClaimSupported(dossier, rating) && average > 0 && [5, 10].includes(scale) && average <= scale
+    && Number.isInteger(count) && count > 0) {
     next.rating = average * 5 / scale;
     next.reviewsAvailable = count;
     next.ratingEvidence = rating;
@@ -383,8 +429,8 @@ export function applyDossierFields(record = {}, dossier = {}) {
     if (next.price) next.priceUnit = dossier.fields.price.unit;
     if (next.happyHourDetails && next.happyHourDetails !== NO_HAPPY_HOUR_FOUND) next.happyHour = true;
     if (dossier.fields?.happyHour?.value === false) next.happyHour = false;
-    if (dossier.ratingEvidence && cited(dossier, dossier.ratingEvidence)) {
-      next.thirdPartyRating = String(dossier.rating);
+    if (dossier.ratingEvidence && ratingClaimSupported(dossier, dossier.ratingEvidence)) {
+      next.thirdPartyRating = formatPublishedRating(dossier.rating);
       next.thirdPartyReviewCount = String(dossier.reviewsAvailable);
       next.ratingCount = dossier.reviewsAvailable;
       if (Array.isArray(dossier.ratingMix) && dossier.ratingMix.length === 5) {
