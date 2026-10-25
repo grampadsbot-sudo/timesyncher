@@ -9,13 +9,13 @@ const CARS_TAB_PANEL_NEEDLE = 'q==="cars"&&n.jsxs("div",{style:{display:"flex",f
 const CARS_TAB_PANEL_PATCH = 'q==="cars"&&n.jsxs("div",{"data-shared-live-tab":"cars",style:{display:"flex",flexDirection:"column",gap:10},children:[n.jsx(Wr,{listKey:"cars"})';
 
 const OE_ROW_SUMMARY_NEEDLE = 'n.jsx("button",{"aria-label":"Open thing details",onClick:()=>Ne(Qt(G)),title:Pn||"Open details",style:{marginTop:6,border:0,padding:0,background:"transparent",textAlign:"left",cursor:"pointer",color:Pn?"#475569":"#9ca3af",fontSize:11,fontWeight:700,width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"},children:Pn||"Open details for summary"})';
-const OE_ROW_SUMMARY_PATCH = '(Zi(G)?Ld:Rn)?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing","data-list-description":Zi(G)&&Ld?"1":undefined,style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:Zi(G)&&Ld?"clip":"ellipsis",whiteSpace:Zi(G)&&Ld?"normal":"nowrap",overflowWrap:Zi(G)&&Ld?"anywhere":undefined,color:"#475569",lineHeight:1.4},children:Zi(G)?Ld||Rn:Rn}):null';
+const OE_ROW_SUMMARY_PATCH = '(Zi(G)?Ld:Rn)?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing","data-list-description":Zi(G)&&Ld?"1":undefined,style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:Zi(G)&&Ld?"clip":"ellipsis",whiteSpace:Zi(G)&&Ld?"normal":"nowrap",overflowWrap:Zi(G)&&Ld?"break-word":undefined,color:"#475569",lineHeight:1.4},children:Zi(G)?Ld||Rn:Rn}):null';
 
 const OE_ROW_TEXT_ORIGINAL = 'Oe=(G,Re,zt=!1)=>{const ua=Bs(mr(G)),Rn=Bs(rr(G)),Pn=';
 const OE_ROW_TEXT_NEEDLE = 'Oe=(G,Re,zt=!1)=>{const ua=Bs(mr(G)),Rn=Bs((Zi(G)?[ha(G).longDetails,ha(G).description,G.longDetails,G.description,ha(G).sourceRecord?.longDetails,ha(G).sourceRecord?.description].map(v=>String(v||"").trim()).find(Boolean):"")||rr(G)),Pn=';
 const OE_ROW_TEXT_PATCH = 'Oe=(G,Re,zt=!1)=>{const ua=Bs(mr(G)),Rn=Bs(rr(G)),Ld=Bs(Zi(G)?[ha(G).longDetails,ha(G).description,G.longDetails,G.description,ha(G).sourceRecord?.longDetails,ha(G).sourceRecord?.description].map(v=>String(v||"").trim()).find(Boolean):""),Pn=';
 const OE_ROW_TEXT_LD_MARKER = 'Rn=Bs(rr(G)),Ld=Bs(Zi(G)?';
-const OE_ROW_SUMMARY_PRIOR = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing","data-list-description":Zi(G)?"1":undefined,style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:Zi(G)?"clip":"ellipsis",whiteSpace:Zi(G)?"normal":"nowrap",overflowWrap:Zi(G)?"anywhere":undefined,color:"#475569",lineHeight:1.4},children:Pn}):null';
+const OE_ROW_SUMMARY_PRIOR = 'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing","data-list-description":Zi(G)?"1":undefined,style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:Zi(G)?"clip":"ellipsis",whiteSpace:Zi(G)?"normal":"nowrap",overflowWrap:Zi(G)?"break-word":undefined,color:"#475569",lineHeight:1.4},children:Pn}):null';
 const HOTELS_TAB_PANEL_PRIOR = '[data-shared-live-tab="hotels"] [data-list-summary="1"][data-list-description="1"]{white-space:normal!important;text-overflow:clip!important;overflow-wrap:anywhere}';
 const HOTELS_TAB_PANEL_CLAMP_PRIOR = '[data-shared-live-tab="hotels"] [data-list-summary="1"][data-list-description="1"]{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;white-space:normal!important;text-overflow:ellipsis!important;overflow-wrap:anywhere!important;line-height:1.4!important;max-height:2.85em}';
 
@@ -42,7 +42,7 @@ function patchCarBeGrid(js = '') {
 }
 
 const OE_HOTEL_JE_TITLE_NEEDLE = 'je=({item:G,title:Re})=>n.jsxs("span",{style:{display:"grid",gridTemplateColumns:"minmax(0, 1fr) 44px",gap:8,width:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:Re}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:ie(G)})]})';
-const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:n.jsx("strong",{style:{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
+const OE_HOTEL_JE_TITLE_PATCH = 'je=({item:G,title:Re})=>n.jsxs("span",{"data-ts-hotel-row-head":"1","data-ts-list-row-name":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%",alignItems:"center"},children:[n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:n.jsx("strong",{style:{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"},children:Re})}),n.jsx("span",{style:{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,color:"#0f766e",fontWeight:900,flexShrink:0},children:ie(G)})]})';
 
 const WR_SORT_ROW_NEEDLE = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2},children:';
 const WR_SORT_ROW_PATCH = 'Wr=({listKey:G})=>{const Re=K[G]||{key:"name",dir:"asc"},zt=ua=>Re.key===ua?Re.dir==="asc"?" ↑":" ↓":"";return n.jsxs("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:2,minWidth:0,maxWidth:"100%"},children:';
@@ -61,7 +61,7 @@ export function patchSharedTripOeListRows(source = '') {
   if (js.includes(OE_HOTEL_JE_TITLE_NEEDLE)) {
     js = js.replace(OE_HOTEL_JE_TITLE_NEEDLE, OE_HOTEL_JE_TITLE_PATCH);
   } else if (
-    !js.includes('data-ts-hotel-row-head":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')
+    !js.includes('data-ts-hotel-row-head":"1","data-ts-list-row-name":"1",style:{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:8,width:"100%",minWidth:0,maxWidth:"100%"')
   ) {
     throw new Error('shared trip Oe() hotel header patch did not apply');
   }
