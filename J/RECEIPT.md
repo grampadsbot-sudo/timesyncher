@@ -1,3 +1,9 @@
+# PR #687 follow-up: duplicate hotel timeline row (grok lane 3, 2026-10-25 4:55 PM PT)
+
+Gate B on `76718041` (run 20261025-231451) failed day-by-day because `Ds()` read `ha(G).timeline` after `ha()` became `{...thing, ...override}`. A checked hotel's own timeline flag added a bare "Hotel Beacon" bed row above "Sleep: Hotel Beacon" (+65px). Flight icon taxi→plane stays (Craig 2026-10-18 1:20 PM PT). Two-line hotel descriptions stay. `Ds()` now reads `le[Qt(G)].timeline`.
+
+Tests this follow-up: `test_served_trek_bundle.mjs`, `test_trek_bundle_strip.mjs`, `test_keepsake_style2.mjs`, `test_shared_trip_live_tab_logos.mjs`, `test_gate_b_product_row_fields.mjs`, `test_shared_trip_api_budget_lines.mjs` — pass. Gate B on the new head is the pipeline's job. Not a merge.
+
 # PR #687 vkfill-687 hard round tier 1 (cursor-ubuntu)
 
 **Start HEAD:** `767180412f2cf0dfff1d1b0b5d2dd6168d462169` (verified before edit).
