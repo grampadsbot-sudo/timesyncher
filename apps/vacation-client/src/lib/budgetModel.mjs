@@ -268,6 +268,7 @@ export function buildBudgetModel(trip) {
 
 export function budgetCompletenessChecks(trip) {
   const model = buildBudgetModel(trip);
+  const timelineIds = assignedPlaceIds(trip);
   const checks = [];
   const push = (name, pass) => checks.push({ name, pass: !!pass });
 
@@ -281,7 +282,7 @@ export function budgetCompletenessChecks(trip) {
 
   for (const row of model.rows) {
     const id = String(row.place.id);
-    push(`row_on_timeline_${id}`, placeOnTimeline(row.place, trip));
+    push(`row_on_timeline_${id}`, timelineIds.has(Number(row.place.id)));
     const catalog = canonicalBudgetPlace(trip, id);
     if (!catalog) continue;
     const expectedName = placeName(catalog);

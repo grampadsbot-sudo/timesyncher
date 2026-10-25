@@ -39,6 +39,56 @@ assert.equal(
   'unscheduled saved place may remain on list tabs',
 );
 
+assert.equal(unscheduledModel.tripPlanned, 80);
+assert.equal(unscheduledModel.tripTimelinePlanned, 80);
+assert.equal(unscheduledModel.buckets[0].planned, 80);
+assert.equal(unscheduledModel.buckets[0].timelinePlanned, 80);
+
+const flagsOnlyTrip = {
+  ...unscheduledSavedTrip,
+  thingOverrides: {
+    ...unscheduledSavedTrip.thingOverrides,
+    'place:30': { ...unscheduledSavedTrip.thingOverrides['place:30'], timeline: false },
+    'place:31': { ...unscheduledSavedTrip.thingOverrides['place:31'], timeline: true, dayIds: [] },
+  },
+};
+const flagsOnlyModel = buildBudgetModel(flagsOnlyTrip);
+assert.deepEqual(flagsOnlyModel.rows.map((row) => row.place.id), [30]);
+assert.equal(flagsOnlyModel.tripPlanned, 80);
+assert.equal(flagsOnlyModel.tripTimelinePlanned, 80);
+const flagsOnlyScore = budgetCompletenessScore(flagsOnlyTrip);
+assert.equal(flagsOnlyScore.pass, flagsOnlyScore.total);
+
+const repeatedAssignmentTrip = {
+  ...flagsOnlyTrip,
+  days: [...flagsOnlyTrip.days, { id: 51, day_number: 2 }],
+  assignments: {
+    ...flagsOnlyTrip.assignments,
+    51: [{ place_id: '30', place: { id: 30, name: 'Scheduled cafe' } }],
+  },
+};
+const repeatedModel = buildBudgetModel(repeatedAssignmentTrip);
+assert.equal(repeatedModel.rows.length, assignedPlaceIds(repeatedAssignmentTrip).size);
+assert.equal(repeatedModel.tripPlanned, 80);
+assert.equal(repeatedModel.tripTimelinePlanned, 80);
+
+const dayPlacementOnlyTrip = {
+  ...unscheduledSavedTrip,
+  thingOverrides: {
+    ...unscheduledSavedTrip.thingOverrides,
+    'place:31': { ...unscheduledSavedTrip.thingOverrides['place:31'], dayIds: [50] },
+  },
+};
+const dayPlacementModel = buildBudgetModel(dayPlacementOnlyTrip);
+assert.deepEqual(dayPlacementModel.rows.map((row) => row.place.id), [30, 31]);
+assert.equal(dayPlacementModel.tripPlanned, 190);
+assert.equal(dayPlacementModel.tripTimelinePlanned, 190);
+assert.deepEqual(
+  budgetCompletenessScore(dayPlacementOnlyTrip).checks.filter((check) => !check.pass),
+  [{ name: 'row_on_timeline_31', pass: false }],
+  'dayIds placement must not hide a missing timeline assignment from completeness checks',
+);
+
 const positiveFixture = buildNycCraigKimDaybydayTripPositiveV1();
 const timelineIds = assignedPlaceIds(positiveFixture);
 const budgetPlaces = placesForBudget(positiveFixture);
