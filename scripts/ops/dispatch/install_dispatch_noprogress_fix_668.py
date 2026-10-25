@@ -17,7 +17,7 @@ TEST_LANE_AUTOFILL = "tests/test_lane_autofill.py"
 LOCK = Path.home() / "tsv-dispatch" / ".autofill.lock"
 DEFAULT_DISPATCH = Path.home() / "tsv-dispatch"
 TEST_CLASS_MARKER = "class NoProgressBackoff668"
-LIVE_SHA256_PREFIX = "a531dc641892"
+LIVE_SHA256_PREFIX = "595f72c619b8"
 
 QUEUE_APPEND_RE = re.compile(
     r"^(\s*)pr_rows\.append\(\(pr_sort_key\(pr,\s*(\w+)\),\s*row\)\)\s*$",
@@ -135,15 +135,25 @@ def inject_lane_autofill(text: str) -> str:
 
 
 def inject_test_lane_autofill(text: str) -> str:
-    if TEST_CLASS_MARKER in text:
-        return text
     repo_test = SOURCE / "test_lane_autofill.py"
     if not repo_test.is_file():
         raise SystemExit("missing mirrored test_lane_autofill.py")
     snippet = repo_test.read_text()
-    start = snippet.find(TEST_CLASS_MARKER)
-    if start == -1:
+    row_start = snippet.find("def _row(")
+    class_start = snippet.find(TEST_CLASS_MARKER)
+    if class_start == -1:
         raise SystemExit("test_lane_autofill.py: missing NoProgressBackoff668 class")
+    if TEST_CLASS_MARKER in text and "def _row(" in text:
+        return text
+    if TEST_CLASS_MARKER in text and row_start != -1:
+        row_end = snippet.find("\n\n", row_start)
+        if row_end == -1:
+            row_end = class_start
+        block = "\n\n" + snippet[row_start:row_end].strip() + "\n"
+        if "import lane_autofill_noprogress_guards" not in text:
+            text = ensure_import(text, "lane_autofill_noprogress_guards")
+        return text.rstrip() + block
+    start = row_start if row_start != -1 else class_start
     block = "\n\n" + snippet[start:].strip() + "\n"
     if "import lane_autofill_noprogress_guards" not in text:
         text = ensure_import(text, "lane_autofill_noprogress_guards")
