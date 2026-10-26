@@ -136,6 +136,14 @@ assert.equal(builderCalls, 0, 'unchanged pages must skip builder');
 assert.equal(fresh.parsed.evidenceDossier.fields.description.value, built.fields.description.value);
 
 builderCalls = 0;
+const aged = await fetchXaiPlaceRatings(place, {
+  ...fetchOpts,
+  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
+  nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
+});
+assert.equal(builderCalls, 0, 'max-age alone must not refresh when pages are unchanged');
+
+builderCalls = 0;
 const changedPages = goodPages(' Menu lists happy hour oysters until six pm. Updated headline.');
 const changedPersisted = { ...built, pages: changedPages, fieldHashes: built.fieldHashes, fieldSources: built.fieldSources };
 await saveThingEvidenceDossier(dossierKey, changedPersisted, { storeImpl: store });
@@ -152,13 +160,6 @@ assert.equal(
 );
 
 builderCalls = 0;
-await saveThingEvidenceDossier(dossierKey, built, { storeImpl: store });
-const aged = await fetchXaiPlaceRatings(place, {
-  ...fetchOpts,
-  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
-  nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
-});
-assert.equal(builderCalls, 0, 'max-age alone must not refresh when pages are unchanged');
 const forced = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
   forceRefresh: true,
