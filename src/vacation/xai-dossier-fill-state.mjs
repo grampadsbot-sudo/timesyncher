@@ -6,8 +6,25 @@ import { mergeDossierPages } from './thing-evidence-dossier.mjs';
 import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
 import { passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
+import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 
 const NO_OP_TOP_UP_IGNORE = new Set(['coordinates', 'ratings']);
+
+export async function prepareOperatorDossierGather(persisted, place, {
+  reuseSavedPages, key, env, storeImpl,
+} = {}) {
+  const unchanged = { persisted, retryEmptyGather: false };
+  if (!reuseSavedPages || !persisted) return unchanged;
+  const normalized = normalizeDossierEvidence({ ...persisted }, place);
+  if (normalized.pages?.length || (persisted.attempts || [])
+    .some((row) => row.step === 'operator_empty_gather_retry')) return unchanged;
+  normalized.attempts = [...(normalized.attempts || []), {
+    kind: 'gather', step: 'operator_empty_gather_retry', status: 'started',
+    startedAt: new Date().toISOString(),
+  }];
+  if (key) await saveThingEvidenceDossier(key, normalized, { env, storeImpl });
+  return { persisted: normalized, retryEmptyGather: true };
+}
 
 export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
   if (isFlightOrCarOrDecision(place)) return false;

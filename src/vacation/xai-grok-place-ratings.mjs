@@ -63,6 +63,7 @@ import {
   dossierFillHardFailure,
   dossierFillNeedsTextRebuild,
   dossierPersistedFillIsNoOp,
+  prepareOperatorDossierGather,
   saveFailedDossierAttempt,
   saveResumablePartial,
 } from './xai-dossier-fill-state.mjs';
@@ -278,8 +279,12 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return gathered;
   };
   let merged;
+  let retryEmptyGather;
   try {
-  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
+  ({ persisted, retryEmptyGather } = await prepareOperatorDossierGather(persisted, place, {
+    reuseSavedPages, key, env, storeImpl,
+  }));
+  if (!retryEmptyGather && persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     merged.emptySource = merged.pages?.length ? null : merged.emptySource || dossierEmptyGatherReason(merged);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
@@ -297,7 +302,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     }
     beginDossierXaiUsageRun(merged, persisted);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
-    if (!(forceRefresh && reuseSavedPages) && pendingTopUp.length && !outOfTime()) {
+    if (!(reuseSavedPages && (forceRefresh || !merged.pages?.length)) && pendingTopUp.length && !outOfTime()) {
       merged = await topUpDossierFields(merged, place, {
         ...gatherOpts,
         onlyFields: pendingTopUp,
@@ -339,6 +344,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
   } else {
     const gathered = await gatherWithEscalation();
     merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
+    if (retryEmptyGather) Object.assign(merged.attempts.findLast((row) => row.step === 'operator_empty_gather_retry'), {
+      status: merged.pages?.length ? 'ok' : 'failed', finishedAt: new Date().toISOString(),
+    });
     merged.fieldCounts = computeDossierFieldCounts(merged, place);
     beginDossierXaiUsageRun(merged, persisted || {});
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
@@ -374,7 +382,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
   }
   if (!merged.pages.length) {
-    const emptySource = dossierEmptyGatherReason(merged);
+    const emptySource = merged.emptySource || dossierEmptyGatherReason(merged);
     merged.emptySource = emptySource;
     merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
