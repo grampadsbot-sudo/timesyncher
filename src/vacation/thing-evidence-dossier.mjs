@@ -145,6 +145,7 @@ async function fetchEvidencePage(url, {
 }) {
   if (existingUrls.has(url)) return null;
   let via = 'direct';
+  const startedAt = new Date().toISOString();
   let text = '';
   let finalUrl = url;
   try {
@@ -152,9 +153,9 @@ async function fetchEvidencePage(url, {
     text = pageText(response.body, response.type);
     finalUrl = response.url;
     if (!text || blockedPageText(text)) throw new Error('evidence_page_empty');
-    attempts.push({ kind: 'page', url, status: 'ok', via: 'direct', method: 'direct' });
+    attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'direct', method: 'direct' });
   } catch (error) {
-    attempts.push({ kind: 'page', url, status: 'failed', via: 'direct', method: 'direct', error: String(error?.message || '').slice(0, 40) });
+    attempts.push({ kind: 'page', url, startedAt, status: 'failed', via: 'direct', method: 'direct', error: String(error?.message || '').slice(0, 40) });
     try {
       const rows = await extractImpl([url], { env, fetchImpl });
       const row = rows?.[0];
@@ -162,9 +163,9 @@ async function fetchEvidencePage(url, {
       if (!text || blockedPageText(text)) throw new Error('tavily_empty');
       via = 'tavily-extract';
       finalUrl = row.url || url;
-      attempts.push({ kind: 'page', url, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
+      attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
     } catch (extractError) {
-      attempts.push({ kind: 'page', url, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', error: String(extractError?.message || '').slice(0, 40) });
+      attempts.push({ kind: 'page', url, startedAt, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', error: String(extractError?.message || '').slice(0, 40) });
       return null;
     }
   }
@@ -212,7 +213,7 @@ export async function gatherBraveEvidenceForQueries(queries = [], place = {}, op
 export async function topUpDossierFields(dossier = {}, place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
-  onlyFields = null,
+  onlyFields = null, onProgress,
 } = {}) {
   const options = { env, fetchImpl, resolveImpl, extractImpl };
   let merged = normalizeDossierEvidence({ ...dossier }, place);
@@ -222,16 +223,23 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
   if (!needs.length) return merged;
   let shortcomings = Array.isArray(merged.shortcomings) ? [...merged.shortcomings] : [];
   for (const field of needs) {
-    let filled = false;
-    for (let attempt = 0; attempt < 3 && !filled; attempt += 1) {
+    let filled = merged.fieldCounts[field]?.status === 'ok';
+    const previous = shortcomings.find((row) => row.field === field)?.attempts?.length || 0;
+    const ledger = (merged.attempts || []).filter((row) => row.kind === 'gap_top_up' && row.field === field);
+    const logged = Math.max(ledger.length, ...ledger.map((row) => Number(row.attempt) || 0));
+    for (let attempt = Math.max(previous, logged); attempt < 3 && !filled; attempt += 1) {
       const queries = topUpQueriesForField(field, place, destination, attempt);
       if (!queries.length) break;
+      const entry = { kind: 'gap_top_up', field, attempt: attempt + 1, query: queries[0].query, startedAt: new Date().toISOString(), status: 'started' };
+      merged.attempts = [...(merged.attempts || []), entry];
+      if (onProgress) await onProgress(merged);
       const gathered = await gatherBraveEvidenceForQueries(queries, place, options);
       merged = mergeDossierPages(merged, gathered);
       merged = normalizeDossierEvidence(merged, place);
       const status = merged.fieldCounts[field]?.status;
       filled = status === 'ok';
       const att = gathered.attempts?.[gathered.attempts.length - 1] || {};
+      Object.assign(entry, { status: att.status || 'no_change', finishedAt: new Date().toISOString() });
       if (!filled) {
         shortcomings = recordFieldShortcoming(
           { shortcomings },
@@ -242,6 +250,8 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
           { query: queries[0].query, via: att.via || 'brave', result: att.status || 'no_change' },
         );
       }
+      merged.shortcomings = shortcomings;
+      if (onProgress) await onProgress(merged);
     }
     if (!filled && field === 'reviews' && (merged.fieldCounts.reviews?.count || 0) > 0) {
       shortcomings = recordFieldShortcoming(

@@ -97,20 +97,21 @@ export function normalizeBraveWebResults(payload = {}, query = '') {
 }
 
 export async function braveWebSearch(query, { env = process.env, fetchImpl = globalThis.fetch, count = 8 } = {}) {
+  const startedAt = new Date().toISOString();
   const key = braveSubscriptionKey(env);
-  if (!key || !String(query || '').trim()) return { results: [], attempts: [{ kind: 'brave', step: 'web_search', status: key ? 'no_query' : 'missing_key', query }] };
+  if (!key || !String(query || '').trim()) return { results: [], attempts: [{ kind: 'brave', step: 'web_search', startedAt, status: key ? 'no_query' : 'missing_key', query }] };
   try {
     const params = new URLSearchParams({ q: String(query).trim(), count: String(count) });
     const payload = await braveGet(`/web/search?${params}`, key, fetchImpl);
     const results = normalizeBraveWebResults(payload, query);
     return {
       results,
-      attempts: [{ kind: 'brave', step: 'web_search', status: 'ok', query, results: results.length }],
+      attempts: [{ kind: 'brave', step: 'web_search', startedAt, status: 'ok', query, results: results.length }],
     };
   } catch (error) {
     return {
       results: [],
-      attempts: [{ kind: 'brave', step: 'web_search', status: 'failed', query, error: String(error?.message || '').slice(0, 60) }],
+      attempts: [{ kind: 'brave', step: 'web_search', startedAt, status: 'failed', query, error: String(error?.message || '').slice(0, 60) }],
     };
   }
 }

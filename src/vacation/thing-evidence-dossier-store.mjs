@@ -1,10 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 
 import { hasDatabase, sql } from './db.mjs';
 import { NYC_GATE_B_TRIP_ID } from './shared-trip-dossier-keys.mjs';
 import { computeDossierFieldHashes } from './thing-dossier-fields.mjs';
-import { dossierPagesVerified } from './thing-evidence-dossier.mjs';
+import { dossierPagesVerified, mergeDossierPages } from './thing-evidence-dossier.mjs';
 
 let storeOverride = null;
 let postgresStoreClient = null;
@@ -171,18 +172,52 @@ export function tripPlaceDossierKey(tripId, placeId) {
   return thingEvidenceDossierKey({ trip_id: tripId, id: placeId });
 }
 
+export async function bindSharedThingEvidenceDossier(place = {}, { env = process.env, storeImpl } = {}) {
+  const tripKey = thingEvidenceDossierKey(place);
+  const rawCategory = place.category?.name || place.category || place.category_name;
+  const category = ['event', 'activity', 'attraction'].includes(rawCategory) ? 'attraction' : rawCategory;
+  if (!['hotel', 'restaurant', 'store', 'attraction'].includes(category)) return tripKey;
+  const normalize = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const title = normalize(place.title || place.name);
+  const address = normalize(place.address || place.sourceRecord?.address);
+  const website = normalize(place.url || place.website || place.sourceRecord?.website);
+  const tripId = place.trip_id ?? place.tripId;
+  if (!title || (!address && !website) || tripId == null || (place.id ?? place.placeId) == null) return tripKey;
+  const identity = JSON.stringify({ category, title, address, website });
+  const sharedKey = `shared:${category}:${createHash('sha256').update(identity).digest('hex')}`;
+  const store = storeImpl || getThingEvidenceDossierStore(env);
+  const current = await store.getDossier(sharedKey);
+  const attached = await loadThingEvidenceDossierResolved(tripKey, { env, storeImpl: store, placeId: place.id ?? place.placeId });
+  let dossier = current || attached.dossier || { thing: place.title || place.name, pages: [], attempts: [] };
+  if (current && attached.dossier && attached.dossierKey !== sharedKey) {
+    const urls = new Set((current.pages || []).map((page) => page.url));
+    dossier = mergeDossierPages(current, {
+      pages: (attached.dossier.pages || []).filter((page) => !urls.has(page.url)),
+      attempts: attached.dossier.attempts || [],
+      braveResults: attached.dossier.braveResults || [],
+    });
+  }
+  const tripIds = [...new Set([...(dossier.tripIds || []), String(tripId)])];
+  await store.putDossier(sharedKey, { ...dossier, tripIds, tripUseCount: tripIds.length });
+  await store.putDossier(tripKey, { sharedDossierKey: sharedKey });
+  return sharedKey;
+}
+
 export async function loadThingEvidenceDossier(dossierKey, { env = process.env, storeImpl } = {}) {
   const key = String(dossierKey || '').trim();
   if (!key) return null;
   const store = storeImpl || getThingEvidenceDossierStore(env);
-  const dossier = await store.getDossier(key);
+  let dossier = await store.getDossier(key);
+  if (dossier?.sharedDossierKey?.startsWith('shared:')) dossier = await store.getDossier(dossier.sharedDossierKey);
   if (!dossier || !dossierPagesVerified(dossier)) return dossier;
   return dossier;
 }
 
 export async function loadThingEvidenceDossierResolved(key, { env = process.env, storeImpl, placeId = null } = {}) {
+  const store = storeImpl || getThingEvidenceDossierStore(env);
+  const attached = await store.getDossier(key);
   const primary = await loadThingEvidenceDossier(key, { env, storeImpl });
-  if (primary?.pages?.length) return { dossier: primary, dossierKey: key };
+  if (primary?.pages?.length) return { dossier: primary, dossierKey: attached?.sharedDossierKey || key };
   const id = Number(placeId);
   if (Number.isInteger(id) && id > 0) {
     const legacyKey = nycDaybydayDossierKey(id);
@@ -191,14 +226,15 @@ export async function loadThingEvidenceDossierResolved(key, { env = process.env,
       if (legacy?.pages?.length) return { dossier: legacy, dossierKey: key, legacyKey };
     }
   }
-  return { dossier: primary, dossierKey: key };
+  return { dossier: primary, dossierKey: attached?.sharedDossierKey || key };
 }
 
 export async function saveThingEvidenceDossier(dossierKey, dossier, { env = process.env, storeImpl } = {}) {
   const key = String(dossierKey || '').trim();
   if (!key || !dossier || typeof dossier !== 'object') return;
   const store = storeImpl || getThingEvidenceDossierStore(env);
-  await store.putDossier(key, dossier);
+  const attached = await store.getDossier(key);
+  await store.putDossier(attached?.sharedDossierKey?.startsWith('shared:') ? attached.sharedDossierKey : key, dossier);
 }
 
 function readLocalThingEvidenceDossier(dossierKey, env = process.env) {
@@ -214,7 +250,10 @@ function readLocalThingEvidenceDossier(dossierKey, env = process.env) {
 }
 
 function readStoredDossierSync(dossierKey, env = process.env) {
-  return readLocalThingEvidenceDossier(dossierKey, env);
+  const dossier = readLocalThingEvidenceDossier(dossierKey, env);
+  return dossier?.sharedDossierKey?.startsWith('shared:')
+    ? readLocalThingEvidenceDossier(dossier.sharedDossierKey, env)
+    : dossier;
 }
 
 export async function loadDossiersByKeys(keyByPlaceId = {}, { env = process.env, storeImpl } = {}) {

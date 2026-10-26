@@ -16,6 +16,7 @@ import {
   gatherBraveEvidenceForQueries,
   gatherThingEvidence,
   mergeDossierPages,
+  topUpDossierFields,
 } from '../src/vacation/thing-evidence-dossier.mjs';
 import { extractReviewsByCode } from '../src/vacation/dossier-review-extract.mjs';
 import { dossierRebuildFields } from '../src/vacation/thing-dossier-fields.mjs';
@@ -100,5 +101,50 @@ const page = {
 const merged = mergeDossierPages({ thing: 'Sample', pages: [page], attempts: [] }, dossier);
 const rebuild = dossierRebuildFields({ fieldHashes: { description: page.sha256 }, fieldSources: { description: page.url } }, merged, { maxAgeExpired: false, changedUrls: [] });
 assert.equal(rebuild.has('itineraryNote') || rebuild.size === 0, true);
+
+const gapPlace = { title: 'Harbor Shop', category: 'store' };
+const prior = {
+  thing: gapPlace.title,
+  pages: [page],
+  attempts: [{ kind: 'page', status: 'ok' }],
+  shortcomings: [{ field: 'hours', attempts: [{ query: 'first hours' }, { query: 'second hours' }] }],
+};
+const queries = [];
+let progress = null;
+const gapOptions = {
+  env: { BRAVE_SEARCH_API_KEY: 'test-key' },
+  destination: 'Boston',
+  onlyFields: ['hours'],
+  fetchImpl: async (url) => {
+    queries.push(new URL(url).searchParams.get('q'));
+    return { ok: true, json: async () => ({ web: { results: [] } }) };
+  },
+  onProgress: async (dossier) => { progress = structuredClone(dossier); },
+};
+const topped = await topUpDossierFields(prior, gapPlace, gapOptions);
+assert.equal(queries.length, 1, 'two saved failures leave only one search');
+assert.equal(queries[0], topUpQueriesForField('hours', gapPlace, 'Boston', 2)[0].query);
+assert.equal(topped.shortcomings.find((row) => row.field === 'hours').attempts.length, 3);
+assert.equal(topped.attempts.filter((row) => row.kind === 'gap_top_up').length, 1);
+assert.ok(Date.parse(progress.attempts.find((row) => row.kind === 'gap_top_up').startedAt));
+await topUpDossierFields(topped, gapPlace, gapOptions);
+assert.equal(queries.length, 1, 'a repeated run cannot restart the three searches');
+await topUpDossierFields({ ...topped, shortcomings: [] }, gapPlace, gapOptions);
+assert.equal(queries.length, 1, 'migrated attempts retain their ordinals when shortcomings are rebuilt');
+
+const interrupted = { ...prior, attempts: [], shortcomings: [] };
+await assert.rejects(() => topUpDossierFields(interrupted, gapPlace, {
+  ...gapOptions,
+  onProgress: async (dossier) => {
+    progress = structuredClone(dossier);
+    throw new Error('interrupted before search');
+  },
+}), /interrupted before search/);
+assert.equal(progress.attempts[0].status, 'started');
+const resumed = await topUpDossierFields(progress, gapPlace, gapOptions);
+assert.equal(queries.length, 3, 'an interrupted attempt consumes its reserved budget');
+assert.equal(resumed.attempts.filter((row) => row.kind === 'gap_top_up').length, 3);
+await topUpDossierFields({ ...resumed, shortcomings: [] }, gapPlace, gapOptions);
+assert.equal(queries.length, 3, 'the durable ledger enforces the cap when shortcomings are rebuilt');
 
 console.log('test_thing_evidence_dossier_682: ok');

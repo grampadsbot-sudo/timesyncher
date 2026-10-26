@@ -244,7 +244,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   let merged;
   try {
-  if (persisted?.pages?.length && !forceRefresh) {
+  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
@@ -262,10 +262,14 @@ export async function fetchXaiPlaceRatings(place = {}, {
     beginDossierXaiUsageRun(merged, persisted);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
     if (pendingTopUp.length && !outOfTime()) {
-      merged = await topUpDossierFields(merged, place, { ...gatherOpts, onlyFields: pendingTopUp });
+      merged = await topUpDossierFields(merged, place, {
+        ...gatherOpts,
+        onlyFields: pendingTopUp,
+        onProgress: key ? (dossier) => saveThingEvidenceDossier(key, dossier, { env, storeImpl }) : undefined,
+      });
     }
     if (placeSupportsDossierReviews(place) && dossierReviewsShouldRunWriter(persisted, merged, place) && !outOfTime()) {
-      merged = await rebuildDossierReviewsFromSavedEvidence(persisted, place, {
+      merged = await rebuildDossierReviewsFromSavedEvidence(merged, place, {
         env,
         fetchImpl,
         destination,
@@ -292,7 +296,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
   } else {
     const gathered = await gatherImpl(place, gatherOpts);
-    merged = gathered;
+    merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
     merged.fieldCounts = computeDossierFieldCounts(merged, place);
     beginDossierXaiUsageRun(merged, persisted || {});
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);

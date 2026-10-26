@@ -9,6 +9,7 @@ import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
+  bindSharedThingEvidenceDossier,
   loadThingEvidenceDossier,
   loadThingEvidenceDossierResolved,
   thingEvidenceDossierKey,
@@ -55,7 +56,9 @@ export function placeFromTarget(target = {}) {
     source: target.source || ccabRecord.source || 'trip_things',
     category,
     category_name: typeof category === 'object' ? category.name : (target.category_name || category),
-    address: target.address || ccabRecord.address,
+    address: target.address || suppliedRecord.address || ccabRecord.address,
+    lat: target.lat ?? suppliedRecord.lat ?? ccabRecord.lat,
+    lng: target.lng ?? suppliedRecord.lng ?? ccabRecord.lng,
     url: chosenUrl,
     sourceRecord,
   };
@@ -162,7 +165,9 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   const results = [];
   for (const target of targets) {
     const place = placeFromTarget(target);
-    const dossierKey = target.dossierKey || thingEvidenceDossierKey(place);
+    const dossierKey = target.dossierKey || (target.sharedLibrary === true
+      ? await bindSharedThingEvidenceDossier(place, { env, storeImpl })
+      : thingEvidenceDossierKey(place));
     const refresh = forceRefresh || target.forceRefresh === true;
     const { dossier: existing } = await loadThingEvidenceDossierResolved(dossierKey, {
       env,

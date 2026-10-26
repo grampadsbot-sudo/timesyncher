@@ -201,7 +201,8 @@ function fieldsNeedingBraveTopUp(counts = {}, place = {}) {
 
 function topUpAttemptsExhausted(dossier = {}, field = '') {
   const row = (dossier.shortcomings || []).find((s) => s.field === field);
-  return Boolean(row && Array.isArray(row.attempts) && row.attempts.length >= 3);
+  const ledger = (dossier.attempts || []).filter((attempt) => attempt.kind === 'gap_top_up' && attempt.field === field);
+  return Math.max(row?.attempts?.length || 0, ledger.length, ...ledger.map((attempt) => Number(attempt.attempt) || 0)) >= 3;
 }
 
 export function braveTopUpFieldsPending(dossier = {}, place = {}) {

@@ -179,4 +179,69 @@ await handler({
 assert.equal(json.ok, true);
 assert.equal(json.results[0].skipped, 'existing_dossier');
 
+const libraryTarget = { ...target, sharedLibrary: true, address: '181 Thompson St, New York, NY', url: 'https://carbone.example/' };
+const libraryRun = await runThingEvidenceDossierStagingTargets([libraryTarget], {
+  ...rebuildOpts,
+  skipExisting: true,
+});
+assert.match(libraryRun.results[0].dossierKey, /^shared:restaurant:/);
+assert.equal(libraryRun.results[0].skipped, 'existing_dossier');
+const reused = await runThingEvidenceDossierStagingTargets([{ ...libraryTarget, tripId: 'other-trip', placeId: 'other-place' }], {
+  ...rebuildOpts,
+  skipExisting: true,
+});
+assert.equal(reused.results[0].dossierKey, libraryRun.results[0].dossierKey);
+assert.equal(reused.results[0].skipped, 'existing_dossier');
+assert.equal(buildCalls, 0);
+
+const emptyTarget = { tripId: 'empty-trip', placeId: 'empty-place', title: 'Rental provider', category: 'car' };
+const emptyKey = tripPlaceDossierKey(emptyTarget.tripId, emptyTarget.placeId);
+await store.putDossier(emptyKey, { thing: emptyTarget.title, pages: [], attempts: [{ kind: 'brave', step: 'web_search', status: 'failed' }] });
+let gapCalls = 0;
+const emptyOptions = {
+  ...rebuildOpts,
+  env: { XAI_API_KEY: 'test', BRAVE_SEARCH_API_KEY: 'test' },
+  fetchImpl: async () => {
+    gapCalls += 1;
+    return { ok: true, json: async () => ({ web: { results: [] } }) };
+  },
+};
+await runThingEvidenceDossierStagingTargets([emptyTarget], emptyOptions);
+const afterFirstEmptyRun = gapCalls;
+assert.ok(afterFirstEmptyRun > 0, 'failed initial capture resumes with gap searches');
+await runThingEvidenceDossierStagingTargets([emptyTarget], emptyOptions);
+assert.equal(gapCalls, afterFirstEmptyRun, 'exhausted empty captures must not restart full search or gap searches');
+assert.equal(gatherCalls, 0);
+
+const newLibrary = await runThingEvidenceDossierStagingTargets([{
+  tripId: 'library-trip', placeId: 'library-place', title: 'Harbor Bookshop', category: 'store',
+  address: '12 Harbor St, Boston, MA', url: 'https://bookshop.example/', sharedLibrary: true,
+}], {
+  ...emptyOptions,
+  gatherImpl: async () => ({ thing: 'Harbor Bookshop', pages: [], attempts: [{ kind: 'brave', status: 'failed' }] }),
+});
+const capturedLibrary = await store.getDossier(newLibrary.results[0].dossierKey);
+assert.equal(capturedLibrary.tripUseCount, 1, 'initial gather must retain the central Thing trip metadata');
+assert.deepEqual(capturedLibrary.tripIds, ['library-trip']);
+
+const budgetTarget = { ...target, tripId: 'budget-trip', placeId: 'budget-place' };
+const budgetKey = tripPlaceDossierKey(budgetTarget.tripId, budgetTarget.placeId);
+await store.putDossier(budgetKey, badReviews);
+let reviewGapCalls = 0;
+const budgetRun = await runThingEvidenceDossierStagingTargets([budgetTarget], {
+  ...emptyOptions,
+  fetchImpl: async () => {
+    reviewGapCalls += 1;
+    return { ok: true, json: async () => ({ web: { results: [] } }) };
+  },
+});
+const afterReview = await store.getDossier(budgetKey);
+const attemptsByField = {};
+for (const entry of afterReview.attempts.filter((row) => row.kind === 'gap_top_up')) {
+  attemptsByField[entry.field] = (attemptsByField[entry.field] || 0) + 1;
+}
+assert.ok(Object.values(attemptsByField).every((count) => count <= 3));
+assert.equal(reviewGapCalls, Object.values(attemptsByField).reduce((sum, count) => sum + count, 0), 'saved-review rebuild must retain every gap-search attempt');
+assert.ok(budgetRun.results[0].pageCount > 0);
+
 console.log('test_thing_evidence_dossier_worker_route: ok');
