@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 
 import { buildBudgetModel, budgetCompletenessChecks } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 import { gateBBudgetPriceCompleteness } from '../src/vacation/gate-b-budget-price-completeness.mjs';
+import { loadFixtureReplaySharedTripFromPath } from '../src/vacation/shared-trip-fixture-replay.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
 import { placeToTripThing } from '../src/vacation/place-search.mjs';
 import {
@@ -100,5 +102,11 @@ for (const row of gateBRows) {
   const place = searchPlaces[row.id];
   assert.ok(place?.price != null && place.price !== 0, `search fill price on place ${row.id}`);
 }
+
+const stagingFixturePath = fileURLToPath(
+  new URL('./fixtures/gate-b-nyc-shared-staging.json', import.meta.url),
+);
+const replay = loadFixtureReplaySharedTripFromPath(stagingFixturePath);
+assert.ok(replay?.served?.places?.length, 'fixture replay must enrich staging NYC shared trip');
 
 console.log('NYC budget search fill price tests passed');
