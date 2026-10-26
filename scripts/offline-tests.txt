@@ -71,6 +71,7 @@ scripts/test_check_hardcoded_content.mjs
 scripts/test_check-no-hardcoded-product-cosmetic.mjs
 scripts/test_no_hardcoded_product_content.mjs
 scripts/test_day_by_day_map_marker_bounds_chrome.mjs
+scripts/test_daybyday_hotel_no_duplicate_timeline_row_687.mjs
 scripts/test_deploy_required_env.mjs
 scripts/test_checkout_coupon_zero_confirm.mjs
 scripts/test_checkout_coupons.mjs

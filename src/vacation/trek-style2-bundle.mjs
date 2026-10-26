@@ -204,6 +204,8 @@ const SE_PATCH = 'function _se({title:e,html:t,styles:i}){const seTitle=String(e
 
 const DS_NEEDLE = 'Ds=G=>{var Re;return Mi(G)?!1:((Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)}';
 const DS_PATCH = 'Ds=G=>{var Re,on;return on=(Re=le[Qt(G)])==null?void 0:Re.timeline,on==null?(Mi(G)?!1:hl(G)):!!on}';
+const CI_ZT_DAY_ASSIGN_NEEDLE = 'zt=(Gt||[]).map(wn=>Ft.get(wn.id)||wn).filter(wn=>jr(wn,G.id)&&Ds(wn))';
+const CI_ZT_DAY_ASSIGN_PATCH = 'zt=(Gt||[]).map(wn=>Ft.get(wn.id)||wn).filter(wn=>jr(wn,G.id)&&Ds(wn)&&!Zi(wn))';
 
 const OP_GRID_NEEDLE = '<div class="daily-grid">${js}<main class="daily-details">';
 const OP_GRID_PATCH = '<div class="daily-grid" data-two-col="1" style="display:table;width:100%;table-layout:fixed">${js}<main class="daily-details" data-two-col-details="1" style="display:table-cell;width:62%;vertical-align:top">';
@@ -391,6 +393,9 @@ export function patchStyleTwoToConfigRenderer(source = '', options = {}) {
   }
   patched = applySharedLiveTabBundlePatches(patched, { served });
   patched = applyLiveProductPatches(patched, { served });
+  if (patched.includes(CI_ZT_DAY_ASSIGN_NEEDLE)) {
+    patched = patched.replace(CI_ZT_DAY_ASSIGN_NEEDLE, CI_ZT_DAY_ASSIGN_PATCH);
+  }
   if (patched.includes(IT_CATEGORY_NEEDLE)) {
     patched = patched.replace(IT_CATEGORY_NEEDLE, IT_CATEGORY_PATCH);
   }
@@ -758,6 +763,9 @@ export function assertPatchedStyleTwo(source = '') {
   }
   if (!js.includes(DS_PATCH) || js.includes('Re=le[Qt(G)])==null?void 0:Re.timeline)??hl(G)')) {
     throw new Error('Style two Ds() timeline ha() patch did not apply.');
+  }
+  if (js.includes(CI_ZT_DAY_ASSIGN_NEEDLE) && !js.includes(CI_ZT_DAY_ASSIGN_PATCH)) {
+    throw new Error('Style two Ci() must exclude hotels from generic day-assignment rows.');
   }
   if (js.includes('data-two-col="1"') || js.includes('data-two-col-itinerary="1"') || js.includes('data-two-col-details="1"')) {
     throw new Error('Style two must not force Style-one daily-left two-col table layout.');
