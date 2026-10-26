@@ -8,13 +8,12 @@ import { buildNycCraigKimDaybydayFixtureRows } from './fixtures/nyc-craig-kim-da
 import {
   buildPr336VkSearchPlacesByRowId,
 } from './fixtures/pr336-vk-search-trip-sources.mjs';
-import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
+import { dossierPresent, dossierPresented } from '../src/vacation/passb-dossier-presented.mjs';
 import { NYC_GATE_B_TRIP_ID } from '../src/vacation/shared-trip-dossier-keys.mjs';
 import {
   loadTripPlaceDossiersFromDisk,
   tripPlaceDossierKey,
 } from '../src/vacation/thing-evidence-dossier-store.mjs';
-import { searchPlaceOutputViolations } from '../src/vacation/search-place-output.mjs';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const jobDir = process.env.PASSB_687_JOB_DIR
@@ -41,30 +40,6 @@ function inventoryFromRows(rows) {
     byType[t] = (byType[t] || 0) + 1;
   }
   return { total: rows.length, byType };
-}
-
-function dossierPresent(dossier) {
-  return Boolean(
-    dossier
-    && Array.isArray(dossier.pages)
-    && dossier.pages.length > 0
-    && Array.isArray(dossier.attempts)
-    && dossier.attempts.length > 0,
-  );
-}
-
-function dossierPresented(dossier, place) {
-  if (!dossierPresent(dossier)) return false;
-  const counts = computeDossierFieldCounts(dossier, place);
-  const summaryOk = counts.summary?.status === 'ok';
-  const descOk = counts.description?.status === 'ok';
-  const placeViolations = searchPlaceOutputViolations({
-    ...place,
-    title: place.title || place.name,
-    category: place.category || place.cat,
-  });
-  const hardPresented = placeViolations.length === 0;
-  return summaryOk && descOk && hardPresented;
 }
 
 function localDossierDir() {

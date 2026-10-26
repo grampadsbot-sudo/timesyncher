@@ -1,13 +1,11 @@
-import { computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
 import {
   getThingEvidenceDossierStore,
   loadTripPlaceDossiersFromStore,
 } from './thing-evidence-dossier-store.mjs';
-import { searchPlaceOutputViolations } from './search-place-output.mjs';
+import { dossierPresent, dossierPresented } from './passb-dossier-presented.mjs';
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
-import { searchPlaceFromStoredDossier } from './shared-trip-dossier-overlay.mjs';
 import {
   buildPassBSharedDossierTargets,
   normPassBDossierCategory,
@@ -31,31 +29,6 @@ export function parsePassBOperatorOffset(raw) {
 
 const OPERATOR_TARGETS_PER_REQUEST = 1;
 const OPERATOR_MAX_TIME_BUDGET_MS = 45000;
-
-function dossierPresent(dossier) {
-  return Boolean(
-    dossier
-    && Array.isArray(dossier.pages)
-    && dossier.pages.length > 0
-    && Array.isArray(dossier.attempts)
-    && dossier.attempts.length > 0,
-  );
-}
-
-function dossierPresented(dossier, place) {
-  if (!dossierPresent(dossier)) return false;
-  const counts = computeDossierFieldCounts(dossier, place);
-  const summaryOk = counts.summary?.status === 'ok';
-  const descOk = counts.description?.status === 'ok';
-  const hydrated = searchPlaceFromStoredDossier(place, dossier);
-  const placeViolations = searchPlaceOutputViolations({
-    ...hydrated,
-    sourceRecord: hydrated,
-    title: hydrated.title || place.title || place.name,
-    category: place.category || place.cat || hydrated.category,
-  });
-  return summaryOk && descOk && placeViolations.length === 0;
-}
 
 function scoreByType(rows, placesById, dossiersByPlaceId) {
   const buckets = {};

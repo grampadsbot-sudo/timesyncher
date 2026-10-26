@@ -1,7 +1,7 @@
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
 import { commitDossierXaiUsageRun } from './dossier-cost.mjs';
-import { braveTopUpFieldsPending } from './thing-evidence-dossier-field-counts.mjs';
+import { braveTopUpFieldsPending, computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
 import { mergeDossierPages } from './thing-evidence-dossier.mjs';
 import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
@@ -12,6 +12,8 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
   changedUrls = [],
 } = {}) {
   if (!persisted?.pages?.length || !merged?.pages?.length) return false;
+  const counts = computeDossierFieldCounts(merged, place);
+  if (counts.summary?.status !== 'ok' || counts.description?.status !== 'ok') return false;
   const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired: false, changedUrls });
   const needsWriter = placeSupportsDossierReviews(place)
     && dossierReviewsShouldRunWriter(persisted, merged, place);
