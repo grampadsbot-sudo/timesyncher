@@ -144,7 +144,7 @@ function createLocalDossierStore(env) {
   };
 }
 
-function getThingEvidenceDossierStore(env = process.env) {
+export function getThingEvidenceDossierStore(env = process.env) {
   if (storeOverride) return storeOverride;
   if (hasDatabase(env)) {
     if (!postgresStoreClient) postgresStoreClient = createPostgresDossierStore(env);

@@ -1,29 +1,10 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
 import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
-import { NYC_GATE_B_TRIP_ID } from '../src/vacation/shared-trip-dossier-keys.mjs';
+import { buildNycThingEvidenceDossierTargets } from '../src/vacation/nyc-passb-dossier-inventory.mjs';
 import { missingSearchKeys, xaiPlaceSearchModelId } from '../src/vacation/provider-env.mjs';
-import { buildNycCraigKimDaybydayFixtureRows } from './fixtures/nyc-craig-kim-daybyday-rows.mjs';
-import { buildPr336VkSearchPlacesByRowId } from './fixtures/pr336-vk-search-trip-sources.mjs';
 
-export function buildNycThingEvidenceDossierTargets({
-  rows = buildNycCraigKimDaybydayFixtureRows(),
-  placesById = buildPr336VkSearchPlacesByRowId(rows),
-  tripId = NYC_GATE_B_TRIP_ID,
-} = {}) {
-  return rows.map((row) => {
-    const place = placesById[row.id];
-    if (!place) throw new Error(`missing dossier inventory place: ${row.id}`);
-    return {
-      ...place,
-      rowId: row.id,
-      placeId: row.id,
-      tripId,
-      sharedLibrary: true,
-      destination: place.address || 'New York, NY',
-    };
-  });
-}
+export { buildNycThingEvidenceDossierTargets } from '../src/vacation/nyc-passb-dossier-inventory.mjs';
 
 async function main() {
   if (!process.env.XAI_API_KEY) throw Object.assign(new Error('XAI_API_KEY is not set.'), { code: 'missing_xai_api_key' });
