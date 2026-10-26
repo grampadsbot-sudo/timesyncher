@@ -971,5 +971,203 @@
     "lat": 40.773,
     "lng": -73.982,
     "address": "1900 Broadway, New York, NY 10023"
+  },
+  "La Traviata Pizzeria": {
+    "category": "restaurant",
+    "description": "Source email: La Traviata Pizzeria neighborhood pizza option mentioned alongside Joe's and John's in Greenwich Village. Price: $28 entree floor; Status: candidate only.",
+    "summary": "Village pizza option from Craig/Kim trek notes.",
+    "price": 28,
+    "website": "https://www.latraviatapizzeria.com/",
+    "logoUrl": "https://www.latraviatapizzeria.com/favicon.ico",
+    "lat": 40.731,
+    "lng": -74.002,
+    "address": "Greenwich Village, New York, NY"
+  },
+  "Famous Original Ray's Pizza": {
+    "category": "restaurant",
+    "description": "Source email: Famous Original Ray's Pizza, 736 7th Ave, NY 10019. Casual stop; compare against Joe's/John's/La Traviata depending on neighborhood. Price: $22 slice floor; Status: candidate only.",
+    "summary": "Midtown Ray's slice stop; Craig email trek source.",
+    "price": 22,
+    "website": "https://rayspizza.com/",
+    "logoUrl": "https://rayspizza.com/favicon.ico",
+    "lat": 40.762,
+    "lng": -73.984,
+    "address": "736 7th Ave, New York, NY 10019"
+  },
+  "Patsy's Pizzeria Upper West Side": {
+    "category": "restaurant",
+    "description": "Upper West Side coal-oven pizza room from the Craig/Kim NYC trek shortlist. Price: $26 entree floor; Status: candidate only.",
+    "summary": "UWS Patsy's pizza; trek shortlist.",
+    "price": 26,
+    "website": "https://www.patsyspizzeria.com/",
+    "logoUrl": "https://www.patsyspizzeria.com/favicon.ico",
+    "lat": 40.787,
+    "lng": -73.975,
+    "address": "Upper West Side, New York, NY"
+  },
+  "Piccola Cucina Uptown": {
+    "category": "restaurant",
+    "description": "Uptown Sicilian trattoria on the Craig/Kim NYC trek restaurant shortlist near Lincoln Center. Price: $42 entree floor; Status: candidate only.",
+    "summary": "Uptown Sicilian; trek shortlist.",
+    "price": 42,
+    "website": "https://www.piccolacucinagroup.com/",
+    "logoUrl": "https://www.piccolacucinagroup.com/favicon.ico",
+    "lat": 40.772,
+    "lng": -73.981,
+    "address": "Upper West Side, New York, NY"
+  },
+  "Estiatorio Milos Hudson Yards": {
+    "category": "restaurant",
+    "description": "Source email: Estiatorio Milos Restaurant at Hudson Yards. Compare against lower-effort pizza/market options if the day is already packed. Price: $85 entree floor; Status: candidate only.",
+    "summary": "Hudson Yards Milos seafood; Craig email trek source.",
+    "price": 85,
+    "website": "https://www.estiatoriomilos.com/location/nyhudsonyards/",
+    "logoUrl": "https://www.estiatoriomilos.com/favicon.ico",
+    "lat": 40.754,
+    "lng": -74.001,
+    "address": "Hudson Yards, New York, NY"
+  },
+  "The Original John's of Bleecker Street": {
+    "category": "restaurant",
+    "description": "Greenwich Village coal-oven pizza classic on the Craig/Kim trek shortlist near Joe's Pizza. Price: $24 slice floor; Status: candidate only.",
+    "summary": "John's of Bleecker Street pizza; trek shortlist.",
+    "price": 24,
+    "website": "https://www.johnsofbleeckerstreet.com/",
+    "logoUrl": "https://www.johnsofbleeckerstreet.com/favicon.ico",
+    "lat": 40.731,
+    "lng": -74.003,
+    "address": "278 Bleecker St, New York, NY 10014"
+  },
+  "Joe's Pizza Carmine Street": {
+    "category": "restaurant",
+    "description": "Source email: Joe's Pizza (Bleecker and Carmine streets), 7 Carmine Street, favorite repeat. Price: $22 slice floor; Status: candidate only.",
+    "summary": "Joe's Pizza Carmine Street; Craig email trek source.",
+    "price": 22,
+    "website": "https://www.joespizzanyc.com/",
+    "logoUrl": "https://www.joespizzanyc.com/favicon.ico",
+    "lat": 40.730,
+    "lng": -74.003,
+    "address": "7 Carmine St, New York, NY 10014"
+  },
+  "Junior's Times Square": {
+    "category": "restaurant",
+    "description": "Source email: JUNIORS 45th St NYC, plain cheesecake and coffee pre-show, 1515 Broadway. Use as dessert/cafe stop, not full dinner unless desired. Price: $18 dessert floor; Status: candidate only.",
+    "summary": "Junior's Times Square cheesecake stop; Craig email trek source.",
+    "price": 18,
+    "website": "https://www.juniorscheesecake.com/blog/restaurants/times-square/",
+    "logoUrl": "https://www.juniorscheesecake.com/favicon.ico",
+    "lat": 40.759,
+    "lng": -73.986,
+    "address": "1515 Broadway, New York, NY 10036"
+  },
+  "Carmine's Times Square": {
+    "category": "restaurant",
+    "description": "Family-style Italian theater-district room on the Craig/Kim NYC trek shortlist for pre-show dinners. Price: $48 entree floor; Status: candidate only.",
+    "summary": "Carmine's Times Square family Italian; trek shortlist.",
+    "price": 48,
+    "website": "https://www.carminesnyc.com/",
+    "logoUrl": "https://www.carminesnyc.com/favicon.ico",
+    "lat": 40.757,
+    "lng": -73.987,
+    "address": "Times Square, New York, NY"
+  },
+  "The Consulate UWS": {
+    "category": "restaurant",
+    "description": "Upper West Side brasserie on the Craig/Kim trek list near Lincoln Center hotel cluster. Price: $38 entree floor; Status: candidate only.",
+    "summary": "The Consulate UWS brasserie; trek shortlist.",
+    "price": 38,
+    "website": "https://www.theconsulatenyc.com/",
+    "logoUrl": "https://www.theconsulatenyc.com/favicon.ico",
+    "lat": 40.784,
+    "lng": -73.978,
+    "address": "Upper West Side, New York, NY"
+  },
+  "Cilantro UWS": {
+    "category": "restaurant",
+    "description": "Source email: CILANTRO - Potato Leek Soup, Tacos, 485 Columbus Ave. Use as nearby casual meal option. Price: $32 entree floor; Status: candidate only.",
+    "summary": "Cilantro UWS tacos; Craig email trek source.",
+    "price": 32,
+    "website": "https://www.cilantrorestaurant.com/",
+    "logoUrl": "https://www.cilantrorestaurant.com/favicon.ico",
+    "lat": 40.786,
+    "lng": -73.973,
+    "address": "485 Columbus Ave, New York, NY 10024"
+  },
+  "Sylvia's Harlem": {
+    "category": "restaurant",
+    "description": "Source email: FROM MOM AND BARBARA, Sylvia's - Harlem. Add as restaurant lead; verify desired location/time. Price: $36 entree floor; Status: candidate only.",
+    "summary": "Sylvia's Harlem soul food; Craig email trek source.",
+    "price": 36,
+    "website": "https://sylviasrestaurant.com/",
+    "logoUrl": "https://sylviasrestaurant.com/favicon.ico",
+    "lat": 40.808,
+    "lng": -73.945,
+    "address": "Harlem, New York, NY"
+  },
+  "Zinc Bar": {
+    "category": "restaurant",
+    "description": "Greenwich Village cocktail bar with small plates on the Craig/Kim NYC trek nightlife shortlist. Price: $24 cocktail floor; Status: candidate only.",
+    "summary": "Zinc Bar Village cocktails; trek shortlist.",
+    "price": 24,
+    "website": "https://www.zincbar.com/",
+    "logoUrl": "https://www.zincbar.com/favicon.ico",
+    "lat": 40.730,
+    "lng": -74.001,
+    "address": "Greenwich Village, New York, NY"
+  },
+  "Westville Hell's Kitchen": {
+    "category": "restaurant",
+    "description": "Casual neighborhood American on the Craig/Kim trek Hell's Kitchen shortlist near Broadway shows. Price: $28 entree floor; Status: candidate only.",
+    "summary": "Westville Hell's Kitchen; trek shortlist.",
+    "price": 28,
+    "website": "https://westville.com/",
+    "logoUrl": "https://westville.com/favicon.ico",
+    "lat": 40.763,
+    "lng": -73.991,
+    "address": "Hell's Kitchen, New York, NY"
+  },
+  "Angelina Bakery Broadway": {
+    "category": "restaurant",
+    "description": "Broadway bakery stop on the Craig/Kim NYC trek list for pre-show sweets. Price: $16 pastry floor; Status: candidate only.",
+    "summary": "Angelina Bakery Broadway; trek shortlist.",
+    "price": 16,
+    "website": "https://www.angelinabakery.com/",
+    "logoUrl": "https://www.angelinabakery.com/favicon.ico",
+    "lat": 40.758,
+    "lng": -73.985,
+    "address": "Broadway, New York, NY"
+  },
+  "Venchi Bleecker Street": {
+    "category": "restaurant",
+    "description": "Bleecker Street gelato and chocolate stop paired with Village pizza on the Craig/Kim trek list. Price: $14 dessert floor; Status: candidate only.",
+    "summary": "Venchi Bleecker gelato; trek shortlist.",
+    "price": 14,
+    "website": "https://us.venchi.com/",
+    "logoUrl": "https://us.venchi.com/favicon.ico",
+    "lat": 40.731,
+    "lng": -74.003,
+    "address": "Bleecker Street, New York, NY"
+  },
+  "Magnolia Bakery": {
+    "category": "restaurant",
+    "description": "Source email mentions Magnolia Bakery after Cilantro/Consulate on the UWS route. Use specific branch later based on route. Price: $12 dessert floor; Status: candidate only.",
+    "summary": "Magnolia Bakery dessert stop; Craig email trek source.",
+    "price": 12,
+    "website": "https://www.magnoliabakery.com/",
+    "logoUrl": "https://www.magnoliabakery.com/favicon.ico",
+    "lat": 40.782,
+    "lng": -73.979,
+    "address": "Upper West Side, New York, NY"
+  },
+  "The Jazz Club at Aman New York": {
+    "category": "restaurant",
+    "description": "Midtown jazz supper club on the Craig/Kim NYC trek nightlife shortlist with cocktails and small plates. Price: $55 cover floor; Status: candidate only.",
+    "summary": "Aman jazz club; trek shortlist.",
+    "price": 55,
+    "website": "https://www.aman.com/hotels/aman-new-york/dining",
+    "logoUrl": "https://www.aman.com/favicon.ico",
+    "lat": 40.763,
+    "lng": -73.977,
+    "address": "Midtown, New York, NY"
   }
 }
