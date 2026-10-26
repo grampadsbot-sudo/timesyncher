@@ -14,7 +14,6 @@ const OVERLAY_ENRICHMENT = JSON.parse(
 const REVIEW_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
 );
-// Per-row text for rows that share a CCAB record (same fare or venue captured twice); keyed by snapshot row id.
 const ROW_TEXT_OVERRIDES = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-row-descriptions.json', import.meta.url), 'utf8'),
 );
