@@ -34,9 +34,19 @@ def build(base_fixture, snapshot, out):
     if not isinstance(snap, dict) or not snap: raise ValueError("data snapshot is empty or not an object")
     cats = {str(c.get("name", "")).lower(): c.get("id") for c in fx.get("categories", []) if isinstance(c, dict)}
     trip_id = (fx.get("trip") or {}).get("id", 1)
-    places = [p for p in fx.get("places", []) if isinstance(p, dict)]
-    have = {str(p.get("id")) for p in places}
     overrides = dict(fx.get("thingOverrides") or {})
+    # A base place whose name matches a snapshot row is a duplicate of that row (the static fixture carries unpriced
+    # copies of the same places). Keep the snapshot row and drop the base copy with its place:<id> override, so the
+    # trip does not count the same place twice in budget and list totals.
+    snap_titles = {str(src.get("title") or "").strip().lower() for src in snap.values() if isinstance(src, dict)}
+    places = []
+    for p in fx.get("places", []):
+        if not isinstance(p, dict): continue
+        if str(p.get("name") or "").strip().lower() in snap_titles:
+            overrides.pop("place:" + str(p.get("id")), None)
+            continue
+        places.append(p)
+    have = {str(p.get("id")) for p in places}
     for rid in sorted(snap, key=lambda k: int(k)):
         src = snap[rid]
         if not isinstance(src, dict): raise ValueError("snapshot row %s is not an object" % rid)
