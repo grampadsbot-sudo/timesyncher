@@ -248,6 +248,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       failed: failed === true || hardFailure.failed === true,
       status: hardFailure.status || status,
       error: hardFailure.error || error,
+      presentedReasons: hardFailure.presentedReasons,
       resumable: resumable === true,
       rateLimited: rateLimited === true,
       rateLimitStep,

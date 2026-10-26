@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 import { normalizeDossierEvidence } from '../src/vacation/dossier-evidence-hydrate.mjs';
+import { dossierPresented } from '../src/vacation/passb-dossier-presented.mjs';
 import { stampReviewsEvidencePageHash } from '../src/vacation/dossier-reviews-rebuild.mjs';
 import { computeDossierFieldHashes } from '../src/vacation/thing-dossier-fields.mjs';
 import { tripPlaceDossierKey } from '../src/vacation/thing-evidence-dossier-store.mjs';
@@ -16,7 +18,7 @@ import {
 } from '../src/vacation/xai-dossier-http.mjs';
 
 function page(url, text) {
-  return { url, text, sha256: `sha-${url}`, fetchedAt: '2026-01-01T00:00:00.000Z' };
+  return { url, text, sha256: createHash('sha256').update(text).digest('hex'), fetchedAt: '2026-01-01T00:00:00.000Z' };
 }
 
 assert.equal(parseRetryAfterMs({ headers: { get: () => '2' } }), 2000);
@@ -44,6 +46,7 @@ const dossierKey = tripPlaceDossierKey(99, 610);
 const complete = {
   thing: 'Carbone',
   pages: [page('https://carbonenewyork.com/', 'Carbone spicy rigatoni and service notes '.repeat(12))],
+  attempts: [{ kind: 'page', status: 'ok', startedAt: '2026-01-01T00:00:00.000Z' }],
   fields: {
     summary: {
       value: 'Carbone is a Greenwich Village Italian restaurant known for red-sauce classics and a lively room.',
@@ -69,6 +72,7 @@ const complete = {
   captureCheckpoint: 'done',
 };
 const place = { title: 'Carbone', category: 'restaurant' };
+assert.equal(dossierPresented(normalizeDossierEvidence(complete, place), place), true);
 const { hashes, sources } = computeDossierFieldHashes(complete);
 const stamped = stampReviewsEvidencePageHash({ ...complete, fieldHashes: hashes, fieldSources: sources }, place);
 complete.fieldHashes = hashes;

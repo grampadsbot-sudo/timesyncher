@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
 import { commitDossierXaiUsageRun } from './dossier-cost.mjs';
@@ -7,6 +8,7 @@ import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
 import { passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { searchPlaceFromStoredDossier } from './shared-trip-dossier-overlay.mjs';
 
 const NO_OP_TOP_UP_IGNORE = new Set(['coordinates', 'ratings']);
 
@@ -16,6 +18,12 @@ export async function prepareOperatorDossierGather(persisted, place, {
   const unchanged = { persisted, retryEmptyGather: false };
   if (!reuseSavedPages || !persisted) return unchanged;
   const normalized = normalizeDossierEvidence({ ...persisted }, place);
+  if (normalized.pages?.length && dossierFillNeedsTextRebuild(normalized, place)
+    && (persisted.attempts || []).some((row) => row.step === 'operator_presented_text_retry'
+      && row.status === 'failed' && row.evidenceHash === presentedEvidenceHash(normalized))) {
+    normalized.captureCheckpoint = 'failed-presented';
+    return { ...unchanged, persisted: normalized, presentedFailure: dossierFillHardFailure(normalized, place) };
+  }
   if (normalized.pages?.length || (persisted.attempts || [])
     .some((row) => row.step === 'operator_empty_gather_retry')) return unchanged;
   normalized.attempts = [...(normalized.attempts || []), {
@@ -26,18 +34,48 @@ export async function prepareOperatorDossierGather(persisted, place, {
   return { persisted: normalized, retryEmptyGather: true };
 }
 
-export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
-  if (isFlightOrCarOrDecision(place)) return false;
+function dossierFillTextProblems(dossier = {}, place = {}) {
+  if (isFlightOrCarOrDecision(place)) return [];
   const counts = computeDossierFieldCounts(dossier, place);
-  if (counts.summary?.status !== 'ok' || counts.description?.status !== 'ok') return true;
   const fields = dossier.fields || {};
-  return passbPresentedHardTextViolations({
+  const raw = passbPresentedHardTextViolations({
     title: place.title || place.name || dossier.thing,
     category: place.category || place.cat,
     summary: fields.summary?.value ?? fields.summary,
     description: fields.description?.value ?? fields.description
       ?? fields.longDetails?.value ?? fields.longDetails ?? fields.details?.value ?? fields.details,
-  }).length > 0;
+  });
+  const hydrated = searchPlaceFromStoredDossier(place, dossier);
+  return [...new Set([
+    ...['summary', 'description'].filter((key) => counts[key]?.status !== 'ok')
+      .map((key) => `${key}:${counts[key]?.status || 'missing'}`),
+    ...raw,
+    ...passbPresentedHardTextViolations({
+      ...hydrated, sourceRecord: hydrated,
+      title: hydrated.title || place.title || place.name,
+      category: place.category || place.cat || hydrated.category,
+    }),
+  ])];
+}
+
+export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
+  return dossierFillTextProblems(dossier, place).length > 0;
+}
+
+function presentedEvidenceHash(dossier) {
+  const pages = (dossier.pages || []).map(({ url, sha256 }) => [url, sha256]).sort();
+  return createHash('sha256').update(JSON.stringify(pages)).digest('hex');
+}
+
+export function recordOperatorDossierTextFailure(dossier, place) {
+  const failure = dossierFillHardFailure(dossier, place);
+  if (!failure.presentedReasons?.length) return;
+  dossier.attempts = [...(dossier.attempts || []), {
+    kind: 'builder', step: 'operator_presented_text_retry', status: 'failed',
+    startedAt: new Date().toISOString(), evidenceHash: presentedEvidenceHash(dossier),
+    presentedReasons: failure.presentedReasons,
+  }];
+  dossier.captureCheckpoint = 'failed-presented';
 }
 
 export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}, {
@@ -97,8 +135,9 @@ export function dossierFillHardFailure(dossier = {}, place = {}) {
   if (dossier.emptySource) {
     return { failed: true, status: 'failed', error: dossier.emptySource, emptySource: dossier.emptySource };
   }
-  return dossierFillNeedsTextRebuild(dossier, place)
-    ? { failed: true, status: 'failed', error: 'presented_fields_not_ok' }
+  const presentedReasons = dossierFillTextProblems(dossier, place);
+  return presentedReasons.length
+    ? { failed: true, status: 'failed', error: 'presented_fields_not_ok', presentedReasons }
     : {};
 }
 

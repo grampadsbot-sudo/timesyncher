@@ -64,6 +64,7 @@ import {
   dossierFillNeedsTextRebuild,
   dossierPersistedFillIsNoOp,
   prepareOperatorDossierGather,
+  recordOperatorDossierTextFailure,
   saveFailedDossierAttempt,
   saveResumablePartial,
 } from './xai-dossier-fill-state.mjs';
@@ -278,12 +279,12 @@ export async function fetchXaiPlaceRatings(place = {}, {
     gathered.emptySource = gathered.pages?.length ? null : dossierEmptyGatherReason(gathered);
     return gathered;
   };
-  let merged;
-  let retryEmptyGather;
+  let merged, retryEmptyGather, presentedFailure;
   try {
-  ({ persisted, retryEmptyGather } = await prepareOperatorDossierGather(persisted, place, {
+  ({ persisted, retryEmptyGather, presentedFailure } = await prepareOperatorDossierGather(persisted, place, {
     reuseSavedPages, key, env, storeImpl,
   }));
+  if (presentedFailure) return { ...presentedFailure, parsed: { evidenceDossier: persisted } };
   if (!retryEmptyGather && persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     merged.emptySource = merged.pages?.length ? null : merged.emptySource || dossierEmptyGatherReason(merged);
@@ -435,8 +436,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsageRuns = merged.xaiUsageRuns;
   final.xaiUsd = merged.xaiUsd;
   final.emptySource = null;
+  if (reuseSavedPages) recordOperatorDossierTextFailure(final, place);
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
-  final.captureCheckpoint = 'done';
+  final.captureCheckpoint = dossierFillHardFailure(final, place).failed ? 'failed-presented' : 'done';
   final.fullPageChars = promptChars(merged);
   return {
     payload,
