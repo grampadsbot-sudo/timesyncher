@@ -5,8 +5,23 @@ import { braveTopUpFieldsPending, computeDossierFieldCounts } from './thing-evid
 import { mergeDossierPages } from './thing-evidence-dossier.mjs';
 import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
+import { passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
 
 const NO_OP_TOP_UP_IGNORE = new Set(['coordinates', 'ratings']);
+
+export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
+  if (isFlightOrCarOrDecision(place)) return false;
+  const counts = computeDossierFieldCounts(dossier, place);
+  if (counts.summary?.status !== 'ok' || counts.description?.status !== 'ok') return true;
+  const fields = dossier.fields || {};
+  return passbPresentedHardTextViolations({
+    title: place.title || place.name || dossier.thing,
+    category: place.category || place.cat,
+    summary: fields.summary?.value ?? fields.summary,
+    description: fields.description?.value ?? fields.description
+      ?? fields.longDetails?.value ?? fields.longDetails ?? fields.details?.value ?? fields.details,
+  }).length > 0;
+}
 
 export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}, {
   maxAgeExpired = false,
@@ -14,9 +29,10 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
 } = {}) {
   const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls });
   if (isFlightOrCarOrDecision(place)) return rebuildFields;
-  const counts = computeDossierFieldCounts(merged, place);
-  if (counts.summary?.status !== 'ok') rebuildFields.add('summary');
-  if (counts.description?.status !== 'ok') rebuildFields.add('description');
+  if (dossierFillNeedsTextRebuild(merged, place)) {
+    rebuildFields.add('summary');
+    rebuildFields.add('description');
+  }
   return rebuildFields;
 }
 
@@ -41,8 +57,8 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
   changedUrls = [],
 } = {}) {
   if (!persisted?.pages?.length || !merged?.pages?.length) return false;
-  const counts = computeDossierFieldCounts(merged, place);
-  if (counts.summary?.status !== 'ok' || counts.description?.status !== 'ok') return false;
+  if (persisted.emptySource || merged.emptySource) return false;
+  if (dossierFillNeedsTextRebuild(merged, place)) return false;
   const rebuildFields = dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls });
   const needsWriter = placeSupportsDossierReviews(place)
     && dossierReviewsShouldRunWriter(persisted, merged, place);
@@ -52,6 +68,19 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
     && persisted.fields
     && Object.keys(persisted.fields).length > 0;
   return !needsWriter && skipBuilder && pendingTopUp.length === 0;
+}
+
+export function dossierFillHardFailure(dossier = {}, place = {}) {
+  if (!dossier.pages?.length) {
+    const emptySource = dossier.emptySource || dossierEmptyGatherReason(dossier);
+    return { failed: true, status: 'failed', error: emptySource, emptySource };
+  }
+  if (dossier.emptySource) {
+    return { failed: true, status: 'failed', error: dossier.emptySource, emptySource: dossier.emptySource };
+  }
+  return dossierFillNeedsTextRebuild(dossier, place)
+    ? { failed: true, status: 'failed', error: 'presented_fields_not_ok' }
+    : {};
 }
 
 export async function saveResumablePartial(merged, persisted, {

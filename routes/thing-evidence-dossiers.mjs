@@ -106,7 +106,8 @@ export default async function handler(req, res) {
     const result = await runThingEvidenceDossierStagingTargets(targets, {
       env: runEnv,
       skipExisting: body?.skipExisting === true,
-      forceRefresh: authMode === 'operator' ? false : body?.forceRefresh === true,
+      forceRefresh: body?.forceRefresh === true,
+      operatorFill: authMode === 'operator',
       timeBudgetMs,
     });
     const payload = batch ? { ...result, batch, inventorySource } : result;

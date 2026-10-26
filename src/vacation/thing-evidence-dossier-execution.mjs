@@ -6,7 +6,7 @@ import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
 import { xaiHttpErrorResumable } from './xai-dossier-http.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
-import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
+import { dossierPersistedFillIsNoOp, dossierFillHardFailure, dossierFillNeedsTextRebuild } from './xai-dossier-fill-state.mjs';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
   bindSharedThingEvidenceDossier,
@@ -150,6 +150,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   storeImpl,
   skipExisting = false,
   forceRefresh = false,
+  operatorFill = false,
   timeBudgetMs = 52000,
 } = {}) {
   const testImpls = env.TIMESYNCHER_DOSSIER_TEST_IMPLS === '1' ? getDossierFillTestImpls() : {};
@@ -168,13 +169,14 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
     const dossierKey = target.dossierKey || (target.sharedLibrary === true
       ? await bindSharedThingEvidenceDossier(place, { env, storeImpl })
       : thingEvidenceDossierKey(place));
-    const refresh = forceRefresh || target.forceRefresh === true;
     const { dossier: existing } = await loadThingEvidenceDossierResolved(dossierKey, {
       env,
       storeImpl,
       placeId: place.id,
     });
     const pagesBefore = existing?.pages?.length || 0;
+    const refresh = forceRefresh || target.forceRefresh === true
+      || (operatorFill && pagesBefore > 0 && (dossierFillNeedsTextRebuild(existing, place) || existing.emptySource));
     if (!refresh && skipExisting && existing?.pages?.length) {
       const normalized = normalizeDossierEvidence({ ...existing }, place);
       if (dossierPersistedFillIsNoOp(existing, normalized, place)) {
@@ -201,6 +203,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
         extractReviewsImpl,
         storeImpl,
         forceRefresh: refresh,
+        reuseSavedPages: operatorFill,
         timeBudgetMs: target.timeBudgetMs ?? timeBudgetMs,
       });
     } catch (error) {
@@ -232,22 +235,27 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       failed,
       upstream,
       emptySource,
+      status,
+      error,
     } = fetchResult;
     const after = parsed?.evidenceDossier?.pages?.length || 0;
+    const hardFailure = dossierFillHardFailure(parsed?.evidenceDossier, place);
     results.push({
       rowId: target.rowId ?? place.id,
       dossierKey,
-      skipped: skipped ? 'existing_dossier' : undefined,
+      skipped: skipped && !hardFailure.failed ? 'existing_dossier' : undefined,
       partial: partial === true,
-      failed: failed === true,
+      failed: failed === true || hardFailure.failed === true,
+      status: hardFailure.status || status,
+      error: hardFailure.error || error,
       resumable: resumable === true,
       rateLimited: rateLimited === true,
       rateLimitStep,
       upstream: upstream || undefined,
       checkpoint: checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
-      emptySource: emptySource || parsed?.evidenceDossier?.emptySource || undefined,
+      emptySource: hardFailure.emptySource || emptySource || undefined,
       pageCount: after,
-      pagesAdded: refresh ? after : Math.max(0, after - pagesBefore),
+      pagesAdded: Math.max(0, after - pagesBefore),
       reviewsRead: fetchResult.parsed?.evidenceDossier?.reviewsRead || 0,
     });
   }

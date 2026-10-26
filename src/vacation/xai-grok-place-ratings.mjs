@@ -1,3 +1,5 @@
+import { lookup } from 'node:dns/promises';
+import { extractTavily } from './poi-search.mjs';
 import {
   postXaiPlaceRatingsResponses,
   xaiGrokPlaceSearchModelId,
@@ -6,6 +8,7 @@ import {
   changedDossierPageUrls,
   DEFAULT_DOSSIER_MAX_AGE_MS,
   gatherThingEvidence,
+  gatherBraveEvidenceForQueries,
   mergeDossierPages,
   topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
@@ -58,6 +61,8 @@ import { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-pr
 import {
   dossierEmptyGatherReason,
   dossierFillRebuildFields,
+  dossierFillHardFailure,
+  dossierFillNeedsTextRebuild,
   dossierPersistedFillIsNoOp,
   saveFailedDossierAttempt,
   saveResumablePartial,
@@ -234,6 +239,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
   forceRefresh = false, timeBudgetMs = 0,
+  reuseSavedPages = false,
 } = {}) {
   const key = dossierKey || thingEvidenceDossierKey(place);
   const resolved = key
@@ -247,10 +253,28 @@ export async function fetchXaiPlaceRatings(place = {}, {
     env, fetchImpl, destination, resolveImpl, center,
   };
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
+  const gatherWithEscalation = async () => {
+    let gathered = await gatherImpl(place, gatherOpts);
+    if (!gathered.pages?.length) {
+      const query = [place.title || place.name, destination].filter(Boolean).join(' ').trim();
+      const startedAt = new Date().toISOString();
+      const escalated = await gatherBraveEvidenceForQueries([query], place, {
+        ...gatherOpts, resolveImpl: resolveImpl || lookup, extractImpl: extractTavily,
+      });
+      gathered = mergeDossierPages(gathered, escalated);
+      gathered.attempts.push({
+        kind: 'brave', provider: 'Brave', stage: 'general', step: 'empty_gather_escalation',
+        query, url: '', startedAt, status: escalated.pages?.length ? 'ok' : 'empty',
+      });
+    }
+    gathered.emptySource = gathered.pages?.length ? null : dossierEmptyGatherReason(gathered);
+    return gathered;
+  };
   let merged;
   try {
-  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && !forceRefresh) {
+  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
+    merged.emptySource = merged.pages?.length ? null : merged.emptySource || dossierEmptyGatherReason(merged);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     const pagesChanged = (persisted.pages || []).length !== (merged.pages || []).length
@@ -260,20 +284,23 @@ export async function fetchXaiPlaceRatings(place = {}, {
       persisted = merged;
     }
     const changedUrlsEarly = changedDossierPageUrls(persisted.pages || [], merged.pages || []);
-    if (dossierPersistedFillIsNoOp(persisted, merged, place, { changedUrls: changedUrlsEarly })) {
+    if (!forceRefresh && dossierPersistedFillIsNoOp(persisted, merged, place, { changedUrls: changedUrlsEarly })) {
       merged.captureCheckpoint = 'done';
       return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
     }
     beginDossierXaiUsageRun(merged, persisted);
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
-    if (pendingTopUp.length && !outOfTime()) {
+    if (!(forceRefresh && reuseSavedPages) && pendingTopUp.length && !outOfTime()) {
       merged = await topUpDossierFields(merged, place, {
         ...gatherOpts,
         onlyFields: pendingTopUp,
         onProgress: key ? (dossier) => saveThingEvidenceDossier(key, dossier, { env, storeImpl }) : undefined,
       });
     }
-    if (placeSupportsDossierReviews(place) && dossierReviewsShouldRunWriter(persisted, merged, place) && !outOfTime()) {
+    if (merged.pages?.length) merged.emptySource = null;
+    if (!(forceRefresh && reuseSavedPages)
+      && (!dossierFillNeedsTextRebuild(merged, place) || computeDossierFieldCounts(merged, place).reviews?.count > 0)
+      && placeSupportsDossierReviews(place) && dossierReviewsShouldRunWriter(persisted, merged, place) && !outOfTime()) {
       merged = await rebuildDossierReviewsFromSavedEvidence(merged, place, {
         env,
         fetchImpl,
@@ -290,24 +317,27 @@ export async function fetchXaiPlaceRatings(place = {}, {
       stampReviewsEvidencePageHash(merged, place);
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-      merged.captureCheckpoint = 'done';
-      return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+      if (!dossierFillHardFailure(merged, place).failed) {
+        merged.captureCheckpoint = 'done';
+        return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+      }
+      persisted = merged;
     }
   } else if (persisted?.pages?.length && forceRefresh) {
-    const gathered = await gatherImpl(place, gatherOpts);
+    const gathered = await gatherWithEscalation();
     merged = mergeDossierPages(persisted, gathered);
     merged.fieldCounts = computeDossierFieldCounts(merged, place);
     beginDossierXaiUsageRun(merged, persisted);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
   } else {
-    const gathered = await gatherImpl(place, gatherOpts);
+    const gathered = await gatherWithEscalation();
     merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
     merged.fieldCounts = computeDossierFieldCounts(merged, place);
     beginDossierXaiUsageRun(merged, persisted || {});
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     merged.captureCheckpoint = 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    if (outOfTime()) {
+    if (outOfTime() && merged.pages?.length) {
       commitDossierXaiUsageRun(merged, persisted || {}, { kind: 'partial-gather', placeId: place.id ?? place.placeId });
       return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
     }
@@ -320,8 +350,14 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const rebuildFields = persisted
     ? dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls })
     : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor', 'itineraryNote']);
+  if (forceRefresh && reuseSavedPages) {
+    rebuildFields.add('summary');
+    rebuildFields.add('description');
+  }
   const skipBuilder = persisted
     && !forceRefresh
+    && merged.pages?.length > 0
+    && !persisted.emptySource && !merged.emptySource
     && rebuildFields.size === 0
     && persisted.fields
     && Object.keys(persisted.fields).length;
@@ -335,7 +371,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     merged.emptySource = emptySource;
     merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    return { payload: {}, structuredText: '', emptySource, parsed: { evidenceDossier: merged } };
+    return { payload: {}, structuredText: '', ...dossierFillHardFailure(merged, place), parsed: { evidenceDossier: merged } };
   }
   if (outOfTime()) {
     merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
@@ -368,7 +404,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   built.fieldCounts = computeDossierFieldCounts(built, place);
   if (built.fieldCounts.reviews?.count != null) built.reviewsRead = built.fieldCounts.reviews.count;
   built.missingFields = deriveMissingFieldsFromShortcomings(built.shortcomings);
-  const final = persisted && !forceRefresh
+  const final = persisted && (!forceRefresh || reuseSavedPages)
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields, place)
     : built;
   if (needsReviewWriter || rebuildFields.has('reviews')) stampReviewsEvidencePageHash(final, place);
@@ -383,6 +419,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsage = merged.xaiUsage;
   final.xaiUsageRuns = merged.xaiUsageRuns;
   final.xaiUsd = merged.xaiUsd;
+  final.emptySource = null;
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
   final.captureCheckpoint = 'done';
   final.fullPageChars = promptChars(merged);
@@ -394,6 +431,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     xaiUsage: final.xaiUsage || [],
     xaiUsageRun: usageRun,
     xaiUsd: final.xaiUsd || 0,
+    ...dossierFillHardFailure(final, place),
     parsed: { evidenceDossier: final },
   };
   } catch (error) {
