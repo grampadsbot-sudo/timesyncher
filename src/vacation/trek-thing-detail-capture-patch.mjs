@@ -6,7 +6,7 @@ const TS_DETAIL_CAPTURE_BODY = 'const d=ha(Dt)||{};const cat=String(It(Dt)||"").
 
 const TS_DETAIL_CAPTURE_MISPLACED = `function tsDetailCapturePayload(Dt){${TS_DETAIL_CAPTURE_BODY}}`;
 
-const HA_BODY = 'ha=G=>{const o=tsFillOv(le[Qt(G)]||{},G);return{...G,...o}}';
+const HA_BODY = 'ha=G=>{const o=tsFillOv(le[Qt(G)]||{},G);const m={...G,...o};if(m.category&&typeof m.category==="object"){const nm=String(m.category.name||m.category.label||"").trim();if(nm)m.category=nm;else delete m.category}return m}';
 const HA_SCOPE_NEEDLE = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=(G,Re)=>{';
 const HA_SCOPE_PATCH = `${HA_BODY},tsDetailCapturePayload=Dt=>{${TS_DETAIL_CAPTURE_BODY}},Sn=(G,Re)=>{`;
 const HA_SCOPE_NEEDLE_BEFORE_SN = 'ha=G=>tsFillOv(le[Qt(G)]||{},G),Sn=';
