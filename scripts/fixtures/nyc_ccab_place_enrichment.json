@@ -20,8 +20,8 @@
     "price": 530,
     "website": "https://www.thelucernehotel.com/",
     "logoUrl": "https://www.thelucernehotel.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7835075,
+    "lng": -73.9783622,
     "address": "201 West 79th Street, New York, NY 10024",
     "summarySourceUrls": [
       "https://www.thelucernehotel.com/",
@@ -35,8 +35,8 @@
     "price": 792,
     "website": "https://www.thewallace.com/",
     "logoUrl": "https://www.thewallace.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7818628,
+    "lng": -73.9818912,
     "address": "Upper West Side, New York, NY",
     "summarySourceUrls": [
       "https://www.thewallace.com/"
@@ -49,8 +49,8 @@
     "price": 736,
     "website": "https://www.beaconhotel.com/",
     "logoUrl": "https://www.beaconhotel.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7807355,
+    "lng": -73.9810912,
     "address": "Upper West Side, New York, NY",
     "summarySourceUrls": [
       "https://www.beaconhotel.com/"
@@ -63,8 +63,8 @@
     "price": 508,
     "website": "https://www.arthousehotelnyc.com/",
     "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7821637,
+    "lng": -73.9803866,
     "address": "2178 Broadway, New York, NY 10024",
     "summarySourceUrls": [
       "https://www.arthousehotelnyc.com/"
@@ -77,8 +77,8 @@
     "price": 509,
     "website": "https://www.empirehotelnyc.com/",
     "logoUrl": "https://www.empirehotelnyc.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7713368,
+    "lng": -73.9826001,
     "address": "44 West 63rd Street, New York, NY 10023",
     "summarySourceUrls": [
       "https://www.empirehotelnyc.com/"
@@ -102,9 +102,9 @@
     "price": 25,
     "website": "https://www.wholefoodsmarket.com/stores/upperwestside",
     "logoUrl": "https://www.wholefoodsmarket.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "808 Columbus Ave"
+    "lat": 40.7946572,
+    "lng": -73.9666786,
+    "address": "808 Columbus Avenue, New York, NY 10025"
   },
   "Park Central Hotel New York": {
     "category": "hotel",
@@ -113,8 +113,8 @@
     "price": 144,
     "website": "https://www.parkcentralny.com/",
     "logoUrl": "https://www.parkcentralny.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7647257,
+    "lng": -73.9811835,
     "address": "Midtown / Central Park South, New York, NY",
     "summarySourceUrls": [
       "https://www.parkcentralny.com/"
@@ -127,9 +127,9 @@
     "price": 160,
     "website": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Financial District, New York, NY",
+    "lat": 40.7094268,
+    "lng": -74.0143431,
+    "address": "85 West Street, New York, NY 10006",
     "summarySourceUrls": [
       "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
     ]
@@ -141,9 +141,9 @@
     "price": 210,
     "website": "https://www.manhattanhoteltimessquare.com/",
     "logoUrl": "https://www.manhattanhoteltimessquare.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Times Square / Midtown, New York, NY",
+    "lat": 40.7621727,
+    "lng": -73.9829659,
+    "address": "790 Seventh Avenue, New York, NY 10019",
     "summarySourceUrls": [
       "https://www.manhattanhoteltimessquare.com/"
     ]
@@ -155,8 +155,8 @@
     "price": 345,
     "website": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7585971,
+    "lng": -73.9861935,
     "address": "1535 Broadway, New York, NY 10036",
     "summarySourceUrls": [
       "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/",
@@ -170,9 +170,9 @@
     "price": 262,
     "website": "https://www.hyatt.com/hyatt/en-US/nycgh-hyatt-grand-central-new-york",
     "logoUrl": "https://www.hyatt.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Grand Central / Midtown East, New York, NY",
+    "lat": 40.7520431,
+    "lng": -73.9763372,
+    "address": "109 East 42nd Street, New York, NY 10017",
     "summarySourceUrls": [
       "https://www.hyatt.com/hyatt/en-US/nycgh-hyatt-grand-central-new-york"
     ]
@@ -184,8 +184,8 @@
     "price": 225,
     "website": "https://www.edisonhotelnyc.com/",
     "logoUrl": "https://www.edisonhotelnyc.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.759647,
+    "lng": -73.9862944,
     "address": "Times Square / Theater District, New York, NY",
     "summarySourceUrls": [
       "https://www.edisonhotelnyc.com/"
@@ -198,9 +198,9 @@
     "price": 349,
     "website": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Times Square, New York, NY",
+    "lat": 40.7627309,
+    "lng": -73.9816563,
+    "address": "811 Seventh Avenue, New York, NY 10019",
     "summarySourceUrls": [
       "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
     ]
@@ -226,8 +226,8 @@
     "price": 324,
     "website": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
     "logoUrl": "https://www.hyatt.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.746287,
+    "lng": -73.9906998,
     "address": "Chelsea, New York, NY",
     "summarySourceUrls": [
       "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
@@ -266,8 +266,8 @@
     "price": 412,
     "website": "https://www.libraryhotel.com/",
     "logoUrl": "https://www.libraryhotel.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7521252,
+    "lng": -73.979405,
     "address": "299 Madison Avenue, New York, NY 10017",
     "summarySourceUrls": [
       "https://www.libraryhotel.com/",
@@ -281,9 +281,9 @@
     "price": 375,
     "website": "https://www.hilton.com/en/hotels/nycgvhg-hilton-club-new-york/",
     "logoUrl": "https://www.hilton.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Manhattan / Midtown, New York, NY",
+    "lat": 40.7643797,
+    "lng": -73.9779279,
+    "address": "102 West 57th Street, New York, NY 10019",
     "summarySourceUrls": [
       "https://www.hilton.com/en/hotels/nycgvhg-hilton-club-new-york/"
     ]
@@ -295,9 +295,9 @@
     "price": 404,
     "website": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/",
     "logoUrl": "https://www.marriott.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Chelsea, New York, NY",
+    "lat": 40.7465986,
+    "lng": -73.9924338,
+    "address": "140 West 28th Street, New York, NY 10001",
     "summarySourceUrls": [
       "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
     ]
@@ -309,8 +309,8 @@
     "price": 317,
     "website": "https://www.thepodhotel.com/pod-times-square/",
     "logoUrl": "https://www.thepodhotel.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7584977,
+    "lng": -73.9932281,
     "address": "Hell’s Kitchen / Times Square, New York, NY",
     "summarySourceUrls": [
       "https://www.thepodhotel.com/pod-times-square/"
@@ -323,8 +323,8 @@
     "price": 425,
     "website": "https://www.romerhotels.com/hells-kitchen/",
     "logoUrl": "https://www.romerhotels.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7633644,
+    "lng": -73.9856929,
     "address": "851 Eighth Avenue, New York, NY 10019",
     "summarySourceUrls": [
       "https://www.romerhotels.com/hells-kitchen/",
@@ -338,9 +338,9 @@
     "price": 266,
     "website": "https://www.nighthotelbroadway.com/",
     "logoUrl": "https://www.nighthotelbroadway.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Upper West Side, New York, NY",
+    "lat": 40.7932576,
+    "lng": -73.9722071,
+    "address": "215 West 94th Street, New York, NY 10025",
     "summarySourceUrls": [
       "https://www.nighthotelbroadway.com/"
     ]
@@ -352,8 +352,8 @@
     "price": 12,
     "website": "https://juicegeneration.com/",
     "logoUrl": "https://juicegeneration.com/favicon.ico",
-    "lat": null,
-    "lng": null,
+    "lat": 40.7778332,
+    "lng": -73.9793629,
     "address": "117 W 72nd St"
   },
   "Juice Generation Columbus Circle": {
@@ -363,9 +363,9 @@
     "price": 12,
     "website": "https://juicegeneration.com/",
     "logoUrl": "https://juicegeneration.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "979 8th Ave"
+    "lat": 40.7670634,
+    "lng": -73.9828593,
+    "address": "979 Eighth Avenue, New York, NY 10019"
   },
   "Pure Green UWS": {
     "category": "store",
@@ -374,9 +374,9 @@
     "price": 12,
     "website": "https://www.puregreen.com/",
     "logoUrl": "https://www.puregreen.com/favicon.ico",
-    "lat": null,
-    "lng": null,
-    "address": "Upper West Side"
+    "lat": 40.7776613,
+    "lng": -73.982681,
+    "address": "2041 Broadway, New York, NY 10023"
   },
   "Flight option: JetBlue LAS-JFK 2026-06-23 07:22-15:31": {
     "category": "flight",
