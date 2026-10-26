@@ -35,9 +35,6 @@ def build(base_fixture, snapshot, out):
     cats = {str(c.get("name", "")).lower(): c.get("id") for c in fx.get("categories", []) if isinstance(c, dict)}
     trip_id = (fx.get("trip") or {}).get("id", 1)
     overrides = dict(fx.get("thingOverrides") or {})
-    # A base place whose name matches a snapshot row is a duplicate of that row (the static fixture carries unpriced
-    # copies of the same places). Keep the snapshot row and drop the base copy with its place:<id> override, so the
-    # trip does not count the same place twice in budget and list totals.
     snap_titles = {str(src.get("title") or "").strip().lower() for src in snap.values() if isinstance(src, dict)}
     places = []
     for p in fx.get("places", []):
