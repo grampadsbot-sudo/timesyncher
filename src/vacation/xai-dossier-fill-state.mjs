@@ -1,4 +1,4 @@
-import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
 import { commitDossierXaiUsageRun } from './dossier-cost.mjs';
 import { braveTopUpFieldsPending, computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
@@ -13,6 +13,7 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
   changedUrls = [],
 } = {}) {
   const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls });
+  if (isFlightOrCarOrDecision(place)) return rebuildFields;
   const counts = computeDossierFieldCounts(merged, place);
   if (counts.summary?.status !== 'ok') rebuildFields.add('summary');
   if (counts.description?.status !== 'ok') rebuildFields.add('description');

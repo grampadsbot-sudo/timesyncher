@@ -161,11 +161,11 @@ const freshValid = {
   ],
   fields: {
     summary: {
-      value: 'Summary with enough words about the Belleclaire hotel stay experience downtown.',
+      value: 'Hotel Belleclaire is a downtown stay with enough words about the room, the block, and a quiet night after a long day.',
       claims: [{ text: 'Belleclaire hotel', pages: ['p1'], supported: true }],
     },
     description: {
-      value: 'Description with enough words about the Belleclaire hotel stay experience downtown for guests.',
+      value: 'Hotel Belleclaire gives guests a full-service stay on the Upper West Side, with a staffed desk, quiet rooms, and an easy walk to the park, so a week in the city stays simple from check-in through a late checkout after dinner.',
       claims: [{ text: 'Belleclaire', pages: ['p1'], supported: true }],
     },
     itineraryNote: {

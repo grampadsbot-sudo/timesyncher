@@ -57,7 +57,7 @@ const complete = {
       claims: [{ text: 'Italian', pages: ['p1'], supported: true }],
     },
     description: {
-      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas, tableside flair, and a lively dining room for special occasions.',
+      value: 'Carbone is a classic Italian restaurant in Greenwich Village with red-sauce pastas, tableside flair, and a lively dining room for special occasions, where regulars book ahead for the spicy rigatoni and a warm room that stays busy from the first seating through the late tables.',
       claims: [{ text: 'Carbone', pages: ['p1'], supported: true }],
     },
     itineraryNote: {

@@ -249,7 +249,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   let merged;
   try {
-  if (persisted?.pages?.length && !forceRefresh) {
+  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);

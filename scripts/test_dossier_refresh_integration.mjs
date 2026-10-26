@@ -61,7 +61,7 @@ function goodPages(descriptionExtra = ' Menu lists happy hour oysters until six 
 }
 
 const findings = {
-  summary: { value: 'Wood-fired pies and a deep negroni list', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
+  summary: { value: 'Riverside Bistro serves wood-fired pies and a deep negroni list for a weeknight table.', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
   description: {
     value: 'Riverside Bistro anchors the block with blistered Riverside Bistro pies, a deep negroni list, and happy hour oysters that regulars quote in every review thread online while the raw bar, pastry counter, and late-night espresso program keep the dining room busy from opening until close.',
     claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
