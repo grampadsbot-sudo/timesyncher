@@ -39,6 +39,8 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
 export function dossierEmptyGatherReason(dossier = {}) {
   const attempts = Array.isArray(dossier.attempts) ? dossier.attempts : [];
   if (!attempts.length) return 'no_gather_attempts';
+  const fallback = attempts.findLast((row) => row.kind === 'page' && row.stage === 'extract_fallback' && row.status === 'failed');
+  if (fallback) return fallback.error || 'brave_extract_fallback_no_pages';
   const brave = attempts.filter((row) => row.kind === 'brave' || row.kind === 'page');
   const noMatch = brave.find((row) => row.status === 'no_match' || row.step === 'match' && row.status === 'no_match');
   if (noMatch) return 'brave_no_match';

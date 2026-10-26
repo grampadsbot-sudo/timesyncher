@@ -315,3 +315,5 @@ scripts/test_dossier_staging_fixes_682.mjs
 scripts/test_dossier_rejected_claims_shortcomings_682.mjs
 scripts/test_live_shared_gate_b_fill_regression_682.mjs
 scripts/test_xai_dossier_retry_682.mjs
+scripts/test_passb_text_builder_687.mjs
+scripts/test_dossier_brave_extract_fallback_687.mjs

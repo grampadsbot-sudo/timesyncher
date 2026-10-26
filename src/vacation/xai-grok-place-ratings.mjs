@@ -23,6 +23,7 @@ import {
   stripDossierReviews,
 } from './dossier-reviews-rebuild.mjs';
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { buildDossierText, preservePresentedDossierText } from './dossier-text-builder.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -40,8 +41,6 @@ import {
   dossierPageById,
   dossierPageId,
   ensureBraveSnippetCitationPages,
-  prepareDossierFindings,
-  fitDescriptionWords,
   resolveClaimCitationPages,
 } from './thing-dossier-fields.mjs';
 import {
@@ -99,12 +98,16 @@ export function dossierBuilderReviewsOnly(rebuildFields = new Set()) {
   return fields.has('reviews') && ![...NON_REVIEW_REBUILD_FIELDS].some((key) => fields.has(key));
 }
 
-export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOnly = false } = {}) {
+export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOnly = false, textProblems = [] } = {}) {
   const modelInput = reviewsOnly && includeReviews
     ? dossierForReviewWriter(dossier)
     : dossierForModel(dossier, includeReviews
       ? { perPage: 1200, total: reviewsOnly ? 10000 : 18000, want: 'both', reviewCap: 60, reviewWords: 55 }
-      : { perPage: 1200, total: 16000, want: 'facts', reviewCap: 0, reviewWords: 40 });
+      : { perPage: 1200, total: 16000, want: 'both', reviewCap: 0, reviewWords: 40 });
+  if (modelInput.fields) {
+    modelInput.fields = { ...modelInput.fields };
+    for (const key of ['summary', 'description', 'longDetails', 'details']) delete modelInput.fields[key];
+  }
   if (!includeReviews) {
     delete modelInput.reviewSet;
     delete modelInput.reviewsRead;
@@ -119,7 +122,9 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     'Neighborhood: return neighborhood as {value, claims} when a saved page names the area or neighborhood for this place.',
     'Coordinates: return lat and lng as separate {value, claims} when a saved page lists map coordinates for this place; values are numbers.',
     'Happy hour: return happyHourDays, happyHourTimes, and happyHourDeals as separate {value, claims} when a saved page states them; each claim cites its page id. Omit a subfield when that detail is missing. When no saved page mentions happy hour, set happyHourFound:false and omit happy-hour subfields—never invent happy hour.',
-    'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence, distinct from the description.',
+    'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence of 12-28 words, including the exact Thing name from thing, distinct from the description and under 320 characters. The Thing name can label a trip activity; do not replace it with only the venue name.',
+    'Text must contain no internal candidate/option/verify language, TBD, N/A, lorem, placeholder, or the word sample. Do not add filler or invent facts to meet length. A Price: line is allowed but no price is required in the description.',
+    'When no reviews were found, still write the description from the saved factual pages; it will end with a short no-reviews note. With few reviews, use what exists and note limited number of reviews. Never invent four reviews from insufficient evidence.',
     'Itinerary note: return itineraryNote as {value, claims} — one cited line (<=280 characters) for the trip itinerary row: what to do or order here, not just the place name.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
@@ -131,13 +136,14 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
       'A known-for item is one specific dish, drink, service or product (e.g. "spicy rigatoni vodka", "tableside guacamole", "hand-sliced nova"), never a broad phrase like "pre-theater dining", "great location", "atmosphere" or "live music".',
       'Return knownFor: [{item, claims}] only for an item a saved page names as a signature, specialty, famous or best-known dish, service or product (a menu marking it signature, an article, or reviews singling it out). Merely having an amenity, an on-site bar, or a neighbouring or tenant restaurant is NOT known-for. Each claim text should state that the page names it as a signature (e.g. "p3 calls the spicy rigatoni its signature dish"). Omit knownFor when no page does this.',
       'Review rating is an integer 1-5 stars (never a 10-point score).',
-      'Return reviews: four {text,rating,verdict,claims} representative assessments in your own words, written from ALL of reviewSet (reflect its real spread of praise and complaints, not just a few entries); claims cite the page ids of the reviewSet entries they rest on. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
-      'The four integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
+      'Return reviews: up to four {text,rating,verdict,claims} representative assessments in your own words, written from ALL of reviewSet (reflect its real spread of praise and complaints, not just a few entries); claims cite the page ids of the reviewSet entries they rest on. Each about 25+ words, distinct with no shared five-word phrases, not repeating the description. claims: the review-evidence statements it rests on, each citing page ids. At least one verdict:true assessment must evaluate how well the known-for item lives up to the claim using customer-review evidence. Do not write in a named customer voice.',
+      'Any returned integer stars must reflect the actual review evidence and average within 0.5 of the fetched average. Do not generate stars from the average alone.',
       'No per-review sources or URLs: those are on the dossier evidence list. Insufficient evidence means omitted fields, never filler.',
     );
   } else {
-    lines.push('This product is a flight, car rental, or decision row: do not return reviews, knownFor from review text, or reviewExcerpts.');
+    lines.push('This call rebuilds factual fields only: do not return reviews or reviewExcerpts. Use the saved pages, including any saved review evidence, for the description; do not infer the product category from this instruction.');
   }
+  if (textProblems.length) lines.push(`The preceding text build was rejected: ${textProblems.join('; ')}. Rebuild summary and description from these saved pages with cited claims. Keep only supported facts; never fill gaps with a template.`);
   lines.push(JSON.stringify(dossierWithPageIds(modelInput)));
   return lines.join('\n');
 }
@@ -210,14 +216,15 @@ export async function extractDossierReviews(dossier, {
 }
 
 async function callDossierBuilder(dossier, {
-  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false,
+  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false, textProblems = [],
 } = {}) {
-  if (buildImpl) return buildImpl(dossier, { reviewsOnly });
+  const prompt = dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly, textProblems });
+  if (buildImpl) return buildImpl(dossier, { reviewsOnly, prompt, textProblems });
   const payload = await postDossierXai(
     dossier,
     'builder',
     xaiGrokPlaceSearchModelId(env),
-    dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly }),
+    prompt,
     { env, fetchImpl, timeoutMs, deadline },
   );
   const structuredText = outputText(payload);
@@ -393,20 +400,20 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
-  const { payload, structuredText, findings } = await callDossierBuilder(merged, {
-    ...xaiOpts(), buildImpl, includeReviews: needsReviewWriter, reviewsOnly,
+  const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
+    includeReviews: needsReviewWriter, reviewsOnly, outOfTime,
+    build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options }),
+    judgeFindings: (findings, skipReviewClaims) => judgeDossierFindings(merged, findings, {
+      ...xaiOpts(), judgeImpl, skipReviewClaims,
+    }),
   });
-  if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
-  const judge = await judgeDossierFindings(merged, findings, {
-    ...xaiOpts(), judgeImpl, skipReviewClaims: !needsReviewWriter,
-  });
-  const built = prepareDossierFindings(merged, findings);
   built.fieldCounts = computeDossierFieldCounts(built, place);
   if (built.fieldCounts.reviews?.count != null) built.reviewsRead = built.fieldCounts.reviews.count;
   built.missingFields = deriveMissingFieldsFromShortcomings(built.shortcomings);
-  const final = persisted && (!forceRefresh || reuseSavedPages)
+  let final = persisted && (!forceRefresh || reuseSavedPages)
     ? mergeSelectiveDossierFindings(persisted, built, rebuildFields, place)
     : built;
+  final = preservePresentedDossierText(persisted, final, place);
   if (needsReviewWriter || rebuildFields.has('reviews')) stampReviewsEvidencePageHash(final, place);
   final.fieldCounts = computeDossierFieldCounts(final, place);
   if (final.fieldCounts.reviews?.count != null) final.reviewsRead = final.fieldCounts.reviews.count;

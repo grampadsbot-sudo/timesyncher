@@ -160,7 +160,23 @@ export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
   const incomingFields = incoming.fields && typeof incoming.fields === 'object' ? incoming.fields : {};
   const fields = { ...persistedFields };
   for (const [key, value] of Object.entries(incomingFields)) {
-    if (value !== undefined) fields[key] = value;
+    if (value === undefined) continue;
+    fields[key] = value;
+    if (!['summary', 'description'].includes(key) || !Array.isArray(value?.claims)) continue;
+    fields[key] = {
+      ...value,
+      claims: value.claims.map((claim) => ({
+        ...claim,
+        pages: (claim.pages || []).map((id) => {
+          const match = /^p(\d+)$/.exec(String(id));
+          if (!match) return id;
+          const source = incoming.pages?.[Number(match[1]) - 1];
+          const index = merged.pages.findIndex((page) => source && page.url === source.url
+            && (page.sha256 || page.text) === (source.sha256 || source.text));
+          return index >= 0 ? `p${index + 1}` : '';
+        }),
+      })),
+    };
   }
   merged.fields = fields;
   for (const key of ['reviews', 'reviewSet', 'reviewExcerpts', 'knownFor', 'xaiUsageRuns', 'xaiUsage']) {
@@ -186,10 +202,10 @@ export function changedDossierPageUrls(before = [], after = []) {
   return changed;
 }
 
-async function fetchEvidencePage(url, {
+async function fetchEvidencePages(url, {
   fetchImpl, resolveImpl, extractImpl, env, attempts, existingUrls,
 }) {
-  if (existingUrls.has(url)) return null;
+  if (existingUrls.has(url)) return [];
   let via = 'direct';
   const startedAt = new Date().toISOString();
   let text = '';
@@ -211,19 +227,37 @@ async function fetchEvidencePage(url, {
       finalUrl = row.url || url;
       attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
     } catch (extractError) {
-      attempts.push({ kind: 'page', url, startedAt, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', error: String(extractError?.message || '').slice(0, 40) });
-      return null;
+      attempts.push({ kind: 'page', provider: 'Tavily', stage: 'extract', query: '', url, startedAt, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', httpStatus: Number(extractError?.status) || Number(String(extractError?.message || '').match(/HTTP\s+(\d{3})/i)?.[1]) || undefined, error: String(extractError?.message || '').slice(0, 120) });
+      let target;
+      try { target = new URL(url); } catch { return []; }
+      if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password) return [];
+      const query = `site:${target.hostname}${target.pathname === '/' ? '' : target.pathname}`;
+      const fallback = await runBraveQueries([query], { env, fetchImpl });
+      const pages = fallback.pages.filter((page) => {
+        try { return new URL(page.url).hostname.replace(/^www\./, '') === target.hostname.replace(/^www\./, ''); } catch { return false; }
+      });
+      attempts.push(...fallback.attempts.map((attempt) => ({
+        ...attempt, provider: 'Brave', stage: 'extract_fallback', url,
+      })));
+      attempts.push({
+        kind: 'page', provider: 'Brave', stage: 'extract_fallback', query, url,
+        startedAt: new Date().toISOString(), via: 'brave-snippet',
+        status: pages.length ? 'ok' : 'failed',
+        error: pages.length ? undefined : 'brave_extract_fallback_no_pages',
+        pages: pages.length,
+      });
+      return pages;
     }
   }
   const limit = pageCharLimit(finalUrl);
   const clipped = text.slice(0, limit);
-  return {
+  return [{
     url: finalUrl,
     fetchedAt: new Date().toISOString(),
     text: clipped,
     via,
     sha256: createHash('sha256').update(clipped).digest('hex'),
-  };
+  }];
 }
 
 async function materializeBraveHits(braveBundle = {}, options = {}) {
@@ -234,8 +268,9 @@ async function materializeBraveHits(braveBundle = {}, options = {}) {
   for (const url of urls) {
     if (dossier.pages.length >= DOSSIER_MAX_PAGES) break;
     if (existing.has(url)) continue;
-    const page = await fetchEvidencePage(url, { ...options, attempts: dossier.attempts, existingUrls: existing });
-    if (page) {
+    const pages = await fetchEvidencePages(url, { ...options, attempts: dossier.attempts, existingUrls: existing });
+    for (const page of pages) {
+      if (existing.has(page.url) || dossier.pages.length >= DOSSIER_MAX_PAGES) continue;
       dossier.pages.push(page);
       existing.add(page.url);
     }
@@ -328,10 +363,13 @@ export async function gatherThingEvidence(place = {}, {
 
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
   if (official && dossier.pages.length < DOSSIER_MAX_PAGES) {
-    const page = await fetchEvidencePage(String(official), {
+    const pages = await fetchEvidencePages(String(official), {
       ...options, attempts: dossier.attempts, existingUrls: new Set(dossier.pages.map((p) => p.url)),
     });
-    if (page) dossier.pages.push(page);
+    for (const page of pages) {
+      if (dossier.pages.length >= DOSSIER_MAX_PAGES) break;
+      if (!dossier.pages.some((saved) => saved.url === page.url)) dossier.pages.push(page);
+    }
   }
 
   if (braveImpl) {

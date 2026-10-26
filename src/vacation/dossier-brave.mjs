@@ -129,7 +129,7 @@ export async function runBraveQueries(queries = [], options = {}) {
       if (seen.has(hit.url)) continue;
       seen.add(hit.url);
       braveResults.push(hit);
-      const snippetText = [hit.title, ...hit.snippets].filter(Boolean).join('\n');
+      const snippetText = [hit.title, ...hit.snippets].filter(Boolean).join('\n').slice(0, 12000);
       if (snippetText.trim()) {
         pages.push({
           url: hit.url,

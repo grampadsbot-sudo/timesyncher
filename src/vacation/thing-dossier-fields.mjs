@@ -192,6 +192,9 @@ export function prepareDossierFindings(dossier, findings = {}) {
     if (key === 'description' && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
+    } else if (key === 'description' && (next.reviewsRead < MIN_REVIEWS_READ
+      || dossier.fieldCounts?.reviews?.status === 'short')) {
+      next.fields[key].value = `${String(claim.value).trim()}\nA limited number of reviews were found for this place.`;
     }
   }
   for (const key of ['lat', 'lng']) {
