@@ -8,13 +8,41 @@ import { dossierRebuildFields } from './thing-dossier-fields.mjs';
 
 const NO_OP_TOP_UP_IGNORE = new Set(['coordinates', 'ratings']);
 
+export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}, {
+  maxAgeExpired = false,
+  changedUrls = [],
+} = {}) {
+  const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls });
+  const counts = computeDossierFieldCounts(merged, place);
+  if (counts.summary?.status !== 'ok') rebuildFields.add('summary');
+  if (counts.description?.status !== 'ok') rebuildFields.add('description');
+  return rebuildFields;
+}
+
+export function dossierEmptyGatherReason(dossier = {}) {
+  const attempts = Array.isArray(dossier.attempts) ? dossier.attempts : [];
+  if (!attempts.length) return 'no_gather_attempts';
+  const brave = attempts.filter((row) => row.kind === 'brave' || row.kind === 'page');
+  const noMatch = brave.find((row) => row.status === 'no_match' || row.step === 'match' && row.status === 'no_match');
+  if (noMatch) return 'brave_no_match';
+  const failed = brave.filter((row) => row.status === 'failed');
+  if (failed.length && (!brave.some((row) => row.status === 'ok') || failed.length === brave.length)) {
+    const last = failed[failed.length - 1];
+    return `gather_failed:${String(last.error || last.step || 'unknown').slice(0, 48)}`;
+  }
+  const hits = (dossier.braveResults || []).length;
+  if (!hits && brave.some((row) => row.status === 'ok' && Number(row.results) === 0)) return 'brave_zero_hits';
+  if (hits > 0 && !(dossier.pages || []).length) return 'brave_hits_not_materialized';
+  return 'gather_no_pages';
+}
+
 export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = {}, {
   changedUrls = [],
 } = {}) {
   if (!persisted?.pages?.length || !merged?.pages?.length) return false;
   const counts = computeDossierFieldCounts(merged, place);
   if (counts.summary?.status !== 'ok' || counts.description?.status !== 'ok') return false;
-  const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired: false, changedUrls });
+  const rebuildFields = dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls });
   const needsWriter = placeSupportsDossierReviews(place)
     && dossierReviewsShouldRunWriter(persisted, merged, place);
   const pendingTopUp = braveTopUpFieldsPending(merged, place)

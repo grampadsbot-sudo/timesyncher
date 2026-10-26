@@ -32,7 +32,6 @@ import {
 } from './thing-evidence-dossier-store.mjs';
 import {
   applyDossierFields,
-  dossierRebuildFields,
   mergeSelectiveDossierFindings,
   claimCitesKnownPages,
   dossierPageById,
@@ -57,6 +56,8 @@ import {
 } from './xai-dossier-http.mjs';
 import { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
 import {
+  dossierEmptyGatherReason,
+  dossierFillRebuildFields,
   dossierPersistedFillIsNoOp,
   saveFailedDossierAttempt,
   saveResumablePartial,
@@ -248,7 +249,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   let merged;
   try {
-  if (persisted && (persisted.pages?.length || persisted.attempts?.length) && !forceRefresh) {
+  if (persisted?.pages?.length && !forceRefresh) {
     merged = normalizeDossierEvidence({ ...persisted }, place);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
@@ -317,7 +318,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
 
   const changedUrls = persisted ? changedDossierPageUrls(persisted.pages || [], merged.pages || []) : [];
   const rebuildFields = persisted
-    ? dossierRebuildFields(persisted, merged, { maxAgeExpired: false, changedUrls })
+    ? dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls })
     : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor', 'itineraryNote']);
   const skipBuilder = persisted
     && !forceRefresh
@@ -330,8 +331,11 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
   }
   if (!merged.pages.length) {
+    const emptySource = dossierEmptyGatherReason(merged);
+    merged.emptySource = emptySource;
+    merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
+    return { payload: {}, structuredText: '', emptySource, parsed: { evidenceDossier: merged } };
   }
   if (outOfTime()) {
     merged.captureCheckpoint = merged.captureCheckpoint || 'after_gather';

@@ -308,6 +308,7 @@ scripts/test_dossier_data_batch_687_r1_r7.mjs
 scripts/test_dossier_server_fill_687.mjs
 scripts/test_passb_integrity_687.mjs
 scripts/test_passb_presented_gate_687.mjs
+scripts/test_passb_fill_noop_687.mjs
 scripts/test_dossier_staging_fixes_682.mjs
 scripts/test_dossier_rejected_claims_shortcomings_682.mjs
 scripts/test_live_shared_gate_b_fill_regression_682.mjs
