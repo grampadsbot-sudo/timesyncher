@@ -131,6 +131,52 @@ export function mergeDossierPages(persisted = {}, gathered = {}) {
   };
 }
 
+function dossierIsSharedPointer(dossier = {}) {
+  if (!dossier?.sharedDossierKey?.startsWith('shared:')) return false;
+  const keys = Object.keys(dossier);
+  return keys.length <= 3 && !(dossier.pages?.length);
+}
+
+export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
+  if (dossierIsSharedPointer(incoming)) return incoming;
+  if (dossierIsSharedPointer(persisted)) return incoming;
+  const merged = mergeDossierPages(persisted, incoming);
+  const pages = new Map();
+  for (const page of [...(persisted.pages || []), ...(incoming.pages || [])]) {
+    const identity = JSON.stringify([page.url, page.sha256 || page.text]);
+    if (!pages.has(identity)) pages.set(identity, page);
+  }
+  merged.pages = [...pages.values()];
+  const attempts = new Map();
+  for (const attempt of [...(persisted.attempts || []), ...(incoming.attempts || [])]) {
+    const stamp = attempt.startedAt || attempt.at;
+    const identity = stamp
+      ? JSON.stringify([attempt.kind, attempt.field, attempt.attempt, attempt.url, attempt.query, stamp])
+      : JSON.stringify(attempt);
+    attempts.set(identity, attempt);
+  }
+  merged.attempts = [...attempts.values()];
+  const persistedFields = persisted.fields && typeof persisted.fields === 'object' ? persisted.fields : {};
+  const incomingFields = incoming.fields && typeof incoming.fields === 'object' ? incoming.fields : {};
+  const fields = { ...persistedFields };
+  for (const [key, value] of Object.entries(incomingFields)) {
+    if (value !== undefined) fields[key] = value;
+  }
+  merged.fields = fields;
+  for (const key of ['reviews', 'reviewSet', 'reviewExcerpts', 'knownFor', 'xaiUsageRuns', 'xaiUsage']) {
+    const inc = incoming[key];
+    const empty = inc == null || (Array.isArray(inc) && inc.length === 0);
+    if (empty && persisted[key] != null && (!Array.isArray(persisted[key]) || persisted[key].length)) {
+      merged[key] = persisted[key];
+    }
+  }
+  if (persisted.rating != null && incoming.rating == null) merged.rating = persisted.rating;
+  if (persisted.reviewsAvailable != null && incoming.reviewsAvailable == null) {
+    merged.reviewsAvailable = persisted.reviewsAvailable;
+  }
+  return merged;
+}
+
 export function changedDossierPageUrls(before = [], after = []) {
   const beforeByUrl = new Map(before.map((page) => [page.url, page.sha256]));
   const changed = [];

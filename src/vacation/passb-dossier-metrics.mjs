@@ -4,6 +4,10 @@ import {
   loadTripPlaceDossiersFromStore,
 } from './thing-evidence-dossier-store.mjs';
 import { searchPlaceOutputViolations } from './search-place-output.mjs';
+import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
+import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
+import { searchPlaceFromStoredDossier } from './shared-trip-dossier-overlay.mjs';
 import {
   buildPassBSharedDossierTargets,
   normPassBDossierCategory,
@@ -43,10 +47,12 @@ function dossierPresented(dossier, place) {
   const counts = computeDossierFieldCounts(dossier, place);
   const summaryOk = counts.summary?.status === 'ok';
   const descOk = counts.description?.status === 'ok';
+  const hydrated = searchPlaceFromStoredDossier(place, dossier);
   const placeViolations = searchPlaceOutputViolations({
-    ...place,
-    title: place.title || place.name,
-    category: place.category || place.cat,
+    ...hydrated,
+    sourceRecord: hydrated,
+    title: hydrated.title || place.title || place.name,
+    category: place.category || place.cat || hydrated.category,
   });
   return summaryOk && descOk && placeViolations.length === 0;
 }
@@ -126,6 +132,18 @@ export async function computePassBDossierMetrics({
       withPages,
     },
     byType: scoreByType(rows, placesById, dossiersByPlaceId),
+    fillTargets: buildPassBSharedDossierTargets().map((target, offset) => {
+      const dossier = dossiersByPlaceId[target.placeId];
+      const place = placeFromTarget(target);
+      const normalized = dossier ? normalizeDossierEvidence(dossier, place) : null;
+      return {
+        offset,
+        placeId: target.placeId,
+        type: normPassBDossierCategory(target.category),
+        pageCount: dossier?.pages?.length || 0,
+        needsFill: !dossier?.pages?.length || !dossierPersistedFillIsNoOp(dossier, normalized, place),
+      };
+    }),
     errors: [],
   };
   if (!String(env.XAI_API_KEY || '').trim()) {

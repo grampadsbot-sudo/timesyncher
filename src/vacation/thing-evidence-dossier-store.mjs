@@ -5,7 +5,11 @@ import { createHash } from 'node:crypto';
 import { hasDatabase, sql } from './db.mjs';
 import { NYC_GATE_B_TRIP_ID } from './shared-trip-dossier-keys.mjs';
 import { computeDossierFieldHashes } from './thing-dossier-fields.mjs';
-import { dossierPagesVerified, mergeDossierPages } from './thing-evidence-dossier.mjs';
+import {
+  dossierPagesVerified,
+  mergeDossierForPersistence,
+  mergeDossierPages,
+} from './thing-evidence-dossier.mjs';
 
 let storeOverride = null;
 let postgresStoreClient = null;
@@ -87,28 +91,36 @@ function createPostgresDossierStore(env) {
       const key = String(dossierKey || '').trim();
       if (!key || !dossier || typeof dossier !== 'object') return;
       await ready();
-      const { hashes, sources } = computeDossierFieldHashes(dossier);
-      const payload = { ...dossier };
-      delete payload.fieldHashes;
-      delete payload.fieldSources;
-      delete payload.refreshedAt;
-      await db`
-        insert into thing_evidence_dossiers (dossier_key, thing_name, payload, field_hashes, field_sources, refreshed_at)
-        values (
-          ${key},
-          ${String(dossier.thing || '')},
-          ${JSON.stringify(payload)}::jsonb,
-          ${JSON.stringify(hashes)}::jsonb,
-          ${JSON.stringify(sources)}::jsonb,
-          now()
-        )
-        on conflict (dossier_key) do update
-        set thing_name = excluded.thing_name,
-            payload = excluded.payload,
-            field_hashes = excluded.field_hashes,
-            field_sources = excluded.field_sources,
-            refreshed_at = now()
-      `;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const rows = await db`
+          select payload from thing_evidence_dossiers where dossier_key = ${key} limit 1
+        `;
+        const raw = rows?.[0]?.payload;
+        const existing = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const merged = existing ? mergeDossierForPersistence(existing, dossier) : dossier;
+        const { hashes, sources } = computeDossierFieldHashes(merged);
+        const payload = { ...merged };
+        delete payload.fieldHashes;
+        delete payload.fieldSources;
+        delete payload.refreshedAt;
+        const saved = await db`
+          insert into thing_evidence_dossiers (dossier_key, thing_name, payload, field_hashes, field_sources, refreshed_at)
+          values (
+            ${key}, ${String(merged.thing || '')}, ${JSON.stringify(payload)}::jsonb,
+            ${JSON.stringify(hashes)}::jsonb, ${JSON.stringify(sources)}::jsonb, now()
+          )
+          on conflict (dossier_key) do update
+          set thing_name = excluded.thing_name,
+              payload = excluded.payload,
+              field_hashes = excluded.field_hashes,
+              field_sources = excluded.field_sources,
+              refreshed_at = now()
+          where thing_evidence_dossiers.payload = ${JSON.stringify(existing ?? null)}::jsonb
+          returning dossier_key
+        `;
+        if (saved?.length) return;
+      }
+      throw new Error('dossier_concurrent_write_conflict');
     },
   };
 }
@@ -129,8 +141,10 @@ function createLocalDossierStore(env) {
     async putDossier(dossierKey, dossier) {
       const key = String(dossierKey || '').trim();
       if (!key || !dossier || typeof dossier !== 'object') return;
-      const { hashes, sources } = computeDossierFieldHashes(dossier);
-      const payload = { ...dossier };
+      const existing = readLocalDossier(key, env)?.payload;
+      const merged = existing ? mergeDossierForPersistence(existing, dossier) : dossier;
+      const { hashes, sources } = computeDossierFieldHashes(merged);
+      const payload = { ...merged };
       delete payload.fieldHashes;
       delete payload.fieldSources;
       delete payload.refreshedAt;
@@ -234,7 +248,11 @@ export async function saveThingEvidenceDossier(dossierKey, dossier, { env = proc
   if (!key || !dossier || typeof dossier !== 'object') return;
   const store = storeImpl || getThingEvidenceDossierStore(env);
   const attached = await store.getDossier(key);
-  await store.putDossier(attached?.sharedDossierKey?.startsWith('shared:') ? attached.sharedDossierKey : key, dossier);
+  const saveKey = attached?.sharedDossierKey?.startsWith('shared:') ? attached.sharedDossierKey : key;
+  const existing = saveKey === key ? attached : await store.getDossier(saveKey);
+  const existingBody = existing?.sharedDossierKey ? await store.getDossier(existing.sharedDossierKey) : existing;
+  const toSave = existingBody ? mergeDossierForPersistence(existingBody, dossier) : dossier;
+  await store.putDossier(saveKey, toSave);
 }
 
 function readLocalThingEvidenceDossier(dossierKey, env = process.env) {

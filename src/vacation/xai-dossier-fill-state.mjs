@@ -2,6 +2,7 @@ import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
 import { commitDossierXaiUsageRun } from './dossier-cost.mjs';
 import { braveTopUpFieldsPending } from './thing-evidence-dossier-field-counts.mjs';
+import { mergeDossierPages } from './thing-evidence-dossier.mjs';
 import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
 
@@ -25,7 +26,7 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
 export async function saveResumablePartial(merged, persisted, {
   key, env, storeImpl, place, checkpoint, rateLimitStep,
 } = {}) {
-  const next = merged || persisted;
+  const next = mergeDossierPages(persisted || {}, merged || {});
   next.captureCheckpoint = checkpoint || next.captureCheckpoint || 'partial-xai';
   if (rateLimitStep) next.captureRateLimitStep = rateLimitStep;
   commitDossierXaiUsageRun(next, persisted || {}, {
@@ -41,6 +42,38 @@ export async function saveResumablePartial(merged, persisted, {
     resumable: true,
     rateLimited: Boolean(rateLimitStep),
     rateLimitStep: rateLimitStep || undefined,
+    checkpoint: next.captureCheckpoint,
+    parsed: { evidenceDossier: next },
+  };
+}
+
+export async function saveFailedDossierAttempt(persisted, merged, {
+  key, env, storeImpl, place, error, checkpoint,
+} = {}) {
+  const next = mergeDossierPages(persisted || {}, merged || {});
+  const step = error?.step || error?.upstream?.step || 'builder';
+  const attempt = {
+    kind: step,
+    status: 'failed',
+    at: new Date().toISOString(),
+    httpStatus: Number(error?.status || error?.upstream?.status) || undefined,
+    error: String(error?.message || 'dossier_step_failed').slice(0, 120),
+  };
+  if (error?.upstream) attempt.upstream = error.upstream;
+  next.attempts = [...(next.attempts || []), attempt];
+  next.captureCheckpoint = checkpoint || next.captureCheckpoint || `failed-${step}`;
+  commitDossierXaiUsageRun(next, persisted || {}, {
+    kind: 'failed-xai',
+    placeId: place.id ?? place.placeId,
+    rateLimitStep: step,
+  });
+  if (key) await saveThingEvidenceDossier(key, next, { env, storeImpl });
+  return {
+    payload: {},
+    structuredText: '',
+    partial: true,
+    failed: true,
+    upstream: error?.upstream || undefined,
     checkpoint: next.captureCheckpoint,
     parsed: { evidenceDossier: next },
   };

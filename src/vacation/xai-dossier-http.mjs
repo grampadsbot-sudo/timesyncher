@@ -19,12 +19,37 @@ export function xaiHttpErrorResumable(status) {
   return RETRYABLE_XAI_STATUSES.has(Number(status));
 }
 
-function attachDossierXaiHttpError(error, { step = '', status = 0 } = {}) {
+function attachDossierXaiHttpError(error, { step = '', status = 0, upstream = null } = {}) {
   const next = error instanceof Error ? error : new Error(String(error));
   if (status) next.status = status;
   if (step) next.step = step;
   next.resumable = xaiHttpErrorResumable(next.status);
+  if (upstream && typeof upstream === 'object') next.upstream = upstream;
   return next;
+}
+
+const UPSTREAM_MESSAGE_BANNED = /api[_-]?key|authorization|bearer|sk-[a-z0-9]/i;
+
+export function sanitizeXaiUpstreamMessage(raw = '') {
+  const text = String(raw || '').replace(/\s+/g, ' ').trim();
+  if (!text || UPSTREAM_MESSAGE_BANNED.test(text)) return '';
+  return text.slice(0, 200);
+}
+
+async function readSanitizedXaiErrorMessage(response) {
+  try {
+    const text = await response.text();
+    if (!text) return '';
+    try {
+      const parsed = JSON.parse(text);
+      const msg = parsed?.error?.message || parsed?.message || parsed?.error || '';
+      return sanitizeXaiUpstreamMessage(msg);
+    } catch {
+      return sanitizeXaiUpstreamMessage(text);
+    }
+  } catch {
+    return '';
+  }
 }
 
 export async function xaiResponsesWithRetry(request, {
@@ -63,9 +88,17 @@ export async function postDossierXai(dossier, step, model, content, { env, fetch
   if (!response.ok) {
     logXaiUsage(dossier, step, model, {});
     const label = step === 'builder' ? 'builder' : step;
+    const message = await readSanitizedXaiErrorMessage(response);
     throw attachDossierXaiHttpError(new Error(`dossier_${label}_http_${response.status}`), {
       step: label,
       status: response.status,
+      upstream: {
+        provider: 'xai',
+        status: response.status,
+        step: label,
+        model,
+        ...(message ? { message } : {}),
+      },
     });
   }
   const payload = await response.json();

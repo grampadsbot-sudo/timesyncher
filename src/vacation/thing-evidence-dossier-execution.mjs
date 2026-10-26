@@ -229,6 +229,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       rateLimited,
       rateLimitStep,
       checkpoint,
+      failed,
+      upstream,
     } = fetchResult;
     const after = parsed?.evidenceDossier?.pages?.length || 0;
     results.push({
@@ -236,9 +238,11 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       dossierKey,
       skipped: skipped ? 'existing_dossier' : undefined,
       partial: partial === true,
+      failed: failed === true,
       resumable: resumable === true,
       rateLimited: rateLimited === true,
       rateLimitStep,
+      upstream: upstream || undefined,
       checkpoint: checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
       pageCount: after,
       pagesAdded: refresh ? after : Math.max(0, after - pagesBefore),

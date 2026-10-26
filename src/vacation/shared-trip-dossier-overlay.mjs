@@ -10,6 +10,15 @@ function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
 
+export function searchPlaceFromStoredDossier(place = {}, dossier = {}) {
+  const placeCtx = gateBPlaceContext(place);
+  const normalized = normalizeDossierEvidence(dossier, placeCtx);
+  return applyDossierFields(
+    { ...(place.sourceRecord || {}), ...(placeCtx.sourceRecord || {}) },
+    normalized,
+  );
+}
+
 function gateBPlaceContext(place = {}) {
   const target = PR336_GATE_B_XAI_PLACE_TARGETS.find((row) => row.rowId === place.id);
   const enriched = target

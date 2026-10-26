@@ -56,7 +56,11 @@ import {
   xaiHttpErrorResumable,
 } from './xai-dossier-http.mjs';
 import { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
-import { dossierPersistedFillIsNoOp, saveResumablePartial } from './xai-dossier-fill-state.mjs';
+import {
+  dossierPersistedFillIsNoOp,
+  saveFailedDossierAttempt,
+  saveResumablePartial,
+} from './xai-dossier-fill-state.mjs';
 
 export { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
 export { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
@@ -396,6 +400,16 @@ export async function fetchXaiPlaceRatings(place = {}, {
         storeImpl,
         place,
         rateLimitStep: error.step || 'xai',
+        checkpoint: (merged || persisted)?.captureCheckpoint,
+      });
+    }
+    if (error?.status && key && (persisted?.pages?.length || merged?.pages?.length)) {
+      return saveFailedDossierAttempt(persisted, merged, {
+        key,
+        env,
+        storeImpl,
+        place,
+        error,
         checkpoint: (merged || persisted)?.captureCheckpoint,
       });
     }
