@@ -6,7 +6,7 @@ import { braveTopUpFieldsPending, computeDossierFieldCounts } from './thing-evid
 import { mergeDossierPages } from './thing-evidence-dossier.mjs';
 import { saveThingEvidenceDossier } from './thing-evidence-dossier-store.mjs';
 import { dossierRebuildFields } from './thing-dossier-fields.mjs';
-import { passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
+import { dossierPresent, dossierPresented, passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { searchPlaceFromStoredDossier } from './shared-trip-dossier-overlay.mjs';
 
@@ -36,20 +36,15 @@ export async function prepareOperatorDossierGather(persisted, place, {
 
 function dossierFillTextProblems(dossier = {}, place = {}) {
   if (isFlightOrCarOrDecision(place)) return [];
+  if (dossierPresented(dossier, place)) return [];
   const counts = computeDossierFieldCounts(dossier, place);
-  const fields = dossier.fields || {};
-  const raw = passbPresentedHardTextViolations({
-    title: place.title || place.name || dossier.thing,
-    category: place.category || place.cat,
-    summary: fields.summary?.value ?? fields.summary,
-    description: fields.description?.value ?? fields.description
-      ?? fields.longDetails?.value ?? fields.longDetails ?? fields.details?.value ?? fields.details,
-  });
   const hydrated = searchPlaceFromStoredDossier(place, dossier);
   return [...new Set([
+    ...(!dossierPresent(dossier) ? ['no_gather_attempts'] : []),
     ...['summary', 'description'].filter((key) => counts[key]?.status !== 'ok')
       .map((key) => `${key}:${counts[key]?.status || 'missing'}`),
-    ...raw,
+    ...['summary', 'description'].filter((key) => !hydrated[key])
+      .map((key) => `${key}:missing`),
     ...passbPresentedHardTextViolations({
       ...hydrated, sourceRecord: hydrated,
       title: hydrated.title || place.title || place.name,
@@ -67,7 +62,11 @@ function presentedEvidenceHash(dossier) {
   return createHash('sha256').update(JSON.stringify(pages)).digest('hex');
 }
 
-export function recordOperatorDossierTextFailure(dossier, place) {
+export function recordOperatorDossierTextBuild(dossier, place, startedAt) {
+  dossier.attempts = [...(dossier.attempts || []), {
+    kind: 'builder', step: 'operator_text_build', status: 'completed',
+    startedAt, finishedAt: new Date().toISOString(),
+  }];
   const failure = dossierFillHardFailure(dossier, place);
   if (!failure.presentedReasons?.length) return;
   dossier.attempts = [...(dossier.attempts || []), {
@@ -115,7 +114,7 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
 } = {}) {
   if (!persisted?.pages?.length || !merged?.pages?.length) return false;
   if (persisted.emptySource || merged.emptySource) return false;
-  if (dossierFillNeedsTextRebuild(merged, place)) return false;
+  if (dossierFillNeedsTextRebuild(persisted, place) || dossierFillNeedsTextRebuild(merged, place)) return false;
   const rebuildFields = dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls });
   const needsWriter = placeSupportsDossierReviews(place)
     && dossierReviewsShouldRunWriter(persisted, merged, place);

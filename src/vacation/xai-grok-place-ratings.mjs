@@ -64,7 +64,7 @@ import {
   dossierFillNeedsTextRebuild,
   dossierPersistedFillIsNoOp,
   prepareOperatorDossierGather,
-  recordOperatorDossierTextFailure,
+  recordOperatorDossierTextBuild,
   saveFailedDossierAttempt,
   saveResumablePartial,
 } from './xai-dossier-fill-state.mjs';
@@ -409,6 +409,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
+  const builderStartedAt = new Date().toISOString();
   const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
     includeReviews: needsReviewWriter, reviewsOnly, outOfTime,
     build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options }),
@@ -436,9 +437,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsageRuns = merged.xaiUsageRuns;
   final.xaiUsd = merged.xaiUsd;
   final.emptySource = null;
-  if (reuseSavedPages) recordOperatorDossierTextFailure(final, place);
-  if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
+  if (reuseSavedPages) recordOperatorDossierTextBuild(final, place, builderStartedAt);
   final.captureCheckpoint = dossierFillHardFailure(final, place).failed ? 'failed-presented' : 'done';
+  if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
   final.fullPageChars = promptChars(merged);
   return {
     payload,

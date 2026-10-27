@@ -238,8 +238,12 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       status,
       error,
     } = fetchResult;
+    const { dossier: saved } = operatorFill
+      ? await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId: place.id })
+      : { dossier: null };
+    const returnedDossier = saved || parsed?.evidenceDossier;
     const after = parsed?.evidenceDossier?.pages?.length || 0;
-    const hardFailure = dossierFillHardFailure(parsed?.evidenceDossier, place);
+    const hardFailure = dossierFillHardFailure(returnedDossier, place);
     results.push({
       rowId: target.rowId ?? place.id,
       dossierKey,
@@ -253,7 +257,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       rateLimited: rateLimited === true,
       rateLimitStep,
       upstream: upstream || undefined,
-      checkpoint: checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
+      checkpoint: hardFailure.presentedReasons?.length
+        ? 'failed-presented' : checkpoint || parsed?.evidenceDossier?.captureCheckpoint,
       emptySource: hardFailure.emptySource || emptySource || undefined,
       pageCount: after,
       pagesAdded: Math.max(0, after - pagesBefore),

@@ -57,7 +57,7 @@ export function evidencePageMatchesPlace(page = {}, place = {}, dossier = {}) {
   return false;
 }
 
-export function pageNamesOtherVenue(page = {}, place = {}) {
+export function pageNamesOtherVenue(page = {}, place = {}, { allowTargetMention = false } = {}) {
   const blob = text(page.text || '');
   const url = text(page.url || '').toLowerCase();
   const title = text(place.title || place.name);
@@ -76,6 +76,7 @@ export function pageNamesOtherVenue(page = {}, place = {}) {
     return true;
   }
   if (!blob || !title) return false;
+  if (allowTargetMention && descriptionNamesThing(blob, title)) return false;
   const ours = nameTokens(title);
   const venueLike = blob.match(/\b([A-Z][A-Za-z'’]+(?:\s+[A-Z][A-Za-z'’]+){0,3})\s+(?:Club|Jazz Club|Restaurant|Bar|Bistro|Grill)\b/g);
   if (!venueLike?.length) return false;
@@ -193,7 +194,7 @@ function stripMisattributedDossierPages(dossier = {}, place = {}) {
   let dropped = false;
   original.forEach((page, index) => {
     const oldId = dossierPageId(index);
-    if (pageNamesOtherVenue(page, place)) {
+    if (pageNamesOtherVenue(page, place, { allowTargetMention: true })) {
       dropped = true;
       return;
     }
