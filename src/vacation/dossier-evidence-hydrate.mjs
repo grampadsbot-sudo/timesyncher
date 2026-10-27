@@ -7,7 +7,7 @@ import {
   fieldsNeedingCapture,
   recordFieldShortcoming,
 } from './thing-evidence-dossier-field-counts.mjs';
-import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { dossierThingTitle, isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 
 function text(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -396,7 +396,7 @@ export function syncDossierRequiredShortcomings(dossier = {}, place = {}) {
 
 export function normalizeDossierEvidence(dossier = {}, place = {}) {
   if (!placeSupportsDossierReviews(place)) {
-    let next = seedBookingNarrativeFields(dossier, place);
+    let next = seedBookingNarrativeFields({ ...dossier, thing: dossierThingTitle(place) || dossier.thing }, place);
     const shortcomings = (Array.isArray(next.shortcomings) ? next.shortcomings : [])
       .filter((row) => row.field !== 'reviews');
     return syncDossierRequiredShortcomings({

@@ -5,7 +5,7 @@ import {
   NO_HAPPY_HOUR_FOUND,
 } from './dossier-hours-fields.mjs';
 import { applyDossierRatingsAndReviews } from './thing-dossier-ratings-copy.mjs';
-import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierScalarClaimRejected } from './dossier-evidence-hydrate.mjs';
 import { dossierPagesVerified, reviewSourceHost } from './thing-evidence-dossier.mjs';
 
@@ -314,6 +314,10 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
 export function applyDossierFields(record = {}, dossier = {}) {
   const narrativeFallback = text(record.longDetails || record.details);
   const next = { ...record, evidenceDossier: dossier };
+  if (String(record.category || '').toLowerCase() === 'flight') {
+    next.title = dossierThingTitle({ ...record, title: record.title || record.name || dossier.thing });
+    if (record.name) next.name = next.title;
+  }
   const useShortcomingMissing = Array.isArray(dossier.shortcomings) && dossier.shortcomings.length > 0;
   const missing = new Set(
     useShortcomingMissing ? dossier.shortcomings.map((s) => s.field).filter(Boolean) : [],

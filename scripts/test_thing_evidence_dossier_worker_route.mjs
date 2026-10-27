@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
 import handler from '../routes/thing-evidence-dossiers.mjs';
-import { runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
+import { listTripThingsMissingDossiers, placeFromTarget, runThingEvidenceDossierStagingTargets } from '../src/vacation/thing-evidence-dossier-execution.mjs';
 import { computeDossierFieldHashes } from '../src/vacation/thing-dossier-rebuild.mjs';
 import { stampReviewsEvidencePageHash } from '../src/vacation/dossier-reviews-rebuild.mjs';
 import {
@@ -243,5 +243,22 @@ for (const entry of afterReview.attempts.filter((row) => row.kind === 'gap_top_u
 assert.ok(Object.values(attemptsByField).every((count) => count <= 3));
 assert.equal(reviewGapCalls, Object.values(attemptsByField).reduce((sum, count) => sum + count, 0), 'saved-review rebuild must retain every gap-search attempt');
 assert.ok(budgetRun.results[0].pageCount > 0);
+
+const bookingUrl = 'https://coastal.example/booking?from=PDX&to=BOS';
+const missingFlights = await listTripThingsMissingDossiers({
+  env: {}, storeImpl: { getDossier: async () => null },
+  dbImpl: async () => [{
+    id: 'flight-needing-capture', trip_id: 'booking-trip', category: 'flight',
+    title: 'Flight option: Coastal Air PDX to BOS', destination: 'Boston',
+    description: 'Coastal Air flies from Portland to Boston.',
+    metadata: { sourceRecord: { website: bookingUrl, summary: 'Portland to Boston with Coastal Air.' } },
+  }],
+});
+assert.equal(missingFlights.targets.length, 1);
+const missingFlight = placeFromTarget(missingFlights.targets[0]);
+assert.equal(missingFlight.url, bookingUrl, 'allMissing must retain the official booking URL for the gatherer');
+assert.equal(missingFlight.sourceRecord.summary, 'Portland to Boston with Coastal Air.');
+assert.equal(missingFlight.description, 'Coastal Air flies from Portland to Boston.');
+assert.equal(missingFlight.title, 'Coastal Air PDX to BOS');
 
 console.log('test_thing_evidence_dossier_worker_route: ok');

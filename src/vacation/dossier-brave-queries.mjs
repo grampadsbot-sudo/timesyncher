@@ -22,6 +22,11 @@ function categoryOf(place = {}) {
   return '';
 }
 
+export function dossierThingTitle(place = {}) {
+  const title = text(place.title || place.name);
+  return categoryOf(place) === 'flight' ? title.replace(/^Flight option:\s*/i, '') : title;
+}
+
 export function isBarOrRestaurant(place = {}) {
   const cat = categoryOf(place);
   return /restaurant|bar|dining|cafe|coffee|pub|brewery|bistro|brasserie|grill|pizzeria|bakery|eatery/.test(cat)
@@ -52,7 +57,7 @@ export function placeSupportsDossierReviews(place = {}) {
 }
 
 function baseQuery(place = {}, destination = '') {
-  const name = text(place.title || place.name);
+  const name = dossierThingTitle(place);
   const dest = text(destination);
   return [name, dest].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
@@ -60,6 +65,12 @@ function baseQuery(place = {}, destination = '') {
 export function braveDossierQueryStages(place = {}, destination = '') {
   const q = baseQuery(place, destination);
   if (!q) return [];
+  if (['flight', 'car'].includes(categoryOf(place))) {
+    return [{ stage: 'general', queries: [
+      `${q} official website booking`,
+      `${q} ${categoryOf(place) === 'flight' ? 'route schedule fare baggage' : 'rental pickup return car class price'}`,
+    ] }];
+  }
   const stages = [
     {
       stage: 'general',

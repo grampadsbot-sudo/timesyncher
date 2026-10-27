@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { gatherThingEvidence, dossierPagesVerified } from '../src/vacation/thing-evidence-dossier.mjs';
 import { dossierEmptyGatherReason } from '../src/vacation/xai-dossier-fill-state.mjs';
 import { runBraveQueries } from '../src/vacation/dossier-brave.mjs';
+import { fetchXaiPlaceRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
 
 const place = { title: 'Harbor Bistro', category: 'restaurant', website: 'https://harbor.example/' };
 
@@ -58,4 +59,60 @@ test('Tavily plan limit without an HTTP status still saves Brave evidence', asyn
   assert.equal(dossier.pages.length, 2);
   assert.equal(dossierPagesVerified(dossier), true);
   assert.ok(dossier.attempts.some((a) => /usage limit/.test(a.error || '')));
+});
+
+test('an unindexed official path falls back to indexed pages on the official host', async () => {
+  const queries = [];
+  const dossier = await gatherThingEvidence({ ...place, website: `${place.website}unindexed-booking/path` }, {
+    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, braveImpl: null,
+    resolveImpl: async () => [{ address: '93.184.216.34' }],
+    extractImpl: async () => { throw new Error('Tavily extract failed with HTTP 432.'); },
+    fetchImpl: async (url) => {
+      if (!url.includes('/web/search?')) return { ok: false, status: 403 };
+      const query = new URL(url).searchParams.get('q');
+      queries.push(query);
+      return { ok: true, json: async () => ({ web: { results: query === 'site:harbor.example' ? [{
+        url: `${place.website}menu`, title: place.title,
+        description: 'Harbor Bistro serves grilled fish with seasonal vegetables and a daily lunch dish.',
+      }, { url: 'https://unrelated.example/', title: 'Other Restaurant', description: 'Unrelated food.' }] : [] } }) };
+    },
+  });
+  assert.ok(queries.includes('site:harbor.example/unindexed-booking/path'));
+  assert.ok(queries.includes('site:harbor.example'));
+  assert.deepEqual(dossier.pages.map((page) => page.url), [`${place.website}menu`]);
+  assert.equal(dossierPagesVerified(dossier), true);
+});
+
+test('gather checkpoints evidence and aborts a stalled next request at the row deadline', async () => {
+  let saved, searches = 0, aborted = false;
+  const result = await fetchXaiPlaceRatings(place, {
+    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, dossierKey: 'deadline:restaurant', timeBudgetMs: 40,
+    storeImpl: {
+      getDossier: async () => saved ? structuredClone(saved) : null,
+      putDossier: async (_key, dossier) => { saved = structuredClone(dossier); },
+    },
+    buildImpl: async () => assert.fail('builder must wait for the next bounded request'),
+    fetchImpl: async (_url, options) => {
+      searches += 1;
+      if (searches === 1) return { ok: true, json: async () => ({ web: { results: [{
+        url: place.website, title: place.title,
+        description: 'Harbor Bistro serves grilled fish with seasonal vegetables and a daily lunch dish.',
+      }] } }) };
+      assert.equal(saved.pages.length, 1, 'the first page is durable before the next request');
+      return new Promise((_resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('deadline did not abort the provider')), 500);
+        options.signal.addEventListener('abort', () => {
+          clearTimeout(timer);
+          aborted = true;
+          reject(options.signal.reason);
+        }, { once: true });
+      });
+    },
+  });
+  assert.equal(aborted, true);
+  assert.equal(searches, 2);
+  assert.equal(result.partial, true);
+  assert.equal(saved.captureCheckpoint, 'after_gather');
+  assert.equal(dossierPagesVerified(saved), true);
+  assert.equal(saved.pages.length, 1);
 });

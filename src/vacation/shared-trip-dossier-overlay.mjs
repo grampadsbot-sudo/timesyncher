@@ -14,7 +14,11 @@ export function searchPlaceFromStoredDossier(place = {}, dossier = {}) {
   const placeCtx = gateBPlaceContext(place);
   const normalized = normalizeDossierEvidence(dossier, placeCtx);
   return applyDossierFields(
-    { ...(place.sourceRecord || {}), ...(placeCtx.sourceRecord || {}) },
+    {
+      ...(place.sourceRecord || {}), ...(placeCtx.sourceRecord || {}),
+      title: placeCtx.title,
+      category: placeCtx.category || placeCtx.sourceRecord?.category,
+    },
     normalized,
   );
 }

@@ -122,6 +122,7 @@ export async function runBraveQueries(queries = [], options = {}) {
   const braveResults = [];
   const seen = new Set();
   for (const row of queries) {
+    if (options.deadline > 0 && Date.now() >= options.deadline) break;
     const query = typeof row === 'string' ? row : row.query;
     const { results, attempts: att } = await braveWebSearch(query, options);
     attempts.push(...att);
@@ -141,6 +142,7 @@ export async function runBraveQueries(queries = [], options = {}) {
         });
       }
     }
+    if (options.onProgress) await options.onProgress({ pages: [...pages], attempts: [...attempts], braveResults: [...braveResults] });
   }
   return { pages, attempts, braveResults };
 }

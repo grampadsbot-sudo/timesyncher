@@ -18,6 +18,7 @@ export async function prepareOperatorDossierGather(persisted, place, {
   const unchanged = { persisted, retryEmptyGather: false };
   if (!reuseSavedPages || !persisted) return unchanged;
   const normalized = normalizeDossierEvidence({ ...persisted }, place);
+  if (normalized.pages?.length) normalized.emptySource = null;
   if (normalized.pages?.length && dossierFillNeedsTextRebuild(normalized, place)
     && (persisted.attempts || []).some((row) => row.step === 'operator_presented_text_retry'
       && row.status === 'failed' && row.evidenceHash === presentedEvidenceHash(normalized))) {
@@ -25,9 +26,12 @@ export async function prepareOperatorDossierGather(persisted, place, {
     return { ...unchanged, persisted: normalized, presentedFailure: dossierFillHardFailure(normalized, place) };
   }
   if (normalized.pages?.length || (persisted.attempts || [])
-    .some((row) => row.step === 'operator_empty_gather_retry')) return unchanged;
+    .some((row) => row.step === 'operator_empty_gather_retry' && row.gatherVersion === 2 && row.status !== 'started')) {
+    return { ...unchanged, persisted: normalized };
+  }
   normalized.attempts = [...(normalized.attempts || []), {
     kind: 'gather', step: 'operator_empty_gather_retry', status: 'started',
+    gatherVersion: 2,
     startedAt: new Date().toISOString(),
   }];
   if (key) await saveThingEvidenceDossier(key, normalized, { env, storeImpl });
@@ -35,7 +39,8 @@ export async function prepareOperatorDossierGather(persisted, place, {
 }
 
 function dossierFillTextProblems(dossier = {}, place = {}) {
-  if (isFlightOrCarOrDecision(place)) return [];
+  if (isFlightOrCarOrDecision(place) && !(dossier.attempts || [])
+    .some((row) => ['page', 'brave'].includes(row.kind) && row.status === 'ok')) return [];
   if (dossierPresented(dossier, place)) return [];
   const counts = computeDossierFieldCounts(dossier, place);
   const hydrated = searchPlaceFromStoredDossier(place, dossier);
@@ -59,7 +64,7 @@ export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
 
 function presentedEvidenceHash(dossier) {
   const pages = (dossier.pages || []).map(({ url, sha256 }) => [url, sha256]).sort();
-  return createHash('sha256').update(JSON.stringify(pages)).digest('hex');
+  return createHash('sha256').update(JSON.stringify({ textBuildVersion: 2, pages })).digest('hex');
 }
 
 export function recordOperatorDossierTextBuild(dossier, place, startedAt) {
@@ -82,7 +87,6 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
   changedUrls = [],
 } = {}) {
   const rebuildFields = dossierRebuildFields(persisted, merged, { maxAgeExpired, changedUrls });
-  if (isFlightOrCarOrDecision(place)) return rebuildFields;
   if (dossierFillNeedsTextRebuild(merged, place)) {
     rebuildFields.add('summary');
     rebuildFields.add('description');

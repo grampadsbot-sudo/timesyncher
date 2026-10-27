@@ -12,6 +12,24 @@ import {
   recordFieldShortcoming,
 } from './thing-evidence-dossier-field-counts.mjs';
 
+export function dossierDeadlineFetch(fetchImpl, deadline = 0) {
+  if (!deadline) return fetchImpl;
+  return (url, options = {}) => {
+    const remaining = deadline - Date.now();
+    const signal = remaining <= 0
+      ? AbortSignal.abort(new DOMException('Dossier request deadline reached', 'TimeoutError'))
+      : AbortSignal.timeout(Math.max(1, Math.ceil(remaining)));
+    return fetchImpl(url, {
+      ...options,
+      signal: options.signal ? AbortSignal.any([options.signal, signal]) : signal,
+    });
+  };
+}
+
+function outOfTime(options = {}) {
+  return options.deadline > 0 && Date.now() >= options.deadline;
+}
+
 function publicAddress(address) {
   if (isIP(address) === 6) return /^2[0-9a-f]{3}:/i.test(address);
   const parts = address.split('.').map(Number);
@@ -23,12 +41,23 @@ function publicAddress(address) {
     && !(parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127);
 }
 
-async function pageResponse(url, { fetchImpl, resolveImpl }, hops = 0) {
+async function pageResponse(url, { fetchImpl, resolveImpl, deadline = 0 }, hops = 0) {
   const parsed = new URL(url);
   if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password
     || (parsed.port && !['80', '443'].includes(parsed.port))) throw new Error('evidence_url_rejected');
   const host = parsed.hostname.replace(/^\[|\]$/g, '');
-  const addresses = isIP(host) ? [{ address: host }] : await resolveImpl(host, { all: true });
+  let timer;
+  let addresses;
+  try {
+    addresses = isIP(host) ? [{ address: host }] : await Promise.race([
+      resolveImpl(host, { all: true }),
+      new Promise((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('evidence_dns_timeout')), deadline ? Math.max(1, Math.min(15000, deadline - Date.now())) : 15000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
   if (!addresses.length || addresses.some((row) => !publicAddress(row.address))) throw new Error('evidence_address_rejected');
   const response = await fetchImpl(parsed.href, {
     redirect: 'manual', signal: AbortSignal.timeout(15000),
@@ -36,7 +65,7 @@ async function pageResponse(url, { fetchImpl, resolveImpl }, hops = 0) {
   });
   if (response.status >= 300 && response.status < 400) {
     if (hops >= 5) throw new Error('evidence_redirect_limit');
-    return pageResponse(new URL(response.headers.get('location'), parsed).href, { fetchImpl, resolveImpl }, hops + 1);
+    return pageResponse(new URL(response.headers.get('location'), parsed).href, { fetchImpl, resolveImpl, deadline }, hops + 1);
   }
   if (!response.ok) throw new Error(`evidence_page_http_${response.status}`);
   const type = response.headers.get('content-type') || '';
@@ -202,24 +231,26 @@ export function changedDossierPageUrls(before = [], after = []) {
   return changed;
 }
 
-async function fetchEvidencePages(url, {
-  fetchImpl, resolveImpl, extractImpl, env, attempts, existingUrls,
-}) {
-  if (existingUrls.has(url)) return [];
+async function fetchEvidencePages(url, options) {
+  const { fetchImpl, resolveImpl, extractImpl, env, attempts, existingUrls } = options;
+  if (existingUrls.has(url) || outOfTime(options)) return [];
   let via = 'direct';
   const startedAt = new Date().toISOString();
   let text = '';
   let finalUrl = url;
   try {
-    const response = await pageResponse(url, { fetchImpl, resolveImpl });
+    const response = await pageResponse(url, options);
     text = pageText(response.body, response.type);
     finalUrl = response.url;
     if (!text || blockedPageText(text)) throw new Error('evidence_page_empty');
     attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'direct', method: 'direct' });
   } catch (error) {
     attempts.push({ kind: 'page', url, startedAt, status: 'failed', via: 'direct', method: 'direct', error: String(error?.message || '').slice(0, 40) });
+    if (outOfTime(options)) return [];
     try {
-      const rows = await extractImpl([url], { env, fetchImpl });
+      const rows = await extractImpl([url], {
+        env, fetchImpl, timeoutMs: options.deadline ? Math.max(1, Math.min(8000, options.deadline - Date.now())) : 60000,
+      });
       const row = rows?.[0];
       text = String(row?.rawContent || '').replace(/\s+/g, ' ').trim();
       if (!text || blockedPageText(text)) throw new Error('tavily_empty');
@@ -228,17 +259,29 @@ async function fetchEvidencePages(url, {
       attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
     } catch (extractError) {
       attempts.push({ kind: 'page', provider: 'Tavily', stage: 'extract', query: '', url, startedAt, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', httpStatus: Number(extractError?.status) || Number(String(extractError?.message || '').match(/HTTP\s+(\d{3})/i)?.[1]) || undefined, error: String(extractError?.message || '').slice(0, 120) });
+      if (outOfTime(options)) return [];
       let target;
       try { target = new URL(url); } catch { return []; }
       if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password) return [];
-      const query = `site:${target.hostname}${target.pathname === '/' ? '' : target.pathname}`;
-      const fallback = await runBraveQueries([query], { env, fetchImpl });
-      const pages = fallback.pages.filter((page) => {
-        try { return new URL(page.url).hostname.replace(/^www\./, '') === target.hostname.replace(/^www\./, ''); } catch { return false; }
-      });
-      attempts.push(...fallback.attempts.map((attempt) => ({
-        ...attempt, provider: 'Brave', stage: 'extract_fallback', url,
-      })));
+      const queries = [...new Set([
+        `site:${target.hostname}${target.pathname === '/' ? '' : target.pathname}`,
+        `site:${target.hostname}`,
+      ])];
+      let query, pages = [];
+      for (query of queries) {
+        const fallback = await runBraveQueries([query], { env, fetchImpl, deadline: options.deadline });
+        const host = target.hostname.replace(/^www\./, '');
+        pages = fallback.pages.filter((page) => {
+          try {
+            const found = new URL(page.url).hostname.replace(/^www\./, '');
+            return found === host || found.endsWith(`.${host}`);
+          } catch { return false; }
+        });
+        attempts.push(...fallback.attempts.map((attempt) => ({
+          ...attempt, provider: 'Brave', stage: 'extract_fallback', url,
+        })));
+        if (pages.length || outOfTime(options)) break;
+      }
       attempts.push({
         kind: 'page', provider: 'Brave', stage: 'extract_fallback', query, url,
         startedAt: new Date().toISOString(), via: 'brave-snippet',
@@ -266,6 +309,7 @@ async function materializeBraveHits(braveBundle = {}, options = {}) {
   for (const row of dossier.braveResults) if (row.url) urls.add(row.url);
   const existing = new Set(dossier.pages.map((p) => p.url));
   for (const url of urls) {
+    if (outOfTime(options)) break;
     if (dossier.pages.length >= DOSSIER_MAX_PAGES) break;
     if (existing.has(url)) continue;
     const pages = await fetchEvidencePages(url, { ...options, attempts: dossier.attempts, existingUrls: existing });
@@ -291,12 +335,29 @@ export async function gatherBraveEvidenceForQueries(queries = [], place = {}, op
   return materializeBraveHits(braveBundle, options);
 }
 
+export async function gatherDossierWithEscalation(place, gatherImpl, options) {
+  let gathered = await gatherImpl(place, options);
+  if (gathered.pages?.length) return gathered;
+  const query = [place.title || place.name, options.destination].filter(Boolean).join(' ').trim();
+  const startedAt = new Date().toISOString();
+  const escalated = await gatherBraveEvidenceForQueries([query], place, {
+    ...options, deadline: 0, resolveImpl: options.resolveImpl || lookup, extractImpl: extractTavily,
+  });
+  gathered = mergeDossierPages(gathered, escalated);
+  gathered.attempts.push({
+    kind: 'brave', provider: 'Brave', stage: 'general', step: 'empty_gather_escalation',
+    query, url: '', startedAt, status: escalated.pages?.length ? 'ok' : 'empty',
+  });
+  return gathered;
+}
+
 export async function topUpDossierFields(dossier = {}, place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
   onlyFields = null, onProgress,
+  deadline = 0,
 } = {}) {
-  const options = { env, fetchImpl, resolveImpl, extractImpl };
+  const options = { env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline };
   let merged = normalizeDossierEvidence({ ...dossier }, place);
   const needs = Array.isArray(onlyFields) && onlyFields.length
     ? onlyFields
@@ -309,6 +370,7 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
     const ledger = (merged.attempts || []).filter((row) => row.kind === 'gap_top_up' && row.field === field);
     const logged = Math.max(ledger.length, ...ledger.map((row) => Number(row.attempt) || 0));
     for (let attempt = Math.max(previous, logged); attempt < 3 && !filled; attempt += 1) {
+      if (outOfTime(options)) break;
       const queries = topUpQueriesForField(field, place, destination, attempt);
       if (!queries.length) break;
       const entry = { kind: 'gap_top_up', field, attempt: attempt + 1, query: queries[0].query, startedAt: new Date().toISOString(), status: 'started' };
@@ -351,10 +413,14 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
 export async function gatherThingEvidence(place = {}, {
   destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
+  deadline = 0, onProgress,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
-  const options = { env, fetchImpl, resolveImpl, extractImpl };
+  const options = {
+    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline,
+    onProgress: onProgress ? (dossier) => onProgress({ ...dossier, thing: name }) : undefined,
+  };
   const queries = stageQueries(place, destination);
   let dossier = await gatherBraveEvidenceForQueries(queries, place, options);
   dossier.thing = name;
@@ -362,7 +428,7 @@ export async function gatherThingEvidence(place = {}, {
   dossier.reviewsRead = 0;
 
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
-  if (official && dossier.pages.length < DOSSIER_MAX_PAGES) {
+  if (official && dossier.pages.length < DOSSIER_MAX_PAGES && !outOfTime(options)) {
     const pages = await fetchEvidencePages(String(official), {
       ...options, attempts: dossier.attempts, existingUrls: new Set(dossier.pages.map((p) => p.url)),
     });
@@ -372,9 +438,10 @@ export async function gatherThingEvidence(place = {}, {
     }
   }
 
-  if (braveImpl) {
+  if (onProgress) await onProgress(dossier);
+  if (braveImpl && !outOfTime(options)) {
     try {
-      const brave = await braveImpl(place, { destination, center, env, fetchImpl });
+      const brave = await braveImpl(place, { destination, center, env, fetchImpl: options.fetchImpl });
       dossier.attempts.push(...(brave.attempts || []));
       for (const page of brave.pages || []) {
         if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);

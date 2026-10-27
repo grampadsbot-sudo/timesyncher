@@ -72,3 +72,32 @@ for (const pageCount of [1, 2]) for (const reject of [false, true]) {
     }
   });
 }
+
+test('saved restaurant pages clear an old empty-source failure and permit the revised text repair once', async () => {
+  const text = `${summary} ${description}`;
+  const pages = [{ url: target.website, text, fetchedAt: '2026-10-26T12:00:00Z', sha256: createHash('sha256').update(text).digest('hex') }];
+  const evidenceHash = createHash('sha256').update(JSON.stringify(pages.map(({ url, sha256 }) => [url, sha256]))).digest('hex');
+  let saved = {
+    thing: target.title, pages, fields: {}, emptySource: 'gather_no_pages',
+    attempts: [{ kind: 'builder', step: 'operator_presented_text_retry', status: 'failed', evidenceHash }],
+  };
+  let builds = 0;
+  const result = await runThingEvidenceDossierStagingTargets([target], {
+    env: {}, operatorFill: true,
+    storeImpl: {
+      getDossier: async () => structuredClone(saved),
+      putDossier: async (_key, dossier) => { saved = structuredClone(dossier); },
+    },
+    gatherImpl: async () => assert.fail('usable evidence must be reused'),
+    fetchImpl: async () => assert.fail('no search during saved text repair'),
+    buildImpl: async () => {
+      builds += 1;
+      return { payload: {}, structuredText: '', findings: { summary: field(summary), description: field(description) } };
+    },
+    judgeImpl: async (_dossier, claims) => claims.map(({ id }) => ({ id, supported: true })),
+  });
+  assert.equal(builds, 1);
+  assert.equal(result.results[0].failed, false);
+  assert.equal(saved.emptySource, null);
+  assert.equal(dossierPresented(saved, target), true);
+});

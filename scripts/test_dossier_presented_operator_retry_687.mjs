@@ -126,3 +126,40 @@ test('new saved evidence permits one more bounded text repair after exhaustion',
   await f.run();
   assert.deepEqual(f.counts(), { builds: 4, judges: 4 });
 });
+
+for (const category of ['flight', 'car']) test(`${category} saved evidence repairs weak text and still rejects unsupported claims`, async () => {
+  const title = category === 'flight' ? 'Coastal Air PDX to BOS' : 'Coastal Rentals compact sedan';
+  const target = { tripId: 'booking-trip', placeId: category, title: category === 'flight' ? `Flight option: ${title}` : title, category };
+  const summary = `${title} includes a checked bag and a refundable booking with a clear cancellation policy.`;
+  const description = `${title} includes a checked bag and a refundable booking. The published booking page explains the cancellation policy and the terms for changing the reservation. Travelers can read those terms before paying and review the details included with the booking, including the checked bag allowance and refund policy.`;
+  const text = `${summary} ${description}`;
+  for (const reject of [false, true]) {
+    let saved = {
+      thing: target.title, fields: {},
+      pages: [{ url: 'https://coastal.example/booking', text, fetchedAt: page.fetchedAt, sha256: createHash('sha256').update(text).digest('hex') }],
+      attempts: [{ kind: 'page', status: 'ok' }], fieldHashes: {}, fieldSources: {},
+    };
+    let builds = 0;
+    const run = () => runThingEvidenceDossierStagingTargets([target], {
+      env: {}, operatorFill: true, skipExisting: true,
+      storeImpl: {
+        getDossier: async () => structuredClone(saved),
+        putDossier: async (_key, dossier) => { saved = structuredClone(dossier); },
+      },
+      gatherImpl: async () => assert.fail('reuse saved booking evidence'),
+      fetchImpl: async () => assert.fail('no provider request for text repair'),
+      buildImpl: async (dossier) => {
+        assert.equal(dossier.thing, title, 'saved booking labels are canonicalized before prompting');
+        builds += 1;
+        return { payload: {}, structuredText: '', findings: { summary: field(summary), description: field(description) } };
+      },
+      judgeImpl: async (_dossier, claims) => claims.map(({ id }) => ({ id, supported: !reject })),
+    });
+    const result = (await run()).results[0];
+    assert.equal(result.failed, reject);
+    assert.equal(dossierPresented(saved, target), !reject);
+    assert.equal(builds, reject ? 2 : 1);
+    await run();
+    assert.equal(builds, reject ? 2 : 1, 'repeat fill cannot spend on unchanged booking evidence');
+  }
+});

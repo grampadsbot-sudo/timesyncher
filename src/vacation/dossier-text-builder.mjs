@@ -1,6 +1,5 @@
 import { computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
 import { dossierPresented, passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
-import { isFlightOrCarOrDecision } from './dossier-brave-queries.mjs';
 import { claimsSupported, dossierPageById, fitDescriptionWords, prepareDossierFindings } from './thing-dossier-fields.mjs';
 
 function dossierTextBuildProblems(dossier = {}, place = {}) {
@@ -52,7 +51,7 @@ export async function buildDossierText(dossier, place, {
       if (claim.supported !== true) textProblems.push(`${key}:unsupported_claim:${String(claim.judgeReason || claim.text || '').slice(0, 240)}`);
     }
   }
-  if (!isFlightOrCarOrDecision(place) && !reviewsOnly && textProblems.length && !outOfTime()) {
+  if (!reviewsOnly && textProblems.length && !outOfTime()) {
     const retry = await build({ includeReviews: false, textProblems });
     if (retry.findings?.description?.value) retry.findings.description.value = fitDescriptionWords(retry.findings.description.value);
     const retryJudge = await judgeFindings(retry.findings, true);

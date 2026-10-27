@@ -186,3 +186,15 @@ test('a rejected saved page with empty recovery returns a fresh failure and does
   assert.equal(f.counts().builds, 0);
   assert.equal(f.queries.length, searches);
 });
+
+test('an older exhausted gather gets one attempt through the revised fallback', async () => {
+  const f = fixture(emptySaved({ attempts: [oldAttempt, {
+    kind: 'gather', step: 'operator_empty_gather_retry', status: 'failed',
+  }] }));
+  const result = await f.run();
+  assert.equal(result.failed, false);
+  assert.equal(f.counts().gathers, 1);
+  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 2 && attempt.status === 'ok'));
+  await f.run();
+  assert.equal(f.counts().gathers, 1);
+});

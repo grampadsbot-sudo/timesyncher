@@ -6,6 +6,7 @@ import { thingRecordFromTripRow } from './intake-shared-trip.mjs';
 import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs';
 import { xaiHttpErrorResumable } from './xai-dossier-http.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
+import { dossierThingTitle } from './dossier-brave-queries.mjs';
 import { dossierPersistedFillIsNoOp, dossierFillHardFailure, dossierFillNeedsTextRebuild } from './xai-dossier-fill-state.mjs';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
@@ -38,6 +39,7 @@ export function placeFromTarget(target = {}) {
     ...(OVERLAY_ENRICHMENT[target.ccabKey] || {}),
   };
   const category = target.category || ccabRecord.category || target.category_name || '';
+  const title = dossierThingTitle({ ...target, category, title: target.title || target.name || target.ccabKey });
   const suppliedRecord = target.sourceRecord || {};
   const chosenUrl = target.website || target.url
     || suppliedRecord.website || suppliedRecord.url
@@ -46,13 +48,14 @@ export function placeFromTarget(target = {}) {
     ...ccabRecord,
     category,
     ...suppliedRecord,
+    ...(String(category).toLowerCase() === 'flight' ? { title, name: title } : {}),
     ...(chosenUrl ? { website: chosenUrl, url: chosenUrl } : {}),
   };
   return {
     id: target.placeId ?? target.rowId ?? target.id,
     trip_id: target.tripId ?? target.trip_id ?? 99,
-    title: target.title || target.name || target.ccabKey,
-    name: target.name || target.title || target.ccabKey,
+    title,
+    name: String(category).toLowerCase() === 'flight' ? title : target.name || target.title || target.ccabKey,
     source: target.source || ccabRecord.source || 'trip_things',
     category,
     category_name: typeof category === 'object' ? category.name : (target.category_name || category),
@@ -61,6 +64,8 @@ export function placeFromTarget(target = {}) {
     lng: target.lng ?? suppliedRecord.lng ?? ccabRecord.lng,
     url: chosenUrl,
     sourceRecord,
+    description: target.description,
+    metadata: target.metadata,
   };
 }
 
@@ -130,6 +135,7 @@ export async function listTripThingsMissingDossiers({
     const existing = await loadThingEvidenceDossier(dossierKey, { env, storeImpl });
     if (existing?.pages?.length) continue;
     targets.push({
+      ...thing,
       tripId: row.trip_id,
       placeId: row.id,
       title: row.title,

@@ -1,28 +1,24 @@
-import { lookup } from 'node:dns/promises';
-import { extractTavily } from './poi-search.mjs';
 import {
-  postXaiPlaceRatingsResponses,
   xaiGrokPlaceSearchModelId,
 } from '../../scripts/vacation-app-reply-rules.mjs';
 import {
   changedDossierPageUrls,
+  dossierDeadlineFetch,
   DEFAULT_DOSSIER_MAX_AGE_MS,
   gatherThingEvidence,
-  gatherBraveEvidenceForQueries,
+  gatherDossierWithEscalation,
   mergeDossierPages,
   topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
-  dossierReviewsNeedRebuild,
-  dossierReviewsPassValidityGate,
   dossierReviewsShouldRunWriter,
   preservePersistedDossierReviewsWhenFresh,
   rebuildDossierReviewsFromSavedEvidence,
   stampReviewsEvidencePageHash,
   stripDossierReviews,
 } from './dossier-reviews-rebuild.mjs';
-import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
+import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { buildDossierText, preservePresentedDossierText } from './dossier-text-builder.mjs';
 import {
   braveTopUpFieldsPending,
@@ -48,7 +44,6 @@ import {
   commitDossierXaiUsageRun,
   dossierForModel,
   dossierForReviewWriter,
-  logXaiUsage,
   promptChars,
 } from './dossier-cost.mjs';
 import { dedupeReviews, extractionPrompt, extractReviewsByCode, finalizeReviewSet } from './dossier-review-extract.mjs';
@@ -118,6 +113,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
   const lines = [
     'Build fields for this place using ONLY the saved dossier pages below (each has an id p1..pN). Never search or use remembered facts.',
     'Write in your own words: summaries of what the pages say, not copied phrases. Every factual statement you make must be listed as a claim.',
+    'Use short atomic claims for individual facts and cite only pages that state each fact. Do not combine supported facts with an inferred recommendation, atmosphere, suitability or comparison in the same claim. Omit unsupported details instead of repeating a rejected paraphrase.',
     'A claim is {text, pages}: text is one short factual statement you rely on; pages lists the id(s) of the saved pages that support it. A claim with no page id fails.',
     'Return summary, description, price as {value, claims}; omit unavailable fields. Price also carries unit.',
     'Hours: return hours as {value, claims} when opening hours appear on a saved page; each claim cites the page id that states those days/times. Omit hours when no page lists hours. When evidenceHints.hours is present, keep that schedule unless a saved page contradicts it.',
@@ -125,6 +121,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     'Coordinates: return lat and lng as separate {value, claims} when a saved page lists map coordinates for this place; values are numbers.',
     'Happy hour: return happyHourDays, happyHourTimes, and happyHourDeals as separate {value, claims} when a saved page states them; each claim cites its page id. Omit a subfield when that detail is missing. When no saved page mentions happy hour, set happyHourFound:false and omit happy-hour subfields—never invent happy hour.',
     'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence of 12-28 words, including the exact name from the thing field, distinct from the description and under 320 characters. The name from the thing field can label a trip activity; do not replace it with only the venue name.',
+    'The thing name is the supplied trip label. Use that label to introduce the place, but claim only facts from the cited pages about the underlying place or provider. For a flight or car rental, use booking, route, fare or rental facts; do not infer restaurant facts or require reviews. Never add Flight option: to a name or summary.',
     'Text must contain no internal candidate/option/verify language, TBD, N/A, lorem, placeholder, or the word sample. Do not add filler or invent facts to meet length. A Price: line is allowed but no price is required in the description.',
     'When no reviews were found, still write the description from the saved factual pages; it will end with a short no-reviews note. With few reviews, use what exists and note limited number of reviews. Never invent four reviews from insufficient evidence.',
     'Itinerary note: return itineraryNote as {value, claims} — one cited line (<=280 characters) for the trip itinerary row: what to do or order here, not just the place name.',
@@ -250,6 +247,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   forceRefresh = false, timeBudgetMs = 0,
   reuseSavedPages = false,
 } = {}) {
+  place = { ...place, title: dossierThingTitle(place) };
   const key = dossierKey || thingEvidenceDossierKey(place);
   const resolved = key
     ? await loadThingEvidenceDossierResolved(key, { env, storeImpl, placeId: place.id ?? place.placeId })
@@ -258,24 +256,19 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const deadline = timeBudgetMs > 0 ? Date.now() + timeBudgetMs : 0;
   const outOfTime = () => deadline > 0 && Date.now() >= deadline;
   const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
+  fetchImpl = dossierDeadlineFetch(fetchImpl, deadline);
   const gatherOpts = {
-    env, fetchImpl, destination, resolveImpl, center,
+    env, fetchImpl, destination, resolveImpl, center, deadline,
+    onProgress: key ? async (progress) => {
+      merged = mergeDossierPages(persisted || {}, progress);
+      merged.emptySource = merged.pages?.length ? null : merged.emptySource;
+      merged.captureCheckpoint = 'after_gather';
+      await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+    } : undefined,
   };
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   const gatherWithEscalation = async () => {
-    let gathered = await gatherImpl(place, gatherOpts);
-    if (!gathered.pages?.length) {
-      const query = [place.title || place.name, destination].filter(Boolean).join(' ').trim();
-      const startedAt = new Date().toISOString();
-      const escalated = await gatherBraveEvidenceForQueries([query], place, {
-        ...gatherOpts, resolveImpl: resolveImpl || lookup, extractImpl: extractTavily,
-      });
-      gathered = mergeDossierPages(gathered, escalated);
-      gathered.attempts.push({
-        kind: 'brave', provider: 'Brave', stage: 'general', step: 'empty_gather_escalation',
-        query, url: '', startedAt, status: escalated.pages?.length ? 'ok' : 'empty',
-      });
-    }
+    const gathered = await gatherDossierWithEscalation(place, gatherImpl, gatherOpts);
     gathered.emptySource = gathered.pages?.length ? null : dossierEmptyGatherReason(gathered);
     return gathered;
   };
@@ -453,6 +446,11 @@ export async function fetchXaiPlaceRatings(place = {}, {
     parsed: { evidenceDossier: final },
   };
   } catch (error) {
+    if (outOfTime() && (merged || persisted)) {
+      return saveResumablePartial(merged || persisted, persisted, {
+        key, env, storeImpl, place, checkpoint: (merged || persisted)?.captureCheckpoint || 'after_gather',
+      });
+    }
     if (error?.resumable && xaiHttpErrorResumable(error.status)) {
       return saveResumablePartial(merged || persisted, persisted, {
         key,
