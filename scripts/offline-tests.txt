@@ -277,3 +277,4 @@ scripts/test_dispatch_stall_guards_649.mjs
 scripts/test_dispatch_vkfill_batch_guards_662.mjs
 scripts/test_dispatch_noprogress_guards_668.mjs
 scripts/test_gateb_coverage_argv_harness.mjs
+scripts/test_vkprloop_h4_wake_724.mjs
