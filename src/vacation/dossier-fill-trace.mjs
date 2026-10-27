@@ -44,3 +44,9 @@ export function recordDossierTracePages(trace, raw = {}, normalized = raw) {
   if (trace.pages.raw && !normalized.pages?.length) trace.builder.blankedBy = trace.pageRepairs.findLast((row) => row.action === 'excluded')?.reason || 'unverified_pages';
   trace.pagesVerified = Boolean(normalized.pages?.length && normalized.pages.every((page) => !dossierPageFailure(page)));
 }
+
+export function recordDossierTraceBuilderFailure(trace, error) {
+  if (!trace?.builder?.ran) return;
+  trace.builder.failure = error?.status ? `builder_http_${Number(error.status)}` : 'builder_interrupted';
+  trace.builder.failureDetail = String(error?.message || error || '').slice(0, 400);
+}

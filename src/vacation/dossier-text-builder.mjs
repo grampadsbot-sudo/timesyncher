@@ -4,6 +4,8 @@ import { computeDossierFieldCounts } from './thing-evidence-dossier-field-counts
 import { dossierPresented, passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
 import { claimsSupported, dossierPageById, fitDescriptionWords, prepareDossierFindings } from './thing-dossier-fields.mjs';
 export { dossierTextEvidencePages } from './dossier-text-evidence.mjs';
+export { dossierPresented };
+export const DOSSIER_ITINERARY_NOTE_PRIORITY = 'Priority: return itineraryNote as a snappy cited vibe + what-to-try line (<=280 chars). Cite only saved pages. Do not skip itineraryNote when pages support a dish, drink, happy hour, or atmosphere highlight.';
 
 function dossierTextBuildProblems(dossier = {}, place = {}) {
   const counts = computeDossierFieldCounts(dossier, place);
@@ -78,24 +80,36 @@ export async function buildDossierText(dossier, place, {
   let { payload, structuredText, findings, judge, built } = first;
   const textProblems = dossierTextBuildProblems(built, place);
   if (first.outcome.blankedBy) textProblems.push(first.outcome.blankedBy);
-  for (const key of ['summary', 'description']) {
+  for (const key of ['summary', 'description', 'itineraryNote']) {
     for (const claim of findings[key]?.claims || []) {
       if (claim.supported !== true) textProblems.push(`${key}:unsupported_claim:${String(claim.judgeReason || claim.text || '').slice(0, 240)}`);
     }
+  }
+  const noteVal = String(built.fields?.itineraryNote?.value || findings.itineraryNote?.value || '').trim();
+  if (!reviewsOnly && noteVal.length < 12) {
+    textProblems.push('itineraryNote missing: return a snappy cited itineraryNote (vibe + what to try/order) supported by saved pages; do not omit it when pages support a highlight');
   }
   if ((!reviewsOnly && textProblems.length || ['parse_error', 'judge_rejected_all'].includes(first.outcome.blankedBy)) && !outOfTime()) {
     const retry = await run({ includeReviews: false, textProblems });
     const fields = { ...built.fields };
     const repairedFindings = { ...findings };
-    for (const key of ['summary', 'description']) {
+    for (const key of ['summary', 'description', 'itineraryNote']) {
       if (!retry.built.fields[key]) continue;
+      if (key === 'itineraryNote') {
+        fields[key] = retry.built.fields[key];
+        repairedFindings[key] = retry.findings[key];
+        continue;
+      }
       const candidate = { ...built, fields: { ...fields, [key]: retry.built.fields[key] } };
       if (dossierTextBuildProblems(candidate, place).some((problem) => problem.startsWith(key) || problem === `blank_${key}`)) continue;
       fields[key] = retry.built.fields[key];
       repairedFindings[key] = retry.findings[key];
     }
     built.attempts = dossier.attempts;
-    if (!dossierTextBuildProblems({ ...built, fields }, place).length) {
+    const repaired = { ...built, fields };
+    const repairedOk = !dossierTextBuildProblems(repaired, place).length;
+    const noteRepaired = String(fields.itineraryNote?.value || '').trim().length >= 12;
+    if (repairedOk || noteRepaired) {
       built.fields = fields;
       findings = repairedFindings;
       payload = retry.payload;

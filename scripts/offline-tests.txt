@@ -337,3 +337,4 @@ scripts/test_dossier_flight_route_round4_687.mjs
 scripts/test_dossier_tavily_fallback_round5_687.mjs
 scripts/test_dossier_saved_identity_round5_687.mjs
 scripts/test_dossier_supported_retry_round5_687.mjs
+scripts/test_itinerary_note_rebuild_687.mjs

@@ -1,5 +1,5 @@
 import { callDossierBuilder as invokeDossierBuilder } from './dossier-builder-call.mjs';
-import { recordDossierTraceAttempts, recordDossierTracePages } from './dossier-fill-trace.mjs';
+import { recordDossierTraceAttempts, recordDossierTraceBuilderFailure, recordDossierTracePages } from './dossier-fill-trace.mjs';
 import {
   xaiGrokPlaceSearchModelId,
 } from '../../scripts/vacation-app-reply-rules.mjs';
@@ -21,7 +21,7 @@ import {
   stripDossierReviews,
 } from './dossier-reviews-rebuild.mjs';
 import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
-import { buildDossierText, dossierTextEvidencePages, preservePresentedDossierText } from './dossier-text-builder.mjs';
+import { buildDossierText, DOSSIER_ITINERARY_NOTE_PRIORITY, dossierPresented, dossierTextEvidencePages, preservePresentedDossierText } from './dossier-text-builder.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -130,7 +130,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     'Text must contain no internal candidate/option/verify language, TBD, N/A, lorem, placeholder, or the word sample. Do not add filler or invent facts to meet length. A Price: line is allowed but no price is required in the description.',
     'Flights need no reviews, opening hours or happy hours. Use airline, both airports and nonstop/route evidence plus the supplied record; never turn a proposed itinerary into a confirmed booking. Prices may be labelled estimates.',
     'When no reviews were found, still write the description from the saved factual pages; it will end with a short no-reviews note. With few reviews, use what exists and note limited number of reviews. Never invent four reviews from insufficient evidence.',
-    'Itinerary note: return itineraryNote as {value, claims} — one cited line (<=280 characters) for the trip itinerary row: what to do or order here, not just the place name.',
+    'Itinerary note: return itineraryNote as {value, claims} — REQUIRED when saved pages support it. One snappy cited line (<=280 characters) for the trip itinerary row: vibe plus what to do or try (examples of voice, not facts to copy: "Great Mexican! Try the tableside guacamole!" / "Old-school Italian with checkerboard tablecloths. The lasagna is supposed to be out of this world!"). Not a generic "X serves Y at address Z" blurb. Cite only dishes, drinks, or atmosphere the saved pages state; omit itineraryNote when pages cannot support one.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
   ];
@@ -148,7 +148,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
   } else {
     lines.push('This call rebuilds factual fields only: do not return reviews or reviewExcerpts. Use the saved pages, including any saved review evidence, for the description; do not infer the product category from this instruction.');
   }
-  if (textProblems.length) lines.push(`The preceding text build was rejected: ${textProblems.join('; ')}. Treat unsupported_claim entries as the judge's rejection feedback. Rebuild summary and description using only statements explicitly supported by these saved pages with cited claims. Drop rejected facts unless the page actually states them; never fill gaps with a template.`);
+  if (textProblems.length) lines.push(`The preceding text build was rejected: ${textProblems.join('; ')}. Treat unsupported_claim entries as the judge's rejection feedback. Rebuild summary, description, and itineraryNote using only statements explicitly supported by these saved pages with cited claims. Drop rejected facts unless the page actually states them; never fill gaps with a template.`);
   lines.push(JSON.stringify(dossierWithPageIds(modelInput)));
   return lines.join('\n');
 }
@@ -357,8 +357,8 @@ export async function fetchXaiPlaceRatings(place = {}, {
     ? dossierFillRebuildFields(persisted, merged, place, { maxAgeExpired: false, changedUrls })
     : new Set(['summary', 'description', 'price', 'hours', 'happyHourDetails', 'rating', 'reviews', 'knownFor', 'itineraryNote']);
   if (forceRefresh && reuseSavedPages) {
-    rebuildFields.add('summary');
-    rebuildFields.add('description');
+    if (!dossierPresented(persisted, place)) { rebuildFields.add('summary'); rebuildFields.add('description'); }
+    rebuildFields.add('itineraryNote');
   }
   const skipBuilder = persisted
     && !forceRefresh
@@ -400,9 +400,12 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const builderStartedAt = new Date().toISOString();
+  const seedTextProblems = rebuildFields.has('itineraryNote') ? [DOSSIER_ITINERARY_NOTE_PRIORITY] : [];
   const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
     includeReviews: needsReviewWriter, reviewsOnly, outOfTime, trace,
-    build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options, place }),
+    build: async (options) => await callDossierBuilder(merged, {
+      ...xaiOpts(), buildImpl, ...options, place, textProblems: [...seedTextProblems, ...(options.textProblems || [])],
+    }),
     judgeFindings: (findings, skipReviewClaims) => judgeDossierFindings(merged, findings, {
       ...xaiOpts(), judgeImpl, skipReviewClaims,
     }),
@@ -443,7 +446,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     parsed: { evidenceDossier: final },
   };
   } catch (error) {
-    if (trace && trace.builder.ran) trace.builder.failure = error?.status ? `builder_http_${Number(error.status)}` : 'builder_interrupted';
+    recordDossierTraceBuilderFailure(trace, error);
     if (reuseSavedPages && merged?.pages?.length) recordOperatorDossierTextBuild(merged, place, new Date().toISOString(), trace);
     if (outOfTime() && (merged || persisted)) {
       return saveResumablePartial(merged || persisted, persisted, {
