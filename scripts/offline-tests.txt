@@ -308,6 +308,10 @@ scripts/test_dossier_data_batch_687_r1_r7.mjs
 scripts/test_dossier_server_fill_687.mjs
 scripts/test_passb_integrity_687.mjs
 scripts/test_passb_presented_gate_687.mjs
+scripts/test_passb_scorecard_harness_687.mjs
+scripts/test_thing_fill_states.mjs
+scripts/test_dossier_provider_mocks_fill_687.mjs
+scripts/test_check_harness_protected_offline.mjs
 scripts/test_passb_fill_noop_687.mjs
 scripts/test_passb_tight_noop_687.mjs
 scripts/test_passb_tight_noop_port_687.mjs
