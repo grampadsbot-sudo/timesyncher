@@ -92,7 +92,8 @@ export function classifyFillOutcome(dossier = {}, place = {}, {
   }
   const pages = Array.isArray(dossier.pages) ? dossier.pages : [];
   if (pages.length > 0 && hardFailure?.presentedReasons?.length) {
-    const textEmpty = hardFailure.presentedReasons.some((row) => /:missing|:blank|text_empty/i.test(String(row)));
+    const textEmpty = hardFailure.presentedReasons.some((row) => /^(?:text_empty|empty_model_output)$/i.test(String(row).trim())
+      || /:blank$/i.test(String(row)));
     return fillOutcomeSchema.parse({
       kind: textEmpty ? 'text_empty' : 'presented_fields_not_ok',
       stopReason: textEmpty ? 'presented_text_empty' : 'presented_fields_not_ok',

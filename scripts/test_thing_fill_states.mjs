@@ -62,6 +62,19 @@ const okOutcome = classifyFillOutcome(dossier, place, { deployment: 'live' });
 assert.equal(okOutcome.kind, 'presented_ok');
 assert.equal(dossierFillHardFailure(dossier, place, { deployment: 'live' }).failed, undefined);
 
+const unpresented = { ...dossier, fields: {} };
+const missingFields = classifyFillOutcome(unpresented, place, {
+  hardFailure: { presentedReasons: ['summary:missing', 'description:missing'] },
+});
+assert.equal(missingFields.kind, 'presented_fields_not_ok');
+assert.equal(missingFields.stopReason, 'presented_fields_not_ok');
+assert.equal(dossierFillHardFailure(unpresented, place).error, 'presented_fields_not_ok');
+const blankModel = classifyFillOutcome(unpresented, place, {
+  hardFailure: { presentedReasons: ['empty_model_output'] },
+});
+assert.equal(blankModel.kind, 'text_empty');
+assert.equal(blankModel.stopReason, 'presented_text_empty');
+
 assert.throws(
   () => assertNoSilentDone('done', { needsFill: true, pagesAdded: 0 }),
   (error) => error.code === 'silent_done_blocked',
