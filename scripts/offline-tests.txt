@@ -339,3 +339,4 @@ scripts/test_dossier_saved_identity_round5_687.mjs
 scripts/test_dossier_supported_retry_round5_687.mjs
 scripts/test_itinerary_note_rebuild_687.mjs
 scripts/test_dossier_silent_done_687.mjs
+scripts/test_dream_pass_fail_modes.mjs
