@@ -80,4 +80,14 @@ assert.throws(
   (error) => error.code === 'silent_done_blocked',
 );
 
+for (const metrics of [
+  { needsFill: true, pagesAdded: 1 },
+  { presented: false, pagesAdded: 3 },
+  { hasPayload: false, pagesAdded: 0 },
+]) {
+  assert.throws(() => assertNoSilentDone('done', metrics), (error) => error.code === 'silent_done_blocked');
+  assert.equal(assertNoSilentDone('after_gather', metrics), null);
+}
+assert.equal(assertNoSilentDone('done', { needsFill: false, presented: true, hasPayload: true, pagesAdded: 0 }), null);
+
 console.log('test_thing_fill_states: ok');

@@ -8,12 +8,13 @@ import { thingWantsEvidenceCapture } from './thing-evidence-capture-trigger.mjs'
 import { xaiHttpErrorResumable } from './xai-dossier-http.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { dossierThingTitle } from './dossier-brave-queries.mjs';
-import { dossierPersistedFillIsNoOp, dossierFillHardFailure, dossierFillNeedsTextRebuild } from './xai-dossier-fill-state.mjs';
+import { completeDossierFill, dossierPersistedFillIsNoOp, dossierFillHardFailure, dossierFillNeedsTextRebuild } from './xai-dossier-fill-state.mjs';
 import { fetchXaiPlaceRatings } from './xai-grok-place-ratings.mjs';
 import {
   bindSharedThingEvidenceDossier,
   loadThingEvidenceDossier,
   loadThingEvidenceDossierResolved,
+  saveThingEvidenceDossier,
   thingEvidenceDossierKey,
 } from './thing-evidence-dossier-store.mjs';
 
@@ -189,11 +190,17 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       const normalized = normalizeDossierEvidence({ ...existing }, place, trace);
       recordDossierTracePages(trace, existing, normalized);
       if (dossierPersistedFillIsNoOp(existing, normalized, place)) {
-        if (trace) trace.gather = { path: 'skipped-noop', gate: 'presented_no_pending_fields' };
+        const failure = completeDossierFill(existing, place);
+        if (trace) trace.gather = { path: 'skipped-noop', gate: failure.stopReason || 'presented_no_pending_fields' };
+        if (failure.failed) await saveThingEvidenceDossier(dossierKey, existing, { env, storeImpl });
         results.push({
+          ...failure,
+          checkpoint: existing.captureCheckpoint,
+          failed: failure.failed === true,
+          pagesAdded: 0,
           rowId: target.rowId ?? place.id,
           dossierKey,
-          skipped: 'existing_dossier',
+          skipped: failure.failed ? undefined : 'existing_dossier',
           ...(trace ? { trace } : {}),
           pageCount: pagesBefore,
           reviewsRead: existing.reviewsRead || 0,
@@ -256,7 +263,14 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       : { dossier: null };
     const returnedDossier = saved || parsed?.evidenceDossier;
     const after = returnedDossier?.pages?.length || 0;
-    const hardFailure = dossierFillHardFailure(normalizeDossierEvidence(returnedDossier, place), place);
+    const completionAttempted = skipped || checkpoint === 'done' || returnedDossier?.captureCheckpoint === 'done'
+      || parsed?.evidenceDossier?.captureCheckpoint === 'done';
+    const hardFailure = completionAttempted
+      ? completeDossierFill(returnedDossier || {}, place)
+      : dossierFillHardFailure(normalizeDossierEvidence(returnedDossier, place), place);
+    if (completionAttempted && hardFailure.failed && returnedDossier) {
+      await saveThingEvidenceDossier(dossierKey, returnedDossier, { env, storeImpl });
+    }
     results.push({
       rowId: target.rowId ?? place.id,
       ...(trace ? { trace } : {}),
@@ -266,7 +280,8 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       failed: failed === true || hardFailure.failed === true,
       status: hardFailure.status || status,
       error: hardFailure.error || error,
-      presentedReasons: hardFailure.presentedReasons,
+      stopReason: hardFailure.stopReason || fetchResult.stopReason,
+      presentedReasons: hardFailure.presentedReasons || fetchResult.presentedReasons,
       resumable: resumable === true,
       rateLimited: rateLimited === true,
       rateLimitStep,

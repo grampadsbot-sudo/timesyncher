@@ -35,7 +35,7 @@ function memoryStore(initial) {
   return store;
 }
 
-test('port: flight, car, and decision keep hash-driven rebuilds during operator fill', async () => {
+test('port: hash-driven light rebuilds cannot bypass the presented completion gate', async () => {
   for (const category of ['flight', 'car', 'decision']) {
     const light = { ...place, category };
     const storeImpl = memoryStore({
@@ -52,10 +52,14 @@ test('port: flight, car, and decision keep hash-driven rebuilds during operator 
       env, storeImpl, operatorFill: true, skipExisting: true,
       gatherImpl: unexpected, buildImpl: unexpected, fetchImpl: unexpected,
     });
-    assert.equal(result.results[0].skipped, 'existing_dossier', category);
+    assert.equal(result.results[0].skipped, undefined, category);
     assert.equal(result.results[0].trace.gather.path, 'skipped-noop');
     assert.equal(result.results[0].trace.builder.ran, false);
-    assert.notEqual(result.results[0].failed, true, category);
+    assert.equal(result.results[0].failed, true, category);
+    assert.equal(result.results[0].status, 'failed', category);
+    assert.equal(result.results[0].stopReason, 'silent_done_blocked', category);
+    assert.equal(result.results[0].checkpoint, 'failed-presented', category);
+    assert.equal((await storeImpl.getDossier(key)).captureCheckpoint, 'failed-presented', category);
   }
 });
 

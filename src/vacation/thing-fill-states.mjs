@@ -130,13 +130,13 @@ export function namedFillStopFromOutcome(outcome) {
   return parsed.stopReason;
 }
 
-export function assertNoSilentDone(checkpoint, { pagesAdded = 0, needsFill = false } = {}) {
-  if (checkpoint !== 'done' || !needsFill || pagesAdded > 0) return null;
-  throw Object.assign(new Error('silent_checkpoint_done_pagesAdded_0'), {
+export function assertNoSilentDone(checkpoint, { needsFill = false, presented = true, hasPayload = true } = {}) {
+  if (checkpoint !== 'done' || (!needsFill && presented && hasPayload)) return null;
+  throw Object.assign(new Error('silent_done_blocked'), {
     code: 'silent_done_blocked',
     outcome: fillOutcomeSchema.parse({
       kind: 'silent_done_blocked',
-      stopReason: 'silent_checkpoint_done_pagesAdded_0',
+      stopReason: 'silent_done_blocked',
     }),
   });
 }

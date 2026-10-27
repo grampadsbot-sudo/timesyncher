@@ -1,8 +1,6 @@
 import { callDossierBuilder as invokeDossierBuilder } from './dossier-builder-call.mjs';
 import { recordDossierTraceAttempts, recordDossierTraceBuilderFailure, recordDossierTracePages } from './dossier-fill-trace.mjs';
-import {
-  xaiGrokPlaceSearchModelId,
-} from '../../scripts/vacation-app-reply-rules.mjs';
+import { xaiGrokPlaceSearchModelId } from '../../scripts/vacation-app-reply-rules.mjs';
 import {
   changedDossierPageUrls,
   dossierDeadlineFetch,
@@ -55,6 +53,7 @@ import {
 } from './xai-dossier-http.mjs';
 import { collectDossierClaims, dossierJudgePrompt } from './xai-dossier-judge-prompt.mjs';
 import {
+  completeDossierFill,
   dossierEmptyGatherReason,
   dossierFillRebuildFields,
   dossierFillHardFailure,
@@ -270,6 +269,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   if (!retryEmptyGather && persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
     merged = normalizeDossierEvidence({ ...persisted }, place, trace);
     recordDossierTracePages(trace, persisted, merged);
+    if (merged.captureCheckpoint === 'done') completeDossierFill(merged, place);
     merged.emptySource = merged.pages?.length ? null : merged.emptySource || dossierEmptyGatherReason(merged);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
@@ -281,8 +281,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
     }
     const changedUrlsEarly = changedDossierPageUrls(persisted.pages || [], merged.pages || []);
     if (!forceRefresh && dossierPersistedFillIsNoOp(persisted, merged, place, { changedUrls: changedUrlsEarly })) {
-      merged.captureCheckpoint = 'done';
-      return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
+      const failure = completeDossierFill(merged, place);
+      if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
+      return { payload: {}, structuredText: '', ...failure, skipped: !failure.failed, parsed: { evidenceDossier: merged } };
     }
     beginDossierXaiUsageRun(merged, persisted);
     const attemptsBeforeTopUp = merged.attempts?.length || 0;
@@ -315,9 +316,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
       recordDossierTraceAttempts(trace, (merged.attempts || []).slice(attemptsBeforeTopUp));
       stampReviewsEvidencePageHash(merged, place);
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
+      const failure = completeDossierFill(merged, place);
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-      if (!dossierFillHardFailure(merged, place).failed) {
-        merged.captureCheckpoint = 'done';
+      if (!failure.failed) {
         return { payload: {}, structuredText: '', parsed: { evidenceDossier: merged } };
       }
       persisted = merged;
@@ -369,9 +370,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
     && persisted.fields
     && Object.keys(persisted.fields).length;
   if (skipBuilder) {
-    merged.captureCheckpoint = 'done';
+    const failure = completeDossierFill(merged, place);
     if (key && merged !== persisted) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
+    return { payload: {}, structuredText: '', ...failure, skipped: !failure.failed, parsed: { evidenceDossier: merged } };
   }
   if (!merged.pages.length) {
     const emptySource = merged.emptySource || dossierEmptyGatherReason(merged);
@@ -429,7 +430,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsd = merged.xaiUsd;
   final.emptySource = null;
   if (reuseSavedPages) recordOperatorDossierTextBuild(final, place, builderStartedAt, trace);
-  final.captureCheckpoint = dossierFillHardFailure(final, place).failed ? 'failed-presented' : 'done';
+  const failure = completeDossierFill(final, place);
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
   final.fullPageChars = promptChars(merged);
   return {
@@ -440,7 +441,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
     xaiUsage: final.xaiUsage || [],
     xaiUsageRun: usageRun,
     xaiUsd: final.xaiUsd || 0,
-    ...dossierFillHardFailure(final, place),
+    ...failure,
     parsed: { evidenceDossier: final },
   };
   } catch (error) {

@@ -1,5 +1,5 @@
 import { recordDossierTracePages } from './dossier-fill-trace.mjs';
-import { classifyFillOutcome, namedFillStopFromOutcome } from './thing-fill-states.mjs';
+import { assertNoSilentDone, classifyFillOutcome, namedFillStopFromOutcome } from './thing-fill-states.mjs';
 import { createHash } from 'node:crypto';
 import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
@@ -199,6 +199,30 @@ export function dossierFillHardFailure(dossier = {}, place = {}, {
   };
 }
 
+export function completeDossierFill(dossier = {}, place = {}) {
+  const failure = dossierFillHardFailure(dossier, place);
+  try {
+    assertNoSilentDone('done', {
+      needsFill: failure.failed === true,
+      presented: dossierPresented(dossier, place),
+      hasPayload: dossierPresent(dossier),
+    });
+    dossier.captureCheckpoint = 'done';
+    return {};
+  } catch (error) {
+    if (error.code !== 'silent_done_blocked') throw error;
+    dossier.captureCheckpoint = 'failed-presented';
+    return {
+      ...failure,
+      failed: true,
+      status: 'failed',
+      error: failure.error || error.code,
+      stopReason: error.code,
+      presentedReasons: failure.presentedReasons || [dossierPresent(dossier) ? 'presented_fields_not_ok' : 'payload_evidence_missing'],
+    };
+  }
+}
+
 export async function saveResumablePartial(merged, persisted, {
   key, env, storeImpl, place, checkpoint, rateLimitStep,
 } = {}) {
@@ -210,6 +234,7 @@ export async function saveResumablePartial(merged, persisted, {
     placeId: place.id ?? place.placeId,
     rateLimitStep: rateLimitStep || undefined,
   });
+  const failure = next.captureCheckpoint === 'done' ? completeDossierFill(next, place) : {};
   if (key && next) await saveThingEvidenceDossier(key, next, { env, storeImpl });
   return {
     payload: {},
@@ -218,6 +243,7 @@ export async function saveResumablePartial(merged, persisted, {
     resumable: true,
     rateLimited: Boolean(rateLimitStep),
     rateLimitStep: rateLimitStep || undefined,
+    ...failure,
     checkpoint: next.captureCheckpoint,
     parsed: { evidenceDossier: next },
   };
@@ -243,6 +269,7 @@ export async function saveFailedDossierAttempt(persisted, merged, {
     placeId: place.id ?? place.placeId,
     rateLimitStep: step,
   });
+  const failure = next.captureCheckpoint === 'done' ? completeDossierFill(next, place) : {};
   if (key) await saveThingEvidenceDossier(key, next, { env, storeImpl });
   return {
     payload: {},
@@ -250,6 +277,7 @@ export async function saveFailedDossierAttempt(persisted, merged, {
     partial: true,
     failed: true,
     upstream: error?.upstream || undefined,
+    ...failure,
     checkpoint: next.captureCheckpoint,
     parsed: { evidenceDossier: next },
   };
