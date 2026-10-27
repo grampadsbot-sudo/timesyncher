@@ -8,6 +8,7 @@ import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { dossierPersistedFillIsNoOp } from './xai-dossier-fill-state.mjs';
 import {
   buildPassBSharedDossierTargets,
+  buildPassBOperatorDossierTargets,
   normPassBDossierCategory,
   passBInventoryCounts,
   sliceDossierBatch,
@@ -105,7 +106,7 @@ export async function computePassBDossierMetrics({
       withPages,
     },
     byType: scoreByType(rows, placesById, dossiersByPlaceId),
-    fillTargets: buildPassBSharedDossierTargets().map((target, offset) => {
+    fillTargets: buildPassBOperatorDossierTargets().map((target, offset) => {
       const dossier = dossiersByPlaceId[target.placeId];
       const place = placeFromTarget(target);
       const normalized = dossier ? normalizeDossierEvidence(dossier, place) : null;
@@ -141,12 +142,12 @@ export function operatorPassBTimeBudgetMs(raw) {
 export async function resolvePassBOperatorTargets(body = {}, { authMode = 'worker' } = {}) {
   if (authMode === 'operator') {
     const offset = parsePassBOperatorOffset(body?.offset);
-    const all = buildPassBSharedDossierTargets();
+    const all = buildPassBOperatorDossierTargets();
     const { slice, batch } = sliceDossierBatch(all, {
       offset,
       limit: OPERATOR_TARGETS_PER_REQUEST,
     });
-    return { targets: slice, batch, source: 'passb-shared-77' };
+    return { targets: slice, batch, source: 'passb-trip' };
   }
   const normalized = body?.targets?.length ? body.targets : null;
   if (normalized?.length) {

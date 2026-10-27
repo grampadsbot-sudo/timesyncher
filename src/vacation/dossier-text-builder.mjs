@@ -56,9 +56,18 @@ export async function buildDossierText(dossier, place, {
     if (retry.findings?.description?.value) retry.findings.description.value = fitDescriptionWords(retry.findings.description.value);
     const retryJudge = await judgeFindings(retry.findings, true);
     const retryBuilt = prepareDossierFindings(dossier, retry.findings);
-    if (!dossierTextBuildProblems(retryBuilt, place).length) {
-      built.fields = { ...built.fields, summary: retryBuilt.fields.summary, description: retryBuilt.fields.description };
-      findings = { ...findings, summary: retry.findings.summary, description: retry.findings.description };
+    const fields = { ...built.fields };
+    const repairedFindings = { ...findings };
+    for (const key of ['summary', 'description']) {
+      if (!retryBuilt.fields[key]) continue;
+      const candidate = { ...built, fields: { ...fields, [key]: retryBuilt.fields[key] } };
+      if (dossierTextBuildProblems(candidate, place).some((problem) => problem.startsWith(key) || problem === `blank_${key}`)) continue;
+      fields[key] = retryBuilt.fields[key];
+      repairedFindings[key] = retry.findings[key];
+    }
+    if (!dossierTextBuildProblems({ ...built, fields }, place).length) {
+      built.fields = fields;
+      findings = repairedFindings;
       payload = retry.payload;
       structuredText = retry.structuredText;
       judge = retryJudge;

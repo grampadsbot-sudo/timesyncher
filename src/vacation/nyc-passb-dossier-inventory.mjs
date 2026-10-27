@@ -36,6 +36,14 @@ export function buildPassBSharedDossierTargets(options = {}) {
   return filterPassBSharedDossierTargets(buildNycThingEvidenceDossierTargets(options));
 }
 
+export function buildPassBOperatorDossierTargets(options = {}) {
+  const targets = buildNycThingEvidenceDossierTargets(options);
+  return [
+    ...filterPassBSharedDossierTargets(targets),
+    ...targets.filter((target) => !isPassBSharedDossierCategory(target.category)),
+  ];
+}
+
 function filterPassBSharedDossierTargets(targets = []) {
   return targets.filter((target) => isPassBSharedDossierCategory(target.category));
 }

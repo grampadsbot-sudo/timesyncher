@@ -194,7 +194,7 @@ test('an older exhausted gather gets one attempt through the revised fallback', 
   const result = await f.run();
   assert.equal(result.failed, false);
   assert.equal(f.counts().gathers, 1);
-  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 2 && attempt.status === 'ok'));
+  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 3 && attempt.status === 'ok'));
   await f.run();
   assert.equal(f.counts().gathers, 1);
 });

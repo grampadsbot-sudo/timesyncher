@@ -103,7 +103,7 @@ assert.equal(operatorHugeLimit.batch.offset, 3);
 assert.equal(operatorHugeLimit.batch.nextOffset, 4);
 assert.equal(operatorHugeLimit.targets[0].placeId, shared[3].placeId);
 
-const operatorExhausted = await resolvePassBOperatorTargets({ offset: 77 }, { authMode: 'operator' });
+const operatorExhausted = await resolvePassBOperatorTargets({ offset: 94 }, { authMode: 'operator' });
 assert.equal(operatorExhausted.targets.length, 0);
 assert.equal(operatorExhausted.batch.nextOffset, null);
 
@@ -203,8 +203,8 @@ assert.equal(workerBatchTwo.json.batch.offset, 2);
 assert.equal(workerBatchTwo.json.results.length, 2);
 
 const operatorResolved = await resolvePassBOperatorTargets({ offset: 0, limit: 4 }, { authMode: 'operator' });
-assert.equal(operatorResolved.source, 'passb-shared-77');
-assert.equal(operatorResolved.batch.total, 77);
+assert.equal(operatorResolved.source, 'passb-trip');
+assert.equal(operatorResolved.batch.total, 94);
 assert.equal(operatorResolved.targets.length, 1);
 
 const fillRun = await runThingEvidenceDossierStagingTargets([shared[6]], {
@@ -218,7 +218,7 @@ for (const row of fillRun.results) {
   assert.ok(saved?.attempts?.length);
 }
 
-const operatorExhaustedPost = await post({ offset: 77 });
+const operatorExhaustedPost = await post({ offset: 94 });
 assert.equal(operatorExhaustedPost.status, 200);
 assert.equal(operatorExhaustedPost.json.ok, true);
 assert.deepEqual(operatorExhaustedPost.json.results, []);

@@ -5,6 +5,7 @@ import { extractTavily } from './poi-search.mjs';
 import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
 import { braveDossierQueryStages, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
 import { normalizeDossierEvidence, syncDossierRequiredShortcomings } from './dossier-evidence-hydrate.mjs';
+import { descriptionNamesThing } from './thing-dossier-fields.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -274,7 +275,8 @@ async function fetchEvidencePages(url, options) {
         pages = fallback.pages.filter((page) => {
           try {
             const found = new URL(page.url).hostname.replace(/^www\./, '');
-            return found === host || found.endsWith(`.${host}`);
+            return found === host || found.endsWith(`.${host}`)
+              || descriptionNamesThing(page.text, options.place?.title || options.place?.name);
           } catch { return false; }
         });
         attempts.push(...fallback.attempts.map((attempt) => ({
@@ -332,7 +334,7 @@ function stageQueries(place, destination) {
 
 export async function gatherBraveEvidenceForQueries(queries = [], place = {}, options = {}) {
   const braveBundle = await runBraveQueries(queries.map((q) => q.query || q), options);
-  return materializeBraveHits(braveBundle, options);
+  return materializeBraveHits(braveBundle, { ...options, place });
 }
 
 export async function gatherDossierWithEscalation(place, gatherImpl, options) {
@@ -418,7 +420,7 @@ export async function gatherThingEvidence(place = {}, {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
   const options = {
-    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline,
+    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place,
     onProgress: onProgress ? (dossier) => onProgress({ ...dossier, thing: name }) : undefined,
   };
   const queries = stageQueries(place, destination);
