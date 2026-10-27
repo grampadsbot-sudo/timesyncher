@@ -86,6 +86,13 @@ export function patchSharedTripListWrapping(source = '') {
   const end = js.indexOf(',tt=G=>', start);
   if (start < 0 || end < 0) throw new Error('shared trip list wrapping anchors missing');
   let rows = js.slice(start, end);
+  const jeStart = rows.indexOf('je=({item:G,title:Re})=>');
+  const oeStart = rows.indexOf('Oe=(G,Re,zt=!1)=>');
+  let jeBlock = '';
+  if (jeStart >= 0 && oeStart > jeStart) {
+    jeBlock = rows.slice(jeStart, oeStart);
+    rows = rows.slice(0, jeStart) + rows.slice(oeStart);
+  }
   rows = rows.replaceAll(
     'fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"',
     'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere"',
@@ -111,6 +118,11 @@ export function patchSharedTripListWrapping(source = '') {
   }
   if (!rows.includes('minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569"')) {
     throw new Error('shared trip list summary wrapping patch did not apply');
+  }
+  if (jeBlock) {
+    const oeIdx = rows.indexOf('Oe=(G,Re,zt=!1)=>');
+    if (oeIdx < 0) throw new Error('shared trip list wrapping lost Oe() anchor');
+    rows = rows.slice(0, oeIdx) + jeBlock + rows.slice(oeIdx);
   }
   return js.slice(0, start) + rows + js.slice(end);
 }
