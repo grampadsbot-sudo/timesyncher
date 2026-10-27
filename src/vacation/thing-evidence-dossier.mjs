@@ -3,7 +3,7 @@ import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { extractTavily } from './poi-search.mjs';
 import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
-import { braveDossierQueryStages, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
+import { braveDossierQueryStages, dossierSearchIdentity, flightEvidenceMatchesTarget, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
 import { normalizeDossierEvidence, syncDossierRequiredShortcomings } from './dossier-evidence-hydrate.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
 import {
@@ -267,7 +267,8 @@ async function fetchEvidencePages(url, options) {
       const queries = [...new Set([
         `site:${target.hostname}${target.pathname === '/' ? '' : target.pathname}`,
         `site:${target.hostname}`,
-      ])];
+        dossierSearchIdentity(options.place),
+      ].filter(Boolean))];
       let query, pages = [];
       for (query of queries) {
         const fallback = await runBraveQueries([query], { env, fetchImpl, deadline: options.deadline });
@@ -276,6 +277,7 @@ async function fetchEvidencePages(url, options) {
           try {
             const found = new URL(page.url).hostname.replace(/^www\./, '');
             return found === host || found.endsWith(`.${host}`)
+              || flightEvidenceMatchesTarget(page, options.place)
               || descriptionNamesThing(page.text, options.place?.title || options.place?.name);
           } catch { return false; }
         });
@@ -340,10 +342,10 @@ export async function gatherBraveEvidenceForQueries(queries = [], place = {}, op
 export async function gatherDossierWithEscalation(place, gatherImpl, options) {
   let gathered = await gatherImpl(place, options);
   if (gathered.pages?.length) return gathered;
-  const query = [place.title || place.name, options.destination].filter(Boolean).join(' ').trim();
+  const query = dossierSearchIdentity(place, options.destination);
   const startedAt = new Date().toISOString();
   const escalated = await gatherBraveEvidenceForQueries([query], place, {
-    ...options, deadline: 0, resolveImpl: options.resolveImpl || lookup, extractImpl: extractTavily,
+    ...options, deadline: 0, resolveImpl: options.resolveImpl || lookup, extractImpl: options.extractImpl || extractTavily,
   });
   gathered = mergeDossierPages(gathered, escalated);
   gathered.attempts.push({

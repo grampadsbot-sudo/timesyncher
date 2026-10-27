@@ -154,8 +154,8 @@ test('a saved page rejected as another venue triggers bounded gather instead of 
   const result = await f.run();
   assert.equal(f.counts().gathers, 1);
   assert.equal(result.failed, false);
-  assert.equal(result.pageCount, 1);
-  assert.equal(result.pagesAdded, 0, 'replacing an unusable page does not inflate page count growth');
+  assert.equal(result.pageCount, 2, 'report both cumulative saved pages, including the excluded original');
+  assert.equal(result.pagesAdded, 1, 'the newly saved dated page grows cumulative storage');
   assert.ok(f.saved().pages.some((row) => row.sha256 === wrong.sha256), 'cumulative storage retains the original evidence');
   assert.equal(dossierPresented(normalizeDossierEvidence(f.saved(), target), target), true);
   await f.run();
@@ -179,7 +179,7 @@ test('a rejected saved page with empty recovery returns a fresh failure and does
   const result = await f.run();
   assert.equal(result.failed, true);
   assert.equal(result.error, 'brave_extract_fallback_no_pages');
-  assert.equal(result.pageCount, 0);
+  assert.equal(result.pageCount, 1, 'the excluded dated original remains in cumulative storage');
   const searches = f.queries.length;
   await f.run();
   assert.equal(f.counts().gathers, 1);
@@ -194,7 +194,7 @@ test('an older exhausted gather gets one attempt through the revised fallback', 
   const result = await f.run();
   assert.equal(result.failed, false);
   assert.equal(f.counts().gathers, 1);
-  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 3 && attempt.status === 'ok'));
+  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 4 && attempt.status === 'ok'));
   await f.run();
   assert.equal(f.counts().gathers, 1);
 });

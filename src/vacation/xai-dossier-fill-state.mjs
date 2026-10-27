@@ -26,12 +26,12 @@ export async function prepareOperatorDossierGather(persisted, place, {
     return { ...unchanged, persisted: normalized, presentedFailure: dossierFillHardFailure(normalized, place) };
   }
   if (normalized.pages?.length || (persisted.attempts || [])
-    .some((row) => row.step === 'operator_empty_gather_retry' && row.gatherVersion === 3 && row.status !== 'started')) {
+    .some((row) => row.step === 'operator_empty_gather_retry' && row.gatherVersion === 4 && row.status !== 'started')) {
     return { ...unchanged, persisted: normalized };
   }
   normalized.attempts = [...(normalized.attempts || []), {
     kind: 'gather', step: 'operator_empty_gather_retry', status: 'started',
-    gatherVersion: 3,
+    gatherVersion: 4,
     startedAt: new Date().toISOString(),
   }];
   if (key) await saveThingEvidenceDossier(key, normalized, { env, storeImpl });
@@ -64,7 +64,7 @@ export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
 
 function presentedEvidenceHash(dossier) {
   const pages = (dossier.pages || []).map(({ url, sha256 }) => [url, sha256]).sort();
-  return createHash('sha256').update(JSON.stringify({ textBuildVersion: 3, pages })).digest('hex');
+  return createHash('sha256').update(JSON.stringify({ textBuildVersion: 4, pages })).digest('hex');
 }
 
 export function recordOperatorDossierTextBuild(dossier, place, startedAt) {

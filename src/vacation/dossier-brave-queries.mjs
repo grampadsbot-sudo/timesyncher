@@ -56,15 +56,38 @@ export function placeSupportsDossierReviews(place = {}) {
   return !isFlightOrCarOrDecision(place);
 }
 
-function baseQuery(place = {}, destination = '') {
+export function dossierSearchIdentity(place = {}, destination = '') {
   const name = dossierThingTitle(place);
+  if (categoryOf(place) === 'flight') {
+    const record = place.sourceRecord || {};
+    const flightNumber = place.flightNumber || place.flight_number || record.flightNumber || record.flight_number
+      || text(record.longDetails || record.description || place.description).match(/\bFlight\s*#\s*([A-Z]{0,3}\s?\d{1,4})\b/i)?.[1];
+    return [...new Set([
+      name.replace(/\b\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?\b/g, '').replace(/[→–—]/g, ' '),
+      text(place.airline || record.airline), text(flightNumber), text(place.route || record.route),
+    ].filter(Boolean))].join(' ').replace(/\s+/g, ' ').trim();
+  }
   const dest = text(destination);
   return [name, dest].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+export function flightEvidenceMatchesTarget(page = {}, place = {}) {
+  if (categoryOf(place) !== 'flight') return false;
+  const title = dossierThingTitle(place);
+  const record = place.sourceRecord || {};
+  const airline = text(place.airline || record.airline || title.split(/\b[A-Z]{3}\b/)[0]).toLowerCase();
+  const blob = text(page.text).toLowerCase();
+  if (!airline || !blob.includes(airline)) return false;
+  const airports = [...new Set(`${title} ${place.route || record.route || ''}`.match(/\b[A-Z]{3}\b/g) || [])];
+  return airports.length >= 2 && airports.every((airport) => new RegExp(`\\b${airport}\\b`, 'i').test(blob));
+}
+
 export function braveDossierQueryStages(place = {}, destination = '') {
-  const q = baseQuery(place, destination);
+  const q = dossierSearchIdentity(place, destination);
   if (!q) return [];
+  if (categoryOf(place) === 'flight') {
+    return [{ stage: 'general', queries: [`${q} flight status schedule`, `${q} airline route airports`] }];
+  }
   if (['flight', 'car'].includes(categoryOf(place))) {
     return [{ stage: 'general', queries: [
       `${q} official website booking`,
@@ -142,7 +165,7 @@ const TOPUP_BY_FIELD = {
 };
 
 export function topUpQueriesForField(field = '', place = {}, destination = '', attemptIndex = 0) {
-  const q = baseQuery(place, destination);
+  const q = dossierSearchIdentity(place, destination);
   const fn = TOPUP_BY_FIELD[field] || TOPUP_BY_FIELD.ratings;
   if (!fn || !q) return [];
   const all = fn(q);

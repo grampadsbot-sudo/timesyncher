@@ -19,7 +19,7 @@ import {
   stripDossierReviews,
 } from './dossier-reviews-rebuild.mjs';
 import { dossierThingTitle, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
-import { buildDossierText, preservePresentedDossierText } from './dossier-text-builder.mjs';
+import { buildDossierText, dossierTextEvidencePages, preservePresentedDossierText } from './dossier-text-builder.mjs';
 import {
   braveTopUpFieldsPending,
   computeDossierFieldCounts,
@@ -95,12 +95,14 @@ export function dossierBuilderReviewsOnly(rebuildFields = new Set()) {
   return fields.has('reviews') && ![...NON_REVIEW_REBUILD_FIELDS].some((key) => fields.has(key));
 }
 
-export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOnly = false, textProblems = [] } = {}) {
+export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOnly = false, textProblems = [], place = {} } = {}) {
   const modelInput = reviewsOnly && includeReviews
     ? dossierForReviewWriter(dossier)
     : dossierForModel(dossier, includeReviews
       ? { perPage: 1200, total: reviewsOnly ? 10000 : 18000, want: 'both', reviewCap: 60, reviewWords: 55 }
       : { perPage: 1200, total: 16000, want: 'both', reviewCap: 0, reviewWords: 40 });
+  if (!reviewsOnly) modelInput.pages = dossierTextEvidencePages(dossier, includeReviews ? 18000 : 16000);
+  modelInput.category = place.category || place.cat || dossier.category;
   if (modelInput.fields) {
     modelInput.fields = { ...modelInput.fields };
     for (const key of ['summary', 'description', 'longDetails', 'details']) delete modelInput.fields[key];
@@ -215,9 +217,9 @@ export async function extractDossierReviews(dossier, {
 }
 
 async function callDossierBuilder(dossier, {
-  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false, textProblems = [],
+  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false, textProblems = [], place = {},
 } = {}) {
-  const prompt = dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly, textProblems });
+  const prompt = dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly, textProblems, place });
   if (buildImpl) return buildImpl(dossier, { reviewsOnly, prompt, textProblems });
   const payload = await postDossierXai(
     dossier,
@@ -405,7 +407,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const builderStartedAt = new Date().toISOString();
   const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
     includeReviews: needsReviewWriter, reviewsOnly, outOfTime,
-    build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options }),
+    build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options, place }),
     judgeFindings: (findings, skipReviewClaims) => judgeDossierFindings(merged, findings, {
       ...xaiOpts(), judgeImpl, skipReviewClaims,
     }),

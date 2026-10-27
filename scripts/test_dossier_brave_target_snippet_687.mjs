@@ -66,7 +66,7 @@ test('old empty-gather exhaustion gets one revised recovery and keeps a hard zer
   assert.equal(gathers, 1);
   assert.equal(result.failed, true);
   assert.equal(result.error, 'brave_extract_fallback_no_pages');
-  assert.ok((await loadThingEvidenceDossier(key, { env: {}, storeImpl })).attempts.some((row) => row.gatherVersion === 3 && row.status === 'failed'));
+  assert.ok((await loadThingEvidenceDossier(key, { env: {}, storeImpl })).attempts.some((row) => row.gatherVersion === 4 && row.status === 'failed'));
   await run();
   assert.equal(gathers, 1, 'unchanged zero-hit evidence cannot restart recovery');
 });

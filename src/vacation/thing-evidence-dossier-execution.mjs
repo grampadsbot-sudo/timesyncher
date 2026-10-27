@@ -248,7 +248,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       ? await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId: place.id })
       : { dossier: null };
     const returnedDossier = saved || parsed?.evidenceDossier;
-    const after = parsed?.evidenceDossier?.pages?.length || 0;
+    const after = returnedDossier?.pages?.length || 0;
     const hardFailure = dossierFillHardFailure(returnedDossier, place);
     results.push({
       rowId: target.rowId ?? place.id,
