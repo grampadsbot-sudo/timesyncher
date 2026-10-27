@@ -66,6 +66,10 @@ const findings = {
     value: 'Riverside Bistro anchors the block with blistered Riverside Bistro pies, a deep negroni list, and happy hour oysters that regulars quote in every review thread online while the raw bar, pastry counter, and late-night espresso program keep the dining room busy from opening until close.',
     claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
   },
+  itineraryNote: {
+    value: 'Wood-fired pies and negronis — try happy hour oysters before six.',
+    claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
+  },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
   knownFor: [{ item: 'margherita', claims: [{ text: 'margherita is the signature pie', pages: ['p3'], supported: true }] }],
   reviewExcerpts: reviewBodies.map((body) => ({ text: body, pages: ['p2'], supported: true })),
