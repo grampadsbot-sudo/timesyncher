@@ -61,7 +61,7 @@ function fixture(initial, { hits = true, status = 200, official = true } = {}) {
     return { ok: false, status: 403 };
   };
   const options = {
-    env, storeImpl, operatorFill: true, skipExisting: true, fetchImpl,
+    env, storeImpl, operatorFill: true, skipExisting: true, fetchImpl, sleepImpl: async () => {},
     gatherImpl: async (place, gatherOptions) => {
       gathers += 1;
       return gatherThingEvidence(place, {
@@ -125,7 +125,7 @@ for (const status of [200, 429]) test(`empty operator recovery names fresh Brave
   assert.equal(f.counts().gathers, 1);
   assert.equal(f.counts().builds, 0);
   assert.equal(result.failed, true);
-  assert.equal(result.error, status === 429 ? 'brave_http_429' : 'tavily_http_432');
+  assert.equal(result.error, status === 429 ? 'brave_http_429+tavily_missing_key' : 'tavily_http_432');
   assert.notEqual(result.error, staleReason);
   assert.equal(result.emptySource, f.saved().emptySource);
   assert.equal(result.pageCount, 0);

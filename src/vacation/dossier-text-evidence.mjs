@@ -1,7 +1,9 @@
 import { condenseText } from './dossier-cost.mjs';
 
 export function dossierTextEvidencePages(dossier = {}, budget = 16000) {
-  const perPage = Math.min(1200, Math.floor(budget / Math.max(1, dossier.pages?.length || 0)));
+  const pages = dossier.pages || [];
+  const total = pages.reduce((sum, page) => sum + String(page.text || '').length, 0);
+  const perPage = total <= budget ? budget : Math.floor(budget / Math.max(1, pages.length));
   return (dossier.pages || []).map(({ braveReviews, ...page }, index) => {
     const raw = String(page.text || '');
     const prefix = raw.slice(0, Math.floor(perPage / 2));

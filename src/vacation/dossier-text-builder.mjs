@@ -83,7 +83,7 @@ export async function buildDossierText(dossier, place, {
       if (claim.supported !== true) textProblems.push(`${key}:unsupported_claim:${String(claim.judgeReason || claim.text || '').slice(0, 240)}`);
     }
   }
-  if ((!reviewsOnly && textProblems.length || first.outcome.blankedBy === 'parse_error') && !outOfTime()) {
+  if ((!reviewsOnly && textProblems.length || ['parse_error', 'judge_rejected_all'].includes(first.outcome.blankedBy)) && !outOfTime()) {
     const retry = await run({ includeReviews: false, textProblems });
     const fields = { ...built.fields };
     const repairedFindings = { ...findings };

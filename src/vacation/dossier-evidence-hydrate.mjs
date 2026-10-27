@@ -1,4 +1,5 @@
 import { flightRecordEvidence } from './dossier-flight-record.mjs';
+import { pageMentionsVenue } from './dossier-venue-identity.mjs';
 import { sanitizeDossierPages, rewriteDossierCitations } from './dossier-page-integrity.mjs';
 import { hoursValueLooksValid } from './dossier-hours-fields.mjs';
 import { extractContactFieldsFromBlob, extractNeighborhoodFromBlob } from './place-detail-extract.mjs';
@@ -78,7 +79,7 @@ export function pageNamesOtherVenue(page = {}, place = {}, { allowTargetMention 
     return true;
   }
   if (!blob || !title) return false;
-  if (allowTargetMention && descriptionNamesThing(blob, title)) return false;
+  if (allowTargetMention && pageMentionsVenue(blob, title)) return false;
   const ours = nameTokens(title);
   const venueLike = blob.match(/\b([A-Z][A-Za-z'’]+(?:\s+[A-Z][A-Za-z'’]+){0,3})\s+(?:Club|Jazz Club|Restaurant|Bar|Bistro|Grill)\b/g);
   if (!venueLike?.length) return false;
@@ -151,7 +152,7 @@ function fieldFailsIdentityCheck(dossier = {}, place = {}, fieldKey = '') {
 
 const IDENTITY_SCALAR_FIELDS = ['address', 'phone', 'website', 'hours', 'happyHourDetails', ...['happyHourDays', 'happyHourTimes', 'happyHourDeals']];
 
-function stripMisattributedDossierPages(dossier = {}, place = {}) {
+function stripMisattributedDossierPages(dossier = {}, place = {}, trace) {
   const original = Array.isArray(dossier.pages) ? dossier.pages : [];
   const kept = [];
   const remap = new Map();
@@ -160,12 +161,21 @@ function stripMisattributedDossierPages(dossier = {}, place = {}) {
     const oldId = dossierPageId(index);
     if (pageNamesOtherVenue(page, place, { allowTargetMention: true })) {
       dropped = true;
+      if (trace) {
+        const repair = { index, reason: 'other_venue', action: 'excluded' };
+        trace.firstFailingPage ||= { index, reason: repair.reason };
+        if (!trace.pageRepairs.some((row) => JSON.stringify(row) === JSON.stringify(repair))) trace.pageRepairs.push(repair);
+      }
       return;
     }
     remap.set(oldId, dossierPageId(kept.length));
     kept.push(page);
   });
   if (!dropped) return dossier;
+  if (trace) {
+    trace.pages.normalized = kept.length;
+    if (!kept.length) trace.builder.blankedBy = 'other_venue';
+  }
   return rewriteDossierCitations({ ...dossier, pages: kept }, remap);
 }
 
@@ -379,7 +389,7 @@ export function normalizeDossierEvidence(dossier = {}, place = {}, trace) {
     }, place);
   }
   let next = stripMisattributedDossierFields(dossier, place);
-  next = ensureBraveSnippetCitationPages(stripMisattributedDossierPages(next, place));
+  next = stripMisattributedDossierPages(ensureBraveSnippetCitationPages(next), place, trace);
   next = hydrateScalarFieldsFromEvidence(next, place);
   next = upgradeAddressFromEvidencePages(next, place);
   next = seedBookingNarrativeFields(next, place);

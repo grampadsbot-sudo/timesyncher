@@ -116,7 +116,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
   }
   const lines = [
     'A page marked via:thing-record contains the supplied itinerary record, not an airline web page. Use its recorded itinerary facts only; candidate only or not booked means no booking is confirmed. Route pages support airline/airport facts, not a specific historical flight status.',
-    'Build fields for this place using ONLY the saved dossier pages below (each has an id p1..pN). Never search or use remembered facts.',
+    'Build fields for this place using ONLY the saved dossier pages below (each has an id p1..pN). Never search or use remembered facts. The place label and existing fields identify the target; they are not evidence for claims. Read the full supplied page text before writing.',
     'Write in your own words: summaries of what the pages say, not copied phrases. Every factual statement you make must be listed as a claim.',
     'Use short atomic claims for individual facts and cite only pages that state each fact. Do not combine supported facts with an inferred recommendation, atmosphere, suitability or comparison in the same claim. Omit unsupported details instead of repeating a rejected paraphrase.',
     'A claim is {text, pages}: text is one short factual statement you rely on; pages lists the id(s) of the saved pages that support it. A claim with no page id fails.',
@@ -148,7 +148,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
   } else {
     lines.push('This call rebuilds factual fields only: do not return reviews or reviewExcerpts. Use the saved pages, including any saved review evidence, for the description; do not infer the product category from this instruction.');
   }
-  if (textProblems.length) lines.push(`The preceding text build was rejected: ${textProblems.join('; ')}. Rebuild summary and description from these saved pages with cited claims. Keep only supported facts; never fill gaps with a template.`);
+  if (textProblems.length) lines.push(`The preceding text build was rejected: ${textProblems.join('; ')}. Treat unsupported_claim entries as the judge's rejection feedback. Rebuild summary and description using only statements explicitly supported by these saved pages with cited claims. Drop rejected facts unless the page actually states them; never fill gaps with a template.`);
   lines.push(JSON.stringify(dossierWithPageIds(modelInput)));
   return lines.join('\n');
 }
@@ -244,7 +244,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
   fetchImpl = dossierDeadlineFetch(fetchImpl, deadline);
   const gatherOpts = {
-    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl,
+    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl, bravePace: { nextAt: 0 },
     onProgress: key ? async (progress) => {
       recordDossierTraceAttempts(trace, progress.attempts);
       merged = mergeDossierPages(persisted || {}, progress);
@@ -309,7 +309,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         extractReviewsImpl,
         extractDossierReviews,
         callDossierBuilder,
-        judgeDossierFindings, trace,
+        judgeDossierFindings, trace, bravePace: gatherOpts.bravePace, sleepImpl,
       });
       recordDossierTraceAttempts(trace, (merged.attempts || []).slice(attemptsBeforeTopUp));
       stampReviewsEvidencePageHash(merged, place);

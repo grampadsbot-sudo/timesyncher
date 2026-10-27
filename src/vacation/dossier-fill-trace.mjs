@@ -41,6 +41,6 @@ export function recordDossierTracePages(trace, raw = {}, normalized = raw) {
   trace.pages = { raw: Math.max(trace.pages.raw, raw.pages?.length || 0), normalized: normalized.pages?.length || 0 };
   const index = (raw.pages || []).findIndex((page) => dossierPageFailure(page));
   if (index >= 0) trace.firstFailingPage ||= { index, reason: dossierPageFailure(raw.pages[index]) };
-  if (trace.pages.raw && !normalized.pages?.length) trace.builder.blankedBy = 'unverified_pages';
+  if (trace.pages.raw && !normalized.pages?.length) trace.builder.blankedBy = trace.pageRepairs.findLast((row) => row.action === 'excluded')?.reason || 'unverified_pages';
   trace.pagesVerified = Boolean(normalized.pages?.length && normalized.pages.every((page) => !dossierPageFailure(page)));
 }

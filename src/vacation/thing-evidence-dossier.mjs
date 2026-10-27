@@ -269,6 +269,7 @@ async function fetchEvidencePages(url, options) {
       const queries = [...new Set([
         `site:${target.hostname}${target.pathname === '/' ? '' : target.pathname}`,
         `site:${target.hostname}`,
+        ...stageQueries(options.place, '').filter((row) => /nonstop route|site:.* route$/.test(row.query)).map((row) => row.query),
         dossierSearchIdentity(options.place),
       ].filter(Boolean))];
       let query, pages = [];
@@ -284,7 +285,7 @@ async function fetchEvidencePages(url, options) {
           } catch { return false; }
         });
         attempts.push(...fallback.attempts.map((attempt) => ({
-          ...attempt, provider: 'Brave', stage: 'extract_fallback', url,
+          ...attempt, provider: attempt.provider || 'Brave', stage: attempt.provider === 'Tavily' ? 'search' : 'extract_fallback', searchStage: 'extract_fallback', url,
         })));
         if (pages.length || outOfTime(options)) break;
       }
@@ -337,6 +338,7 @@ function stageQueries(place, destination) {
 }
 
 export async function gatherBraveEvidenceForQueries(queries = [], place = {}, options = {}) {
+  options = { ...options, bravePace: options.bravePace || { nextAt: 0 } };
   const braveBundle = await runBraveQueries(queries, options);
   return materializeBraveHits(braveBundle, { ...options, place });
 }
@@ -362,9 +364,9 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
   destination = '', env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence, center = null,
   onlyFields = null, onProgress,
-  deadline = 0,
+  deadline = 0, bravePace = { nextAt: 0 }, sleepImpl,
 } = {}) {
-  const options = { env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline };
+  const options = { env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, bravePace, sleepImpl };
   let merged = normalizeDossierEvidence({ ...dossier }, place);
   const needs = Array.isArray(onlyFields) && onlyFields.length
     ? onlyFields

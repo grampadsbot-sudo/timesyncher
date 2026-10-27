@@ -93,7 +93,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   extractDossierReviews,
   callDossierBuilder,
   judgeDossierFindings,
-  topUpImpl = topUpDossierFields, trace,
+  topUpImpl = topUpDossierFields, trace, bravePace, sleepImpl,
 } = {}) {
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
   let merged = ensureBraveSnippetCitationPages({ ...persisted });
@@ -104,7 +104,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');
   if (pending.length) {
     const before = merged.attempts?.length || 0;
-    merged = await topUpImpl(merged, place, { env, fetchImpl, destination, deadline, onlyFields: pending });
+    merged = await topUpImpl(merged, place, { env, fetchImpl, destination, deadline, onlyFields: pending, bravePace, sleepImpl });
     recordDossierTraceAttempts(trace, (merged.attempts || []).slice(before));
   }
   const extraction = await extractDossierReviews(merged, {

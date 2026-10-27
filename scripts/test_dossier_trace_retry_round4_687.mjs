@@ -16,9 +16,11 @@ for (const status of [401, 402, 422, 429, 500, 503]) test(`Brave HTTP ${status} 
     fetchImpl: async () => { calls += 1; return webResponse([], status); },
   });
   assert.equal(calls, status === 429 || status >= 500 ? 3 : 1);
-  assert.equal(out.attempts.length, calls);
-  assert.equal(out.attempts.at(-1).httpStatus, status);
-  assert.equal(out.attempts.at(-1).error, `brave_http_${status}`);
+  const braveAttempts = out.attempts.filter((row) => row.kind === 'brave');
+  assert.equal(braveAttempts.length, calls);
+  assert.equal(braveAttempts.at(-1).httpStatus, status);
+  assert.equal(braveAttempts.at(-1).error, `brave_http_${status}`);
+  assert.equal(out.attempts.at(-1).error, 'tavily_missing_key');
 });
 
 test('429 then OK honors bounded Retry-After and paces sequential queries', async () => {
@@ -89,7 +91,7 @@ test('operator R0 retries current-version exhaustion on the next offset/limit/sk
   };
   const first = (await runThingEvidenceDossierStagingTargets(targets, options)).results[0];
   assert.equal(gathers, 1);
-  assert.equal(first.emptySource, 'brave_http_401');
+  assert.equal(first.emptySource, 'brave_http_401+tavily_missing_key');
   assert.equal(first.trace.gather.path, 'retry');
   assert.ok(first.trace.attempts.some((attempt) => attempt.httpStatus === 401));
   assert.ok(first.trace.attempts.some((attempt) => attempt.provider === 'direct' && attempt.httpStatus === 403));

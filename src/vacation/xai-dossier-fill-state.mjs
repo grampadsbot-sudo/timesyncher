@@ -122,6 +122,15 @@ export function dossierEmptyGatherReason(dossier = {}) {
   const attempts = Array.isArray(dossier.attempts) ? dossier.attempts : [];
   if (!attempts.length) return 'no_gather_attempts';
   const terminal = [...new Map(attempts.map((row) => [JSON.stringify([row.kind, row.provider, row.step, row.stage, row.query, row.url]), row])).values()];
+  const tavilySearches = terminal.filter((row) => row.provider === 'Tavily' && row.stage === 'search');
+  if (tavilySearches.length) {
+    const last = tavilySearches.at(-1);
+    const brave = terminal.find((row) => row.kind === 'brave' && row.status === 'failed');
+    const status = Number(brave?.httpStatus);
+    const reason = last.status !== 'ok' ? last.error || 'tavily_request_failed'
+      : tavilySearches.some((row) => row.results > 0) ? 'tavily_hits_not_materialized' : 'tavily_zero_hits';
+    return `${brave ? status ? `brave_http_${status}` : brave.error || 'brave_request_failed' : 'brave_missing_key'}+${reason}`;
+  }
   const searches = terminal.filter((row) => row.kind === 'brave');
   const errors = terminal.filter((row) => row.status === 'failed' && (row.kind === 'brave' || /tavily/i.test(row.provider || row.via || '')));
   const lastError = errors.at(-1);
