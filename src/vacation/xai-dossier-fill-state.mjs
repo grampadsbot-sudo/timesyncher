@@ -1,4 +1,5 @@
 import { recordDossierTracePages } from './dossier-fill-trace.mjs';
+import { classifyFillOutcome, namedFillStopFromOutcome } from './thing-fill-states.mjs';
 import { createHash } from 'node:crypto';
 import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
@@ -164,18 +165,36 @@ export function dossierPersistedFillIsNoOp(persisted = {}, merged = {}, place = 
   return !needsWriter && skipBuilder && pendingTopUp.length === 0;
 }
 
-export function dossierFillHardFailure(dossier = {}, place = {}) {
+export function dossierFillHardFailure(dossier = {}, place = {}, {
+  deployment = 'tip',
+  hold,
+} = {}) {
   if (!dossier.pages?.length) {
     const emptySource = dossier.emptySource || dossierEmptyGatherReason(dossier);
-    return { failed: true, status: 'failed', error: emptySource, emptySource };
+    const outcome = classifyFillOutcome(dossier, place, {
+      deployment, hold, emptySource,
+    });
+    const stopReason = namedFillStopFromOutcome(outcome) || emptySource;
+    return { failed: true, status: 'failed', error: stopReason, emptySource };
   }
   if (dossier.emptySource) {
-    return { failed: true, status: 'failed', error: dossier.emptySource, emptySource: dossier.emptySource };
+    const outcome = classifyFillOutcome(dossier, place, {
+      deployment, hold, emptySource: dossier.emptySource,
+    });
+    const stopReason = namedFillStopFromOutcome(outcome) || dossier.emptySource;
+    return { failed: true, status: 'failed', error: stopReason, emptySource: dossier.emptySource };
   }
   const presentedReasons = dossierFillTextProblems(dossier, place);
-  return presentedReasons.length
-    ? { failed: true, status: 'failed', error: 'presented_fields_not_ok', presentedReasons }
-    : {};
+  if (!presentedReasons.length) return {};
+  const hardFailure = { presentedReasons };
+  const outcome = classifyFillOutcome(dossier, place, { deployment, hold, hardFailure });
+  const stopReason = namedFillStopFromOutcome(outcome) || 'presented_fields_not_ok';
+  return {
+    failed: true,
+    status: 'failed',
+    error: stopReason,
+    presentedReasons,
+  };
 }
 
 export async function saveResumablePartial(merged, persisted, {
