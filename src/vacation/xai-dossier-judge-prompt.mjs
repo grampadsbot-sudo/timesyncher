@@ -1,5 +1,4 @@
-import { dossierForModel } from './dossier-cost.mjs';
-import { dossierPageById } from './thing-dossier-fields.mjs';
+import { dossierTextEvidencePages } from './dossier-text-evidence.mjs';
 
 export function collectDossierClaims(findings = {}) {
   const items = [];
@@ -22,8 +21,8 @@ export function collectDossierClaims(findings = {}) {
 
 export function dossierJudgePrompt(dossier, items) {
   const ids = [...new Set(items.flatMap((item) => item.pages || []))];
-  const slim = dossierForModel(dossier, { perPage: 1800, total: 24000 });
-  const pages = ids.map((id) => ({ id, page: dossierPageById(slim, id) })).filter((row) => row.page)
+  const saved = new Map(dossierTextEvidencePages(dossier, 24000).map((page) => [page.id, page]));
+  const pages = ids.map((id) => ({ id, page: saved.get(id) })).filter((row) => row.page)
     .map(({ id, page }) => ({ id, url: page.url, fetchedAt: page.fetchedAt, sha256: page.sha256, text: page.text }));
   return [
     'You are an independent fact checker. You did not write these claims.',

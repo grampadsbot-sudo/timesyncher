@@ -1,3 +1,4 @@
+import { recordDossierTracePages } from './dossier-fill-trace.mjs';
 import { createHash } from 'node:crypto';
 import { isFlightOrCarOrDecision, placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import { dossierReviewsShouldRunWriter } from './dossier-reviews-rebuild.mjs';
@@ -12,26 +13,46 @@ import { searchPlaceFromStoredDossier } from './shared-trip-dossier-overlay.mjs'
 
 const NO_OP_TOP_UP_IGNORE = new Set(['coordinates', 'ratings']);
 
+function retryWindow(attempts, step, evidenceHash) {
+  const previous = attempts.findLast((row) => row.step === step
+    && (!evidenceHash || row.evidenceHash === evidenceHash));
+  const count = Math.min(1000000, Math.max(0, Number(previous?.retryCount) || 0));
+  return { count, nextEligibleAt: previous?.nextEligibleAt || null,
+    cooling: previous?.status === 'failed' && Date.parse(previous.nextEligibleAt) > Date.now() };
+}
+
+function nextRetryAt(count) {
+  return count < 3 ? null : new Date(Date.now() + Math.min(3600000, 60000 * 2 ** Math.min(6, count - 3))).toISOString();
+}
+
 export async function prepareOperatorDossierGather(persisted, place, {
-  reuseSavedPages, key, env, storeImpl,
+  reuseSavedPages, key, env, storeImpl, trace,
 } = {}) {
   const unchanged = { persisted, retryEmptyGather: false };
-  if (!reuseSavedPages || !persisted) return unchanged;
-  const normalized = normalizeDossierEvidence({ ...persisted }, place);
-  if (normalized.pages?.length) normalized.emptySource = null;
-  if (normalized.pages?.length && dossierFillNeedsTextRebuild(normalized, place)
-    && (persisted.attempts || []).some((row) => row.step === 'operator_presented_text_retry'
-      && row.status === 'failed' && row.evidenceHash === presentedEvidenceHash(normalized))) {
-    normalized.captureCheckpoint = 'failed-presented';
-    return { ...unchanged, persisted: normalized, presentedFailure: dossierFillHardFailure(normalized, place) };
+  if (!reuseSavedPages || !persisted) {
+    if (trace) trace.gather = { path: 'fresh', gate: persisted ? 'refresh_requested' : 'no_saved_dossier' };
+    return unchanged;
   }
-  if (normalized.pages?.length || (persisted.attempts || [])
-    .some((row) => row.step === 'operator_empty_gather_retry' && row.gatherVersion === 4 && row.status !== 'started')) {
+  const normalized = normalizeDossierEvidence({ ...persisted }, place, trace);
+  recordDossierTracePages(trace, persisted, normalized);
+  if (normalized.pages?.length) {
+    normalized.emptySource = null;
+    const needsText = dossierFillNeedsTextRebuild(normalized, place);
+    const retry = retryWindow(normalized.attempts || [], 'operator_presented_text_retry', presentedEvidenceHash(normalized));
+    if (trace) trace.gather = { path: 'reuse', gate: needsText ? 'presented_text_retry_due' : 'saved_pages', retry };
+    if (needsText && retry.cooling) {
+      normalized.captureCheckpoint = 'failed-presented';
+      if (trace) trace.gather.gate = 'text_retry_backoff';
+      return { ...unchanged, persisted: normalized, presentedFailure: dossierFillHardFailure(normalized, place) };
+    }
     return { ...unchanged, persisted: normalized };
   }
+  const retry = retryWindow(normalized.attempts || [], 'operator_empty_gather_retry');
+  if (trace) trace.gather = { path: retry.cooling ? 'reuse' : 'retry', gate: retry.cooling ? 'empty_gather_backoff' : 'empty_saved_pages', retry };
+  if (retry.cooling) return { ...unchanged, persisted: normalized };
   normalized.attempts = [...(normalized.attempts || []), {
     kind: 'gather', step: 'operator_empty_gather_retry', status: 'started',
-    gatherVersion: 4,
+    retryCount: retry.count + 1, nextEligibleAt: nextRetryAt(retry.count + 1),
     startedAt: new Date().toISOString(),
   }];
   if (key) await saveThingEvidenceDossier(key, normalized, { env, storeImpl });
@@ -64,18 +85,21 @@ export function dossierFillNeedsTextRebuild(dossier = {}, place = {}) {
 
 function presentedEvidenceHash(dossier) {
   const pages = (dossier.pages || []).map(({ url, sha256 }) => [url, sha256]).sort();
-  return createHash('sha256').update(JSON.stringify({ textBuildVersion: 4, pages })).digest('hex');
+  return createHash('sha256').update(JSON.stringify({ pages })).digest('hex');
 }
 
-export function recordOperatorDossierTextBuild(dossier, place, startedAt) {
+export function recordOperatorDossierTextBuild(dossier, place, startedAt, trace) {
   dossier.attempts = [...(dossier.attempts || []), {
     kind: 'builder', step: 'operator_text_build', status: 'completed',
     startedAt, finishedAt: new Date().toISOString(),
   }];
   const failure = dossierFillHardFailure(dossier, place);
   if (!failure.presentedReasons?.length) return;
+  const retry = retryWindow(dossier.attempts || [], 'operator_presented_text_retry', presentedEvidenceHash(dossier));
   dossier.attempts = [...(dossier.attempts || []), {
     kind: 'builder', step: 'operator_presented_text_retry', status: 'failed',
+    retryCount: retry.count + 1, nextEligibleAt: nextRetryAt(retry.count + 1),
+    blankedBy: trace?.builder.blankedBy || null,
     startedAt: new Date().toISOString(), evidenceHash: presentedEvidenceHash(dossier),
     presentedReasons: failure.presentedReasons,
   }];
@@ -97,19 +121,20 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
 export function dossierEmptyGatherReason(dossier = {}) {
   const attempts = Array.isArray(dossier.attempts) ? dossier.attempts : [];
   if (!attempts.length) return 'no_gather_attempts';
-  const fallback = attempts.findLast((row) => row.kind === 'page' && row.stage === 'extract_fallback' && row.status === 'failed');
-  if (fallback) return fallback.error || 'brave_extract_fallback_no_pages';
-  const brave = attempts.filter((row) => row.kind === 'brave' || row.kind === 'page');
-  const noMatch = brave.find((row) => row.status === 'no_match' || row.step === 'match' && row.status === 'no_match');
-  if (noMatch) return 'brave_no_match';
-  const failed = brave.filter((row) => row.status === 'failed');
-  if (failed.length && (!brave.some((row) => row.status === 'ok') || failed.length === brave.length)) {
-    const last = failed[failed.length - 1];
-    return `gather_failed:${String(last.error || last.step || 'unknown').slice(0, 48)}`;
+  const terminal = [...new Map(attempts.map((row) => [JSON.stringify([row.kind, row.provider, row.step, row.stage, row.query, row.url]), row])).values()];
+  const searches = terminal.filter((row) => row.kind === 'brave');
+  const errors = terminal.filter((row) => row.status === 'failed' && (row.kind === 'brave' || /tavily/i.test(row.provider || row.via || '')));
+  const lastError = errors.at(-1);
+  if (lastError) {
+    const status = Number(lastError.httpStatus) || Number(String(lastError.error || '').match(/(?:http[_ ]|HTTP\s+)(\d{3})/i)?.[1]);
+    if (status) return `${lastError.kind === 'brave' ? 'brave' : 'tavily'}_http_${status}`;
+    if (lastError.kind === 'brave') return lastError.error === 'brave_deadline' ? 'brave_deadline' : 'brave_request_failed';
   }
-  const hits = (dossier.braveResults || []).length;
-  if (!hits && brave.some((row) => row.status === 'ok' && Number(row.results) === 0)) return 'brave_zero_hits';
-  if (hits > 0 && !(dossier.pages || []).length) return 'brave_hits_not_materialized';
+  if (searches.some((row) => Number(row.results) > 0) || dossier.braveResults?.length) return 'brave_hits_not_materialized';
+  if (searches.some((row) => row.step === 'web_search' && row.status === 'ok')
+    && searches.filter((row) => row.step === 'web_search').every((row) => row.status === 'ok' && Number(row.results) === 0)) return 'brave_zero_hits';
+  if (searches.some((row) => row.status === 'missing_key')) return 'brave_missing_key';
+  if (searches.some((row) => row.status === 'no_match')) return 'brave_no_match';
   return 'gather_no_pages';
 }
 

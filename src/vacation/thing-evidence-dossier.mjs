@@ -1,9 +1,11 @@
+import { dossierPageFailure } from './dossier-page-integrity.mjs';
+import { flightRecordEvidence } from './dossier-flight-record.mjs';
 import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { extractTavily } from './poi-search.mjs';
 import { braveLocalEvidence, runBraveQueries } from './dossier-brave.mjs';
-import { braveDossierQueryStages, dossierSearchIdentity, flightEvidenceMatchesTarget, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
+import { braveDossierQueryStages, dossierSearchIdentity, flightEvidenceMatchesTarget, placeSupportsDossierReviews, stageQueriesForFields, topUpQueriesForField } from './dossier-brave-queries.mjs';
 import { normalizeDossierEvidence, syncDossierRequiredShortcomings } from './dossier-evidence-hydrate.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
 import {
@@ -85,7 +87,7 @@ async function pageResponse(url, { fetchImpl, resolveImpl, deadline = 0 }, hops 
   } finally {
     await reader.cancel();
   }
-  return { url: parsed.href, body: Buffer.concat(chunks).toString('utf8'), type };
+  return { url: parsed.href, body: Buffer.concat(chunks).toString('utf8'), type, status: response.status };
 }
 
 function pageText(body, type) {
@@ -174,14 +176,14 @@ export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
   const pages = new Map();
   for (const page of [...(persisted.pages || []), ...(incoming.pages || [])]) {
     const identity = JSON.stringify([page.url, page.sha256 || page.text]);
-    if (!pages.has(identity)) pages.set(identity, page);
+    if (!pages.has(identity) || dossierPageFailure(pages.get(identity)) && !dossierPageFailure(page)) pages.set(identity, page);
   }
   merged.pages = [...pages.values()];
   const attempts = new Map();
   for (const attempt of [...(persisted.attempts || []), ...(incoming.attempts || [])]) {
     const stamp = attempt.startedAt || attempt.at;
     const identity = stamp
-      ? JSON.stringify([attempt.kind, attempt.field, attempt.attempt, attempt.url, attempt.query, stamp])
+      ? JSON.stringify([attempt.kind, attempt.provider, attempt.step, attempt.stage, attempt.field, attempt.attempt, attempt.retry, attempt.retryCount, attempt.url, attempt.query, stamp])
       : JSON.stringify(attempt);
     attempts.set(identity, attempt);
   }
@@ -244,7 +246,7 @@ async function fetchEvidencePages(url, options) {
     text = pageText(response.body, response.type);
     finalUrl = response.url;
     if (!text || blockedPageText(text)) throw new Error('evidence_page_empty');
-    attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'direct', method: 'direct' });
+    attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'direct', method: 'direct', httpStatus: response.status || 200 });
   } catch (error) {
     attempts.push({ kind: 'page', url, startedAt, status: 'failed', via: 'direct', method: 'direct', error: String(error?.message || '').slice(0, 40) });
     if (outOfTime(options)) return [];
@@ -257,7 +259,7 @@ async function fetchEvidencePages(url, options) {
       if (!text || blockedPageText(text)) throw new Error('tavily_empty');
       via = 'tavily-extract';
       finalUrl = row.url || url;
-      attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'tavily-extract', method: 'tavily-extract' });
+      attempts.push({ kind: 'page', url, startedAt, status: 'ok', via: 'tavily-extract', method: 'tavily-extract', httpStatus: 200 });
     } catch (extractError) {
       attempts.push({ kind: 'page', provider: 'Tavily', stage: 'extract', query: '', url, startedAt, status: 'failed', via: 'tavily-extract', method: 'tavily-extract', httpStatus: Number(extractError?.status) || Number(String(extractError?.message || '').match(/HTTP\s+(\d{3})/i)?.[1]) || undefined, error: String(extractError?.message || '').slice(0, 120) });
       if (outOfTime(options)) return [];
@@ -271,7 +273,7 @@ async function fetchEvidencePages(url, options) {
       ].filter(Boolean))];
       let query, pages = [];
       for (query of queries) {
-        const fallback = await runBraveQueries([query], { env, fetchImpl, deadline: options.deadline });
+        const fallback = await runBraveQueries([query], { env, fetchImpl, deadline: options.deadline, bravePace: options.bravePace, sleepImpl: options.sleepImpl });
         const host = target.hostname.replace(/^www\./, '');
         pages = fallback.pages.filter((page) => {
           try {
@@ -335,17 +337,18 @@ function stageQueries(place, destination) {
 }
 
 export async function gatherBraveEvidenceForQueries(queries = [], place = {}, options = {}) {
-  const braveBundle = await runBraveQueries(queries.map((q) => q.query || q), options);
+  const braveBundle = await runBraveQueries(queries, options);
   return materializeBraveHits(braveBundle, { ...options, place });
 }
 
 export async function gatherDossierWithEscalation(place, gatherImpl, options) {
+  options = { ...options, bravePace: options.bravePace || { nextAt: 0 } };
   let gathered = await gatherImpl(place, options);
-  if (gathered.pages?.length) return gathered;
+  if (gathered.pages?.length || outOfTime(options)) return gathered;
   const query = dossierSearchIdentity(place, options.destination);
   const startedAt = new Date().toISOString();
   const escalated = await gatherBraveEvidenceForQueries([query], place, {
-    ...options, deadline: 0, resolveImpl: options.resolveImpl || lookup, extractImpl: options.extractImpl || extractTavily,
+    ...options, resolveImpl: options.resolveImpl || lookup, extractImpl: options.extractImpl || extractTavily,
   });
   gathered = mergeDossierPages(gathered, escalated);
   gathered.attempts.push({
@@ -417,12 +420,12 @@ export async function topUpDossierFields(dossier = {}, place = {}, {
 export async function gatherThingEvidence(place = {}, {
   destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
-  deadline = 0, onProgress,
+  deadline = 0, onProgress, bravePace = { nextAt: 0 }, sleepImpl,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
   const options = {
-    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place,
+    env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place, bravePace, sleepImpl,
     onProgress: onProgress ? (dossier) => onProgress({ ...dossier, thing: name }) : undefined,
   };
   const queries = stageQueries(place, destination);
@@ -443,9 +446,9 @@ export async function gatherThingEvidence(place = {}, {
   }
 
   if (onProgress) await onProgress(dossier);
-  if (braveImpl && !outOfTime(options)) {
+  if (braveImpl && placeSupportsDossierReviews(place) && !outOfTime(options)) {
     try {
-      const brave = await braveImpl(place, { destination, center, env, fetchImpl: options.fetchImpl });
+      const brave = await braveImpl(place, { destination, center, env, fetchImpl: options.fetchImpl, deadline, bravePace, sleepImpl });
       dossier.attempts.push(...(brave.attempts || []));
       for (const page of brave.pages || []) {
         if (!dossier.pages.some((p) => p.url === page.url)) dossier.pages.push(page);
@@ -455,6 +458,8 @@ export async function gatherThingEvidence(place = {}, {
     }
   }
 
+  const record = dossier.pages.length ? flightRecordEvidence(place) : null;
+  if (record && !dossier.pages.some((page) => page.url === record.url)) dossier.pages.push(record);
   dossier.fieldCounts = computeDossierFieldCounts(dossier, place);
   dossier.missingFields = fieldsNeedingCapture(dossier.fieldCounts, place);
   dossier.shortcomings = [];

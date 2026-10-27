@@ -110,7 +110,7 @@ for (const reject of [false, true]) test(`failed presented repair names current 
   const repeat = await f.run();
   assert.equal(repeat.failed, true);
   assert.ok(repeat.presentedReasons.includes(reject ? 'blank_summary' : 'summary_banned_prefix'));
-  assert.deepEqual(f.counts(), { builds: 2, judges: 2 }, 'exhausted evidence cannot loop through paid text rebuilds');
+  assert.deepEqual(f.counts(), { builds: 4, judges: 4 }, 'next operator call gets one bounded text repair');
 });
 
 test('new saved evidence permits one more bounded text repair after exhaustion', async () => {
@@ -124,7 +124,7 @@ test('new saved evidence permits one more bounded text repair after exhaustion',
   assert.ok(result.presentedReasons.includes('summary_banned_prefix'));
   assert.deepEqual(f.counts(), { builds: 4, judges: 4 });
   await f.run();
-  assert.deepEqual(f.counts(), { builds: 4, judges: 4 });
+  assert.deepEqual(f.counts(), { builds: 6, judges: 6 });
 });
 
 for (const category of ['flight', 'car']) test(`${category} saved evidence repairs weak text and still rejects unsupported claims`, async () => {
@@ -160,6 +160,6 @@ for (const category of ['flight', 'car']) test(`${category} saved evidence repai
     assert.equal(dossierPresented(saved, target), !reject);
     assert.equal(builds, reject ? 2 : 1);
     await run();
-    assert.equal(builds, reject ? 2 : 1, 'repeat fill cannot spend on unchanged booking evidence');
+    assert.equal(builds, reject ? 4 : 1, 'repeat fill retries rejected text and reuses successful text');
   }
 });

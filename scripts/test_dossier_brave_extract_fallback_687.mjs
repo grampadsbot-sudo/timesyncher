@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createHash } from 'node:crypto';
-import { gatherThingEvidence, dossierPagesVerified } from '../src/vacation/thing-evidence-dossier.mjs';
+import { gatherThingEvidence, dossierPagesVerified, dossierDeadlineFetch } from '../src/vacation/thing-evidence-dossier.mjs';
 import { dossierEmptyGatherReason } from '../src/vacation/xai-dossier-fill-state.mjs';
 import { runBraveQueries } from '../src/vacation/dossier-brave.mjs';
 import { fetchXaiPlaceRatings } from '../src/vacation/xai-grok-place-ratings.mjs';
@@ -11,7 +11,7 @@ const place = { title: 'Harbor Bistro', category: 'restaurant', website: 'https:
 async function gather({ hits = true, status = 432, extractMessage = '' } = {}) {
   const queries = [];
   const dossier = await gatherThingEvidence(place, {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' },
+    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async () => {},
     resolveImpl: async () => [{ address: '93.184.216.34' }],
     extractImpl: async () => { throw new Error(extractMessage || `Tavily extract failed with HTTP ${status}.`); },
     braveImpl: null,
@@ -42,7 +42,7 @@ for (const status of [400, 401, 403, 429, 432]) test(`direct failure and Tavily 
 test('Tavily 432 with zero Brave hits ends in a hard named reason', async () => {
   const { dossier } = await gather({ hits: false });
   assert.equal(dossier.pages.length, 0);
-  assert.equal(dossierEmptyGatherReason(dossier), 'brave_extract_fallback_no_pages');
+  assert.equal(dossierEmptyGatherReason(dossier), 'tavily_http_432');
 });
 
 test('long Brave snippets hash the exact saved bytes', async () => {
@@ -64,7 +64,7 @@ test('Tavily plan limit without an HTTP status still saves Brave evidence', asyn
 test('an unindexed official path falls back to indexed pages on the official host', async () => {
   const queries = [];
   const dossier = await gatherThingEvidence({ ...place, website: `${place.website}unindexed-booking/path` }, {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, braveImpl: null,
+    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async () => {}, braveImpl: null,
     resolveImpl: async () => [{ address: '93.184.216.34' }],
     extractImpl: async () => { throw new Error('Tavily extract failed with HTTP 432.'); },
     fetchImpl: async (url) => {
@@ -83,10 +83,10 @@ test('an unindexed official path falls back to indexed pages on the official hos
   assert.equal(dossierPagesVerified(dossier), true);
 });
 
-test('gather checkpoints evidence and aborts a stalled next request at the row deadline', async () => {
-  let saved, searches = 0, aborted = false;
+test('gather checkpoints evidence and stops when the next paced request cannot fit the row deadline', async () => {
+  let saved, searches = 0;
   const result = await fetchXaiPlaceRatings(place, {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, dossierKey: 'deadline:restaurant', timeBudgetMs: 40,
+    sleepImpl: async () => {}, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, dossierKey: 'deadline:restaurant', timeBudgetMs: 40,
     storeImpl: {
       getDossier: async () => saved ? structuredClone(saved) : null,
       putDossier: async (_key, dossier) => { saved = structuredClone(dossier); },
@@ -98,21 +98,22 @@ test('gather checkpoints evidence and aborts a stalled next request at the row d
         url: place.website, title: place.title,
         description: 'Harbor Bistro serves grilled fish with seasonal vegetables and a daily lunch dish.',
       }] } }) };
-      assert.equal(saved.pages.length, 1, 'the first page is durable before the next request');
-      return new Promise((_resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('deadline did not abort the provider')), 500);
-        options.signal.addEventListener('abort', () => {
-          clearTimeout(timer);
-          aborted = true;
-          reject(options.signal.reason);
-        }, { once: true });
-      });
+      assert.fail('no second request fits the paced gather budget');
     },
   });
-  assert.equal(aborted, true);
-  assert.equal(searches, 2);
+  assert.equal(searches, 1);
   assert.equal(result.partial, true);
   assert.equal(saved.captureCheckpoint, 'after_gather');
   assert.equal(dossierPagesVerified(saved), true);
   assert.equal(saved.pages.length, 1);
+});
+
+
+test('a request already in flight is aborted at the dossier deadline', async () => {
+  const fetch = dossierDeadlineFetch(async (_url, options) => new Promise((_resolve, reject) => {
+    options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true });
+  }), Date.now() + 20);
+  const timer = setTimeout(() => assert.fail('the dossier deadline must abort this request'), 500);
+  try { await assert.rejects(fetch('https://harbor.example/'), { name: 'TimeoutError' }); }
+  finally { clearTimeout(timer); }
 });

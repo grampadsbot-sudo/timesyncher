@@ -22,13 +22,13 @@ test('zero hits produces a hard named terminal reason', async () => {
   const dossier = await gather('empty', false);
   assert.equal(dossier.pages.length, 0);
   assert.deepEqual(dossierFillHardFailure(dossier, place), {
-    failed: true, status: 'failed', error: 'brave_extract_fallback_no_pages', emptySource: 'brave_extract_fallback_no_pages',
+    failed: true, status: 'failed', error: 'brave_zero_hits', emptySource: 'brave_zero_hits',
   });
 });
 
 async function gather(extract, hits) {
   return gatherThingEvidence(place, {
-    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, braveImpl: null,
+    env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async () => {}, braveImpl: null,
     resolveImpl: async () => [{ address: '93.184.216.34' }],
     extractImpl: async () => {
       if (extract === '432') throw new Error('Tavily extract failed with HTTP 432.');
@@ -65,8 +65,8 @@ test('old empty-gather exhaustion gets one revised recovery and keeps a hard zer
   const result = (await run()).results[0];
   assert.equal(gathers, 1);
   assert.equal(result.failed, true);
-  assert.equal(result.error, 'brave_extract_fallback_no_pages');
-  assert.ok((await loadThingEvidenceDossier(key, { env: {}, storeImpl })).attempts.some((row) => row.gatherVersion === 4 && row.status === 'failed'));
+  assert.equal(result.error, 'brave_missing_key');
+  assert.ok((await loadThingEvidenceDossier(key, { env: {}, storeImpl })).attempts.some((row) => row.retryCount === 1 && row.status === 'failed'));
   await run();
-  assert.equal(gathers, 1, 'unchanged zero-hit evidence cannot restart recovery');
+  assert.equal(gathers, 2, 'next operator call retries zero-hit evidence once');
 });

@@ -1,3 +1,4 @@
+import { createDossierFillTrace, recordDossierTracePages } from './dossier-fill-trace.mjs';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -171,6 +172,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   }
   const results = [];
   for (const target of targets) {
+    const trace = operatorFill ? createDossierFillTrace() : undefined;
     const place = placeFromTarget(target);
     const dossierKey = target.dossierKey || (target.sharedLibrary === true
       ? await bindSharedThingEvidenceDossier(place, { env, storeImpl })
@@ -184,12 +186,15 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
     const refresh = forceRefresh || target.forceRefresh === true
       || (operatorFill && pagesBefore > 0 && (dossierFillNeedsTextRebuild(existing, place) || existing.emptySource));
     if (!refresh && skipExisting && existing?.pages?.length) {
-      const normalized = normalizeDossierEvidence({ ...existing }, place);
+      const normalized = normalizeDossierEvidence({ ...existing }, place, trace);
+      recordDossierTracePages(trace, existing, normalized);
       if (dossierPersistedFillIsNoOp(existing, normalized, place)) {
+        if (trace) trace.gather = { path: 'skipped-noop', gate: 'presented_no_pending_fields' };
         results.push({
           rowId: target.rowId ?? place.id,
           dossierKey,
           skipped: 'existing_dossier',
+          ...(trace ? { trace } : {}),
           pageCount: pagesBefore,
           reviewsRead: existing.reviewsRead || 0,
         });
@@ -199,6 +204,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
     let fetchResult;
     try {
       fetchResult = await fetchXaiPlaceRatings(place, {
+        trace,
         destination: target.destination,
         dossierKey,
         env,
@@ -217,6 +223,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
         results.push({
           rowId: target.rowId ?? place.id,
           dossierKey,
+          ...(trace ? { trace } : {}),
           partial: true,
           resumable: true,
           rateLimited: xaiHttpErrorResumable(error.status),
@@ -249,9 +256,10 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
       : { dossier: null };
     const returnedDossier = saved || parsed?.evidenceDossier;
     const after = returnedDossier?.pages?.length || 0;
-    const hardFailure = dossierFillHardFailure(returnedDossier, place);
+    const hardFailure = dossierFillHardFailure(normalizeDossierEvidence(returnedDossier, place), place);
     results.push({
       rowId: target.rowId ?? place.id,
+      ...(trace ? { trace } : {}),
       dossierKey,
       skipped: skipped && !hardFailure.failed ? 'existing_dossier' : undefined,
       partial: partial === true,

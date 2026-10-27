@@ -73,7 +73,7 @@ for (const withLedger of [false, true]) for (const reject of [false, true]) {
       if (!saved.attempts?.length) assert.ok(result.presentedReasons.includes('no_gather_attempts'));
       const count = builds;
       await run();
-      assert.equal(builds, count, 'failed repairs must stop on unchanged evidence');
+      assert.equal(builds, count + 2, 'the next call retries failed text with one bounded repair');
     } else {
       assert.equal(result.checkpoint, 'done');
       assert.equal(result.presentedReasons, undefined);

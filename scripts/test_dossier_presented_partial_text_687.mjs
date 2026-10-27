@@ -111,6 +111,6 @@ for (const reject of [false, true]) test(`old text exhaustion reaches revised bu
     assert.ok(result.presentedReasons.includes('summary:missing'));
     assert.ok(result.presentedReasons.includes('description:missing'));
     await run();
-    assert.equal(builds, 2, 'unchanged evidence cannot restart a rejected repair');
+    assert.equal(builds, 4, 'next operator call retries a rejected repair once');
   }
 });

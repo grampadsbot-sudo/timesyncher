@@ -1,17 +1,9 @@
+import { dossierPageFailure } from './dossier-page-integrity.mjs';
+import { collectDossierClaims } from './xai-dossier-judge-prompt.mjs';
 import { computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
 import { dossierPresented, passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
 import { claimsSupported, dossierPageById, fitDescriptionWords, prepareDossierFindings } from './thing-dossier-fields.mjs';
-import { condenseText } from './dossier-cost.mjs';
-
-export function dossierTextEvidencePages(dossier = {}, budget = 16000) {
-  const perPage = Math.min(1200, Math.floor(budget / Math.max(1, dossier.pages?.length || 0)));
-  return (dossier.pages || []).map(({ braveReviews, ...page }, index) => {
-    const raw = String(page.text || '');
-    const prefix = raw.slice(0, Math.floor(perPage / 2));
-    const text = raw.length <= perPage ? raw : `${prefix}\n${condenseText(raw, dossier.thing, { maxChars: Math.max(0, perPage - prefix.length - 1) })}`.slice(0, perPage);
-    return { ...page, id: `p${index + 1}`, text };
-  });
-}
+export { dossierTextEvidencePages } from './dossier-text-evidence.mjs';
 
 function dossierTextBuildProblems(dossier = {}, place = {}) {
   const counts = computeDossierFieldCounts(dossier, place);
@@ -49,39 +41,66 @@ export function preservePresentedDossierText(persisted, built = {}, place = {}) 
   return dossierPresented(candidate, place) ? candidate : built;
 }
 
+function builderOutcome(result, dossier, findings) {
+  const claims = collectDossierClaims(findings);
+  const supported = claims.filter((claim) => claim.supported === true).length;
+  const jsonParsed = result.jsonParsed ?? Boolean(result.findings && typeof result.findings === 'object' && !Array.isArray(result.findings));
+  const textClaims = ['summary', 'description'].flatMap((key) => findings[key]?.claims || []);
+  const pagesVerified = Boolean(dossier.pages?.length && dossier.pages.every((page) => !dossierPageFailure(page)));
+  const blankedBy = !pagesVerified ? 'unverified_pages' : !jsonParsed && !String(result.structuredText || '').trim() ? 'empty_model_output' : !jsonParsed ? 'parse_error'
+    : !findings.summary?.value && !findings.description?.value ? 'empty_model_output'
+      : textClaims.length && textClaims.every((claim) => claim.supported !== true) ? 'judge_rejected_all' : null;
+  return { ran: true, structuredTextChars: String(result.structuredText || '').length, jsonParsed,
+    summaryClaims: findings.summary?.claims?.length || 0, descriptionClaims: findings.description?.claims?.length || 0,
+    judgeSupported: supported, judgeUnsupported: claims.length - supported, blankedBy };
+}
+
 export async function buildDossierText(dossier, place, {
-  build, judgeFindings, includeReviews = true, reviewsOnly = false, outOfTime = () => false,
+  build, judgeFindings, includeReviews = true, reviewsOnly = false, outOfTime = () => false, trace,
 }) {
-  let { payload, structuredText, findings } = await build({ includeReviews, reviewsOnly });
-  if (findings?.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
-  let judge = await judgeFindings(findings, !includeReviews);
-  let built = prepareDossierFindings(dossier, findings);
+  const run = async (options) => {
+    if (trace) trace.builder.ran = true;
+    const result = await build(options);
+    const findings = result.findings && typeof result.findings === 'object' && !Array.isArray(result.findings) ? result.findings : {};
+    if (findings.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
+    const judge = await judgeFindings(findings, !options.includeReviews);
+    const outcome = builderOutcome(result, dossier, findings);
+    if (trace) {
+      trace.builder.attempts.push(outcome);
+      Object.assign(trace.builder, outcome);
+    }
+    if (outcome.blankedBy) dossier.attempts = [...(dossier.attempts || []), {
+      kind: 'builder', step: outcome.blankedBy, status: 'failed', startedAt: new Date().toISOString(),
+    }];
+    return { ...result, findings, judge, outcome, built: prepareDossierFindings({ ...dossier, category: place.category || place.cat }, findings) };
+  };
+  const first = await run({ includeReviews, reviewsOnly });
+  let { payload, structuredText, findings, judge, built } = first;
   const textProblems = dossierTextBuildProblems(built, place);
+  if (first.outcome.blankedBy) textProblems.push(first.outcome.blankedBy);
   for (const key of ['summary', 'description']) {
-    for (const claim of findings?.[key]?.claims || []) {
+    for (const claim of findings[key]?.claims || []) {
       if (claim.supported !== true) textProblems.push(`${key}:unsupported_claim:${String(claim.judgeReason || claim.text || '').slice(0, 240)}`);
     }
   }
-  if (!reviewsOnly && textProblems.length && !outOfTime()) {
-    const retry = await build({ includeReviews: false, textProblems });
-    if (retry.findings?.description?.value) retry.findings.description.value = fitDescriptionWords(retry.findings.description.value);
-    const retryJudge = await judgeFindings(retry.findings, true);
-    const retryBuilt = prepareDossierFindings(dossier, retry.findings);
+  if ((!reviewsOnly && textProblems.length || first.outcome.blankedBy === 'parse_error') && !outOfTime()) {
+    const retry = await run({ includeReviews: false, textProblems });
     const fields = { ...built.fields };
     const repairedFindings = { ...findings };
     for (const key of ['summary', 'description']) {
-      if (!retryBuilt.fields[key]) continue;
-      const candidate = { ...built, fields: { ...fields, [key]: retryBuilt.fields[key] } };
+      if (!retry.built.fields[key]) continue;
+      const candidate = { ...built, fields: { ...fields, [key]: retry.built.fields[key] } };
       if (dossierTextBuildProblems(candidate, place).some((problem) => problem.startsWith(key) || problem === `blank_${key}`)) continue;
-      fields[key] = retryBuilt.fields[key];
+      fields[key] = retry.built.fields[key];
       repairedFindings[key] = retry.findings[key];
     }
+    built.attempts = dossier.attempts;
     if (!dossierTextBuildProblems({ ...built, fields }, place).length) {
       built.fields = fields;
       findings = repairedFindings;
       payload = retry.payload;
       structuredText = retry.structuredText;
-      judge = retryJudge;
+      judge = retry.judge;
     }
   }
   return { payload, structuredText, findings, judge, built };

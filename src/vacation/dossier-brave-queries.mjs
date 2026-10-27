@@ -60,12 +60,10 @@ export function dossierSearchIdentity(place = {}, destination = '') {
   const name = dossierThingTitle(place);
   if (categoryOf(place) === 'flight') {
     const record = place.sourceRecord || {};
-    const flightNumber = place.flightNumber || place.flight_number || record.flightNumber || record.flight_number
-      || text(record.longDetails || record.description || place.description).match(/\bFlight\s*#\s*([A-Z]{0,3}\s?\d{1,4})\b/i)?.[1];
-    return [...new Set([
-      name.replace(/\b\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?\b/g, '').replace(/[→–—]/g, ' '),
-      text(place.airline || record.airline), text(flightNumber), text(place.route || record.route),
-    ].filter(Boolean))].join(' ').replace(/\s+/g, ' ').trim();
+    const cleanName = name.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '').replace(/\b\d{1,2}:\d{2}(?:\s*[–—-]\s*\d{1,2}:\d{2})?\b/g, '');
+    const airline = text(place.airline || record.airline || cleanName.split(/\b[A-Z]{3}\b/)[0]);
+    const airports = [...new Set(`${place.route || record.route || ''} ${cleanName}`.match(/\b[A-Z]{3}\b/g) || [])];
+    return [...new Set([airline, ...airports])].filter(Boolean).join(' ');
   }
   const dest = text(destination);
   return [name, dest].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
@@ -86,7 +84,12 @@ export function braveDossierQueryStages(place = {}, destination = '') {
   const q = dossierSearchIdentity(place, destination);
   if (!q) return [];
   if (categoryOf(place) === 'flight') {
-    return [{ stage: 'general', queries: [`${q} flight status schedule`, `${q} airline route airports`] }];
+    let site = '';
+    try { site = new URL(place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url).hostname; } catch { site = ''; }
+    return [{ stage: 'general', queries: [
+      `${q} nonstop route`, `${q} airline destinations airports`,
+      ...(site ? [`${q} site:${site} route`] : [`${q} official airline route`]),
+    ] }];
   }
   if (['flight', 'car'].includes(categoryOf(place))) {
     return [{ stage: 'general', queries: [

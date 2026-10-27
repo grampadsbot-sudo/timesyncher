@@ -65,7 +65,7 @@ function fixture(initial, { hits = true, status = 200, official = true } = {}) {
     gatherImpl: async (place, gatherOptions) => {
       gathers += 1;
       return gatherThingEvidence(place, {
-        ...gatherOptions, braveImpl: null,
+        ...gatherOptions, sleepImpl: async () => {}, braveImpl: null,
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { extracts += 1; throw new Error(oldAttempt.error); },
       });
@@ -119,22 +119,24 @@ test('operator limit 1 retries a saved Tavily 432 once, saves Brave fallback pag
   assert.equal(f.counts().extracts, 1);
 });
 
-for (const status of [200, 429]) test(`empty operator recovery names fresh Brave failure at HTTP ${status} and stops retrying`, async () => {
+for (const status of [200, 429]) test(`empty operator recovery names fresh Brave failure at HTTP ${status} and permits the next bounded call`, async () => {
   const f = fixture(emptySaved(), { hits: false, status });
   const result = await f.run();
   assert.equal(f.counts().gathers, 1);
   assert.equal(f.counts().builds, 0);
   assert.equal(result.failed, true);
-  assert.equal(result.error, 'brave_extract_fallback_no_pages');
+  assert.equal(result.error, status === 429 ? 'brave_http_429' : 'tavily_http_432');
   assert.notEqual(result.error, staleReason);
   assert.equal(result.emptySource, f.saved().emptySource);
   assert.equal(result.pageCount, 0);
-  assert.equal(f.queries.filter((query) => query === 'Harbor Bistro Boston').length, 1, 'one broader recovery search');
+  assert.equal(f.queries.filter((query) => query === 'Harbor Bistro Boston').length, status === 429 ? 3 : 1, 'one broader recovery query with at most two HTTP retries');
   const before = { ...f.counts(), searches: f.queries.length };
   const repeated = await f.run();
   assert.equal(repeated.failed, true);
   assert.equal(repeated.error, result.error);
-  assert.deepEqual({ ...f.counts(), searches: f.queries.length }, before, 'exhausted recovery must not loop');
+  assert.equal(f.counts().gathers, before.gathers + 1, 'next operator call gets one gather');
+  assert.ok(f.queries.length > before.searches);
+  assert.equal(f.counts().builds, 0);
 });
 
 test('a historical no-match cannot override the fresh zero-hit recovery reason', async () => {
@@ -178,13 +180,13 @@ test('a rejected saved page with empty recovery returns a fresh failure and does
   const f = fixture(emptySaved({ pages: [wrong], attempts: [], emptySource: 'gather_no_pages' }), { hits: false });
   const result = await f.run();
   assert.equal(result.failed, true);
-  assert.equal(result.error, 'brave_extract_fallback_no_pages');
+  assert.equal(result.error, 'tavily_http_432');
   assert.equal(result.pageCount, 1, 'the excluded dated original remains in cumulative storage');
   const searches = f.queries.length;
   await f.run();
-  assert.equal(f.counts().gathers, 1);
+  assert.equal(f.counts().gathers, 2);
   assert.equal(f.counts().builds, 0);
-  assert.equal(f.queries.length, searches);
+  assert.ok(f.queries.length > searches);
 });
 
 test('an older exhausted gather gets one attempt through the revised fallback', async () => {
@@ -194,7 +196,7 @@ test('an older exhausted gather gets one attempt through the revised fallback', 
   const result = await f.run();
   assert.equal(result.failed, false);
   assert.equal(f.counts().gathers, 1);
-  assert.ok(f.saved().attempts.some((attempt) => attempt.gatherVersion === 4 && attempt.status === 'ok'));
+  assert.ok(f.saved().attempts.some((attempt) => attempt.retryCount === 1 && attempt.status === 'ok'));
   await f.run();
   assert.equal(f.counts().gathers, 1);
 });

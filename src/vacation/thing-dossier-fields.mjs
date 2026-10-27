@@ -189,10 +189,10 @@ export function prepareDossierFindings(dossier, findings = {}) {
     if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
       || !descriptionNamesThing(claim.value, dossier.thing))) continue;
     next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
-    if (key === 'description' && !next.reviewsRead) {
+    if (key === 'description' && placeSupportsDossierReviews(dossier) && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;
       next.fields[key].noReviewsFlag = true;
-    } else if (key === 'description' && (next.reviewsRead < MIN_REVIEWS_READ
+    } else if (key === 'description' && placeSupportsDossierReviews(dossier) && (next.reviewsRead < MIN_REVIEWS_READ
       || dossier.fieldCounts?.reviews?.status === 'short')) {
       next.fields[key].value = `${String(claim.value).trim()}\nA limited number of reviews were found for this place.`;
     }

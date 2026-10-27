@@ -30,7 +30,7 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
     fetchImpl: async () => assert.fail('no unmocked fetch'),
     gatherImpl: async (place, options) => {
       gathers += 1;
-      return gatherThingEvidence(place, { ...options, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, braveImpl: null,
+      return gatherThingEvidence(place, { ...options, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async () => {}, braveImpl: null,
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { if (extract === '432') throw new Error('Tavily extract failed with HTTP 432.'); return []; },
         fetchImpl: async (url) => {
@@ -55,9 +55,9 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
     assert.equal(dossierPagesVerified(saved), true);
     assert.equal(dossierPresented(saved, target), true);
     assert.equal(saved.pages[0].via, 'brave-snippet');
-  } else assert.equal(result.error, 'brave_extract_fallback_no_pages');
+  } else assert.equal(result.error, extract === '432' ? 'tavily_http_432' : 'brave_missing_key');
   await run();
-  assert.equal(gathers, 1, 'same current-version empty attempt must stop');
+  assert.equal(gathers, hits ? 1 : 2, 'next call retries empty evidence and reuses a successful recovery');
 });
 
 test('operator response counts cumulative stored pages after identity normalization, without losing dated versions', async () => {

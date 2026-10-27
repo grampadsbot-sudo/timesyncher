@@ -119,7 +119,7 @@ const emptyResult = await fetchXaiPlaceRatings(
   },
 );
 assert.equal(gatherCalls, 1, 'zero_page_attempts_only_triggers_gather');
-assert.equal(emptyResult.emptySource, 'brave_no_match', 'zero_page_named_empty_source');
+assert.equal(emptyResult.emptySource, 'brave_missing_key', 'zero_page_named_empty_source');
 assert.equal(emptyResult.parsed?.evidenceDossier?.pages?.length || 0, 0);
 
 console.log('test_passb_fill_noop_687: ok');

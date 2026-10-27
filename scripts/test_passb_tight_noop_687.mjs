@@ -60,7 +60,7 @@ test('rule 1: timed-out empty gather is a hard failure with a persisted named re
       fetchImpl: async () => { searches += 1; return { ok: true, json: async () => ({ web: { results: [] } }) }; },
       buildImpl: async () => { assert.fail('no builder without saved pages'); },
     });
-    assert.equal(searches, 1, 'one broader search even when the original gather exhausted the budget');
+    assert.equal(searches, 0, 'no provider request after the original gather exhausted the budget');
     assert.equal(result.failed, true);
     assert.equal(result.status, 'failed');
     assert.equal(result.emptySource, 'brave_no_match');
@@ -160,7 +160,7 @@ test('rules 1 and 3: exhausted broader search returns a hard operator failure', 
   assert.equal(searches, 1);
   assert.equal(result.results[0].failed, true);
   assert.equal(result.results[0].status, 'failed');
-  assert.equal(result.results[0].emptySource, 'brave_no_match');
+  assert.equal(result.results[0].emptySource, 'brave_zero_hits');
   assert.equal(result.results[0].pagesAdded, 0);
 });
 

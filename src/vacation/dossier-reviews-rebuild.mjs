@@ -1,3 +1,5 @@
+import { buildDossierText } from './dossier-text-builder.mjs';
+import { recordDossierTraceAttempts } from './dossier-fill-trace.mjs';
 import { placeSupportsDossierReviews } from './dossier-brave-queries.mjs';
 import {
   dossierReviewsNeedRebuild,
@@ -91,7 +93,7 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   extractDossierReviews,
   callDossierBuilder,
   judgeDossierFindings,
-  topUpImpl = topUpDossierFields,
+  topUpImpl = topUpDossierFields, trace,
 } = {}) {
   if (!placeSupportsDossierReviews(place)) return stripDossierReviews(persisted, place);
   let merged = ensureBraveSnippetCitationPages({ ...persisted });
@@ -101,20 +103,22 @@ export async function rebuildDossierReviewsFromSavedEvidence(persisted = {}, pla
   }
   const pending = braveTopUpFieldsPending(merged, place).filter((f) => f === 'reviews');
   if (pending.length) {
-    merged = await topUpImpl(merged, place, { env, fetchImpl, destination, onlyFields: pending });
+    const before = merged.attempts?.length || 0;
+    merged = await topUpImpl(merged, place, { env, fetchImpl, destination, deadline, onlyFields: pending });
+    recordDossierTraceAttempts(trace, (merged.attempts || []).slice(before));
   }
   const extraction = await extractDossierReviews(merged, {
     env, fetchImpl, timeoutMs, deadline, extractReviewsImpl, place,
   });
   merged.reviewSet = extraction.set;
   merged.reviewExtraction = extraction.stats;
-  const { findings } = await callDossierBuilder(merged, {
-    env, fetchImpl, timeoutMs, deadline, buildImpl, includeReviews: true, reviewsOnly: true,
+  const { built } = await buildDossierText(merged, place, {
+    includeReviews: true, reviewsOnly: true, trace, outOfTime: () => deadline > 0 && Date.now() >= deadline,
+    build: (options) => callDossierBuilder(merged, { env, fetchImpl, timeoutMs, deadline, buildImpl, ...options }),
+    judgeFindings: (findings) => judgeDossierFindings(merged, findings, {
+      env, fetchImpl, timeoutMs, deadline, judgeImpl, skipReviewClaims: false,
+    }),
   });
-  await judgeDossierFindings(merged, findings, {
-    env, fetchImpl, timeoutMs, deadline, judgeImpl, skipReviewClaims: false,
-  });
-  const built = prepareDossierFindings(merged, findings);
   const final = mergeSelectiveDossierFindings(persisted, built, new Set(['reviews']), place);
   stampReviewsEvidencePageHash(final, place);
   if (!dossierReviewsPassValidityGate(final, place)) {

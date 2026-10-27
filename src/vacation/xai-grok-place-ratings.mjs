@@ -1,3 +1,5 @@
+import { callDossierBuilder as invokeDossierBuilder } from './dossier-builder-call.mjs';
+import { recordDossierTraceAttempts, recordDossierTracePages } from './dossier-fill-trace.mjs';
 import {
   xaiGrokPlaceSearchModelId,
 } from '../../scripts/vacation-app-reply-rules.mjs';
@@ -113,6 +115,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     delete modelInput.reviewExcerpts;
   }
   const lines = [
+    'A page marked via:thing-record contains the supplied itinerary record, not an airline web page. Use its recorded itinerary facts only; candidate only or not booked means no booking is confirmed. Route pages support airline/airport facts, not a specific historical flight status.',
     'Build fields for this place using ONLY the saved dossier pages below (each has an id p1..pN). Never search or use remembered facts.',
     'Write in your own words: summaries of what the pages say, not copied phrases. Every factual statement you make must be listed as a claim.',
     'Use short atomic claims for individual facts and cite only pages that state each fact. Do not combine supported facts with an inferred recommendation, atmosphere, suitability or comparison in the same claim. Omit unsupported details instead of repeating a rejected paraphrase.',
@@ -125,6 +128,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     'Description: 70-110 words (count them; over 120 or under 40 is discarded), using the exact place name, naming the place, drawn from its site, articles and especially reviews, covering what distinguishes it. Summary: one short decision-useful sentence of 12-28 words, including the exact name from the thing field, distinct from the description and under 320 characters. The name from the thing field can label a trip activity; do not replace it with only the venue name.',
     'The thing name is the supplied trip label. Use that label to introduce the place, but claim only facts from the cited pages about the underlying place or provider. For a flight or car rental, use booking, route, fare or rental facts; do not infer restaurant facts or require reviews. Never add Flight option: to a name or summary.',
     'Text must contain no internal candidate/option/verify language, TBD, N/A, lorem, placeholder, or the word sample. Do not add filler or invent facts to meet length. A Price: line is allowed but no price is required in the description.',
+    'Flights need no reviews, opening hours or happy hours. Use airline, both airports and nonstop/route evidence plus the supplied record; never turn a proposed itinerary into a confirmed booking. Prices may be labelled estimates.',
     'When no reviews were found, still write the description from the saved factual pages; it will end with a short no-reviews note. With few reviews, use what exists and note limited number of reviews. Never invent four reviews from insufficient evidence.',
     'Itinerary note: return itineraryNote as {value, claims} — one cited line (<=280 characters) for the trip itinerary row: what to do or order here, not just the place name.',
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
@@ -216,27 +220,7 @@ export async function extractDossierReviews(dossier, {
   return { set, stats: { code: code.length, codeKept: keep ? keep.length : null, model: Array.isArray(model) ? model.length : 0, kept: set.length, status } };
 }
 
-async function callDossierBuilder(dossier, {
-  env, fetchImpl, timeoutMs, deadline = 0, buildImpl, includeReviews = true, reviewsOnly = false, textProblems = [], place = {},
-} = {}) {
-  const prompt = dossierBuilderPrompt(dossier, { includeReviews, reviewsOnly, textProblems, place });
-  if (buildImpl) return buildImpl(dossier, { reviewsOnly, prompt, textProblems });
-  const payload = await postDossierXai(
-    dossier,
-    'builder',
-    xaiGrokPlaceSearchModelId(env),
-    prompt,
-    { env, fetchImpl, timeoutMs, deadline },
-  );
-  const structuredText = outputText(payload);
-  let findings;
-  try {
-    findings = JSON.parse(structuredText);
-  } catch {
-    findings = {};
-  }
-  return { payload, structuredText, findings };
-}
+const callDossierBuilder = (dossier, options) => invokeDossierBuilder(dossier, { ...options, promptBuilder: dossierBuilderPrompt });
 
 export function dossierCaptureComplete(dossier = {}) {
   return Boolean(dossier?.pages?.length && dossier.fields && Object.keys(dossier.fields).length);
@@ -247,7 +231,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
   forceRefresh = false, timeBudgetMs = 0,
-  reuseSavedPages = false,
+  reuseSavedPages = false, trace, sleepImpl,
 } = {}) {
   place = { ...place, title: dossierThingTitle(place) };
   const key = dossierKey || thingEvidenceDossierKey(place);
@@ -260,8 +244,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
   fetchImpl = dossierDeadlineFetch(fetchImpl, deadline);
   const gatherOpts = {
-    env, fetchImpl, destination, resolveImpl, center, deadline,
+    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl,
     onProgress: key ? async (progress) => {
+      recordDossierTraceAttempts(trace, progress.attempts);
       merged = mergeDossierPages(persisted || {}, progress);
       merged.emptySource = merged.pages?.length ? null : merged.emptySource;
       merged.captureCheckpoint = 'after_gather';
@@ -271,17 +256,19 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const xaiOpts = () => ({ env, fetchImpl, timeoutMs: remainingTimeoutMs(), deadline });
   const gatherWithEscalation = async () => {
     const gathered = await gatherDossierWithEscalation(place, gatherImpl, gatherOpts);
+    recordDossierTraceAttempts(trace, gathered.attempts);
     gathered.emptySource = gathered.pages?.length ? null : dossierEmptyGatherReason(gathered);
     return gathered;
   };
   let merged, retryEmptyGather, presentedFailure;
   try {
   ({ persisted, retryEmptyGather, presentedFailure } = await prepareOperatorDossierGather(persisted, place, {
-    reuseSavedPages, key, env, storeImpl,
+    reuseSavedPages, key, env, storeImpl, trace,
   }));
   if (presentedFailure) return { ...presentedFailure, parsed: { evidenceDossier: persisted } };
   if (!retryEmptyGather && persisted && (persisted.pages?.length || persisted.attempts?.length) && (!forceRefresh || reuseSavedPages)) {
-    merged = normalizeDossierEvidence({ ...persisted }, place);
+    merged = normalizeDossierEvidence({ ...persisted }, place, trace);
+    recordDossierTracePages(trace, persisted, merged);
     merged.emptySource = merged.pages?.length ? null : merged.emptySource || dossierEmptyGatherReason(merged);
     merged = preservePersistedDossierReviewsWhenFresh(persisted, merged, place);
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
@@ -297,6 +284,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
       return { payload: {}, structuredText: '', skipped: true, parsed: { evidenceDossier: merged } };
     }
     beginDossierXaiUsageRun(merged, persisted);
+    const attemptsBeforeTopUp = merged.attempts?.length || 0;
     const pendingTopUp = braveTopUpFieldsPending(merged, place);
     if (!(reuseSavedPages && (forceRefresh || !merged.pages?.length)) && pendingTopUp.length && !outOfTime()) {
       merged = await topUpDossierFields(merged, place, {
@@ -305,6 +293,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
         onProgress: key ? (dossier) => saveThingEvidenceDossier(key, dossier, { env, storeImpl }) : undefined,
       });
     }
+    recordDossierTraceAttempts(trace, (merged.attempts || []).slice(attemptsBeforeTopUp));
     if (merged.pages?.length) merged.emptySource = null;
     if (!(forceRefresh && reuseSavedPages)
       && (!dossierFillNeedsTextRebuild(merged, place) || computeDossierFieldCounts(merged, place).reviews?.count > 0)
@@ -320,8 +309,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
         extractReviewsImpl,
         extractDossierReviews,
         callDossierBuilder,
-        judgeDossierFindings,
+        judgeDossierFindings, trace,
       });
+      recordDossierTraceAttempts(trace, (merged.attempts || []).slice(attemptsBeforeTopUp));
       stampReviewsEvidencePageHash(merged, place);
       commitDossierXaiUsageRun(merged, persisted, { kind: 'reviews-rebuild', placeId: place.id ?? place.placeId });
       if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
@@ -340,6 +330,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   } else {
     const gathered = await gatherWithEscalation();
     merged = persisted ? mergeDossierPages(persisted, gathered) : gathered;
+    if (trace) trace.gather.path = retryEmptyGather ? 'retry' : 'fresh';
     if (retryEmptyGather) Object.assign(merged.attempts.findLast((row) => row.step === 'operator_empty_gather_retry'), {
       status: merged.pages?.length ? 'ok' : 'failed', finishedAt: new Date().toISOString(),
     });
@@ -348,11 +339,15 @@ export async function fetchXaiPlaceRatings(place = {}, {
     if (!placeSupportsDossierReviews(place)) merged = stripDossierReviews(merged, place);
     merged.captureCheckpoint = 'after_gather';
     if (key) await saveThingEvidenceDossier(key, merged, { env, storeImpl });
-    if (outOfTime() && merged.pages?.length) {
+    if ((outOfTime() || gathered.attempts?.some((row) => row.error === 'brave_deadline')) && merged.pages?.length) {
+      recordDossierTracePages(trace, merged, normalizeDossierEvidence(merged, place, trace));
       commitDossierXaiUsageRun(merged, persisted || {}, { kind: 'partial-gather', placeId: place.id ?? place.placeId });
       return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
     }
   }
+  const rawPages = merged;
+  merged = normalizeDossierEvidence(merged, place, trace);
+  recordDossierTracePages(trace, rawPages, merged);
   merged.fieldCounts = computeDossierFieldCounts(merged, place);
   if (merged.fieldCounts.reviews?.count != null) merged.reviewsRead = merged.fieldCounts.reviews.count;
   merged.missingFields = deriveMissingFieldsFromShortcomings(merged.shortcomings);
@@ -406,7 +401,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   }
   const builderStartedAt = new Date().toISOString();
   const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
-    includeReviews: needsReviewWriter, reviewsOnly, outOfTime,
+    includeReviews: needsReviewWriter, reviewsOnly, outOfTime, trace,
     build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options, place }),
     judgeFindings: (findings, skipReviewClaims) => judgeDossierFindings(merged, findings, {
       ...xaiOpts(), judgeImpl, skipReviewClaims,
@@ -432,7 +427,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   final.xaiUsageRuns = merged.xaiUsageRuns;
   final.xaiUsd = merged.xaiUsd;
   final.emptySource = null;
-  if (reuseSavedPages) recordOperatorDossierTextBuild(final, place, builderStartedAt);
+  if (reuseSavedPages) recordOperatorDossierTextBuild(final, place, builderStartedAt, trace);
   final.captureCheckpoint = dossierFillHardFailure(final, place).failed ? 'failed-presented' : 'done';
   if (key) await saveThingEvidenceDossier(key, final, { env, storeImpl });
   final.fullPageChars = promptChars(merged);
@@ -448,6 +443,8 @@ export async function fetchXaiPlaceRatings(place = {}, {
     parsed: { evidenceDossier: final },
   };
   } catch (error) {
+    if (trace && trace.builder.ran) trace.builder.failure = error?.status ? `builder_http_${Number(error.status)}` : 'builder_interrupted';
+    if (reuseSavedPages && merged?.pages?.length) recordOperatorDossierTextBuild(merged, place, new Date().toISOString(), trace);
     if (outOfTime() && (merged || persisted)) {
       return saveResumablePartial(merged || persisted, persisted, {
         key, env, storeImpl, place, checkpoint: (merged || persisted)?.captureCheckpoint || 'after_gather',

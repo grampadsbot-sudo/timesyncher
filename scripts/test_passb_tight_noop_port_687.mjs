@@ -53,6 +53,8 @@ test('port: flight, car, and decision keep hash-driven rebuilds during operator 
       gatherImpl: unexpected, buildImpl: unexpected, fetchImpl: unexpected,
     });
     assert.equal(result.results[0].skipped, 'existing_dossier', category);
+    assert.equal(result.results[0].trace.gather.path, 'skipped-noop');
+    assert.equal(result.results[0].trace.builder.ran, false);
     assert.notEqual(result.results[0].failed, true, category);
   }
 });

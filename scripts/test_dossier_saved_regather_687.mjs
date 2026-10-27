@@ -64,7 +64,7 @@ for (const pageCount of [1, 2]) for (const reject of [false, true]) {
       assert.ok(result.presentedReasons.includes('summary:missing'));
       const count = builds;
       await run();
-      assert.equal(builds, count, 'unchanged rejected evidence is exhausted');
+      assert.equal(builds, count + 2, 'next operator call retries rejected evidence with one repair');
     } else {
       assert.equal(result.failed, false);
       assert.equal(result.checkpoint, 'done');
