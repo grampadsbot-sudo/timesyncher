@@ -159,7 +159,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
   skipExisting = false,
   forceRefresh = false,
   operatorFill = false,
-  timeBudgetMs = 52000, sleepImpl,
+  timeBudgetMs = 52000, sleepImpl, fetchTaskImpl,
 } = {}) {
   const testImpls = env.TIMESYNCHER_DOSSIER_TEST_IMPLS === '1' ? getDossierFillTestImpls() : {};
   fetchImpl = fetchImpl || testImpls.fetchImpl;
@@ -211,7 +211,7 @@ export async function runThingEvidenceDossierStagingTargets(targets = [], {
     let fetchResult;
     try {
       fetchResult = await fetchXaiPlaceRatings(place, {
-        trace, sleepImpl,
+        trace, sleepImpl, fetchTaskImpl,
         destination: target.destination,
         dossierKey,
         env,

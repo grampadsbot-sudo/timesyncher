@@ -123,6 +123,8 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
 
 export function dossierEmptyGatherReason(dossier = {}) {
   const attempts = Array.isArray(dossier.attempts) ? dossier.attempts : [];
+  const workerFailure = attempts.at(-1);
+  if (workerFailure?.kind === 'fetch_worker' && workerFailure.status === 'failed') return workerFailure.error;
   if (!attempts.length) return 'no_gather_attempts';
   const terminal = [...new Map(attempts.map((row) => [JSON.stringify([row.kind, row.provider, row.step, row.stage, row.query, row.url]), row])).values()];
   const tavilySearches = terminal.filter((row) => row.provider === 'Tavily' && row.stage === 'search');

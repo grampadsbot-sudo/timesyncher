@@ -1,4 +1,5 @@
 import { callDossierBuilder as invokeDossierBuilder } from './dossier-builder-call.mjs';
+import { gatherDossierWithEscalation, topUpDossierFields } from './dossier-fetch-tasks.mjs';
 import { recordDossierTraceAttempts, recordDossierTraceBuilderFailure, recordDossierTracePages } from './dossier-fill-trace.mjs';
 import { xaiGrokPlaceSearchModelId } from '../../scripts/vacation-app-reply-rules.mjs';
 import {
@@ -6,9 +7,7 @@ import {
   dossierDeadlineFetch,
   DEFAULT_DOSSIER_MAX_AGE_MS,
   gatherThingEvidence,
-  gatherDossierWithEscalation,
   mergeDossierPages,
-  topUpDossierFields,
 } from './thing-evidence-dossier.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import {
@@ -231,7 +230,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
   gatherImpl = gatherThingEvidence, searchImpl, resolveImpl, buildImpl, judgeImpl, extractReviewsImpl,
   dossierKey = '', maxAgeMs = DEFAULT_DOSSIER_MAX_AGE_MS, storeImpl, nowMs = Date.now(), center = null,
   forceRefresh = false, timeBudgetMs = 0,
-  reuseSavedPages = false, trace, sleepImpl,
+  reuseSavedPages = false, trace, sleepImpl, fetchTaskImpl,
 } = {}) {
   place = { ...place, title: dossierThingTitle(place) };
   const key = dossierKey || thingEvidenceDossierKey(place);
@@ -242,9 +241,10 @@ export async function fetchXaiPlaceRatings(place = {}, {
   const deadline = timeBudgetMs > 0 ? Date.now() + timeBudgetMs : 0;
   const outOfTime = () => deadline > 0 && Date.now() >= deadline;
   const remainingTimeoutMs = () => (deadline > 0 ? Math.max(1000, deadline - Date.now()) : timeoutMs);
+  const fetchIsolation = fetchImpl === globalThis.fetch && !resolveImpl && !sleepImpl;
   fetchImpl = dossierDeadlineFetch(fetchImpl, deadline);
   const gatherOpts = {
-    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl, bravePace: { nextAt: 0 },
+    env, fetchImpl, destination, resolveImpl, center, deadline, sleepImpl, fetchIsolation, fetchTaskImpl, bravePace: { nextAt: 0 },
     onProgress: key ? async (progress) => {
       recordDossierTraceAttempts(trace, progress.attempts);
       merged = mergeDossierPages(persisted || {}, progress);
@@ -301,6 +301,7 @@ export async function fetchXaiPlaceRatings(place = {}, {
       && (!dossierFillNeedsTextRebuild(merged, place) || computeDossierFieldCounts(merged, place).reviews?.count > 0)
       && placeSupportsDossierReviews(place) && dossierReviewsShouldRunWriter(persisted, merged, place) && !outOfTime()) {
       merged = await rebuildDossierReviewsFromSavedEvidence(merged, place, {
+        topUpImpl: (dossier, thing, opts) => topUpDossierFields(dossier, thing, { ...opts, fetchIsolation, fetchTaskImpl }),
         env,
         fetchImpl,
         destination,
