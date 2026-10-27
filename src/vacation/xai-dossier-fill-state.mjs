@@ -117,7 +117,7 @@ export function dossierFillRebuildFields(persisted = {}, merged = {}, place = {}
     rebuildFields.add('description');
   }
   const counts = computeDossierFieldCounts(merged, place);
-  if (counts.itineraryNote?.status === 'missing') rebuildFields.add('itineraryNote');
+  if (!isFlightOrCarOrDecision(place) && counts.itineraryNote?.status === 'missing') rebuildFields.add('itineraryNote');
   return rebuildFields;
 }
 

@@ -131,6 +131,7 @@ export function dossierBuilderPrompt(dossier, { includeReviews = true, reviewsOn
     'Flights need no reviews, opening hours or happy hours. Use airline, both airports and nonstop/route evidence plus the supplied record; never turn a proposed itinerary into a confirmed booking. Prices may be labelled estimates.',
     'When no reviews were found, still write the description from the saved factual pages; it will end with a short no-reviews note. With few reviews, use what exists and note limited number of reviews. Never invent four reviews from insufficient evidence.',
     'Itinerary note: return itineraryNote as {value, claims} — REQUIRED when saved pages support it. One snappy cited line (<=280 characters) for the trip itinerary row: vibe plus what to do or try (examples of voice, not facts to copy: "Great Mexican! Try the tableside guacamole!" / "Old-school Italian with checkerboard tablecloths. The lasagna is supposed to be out of this world!"). Not a generic "X serves Y at address Z" blurb. Cite only dishes, drinks, or atmosphere the saved pages state; omit itineraryNote when pages cannot support one.',
+    DOSSIER_ITINERARY_NOTE_PRIORITY,
     'Price: positive visible amount, with unit (per night, rental total, fare, or per-person estimate), never confuse a menu item price with a hotel nightly rate.',
     'Return rating: {average,count,scaleMax,quote,url,starMix} only when a published average and count are on a page; the quote is the exact text showing those numbers.',
   ];
@@ -400,12 +401,9 @@ export async function fetchXaiPlaceRatings(place = {}, {
     return { payload: {}, structuredText: '', partial: true, checkpoint: merged.captureCheckpoint, parsed: { evidenceDossier: merged } };
   }
   const builderStartedAt = new Date().toISOString();
-  const seedTextProblems = rebuildFields.has('itineraryNote') ? [DOSSIER_ITINERARY_NOTE_PRIORITY] : [];
   const { payload, structuredText, findings, judge, built } = await buildDossierText(merged, place, {
     includeReviews: needsReviewWriter, reviewsOnly, outOfTime, trace,
-    build: async (options) => await callDossierBuilder(merged, {
-      ...xaiOpts(), buildImpl, ...options, place, textProblems: [...seedTextProblems, ...(options.textProblems || [])],
-    }),
+    build: async (options) => await callDossierBuilder(merged, { ...xaiOpts(), buildImpl, ...options, place }),
     judgeFindings: (findings, skipReviewClaims) => judgeDossierFindings(merged, findings, {
       ...xaiOpts(), judgeImpl, skipReviewClaims,
     }),

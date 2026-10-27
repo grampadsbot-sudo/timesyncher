@@ -56,7 +56,11 @@ for (const withLedger of [false, true]) for (const reject of [false, true]) {
       extractReviewsImpl: async () => ({ reviews: [], keep: [] }),
       buildImpl: async () => {
         builds += 1;
-        return { payload: {}, structuredText: '{}', findings: { summary: field(summary), description: field(description) } };
+        const findings = { summary: field(summary), description: field(description) };
+        if (!reject) {
+          findings.itineraryNote = field(`${target.title} — order the grilled fish beside the waterfront.`);
+        }
+        return { payload: {}, structuredText: '{}', findings };
       },
       judgeImpl: async (_dossier, claims) => claims.map(({ id }) => ({ id, supported: !reject })),
     })).results[0];

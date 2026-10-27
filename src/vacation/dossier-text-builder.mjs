@@ -86,7 +86,7 @@ export async function buildDossierText(dossier, place, {
     }
   }
   const noteVal = String(built.fields?.itineraryNote?.value || findings.itineraryNote?.value || '').trim();
-  if (!reviewsOnly && noteVal.length < 12) {
+  if (!reviewsOnly && noteVal.length < 12 && textProblems.length) {
     textProblems.push('itineraryNote missing: return a snappy cited itineraryNote (vibe + what to try/order) supported by saved pages; do not omit it when pages support a highlight');
   }
   if ((!reviewsOnly && textProblems.length || ['parse_error', 'judge_rejected_all'].includes(first.outcome.blankedBy)) && !outOfTime()) {
