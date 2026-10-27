@@ -79,3 +79,38 @@ export function patchSharedTripOeListRows(source = '') {
   }
   return js;
 }
+
+export function patchSharedTripListWrapping(source = '') {
+  const js = String(source || '');
+  const start = js.indexOf('be=({item:G})=>');
+  const end = js.indexOf(',tt=G=>', start);
+  if (start < 0 || end < 0) throw new Error('shared trip list wrapping anchors missing');
+  let rows = js.slice(start, end);
+  rows = rows.replaceAll(
+    'fontWeight:800,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"',
+    'fontWeight:800,width:"100%",minWidth:0,maxWidth:"100%",whiteSpace:"normal",overflowWrap:"anywhere"',
+  );
+  rows = rows.replaceAll(
+    '"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}',
+    '"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",whiteSpace:"normal",overflowWrap:"anywhere"}',
+  );
+  rows = rows.replaceAll(
+    'marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#475569",lineHeight:1.4',
+    'marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4',
+  );
+  rows = rows.replaceAll(
+    'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0,maxWidth:"100%"',
+    'whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0,maxWidth:"100%"',
+  );
+  rows = rows.replaceAll(
+    'overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})',
+    'whiteSpace:"normal",overflowWrap:"anywhere",minWidth:0},children:n.jsx("strong",{children:J(G)||"Rental"})',
+  );
+  if (!rows.includes('"data-ts-list-row-name":"1",style:{minWidth:0,maxWidth:"100%",width:"100%",whiteSpace:"normal"')) {
+    throw new Error('shared trip list name wrapping patch did not apply');
+  }
+  if (!rows.includes('minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569"')) {
+    throw new Error('shared trip list summary wrapping patch did not apply');
+  }
+  return js.slice(0, start) + rows + js.slice(end);
+}

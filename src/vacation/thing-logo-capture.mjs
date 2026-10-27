@@ -50,11 +50,14 @@ function text(value) {
 }
 
 function sourceRecord(thing = {}, override = {}) {
+  const metadata = thing.metadata && typeof thing.metadata === 'object' ? thing.metadata : {};
+  const nested = metadata.sourceRecord && typeof metadata.sourceRecord === 'object' ? metadata.sourceRecord : {};
+  const stored = thing.source_record && typeof thing.source_record === 'object' ? thing.source_record : {};
   const embedded = thing.sourceRecord && typeof thing.sourceRecord === 'object' ? thing.sourceRecord : {};
   const overrideRecord = override.sourceRecord && typeof override.sourceRecord === 'object' ? override.sourceRecord : {};
   const fromThing = thing.source && typeof thing.source === 'object' ? thing.source : {};
   const fromOverride = override.source && typeof override.source === 'object' ? override.source : {};
-  return { ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
+  return { ...nested, ...stored, ...embedded, ...overrideRecord, ...fromThing, ...fromOverride };
 }
 
 function thumbnailFromSource(source = {}) {
@@ -88,7 +91,10 @@ function brandLogoFromName(name = '') {
 function pageUrlForLogo(thing = {}, override = {}) {
   const source = sourceRecord(thing, override);
   return text(
-    source.url
+    override.url
+    || override.website
+    || override.sourceUrl
+    || source.url
     || source.website
     || source.sourceUrl
     || thing.url
@@ -165,6 +171,7 @@ export function sourceLogoUrl(thing = {}, override = {}) {
     thing.faviconUrl,
     override.logoUrl,
     override.iconUrl,
+    thing.captured_logo_url,
     thing.logoUrl,
     thing.iconUrl,
     thing.image_url,

@@ -26,5 +26,28 @@ assert.match(committed, /zr\.length\?n\.jsx\(Nr,\{items:zr/);
 assert.match(committed, /data-ts-day-map":"1"/);
 assert.match(committed, /gpe,\{center:Ia,zoom:11/);
 assert.match(committed, /a\.tile\.opentopomap\.org/);
+assert.match(committed, /ua\.time&&!ua\.endTime&&!ua\.isConflict\?n\.jsx\("div",\{"data-ts-timeline-time":"1"/);
+assert.match(committed, /alignSelf:ua\.time&&!ua\.endTime&&!ua\.isConflict\?"baseline":"start"/);
+assert.match(committed, /paddingTop:Zn\?8:2/);
+
+const timelineStart = committed.indexOf('return n.jsxs("div",{style:{display:"grid",gridTemplateColumns:"minmax(52px,64px)');
+const timelineEndMarker = ']},`${ua.type}-${Rn}-${ua.title}`)';
+const timelineEnd = committed.indexOf(timelineEndMarker, timelineStart);
+assert.ok(timelineStart > 0 && timelineEnd > timelineStart);
+const rowExpression = committed.slice(timelineStart, timelineEnd + timelineEndMarker.length);
+const jsx = (type, props) => ({ type, props });
+const rowFor = new Function('n', 'ua', 'Rn', 'Zn', 'Xr', 'sr', 'zr', 'Pn', 'Yo', 'Bs', 'rr', 'Nr', rowExpression);
+const row = (extra = {}) => rowFor({ jsx, jsxs: jsx, Fragment: 'fragment' }, { time: '12:00', title: 'Lunch', type: 'restaurant', item: {}, ...extra }, 0, false, '', '', [], 'Lunch', String, String, () => '', null);
+const single = row();
+assert.equal(single.props.children[0].props.style.alignSelf, 'baseline');
+assert.equal(single.props.children[2].props.style.alignSelf, 'baseline');
+assert.equal(single.props.children[0].props.children, '12:00');
+const ranged = row({ endTime: '13:00' });
+assert.equal(ranged.props.children[0].props.children[1].props.children[1].props.children, '13:00');
+assert.equal(ranged.props.children[2].props.style.alignSelf, 'start');
+const conflict = row({ isConflict: true });
+assert.equal(conflict.props.children[0].props.style.color, '#b91c1c');
+assert.equal(conflict.props.children[2].props.style.borderLeft, '3px solid #60a5fa');
+assert.equal(row({ time: '' }).props.children[2].props.style.alignSelf, 'start');
 
 console.log('itinerary fresh day-by-day bundle checks passed');

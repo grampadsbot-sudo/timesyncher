@@ -28,6 +28,14 @@ const payload = finalizeServedSharedTripPayload(buildNycPr225SharedTrip());
 const car = payload.places.find((place) => String(place.name || '').includes('Priceline'));
 assert.equal(payload.thingOverrides[`place:${car.id}`]?.rentalCompany, 'Priceline opaque');
 
+const nestedLogoPayload = finalizeServedSharedTripPayload({
+  places: [{ id: 801, name: 'North venue', category_name: 'Store', metadata: { sourceRecord: { favicon: 'https://north.example/icon.png' } } },
+    { id: 802, name: 'South venue', category_name: 'Restaurant', source_record: { logo: 'https://south.example/logo.svg' } }],
+  thingOverrides: {},
+});
+assert.equal(nestedLogoPayload.thingOverrides['place:801'].logoUrl, 'https://north.example/icon.png');
+assert.equal(nestedLogoPayload.thingOverrides['place:802'].logoUrl, 'https://south.example/logo.svg');
+
 const dcSnippet = bundle.slice(bundle.indexOf('dc=({item:G,size:Re=28})'), bundle.indexOf('dc=({item:G,size:Re=28})') + 900);
 assert.match(dcSnippet, /"data-ts-logo-chip":"1"/, 'logo chip exposes Gate B marker');
 assert.match(dcSnippet, /children:zt\?\[n\.jsx\("img"/, 'logo chip uses img or emoji fallback');
