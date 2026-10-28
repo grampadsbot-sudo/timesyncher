@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { productThingCategory } from '../src/vacation/keepsake-product-overrides.mjs';
+import { pickFlightListRowSummaryText, STORED_SUMMARY_LIST_ROW_PICK_BUNDLE } from '../src/vacation/flight-list-row-summary.mjs';
 
 import { compareColumnRows, nextColumnSort, rowPriceAmount, LIST_SORT_PRESENTATION } from '../src/vacation/list-column-sort.mjs';
 import { finalizeServedSharedTripPayload } from '../src/vacation/shared-trip-served-page.mjs';
@@ -69,4 +70,57 @@ assert.equal(rowPriceAmount('no amount'), null);
 assert.deepEqual(nextColumnSort({ key: 'price', dir: 'asc' }, 'name'), { key: 'name', dir: 'asc' });
 assert.deepEqual(nextColumnSort({ key: 'name', dir: 'asc' }, 'name'), { key: 'name', dir: 'desc' });
 
-console.log('shared tab list summary tests passed');
+const bundledFlightPick = Function(`return (${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE})`)();
+const flightSummaryCases = [
+  {
+    name: 'Southwest one stop base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;',
+    expected: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop;',
+  },
+  {
+    name: 'Southwest via DAL base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;',
+    expected: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop via DAL;',
+  },
+  {
+    name: 'long Airline semicolon base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that same afternoon with fares listed separately.',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;  Stops: 1 stop;',
+  },
+  {
+    name: 'long Airline period base f7be729',
+    input: 'Airline: Southwest; Route: LAS-LGA; Stops: 1 stop. Outbound travel departs in the morning and arrives later that same afternoon with fares listed separately.',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;  Stops: 1 stop.',
+  },
+  {
+    name: 'non-Airline base f7be729',
+    input: 'Neighborhood bistro with a short wine list and late seating. Book ahead on weekends for the dining room and outdoor tables.',
+    expected: 'Neighborhood bistro with a short wine list and late seating.',
+  },
+  {
+    name: 'Documented option base f7be729',
+    input: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
+    expected: 'Documented flight option with Airline: Southwest; Route: LAS-LGA; Stops: 1 stop; Outbound travel departs in the morning and arrives later that afternoon.',
+  },
+  {
+    name: 'whitespace base f7be729',
+    input: '  Airline: Southwest;  Route: LAS-LGA;\tStops: 1 stop;  ',
+    expected: 'Airline: Southwest;  Route: LAS-LGA;\tStops: 1 stop;',
+  },
+  ...[';', '.'].map((terminator) => ({
+    name: `Airline fallback preserves ${terminator}`,
+    input: `Airline: Example Air has a route; Route: AAA-BBB; Stops: no stops; Out: at dawn; Back: at dusk${terminator}`,
+    expected: `Airline: Example Air has a route; Route: AAA-BBB; Stops: no stops; Out: at dawn; Back: at dusk${terminator}`,
+  })),
+  { name: 'short non-Airline', input: 'No saved flight details', expected: 'No saved flight details' },
+  { name: 'empty', input: '', expected: '' },
+  { name: 'null', input: null, expected: '' },
+  { name: 'zero', input: 0, expected: '0' },
+];
+for (const { name, input, expected } of flightSummaryCases) {
+  const picked = pickFlightListRowSummaryText(input);
+  assert.equal(picked, expected, name);
+  assert.equal(bundledFlightPick(input), picked, `${name} bundle parity`);
+}
+
+console.log(`shared tab list summary tests passed (${flightSummaryCases.length} flight picker expectations and bundle parity cases)`);
