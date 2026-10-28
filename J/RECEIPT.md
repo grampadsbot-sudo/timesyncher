@@ -1,37 +1,43 @@
-# PR687 host handoff
+# PR #693 U2–U5 source handoff
 
-Outcome: source-ready for host review; uncommitted changes only. PR completion, publication, data acceptance and CI success are not claimed. Reference: starting and current HEAD `c71dc06e2404837c4742c783662e54ef183a0370`; source patch SHA256 `ab8925df09144f94487391ada7df1b16438f104365cbab7a31cc2cf3d3e4a6b0`.
+Outcome: source-ready for host review only; all source changes are uncommitted on starting HEAD `04e5f55e5c7c8a4ca4bc39e96c306214cd53711d`. No new commit or pushed head exists. Product acceptance remains open.
 
-Model: gpt-6.1-sol. One agent; no delegation, other model calls, paid provider runs or credential extraction. Git metadata was not changed. No stage, commit, push, merge, rebase, deployment or remote messages.
-
-## Authority and scope
-
-Read current GBrain `bot-admin/lanes/vk-pr-handoff/pr-687`, `bot-admin/messages/time-syncher/decisions-log` (#60/#61), `bot-admin/messages/time-syncher/eggbot-thing-dossier-central-db-nyc-20261025`, governing request `bot-admin/messages/time-syncher/eggbot-chief-687-passb-fill-now-20261025-2142`, the required repository SoTs, and the engineer, Thing data, keepsake QA and Vacation verification skill pages. CLI `gbrain get` succeeded; the published-skill catalog route returned no entries, so the existing skill pages supplied the instructions.
-
-Verified PR687 branch/head and base `migrate/trek-source` through read-only GitHub API; inspected its latest comments. Retained every ownership hold and quota/round requirement. The newest handoff scopes this source round to the cumulative dossier builder, with no Gate B pixel round. No UI/rendering or PR693 change, screenshot, pstack, SCT or QA launch.
+Authorization: the current chief comment clears `hold:dr-diagnosis` and `hold:after-687` and launches `R-693-fold-u2-u5-20261027`: https://github.com/grampadsbot-sudo/timesyncher/pull/693#issuecomment-6455960934 . Current PR head and branch matched the brief. Read-only live evidence is saved in `pr-693-current.json` and `pr-687-current.json` in the job directory. GBrain `bot-admin/lanes/vk-pr-handoff/pr-693` is older; the current launch authorizes source work. Data-filled build remains required for acceptance by `bot-admin/messages/time-syncher/two-pr-strategy` and `bot-admin/messages/time-syncher/ui-acceptance-matrix`.
 
 ## Source changes
 
-- `scripts/build_nyc_thing_evidence_dossiers.mjs` derives its targets from the existing inventory instead of the nine-place constant: 94 targets (22 hotels, 16 flights, 15 stores, 15 attractions/events, 25 restaurants, one car). It preserves each target's source metadata, coordinates, address and trip identity. CLI preflight rejects missing xAI key/model or Brave configuration before storage/search mutations; it does not load or print credentials.
-- The existing dossier store now supports shared dossiers for matching title/category/address/URL identities and trip references to those dossiers. The inventory runner opts shared types into this path; flights/cars retain trip keys. Shared dossiers retain cumulative captured pages/attempts and unique trip IDs/use count. Legacy trip captures migrate into the shared record. Async and disk readers follow trip references; writes through references update the shared record.
-- Gap top-ups reserve and checkpoint each numbered attempt in `attempts[]`, count earlier attempts/legacy shortcomings and enforce at most three per missing field across resumes. New web/page/gap events carry timestamps. Saved zero-page attempts resume gap work without repeating the full initial gather.
-- Initial gather preserves shared metadata. Saved-review rebuild now receives the dossier after top-ups, preserving those pages and retry reservations.
-- Extended three existing classified tests; no new test file or manifest edit. Added full inventory coverage, alternate input coverage, shared reuse/trip counts, flight/car isolation, disk-reference reading, preflight-before-mutation, legacy retry budgets, interrupted reservations, empty-capture resume and saved-review ledger checks.
+- U2: reuse the existing emoji ink-centering/mobile label behavior and center vector tab icons in the same 16px flex slot; no 0.75px nudge imported from #591. New maintained source module is `src/vacation/trek-tab-icon-center-patches.mjs`, imported by the existing bundle builder. This is a candidate fold, not proof that Craig's original emoji case is accepted.
+- U3: align time and title to their grid baseline only for a single non-conflict time. Preserve ranged, untimed and conflict rendering. Runtime cases execute the actual emitted row expression.
+- U4: remove name/summary truncation in the actual served Oe list renderer and hotel/car name headers. Preserve the nonshrinking nowrap price cell, original row controls and U1 stars. Runtime cases execute actual emitted compact/expanded hotel rows with long text and a price.
+- U5: fold #590's useful production logo resolution into preview list lookup and the shared server logo resolver. Recognize nested metadata/source_record logos, captured logos and saved override website URLs. Existing override preference and story-media rejection remain. Test the served payload finalizer with distinct sourced logos. No fixture replay route or capture modification imported.
+- Rebuilt `public/assets/index-BKun7ofk.js` using `node scripts/rebake_served_trek_bundle.mjs`; byte parity with the maintained builder is checked. No hand edit of compiled output.
 
-## Verification on the uncommitted source at c71dc06e2404837c4742c783662e54ef183a0370
+Feature Map coverage already exists in `features/README.md`: `features/itinerary-surfaces.md` (tabs), `features/day-view.md` (timeline), `features/logos.md` (logos), `features/hotel-stay-fields.md` and `features/ratings-reviews.md`. No UI acceptance claim is made.
 
-All 15 focused checks exited 0; exact commands/results are in `/home/ubishere9995/tsv-work/vkfill-687-20261025215805-job/test-results.json` and per-test logs. These include the dossier data batch, evidence682, worker route, refresh integration, retry682, reviews/identity682, hydration682, staging fixes682, base dossier, rejected claims/shortcomings682, cost682, fixture overlay, keepsake style2, bundle strip and served bundle checks.
+## Local validation on 04e5f55e5c7c8a4ca4bc39e96c306214cd53711d + PATCH.diff sha256 381c3ef1e6df5c10eda0eaf746a6255edbefc13e2a575c9df3dd42f99fc305bd
 
-Final gates exited 0: `node scripts/check-no-comments.mjs` (898 files), `node scripts/test_offline_manifest.mjs` (310 offline/17 online), `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs` (255 reports/0 failures), and `git diff --check`. Logs and exit codes: `/home/ubishere9995/tsv-work/vkfill-687-20261025215805-job/gate-results.json`.
+14 focused checks exited 0; see `focused-checks.json` and their logs. These include U1 star model/served bundle, category tabs, Day-by-Day, shared list summary, source/served logos, logo centering, shared categories and `node scripts/test_keepsake_style2.mjs`. After adding runtime assertions, the Day-by-Day and list-summary checks again exited 0. No existing assertion was removed or loosened; no new test file was introduced.
 
-Baseline proof: loading the unchanged starting-HEAD top-up/count modules into the same new behavioral test fails with `3 !== 1` at "two saved failures leave only one search". Current code passes. See `/home/ubishere9995/tsv-work/vkfill-687-20261025215805-job/baseline-topup-regression.log`.
+Production build exited 0: `VERCEL_GIT_COMMIT_SHA=04e5f55e5c7c8a4ca4bc39e96c306214cd53711d npm run build`. The first build lacked the required build SHA; the corrected command uses the existing declared input. The stamp is the starting HEAD, not a claim of a new published build. Locked root and vacation-client dependencies were installed with `npm ci --ignore-scripts`; manifests and lockfiles were unchanged.
 
-The supplied worktree lacks installed Neon/TypeScript dependencies. Initial direct test/check attempts failed with module-not-found. Tests then used the read-only dependency resolver `/home/ubishere9995/tsv-work/vkfill-687-20261025215805-job/dependency-resolver.mjs` against the existing `vkfill-693-20261024164917` dependency installation. Both root and client package-lock files are byte-identical to this worktree. No dependency/package/lock/checker file was modified; only dependency resolution changed for local execution. This setup is not a CI pass claim.
+Required handoff checks exited 0 (logs in job directory):
+- `node scripts/check-no-comments.mjs`: 872 files scanned.
+- `node scripts/test_offline_manifest.mjs`: 297 offline / 17 online.
+- `BASE=migrate/trek-source node scripts/check-code-ratchet.mjs`: 255 report / 0 fail.
+- `git diff --check`.
 
-## CI and remaining host work
+## Visual and publication limits
 
-Existing starting-head CI is red: run `40271625366`, job `121405479970`, `unit-tests`; also run `40271620901`, job `121405466831`. First failure annotation: `Process completed with exit code 1.` Underlying test assertion: not found in the accessible annotations. Read-only job-log GET `/repos/grampadsbot-sudo/timesyncher/actions/jobs/121405479970/logs` returned HTTP 403; no credential/privilege retry was attempted. Evidence: `github-final-checks.json`, `github-annotations-121405479970.json`, `ci-log-read-error.txt`. PR comment `6408658061` reports the stopped CI loop; current issue labels are `status:stuck` and `needs-dr-eggbot`. No CI rerun, guard reset, label change or speculative CI fix.
+NOT merge-eligible yet. No new-head CI, current structure-mode 32-screen Gate B, Craig-eye acceptance, live build SHA, or Style one/two live+PDF QA receipt was produced. Source PRs #591/#590/#560/#550 remain open and no U row is accepted.
 
-Host owns review, Git publication and any targeted CI diagnosis. The credential route checked is the current handoff's sanctioned vacation runtime loader (Vercel env), with the repo provider-name contract in `src/vacation/provider-env.mjs`. This runner explicitly forbids credential extraction/other models; no host credential availability claim is made. Host must perform the sanctioned credentialed run and evaluate actual by-type present/presented results, >=80% by type and Craig's sample. This round produces source only: no real capture, central production import, synthetic seed acceptance, live build or present/presented acceptance. The shared binding is opt-in for this inventory runner; this round does not claim all other capture entry points have been migrated.
+The supplied fixture `/home/ubishere9995/tsv-dispatch/fixture-nyc/nyc-shared.json` fails the current capture pre-data check: 52 failures (21 hotel_description_judge, 31 blank_price). Exact result: `capture-pre-data-check.json`. Example: Arthouse Hotel generic `Documented NYC option (hotel)` and blank price. The current #687 head `2ba6416b7afe11325c96a53d1891f594fdf9c9ad` also retains `hold:test-trip-fixture`: https://github.com/grampadsbot-sudo/timesyncher/pull/687#issuecomment-6455759536 . These are data/harness prerequisites, not UI text to invent or checks to relax.
 
-Review artifacts: `/home/ubishere9995/tsv-work/vkfill-687-20261025215805-job/SOURCE-CHANGES.patch`, this receipt and `J/PR_DESCRIPTION.md`. GBrain filing and PR-description publication remain with the host. No source write failed.
+`baselines/manifest.json` is absent in this worktree. GBrain access was successfully checked with `gbrain get bot-admin/lanes/vk-pr-handoff/pr-693`, `gbrain get skills/vk-thing-data-contract/skill`, `gbrain get skills/timesyncher-vacation-verification/skill`, `gbrain get bot-admin/messages/time-syncher/two-pr-strategy`; snapshots are in the job directory. The engineering/verification skills state NYC screenshots are historical references, not approved baselines. No baseline was substituted or edited.
+
+One local browser diagnostic was attempted against the built served route, without capture CSS or product environment detection. Command: `node /home/ubishere9995/tsv-work/vkfill-693-20261027161756-job/inspect-served-ui.mjs`. It exited 1: `TimeoutError: Waiting for selector [data-ts-tab] failed` (15000ms). No screenshots were produced (diagnostic-ui.json has 0 screens); this failed local harness attempt is not evidence of a source pass or a Gate B verdict. No second browser/capture round ran. The script/report remain job-only, outside the source patch.
+
+## Host next action
+
+Review/apply the uncommitted source candidate and PATCH.diff, including the new tab module. The outer host owns commit, push, PR publication and any lane-END wake. Preserve ownership, round history, quotas and remaining data/harness holds. Obtain a data-filled build, then perform the sanctioned 390/1280 checks for U2–U5 and U1 regression plus current named 32-screen Gate B and exact published-head CI before acceptance. Do not merge this candidate on these local checks alone.
+
+No Git metadata mutation, source publication, merge, rebase, deployment, external messaging, paid/model fallback, provider fill, baseline/check/config/dependency change, SCT/QA launch, or gate reset was performed. GBrain receipt publication is left for the host under HOST PUBLICATION ONLY.

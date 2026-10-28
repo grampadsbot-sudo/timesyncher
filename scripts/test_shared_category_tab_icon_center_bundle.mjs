@@ -12,9 +12,13 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /data-tab-category":G\.id/);
+assert.match(rendered, /"data-tab-category":G\.id,"data-ts-category-tab-icon":"1","data-ts-logo-chip":"1"/);
+assert.equal((rendered.match(/data-tab-category":G\.id/g) || []).length, 1);
 assert.match(rendered, /display:"inline-flex",alignItems:"center",verticalAlign:"middle"\},children:G\.label\}/);
 assert.match(rendered, /function tsPaintTabEmoji\(/);
+assert.match(rendered, /"data-ts-category-tab-icon":"1","aria-hidden":"true",style:\{width:16,height:16,minWidth:16,display:"inline-flex",alignItems:"center",justifyContent:"center",lineHeight:1,flex:"0 0 16px",alignSelf:"center"\},children:n\.jsx\(G\.Icon,\{size:13\}\)/);
+assert.doesNotMatch(rendered, /translateY\(0\.75px\)/);
+assert.match(rendered, /if\(label\.style\.display!=="none"\)/);
 assert.match(rendered, /AI-assisted vacation itinerary planning/);
 
 const atR20Tip = execFileSync('git', ['show', '9986132:public/assets/index-BKun7ofk.js'], {

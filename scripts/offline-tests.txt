@@ -51,6 +51,8 @@ scripts/test_check_dialog_pack.mjs
 scripts/test_check_no_comments.mjs
 scripts/test_trek_bundle_strip.mjs
 scripts/test_served_trek_bundle.mjs
+scripts/test_served_star_rating_bundle.mjs
+scripts/test_star_rating_model.mjs
 scripts/test_trip_map_initial_view.mjs
 scripts/test_trip_map_initial_view_bundle.mjs
 scripts/test_trip_map_harness_hook_bundle.mjs

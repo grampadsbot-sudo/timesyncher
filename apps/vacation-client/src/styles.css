@@ -494,7 +494,7 @@ body {
   align-self: center;
 }
 
-.tsv-row-car-head .tsv-row-name {
+.tsv-row-car-head .tsv-row-title-stack {
   grid-row: 1;
   grid-column: 2;
   align-self: center;
@@ -527,13 +527,60 @@ body {
   flex-shrink: 0;
 }
 
+.tsv-row-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  grid-column: 2;
+}
+
 .tsv-row-name {
   font-weight: 800;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  grid-column: 2;
+  width: 100%;
+}
+
+.tsv-row-rating {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.tsv-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.tsv-star {
+  display: block;
+  flex-shrink: 0;
+}
+
+.tsv-star-full,
+.tsv-star-half-full {
+  color: #f2b01e;
+}
+
+.tsv-star-empty,
+.tsv-star-half-empty {
+  color: #475569;
+}
+
+.tsv-detail-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tsv-detail-rating-caption {
+  color: #cbd5e1;
 }
 
 .tsv-row-price {
@@ -1147,7 +1194,6 @@ button.tsv-timeline-link {
 }
 
 .tsv-review-stars {
-  font-weight: 800;
   margin-bottom: 6px;
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
+import { StarRating } from './StarRating';
 import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
 
 type Props = {
@@ -87,7 +88,8 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
           ) : null}
           {model.ratingLines.map((line) => (
             <p key={line.id} className="tsv-detail-rating" data-ts-detail-field="rating">
-              {line.text}
+              <StarRating value={line.value} />
+              {line.caption ? <span className="tsv-detail-rating-caption"> {line.caption}</span> : null}
             </p>
           ))}
           {model.summary ? (
@@ -146,8 +148,10 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
                         {review.compositeLabel}
                       </p>
                     ) : null}
-                    {review.rating ? (
-                      <div className="tsv-review-stars">{review.rating} ★</div>
+                    {review.ratingValue != null ? (
+                      <div className="tsv-review-stars">
+                        <StarRating value={review.ratingValue} />
+                      </div>
                     ) : null}
                     <p>{review.text}</p>
                   </li>

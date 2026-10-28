@@ -7,6 +7,7 @@ import { tripMapHookBundleSnippet } from './trip-map-hook.mjs';
 import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
+import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -147,6 +148,7 @@ export function patchThingLogoChipAlignment(source = '') {
   } else if (!js.includes('alignItems:"center",lineHeight:1,gap:4,background:q===G.id?')) {
     throw new Error('trek bundle missing category tab button anchor for line-height patch');
   }
+  js = patchTabIconVerticalCenter(js);
   if (js.includes(TAB_BUTTON_DATA_TAB_NEEDLE)) {
     js = js.replace(TAB_BUTTON_DATA_TAB_NEEDLE, TAB_BUTTON_DATA_TAB_PATCH);
   } else if (!js.includes('"data-ts-tab":G.id,"data-tab":G.id,title:Re?G.label:void 0')) {
