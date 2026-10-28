@@ -224,7 +224,11 @@ export function detailItineraryNote(place, trip) {
 }
 
 export function detailHappyHour(override) {
-  return text(override.happyHourDetails);
+  const raw = text(override.happyHourDetails);
+  if (!raw || /^no happy hour found$/i.test(raw)) return '';
+  if (/^false$/i.test(raw)) return '';
+  if (String(override.happyHour ?? '').toLowerCase() === 'false' && !raw) return '';
+  return raw;
 }
 
 export function detailPriceLabel(place, trip, category) {
@@ -345,15 +349,29 @@ function hotelExtraRows(override) {
   return rows;
 }
 
+function detailAddressHoursBox(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const address = text(override.address || place.address || source.address);
+  const hours = text(override.hours || source.hours || source.openingHours);
+  if (!address && !hours) return null;
+  const lines = [];
+  if (address) lines.push({ key: 'address', label: 'Address', value: address });
+  if (hours) lines.push({ key: 'hours', label: 'Hours', value: hours });
+  return { lines };
+}
+
+function detailPhoneCallBox(place, trip) {
+  const override = overrideFor(trip, place);
+  const source = sourceRecord(place, override);
+  const phone = text(override.phone || place.phone || source.phone || source.telephone);
+  if (!phone) return null;
+  return { phone, href: `tel:${phone.replace(/\s+/g, '')}` };
+}
+
 function standardContactRows(place, override) {
   const source = sourceRecord(place, override);
   const rows = [];
-  const address = text(override.address || place.address || source.address);
-  if (address) rows.push({ key: 'address', label: 'Address', value: address });
-  const hours = text(override.hours || source.hours || source.openingHours);
-  if (hours) rows.push({ key: 'hours', label: 'Hours', value: hours });
-  const phone = text(override.phone || place.phone || source.phone || source.telephone);
-  if (phone) rows.push({ key: 'phone', label: 'Phone', value: phone, href: `tel:${phone.replace(/\s+/g, '')}` });
   const website = text(override.website || override.url || place.url || source.website || source.url);
   const websiteHref = safeHttpUrl(website);
   if (website) {
@@ -427,6 +445,8 @@ export function buildDetailViewModel(place, trip) {
         : '',
     reviewTotalsLine: detailReviewTotalsLine(override),
     summarySourceUrls: detailSummarySourceUrls(override),
+    addressHoursBox: detailAddressHoursBox(place, trip),
+    phoneCallBox: detailPhoneCallBox(place, trip),
     fieldRows: detailFieldRows(place, trip),
   };
 }

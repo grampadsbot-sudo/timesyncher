@@ -111,6 +111,9 @@ function pickLongDetails(place = {}, override = {}, source = null) {
     place.longDetails,
     source?.longDetails,
     source?.details,
+    override.description,
+    place.description,
+    source?.description,
   );
 }
 

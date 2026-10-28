@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { bravePoint } from './brave-place-query.mjs';
 import { intakeLodgingLookupQuery } from './intake-lodging-lookup.mjs';
-import { braveSubscriptionKey, BRAVE_SEARCH_RES_V1 } from './poi-search.mjs';
+import { braveSubscriptionKey, tavilyApiKey, BRAVE_SEARCH_RES_V1 } from './poi-search.mjs';
+import { dossierTavilySearch } from './dossier-tavily-search.mjs';
 const nameKey = (value) => String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
 function finite(value) {
@@ -68,20 +69,142 @@ export function bravePoiPage(poi = {}, { fetchedAt = new Date().toISOString(), i
   };
 }
 
-async function braveGet(path, key, fetchImpl) {
-  const response = await fetchImpl(`${BRAVE_SEARCH_RES_V1}${path}`, { method: 'GET', headers: { accept: 'application/json', 'X-Subscription-Token': key } });
-  if (!response?.ok) throw new Error(`brave_http_${Number(response?.status) || 0}`);
-  return response.json();
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function braveGet(path, key, fetchImpl, options = {}) {
+  const { attempts = [], query = '', step = 'web_search', deadline = 0, sleepImpl = pause } = options;
+  const pace = options.bravePace || { nextAt: 0 };
+  if (pace.unavailable) throw new Error(pace.unavailable);
+  for (let retry = 0; retry <= 2; retry += 1) {
+    const wait = Math.max(0, pace.nextAt - Date.now());
+    if (deadline && Date.now() + wait >= deadline) throw new Error('brave_deadline');
+    if (wait) await sleepImpl(wait);
+    const startedAt = new Date().toISOString();
+    pace.nextAt = Date.now() + 1050;
+    let response;
+    try {
+      response = await fetchImpl(`${BRAVE_SEARCH_RES_V1}${path}`, {
+        method: 'GET', headers: { accept: 'application/json', 'X-Subscription-Token': key },
+      });
+      if (response?.ok) {
+        const payload = await response.json();
+        attempts.push({ kind: 'brave', step, query, startedAt, status: 'ok', httpStatus: Number(response.status) || 200,
+          results: (payload.web?.results || payload.locations?.results || payload.results || []).length, retry });
+        return payload;
+      }
+    } catch {
+      attempts.push({ kind: 'brave', step, query, startedAt, status: 'failed', error: 'brave_request_failed', retry });
+      throw new Error('brave_request_failed');
+    }
+    const status = Number(response?.status) || 0;
+    if ([401, 402, 403].includes(status)) pace.unavailable = `brave_http_${status}`;
+    attempts.push({ kind: 'brave', step, query, startedAt, status: 'failed', httpStatus: status,
+      error: `brave_http_${status}`, results: 0, retry });
+    const header = response?.headers?.get?.('retry-after');
+    const requested = header == null ? 250 * 2 ** retry
+      : /^\d+(?:\.\d+)?$/.test(header) ? Number(header) * 1000 : Math.max(0, Date.parse(header) - Date.now());
+    const backoff = Number.isFinite(requested) ? Math.max(0, requested) : 250 * 2 ** retry;
+    if (retry === 2 || !(status === 429 || status >= 500 && status <= 599)
+      || backoff > 2000 || deadline && Date.now() + Math.max(backoff, pace.nextAt - Date.now()) >= deadline) {
+      throw new Error(`brave_http_${status}`);
+    }
+    pace.nextAt = Math.max(pace.nextAt, Date.now() + backoff);
+  }
+}
+
+function starFromSnippet(snippet = '') {
+  const m = String(snippet).match(/(\d(?:\.\d)?)\s*(?:\/\s*5|out of 5|stars?)/i);
+  return m ? Number(m[1]) : null;
+}
+
+export function normalizeBraveWebResults(payload = {}, query = '') {
+  const web = payload?.web?.results || payload?.results || [];
+  const out = [];
+  for (const row of web) {
+    const url = String(row.url || row.link || '').trim();
+    if (!/^https?:\/\//.test(url)) continue;
+    const title = String(row.title || '').trim();
+    const snippets = [
+      String(row.description || row.snippet || '').trim(),
+      ...(Array.isArray(row.extra_snippets) ? row.extra_snippets.map((s) => String(s || '').trim()) : []),
+    ].filter(Boolean);
+    const rating = starFromSnippet(snippets.join(' '));
+    out.push({ url, title, snippets, rating, query });
+  }
+  return out;
+}
+
+export async function braveWebSearch(query, options = {}) {
+  const { env = process.env, fetchImpl = globalThis.fetch, count = 8 } = options;
+  const startedAt = new Date().toISOString();
+  const key = braveSubscriptionKey(env);
+  if (!String(query || '').trim()) return { results: [], attempts: [{ kind: 'brave', step: 'web_search', startedAt, status: 'no_query', query }] };
+  if (!key) {
+    const attempts = [{ kind: 'brave', step: 'web_search', startedAt, status: 'missing_key', query }];
+    return tavilyApiKey(env) ? dossierTavilySearch(query, options, attempts) : { results: [], attempts };
+  }
+  if (options.bravePace?.unavailable) return dossierTavilySearch(query, options);
+  const attempts = [];
+  try {
+    const params = new URLSearchParams({ q: String(query).trim(), count: String(count) });
+    const payload = await braveGet(`/web/search?${params}`, key, fetchImpl, { ...options, query, attempts });
+    const results = normalizeBraveWebResults(payload, query);
+    attempts.at(-1).results = results.length;
+    return { results, attempts };
+  } catch (error) {
+    if (!attempts.length || error.message === 'brave_deadline') attempts.push({ kind: 'brave', step: 'web_search', startedAt,
+      status: 'failed', query, error: error.message, results: 0 });
+    if (error.message === 'brave_deadline') return { results: [], attempts };
+    return dossierTavilySearch(query, options, attempts);
+  }
+}
+
+export async function runBraveQueries(queries = [], options = {}) {
+  options = { ...options, bravePace: options.bravePace || { nextAt: 0 } };
+  const pages = [];
+  const attempts = [];
+  const braveResults = [];
+  const seen = new Set();
+  for (const row of queries) {
+    if (options.deadline > 0 && Date.now() >= options.deadline) break;
+    const query = typeof row === 'string' ? row : row.query;
+    const { results, attempts: att } = await braveWebSearch(query, options);
+    if (row.stage) for (const attempt of att) {
+      if (attempt.provider === 'Tavily') attempt.searchStage = row.stage;
+      else attempt.stage = row.stage;
+    }
+    attempts.push(...att);
+    for (const hit of results) {
+      if (seen.has(hit.url)) continue;
+      seen.add(hit.url);
+      braveResults.push(hit);
+      const snippetText = [hit.title, ...hit.snippets].filter(Boolean).join('\n').slice(0, 12000);
+      if (snippetText.trim()) {
+        pages.push({
+          url: hit.url,
+          fetchedAt: new Date().toISOString(),
+          text: snippetText.slice(0, 12000),
+          via: hit.provider === 'Tavily' ? 'tavily-search' : 'brave-snippet',
+          sha256: createHash('sha256').update(snippetText).digest('hex'),
+          braveSnippet: true,
+        });
+      }
+    }
+    if (options.onProgress) await options.onProgress({ pages: [...pages], attempts: [...attempts], braveResults: [...braveResults] });
+  }
+  return { pages, attempts, braveResults };
 }
 
 export async function braveLocalEvidence(place = {}, {
-  destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
+  destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch, bravePace = { nextAt: 0 }, sleepImpl, deadline,
 } = {}) {
   const attempts = [];
   const name = String(place.title || place.name || '').trim();
   const key = braveSubscriptionKey(env);
   if (!key || !name) return { pages: [], attempts: [{ kind: 'brave', status: key ? 'no_name' : 'missing_key' }] };
+  const localOptions = (step) => ({ attempts, query: lookupQuery, step, bravePace, sleepImpl, deadline });
   const lookupQuery = intakeLodgingLookupQuery(name, destination) || name;
+  if (bravePace.unavailable) return runBraveQueries([{ query: lookupQuery, stage: 'reviews' }], { env, fetchImpl, bravePace, sleepImpl, deadline });
   let rows = [];
   const searchCenter = destinationCenter(place, center);
   try {
@@ -93,17 +216,16 @@ export async function braveLocalEvidence(place = {}, {
         radius: '5000',
         count: '8',
       });
-      rows = (await braveGet(`/local/place_search?${params}`, key, fetchImpl))?.results || [];
-      attempts.push({ kind: 'brave', step: 'place_search', status: 'ok', results: rows.length });
+      rows = (await braveGet(`/local/place_search?${params}`, key, fetchImpl, localOptions('place_search')))?.results || [];
     }
     if (!pickBraveLocation(rows, name)) {
       const params = new URLSearchParams({ q: lookupQuery, result_filter: 'locations', count: '8' });
-      rows = (await braveGet(`/web/search?${params}`, key, fetchImpl))?.locations?.results || [];
-      attempts.push({ kind: 'brave', step: 'local_search', status: 'ok', results: rows.length });
+      rows = (await braveGet(`/web/search?${params}`, key, fetchImpl, localOptions('local_search')))?.locations?.results || [];
     }
   } catch (error) {
     attempts.push({ kind: 'brave', step: 'search', status: 'failed', error: String(error?.message || '').slice(0, 40) });
-    return { pages: [], attempts };
+    const fallback = await runBraveQueries([{ query: lookupQuery, stage: 'reviews' }], { env, fetchImpl, bravePace: { ...bravePace, unavailable: error.message }, sleepImpl, deadline });
+    return { ...fallback, attempts: [...attempts, ...fallback.attempts] };
   }
   const hit = pickBraveLocation(rows, name);
   if (!hit) {
@@ -111,12 +233,13 @@ export async function braveLocalEvidence(place = {}, {
     return { pages: [], attempts };
   }
   try {
-    const pois = (await braveGet(`/local/pois?${new URLSearchParams({ ids: hit.id })}`, key, fetchImpl))?.results || [];
+    const pois = (await braveGet(`/local/pois?${new URLSearchParams({ ids: hit.id })}`, key, fetchImpl, localOptions('pois')))?.results || [];
     const page = bravePoiPage(pois[0] || {}, { id: hit.id });
-    attempts.push({ kind: 'brave', step: 'pois', status: page ? 'ok' : 'empty', reviews: page?.braveReviews.length || 0, rating: Boolean(page?.braveRating) });
+    Object.assign(attempts.at(-1), { reviews: page?.braveReviews.length || 0, rating: Boolean(page?.braveRating) });
     return { pages: page ? [page] : [], attempts };
   } catch (error) {
     attempts.push({ kind: 'brave', step: 'pois', status: 'failed', error: String(error?.message || '').slice(0, 40) });
-    return { pages: [], attempts };
+    const fallback = await runBraveQueries([{ query: lookupQuery, stage: 'reviews' }], { env, fetchImpl, bravePace: { ...bravePace, unavailable: error.message }, sleepImpl, deadline });
+    return { ...fallback, attempts: [...attempts, ...fallback.attempts] };
   }
 }

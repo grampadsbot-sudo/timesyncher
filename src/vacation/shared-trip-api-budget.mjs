@@ -221,24 +221,48 @@ export function syncSharedTripApiBudget(shared = {}) {
   const visible = visibleAmountSet(rows, shared);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
   const lines = [...existing.map((line) => ({ ...line }))];
+  const coveredPlaces = new Set(lines.map((line) => String(line.place_id ?? '')));
+  const coveredIds = new Set(lines.map((line) => String(line.id)));
   const covered = new Set(
     lines
       .map((line) => Number(line.total_price))
       .filter((n) => Number.isFinite(n)),
   );
 
+  for (const row of rows) {
+    if (!row.hasPrice) continue;
+    const placeId = String(row.place.id);
+    const nameKey = text(row.place.name || row.place.title).toLowerCase();
+    for (const line of lines) {
+      const linePlace = String(line.place_id ?? '');
+      const lineName = text(line.name).toLowerCase();
+      const samePlace = linePlace && linePlace === placeId;
+      const sameName = lineName && lineName === nameKey;
+      if (!samePlace && !sameName) continue;
+      if (!Number(line.total_price) || line.total_price === 0) {
+        line.total_price = row.amount;
+        line.place_id = row.place.id;
+      }
+    }
+  }
+
   let sortOrder = lines.length;
   for (const row of rows) {
-    if (covered.has(row.amount)) continue;
+    const id = intId(`${tripId}:budget:place:${row.place.id}`);
+    const placeId = String(row.place.id);
+    if (coveredPlaces.has(placeId) || coveredIds.has(String(id))) continue;
     lines.push({
-      id: intId(`${tripId}:budget:place:${row.place.id}`),
+      id,
       trip_id: tripId,
+      place_id: row.place.id,
       category: row.bucket,
       name: text(row.place.name || row.place.title) || 'Trip item',
       total_price: row.amount,
       note: '',
       sort_order: sortOrder,
     });
+    coveredPlaces.add(placeId);
+    coveredIds.add(String(id));
     covered.add(row.amount);
     sortOrder += 1;
   }
@@ -258,5 +282,31 @@ export function syncSharedTripApiBudget(shared = {}) {
     sortOrder += 1;
   }
 
-  return { ...shared, budget: lines };
+  const pricedHotelNames = new Set(
+    rows
+      .filter((row) => row.bucket === 'Hotel' && row.hasPrice)
+      .map((row) => text(row.place.name || row.place.title).toLowerCase())
+      .filter(Boolean),
+  );
+  const keptHotelNames = new Set();
+  const deduped = [];
+  for (const line of lines) {
+    if (line.category !== 'Hotel') {
+      deduped.push(line);
+      continue;
+    }
+    const nameKey = text(line.name).toLowerCase();
+    const priced = Number(line.total_price) > 0;
+    if (pricedHotelNames.has(nameKey)) {
+      if (priced) {
+        if (keptHotelNames.has(nameKey)) continue;
+        keptHotelNames.add(nameKey);
+      } else if (keptHotelNames.has(nameKey)) {
+        continue;
+      }
+    }
+    deduped.push(line);
+  }
+
+  return { ...shared, budget: deduped };
 }

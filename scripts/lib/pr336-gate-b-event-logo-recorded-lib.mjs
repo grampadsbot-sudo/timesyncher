@@ -110,7 +110,8 @@ export async function applyPr336GateBEventLogosFromRecorded(placesById = {}, {
     const place = stripEventLogoFields(placesById[id]);
     const target = logoTargetByRowId.get(id);
     if (!target?.title) return place;
-    return { ...place, title: text(target.title, 240) };
+    const logoSearchTitle = text(target.logoSearchTitle || target.ccabKey || target.title, 240);
+    return { ...place, title: logoSearchTitle };
   });
   const { places: enriched } = await enrichSearchPlacesWithEventLogos(stripped, {
     destination,
@@ -119,7 +120,7 @@ export async function applyPr336GateBEventLogosFromRecorded(placesById = {}, {
   const out = { ...placesById };
   enriched.forEach((place, index) => {
     const id = rowIds[index];
-    const displayTitle = text(placesById[id]?.title, 240);
+    const displayTitle = text(logoTargetByRowId.get(id)?.title || placesById[id]?.title, 240);
     out[id] = displayTitle ? { ...place, title: displayTitle } : place;
   });
   return {

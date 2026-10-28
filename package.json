@@ -24,6 +24,7 @@
     "test:timeline-icons": "node scripts/test_timeline_icons.mjs",
     "test:thing-media-bind": "node scripts/test_bind_thing_media.mjs",
     "test:keepsake-style2": "node scripts/test_keepsake_style2.mjs",
+    "test:passb-scorecard": "node scripts/passb-scorecard-run.mjs",
     "test:first-pass-minimums": "node scripts/test_first_pass_minimums.mjs",
     "test:g2c-thing-notes": "node scripts/test_g2c_thing_notes_destination.mjs",
     "test:g3a-canned-dialog": "node scripts/test_g3a_canned_dialog.mjs",
@@ -47,6 +48,7 @@
     "@vercel/blob": "^2.3.3",
     "@vercel/functions": "^2.2.13",
     "qrcode": "^1.5.4",
-    "stripe": "^22.2.0"
+    "stripe": "^22.2.0",
+    "zod": "^4.6.7"
   }
 }

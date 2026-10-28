@@ -1087,11 +1087,37 @@ button.tsv-timeline-link {
 .tsv-detail-summary,
 .tsv-detail-field,
 .tsv-detail-happy-hour,
-.tsv-detail-note {
+.tsv-detail-note,
+.tsv-detail-info-box {
   margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.tsv-detail-info-box {
+  display: block;
+  padding: 10px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+}
+
+.tsv-detail-info-box .tsv-detail-field {
+  margin-bottom: 6px;
+}
+
+.tsv-detail-info-box .tsv-detail-field:last-child {
+  margin-bottom: 0;
+}
+
+.tsv-detail-phone-box {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tsv-detail-phone-box:hover {
+  border-color: #64748b;
 }
 
 .tsv-detail-summary {

@@ -1,9 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 
 import { hasDatabase, sql } from './db.mjs';
+import { NYC_GATE_B_TRIP_ID } from './shared-trip-dossier-keys.mjs';
 import { computeDossierFieldHashes } from './thing-dossier-fields.mjs';
-import { dossierPagesVerified } from './thing-evidence-dossier.mjs';
+import {
+  dossierPagesVerified,
+  mergeDossierForPersistence,
+  mergeDossierPages,
+} from './thing-evidence-dossier.mjs';
 
 let storeOverride = null;
 let postgresStoreClient = null;
@@ -85,28 +91,36 @@ function createPostgresDossierStore(env) {
       const key = String(dossierKey || '').trim();
       if (!key || !dossier || typeof dossier !== 'object') return;
       await ready();
-      const { hashes, sources } = computeDossierFieldHashes(dossier);
-      const payload = { ...dossier };
-      delete payload.fieldHashes;
-      delete payload.fieldSources;
-      delete payload.refreshedAt;
-      await db`
-        insert into thing_evidence_dossiers (dossier_key, thing_name, payload, field_hashes, field_sources, refreshed_at)
-        values (
-          ${key},
-          ${String(dossier.thing || '')},
-          ${JSON.stringify(payload)}::jsonb,
-          ${JSON.stringify(hashes)}::jsonb,
-          ${JSON.stringify(sources)}::jsonb,
-          now()
-        )
-        on conflict (dossier_key) do update
-        set thing_name = excluded.thing_name,
-            payload = excluded.payload,
-            field_hashes = excluded.field_hashes,
-            field_sources = excluded.field_sources,
-            refreshed_at = now()
-      `;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const rows = await db`
+          select payload from thing_evidence_dossiers where dossier_key = ${key} limit 1
+        `;
+        const raw = rows?.[0]?.payload;
+        const existing = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const merged = existing ? mergeDossierForPersistence(existing, dossier) : dossier;
+        const { hashes, sources } = computeDossierFieldHashes(merged);
+        const payload = { ...merged };
+        delete payload.fieldHashes;
+        delete payload.fieldSources;
+        delete payload.refreshedAt;
+        const saved = await db`
+          insert into thing_evidence_dossiers (dossier_key, thing_name, payload, field_hashes, field_sources, refreshed_at)
+          values (
+            ${key}, ${String(merged.thing || '')}, ${JSON.stringify(payload)}::jsonb,
+            ${JSON.stringify(hashes)}::jsonb, ${JSON.stringify(sources)}::jsonb, now()
+          )
+          on conflict (dossier_key) do update
+          set thing_name = excluded.thing_name,
+              payload = excluded.payload,
+              field_hashes = excluded.field_hashes,
+              field_sources = excluded.field_sources,
+              refreshed_at = now()
+          where thing_evidence_dossiers.payload = ${JSON.stringify(existing ?? null)}::jsonb
+          returning dossier_key
+        `;
+        if (saved?.length) return;
+      }
+      throw new Error('dossier_concurrent_write_conflict');
     },
   };
 }
@@ -127,8 +141,10 @@ function createLocalDossierStore(env) {
     async putDossier(dossierKey, dossier) {
       const key = String(dossierKey || '').trim();
       if (!key || !dossier || typeof dossier !== 'object') return;
-      const { hashes, sources } = computeDossierFieldHashes(dossier);
-      const payload = { ...dossier };
+      const existing = readLocalDossier(key, env)?.payload;
+      const merged = existing ? mergeDossierForPersistence(existing, dossier) : dossier;
+      const { hashes, sources } = computeDossierFieldHashes(merged);
+      const payload = { ...merged };
       delete payload.fieldHashes;
       delete payload.fieldSources;
       delete payload.refreshedAt;
@@ -142,7 +158,7 @@ function createLocalDossierStore(env) {
   };
 }
 
-function getThingEvidenceDossierStore(env = process.env) {
+export function getThingEvidenceDossierStore(env = process.env) {
   if (storeOverride) return storeOverride;
   if (hasDatabase(env)) {
     if (!postgresStoreClient) postgresStoreClient = createPostgresDossierStore(env);
@@ -160,26 +176,83 @@ export function thingEvidenceDossierKey(place = {}) {
   return '';
 }
 
-export function nycDaybydayDossierKey(rowId) {
+function nycDaybydayDossierKey(rowId) {
   const id = Number(rowId);
   if (!Number.isInteger(id) || id <= 0) return '';
   return `nyc-daybyday:${id}`;
+}
+
+export function tripPlaceDossierKey(tripId, placeId) {
+  return thingEvidenceDossierKey({ trip_id: tripId, id: placeId });
+}
+
+export async function bindSharedThingEvidenceDossier(place = {}, { env = process.env, storeImpl } = {}) {
+  const tripKey = thingEvidenceDossierKey(place);
+  const rawCategory = place.category?.name || place.category || place.category_name;
+  const category = ['event', 'activity', 'attraction'].includes(rawCategory) ? 'attraction' : rawCategory;
+  if (!['hotel', 'restaurant', 'store', 'attraction'].includes(category)) return tripKey;
+  const normalize = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const title = normalize(place.title || place.name);
+  const address = normalize(place.address || place.sourceRecord?.address);
+  const website = normalize(place.url || place.website || place.sourceRecord?.website);
+  const tripId = place.trip_id ?? place.tripId;
+  if (!title || (!address && !website) || tripId == null || (place.id ?? place.placeId) == null) return tripKey;
+  const identity = JSON.stringify({ category, title, address, website });
+  const sharedKey = `shared:${category}:${createHash('sha256').update(identity).digest('hex')}`;
+  const store = storeImpl || getThingEvidenceDossierStore(env);
+  const current = await store.getDossier(sharedKey);
+  const attached = await loadThingEvidenceDossierResolved(tripKey, { env, storeImpl: store, placeId: place.id ?? place.placeId });
+  let dossier = current || attached.dossier || { thing: place.title || place.name, pages: [], attempts: [] };
+  if (current && attached.dossier && attached.dossierKey !== sharedKey) {
+    const urls = new Set((current.pages || []).map((page) => page.url));
+    dossier = mergeDossierPages(current, {
+      pages: (attached.dossier.pages || []).filter((page) => !urls.has(page.url)),
+      attempts: attached.dossier.attempts || [],
+      braveResults: attached.dossier.braveResults || [],
+    });
+  }
+  const tripIds = [...new Set([...(dossier.tripIds || []), String(tripId)])];
+  await store.putDossier(sharedKey, { ...dossier, tripIds, tripUseCount: tripIds.length });
+  await store.putDossier(tripKey, { sharedDossierKey: sharedKey });
+  return sharedKey;
 }
 
 export async function loadThingEvidenceDossier(dossierKey, { env = process.env, storeImpl } = {}) {
   const key = String(dossierKey || '').trim();
   if (!key) return null;
   const store = storeImpl || getThingEvidenceDossierStore(env);
-  const dossier = await store.getDossier(key);
+  let dossier = await store.getDossier(key);
+  if (dossier?.sharedDossierKey?.startsWith('shared:')) dossier = await store.getDossier(dossier.sharedDossierKey);
   if (!dossier || !dossierPagesVerified(dossier)) return dossier;
   return dossier;
+}
+
+export async function loadThingEvidenceDossierResolved(key, { env = process.env, storeImpl, placeId = null } = {}) {
+  const store = storeImpl || getThingEvidenceDossierStore(env);
+  const attached = await store.getDossier(key);
+  const primary = await loadThingEvidenceDossier(key, { env, storeImpl });
+  if (primary?.pages?.length) return { dossier: primary, dossierKey: attached?.sharedDossierKey || key };
+  const id = Number(placeId);
+  if (Number.isInteger(id) && id > 0) {
+    const legacyKey = nycDaybydayDossierKey(id);
+    if (legacyKey && legacyKey !== key) {
+      const legacy = await loadThingEvidenceDossier(legacyKey, { env, storeImpl });
+      if (legacy?.pages?.length) return { dossier: legacy, dossierKey: key, legacyKey };
+    }
+  }
+  return { dossier: primary, dossierKey: attached?.sharedDossierKey || key };
 }
 
 export async function saveThingEvidenceDossier(dossierKey, dossier, { env = process.env, storeImpl } = {}) {
   const key = String(dossierKey || '').trim();
   if (!key || !dossier || typeof dossier !== 'object') return;
   const store = storeImpl || getThingEvidenceDossierStore(env);
-  await store.putDossier(key, dossier);
+  const attached = await store.getDossier(key);
+  const saveKey = attached?.sharedDossierKey?.startsWith('shared:') ? attached.sharedDossierKey : key;
+  const existing = saveKey === key ? attached : await store.getDossier(saveKey);
+  const existingBody = existing?.sharedDossierKey ? await store.getDossier(existing.sharedDossierKey) : existing;
+  const toSave = existingBody ? mergeDossierForPersistence(existingBody, dossier) : dossier;
+  await store.putDossier(saveKey, toSave);
 }
 
 function readLocalThingEvidenceDossier(dossierKey, env = process.env) {
@@ -195,23 +268,43 @@ function readLocalThingEvidenceDossier(dossierKey, env = process.env) {
 }
 
 function readStoredDossierSync(dossierKey, env = process.env) {
-  return readLocalThingEvidenceDossier(dossierKey, env);
+  const dossier = readLocalThingEvidenceDossier(dossierKey, env);
+  return dossier?.sharedDossierKey?.startsWith('shared:')
+    ? readLocalThingEvidenceDossier(dossier.sharedDossierKey, env)
+    : dossier;
 }
 
 export async function loadDossiersByKeys(keyByPlaceId = {}, { env = process.env, storeImpl } = {}) {
   const out = {};
   for (const [placeId, dossierKey] of Object.entries(keyByPlaceId)) {
-    const dossier = await loadThingEvidenceDossier(dossierKey, { env, storeImpl });
-    if (dossier) out[placeId] = dossier;
+    const { dossier } = await loadThingEvidenceDossierResolved(dossierKey, { env, storeImpl, placeId });
+    if (dossier?.pages?.length) out[placeId] = dossier;
   }
   return out;
 }
 
-export function loadNycDaybydayDossiersFromDisk(placeIds = [], env = process.env) {
+export function loadTripPlaceDossiersFromDisk(placeIds = [], tripId = NYC_GATE_B_TRIP_ID, env = process.env) {
   const out = {};
   for (const placeId of placeIds) {
-    const dossier = readStoredDossierSync(nycDaybydayDossierKey(placeId), env);
-    if (dossier) out[placeId] = dossier;
+    let dossier = readStoredDossierSync(tripPlaceDossierKey(tripId, placeId), env);
+    if (!dossier?.pages?.length) {
+      dossier = readStoredDossierSync(nycDaybydayDossierKey(placeId), env);
+    }
+    if (dossier?.pages?.length) out[placeId] = dossier;
+  }
+  return out;
+}
+
+export async function loadTripPlaceDossiersFromStore(placeIds = [], {
+  tripId = NYC_GATE_B_TRIP_ID,
+  env = process.env,
+  storeImpl,
+} = {}) {
+  const out = {};
+  for (const placeId of placeIds) {
+    const key = tripPlaceDossierKey(tripId, placeId);
+    const { dossier } = await loadThingEvidenceDossierResolved(key, { env, storeImpl, placeId });
+    if (dossier?.pages?.length) out[placeId] = dossier;
   }
   return out;
 }

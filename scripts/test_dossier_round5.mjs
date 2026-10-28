@@ -4,6 +4,7 @@ import { bravePoiPage, pickBraveLocation, braveLocalEvidence } from '../src/vaca
 import { condenseText, dossierForModel, xaiCallUsd, logXaiUsage } from '../src/vacation/dossier-cost.mjs';
 import { extractReviewsByCode, finalizeReviewSet } from '../src/vacation/dossier-review-extract.mjs';
 import { gatherThingEvidence } from '../src/vacation/thing-evidence-dossier.mjs';
+import { BRAVE_SEARCH_RES_V1 } from '../src/vacation/poi-search.mjs';
 import { prepareDossierFindings } from '../src/vacation/thing-dossier-fields.mjs';
 
 const poi = {
@@ -37,10 +38,29 @@ const brave = await braveLocalEvidence({ title: 'Arthouse Hotel' }, { destinatio
 assert.equal(brave.pages.length, 1);
 assert.ok(calls[0].includes('result_filter=locations') && calls[1].includes('ids=abc'));
 
-const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel' }, {
-  destination: 'NYC', env: {},
-  searchImpl: async () => ({ results: [{ url: 'https://a.example/arthouse', rawContent: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }] }),
-  extractImpl: async () => [], braveImpl: async () => brave,
+const dossier = await gatherThingEvidence({ title: 'Arthouse Hotel', category: 'hotel' }, {
+  destination: 'NYC',
+  env: { BRAVE_SEARCH_API_KEY: 'k' },
+  fetchImpl: async (url) => {
+    if (url.includes(BRAVE_SEARCH_RES_V1)) {
+      return {
+        ok: true,
+        json: async () => ({
+          web: { results: [{ url: 'https://a.example/arthouse', title: 'Arthouse Hotel', description: 'Arthouse Hotel is a hotel on the Upper West Side with a rooftop bar.' }] },
+        }),
+      };
+    }
+    if (url.includes('a.example')) {
+      return {
+        ok: true,
+        headers: { get: () => 'text/html' },
+        body: { getReader: () => ({ read: async () => ({ done: true }), cancel: async () => {} }) },
+      };
+    }
+    return { ok: false, status: 404 };
+  },
+  extractImpl: async () => [],
+  braveImpl: async () => brave,
 });
 assert.ok(dossier.pages.some((p) => p.via === 'brave'));
 assert.ok(dossier.attempts.some((a) => a.kind === 'brave' && a.step === 'pois'));

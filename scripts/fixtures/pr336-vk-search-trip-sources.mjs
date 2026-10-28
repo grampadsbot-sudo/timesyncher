@@ -14,6 +14,9 @@ const OVERLAY_ENRICHMENT = JSON.parse(
 const REVIEW_ENRICHMENT = JSON.parse(
   readFileSync(new URL('./pr336-gate-b-vk-reviews.json', import.meta.url), 'utf8'),
 );
+const ROW_TEXT_OVERRIDES = JSON.parse(
+  readFileSync(new URL('./pr336-gate-b-row-descriptions.json', import.meta.url), 'utf8'),
+);
 const ENRICHMENT = { ...BASE_ENRICHMENT };
 for (const [key, patch] of Object.entries(OVERLAY_ENRICHMENT)) {
   ENRICHMENT[key] = { ...(BASE_ENRICHMENT[key] || {}), ...patch };
@@ -156,6 +159,10 @@ export function buildGateBSearchPlaceForRow({ id, name, cat, ccabKey: rowCcabKey
         reason: 'Opaque JFK card hides the supplier; display title matches the Priceline Standard sedan class on the sourced card.',
       },
     };
+  }
+  const rowText = ROW_TEXT_OVERRIDES[id];
+  if (rowText) {
+    ccabRecord = { ...ccabRecord, ...rowText, longDetails: rowText.description };
   }
   const alias = GATE_B_DISPLAY_TITLE_ALIASES[id];
   const displayTitle = alias?.title || name;

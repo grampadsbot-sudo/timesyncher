@@ -129,7 +129,7 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
   );
   assert.ok(flaggedXai.missingFields.includes('ratings'));
   assert.ok(flaggedXai.missingFields.includes('reviews'));
-  assert.equal(flaggedXai.review1, undefined);
+  assert.equal(flaggedXai.review1, null);
   assert.equal(flaggedXai.googleRating, undefined);
   assert.equal(flaggedXai.xaiRatingsFetched, false);
 
@@ -138,7 +138,7 @@ export function assertXaiGrokPlaceRatingsContract(assert, searchPlaceOutputViola
     { evidenceDossier: { thing: 'Sparse themes place', pages: [dossierPage('https://example.com/x', 'rating only page without breadth')], attempts: [] } },
   );
   assert.ok(sparseThemes.missingFields.includes('reviews'));
-  assert.equal(sparseThemes.review1, undefined);
+  assert.equal(sparseThemes.review1, null);
   assert.equal(sparseThemes.xaiRatingsFetched, false);
 
   const tenPoint = parseXaiStructuredPayload(JSON.stringify({
