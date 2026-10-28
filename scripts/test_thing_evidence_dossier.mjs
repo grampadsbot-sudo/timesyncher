@@ -119,7 +119,7 @@ assert.equal(built.fields.description.value.includes('No reviews were found'), f
 const unsupportedReview = JSON.parse(JSON.stringify(findings));
 unsupportedReview.reviews[1].claims[0].supported = false;
 const badReview = enrichPlaceRecordWithXaiRatings({}, { evidenceDossier: prepareDossierFindings({ thing: 'Riverside Bistro', pages: goodPages, attempts: [] }, unsupportedReview) });
-assert.equal(badReview.review1, undefined, 'any unsupported review claim fails reviews');
+assert.equal(badReview.review1, null, 'any unsupported review claim fails reviews');
 const { judgeDossierFindings, dossierJudgePrompt } = await import('../src/vacation/xai-grok-place-ratings.mjs');
 const toJudge = { summary: { value: 'x', claims: [{ text: 'a', pages: ['p1'] }, { text: 'b', pages: [] }] } };
 let asked = [];
@@ -211,7 +211,7 @@ assert.ok(F4.fitDescriptionWords(long).split(/\s+/).length <= 120 && fit.endsWit
 const empty = enrichPlaceRecordWithXaiRatings({ review1: 'stale' }, { evidenceDossier: { thing: 'Empty', pages: [], attempts: [] } });
 assert.ok(empty.missingFields.includes('reviews'));
 assert.ok(empty.missingFields.includes('ratings'));
-assert.equal(empty.review1, undefined);
+assert.equal(empty.review1, null);
 
 const merged = mergeDossierPages(
   { thing: 'Riverside Bistro', pages: [goodPages[0]], attempts: [] },

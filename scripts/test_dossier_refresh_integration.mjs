@@ -37,8 +37,8 @@ function memoryStore() {
       const { hashes, sources } = computeDossierFieldHashes(dossier);
       rows.set(key, {
         ...JSON.parse(JSON.stringify(dossier)),
-        fieldHashes: hashes,
-        fieldSources: sources,
+        fieldHashes: dossier.fieldHashes || hashes,
+        fieldSources: dossier.fieldSources || sources,
       });
     },
   };
@@ -61,9 +61,13 @@ function goodPages(descriptionExtra = ' Menu lists happy hour oysters until six 
 }
 
 const findings = {
-  summary: { value: 'Wood-fired pies and a deep negroni list', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
+  summary: { value: 'Riverside Bistro serves wood-fired pies and a deep negroni list for a weeknight table.', claims: [{ text: 'serves wood-fired pies', pages: ['p1'], supported: true }] },
   description: {
     value: 'Riverside Bistro anchors the block with blistered Riverside Bistro pies, a deep negroni list, and happy hour oysters that regulars quote in every review thread online while the raw bar, pastry counter, and late-night espresso program keep the dining room busy from opening until close.',
+    claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
+  },
+  itineraryNote: {
+    value: 'Wood-fired pies and negronis — try happy hour oysters before six.',
     claims: [{ text: 'happy hour oysters until six', pages: ['p1'], supported: true }],
   },
   rating: { average: 4.5, count: 120, scaleMax: 5, quote: 'Average 4.5 stars from 120 verified diner reviews', url: urlA },
@@ -118,7 +122,14 @@ const buildImpl = async () => {
 };
 const judgeImpl = async (_dossier, items) => items.map((item) => ({ id: item.id, supported: true }));
 const extractReviewsImpl = async () => ({ reviews: [], keep: [] });
-const fetchOpts = { dossierKey, storeImpl: store, buildImpl, judgeImpl, extractReviewsImpl };
+const fetchOpts = {
+  dossierKey,
+  storeImpl: store,
+  buildImpl,
+  judgeImpl,
+  extractReviewsImpl,
+  env: {},
+};
 
 const fresh = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
@@ -129,14 +140,20 @@ assert.equal(builderCalls, 0, 'unchanged pages must skip builder');
 assert.equal(fresh.parsed.evidenceDossier.fields.description.value, built.fields.description.value);
 
 builderCalls = 0;
-const changedDescriptionGather = async () => ({
-  thing: 'Riverside Bistro',
-  pages: goodPages(' Menu lists happy hour oysters until six pm. Updated headline.'),
-  attempts: [],
+const aged = await fetchXaiPlaceRatings(place, {
+  ...fetchOpts,
+  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
+  nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
 });
+assert.equal(builderCalls, 0, 'max-age alone must not refresh when pages are unchanged');
+
+builderCalls = 0;
+const changedPages = goodPages(' Menu lists happy hour oysters until six pm. Updated headline.');
+const changedPersisted = { ...built, pages: changedPages, fieldHashes: built.fieldHashes, fieldSources: built.fieldSources };
+await saveThingEvidenceDossier(dossierKey, changedPersisted, { storeImpl: store });
 const changedOnlyDescription = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
-  gatherImpl: changedDescriptionGather,
+  gatherImpl: async () => { throw new Error('gather must not run when dossier exists'); },
   nowMs: Date.now(),
 });
 assert.equal(builderCalls, 1, 'changed description page must invoke builder once');
@@ -147,12 +164,13 @@ assert.equal(
 );
 
 builderCalls = 0;
-const expired = await fetchXaiPlaceRatings(place, {
+const forced = await fetchXaiPlaceRatings(place, {
   ...fetchOpts,
+  forceRefresh: true,
   gatherImpl: unchangedGather,
-  nowMs: Date.now() + (8 * 24 * 60 * 60 * 1000),
+  nowMs: Date.now(),
 });
-assert.equal(builderCalls, 1, 'max-age expiry must refresh even when pages are unchanged');
+assert.ok(forced.parsed.evidenceDossier.pages.length >= 3, 'force refresh may re-gather');
 
 const loaded = await loadThingEvidenceDossier(dossierKey, { storeImpl: store });
 assert.equal(loaded.thing, 'Riverside Bistro');

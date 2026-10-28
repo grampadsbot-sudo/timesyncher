@@ -37,6 +37,21 @@ export function detailFieldRows(
   trip: SharedTripPayload,
 ): Array<{ key: string; label: string; value: string; href?: string }>;
 
+export type DetailAddressHoursLine = {
+  key: string;
+  label: string;
+  value: string;
+};
+
+export type DetailAddressHoursBox = {
+  lines: DetailAddressHoursLine[];
+};
+
+export type DetailPhoneCallBox = {
+  phone: string;
+  href: string;
+};
+
 export type DetailViewModel = {
   name: string;
   category: string;
@@ -60,6 +75,8 @@ export type DetailViewModel = {
   reviewTotalsLine: string;
   reviewFootnote: string;
   summarySourceUrls: string[];
+  addressHoursBox: DetailAddressHoursBox | null;
+  phoneCallBox: DetailPhoneCallBox | null;
   fieldRows: Array<{ key: string; label: string; value: string; href?: string }>;
 };
 

@@ -1,3 +1,5 @@
+import { NYC_PASS_B_RESTAURANT_LIST_ROWS } from './nyc-pass-b-restaurant-rows.mjs';
+
 export const NYC_CCAB_DISPLAY_ALIASES = {
   "Motto by Hilton Chelsea": "Motto by Hilton New York City Times Square",
   "Romer Hell's Kitchen": "Romer Hell’s Kitchen",
@@ -374,7 +376,8 @@ export function appendNycStagingListTabRows(rows, options = {}) {
   const seenIds = new Set(rows.map((row) => row.id));
   let nextFreeId = 617;
   while (seenIds.has(nextFreeId)) nextFreeId += 1;
-  for (const listRow of NYC_STAGING_CAPTURE_LIST_ROWS) {
+  const appendList = [...NYC_STAGING_CAPTURE_LIST_ROWS, ...NYC_PASS_B_RESTAURANT_LIST_ROWS];
+  for (const listRow of appendList) {
     if (!includeCategories.includes(listRow.cat)) continue;
     const identity = `${listRow.ccabKey}\0${listRow.name}`;
     if (seenRowIdentities.has(identity)) continue;

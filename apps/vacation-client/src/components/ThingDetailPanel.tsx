@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import type { SharedPlace, SharedTripPayload } from '../types/sharedTrip';
 import { buildDetailViewModel } from '../lib/detailModel.mjs';
 import { StarRating } from './StarRating';
+import type { DetailAddressHoursLine } from '../lib/detailModel.mjs';
 
 type Props = {
   place: SharedPlace;
@@ -95,6 +96,24 @@ export function ThingDetailPanel({ place, trip, onClose }: Props) {
             <p className="tsv-detail-summary" data-ts-detail-field="summary">
               {model.summary}
             </p>
+          ) : null}
+          {model.addressHoursBox ? (
+            <div className="tsv-detail-info-box" data-ts-detail-info-box="address-hours">
+              {model.addressHoursBox.lines.map((line: DetailAddressHoursLine) => (
+                <p key={line.key} className="tsv-detail-field" data-ts-detail-field={line.key}>
+                  <strong>{line.label}:</strong> {line.value}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {model.phoneCallBox ? (
+            <a
+              className="tsv-detail-info-box tsv-detail-phone-box"
+              data-ts-detail-info-box="phone"
+              href={model.phoneCallBox.href}
+            >
+              <strong>Phone:</strong> {model.phoneCallBox.phone}
+            </a>
           ) : null}
           {model.fieldRows.map((row) => (
             <p key={row.key} className="tsv-detail-field" data-ts-detail-field={row.key}>

@@ -35,11 +35,19 @@ function shortLineFromStoredSummary(value = '', max = LIST_ROW_SHORT_MAX) {
 export function pickFlightListRowSummaryText(value = '') {
   const s = text(value);
   if (!s) return '';
-  if (wordCount(s) <= 20) return s;
-  if (/^Documented .+ option/i.test(s)) return s;
-  const line = shortLineFromStoredSummary(s);
-  return wordCount(line) >= LIST_ROW_MIN_WORDS ? line : '';
+  let line = s;
+  if (wordCount(s) > 20 && !/^Documented .+ option/i.test(s)) {
+    line = shortLineFromStoredSummary(s);
+    if (wordCount(line) < LIST_ROW_MIN_WORDS) line = '';
+  }
+  if (/Airline:/i.test(line) && /Route:/i.test(line)) return line;
+  if (/^Airline:/i.test(s) && s.includes(';')) {
+    const parts = s.match(/[^;]+;?/g).map((row) => text(row)).filter(Boolean);
+    const airlineLine = clipText(parts.slice(0, 5).join(' '), LIST_ROW_SHORT_MAX);
+    if (wordCount(airlineLine) >= LIST_ROW_MIN_WORDS) return airlineLine;
+  }
+  return line;
 }
 
 export const STORED_SUMMARY_LIST_ROW_PICK_BUNDLE =
-  't=>{const s=String(t||"").replace(/\\s+/g," ").trim();if(!s)return"";const wc=n=>String(n||"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n||"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};if(wc(s)<=20)return s;if(/^Documented .+ option/i.test(s))return s;const cl=s.match(/[^.!?;]+[.!?;]/gy);if(cl){let line="";for(const x of cl){const next=clip((line?line+" ":"")+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6)break}const out=clip(line,120);return wc(out)>=6?out:""}const ten=clip(s.split(/\\s+/).slice(0,10).join(" "),120);return wc(ten)>=6?ten:""}';
+  't=>{const s=String(t??"").trim();if(!s)return"";const wc=n=>String(n??"").trim().split(/\\s+/).filter(Boolean).length;const clip=(n,m)=>{const r=String(n??"").trim();return!r||r.length<=m?r:r.slice(0,m).trim()};let line=s;if(wc(s)>20&&!/^Documented .+ option/i.test(s)){const cl=s.match(/[^.!?;]+[.!?;]/gy);line="";if(cl){for(const x of cl){const next=clip(line+" "+x,4000);if(line&&next.length>120)break;line=next;if(wc(line)>=6)break}line=clip(line,120)}else line=clip(s.split(/\\s+/).slice(0,10).join(" "),120);if(wc(line)<6)line=""}if(/Airline:/i.test(line)&&/Route:/i.test(line))return line;if(/^Airline:/i.test(s)&&s.includes(";")){const parts=s.match(/[^;]+;?/g).map(r=>String(r??"").trim()).filter(Boolean);const airlineLine=clip(parts.slice(0,5).join(" "),120);if(wc(airlineLine)>=6)return airlineLine}return line}';
