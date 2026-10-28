@@ -17,34 +17,44 @@ import {
 } from './dossier-vk-search.mjs';
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { dossierPresented } from './passb-dossier-presented.mjs';
+import { descriptionNamesThing } from './thing-dossier-fields.mjs';
+import { claimTextSupportedByPage } from './dossier-claim-support.mjs';
+import { rewriteDossierCitations } from './dossier-page-integrity.mjs';
 
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
 function savedDatedPage(page) {
-  return typeof page?.url === 'string' && page.url.trim()
-    && typeof page.fetchedAt === 'string' && Number.isFinite(Date.parse(page.fetchedAt));
+  try {
+    const url = new URL(page?.url);
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password
+      && typeof page.fetchedAt === 'string' && Number.isFinite(Date.parse(page.fetchedAt));
+  } catch { return false; }
 }
 
 function recitClaim(claim, pages) {
   const match = /^p([1-9]\d*)$/.exec(String(claim?.pages?.[0] || ''));
+  const citedIndex = match ? Number(match[1]) - 1 : -1;
   const index = claim?.sourceUrl
-    ? pages.findIndex((page) => page.url === claim.sourceUrl)
-    : match ? Number(match[1]) - 1 : -1;
+    ? pages[citedIndex]?.url === claim.sourceUrl ? citedIndex : pages.findIndex((page) => page.url === claim.sourceUrl)
+    : citedIndex;
   const page = pages[index];
-  if (claim?.supported !== true || !savedDatedPage(page)) return { ...claim, supported: false };
+  if (claim?.supported !== true || !savedDatedPage(page)
+    || !claimTextSupportedByPage(claim.text || claim.claim, page.text)) return { ...claim, supported: false };
   return { ...claim, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true };
 }
 
-function composeFromPages(claims, pages, minWords, maxWords) {
+function composeFromPages(claims, pages, minWords, maxWords, thing) {
   const parts = [];
   const citations = [];
   let wordsUsed = 0;
   const append = (claim) => {
-    const words = String(claim.text || claim.claim || '').trim().split(/\s+/).filter(Boolean);
+    const body = String(claim.text || claim.claim || '').trim();
+    if (parts.includes(body)) return;
+    const words = body.split(/\s+/).filter(Boolean);
     const text = words.slice(0, maxWords - wordsUsed).join(' ');
-    if (!text) return;
+    if (!text || recitClaim({ ...claim, text }, pages).supported !== true) return;
     parts.push(text);
     citations.push({ ...claim, text });
     wordsUsed += wordCount(text);
@@ -62,47 +72,77 @@ function composeFromPages(claims, pages, minWords, maxWords) {
     if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
     append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
   }
-  return { value: parts.join(' '), claims: citations };
+  const body = parts.join(' ');
+  const value = thing && body && !descriptionNamesThing(body, thing) ? `${thing}: ${body}` : body;
+  return { value, claims: citations, bodyWords: wordsUsed };
 }
 
 
 function ensureVerifiedPages(dossier = {}) {
-  const now = new Date().toISOString();
-  const pages = (dossier.pages || []).map((page) => {
+  const pages = [];
+  const remap = new Map();
+  for (const [index, page] of (dossier.pages || []).entries()) {
+    try {
+      const url = new URL(page?.url);
+      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) continue;
+    } catch { continue; }
     const text = String(page?.text || '');
-    const fetchedAt = Number.isFinite(Date.parse(page?.fetchedAt)) ? page.fetchedAt : now;
+    if (!text.trim()) continue;
     const sha256 = createHash('sha256').update(text).digest('hex');
-    return { ...page, text, fetchedAt, sha256, url: page?.url || 'https://example.invalid/bot-primary' };
-  }).filter((page) => page.text.trim() && /^https?:\/\//.test(page.url || ''));
-  return { ...dossier, pages };
+    remap.set(`p${index + 1}`, `p${pages.length + 1}`);
+    pages.push({ ...page, text, sha256 });
+  }
+  return rewriteDossierCitations({ ...dossier, pages }, remap);
 }
 
 export function recitBotPrimaryFields(dossier = {}) {
   const pages = dossier.pages || [];
   const fields = { ...(dossier.fields || {}) };
   for (const [key, field] of Object.entries(fields)) {
-    if (!Array.isArray(field?.claims)) continue;
+    if (!field || typeof field !== 'object') continue;
+    const claims = (Array.isArray(field.claims) ? field.claims : []).map((claim) => recitClaim(claim, pages));
+    const supported = claims.filter((claim) => claim.supported === true);
+    let value = field.value;
+    if (!supported.length) value = '';
+    else if (supported.length !== claims.length) {
+      const body = supported.map((claim) => claim.text || claim.claim).join(' ');
+      const minWords = key === 'summary' ? 12 : key === 'description' ? 40 : 0;
+      value = wordCount(body) >= minWords ? body : '';
+      if (value && ['summary', 'description'].includes(key) && dossier.thing
+        && !descriptionNamesThing(value, dossier.thing)) value = `${dossier.thing}: ${value}`;
+    }
     fields[key] = {
       ...field,
-      claims: field.claims.map((claim) => recitClaim(claim, pages)),
+      value,
+      ...(Array.isArray(field.claims) ? { claims: supported.length ? supported : claims } : {}),
     };
   }
-  return { ...dossier, fields };
+  const next = { ...dossier, fields };
+  if (fields.itineraryNote && !fields.itineraryNote.value) next.itineraryNote = '';
+  return next;
 }
 
 export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place = {}) {
   const thing = String(place.title || place.name || bot.thing || persisted.thing || '').trim();
   persisted = recitBotPrimaryFields(persisted || {});
   bot = recitBotPrimaryFields(bot || {});
-  let merged = recitBotPrimaryFields(mergeDossierPages(persisted, bot));
+  let merged = recitBotPrimaryFields({
+    ...mergeDossierPages(persisted, bot),
+    fields: { ...(persisted.fields || {}), ...(bot.fields || {}) },
+  });
   merged.thing = thing || merged.thing;
   const pages = merged.pages || [];
   const claimRows = Object.values(bot.fields || {}).flatMap((field) => field?.claims || []);
   const ensure = (key, minWords, maxWords) => {
-    const existing = String(merged.fields?.[key]?.value || '').trim();
-    if (wordCount(existing) >= minWords) return;
-    const composed = composeFromPages(claimRows, pages, minWords, maxWords);
-    if (wordCount(composed.value) < minWords || !composed.claims.length) return;
+    let existing = String(merged.fields?.[key]?.value || '').trim();
+    if (thing && existing.startsWith(`${thing}: `)) existing = existing.slice(thing.length + 2);
+    if (wordCount(existing) >= minWords) {
+      if (thing && !descriptionNamesThing(existing, thing)) merged.fields[key] = { ...merged.fields[key], value: `${thing}: ${existing}` };
+      return;
+    }
+    if (merged.fields?.[key]) merged.fields[key] = { ...merged.fields[key], value: '' };
+    const { bodyWords, ...composed } = composeFromPages(claimRows, pages, minWords, maxWords, thing);
+    if (bodyWords < minWords || !composed.claims.length) return;
     merged.fields = {
       ...(merged.fields || {}),
       [key]: composed,
@@ -187,13 +227,15 @@ export async function runBotPrimarySeedTargets(targets = [], {
       });
       continue;
     }
-    let merged = mergeBotPrimaryPresentedFields(existing || {}, bot || {}, place);
+    let merged = mergeBotPrimaryPresentedFields(ensureVerifiedPages(existing || {}), ensureVerifiedPages(bot || {}), place);
     merged = ensureVerifiedPages(merged);
     merged = normalizeDossierEvidence(merged, place);
+    merged = recitBotPrimaryFields(merged);
     merged = existing ? mergeDossierForPersistence(existing, merged) : merged;
     merged = recitBotPrimaryFields(merged);
     merged = ensureVerifiedPages(merged);
     merged = normalizeDossierEvidence(merged, place);
+    merged = recitBotPrimaryFields(merged);
     const failure = completeDossierFill(merged, place);
     await saveThingEvidenceDossier(saveKey, merged, { env, storeImpl: store });
     const after = await loadThingEvidenceDossierResolved(saveKey, {

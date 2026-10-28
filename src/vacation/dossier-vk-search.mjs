@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { descriptionNamesThing, fitDescriptionWords } from './thing-dossier-fields.mjs';
+import { descriptionNamesThing } from './thing-dossier-fields.mjs';
+import { claimTextSupportedByPage } from './dossier-claim-support.mjs';
 
 export const VK_SEARCH_BOT_ID = 'aa90bc69-c4eb-4237-a2f9-bcd76cd14dce';
 export const VK_SEARCH_PROVIDER = 'vk-search';
@@ -43,11 +44,10 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
   const supported = vkSearchClaimSupportOk(result);
   const thing = text(place.title || place.name || result.thingName);
   const sources = thin ? [] : sourcesOf(result);
-  const now = new Date().toISOString();
   const pages = sources.map((source) => ({
     url: source.url,
-    fetchedAt: Number.isFinite(Date.parse(source.fetchedAt)) ? source.fetchedAt : now,
-    text: [thing, source.title, source.text, source.snippet].filter(text).join('\n'),
+    fetchedAt: source.fetchedAt,
+    text: [source.title, source.text, source.snippet].filter(text).join('\n'),
     via: VK_SEARCH_PROVIDER,
   }));
   const dossier = {
@@ -56,49 +56,52 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       stage: 'discovery', status: thin ? 'thin' : supported ? 'ok' : 'claim_support_failed', botId: VK_SEARCH_BOT_ID }],
   };
   const pageIndex = (url) => pages.findIndex((page) => page.url === url);
-  const claims = list(result.summaryClaims).filter((claim) => text(claim?.claim || claim?.text) && pageIndex(claim.sourceUrl) >= 0);
-  const append = (index, value) => { pages[index].text += `\n${value}`; };
+  const pageSupports = (index, value) => typeof pages[index]?.fetchedAt === 'string'
+    && Number.isFinite(Date.parse(pages[index].fetchedAt))
+    && claimTextSupportedByPage(value, pages[index].text);
+  const claims = list(result.summaryClaims).filter((claim) => pageSupports(pageIndex(claim?.sourceUrl), text(claim?.claim || claim?.text)));
   const scalar = (key, value, index) => {
-    if (!text(value) || index < 0) return;
-    append(index, value);
+    if (!text(value) || !pageSupports(index, value)) return;
     dossier.fields[key] = { value, claims: [{ text: value, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }] };
   };
-  for (const claim of claims) append(pageIndex(claim.sourceUrl), text(claim.claim || claim.text));
   const wordCount = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length;
   const citations = claims.map((claim) => ({ text: text(claim.claim || claim.text), sourceUrl: claim.sourceUrl,
     pages: [`p${pageIndex(claim.sourceUrl) + 1}`], supported: true }));
-  const claimText = claims.map((claim) => text(claim.claim || claim.text)).filter(Boolean).join(' ');
-  const pageBits = pages.map((page) => text(page.text)).filter(Boolean);
   const compose = (minWords, maxWords) => {
     const parts = [];
-    if (thing) parts.push(thing);
-    if (claimText) parts.push(claimText);
-    for (const bit of pageBits) {
-      if (wordCount(parts.join(' ')) >= minWords) break;
-      const next = bit.replace(/\s+/g, ' ').trim();
-      if (!next || parts.some((part) => part.includes(next.slice(0, 40)))) continue;
-      parts.push(next);
+    const used = [];
+    let wordsUsed = 0;
+    const append = (claim) => {
+      if (parts.includes(claim.text)) return;
+      const value = claim.text.split(/\s+/).slice(0, maxWords - wordsUsed).join(' ');
+      if (!value || !pageSupports(pageIndex(claim.sourceUrl), value)) return;
+      parts.push(value);
+      used.push({ ...claim, text: value });
+      wordsUsed += wordCount(value);
+    };
+    for (const claim of citations) {
+      if (wordsUsed >= maxWords) break;
+      append(claim);
     }
-    let value = parts.join('. ').replace(/\s+/g, ' ').trim();
+    for (const [index, page] of pages.entries()) {
+      if (wordsUsed >= minWords) break;
+      const bit = text(page.text).replace(/\s+/g, ' ');
+      if (!pageSupports(index, bit) || parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
+      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
+    }
+    if (wordsUsed < minWords || !used.length) return null;
+    let value = parts.join(' ');
     if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
-    return fitDescriptionWords(value, maxWords);
+    return { value, claims: used };
   };
-  if (claims.length || pages.length) {
-    const summaryValue = compose(12, 40);
-    const descriptionValue = compose(40, 120);
-    if (wordCount(summaryValue) >= 12 && descriptionNamesThing(summaryValue, thing)) {
-      dossier.fields.summary = { value: summaryValue, claims: citations.length ? citations : [{ text: summaryValue, sourceUrl: pages[0]?.url, pages: ['p1'], supported: true }] };
-    }
-    if (wordCount(descriptionValue) >= 40 && descriptionNamesThing(descriptionValue, thing) && pages.length) {
-      dossier.fields.description = { value: descriptionValue, claims: citations.length ? citations : [{ text: descriptionValue, sourceUrl: pages[0]?.url, pages: ['p1'], supported: true }] };
-    } else if (pages.length && !dossier.fields.description) {
-      scalar('description', descriptionValue || pages.map((page) => page.text).join('\n'), 0);
-    }
+  for (const [key, minWords, maxWords] of [['summary', 12, 40], ['description', 40, 120]]) {
+    const field = compose(minWords, maxWords);
+    if (field) dossier.fields[key] = field;
   }
   const hint = (key, raw, sourceUrl) => {
     const value = text(raw?.value ?? raw);
     const explicit = raw?.sourceUrl || sourceUrl;
-    const claim = claims.find((row) => text(row.claim || row.text).includes(value));
+    const claim = claims.find((row) => text(row.claim || row.text).includes(value) && pageSupports(pageIndex(row.sourceUrl), value));
     const official = sources.findIndex((source) => !/yelp\.|google\.|tripadvisor\./i.test(new URL(source.url).hostname));
     const index = explicit ? pageIndex(explicit) : claim ? pageIndex(claim.sourceUrl) : official >= 0 ? official : pages.length ? 0 : -1;
     scalar(key, value, index);
@@ -117,10 +120,10 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const claim = claims.find((row) => text(row.claim || row.text).toLowerCase().includes(source));
     const index = url ? pageIndex(url) : sources.findIndex((row) => new URL(row.url).hostname.includes(`${source}.`));
     const citing = index >= 0 ? index : !url && claim ? pageIndex(claim.sourceUrl) : -1;
-    if (citing >= 0) {
-      const count = Number(result.reviewCount?.[source]);
-      const quote = `${thing}: ${source} rating ${average}/5${count > 0 ? ` from ${count} reviews` : ''}`;
-      append(citing, quote);
+    const count = Number(result.reviewCount?.[source]);
+    const ratingText = `${source} rating ${average}${count > 0 ? ` from ${count} reviews` : ''}`;
+    if (pageSupports(citing, ratingText)) {
+      const quote = pages[citing].text;
       const rating = { average, ...(count > 0 ? { count } : {}), scaleMax: 5, quote, url: pages[citing].url, source };
       pages[citing].braveRating = rating;
       if (count > 0) {

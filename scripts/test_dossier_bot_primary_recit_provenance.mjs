@@ -18,8 +18,8 @@ for (const claim of counterexample.fields.description.claims) {
   assert.notEqual(claim.sourceUrl, unrelated.url, 'recit must never substitute an unrelated page');
 }
 
-const first = { url: 'https://example.org/first', text: 'First source text.', fetchedAt };
-const second = { url: 'https://example.org/second', text: 'Second source text.', fetchedAt };
+const first = { url: 'https://example.org/first', text: `First supported claim. ${value}`, fetchedAt };
+const second = { url: 'https://example.org/second', text: 'Second supported claim.', fetchedAt };
 const claims = [
   { text: 'First supported claim.', sourceUrl: first.url, pages: ['p1'], supported: true, judge: 'first-judge' },
   { text: 'Second supported claim.', sourceUrl: second.url, pages: ['p2'], supported: true },
@@ -30,10 +30,10 @@ const snapshot = structuredClone(input);
 const reordered = recitBotPrimaryFields(input);
 assert.deepEqual(input, snapshot, 'recit must not mutate its input');
 assert.equal(reordered.fields.description.unit, 'preserved');
-assert.equal(reordered.fields.description.claims.length, 3, 'all per-source claims survive');
+assert.equal(reordered.fields.description.claims.length, 2, 'only supported per-source claims survive in a mixed field');
 assert.deepEqual(reordered.fields.description.claims[0], { ...claims[0], pages: ['p2'] });
 assert.deepEqual(reordered.fields.description.claims[1], { ...claims[1], pages: ['p1'] });
-assert.deepEqual(reordered.fields.description.claims[2], unsupported);
+assert.equal(reordered.fields.description.claims.some((claim) => claim.sourceUrl === unsupported.sourceUrl), false);
 
 const byId = recitBotPrimaryFields({
   pages: [second, first],
@@ -70,7 +70,9 @@ for (const date of [undefined, '', 'not-a-date']) {
 const noPages = recitBotPrimaryFields({ fields: { summary: { value, claims: [claims[0]] } } });
 assert.equal(noPages.fields.summary.claims[0].supported, false);
 const noClaims = { description: { value }, summary: { value, claims: [] } };
-assert.deepEqual(recitBotPrimaryFields({ pages: [first], fields: noClaims }).fields, noClaims);
+assert.deepEqual(recitBotPrimaryFields({ pages: [first], fields: noClaims }).fields, {
+  description: { value: '' }, summary: { value: '', claims: [] },
+});
 const emptyValue = recitBotPrimaryFields({
   pages: [first], fields: { summary: { value: '', claims: [{ text: value, supported: true }] } },
 });

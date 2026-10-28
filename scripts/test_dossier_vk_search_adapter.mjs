@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { claimTextSupportedByPage } from '../src/vacation/dossier-claim-support.mjs';
 import { gatherThingEvidence, dossierPagesVerified, mergeDossierForPersistence } from '../src/vacation/thing-evidence-dossier.mjs';
 import { claimsSupported, applyDossierFields } from '../src/vacation/thing-dossier-fields.mjs';
 import { normalizeDossierEvidence } from '../src/vacation/dossier-evidence-hydrate.mjs';
@@ -32,19 +33,19 @@ assert.equal(dossierPagesVerified(rich), true);
 assert.equal(rich.yelpRating, 3.9);
 assert.equal(rich.yelpReviewCount, 1448);
 assert.ok(rich.fields.hours);
-assert.ok(rich.fields.itineraryNote);
+assert.equal(rich.fields.itineraryNote, undefined);
 for (const field of Object.values(rich.fields)) {
   assert.equal(claimsSupported(rich, field), true);
   for (const claim of field.claims) {
     assert.ok(result.sources.some((source) => source.url === claim.sourceUrl));
-    assert.ok(rich.pages[Number(claim.pages[0].slice(1)) - 1].text.includes(claim.text));
+    assert.equal(claimTextSupportedByPage(claim.text, rich.pages[Number(claim.pages[0].slice(1)) - 1].text), true);
   }
 }
 const normalized = normalizeDossierEvidence(rich, place);
 const displayed = applyDossierFields(place, normalized);
 assert.equal(String(displayed.yelpRating), '3.9');
 assert.equal(displayed.hours, rich.fields.hours.value);
-assert.equal(displayed.itineraryNote, result.itineraryNoteCandidate);
+assert.equal(displayed.itineraryNote, undefined);
 assert.equal(displayed.price, undefined, 'text price hint is not a numeric price');
 assert.equal(displayed.thirdPartyRating, '3.9');
 assert.equal(displayed.thirdPartyReviewCount, '1448');
@@ -118,7 +119,7 @@ for (const target of buildNycThingEvidenceDossierTargets()) {
       const cited = dossier.pages[Number(claim.pages[0].slice(1)) - 1];
       assert.equal(cited.url, claim.sourceUrl);
       assert.ok(census.sources.some((source) => source.url === claim.sourceUrl));
-      assert.ok(cited.text.includes(claim.text));
+      assert.equal(claimTextSupportedByPage(claim.text, cited.text), true);
     }
   }
   const shown = applyDossierFields(target, normalizeDossierEvidence(dossier, target));
