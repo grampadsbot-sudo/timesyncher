@@ -1,0 +1,92 @@
+{
+  "thingId": 605,
+  "thingName": "Strand Book Store",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.strandbooks.com/hours-locations",
+      "title": "Hours & Locations official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "828 Broadway Mon\u2013Sun 10am\u20139pm; Rare Book Room weekdays 10\u20135 / weekends 10\u20136"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html",
+      "title": "Tripadvisor",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.7/5 \u00b7 ~843 reviews"
+    },
+    {
+      "url": "https://www.yelp.com/search?find_desc=Strand+Bookstore&find_loc=SoHo%2C+Manhattan%2C+NY",
+      "title": "Yelp search context",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Yelp ~4.4 from ~1800 reviews (baseline)"
+    }
+  ],
+  "rating": {
+    "primary": 4.7,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.7,
+    "yelp": 4.4,
+    "google": 4.8
+  },
+  "reviewCount": {
+    "tripadvisor": 843,
+    "yelp": 1800,
+    "google": 16273
+  },
+  "priceHint": "Free entry; books/totes vary; baseline souvenir floor $22",
+  "hoursHint": "Main store Mon\u2013Sun 10am\u20139pm; Rare Book Room Mon\u2013Fri 10am\u20135pm, Sat\u2013Sun 10am\u20136pm (official)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    {
+      "claim": "Flagship at 828 Broadway / 12th St open daily 10am\u20139pm",
+      "sourceUrl": "https://www.strandbooks.com/hours-locations"
+    },
+    {
+      "claim": "Rare Book Room weekday 10\u20135 / weekend 10\u20136",
+      "sourceUrl": "https://www.strandbooks.com/hours-locations"
+    },
+    {
+      "claim": "Tripadvisor ~4.7; Google baseline 4.8",
+      "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
+    }
+  ],
+  "itineraryNoteCandidate": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
+  "voicePass": {
+    "itineraryNote": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
+    "shortDescription": "Iconic independent bookstore at 828 Broadway, open daily 10am\u20139pm with a Rare Book Room upstairs.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 78,
+    "googleRating": "4.8",
+    "yelpRating": "4.4",
+    "price": 22,
+    "hours": true,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.073195,
+    "attemptKinds": {
+      "brave": 30
+    },
+    "officialUrls": [
+      "https://www.strandbooks.com/",
+      "https://en.wikipedia.org/wiki/Strand_Bookstore",
+      "https://www.strandbooks.com/hours-locations",
+      "https://www.strandbooks.com/about",
+      "https://bookshop.org/shop/strandbooks"
+    ]
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 6,
+  "censusReuse": "full10"
+}

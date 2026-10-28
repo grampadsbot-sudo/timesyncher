@@ -1,0 +1,80 @@
+{
+  "thingId": 612,
+  "thingName": "Chelsea Market",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.chelseamarket.com/visit",
+      "title": "Chelsea Market Visit",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "75 Ninth Ave; Mon-Sun 7am-10pm"
+    },
+    {
+      "url": "https://www.yelp.com/biz/chelsea-market-new-york",
+      "title": "Chelsea Market Yelp",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "4.3\u2605 \u00b7 2638 reviews"
+    }
+  ],
+  "rating": {
+    "primary": 4.6,
+    "primarySource": "google",
+    "google": 4.6,
+    "yelp": 4.3,
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "google": 52413,
+    "yelp": 2638,
+    "tripadvisor": 10012
+  },
+  "priceHint": "$$ food hall / market",
+  "hoursHint": "Daily 7:00 AM \u2013 10:00 PM (official visit page; vendor hours vary)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "75 Ninth Avenue between 15th & 16th",
+      "sourceUrl": "https://www.chelseamarket.com/visit"
+    },
+    {
+      "claim": "Concourse hours daily 7am\u201310pm",
+      "sourceUrl": "https://www.chelseamarket.com/visit"
+    },
+    {
+      "claim": "Google ~4.6 from 50k+ reviews",
+      "sourceUrl": "https://www.google.com/maps/place/Chelsea+Market"
+    }
+  ],
+  "itineraryNoteCandidate": "Wander the industrial food hall early for shorter lines, then walk the High Line next door.",
+  "voicePass": {
+    "itineraryNote": "Wander the industrial food hall early for shorter lines, then walk the High Line next door.",
+    "shortDescription": "Iconic Chelsea food hall in a former Nabisco factory.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 22,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

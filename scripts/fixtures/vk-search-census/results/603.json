@@ -1,0 +1,88 @@
+{
+  "thingId": 603,
+  "thingName": "Hotel Belleclaire Central Park",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.hotelbelleclaire.com/amenities",
+      "title": "Amenities / Wine Hour",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Complimentary wine hour Wed\u2013Fri 5\u20136pm at Allure; 24h fitness; dog-friendly"
+    },
+    {
+      "url": "https://www.hotelbelleclaire.com/eat-drink",
+      "title": "Eat & Drink",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Mille-Feuille 7am\u20136pm; Allure 5\u201311pm; live jazz Fri 5\u20137pm; Wine Hour Wed\u2013Fri 5\u20136"
+    },
+    {
+      "url": "https://www.hotelbelleclaire.com/",
+      "title": "Hotel Belleclaire home",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "2175 Broadway Upper West Side boutique near Central Park"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "google",
+    "google": 4.1
+  },
+  "reviewCount": {
+    "google": 2100
+  },
+  "priceHint": "Baseline overnight ~$518 floor; boutique UWS rates vary",
+  "hoursHint": "Hotel 24h front desk; Mille-Feuille 7am\u20136pm; Allure 5\u201311pm nightly (official)",
+  "happyHourHint": "Complimentary Triumph Wine Hour Wed\u2013Fri 5\u20136pm at Allure for guests (official amenities)",
+  "summaryClaims": [
+    {
+      "claim": "2175 Broadway, Upper West Side, near Central Park",
+      "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+    },
+    {
+      "claim": "Complimentary wine hour Wed\u2013Fri 5\u20136pm at Allure",
+      "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+    },
+    {
+      "claim": "24-hour fitness center and on-site Mille-Feuille + Allure",
+      "sourceUrl": "https://www.hotelbelleclaire.com/eat-drink"
+    }
+  ],
+  "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed\u2013Fri wine hour.",
+  "voicePass": {
+    "itineraryNote": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed\u2013Fri wine hour.",
+    "shortDescription": "Historic UWS boutique on Broadway with Allure lounge and guest wine hour Wed\u2013Fri.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 84,
+    "googleRating": "4.1",
+    "yelpRating": null,
+    "price": 518,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.07708,
+    "attemptKinds": {
+      "brave": 31
+    },
+    "officialUrls": [
+      "https://www.hotelbelleclaire.com/",
+      "https://www.expedia.com/New-York-Hotels-Hotel-Belleclaire.h201239.Hotel-Information",
+      "https://en.wikipedia.org/wiki/Hotel_Belleclaire",
+      "https://www.hotels.com/ho163765/hotel-belleclaire-new-york-united-states-of-america/",
+      "https://luxuryhotelsnyc.net/hotel-belleclaire-central-park-new-york/"
+    ]
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 5,
+  "censusReuse": "full10"
+}

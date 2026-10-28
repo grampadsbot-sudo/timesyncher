@@ -1,0 +1,68 @@
+{
+  "thingId": 647,
+  "thingName": "Saks Fifth Avenue",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.saksfifthavenue.com/locations/newyork/",
+      "title": "Saks NYC",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "611 Fifth Ave hours"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.1,
+    "yelp": 3.1
+  },
+  "reviewCount": {
+    "tripadvisor": 769,
+    "yelp": 978
+  },
+  "priceHint": "$$$$ luxury department store",
+  "hoursHint": "Mon\u2013Sat 11am\u20137pm; Sun noon\u20136pm (Saks NYC location page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Flagship at 611 Fifth Avenue",
+      "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+    },
+    {
+      "claim": "Mon\u2013Sat 11\u20137, Sun 12\u20136",
+      "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+    }
+  ],
+  "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors\u2014service can be uneven, so keep plans flexible.",
+  "voicePass": {
+    "itineraryNote": "Tour the Fifth Avenue flagship for holiday windows and luxury floors\u2014service can be uneven, so keep plans flexible.",
+    "shortDescription": "Saks Fifth Avenue Manhattan flagship.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 150,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

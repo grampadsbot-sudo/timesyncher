@@ -1,0 +1,69 @@
+{
+  "thingId": 667,
+  "thingName": "Statue of Liberty / Ellis Island tour candidate",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://statuecitycruises.com/faq",
+      "title": "Statue City Cruises FAQ",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Only authorized ferry; adult $26 GA"
+    },
+    {
+      "url": "https://statuecitycruises.com/",
+      "title": "Statue City Cruises",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Official ferry to Liberty & Ellis"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Adult GA $26; seniors/military $23; kids 4\u201312 $17.30 (official FAQ)",
+  "hoursHint": "Ferries daily except Thanksgiving & Christmas; ticket offices open 30 min before first ferry",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Statue City Cruises is the only authorized ferry ticket provider",
+      "sourceUrl": "https://statuecitycruises.com/faq"
+    },
+    {
+      "claim": "General admission adults $26 includes both islands + audio",
+      "sourceUrl": "https://statuecitycruises.com/faq"
+    }
+  ],
+  "itineraryNoteCandidate": "Book statuecitycruises.com early for pedestal/crown; GA covers Liberty + Ellis ferry.",
+  "voicePass": {
+    "itineraryNote": "Book statuecitycruises.com early for pedestal/crown; GA covers Liberty + Ellis ferry.",
+    "shortDescription": "Official Statue of Liberty / Ellis Island ferry candidate.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 35,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

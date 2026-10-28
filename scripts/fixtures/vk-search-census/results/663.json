@@ -1,0 +1,76 @@
+{
+  "thingId": 663,
+  "thingName": "Dizzy\u2019s Club / Jazz at Lincoln Center",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://jazz.org/dizzys/dizzys-faq/",
+      "title": "Dizzy's FAQ",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "$25 F&B min; door times; Broadway@60th 5th floor"
+    },
+    {
+      "url": "https://jazz.org/dizzys/",
+      "title": "Dizzy's Club",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Jazz at Lincoln Center"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.5
+  },
+  "reviewCount": {
+    "tripadvisor": 880
+  },
+  "priceHint": "~$60 + $25 F&B minimum; student $15\u2013$25",
+  "hoursHint": "Mon\u2013Sat sets 7 & 9pm; Sun 5 & 7:30pm; late night Thu\u2013Sat 10:45pm (Dizzy's FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Broadway at 60th Street, 5th Floor, Jazz at Lincoln Center",
+      "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+    },
+    {
+      "claim": "$25 food & beverage minimum per person per set",
+      "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+    },
+    {
+      "claim": "Mon\u2013Sat 7pm & 9pm sets; Sunday 5pm & 7:30pm",
+      "sourceUrl": "https://jazz.org/dizzys/"
+    }
+  ],
+  "itineraryNoteCandidate": "Book Dizzy's for skyline jazz above Columbus Circle\u2014budget ticket plus the $25 F&B minimum.",
+  "voicePass": {
+    "itineraryNote": "Book Dizzy's for skyline jazz above Columbus Circle\u2014budget ticket plus the $25 F&B minimum.",
+    "shortDescription": "Dizzy's Club at Jazz at Lincoln Center.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 50,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

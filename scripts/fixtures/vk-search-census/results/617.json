@@ -1,0 +1,72 @@
+{
+  "thingId": 617,
+  "thingName": "Arthouse Hotel",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.arthousehotelnyc.com/",
+      "title": "Spacious boutique hotel on the Upper West Side.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Official: rooms/suites/lofts; Arthouse Bar, Serafina, RedFarm"
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.2,
+    "booking": 7.9
+  },
+  "reviewCount": {
+    "tripadvisor": 8181,
+    "booking": 1601
+  },
+  "priceHint": "4-star boutique UWS",
+  "hoursHint": "Hotel \u2014 24h front desk; 3 on-site dining venues (official)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: 2178 Broadway / W 77th",
+      "sourceUrl": "https://www.arthousehotelnyc.com/"
+    },
+    {
+      "claim": "Official site https://www.arthousehotelnyc.com/",
+      "sourceUrl": "https://www.arthousehotelnyc.com/"
+    },
+    {
+      "claim": "Guest rating primary 4.2 via tripadvisor",
+      "sourceUrl": "https://www.arthousehotelnyc.com/"
+    }
+  ],
+  "itineraryNoteCandidate": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
+  "voicePass": {
+    "itineraryNote": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
+    "shortDescription": "Spacious boutique hotel on the Upper West Side.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 508,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 4,
+  "winner": "grok-bot"
+}

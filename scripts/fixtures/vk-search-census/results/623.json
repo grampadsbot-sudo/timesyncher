@@ -1,0 +1,74 @@
+{
+  "thingId": 623,
+  "thingName": "Hyatt House New York/Chelsea",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
+      "title": "Hyatt House suites in Chelsea.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "TA 4.2 / Booking 8.6"
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.2,
+    "booking": 8.6,
+    "expedia": 8.8
+  },
+  "reviewCount": {
+    "tripadvisor": 1423,
+    "booking": 621,
+    "expedia": 1000
+  },
+  "priceHint": "Suite hotel Chelsea",
+  "hoursHint": "Hotel \u2014 24h; breakfast",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: 815 Avenue of the Americas",
+      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+    },
+    {
+      "claim": "Official site https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
+      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+    },
+    {
+      "claim": "Guest rating primary 4.2 via tripadvisor",
+      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+    }
+  ],
+  "itineraryNoteCandidate": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
+  "voicePass": {
+    "itineraryNote": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
+    "shortDescription": "Hyatt House suites in Chelsea.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 324,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

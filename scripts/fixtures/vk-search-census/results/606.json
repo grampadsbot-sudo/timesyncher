@@ -1,0 +1,72 @@
+{
+  "thingId": 606,
+  "thingName": "Afternoon matinee show",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
+      "title": "TKTS by TDF",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Same-day + next-day matinee discounts; Times Square & Lincoln Center booths"
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "yelp",
+    "yelp": 4.0,
+    "tripadvisor": 4.6
+  },
+  "reviewCount": {
+    "yelp": 344,
+    "tripadvisor": 17
+  },
+  "priceHint": "Same-day Broadway/Off-Broadway up to 50% off + $8 TKTS service fee",
+  "hoursHint": "Times Square booth: Mon/Tue/Fri 3\u20138; Wed/Thu/Sat 11\u20138; Sun 11\u20137 (search listing; confirm TKTS Live)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "TKTS sells same-day and next-day matinee discounts up to 50%",
+      "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+    },
+    {
+      "claim": "$8 per-ticket TDF service charge",
+      "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+    }
+  ],
+  "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps\u2014Lincoln Center booth is often shorter.",
+  "voicePass": {
+    "itineraryNote": "For a matinee, check TKTS Live first, then queue under the red steps\u2014Lincoln Center booth is often shorter.",
+    "shortDescription": "Afternoon matinee via TKTS discount booths (placeholder attraction).",
+    "unsupportedFlags": [
+      "Thing is a generic \"Afternoon matinee show\" \u2014 mapped to TKTS discovery path"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 80,
+    "googleRating": "4.5",
+    "yelpRating": "4",
+    "price": 78,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.061796,
+    "attemptKinds": {
+      "brave": 34
+    },
+    "braveAttempts": 34
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "winner": "grok-bot"
+}

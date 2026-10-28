@@ -1,0 +1,68 @@
+{
+  "thingId": 607,
+  "thingName": "Friend meetup at Bryant Park",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://bryantpark.org/the-park/hours-and-directions",
+      "title": "Bryant Park Hours",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Oct daily 7am-10pm; behind NYPL"
+    }
+  ],
+  "rating": {
+    "primary": 4.6,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.6
+  },
+  "reviewCount": {
+    "tripadvisor": 24056
+  },
+  "priceHint": "Free park",
+  "hoursHint": "Oct: daily 7am\u201310pm (official hours page; seasonal)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Between 40th\u201342nd & Fifth\u2013Sixth behind NYPL",
+      "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
+    },
+    {
+      "claim": "October hours daily 7am\u201310pm",
+      "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
+    }
+  ],
+  "itineraryNoteCandidate": "Meet at the lawn or carousel\u2014check bryantpark.org calendar for games and events that day.",
+  "voicePass": {
+    "itineraryNote": "Meet at the lawn or carousel\u2014check bryantpark.org calendar for games and events that day.",
+    "shortDescription": "Midtown lawn park behind the main Public Library.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 95,
+    "googleRating": "4.7",
+    "yelpRating": "4.6",
+    "price": 20,
+    "hours": true,
+    "happyHour": null,
+    "itineraryNote": true,
+    "xaiUsd": 0.071146,
+    "attemptKinds": {
+      "brave": 33
+    },
+    "braveAttempts": 33
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 6,
+  "winner": "tie-brave-deeper-pages"
+}

@@ -1,0 +1,74 @@
+{
+  "thingId": 673,
+  "thingName": "Nobody Told Me",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/",
+      "title": "Hours & Location",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "951 Amsterdam Ave; Mon\u2013Fri 12pm\u20132am; Sat\u2013Sun 11am\u20132am"
+    },
+    {
+      "url": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
+      "title": "UWS Happy Hour",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "3\u20136pm daily: draft $7, wine $10, cocktails $12, oysters $2 (min 4), snacks $5"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "google",
+    "google": 4.5
+  },
+  "reviewCount": {
+    "google": 522
+  },
+  "priceHint": "HH drinks $7\u201312; oysters $2; snacks $5; baseline floor $24 cocktail",
+  "hoursHint": "Mon\u2013Fri 12pm\u20132am; Sat\u2013Sun 11am\u20132am (official)",
+  "happyHourHint": "Daily 3\u20136pm: draft $7, wine $10, cocktails $12, oysters $2 min 4 (official menu)",
+  "summaryClaims": [
+    {
+      "claim": "951 Amsterdam Ave, UWS",
+      "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
+    },
+    {
+      "claim": "Happy hour daily 3\u20136pm with listed drink and oyster prices",
+      "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+    },
+    {
+      "claim": "Hours Mon\u2013Fri noon\u20132am / weekends 11am\u20132am",
+      "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
+    }
+  ],
+  "itineraryNoteCandidate": "Nobody Told Me for $2 oysters and $12 cocktails at the 3\u20136pm happy hour.",
+  "voicePass": {
+    "itineraryNote": "Nobody Told Me for $2 oysters and $12 cocktails at the 3\u20136pm happy hour.",
+    "shortDescription": "UWS cocktail bar at 951 Amsterdam with daily 3\u20136pm HH and $2 oysters.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (hours + HH menu).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 24,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

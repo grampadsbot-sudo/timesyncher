@@ -1,0 +1,95 @@
+{
+  "thingId": 675,
+  "thingName": "The Smith - Lincoln Square",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://thesmithrestaurant.com/location/lincoln-square/",
+      "title": "The Smith Lincoln Square official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "1900 Broadway at 63rd; Mon\u2013Thu 8am\u201311pm, Fri 8am\u2013midnight, Sat 9am\u2013midnight, Sun 9am\u201311pm"
+    },
+    {
+      "url": "https://www.opentable.com/the-smith-lincoln-square",
+      "title": "OpenTable",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.5 \u2605 \u00b7 13404 reviews"
+    },
+    {
+      "url": "https://www.yelp.com/biz/the-smith-new-york-3",
+      "title": "Yelp",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "3.9 \u2605 \u00b7 ~2430 reviews \u00b7 1900 Broadway"
+    },
+    {
+      "url": "https://happy-hour.nyc/bars-restaurants/the-smith",
+      "title": "happy-hour.nyc (SOFT)",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Martini Hour weekdays 3\u20136pm and nightly from 10pm; $12 martinis \u2014 NOT official site"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "opentable",
+    "opentable": 4.5,
+    "yelp": 3.9
+  },
+  "reviewCount": {
+    "opentable": 13404,
+    "yelp": 2430
+  },
+  "priceHint": "Brunch/entrees ~mid $$; OT mid-range; martini HH $12 if third-party accurate",
+  "hoursHint": "Mon\u2013Thu 8am\u201311pm; Fri 8am\u2013midnight; Sat 9am\u2013midnight; Sun 9am\u201311pm (official)",
+  "happyHourHint": "SOFT: Martini Hour weekdays 3\u20136pm + nightly from 10pm ($12) \u2014 third-party only; not on fetched official page",
+  "summaryClaims": [
+    {
+      "claim": "1900 Broadway at 63rd Street across from Lincoln Center",
+      "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+    },
+    {
+      "claim": "Hours Mon\u2013Thu 8am\u201311pm; Fri to midnight; Sat 9am\u2013midnight; Sun 9am\u201311pm",
+      "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+    },
+    {
+      "claim": "OpenTable 4.5 from ~13k reviews",
+      "sourceUrl": "https://www.opentable.com/the-smith-lincoln-square"
+    },
+    {
+      "claim": "Martini HH times/prices only from third-party aggregator \u2014 unsupported for hard claim",
+      "sourceUrl": "https://happy-hour.nyc/bars-restaurants/the-smith"
+    }
+  ],
+  "itineraryNoteCandidate": "Pre-theater brunch or dinner at The Smith Lincoln Square, steps from curtain.",
+  "voicePass": {
+    "itineraryNote": "Pre-theater brunch or dinner at The Smith Lincoln Square, steps from curtain.",
+    "shortDescription": "Busy Lincoln Square brasserie at 1900 Broadway with long hours for pre- and post-show.",
+    "unsupportedFlags": [
+      "Martini happy hour prices/times not confirmed on official page \u2014 omitted from itineraryNote"
+    ],
+    "claimSupportOk": true,
+    "note": "Voice deliberately avoids HH claim pending official confirmation."
+  },
+  "callCounts": {
+    "webSearch": 2,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 2 WebSearch + 1 WebFetch (HH follow-up search).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 35,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

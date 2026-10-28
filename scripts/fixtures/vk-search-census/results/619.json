@@ -1,0 +1,72 @@
+{
+  "thingId": 619,
+  "thingName": "Hotel Beacon",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.beaconhotel.com/",
+      "title": "Historic Upper West Side hotel with apartment-style rooms.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Official: kitchenettes, Central Park proximity"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.5,
+    "booking": 8.8
+  },
+  "reviewCount": {
+    "tripadvisor": 5533,
+    "booking": 2922
+  },
+  "priceHint": "4-star UWS; kitchenette studios",
+  "hoursHint": "Hotel \u2014 24h; kitchenettes; laundry",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: 2130 Broadway",
+      "sourceUrl": "https://www.beaconhotel.com/"
+    },
+    {
+      "claim": "Official site https://www.beaconhotel.com/",
+      "sourceUrl": "https://www.beaconhotel.com/"
+    },
+    {
+      "claim": "Guest rating primary 4.5 via tripadvisor",
+      "sourceUrl": "https://www.beaconhotel.com/"
+    }
+  ],
+  "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway\u2014ideal for longer NYC stays.",
+  "voicePass": {
+    "itineraryNote": "Book a kitchenette studio near 72nd St subway\u2014ideal for longer NYC stays.",
+    "shortDescription": "Historic Upper West Side hotel with apartment-style rooms.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 736,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

@@ -1,0 +1,82 @@
+{
+  "thingId": 670,
+  "thingName": "Amelie Bistro & Wine Bar",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.ameliewinebar.com/uws",
+      "title": "Am\u00e9lie UWS official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "566 Amsterdam Ave; dinner Mon\u2013Thu/Sun 4\u20139:30, Fri\u2013Sat 4\u201310:30; HH daily 4\u20136"
+    },
+    {
+      "url": "https://www.ameliewinebar.com/uws/menus/happy-hour",
+      "title": "UWS Happy Hour menu",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Every day 4\u20136pm: $14 flights, $10 wine of day, HH cocktails $9\u201311, food specials"
+    },
+    {
+      "url": "https://www.opentable.com/r/amelie-uws-new-york",
+      "title": "Amelie OpenTable",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.7 \u2605 \u00b7 49 reviews \u00b7 $31\u201350 French"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "google",
+    "google": 4.5,
+    "opentable": 4.7
+  },
+  "reviewCount": {
+    "google": 619,
+    "opentable": 49
+  },
+  "priceHint": "OT $31\u201350; HH wine flight $14 / wine of day $10",
+  "hoursHint": "Dinner Mon\u2013Thu & Sun 4\u20139:30pm, Fri\u2013Sat 4\u201310:30pm; Lunch Tue\u2013Fri 12\u20133pm; Brunch Sat\u2013Sun 11am\u20133pm (official)",
+  "happyHourHint": "Daily 4\u20136pm: $14 wine flights, $10 wine of the day, HH cocktails $9\u201311 (official menu)",
+  "summaryClaims": [
+    {
+      "claim": "566 Amsterdam Avenue, Upper West Side",
+      "sourceUrl": "https://www.ameliewinebar.com/uws"
+    },
+    {
+      "claim": "Happy hour every day 4\u20136pm with $14 flights and $10 wine of the day",
+      "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+    },
+    {
+      "claim": "Google ~4.5 from ~619 reviews; OpenTable 4.7/49",
+      "sourceUrl": "https://www.opentable.com/r/amelie-uws-new-york"
+    }
+  ],
+  "itineraryNoteCandidate": "Hit Am\u00e9lie UWS at 4pm for $14 wine flights before a Central Park stroll.",
+  "voicePass": {
+    "itineraryNote": "Hit Am\u00e9lie UWS at 4pm for $14 wine flights before a Central Park stroll.",
+    "shortDescription": "Cozy French bistro and wine bar on Amsterdam Ave with daily 4\u20136pm happy hour.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (site + HH menu).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 65,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

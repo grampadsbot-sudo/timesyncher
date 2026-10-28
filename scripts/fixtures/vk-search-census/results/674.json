@@ -1,0 +1,82 @@
+{
+  "thingId": 674,
+  "thingName": "Rosa Mexicano - Lincoln Center",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://rosamexicano.com/location/lincoln-center/",
+      "title": "Rosa Mexicano Lincoln Center",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "44 W 63rd St Empire Hotel; Mon\u2013Wed 7am\u201311pm, Thu\u2013Sat later, Sun to 10pm"
+    },
+    {
+      "url": "https://rosamexicano.com/happy-hour/",
+      "title": "Fiesta Hour official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area all NYC incl Lincoln Center; Margarita Mondays $5"
+    },
+    {
+      "url": "https://www.opentable.com/r/rosa-mexicano-lincoln-center-new-york-3",
+      "title": "OpenTable",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.5 \u2605 \u00b7 10218 reviews \u00b7 $30 and under"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "opentable",
+    "opentable": 4.5
+  },
+  "reviewCount": {
+    "opentable": 10218
+  },
+  "priceHint": "OT $30 and under; Margarita Mondays $5; Fiesta Hour bar specials",
+  "hoursHint": "Mon\u2013Wed 7am\u201311pm; Thu\u2013Sat 7am\u2013midnight (Fri/Sat late to 1am on some pages); Sun 7am\u201310pm (official location)",
+  "happyHourHint": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area only; Margarita Mondays $5; Taco Tuesdays half-price (official)",
+  "summaryClaims": [
+    {
+      "claim": "Now at Empire Hotel, 44 W 63rd St across from Lincoln Center",
+      "sourceUrl": "https://rosamexicano.com/location/lincoln-center/"
+    },
+    {
+      "claim": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area at all NYC locations including Lincoln Center",
+      "sourceUrl": "https://rosamexicano.com/happy-hour/"
+    },
+    {
+      "claim": "OpenTable 4.5 from 10,218 reviews",
+      "sourceUrl": "https://www.opentable.com/r/rosa-mexicano-lincoln-center-new-york-3"
+    }
+  ],
+  "itineraryNoteCandidate": "Tableside guacamole and a Fiesta Hour margarita before curtain at Lincoln Center.",
+  "voicePass": {
+    "itineraryNote": "Tableside guacamole and a Fiesta Hour margarita before curtain at Lincoln Center.",
+    "shortDescription": "Mexican flagship at the Empire Hotel across from the Met, with daily breakfast and Fiesta Hour.",
+    "unsupportedFlags": [
+      "Fri/Sat close time differs slightly across official pages (midnight vs 1am)"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 42,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

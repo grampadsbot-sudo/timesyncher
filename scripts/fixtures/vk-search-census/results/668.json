@@ -1,0 +1,86 @@
+{
+  "thingId": 668,
+  "thingName": "Village Vanguard",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://villagevanguard.com/faq",
+      "title": "Village Vanguard FAQ",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Shows 8pm & 10pm; seating 7pm / 9:30pm; admission separate + 1 drink min; no food; age 15+"
+    },
+    {
+      "url": "https://www.yelp.com/biz/village-vanguard-new-york",
+      "title": "Yelp",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.1 \u2605 \u00b7 240 reviews \u00b7 178 7th Ave S"
+    },
+    {
+      "url": "https://villagevanguard.squadup.com/",
+      "title": "Tickets",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Online tickets; online sales close 1 hour before showtime"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "yelp",
+    "yelp": 4.1
+  },
+  "reviewCount": {
+    "yelp": 240
+  },
+  "priceHint": "Cover separate from drinks; one-drink minimum; cover often ~$35\u201350 (guide/search; confirm ticket page)",
+  "hoursHint": "Shows 8pm & 10pm; doors/seating 7pm first show, 9:30pm second (official FAQ)",
+  "happyHourHint": null,
+  "summaryClaims": [
+    {
+      "claim": "178 7th Avenue South; shows at 8pm and 10pm",
+      "sourceUrl": "https://villagevanguard.com/faq"
+    },
+    {
+      "claim": "Admission paid in advance; one drink minimum; no food served",
+      "sourceUrl": "https://villagevanguard.com/faq"
+    },
+    {
+      "claim": "Online ticket cutoff 1 hour before showtime; standby not guaranteed",
+      "sourceUrl": "https://villagevanguard.com/faq"
+    },
+    {
+      "claim": "Yelp 4.1 from 240 reviews",
+      "sourceUrl": "https://www.yelp.com/biz/village-vanguard-new-york"
+    }
+  ],
+  "itineraryNoteCandidate": "Buy Village Vanguard tickets early for the 8pm set \u2014 admission is separate and there's a one-drink minimum.",
+  "voicePass": {
+    "itineraryNote": "Buy Village Vanguard tickets early for the 8pm set \u2014 admission is separate and there's a one-drink minimum.",
+    "shortDescription": "Historic West Village jazz cellar with 8pm and 10pm sets; tickets online, no food, age 15+.",
+    "unsupportedFlags": [
+      "Exact cover dollar amount varies by night \u2014 not hard-coded from FAQ"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

@@ -1,0 +1,65 @@
+{
+  "thingId": 658,
+  "thingName": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york",
+      "title": "United LAS-EWR 07:00-15:00",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "United nonstop LAS\u2013EWR; June RT economy from ~$259\u2013$267 in SERP samples"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Inventory/list price $257",
+  "hoursHint": "United LAS-EWR 07:00-15:00 \u2014 schedule per airline booking tool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "United nonstop LAS\u2013EWR; June RT economy from ~$259\u2013$267 in SERP samples",
+      "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
+    },
+    {
+      "claim": "Thing inventory website points at airline booking deep link",
+      "sourceUrl": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1"
+    }
+  ],
+  "itineraryNoteCandidate": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
+  "voicePass": {
+    "itineraryNote": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
+    "shortDescription": "United LAS-EWR 07:00-15:00",
+    "unsupportedFlags": [
+      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 257,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

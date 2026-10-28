@@ -1,0 +1,76 @@
+{
+  "thingId": 666,
+  "thingName": "Smoke Jazz & Supper Club",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://smokejazz.com/faq/",
+      "title": "Smoke Jazz FAQ",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "2751 Broadway; Wed-Sun 4pm; dinner mins; HH"
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.2,
+    "yelp": 3.8
+  },
+  "reviewCount": {
+    "tripadvisor": 573,
+    "yelp": 475
+  },
+  "priceHint": "Tickets ~$25\u2013$65; dinner entr\u00e9e min on early sets; $20 min on 10pm",
+  "hoursHint": "Lounge & listening room Wed\u2013Sun 4pm\u2013close (official FAQ)",
+  "happyHourHint": "Happy hour cocktails/apps ~$7 between 4\u20135:30pm (official FAQ)",
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "2751 Broadway, Upper West Side",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    },
+    {
+      "claim": "Open Wed\u2013Sun from 4pm",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    },
+    {
+      "claim": "Dinner shows require one entr\u00e9e per person; 10pm set has $20 min",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    },
+    {
+      "claim": "Happy hour ~$7 drinks/apps 4\u20135:30pm per FAQ",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    }
+  ],
+  "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set\u2014buy tickets ahead for dinner shows.",
+  "voicePass": {
+    "itineraryNote": "Arrive for happy hour, then catch a listening-room set\u2014buy tickets ahead for dinner shows.",
+    "shortDescription": "UWS jazz supper club with listening room and lounge.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 45,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 7,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

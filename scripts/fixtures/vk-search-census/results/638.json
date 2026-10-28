@@ -1,0 +1,74 @@
+{
+  "thingId": 638,
+  "thingName": "The Manhattan at Times Square Hotel",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail",
+      "title": "The Manhattan at Times Square Hotel.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Booking 5.8 \u2014 mixed/dated reviews"
+    }
+  ],
+  "rating": {
+    "primary": 5.8,
+    "primarySource": "booking",
+    "booking": 5.8,
+    "hotels": 6.0
+  },
+  "reviewCount": {
+    "booking": 4133,
+    "hotels": 4008
+  },
+  "priceHint": "Times Square hotel (IHG/SPND)",
+  "hoursHint": "Hotel \u2014 24h",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: Times Square / Manhattan at TSQ",
+      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+    },
+    {
+      "claim": "Official site https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail",
+      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+    },
+    {
+      "claim": "Guest rating primary 5.8 via booking",
+      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+    }
+  ],
+  "itineraryNoteCandidate": "Central but dated per recent reviews\u2014only pick if the rate is sharply better than peers.",
+  "voicePass": {
+    "itineraryNote": "Central but dated per recent reviews\u2014only pick if the rate is sharply better than peers.",
+    "shortDescription": "The Manhattan at Times Square Hotel.",
+    "unsupportedFlags": [
+      "Low guest scores; renovation/maintenance complaints in SERP"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 210,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

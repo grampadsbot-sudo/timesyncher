@@ -1,0 +1,72 @@
+{
+  "thingId": 669,
+  "thingName": "Village Vanguard / Smoke / Birdland / Jazz Gallery",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.birdlandjazz.com/faq/",
+      "title": "Birdland FAQ",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "315 W 44th; $20 min"
+    },
+    {
+      "url": "https://www.birdlandjazz.com/",
+      "title": "Birdland Jazz",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Times Square jazz club & theater"
+    }
+  ],
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.1
+  },
+  "reviewCount": {},
+  "priceHint": "$20 F&B minimum at Birdland (official FAQ)",
+  "hoursHint": "Birdland box office daily ~2\u201311pm; show doors vary (birdlandjazz.com FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Birdland at 315 West 44th Street",
+      "sourceUrl": "https://www.birdlandjazz.com/"
+    },
+    {
+      "claim": "$20 food-or-beverage minimum per person per set",
+      "sourceUrl": "https://www.birdlandjazz.com/faq/"
+    }
+  ],
+  "itineraryNoteCandidate": "Use this as a jazz-crawl hub\u2014confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
+  "voicePass": {
+    "itineraryNote": "Use this as a jazz-crawl hub\u2014confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
+    "shortDescription": "Cluster placeholder spanning Birdland and peer Village jazz rooms.",
+    "unsupportedFlags": [
+      "Cluster Thing \u2014 Birdland confirmed; peers need per-venue tickets"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 5,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

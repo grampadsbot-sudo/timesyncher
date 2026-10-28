@@ -1,0 +1,80 @@
+{
+  "thingId": 672,
+  "thingName": "e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://e-barnyc.com/",
+      "title": "e's BAR official",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "511 Amsterdam; daily hours; walk-ins"
+    },
+    {
+      "url": "https://www.yelp.com/biz/es-bar-new-york",
+      "title": "e's BAR Yelp",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "441 reviews"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "google",
+    "google": 4.4,
+    "yelp": null
+  },
+  "reviewCount": {
+    "google": 1010,
+    "yelp": 441
+  },
+  "priceHint": "$$ neighborhood bar; HH $5 burger noted by NY Mag",
+  "hoursHint": "Mon 5\u201311; Tue\u2013Wed 5\u201312; Thu 4\u20132am; Fri 2\u20132am; Sat 12\u20132am; Sun 12\u201311 (official; page also shows updated Thu\u2013Sun daytime)",
+  "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person \u2014 stoop.bar lists 5\u20137pm daily (third-party)",
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "511 Amsterdam Ave between 84th & 85th",
+      "sourceUrl": "https://e-barnyc.com/"
+    },
+    {
+      "claim": "Published daily hours on official homepage",
+      "sourceUrl": "https://e-barnyc.com/"
+    },
+    {
+      "claim": "Cluster Thing also lists The Dead Poet / Lilly's \u2014 only e's BAR official fetched",
+      "sourceUrl": "https://e-barnyc.com/"
+    }
+  ],
+  "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger\u2014verify Dead Poet / Lilly's separately.",
+  "voicePass": {
+    "itineraryNote": "Start the UWS bar hop at e's for games and a casual burger\u2014verify Dead Poet / Lilly's separately.",
+    "shortDescription": "e's BAR \u2014 friendly UWS neighborhood bar (cluster includes Dead Poet / Lilly's).",
+    "unsupportedFlags": [
+      "Cluster Thing; HH times from third-party soft-flagged"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 22,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 7,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

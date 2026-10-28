@@ -1,0 +1,68 @@
+{
+  "thingId": 645,
+  "thingName": "Nordstrom NYC Flagship",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship",
+      "title": "Nordstrom NYC Flagship",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "225 W 57th; bot-blocked on fetch but search listed hours"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "aggregator",
+    "aggregator": 4.4
+  },
+  "reviewCount": {
+    "aggregator": 1761
+  },
+  "priceHint": "$$$$ luxury department store",
+  "hoursHint": "Mon\u2013Sat 10am\u20139pm; Sun 11am\u20137pm (Nordstrom store details)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Flagship at 225 W 57th St (Central Park Tower)",
+      "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
+    },
+    {
+      "claim": "Mon\u2013Sat 10\u20139, Sun 11\u20137 per store listing",
+      "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
+    }
+  ],
+  "itineraryNoteCandidate": "Browse the Central Park Tower flagship for luxury floors without Midtown Fifth Avenue crush.",
+  "voicePass": {
+    "itineraryNote": "Browse the Central Park Tower flagship for luxury floors without Midtown Fifth Avenue crush.",
+    "shortDescription": "Nordstrom's NYC flagship in Central Park Tower.",
+    "unsupportedFlags": [
+      "Official fetch returned bot-block page; hours from search SERP"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 100,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

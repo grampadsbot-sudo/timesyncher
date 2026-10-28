@@ -1,0 +1,106 @@
+{
+  "thingId": 610,
+  "thingName": "Carbone",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://carbonenewyork.com/",
+      "title": "Carbone New York official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "181 Thompson St; Lunch Tue\u2013Sun 11:30am\u20132pm; Dinner daily 5\u201311:30pm; corkage $110"
+    },
+    {
+      "url": "https://www.yelp.com/biz/carbone-new-york",
+      "title": "CARBONE Yelp",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.0 \u2605 \u00b7 2129 reviews \u00b7 $$$$ \u00b7 181 Thompson St; Spicy Rigatoni Vodka $49"
+    },
+    {
+      "url": "https://www.opentable.com/r/carbone",
+      "title": "Carbone OpenTable",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.5 \u2605 \u00b7 664 reviews \u00b7 $50+"
+    },
+    {
+      "url": "https://www.stoop.bar/happy-hour/noho/carbone-new-york",
+      "title": "stoop.bar HH (REJECTED)",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Lists 168 Sullivan St \u2014 DIFFERENT venue; claim-support REJECT"
+    }
+  ],
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "yelp",
+    "yelp": 4.0,
+    "opentable": 4.5
+  },
+  "reviewCount": {
+    "yelp": 2129,
+    "opentable": 664
+  },
+  "priceHint": "$$$$ / OT $50+; Spicy Rigatoni Vodka $49 (Yelp menu)",
+  "hoursHint": "Lunch Tue\u2013Sun 11:30am\u20132pm; Dinner Mon\u2013Sun 5\u201311:30pm (official)",
+  "happyHourHint": null,
+  "happyHourRejectReason": "Third-party HH page maps to 168 Sullivan St, not 181 Thompson St",
+  "summaryClaims": [
+    {
+      "claim": "Located at 181 Thompson Street, Greenwich Village",
+      "sourceUrl": "https://carbonenewyork.com/"
+    },
+    {
+      "claim": "Lunch Tue\u2013Sun 11:30am\u20132pm; dinner daily 5\u201311:30pm",
+      "sourceUrl": "https://carbonenewyork.com/"
+    },
+    {
+      "claim": "Yelp 4.0 from ~2129 reviews",
+      "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+    },
+    {
+      "claim": "Corkage $110 per 750ml bottle",
+      "sourceUrl": "https://carbonenewyork.com/"
+    },
+    {
+      "claim": "No verified happy hour at 181 Thompson (Sullivan St listing rejected)",
+      "sourceUrl": "https://www.stoop.bar/happy-hour/noho/carbone-new-york"
+    }
+  ],
+  "itineraryNoteCandidate": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
+  "voicePass": {
+    "itineraryNote": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
+    "shortDescription": "Glamorous Italian-American on Thompson Street with tuxedo captains and hard-to-get reservations.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true,
+    "note": "Note leans on Yelp signature dishes + official address/hours; no HH claimed."
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 71,
+    "googleRating": "4.3",
+    "yelpRating": "4",
+    "price": 48,
+    "hours": true,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.084376,
+    "attemptKinds": {
+      "brave": 17
+    },
+    "officialUrls": [
+      "https://carbonenewyork.com/",
+      "https://en.wikipedia.org/wiki/Carbone_(restaurant)",
+      "https://www.tripadvisor.com/Restaurant_Review-g60763-d3958626-Reviews-Carbone-New_York_City_New_York.html",
+      "https://www.majorfood.com/brands/carbone",
+      "https://www.nyctourism.com/restaurants/carbone-greenwich-village/"
+    ]
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 6,
+  "censusReuse": "full10"
+}

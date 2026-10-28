@@ -1,0 +1,77 @@
+{
+  "thingId": 671,
+  "thingName": "Bodega 88",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://bodega88nyc.com/",
+      "title": "Bodega 88 official",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "573 Columbus Ave; HH drinks 11am\u20137pm; hours listed 11am\u201312am"
+    },
+    {
+      "url": "https://www.yelp.com/biz/bodega-88-new-york",
+      "title": "Bodega 88 Yelp",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "4.3 \u2605 \u00b7 277 reviews \u00b7 $$ Sports Bars / Latin American"
+    }
+  ],
+  "rating": {
+    "primary": 4.3,
+    "primarySource": "yelp",
+    "yelp": 4.3
+  },
+  "reviewCount": {
+    "yelp": 277
+  },
+  "priceHint": "$$; HH beers ~$6, cocktails from ~$8 (third-party menu scrapes)",
+  "hoursHint": "Daily ~11am\u201312am (official site lists all days 11:00 AM\u201312:00 AM)",
+  "happyHourHint": "Happy hour drinks 11am\u20137pm: beer, sangria, drinks & classic mojitos (official)",
+  "summaryClaims": [
+    {
+      "claim": "573 Columbus Ave, Upper West Side (not Theater District)",
+      "sourceUrl": "https://bodega88nyc.com/"
+    },
+    {
+      "claim": "Happy hour drinks 11am\u20137pm per official site",
+      "sourceUrl": "https://bodega88nyc.com/"
+    },
+    {
+      "claim": "Yelp 4.3 from 277 reviews",
+      "sourceUrl": "https://www.yelp.com/biz/bodega-88-new-york"
+    }
+  ],
+  "itineraryNoteCandidate": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
+  "voicePass": {
+    "itineraryNote": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
+    "shortDescription": "Latin-inspired UWS sports bar at 573 Columbus with long daytime drink specials.",
+    "unsupportedFlags": [
+      "Exact HH drink prices only from third-party menu scrape, not official site body"
+    ],
+    "claimSupportOk": true,
+    "note": "Baseline summary said Theater-district Asian-fusion \u2014 wrong venue; bot corrected to UWS sports bar."
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 28,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10"
+}

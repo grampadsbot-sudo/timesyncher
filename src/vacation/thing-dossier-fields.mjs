@@ -357,7 +357,11 @@ export function applyDossierFields(record = {}, dossier = {}) {
         continue;
       }
       if (!claimsSupported(dossier, claim)) continue;
-      if (key === 'price') next[key] = Number(claim.value);
+      if (key === 'price') {
+        const value = Number(claim.value);
+        if (!Number.isFinite(value)) continue;
+        next[key] = value;
+      }
       else if (['lat', 'lng'].includes(key)) next[key] = Number(claim.value);
       else {
         const scalar = scalarFieldValue(claim.value ?? claim);

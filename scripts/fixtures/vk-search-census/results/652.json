@@ -1,0 +1,65 @@
+{
+  "thingId": 652,
+  "thingName": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1",
+  "type": "flight",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK",
+      "title": "JetBlue LAS-JFK overnight",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "JetBlue overnight nonstop ~11pm\u20137am class"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Inventory/list price $252",
+  "hoursHint": "JetBlue LAS-JFK overnight \u2014 schedule per airline booking tool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "JetBlue overnight nonstop ~11pm\u20137am class",
+      "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+    },
+    {
+      "claim": "Thing inventory website points at airline booking deep link",
+      "sourceUrl": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1"
+    }
+  ],
+  "itineraryNoteCandidate": "Red-eye JetBlue LAS\u2013JFK to wake up in New York \u2014 save a hotel night.",
+  "voicePass": {
+    "itineraryNote": "Red-eye JetBlue LAS\u2013JFK to wake up in New York \u2014 save a hotel night.",
+    "shortDescription": "JetBlue LAS-JFK overnight",
+    "unsupportedFlags": [
+      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 252,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

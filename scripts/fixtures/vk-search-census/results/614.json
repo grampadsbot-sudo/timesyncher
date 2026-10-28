@@ -1,0 +1,68 @@
+{
+  "thingId": 614,
+  "thingName": "MoMA Design Store - 53rd Street",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://store.moma.org/pages/design-store-53rd-nyc",
+      "title": "MoMA Design Store 53rd",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "44 W 53rd; daily 9:30-6:30 Fri to 9"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4,
+    "yelp": 3.3
+  },
+  "reviewCount": {
+    "tripadvisor": 636,
+    "yelp": 68
+  },
+  "priceHint": "$$$ design gifts",
+  "hoursHint": "Daily 9:30am\u20136:30pm; Fri until 9pm (official store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "44 West 53rd Street across from MoMA",
+      "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+    },
+    {
+      "claim": "Open daily 9:30am\u20136:30pm; Fridays until 9pm",
+      "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+    }
+  ],
+  "itineraryNoteCandidate": "Browse curated design objects across from MoMA\u2014best before or after a museum visit.",
+  "voicePass": {
+    "itineraryNote": "Browse curated design objects across from MoMA\u2014best before or after a museum visit.",
+    "shortDescription": "MoMA's design gift store on West 53rd Street.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 35,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

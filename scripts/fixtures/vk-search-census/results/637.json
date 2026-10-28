@@ -1,0 +1,72 @@
+{
+  "thingId": 637,
+  "thingName": "The Empire Hotel New York",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.empirehotelnyc.com/",
+      "title": "Empire Hotel near Lincoln Center / Columbus Circle.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Official rooftop + suites"
+    }
+  ],
+  "rating": {
+    "primary": 3.7,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 3.7,
+    "hotels": 7.6
+  },
+  "reviewCount": {
+    "tripadvisor": 10007,
+    "hotels": 7222
+  },
+  "priceHint": "4-star near Columbus Circle; rooftop",
+  "hoursHint": "Hotel \u2014 24h; rooftop bar/seasonal pool",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: 44 W 63rd St",
+      "sourceUrl": "https://www.empirehotelnyc.com/"
+    },
+    {
+      "claim": "Official site https://www.empirehotelnyc.com/",
+      "sourceUrl": "https://www.empirehotelnyc.com/"
+    },
+    {
+      "claim": "Guest rating primary 3.7 via tripadvisor",
+      "sourceUrl": "https://www.empirehotelnyc.com/"
+    }
+  ],
+  "itineraryNoteCandidate": "Empire for Columbus Circle nights\u2014rooftop is the scene; rooms get mixed scores.",
+  "voicePass": {
+    "itineraryNote": "Empire for Columbus Circle nights\u2014rooftop is the scene; rooms get mixed scores.",
+    "shortDescription": "Empire Hotel near Lincoln Center / Columbus Circle.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 509,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 4,
+  "winner": "grok-bot"
+}

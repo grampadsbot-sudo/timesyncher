@@ -1,0 +1,68 @@
+{
+  "thingId": 642,
+  "thingName": "Apple Fifth Avenue",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.apple.com/retail/fifthavenue/",
+      "title": "Apple Fifth Avenue",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "767 Fifth Ave; Always Open"
+    }
+  ],
+  "rating": {
+    "primary": 3.4,
+    "primarySource": "yelp",
+    "yelp": 3.4,
+    "aggregator": 4.4
+  },
+  "reviewCount": {
+    "yelp": 1220,
+    "aggregator": 22764
+  },
+  "priceHint": "Apple retail",
+  "hoursHint": "Always open 24/7 (official Apple retail page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Glass cube at 767 Fifth Avenue",
+      "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+    },
+    {
+      "claim": "Store hours: Always Open",
+      "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+    }
+  ],
+  "itineraryNoteCandidate": "Drop into the always-open Fifth Avenue cube anytime\u2014Genius Bar still needs a reservation.",
+  "voicePass": {
+    "itineraryNote": "Drop into the always-open Fifth Avenue cube anytime\u2014Genius Bar still needs a reservation.",
+    "shortDescription": "Iconic 24-hour Apple glass-cube flagship on Fifth Avenue.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 49,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

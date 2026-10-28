@@ -1,0 +1,95 @@
+{
+  "thingId": 604,
+  "thingName": "Statue of Liberty walking tour",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.statueofliberty.org/visit/",
+      "title": "Foundation Visit page",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Statue City Cruises ONLY authorized ferry; Battery Park or Liberty State Park; museums included"
+    },
+    {
+      "url": "https://www.nps.gov/stli/planyourvisit/hours.htm",
+      "title": "NPS hours",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Accessible only via ferry; check ferry schedule; page last updated Apr 6 2026"
+    },
+    {
+      "url": "https://statuecitycruises.com/faq",
+      "title": "Statue City Cruises FAQ (search hit)",
+      "fetchedAt": "2026-10-28T04:18:20Z",
+      "snippet": "Adult GA ~$26; child/senior tiers; pedestal/crown add-on"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "thirdParty",
+    "thirdParty": 4.5
+  },
+  "reviewCount": {
+    "thirdParty": 44396
+  },
+  "priceHint": "Adult general admission ferry ~$26; child/senior lower; crown/pedestal extra (SCC FAQ via search)",
+  "hoursHint": "Ferry-only access; schedules seasonal \u2014 buy via Statue City Cruises; NPS park hours page refers to ferry schedule",
+  "happyHourHint": null,
+  "summaryClaims": [
+    {
+      "claim": "Only Statue City Cruises is NPS-authorized to Liberty/Ellis Islands",
+      "sourceUrl": "https://www.statueofliberty.org/visit/"
+    },
+    {
+      "claim": "Depart from Battery Park NYC or Liberty State Park NJ",
+      "sourceUrl": "https://www.statueofliberty.org/visit/"
+    },
+    {
+      "claim": "Ticket includes museums on both islands; no separate museum ticket",
+      "sourceUrl": "https://www.statueofliberty.org/visit/"
+    },
+    {
+      "claim": "Adult GA around $26 per search synthesis of SCC FAQ",
+      "sourceUrl": "https://statuecitycruises.com/faq"
+    }
+  ],
+  "itineraryNoteCandidate": "Buy Statue City Cruises tickets only, board at Battery Park, then see Liberty and Ellis museums on one ticket.",
+  "voicePass": {
+    "itineraryNote": "Buy Statue City Cruises tickets only, board at Battery Park, then see Liberty and Ellis museums on one ticket.",
+    "shortDescription": "NPS ferry day from Battery Park to Liberty and Ellis Islands with museum access included.",
+    "unsupportedFlags": [
+      "Exact current adult fare should be rechecked on SCC checkout; search synthesis ~$26"
+    ],
+    "claimSupportOk": true,
+    "note": "NPS hours page thin on clock times; bot wins authority guidance over raw hour string."
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (Foundation + NPS).",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 80,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 26,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.070172,
+    "attemptKinds": {
+      "brave": 31
+    },
+    "officialUrls": [
+      "https://www.statueofliberty.org/visit/",
+      "https://www.statueofliberty.org/directions-battery-park",
+      "https://www.musement.com/us/new-york/vip-access-ellis-island-statue-liberty-and-battery-park-walking-tour-330022/",
+      "https://www.nps.gov/stli/planyourvisit/index.htm",
+      "https://www.statueofliberty.org/LegitTickets"
+    ]
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "censusReuse": "full10"
+}

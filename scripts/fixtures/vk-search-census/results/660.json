@@ -1,0 +1,82 @@
+{
+  "thingId": 660,
+  "thingName": "Blue Note Jazz Club",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.bluenotejazz.com/nyc/faqs/",
+      "title": "Blue Note NYC FAQ",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "131 W 3rd; $20 min; corkage $35; capacity 200"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/contact/",
+      "title": "Blue Note Contact",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Hours music 8 & 10:30"
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "aggregator",
+    "aggregator": 4.2
+  },
+  "reviewCount": {
+    "aggregator": 5492
+  },
+  "priceHint": "$20 consumption minimum + ticket (varies by show)",
+  "hoursHint": "Music ~8:00pm & 10:30pm; doors 6pm/10pm (official contact/FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "131 West 3rd Street, Greenwich Village",
+      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+    },
+    {
+      "claim": "$20 consumption minimum per show",
+      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+    },
+    {
+      "claim": "Sets ~8pm and 10:30pm; doors 6pm/10pm",
+      "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+    },
+    {
+      "claim": "Inventory website jazz.org/dizzys is incorrect for Blue Note",
+      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+    }
+  ],
+  "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
+  "voicePass": {
+    "itineraryNote": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
+    "shortDescription": "Legendary Greenwich Village jazz club with nightly sets.",
+    "unsupportedFlags": [
+      "Inventory website pointed at Dizzy's \u2014 corrected to bluenotejazz.com"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 55,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

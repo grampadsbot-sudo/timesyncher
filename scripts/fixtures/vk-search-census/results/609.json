@@ -1,0 +1,73 @@
+{
+  "thingId": 609,
+  "thingName": "Priceline opaque Standard sedan",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "Priceline JFK cars",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "JFK rental deals landing"
+    },
+    {
+      "url": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/",
+      "title": "Express Deals explainer",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "Company hidden until after book; nonrefundable"
+    }
+  ],
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
+  "priceHint": "Opaque Express Deal \u2014 prepaid/nonrefundable; compare all-in vs named brands",
+  "hoursHint": "Airport pickup per supplier after reveal",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Priceline Express Deals hide rental company until after prepaid booking",
+      "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+    },
+    {
+      "claim": "Opaque car rates are typically nonrefundable/nonchangeable",
+      "sourceUrl": "https://www.priceline.com/static-pages/terms_en.html"
+    }
+  ],
+  "itineraryNoteCandidate": "Only use opaque JFK sedan if plans are locked\u2014otherwise named brands may be safer.",
+  "voicePass": {
+    "itineraryNote": "Only use opaque JFK sedan if plans are locked\u2014otherwise named brands may be safer.",
+    "shortDescription": "Priceline opaque standard sedan at JFK.",
+    "unsupportedFlags": [
+      "Opaque product \u2014 company unknown pre-purchase"
+    ],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 93,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 306,
+    "hours": true,
+    "happyHour": null,
+    "itineraryNote": true,
+    "xaiUsd": 0.07053,
+    "attemptKinds": {
+      "brave": 24
+    },
+    "braveAttempts": 24
+  },
+  "censusReuse": null,
+  "botFieldScore": 4,
+  "baseFieldScore": 4,
+  "winner": "tie-brave-deeper-pages"
+}

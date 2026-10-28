@@ -1,0 +1,66 @@
+{
+  "thingId": 646,
+  "thingName": "Pure Green UWS",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.puregreenfranchise.com/new-york/uws/",
+      "title": "Pure Green UWS",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "2041 Broadway; 7am-9pm"
+    }
+  ],
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "google",
+    "google": 4.8
+  },
+  "reviewCount": {
+    "google": 78
+  },
+  "priceHint": "$$ juice bar",
+  "hoursHint": "Daily ~7am\u20139pm (franchise UWS listing)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "UWS shop at 2041 Broadway",
+      "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+    },
+    {
+      "claim": "Listed open daily 7am\u20139pm",
+      "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+    }
+  ],
+  "itineraryNoteCandidate": "Quick cold-pressed juice stop on Broadway before a Lincoln Center evening.",
+  "voicePass": {
+    "itineraryNote": "Quick cold-pressed juice stop on Broadway before a Lincoln Center evening.",
+    "shortDescription": "Pure Green juice bar on the Upper West Side.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 12,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

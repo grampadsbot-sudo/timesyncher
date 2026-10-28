@@ -1,0 +1,68 @@
+{
+  "thingId": 616,
+  "thingName": "Whole Foods Market Columbus Circle",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.wholefoodsmarket.com/stores/columbuscircle/",
+      "title": "Whole Foods Columbus Circle",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "10 Columbus Cir; daily 7am-10pm"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4,
+    "yelp": 3.3
+  },
+  "reviewCount": {
+    "tripadvisor": 1889,
+    "yelp": 913
+  },
+  "priceHint": "$$$ grocery / prepared foods",
+  "hoursHint": "Daily 7:00am\u201310:00pm (official store page)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "10 Columbus Circle location",
+      "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+    },
+    {
+      "claim": "Open daily 7am\u201310pm",
+      "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+    }
+  ],
+  "itineraryNoteCandidate": "Stock picnic supplies under the Time Warner Center before a Central Park stroll.",
+  "voicePass": {
+    "itineraryNote": "Stock picnic supplies under the Time Warner Center before a Central Park stroll.",
+    "shortDescription": "Large Whole Foods at Columbus Circle.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 25,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

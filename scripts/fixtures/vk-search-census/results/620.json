@@ -1,0 +1,73 @@
+{
+  "thingId": 620,
+  "thingName": "Hotel Edison",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.edisonhotelnyc.com/",
+      "title": "Historic Times Square hotel near Broadway theaters.",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "TA 3.9 / 18k+ reviews"
+    }
+  ],
+  "rating": {
+    "primary": 3.9,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 3.9,
+    "booking": 7.8
+  },
+  "reviewCount": {
+    "tripadvisor": 18814,
+    "booking": 7269,
+    "google": 6634
+  },
+  "priceHint": "4-star Times Square",
+  "hoursHint": "Hotel \u2014 24h",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Address/area: Times Square / Hotel Edison",
+      "sourceUrl": "https://www.edisonhotelnyc.com/"
+    },
+    {
+      "claim": "Official site https://www.edisonhotelnyc.com/",
+      "sourceUrl": "https://www.edisonhotelnyc.com/"
+    },
+    {
+      "claim": "Guest rating primary 3.9 via tripadvisor",
+      "sourceUrl": "https://www.edisonhotelnyc.com/"
+    }
+  ],
+  "itineraryNoteCandidate": "Classic Times Square base\u2014expect energy and some noise; location is the draw.",
+  "voicePass": {
+    "itineraryNote": "Classic Times Square base\u2014expect energy and some noise; location is the draw.",
+    "shortDescription": "Historic Times Square hotel near Broadway theaters.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 225,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot"
+}

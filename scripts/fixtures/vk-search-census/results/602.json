@@ -1,0 +1,86 @@
+{
+  "thingId": 602,
+  "thingName": "Zabar's",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.zabars.com/directions.html",
+      "title": "Zabar's Directions (official)",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "2245 Broadway; Mon-Sat 8-7:30 Sun 9-6; cafe hours separate"
+    },
+    {
+      "url": "https://www.yelp.com/biz/zabars-new-york",
+      "title": "Zabar's Yelp",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "3.9\u2605 \u00b7 1448 reviews"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html",
+      "title": "Zabar's Tripadvisor",
+      "fetchedAt": "2026-10-28T04:40:00Z",
+      "snippet": "4.4\u2605 \u00b7 726 reviews"
+    }
+  ],
+  "rating": {
+    "primary": 3.9,
+    "primarySource": "yelp",
+    "yelp": 3.9,
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "yelp": 1448,
+    "tripadvisor": 726
+  },
+  "priceHint": "$$ gourmet market / cafe",
+  "hoursHint": "Mon\u2013Sat 8am\u20137:30pm; Sun 9am\u20136pm (official directions)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    {
+      "claim": "Located at 2245 Broadway at 80th Street, UWS",
+      "sourceUrl": "https://www.zabars.com/directions.html"
+    },
+    {
+      "claim": "Main store Mon\u2013Sat 8am\u20137:30pm, Sun 9am\u20136pm",
+      "sourceUrl": "https://www.zabars.com/directions.html"
+    },
+    {
+      "claim": "Yelp 3.9 from ~1448 reviews",
+      "sourceUrl": "https://www.yelp.com/biz/zabars-new-york"
+    }
+  ],
+  "itineraryNoteCandidate": "Grab hand-sliced nova and a cafe coffee at this UWS food landmark, then picnic two blocks from the park.",
+  "voicePass": {
+    "itineraryNote": "Grab hand-sliced nova and a cafe coffee at this UWS food landmark, then picnic two blocks from the park.",
+    "shortDescription": "Legendary Upper West Side gourmet market for smoked fish, cheese, and housewares.",
+    "unsupportedFlags": [],
+    "claimSupportOk": true
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 90,
+    "googleRating": "4.5",
+    "yelpRating": "3.9",
+    "price": 18,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.071644,
+    "attemptKinds": {
+      "brave": 27
+    },
+    "braveAttempts": 27
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "winner": "grok-bot"
+}
