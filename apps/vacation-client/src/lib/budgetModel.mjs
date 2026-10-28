@@ -145,6 +145,13 @@ export function varianceLabel(planned, target, currency = 'USD') {
     : `Over by ${formatUsd(abs, currency)}`;
 }
 
+// A missing target is not an amount. Rendering it as $0 fails the budget
+// gate once real $0 rows are no longer on the API budget.
+export function formatBudgetTarget(target, currency = 'USD') {
+  if (target == null) return '';
+  return formatUsd(target, currency);
+}
+
 export function buildBudgetModel(trip) {
   const currency = trip?.trip?.currency || 'USD';
   const rows = placesForBudget(trip).map((place) => {

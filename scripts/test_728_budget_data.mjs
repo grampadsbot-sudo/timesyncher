@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { syncSharedTripApiBudget, trekBudgetAmount } from '../src/vacation/shared-trip-api-budget.mjs';
-import { budgetLineAmount, buildBudgetModel } from '../apps/vacation-client/src/lib/budgetModel.mjs';
+import { budgetLineAmount, buildBudgetModel, formatBudgetTarget } from '../apps/vacation-client/src/lib/budgetModel.mjs';
 
 const trip = {
   trip: { id: 7, metadata: { dialogParty: {
@@ -65,4 +65,7 @@ const blocked = syncSharedTripApiBudget({
     provenanceBlocker: 'unverified source price', provenanceBlocked: ['price'] } },
 });
 assert.equal(blocked.thingOverrides['place:1'].pricePerPerson, undefined, 'quantity shaping must not promote a blocked price to a new field');
+assert.equal(formatBudgetTarget(null), '', 'a missing budget target is not $0');
+assert.equal(formatBudgetTarget(0), '$0');
+assert.equal(formatBudgetTarget(12), '$12');
 console.log('728 budget data tests passed');
