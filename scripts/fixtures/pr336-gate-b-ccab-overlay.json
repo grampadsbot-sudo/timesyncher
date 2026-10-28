@@ -17,7 +17,7 @@
     "description": "Google lists Carbone around 4.4/5 with thousands of reviews. Greenwich Village red-sauce dining room on Thompson Street; lunch Tue–Sun 11:30am–2pm and dinner nightly (carbonenewyork.com). Public lunch menu entrees list about $24–$54 on Yelp; Price: $48 per person dinner planning estimate before tax, tip, and drinks.",
     "price": 48,
     "website": "https://carbonenewyork.com/",
-    "logoUrl": "https://carbonenewyork.com/favicon.ico",
+    "logoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png",
     "lat": 40.726,
     "lng": -73.9997,
     "address": "181 Thompson Street, New York, NY 10012",
@@ -49,7 +49,8 @@
     "address": "TKTS Times Square, Broadway at W 47th St, New York, NY 10036",
     "thirdPartyRating": "4.5",
     "thirdPartyReviewCount": "8500",
-    "thirdPartySource": "Tripadvisor"
+    "thirdPartySource": "Tripadvisor",
+    "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png"
   },
   "Friend meetup at Bryant Park": {
     "category": "event",
@@ -96,7 +97,8 @@
   "Arthouse Hotel": {
     "thirdPartyRating": "7.9",
     "thirdPartyReviewCount": "2366",
-    "thirdPartySource": "Booking.com"
+    "thirdPartySource": "Booking.com",
+    "logoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png"
   },
   "Park Central Hotel New York": {
     "thirdPartyRating": "3.8",
@@ -106,7 +108,8 @@
   "The Empire Hotel New York": {
     "thirdPartyRating": "6.8",
     "thirdPartyReviewCount": "3898",
-    "thirdPartySource": "Booking.com"
+    "thirdPartySource": "Booking.com",
+    "logoUrl": "https://image-tc.galaxy.tf/wipng-ay7dnvukh2y1egwneghxy6ip6/favicon.png"
   },
   "Priceline opaque JFK — Standard sedan": {
     "category": "car",
@@ -121,12 +124,154 @@
     "dropoffHours": "Return timing follows your booked rental; confirm Jun 30 2026 drop-off hours when you pay.",
     "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
     "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)",
-    "missingFields": ["ratings", "reviews"],
+    "missingFields": [
+      "ratings",
+      "reviews"
+    ],
     "reviewThemes": [
       "No company-specific JFK counter reputation before booking",
       "Supplier brand hidden until checkout",
       "Choose only if savings outweigh counter uncertainty"
     ],
     "reputationNote": "Review summary: no company-specific JFK confidence because the counter is unknown; choose only if the savings justify that uncertainty."
+  },
+  "Blue Note Jazz Club": {
+    "logoUrl": "https://www.bluenotejazz.com/nyc/wp-content/uploads/sites/2/2022/05/cropped-fav-180x180.png"
+  },
+  "Night Hotel Broadway": {
+    "logoUrl": "https://assets.simplotel.com/simplotel/image/upload/x_0,y_2,w_562,h_563,c_crop/w_32,h_32,c_scale/night-hotel-broadway/Logo_e46ec698"
+  },
+  "Romer Hell’s Kitchen": {
+    "logoUrl": "https://www.romerhotels.com/skins/skin-romerhotelsprod/hell-favicon.ico"
+  },
+  "Juice Generation Columbus Circle": {
+    "logoUrl": "https://www.juicegeneration.com/static/version1792535308/frontend/JGNew/JGTheme/en_US/Magento_Theme/favicon.ico"
+  },
+  "Juice Generation Upper West Side": {
+    "logoUrl": "https://www.juicegeneration.com/static/version1792535308/frontend/JGNew/JGTheme/en_US/Magento_Theme/favicon.ico"
+  },
+  "Blue Note": {
+    "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-180x180.png"
+  },
+  "Blue Note Jazz Festival New York 2026": {
+    "logoUrl": "https://www.bluenotejazz.com/festivals/wp-content/uploads/sites/11/2023/01/cropped-fav-180x180.png"
+  },
+  "Bodega 88": {
+    "logoUrl": "https://static.spotapps.co/website_images/ab_websites/48639_website/favicons/apple-touch-icon.png"
+  },
+  "Nobody Told Me": {
+    "logoUrl": "https://media-cdn.getbento.com/accounts/9a6404f78cf78bec158eda77b36a73ad/media/images/70429NobodyToldMe_Character-05.png"
+  },
+  "Famous Original Ray's Pizza": {
+    "logoUrl": "https://chowly-coo-configuration-assets.nyc3.digitaloceanspaces.com/chowly-coo-prod-configuration-assets/public/assets/Favicon-355-baf26ef6-982c-44b6-b9c6-de88d42942e9.png"
+  },
+  "Piccola Cucina Uptown": {
+    "logoUrl": "https://www.piccolacucinagroup.com/wp-content/uploads/2024/02/icon-180px.jpg"
+  },
+  "Estiatorio Milos Hudson Yards": {
+    "logoUrl": "https://www.estiatoriomilos.com/wp-content/themes/milos/assets/img/icons/favicon.ico"
+  },
+  "Junior's Times Square": {
+    "logoUrl": "https://www.juniorscheesecake.com/cdn/shop/files/8in_Strawberry_Cheesecake_slice.png?crop=center&height=32&v=1726172249&width=32"
+  },
+  "Sylvia's Harlem": {
+    "logoUrl": "https://static.spotapps.co/website_images/ab_websites/10649_website_v1/favicons/apple-touch-icon.png"
+  },
+  "Venchi Bleecker Street": {
+    "logoUrl": "https://us.venchi.com/cdn/shop/files/favicon-1.webp?crop=center&height=32&v=1776701868&width=32"
+  },
+  "Magnolia Bakery": {
+    "logoUrl": "https://www.magnoliabakery.com/cdn/shop/files/MB_Favicon_32x32.png?v=1650906977"
+  },
+  "The Jazz Club at Aman New York": {
+    "logoUrl": "https://www.aman.com/themes/custom/aman/assets/dist/media/favicons/apple-touch-icon-114x114.png"
+  },
+  "Hertz JFK — Compact SUV": {
+    "category": "car",
+    "price": 366,
+    "summary": "Hertz compact SUV at JFK Federal Circle with a higher seating position and a counter-skip card in the saved source. The compact class suits light luggage rather than several large bags. The saved $366 total is a benchmark; dated checkout was blocked, and counter-skip depends on the selected rate.",
+    "description": "Hertz compact SUV at JFK Federal Circle with a higher seating position and a counter-skip card in the saved source. The compact class suits light luggage rather than several large bags. The saved $366 total is a benchmark; dated checkout was blocked, and counter-skip depends on the selected rate.\n\nPrice/source: Saved benchmark $53/day, $366 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Hertz is at Federal Circle and this card includes Skip the Counter, which is valuable after a JetBlue arrival if it actually applies to the selected rate. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV gives a higher seating position but not true standard-SUV cargo room; fine for light luggage, questionable for multiple large bags. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: best visible score in this set (Priceline 8.4 / 257), but JFK branch snippets still warn about long waits/understaffing, so counter-skip is the reason to prefer it.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Hertz compact SUV at JFK Federal Circle with a higher seating position and a counter-skip card in the saved source. The compact class suits light luggage rather than several large bags. The saved $366 total is a benchmark; dated checkout was blocked, and counter-skip depends on the selected rate.\n\nPrice/source: Saved benchmark $53/day, $366 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Hertz is at Federal Circle and this card includes Skip the Counter, which is valuable after a JetBlue arrival if it actually applies to the selected rate. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV gives a higher seating position but not true standard-SUV cargo room; fine for light luggage, questionable for multiple large bags. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: best visible score in this set (Priceline 8.4 / 257), but JFK branch snippets still warn about long waits/understaffing, so counter-skip is the reason to prefer it.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.hertz.com/favicon.ico",
+    "rentalCompany": "Hertz",
+    "carType": "Compact SUV",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "Thrifty JFK — Midsize sedan": {
+    "category": "car",
+    "price": 395,
+    "summary": "Thrifty midsize sedan at JFK keeps the car smaller for Manhattan parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark. Dated checkout was blocked; the source warns about counter delays and add-on pressure, so allow time after the flight.",
+    "description": "Thrifty midsize sedan at JFK keeps the car smaller for Manhattan parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark. Dated checkout was blocked; the source warns about counter delays and add-on pressure, so allow time after the flight.\n\nPrice/source: Saved benchmark $57/day, $395 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Thrifty is a budget counter at JFK/Federal Circle with online check-in on these cards, but it is still a line-risk option. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Midsize sedan is sensible for NYC: cheaper and garage-friendly, but less flexible than an SUV if luggage grows. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.5 / 55 is okay, while broader JFK Thrifty snippets complain about long waits; choose for savings, not smoothest pickup.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Thrifty midsize sedan at JFK keeps the car smaller for Manhattan parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark. Dated checkout was blocked; the source warns about counter delays and add-on pressure, so allow time after the flight.\n\nPrice/source: Saved benchmark $57/day, $395 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Thrifty is a budget counter at JFK/Federal Circle with online check-in on these cards, but it is still a line-risk option. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Midsize sedan is sensible for NYC: cheaper and garage-friendly, but less flexible than an SUV if luggage grows. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.5 / 55 is okay, while broader JFK Thrifty snippets complain about long waits; choose for savings, not smoothest pickup.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.thrifty.com/favicon.ico",
+    "rentalCompany": "Thrifty",
+    "carType": "Midsize sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "Thrifty JFK — Compact SUV": {
+    "category": "car",
+    "price": 398,
+    "summary": "Thrifty compact SUV at JFK adds a higher seating position without the cargo room of a standard SUV. The saved Priceline card lists a $398 rental-total benchmark. Dated checkout was blocked; compare the final terms and luggage fit before choosing this class.",
+    "description": "Thrifty compact SUV at JFK adds a higher seating position without the cargo room of a standard SUV. The saved Priceline card lists a $398 rental-total benchmark. Dated checkout was blocked; compare the final terms and luggage fit before choosing this class.\n\nPrice/source: Saved benchmark $57/day, $398 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Thrifty is a budget counter at JFK/Federal Circle with online check-in on these cards, but it is still a line-risk option. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV is easier than a full SUV in NYC, but cargo space may be tight after airport baggage. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.5 / 55 is okay, while broader JFK Thrifty snippets complain about long waits; choose for savings, not smoothest pickup.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Thrifty compact SUV at JFK adds a higher seating position without the cargo room of a standard SUV. The saved Priceline card lists a $398 rental-total benchmark. Dated checkout was blocked; compare the final terms and luggage fit before choosing this class.\n\nPrice/source: Saved benchmark $57/day, $398 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Thrifty is a budget counter at JFK/Federal Circle with online check-in on these cards, but it is still a line-risk option. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV is easier than a full SUV in NYC, but cargo space may be tight after airport baggage. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.5 / 55 is okay, while broader JFK Thrifty snippets complain about long waits; choose for savings, not smoothest pickup.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.thrifty.com/favicon.ico",
+    "rentalCompany": "Thrifty",
+    "carType": "Compact SUV",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "Dollar JFK — Midsize sedan": {
+    "category": "car",
+    "price": 395,
+    "summary": "Dollar midsize sedan at JFK offers a smaller car for city parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark with online check-in on these cards. Dated checkout was blocked; verify that check-in and final terms apply to the selected rate.",
+    "description": "Dollar midsize sedan at JFK offers a smaller car for city parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark with online check-in on these cards. Dated checkout was blocked; verify that check-in and final terms apply to the selected rate.\n\nPrice/source: Saved benchmark $57/day, $395 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Midsize sedan is sensible for NYC: cheaper and garage-friendly, but less flexible than an SUV if luggage grows. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Dollar midsize sedan at JFK offers a smaller car for city parking and moderate luggage. The saved Priceline card lists a $395 rental-total benchmark with online check-in on these cards. Dated checkout was blocked; verify that check-in and final terms apply to the selected rate.\n\nPrice/source: Saved benchmark $57/day, $395 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Midsize sedan is sensible for NYC: cheaper and garage-friendly, but less flexible than an SUV if luggage grows. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.dollar.com/favicon.ico",
+    "rentalCompany": "Dollar",
+    "carType": "Midsize sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "Dollar JFK — Compact SUV": {
+    "category": "car",
+    "price": 399,
+    "summary": "Dollar compact SUV at JFK offers a higher seating position for light luggage, with less cargo room than a standard SUV. The saved Priceline card lists a $399 rental-total benchmark. Dated checkout was blocked; confirm luggage fit and the selected rate’s online check-in terms.",
+    "description": "Dollar compact SUV at JFK offers a higher seating position for light luggage, with less cargo room than a standard SUV. The saved Priceline card lists a $399 rental-total benchmark. Dated checkout was blocked; confirm luggage fit and the selected rate’s online check-in terms.\n\nPrice/source: Saved benchmark $57/day, $399 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV gives a higher seating position but not true standard-SUV cargo room; fine for light luggage, questionable for multiple large bags. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Dollar compact SUV at JFK offers a higher seating position for light luggage, with less cargo room than a standard SUV. The saved Priceline card lists a $399 rental-total benchmark. Dated checkout was blocked; confirm luggage fit and the selected rate’s online check-in terms.\n\nPrice/source: Saved benchmark $57/day, $399 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Compact SUV gives a higher seating position but not true standard-SUV cargo room; fine for light luggage, questionable for multiple large bags. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.dollar.com/favicon.ico",
+    "rentalCompany": "Dollar",
+    "carType": "Compact SUV",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "Dollar JFK — Full-size sedan": {
+    "category": "car",
+    "price": 402,
+    "summary": "Dollar full-size sedan at JFK is the roomier sedan choice for luggage while avoiding SUV parking premiums. The saved Priceline card lists a $402 rental-total benchmark. Dated checkout was blocked; compare the final taxes, fees, and online check-in terms before choosing it.",
+    "description": "Dollar full-size sedan at JFK is the roomier sedan choice for luggage while avoiding SUV parking premiums. The saved Priceline card lists a $402 rental-total benchmark. Dated checkout was blocked; compare the final taxes, fees, and online check-in terms before choosing it.\n\nPrice/source: Saved benchmark $58/day, $402 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Full-size sedan is the roomy non-SUV choice: better luggage comfort while avoiding SUV parking premiums. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "longDetails": "Dollar full-size sedan at JFK is the roomier sedan choice for luggage while avoiding SUV parking premiums. The saved Priceline card lists a $402 rental-total benchmark. Dated checkout was blocked; compare the final taxes, fees, and online check-in terms before choosing it.\n\nPrice/source: Saved benchmark $58/day, $402 total incl. taxes/fees. Source: Priceline JFK pricing page; exact dated checkout search hit anti-bot, so this is a source-priced JFK card/floor, not a booked reservation.\n\nJFK pickup/counter: Dollar is another JFK value counter with online check-in on these cards, usually a bit more reassuring here than Thrifty by score/count. Expect to leave the JetBlue terminal/baggage-claim flow and use AirTrain/signage to Federal Circle/rental-car facilities; build in extra time after landing.\n\nCar + NYC tradeoff: Full-size sedan is the roomy non-SUV choice: better luggage comfort while avoiding SUV parking premiums. NYC reality: driving into Manhattan can be slow, toll-heavy, and stressful; parking/garages can be expensive and tight. A rental only makes sense if they need out-of-Manhattan flexibility, luggage control, or day trips—otherwise taxi/subway/rideshare may be easier.\n\nReview summary: Priceline 7.7 / 153 beats Thrifty in this set, but it remains a value brand where counter delays/upsell friction are part of the tradeoff.\n\nBooking boundary: do not book/pay/accept insurance or toll terms without explicit approval. Before booking, verify exact Jun 23 pickup time, Jun 30 return time, taxes/fees, additional-driver policy, toll policy, fuel/EV policy, cancellation terms, and whether counter-skip/online check-in applies.",
+    "logoUrl": "https://www.dollar.com/favicon.ico",
+    "rentalCompany": "Dollar",
+    "carType": "Full-size sedan",
+    "pickupLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "returnLocation": "JFK Airport rental car facility / Federal Circle, Jamaica, NY",
+    "startTime": "Confirm pickup time at booking (trip window Jun 23 2026 pickup)",
+    "endTime": "Confirm return time at booking (trip window Jun 30 2026 return)"
+  },
+  "La Traviata Pizzeria": {
+    "website": "https://www.latraviatapizzany.com/",
+    "address": "101 W 68th St, New York, NY 10023"
   }
 }

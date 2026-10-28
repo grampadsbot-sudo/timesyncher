@@ -17,6 +17,7 @@ let hotels = 0;
 let hotelDescPass = 0;
 let flights = 0;
 let cars = 0;
+const carBrands = new Set();
 let hotelMissingUrls = 0;
 
 for (const place of trip.places || []) {
@@ -41,12 +42,15 @@ for (const place of trip.places || []) {
   if (category === 'car') {
     cars += 1;
     assert.ok(price != null && price !== '', `${place.name} missing car price`);
+    const company = String(override.rentalCompany || place.name.split('—')[0] || place.name).trim();
+    if (company) carBrands.add(company);
   }
 }
 
 assert.ok(hotels >= 22, `expected >= 22 hotels, got ${hotels}`);
 assert.ok(flights >= 10, `expected >= 10 flights, got ${flights}`);
-assert.equal(cars, 1, `expected 1 car, got ${cars}`);
+assert.equal(cars, 7, `expected 7 car options, got ${cars}`);
+assert.ok(carBrands.size > 1, `expected multiple car brands, got ${[...carBrands].join(', ')}`);
 assert.equal(hotelDescPass, hotels, `hotel_desc ${hotelDescPass}/${hotels}`);
 assert.equal(hotelMissingUrls, 0, `hotels missing summarySourceUrls: ${hotelMissingUrls}`);
 

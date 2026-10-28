@@ -355,3 +355,5 @@ scripts/test_dream_pass_fail_modes.mjs
 scripts/test_dossier_fetch_isolation_687.mjs
 scripts/test_claim_support_negation_no_upgrade.mjs
 scripts/test_claim_support_filler_summary.mjs
+scripts/test_728_budget_data.mjs
+scripts/test_728_data_fixtures.mjs

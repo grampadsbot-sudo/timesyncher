@@ -1,7 +1,6 @@
 export const NYC_PASS_B_RESTAURANT_LIST_ROWS = [
   { id: 677, name: "La Traviata Pizzeria", cat: "restaurant", ccabKey: "La Traviata Pizzeria" },
   { id: 678, name: "Famous Original Ray's Pizza", cat: "restaurant", ccabKey: "Famous Original Ray's Pizza" },
-  { id: 679, name: "Patsy's Pizzeria Upper West Side", cat: "restaurant", ccabKey: "Patsy's Pizzeria Upper West Side" },
   { id: 680, name: "Piccola Cucina Uptown", cat: "restaurant", ccabKey: "Piccola Cucina Uptown" },
   { id: 681, name: "Estiatorio Milos Hudson Yards", cat: "restaurant", ccabKey: "Estiatorio Milos Hudson Yards" },
   { id: 682, name: "The Original John's of Bleecker Street", cat: "restaurant", ccabKey: "The Original John's of Bleecker Street" },

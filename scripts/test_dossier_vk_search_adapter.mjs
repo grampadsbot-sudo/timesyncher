@@ -127,5 +127,5 @@ for (const target of buildNycThingEvidenceDossierTargets()) {
   if (!vkSearchClaimSupportOk(census)) assert.equal(dossier.itineraryNote, undefined);
   censusChecked += 1;
 }
-assert.equal(censusChecked, 76);
+assert.equal(censusChecked, 78);
 console.log(JSON.stringify({ ok: true, checked: 'dossier-vk-search-adapter', fixture: 602 }));
