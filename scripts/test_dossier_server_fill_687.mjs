@@ -39,12 +39,12 @@ function page(url, text) {
 
 const shared = buildPassBSharedDossierTargets();
 const inventory = passBInventoryCounts(shared);
-assert.equal(inventory.total, 76);
-assert.deepEqual(inventory.byType, { hotel: 22, restaurant: 24, store: 15, attraction: 15 });
+assert.equal(inventory.total, 77);
+assert.deepEqual(inventory.byType, { hotel: 22, restaurant: 25, store: 15, attraction: 15 });
 
 const { slice: batchOne, batch: metaOne } = sliceDossierBatch(shared, { offset: 0, limit: 5 });
 assert.equal(batchOne.length, 5);
-assert.equal(metaOne.total, 76);
+assert.equal(metaOne.total, 77);
 assert.equal(metaOne.nextOffset, 5);
 const { slice: batchTwo } = sliceDossierBatch(shared, { offset: 5, limit: 5 });
 assert.equal(batchTwo[0].placeId, shared[5].placeId);
@@ -103,7 +103,7 @@ assert.equal(operatorHugeLimit.batch.offset, 3);
 assert.equal(operatorHugeLimit.batch.nextOffset, 4);
 assert.equal(operatorHugeLimit.targets[0].placeId, shared[3].placeId);
 
-const operatorExhausted = await resolvePassBOperatorTargets({ offset: 99 }, { authMode: 'operator' });
+const operatorExhausted = await resolvePassBOperatorTargets({ offset: 100 }, { authMode: 'operator' });
 assert.equal(operatorExhausted.targets.length, 0);
 assert.equal(operatorExhausted.batch.nextOffset, null);
 
@@ -190,7 +190,7 @@ const workerBatchOne = await post({
   enableTestImpls: true,
 }, 'worker-secret');
 assert.equal(workerBatchOne.json.ok, true);
-assert.equal(workerBatchOne.json.batch.total, 76);
+assert.equal(workerBatchOne.json.batch.total, 77);
 assert.equal(workerBatchOne.json.results.length, 2);
 
 const workerBatchTwo = await post({
@@ -204,7 +204,7 @@ assert.equal(workerBatchTwo.json.results.length, 2);
 
 const operatorResolved = await resolvePassBOperatorTargets({ offset: 0, limit: 4 }, { authMode: 'operator' });
 assert.equal(operatorResolved.source, 'passb-trip');
-assert.equal(operatorResolved.batch.total, 99);
+assert.equal(operatorResolved.batch.total, 100);
 assert.equal(operatorResolved.targets.length, 1);
 
 const fillRun = await runThingEvidenceDossierStagingTargets([shared[6]], {
@@ -218,7 +218,7 @@ for (const row of fillRun.results) {
   assert.ok(saved?.attempts?.length);
 }
 
-const operatorExhaustedPost = await post({ offset: 99 });
+const operatorExhaustedPost = await post({ offset: 100 });
 assert.equal(operatorExhaustedPost.status, 200);
 assert.equal(operatorExhaustedPost.json.ok, true);
 assert.deepEqual(operatorExhaustedPost.json.results, []);
@@ -232,13 +232,13 @@ const ignoreInjectedTargets = await resolvePassBOperatorTargets({
 assert.equal(ignoreInjectedTargets.targets[0].placeId, shared[5].placeId);
 
 const metrics = await computePassBDossierMetrics({ env: process.env, storeImpl: store });
-assert.equal(metrics.passBSharedInventory.byType.restaurant, 24);
+assert.equal(metrics.passBSharedInventory.byType.restaurant, 25);
 assert.equal(metrics.dossierStore.source, 'central');
 assert.ok(metrics.dossierStore.withPages >= 4);
-assert.equal(metrics.byType.restaurant.total, 24);
+assert.equal(metrics.byType.restaurant.total, 25);
 
 const metricsPost = await post({ metrics: true });
-assert.equal(metricsPost.json.passBSharedInventory.total, 76);
-assert.equal(metricsPost.json.inventory.byType.restaurant, 24);
+assert.equal(metricsPost.json.passBSharedInventory.total, 77);
+assert.equal(metricsPost.json.inventory.byType.restaurant, 25);
 
 console.log('test_dossier_server_fill_687: ok');

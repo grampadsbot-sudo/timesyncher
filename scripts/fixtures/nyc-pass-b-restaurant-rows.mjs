@@ -16,4 +16,5 @@ export const NYC_PASS_B_RESTAURANT_LIST_ROWS = [
   { id: 692, name: "Venchi Bleecker Street", cat: "restaurant", ccabKey: "Venchi Bleecker Street" },
   { id: 693, name: "Magnolia Bakery", cat: "restaurant", ccabKey: "Magnolia Bakery" },
   { id: 694, name: "The Jazz Club at Aman New York", cat: "restaurant", ccabKey: "The Jazz Club at Aman New York" },
+  { id: 695, name: "Cafe Luxembourg", cat: "restaurant", ccabKey: "Cafe Luxembourg" },
 ];

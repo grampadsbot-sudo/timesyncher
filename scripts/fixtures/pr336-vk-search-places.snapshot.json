@@ -3211,6 +3211,35 @@
     "price": 55,
     "logoUrl": "https://www.aman.com/themes/custom/aman/assets/dist/media/favicons/apple-touch-icon-114x114.png"
   },
+  "695": {
+    "source": "brave",
+    "title": "Cafe Luxembourg",
+    "category": "restaurant",
+    "lat": 40.778,
+    "lng": -73.982,
+    "address": "200 W 70th St, New York, NY 10023",
+    "url": "https://www.cafeluxembourg.com/",
+    "externalId": "Cafe Luxembourg",
+    "sourceRecord": {
+      "category": "restaurant",
+      "description": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023. The menu offers the classics with a nod to French cuisine. Weekend brunch runs Saturday and Sunday 10:00am-3:30pm on the official hours page. Official site price range: $$$. Status: candidate only.",
+      "summary": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023.",
+      "priceLevel": "$$$",
+      "website": "https://www.cafeluxembourg.com/",
+      "logoUrl": "https://media-cdn.getbento.com/accounts/547d21b79b49b32f22febef3c3b02a10/media/images/45339Lux_fav.png",
+      "lat": 40.778,
+      "lng": -73.982,
+      "address": "200 W 70th St, New York, NY 10023",
+      "source": "brave",
+      "url": "https://www.cafeluxembourg.com/",
+      "longDetails": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023. The menu offers the classics with a nod to French cuisine. Weekend brunch runs Saturday and Sunday 10:00am-3:30pm on the official hours page. Official site price range: $$$. Status: candidate only.",
+      "price": 78
+    },
+    "description": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023. The menu offers the classics with a nod to French cuisine. Weekend brunch runs Saturday and Sunday 10:00am-3:30pm on the official hours page. Official site price range: $$$. Status: candidate only.",
+    "summary": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023.",
+    "price": 78,
+    "logoUrl": "https://media-cdn.getbento.com/accounts/547d21b79b49b32f22febef3c3b02a10/media/images/45339Lux_fav.png"
+  },
   "710": {
     "source": "brave",
     "title": "Hertz JFK — Compact SUV",

@@ -232,6 +232,6 @@ try {
   useVacationDatabase(null);
   useThingEvidenceDossierStore(null);
 }
-assert.equal(metrics.fillTargets.length, 99);
+assert.equal(metrics.fillTargets.length, 100);
 assert.ok(metrics.fillTargets.every((target) => target.needsFill), 'empty central inventory yields actual gap targets');
 console.log('test_passb_integrity_687: ok');

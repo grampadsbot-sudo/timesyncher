@@ -1169,5 +1169,16 @@
     "lat": 40.763,
     "lng": -73.977,
     "address": "Midtown, New York, NY"
+  },
+  "Cafe Luxembourg": {
+    "category": "restaurant",
+    "description": "Classic upper west side American brasserie since 1983 at 200 W 70th St, New York, NY 10023. The menu offers the classics with a nod to French cuisine. Weekend brunch runs Saturday and Sunday 10:00am-3:30pm on the official hours page. Official site price range: $$$. Status: candidate only.",
+    "summary": "Cafe Luxembourg UWS brasserie since 1983.",
+    "priceLevel": "$$$",
+    "website": "https://www.cafeluxembourg.com/",
+    "logoUrl": "https://media-cdn.getbento.com/accounts/547d21b79b49b32f22febef3c3b02a10/media/images/45339Lux_fav.png",
+    "lat": 40.778,
+    "lng": -73.982,
+    "address": "200 W 70th St, New York, NY 10023"
   }
 }
