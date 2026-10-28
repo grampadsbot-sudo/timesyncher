@@ -22,25 +22,47 @@ function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-function composeFromPages(thing, claims, pages, minWords, maxWords) {
-  const claimText = (claims || []).map((c) => String(c?.text || c?.claim || '').trim()).filter(Boolean).join(' ');
+function savedDatedPage(page) {
+  return typeof page?.url === 'string' && page.url.trim()
+    && typeof page.fetchedAt === 'string' && Number.isFinite(Date.parse(page.fetchedAt));
+}
+
+function recitClaim(claim, pages) {
+  const match = /^p([1-9]\d*)$/.exec(String(claim?.pages?.[0] || ''));
+  const index = claim?.sourceUrl
+    ? pages.findIndex((page) => page.url === claim.sourceUrl)
+    : match ? Number(match[1]) - 1 : -1;
+  const page = pages[index];
+  if (claim?.supported !== true || !savedDatedPage(page)) return { ...claim, supported: false };
+  return { ...claim, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true };
+}
+
+function composeFromPages(claims, pages, minWords, maxWords) {
   const parts = [];
-  if (thing) parts.push(thing);
-  if (claimText) parts.push(claimText);
-  for (const page of pages || []) {
+  const citations = [];
+  let wordsUsed = 0;
+  const append = (claim) => {
+    const words = String(claim.text || claim.claim || '').trim().split(/\s+/).filter(Boolean);
+    const text = words.slice(0, maxWords - wordsUsed).join(' ');
+    if (!text) return;
+    parts.push(text);
+    citations.push({ ...claim, text });
+    wordsUsed += wordCount(text);
+  };
+  for (const claim of claims || []) {
+    const cited = recitClaim(claim, pages);
+    if (cited.supported === true) append(cited);
+    if (wordsUsed >= maxWords) break;
+  }
+  for (const [index, page] of (pages || []).entries()) {
+    if (wordsUsed >= minWords) break;
+    if (!savedDatedPage(page)) continue;
     const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
     if (!bit) continue;
-    if (wordCount(parts.join(' ')) >= minWords) break;
     if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-    parts.push(bit);
+    append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
   }
-  let value = parts.join('. ').replace(/\s+/g, ' ').trim();
-  if (thing && !value.toLowerCase().includes(String(thing).toLowerCase().slice(0, 12))) {
-    value = `${thing}: ${value}`;
-  }
-  const words = value.split(/\s+/).filter(Boolean);
-  if (words.length > maxWords) value = words.slice(0, maxWords).join(' ');
-  return value;
+  return { value: parts.join(' '), claims: citations };
 }
 
 
@@ -57,22 +79,12 @@ function ensureVerifiedPages(dossier = {}) {
 
 export function recitBotPrimaryFields(dossier = {}) {
   const pages = dossier.pages || [];
-  if (!pages.length) return dossier;
   const fields = { ...(dossier.fields || {}) };
   for (const [key, field] of Object.entries(fields)) {
-    const value = String(field?.value || '').trim();
-    if (!value) continue;
-    const wanted = field?.claims?.[0]?.sourceUrl || pages[0].url;
-    let index = pages.findIndex((page) => page.url === wanted);
-    if (index < 0) index = 0;
+    if (!Array.isArray(field?.claims)) continue;
     fields[key] = {
-      value,
-      claims: [{
-        text: value,
-        sourceUrl: pages[index].url,
-        pages: [`p${index + 1}`],
-        supported: true,
-      }],
+      ...field,
+      claims: field.claims.map((claim) => recitClaim(claim, pages)),
     };
   }
   return { ...dossier, fields };
@@ -80,21 +92,20 @@ export function recitBotPrimaryFields(dossier = {}) {
 
 export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place = {}) {
   const thing = String(place.title || place.name || bot.thing || persisted.thing || '').trim();
-  let merged = mergeDossierPages(persisted || {}, bot || {});
+  persisted = recitBotPrimaryFields(persisted || {});
+  bot = recitBotPrimaryFields(bot || {});
+  let merged = recitBotPrimaryFields(mergeDossierPages(persisted, bot));
   merged.thing = thing || merged.thing;
   const pages = merged.pages || [];
   const claimRows = Object.values(bot.fields || {}).flatMap((field) => field?.claims || []);
   const ensure = (key, minWords, maxWords) => {
     const existing = String(merged.fields?.[key]?.value || '').trim();
     if (wordCount(existing) >= minWords) return;
-    const value = composeFromPages(thing, claimRows, pages, minWords, maxWords);
-    if (wordCount(value) < minWords || !pages.length) return;
+    const composed = composeFromPages(claimRows, pages, minWords, maxWords);
+    if (wordCount(composed.value) < minWords || !composed.claims.length) return;
     merged.fields = {
       ...(merged.fields || {}),
-      [key]: {
-        value,
-        claims: [{ text: value, sourceUrl: pages[0].url, pages: ['p1'], supported: true }],
-      },
+      [key]: composed,
     };
   };
   ensure('summary', 12, 40);

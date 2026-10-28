@@ -191,6 +191,7 @@ scripts/test_void_stale_build.mjs
 scripts/test_brave_tavily_adapter.mjs
 scripts/test_dossier_vk_search_adapter.mjs
 scripts/test_dossier_bot_primary_seed.mjs
+scripts/test_dossier_bot_primary_recit_provenance.mjs
 scripts/test_customer_input_reply.mjs
 scripts/test_destination_extraction_chat_request.mjs
 scripts/test_g2c_thing_notes_destination.mjs
