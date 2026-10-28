@@ -30,7 +30,7 @@ for (const extract of ['432', 'empty']) for (const hits of [true, false]) for (c
     fetchImpl: async () => assert.fail('no unmocked fetch'),
     gatherImpl: async (place, options) => {
       gathers += 1;
-      return gatherThingEvidence(place, { ...options, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' }, sleepImpl: async () => {}, braveImpl: null,
+      return gatherThingEvidence(place, { ...options, env: { BRAVE_SEARCH_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' }, sleepImpl: async () => {}, braveImpl: null,
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { if (extract === '432') throw new Error('Tavily extract failed with HTTP 432.'); return []; },
         fetchImpl: async (url) => {
