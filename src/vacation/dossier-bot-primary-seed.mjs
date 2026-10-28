@@ -1,9 +1,9 @@
 import { completeDossierFill } from './xai-dossier-fill-state.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
-import { mergeDossierPages } from './thing-evidence-dossier.mjs';
+import { mergeDossierPages, mergeDossierForPersistence } from './thing-evidence-dossier.mjs';
 import {
+  getThingEvidenceDossierStore,
   loadThingEvidenceDossierResolved,
-  saveThingEvidenceDossier,
 } from './thing-evidence-dossier-store.mjs';
 import {
   gatherVkSearchEvidence,
@@ -12,6 +12,7 @@ import {
   VK_SEARCH_PROVIDER,
 } from './dossier-vk-search.mjs';
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
+import { dossierPresented } from './passb-dossier-presented.mjs';
 
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
@@ -36,6 +37,29 @@ function composeFromPages(thing, claims, pages, minWords, maxWords) {
   const words = value.split(/\s+/).filter(Boolean);
   if (words.length > maxWords) value = words.slice(0, maxWords).join(' ');
   return value;
+}
+
+export function recitBotPrimaryFields(dossier = {}) {
+  const pages = dossier.pages || [];
+  if (!pages.length) return dossier;
+  const fields = { ...(dossier.fields || {}) };
+  for (const [key, field] of Object.entries(fields)) {
+    const value = String(field?.value || '').trim();
+    if (!value) continue;
+    const wanted = field?.claims?.[0]?.sourceUrl || pages[0].url;
+    let index = pages.findIndex((page) => page.url === wanted);
+    if (index < 0) index = 0;
+    fields[key] = {
+      value,
+      claims: [{
+        text: value,
+        sourceUrl: pages[index].url,
+        pages: [`p${index + 1}`],
+        supported: true,
+      }],
+    };
+  }
+  return { ...dossier, fields };
 }
 
 export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place = {}) {
@@ -79,7 +103,7 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
       finishedAt: new Date().toISOString(),
     },
   ];
-  return merged;
+  return recitBotPrimaryFields(merged);
 }
 
 export async function runBotPrimarySeedTargets(targets = [], {
@@ -87,15 +111,18 @@ export async function runBotPrimarySeedTargets(targets = [], {
   storeImpl,
   gatherImpl = gatherVkSearchEvidence,
 } = {}) {
+  const store = storeImpl || getThingEvidenceDossierStore(env);
   const results = [];
   for (const target of targets) {
     const place = placeFromTarget(target);
     const dossierKey = target.dossierKey;
-    const { dossier: existing } = await loadThingEvidenceDossierResolved(dossierKey, {
+    const loaded = await loadThingEvidenceDossierResolved(dossierKey, {
       env,
-      storeImpl,
+      storeImpl: store,
       placeId: place.id,
     });
+    const existing = loaded.dossier;
+    const saveKey = loaded.dossierKey || dossierKey;
     const census = loadVkSearchCensusResult(place, { env });
     const bot = census
       ? vkSearchResultToDossier(census, place)
@@ -115,16 +142,21 @@ export async function runBotPrimarySeedTargets(targets = [], {
     }
     let merged = mergeBotPrimaryPresentedFields(existing || {}, bot || {}, place);
     merged = normalizeDossierEvidence(merged, place);
+    merged = existing ? mergeDossierForPersistence(existing, merged) : merged;
+    merged = recitBotPrimaryFields(merged);
+    merged = normalizeDossierEvidence(merged, place);
     const failure = completeDossierFill(merged, place);
-    await saveThingEvidenceDossier(dossierKey, merged, { env, storeImpl });
+    await store.putDossier(saveKey, merged);
+    const presented = dossierPresented(merged, place);
     results.push({
       ...failure,
       rowId: target.rowId ?? place.id,
-      dossierKey,
+      dossierKey: saveKey,
       pageCount: merged.pages?.length || 0,
       pagesAdded: Math.max(0, (merged.pages?.length || 0) - (existing?.pages?.length || 0)),
       xaiCalled: false,
       fillPath: census ? 'bot-census' : 'bot',
+      presented,
       skipped: failure.failed ? undefined : 'bot_primary_seed',
     });
   }
