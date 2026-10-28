@@ -18,7 +18,7 @@ import {
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { dossierPresented } from './passb-dossier-presented.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
-import { claimTextSupportedByPage } from './dossier-claim-support.mjs';
+import { claimTextSupportedByPage, claimTextContradictsPage, claimTextWasRejected, claimTextVerdictEligible, isFillerSummaryText } from './dossier-claim-support.mjs';
 import { rewriteDossierCitations } from './dossier-page-integrity.mjs';
 
 function wordCount(value) {
@@ -40,8 +40,13 @@ function recitClaim(claim, pages) {
     ? pages[citedIndex]?.url === claim.sourceUrl ? citedIndex : pages.findIndex((page) => page.url === claim.sourceUrl)
     : citedIndex;
   const page = pages[index];
-  if (claim?.supported !== true || !savedDatedPage(page)
-    || !claimTextSupportedByPage(claim.text || claim.claim, page.text)) return { ...claim, supported: false };
+  if (claim?.supported !== true || !savedDatedPage(page) || page.claimSupportOk === false
+    || !claimTextVerdictEligible(claim.text || claim.claim, page.inputClaimVerdicts)
+    || claimTextWasRejected(claim.text || claim.claim, page.rejectedClaimTexts)
+    || !claimTextSupportedByPage(claim.text || claim.claim, page.text)) return {
+    ...claim, supported: false,
+    ...(claim?.supported === true && savedDatedPage(page) ? { verificationDowngraded: true } : {}),
+  };
   return { ...claim, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true };
 }
 
@@ -66,7 +71,7 @@ function composeFromPages(claims, pages, minWords, maxWords, thing) {
   }
   for (const [index, page] of (pages || []).entries()) {
     if (wordsUsed >= minWords) break;
-    if (!savedDatedPage(page)) continue;
+    if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
     const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
     if (!bit) continue;
     if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
@@ -96,28 +101,46 @@ function ensureVerifiedPages(dossier = {}) {
 }
 
 export function recitBotPrimaryFields(dossier = {}) {
-  const pages = dossier.pages || [];
+  const inputClaims = Object.values(dossier.fields || {}).flatMap((field) => Array.isArray(field?.claims) ? field.claims : []);
+  const rejectedClaims = inputClaims.filter((claim) => claim?.supported === false && claim.verificationDowngraded !== true);
+  const rejected = rejectedClaims.map((claim) => claim?.text || claim?.claim).filter(Boolean);
+  const pages = (dossier.pages || []).map((page) => ({
+    ...page,
+    rejectedClaimTexts: [...new Set([...(page.rejectedClaimTexts || []), ...rejected])],
+  }));
   const fields = { ...(dossier.fields || {}) };
   for (const [key, field] of Object.entries(fields)) {
     if (!field || typeof field !== 'object') continue;
+    const narrative = ['summary', 'description'].includes(key);
     const claims = (Array.isArray(field.claims) ? field.claims : []).map((claim) => recitClaim(claim, pages));
     const supported = claims.filter((claim) => claim.supported === true);
     let value = field.value;
+    const contradictsValue = supported.some((claim) => {
+      const page = pages[Number(claim.pages[0].slice(1)) - 1];
+      return claimTextContradictsPage(value, page.text);
+    });
     if (!supported.length) value = '';
-    else if (supported.length !== claims.length) {
+    else if (supported.length !== claims.length || contradictsValue) {
       const body = supported.map((claim) => claim.text || claim.claim).join(' ');
       const minWords = key === 'summary' ? 12 : key === 'description' ? 40 : 0;
       value = wordCount(body) >= minWords ? body : '';
       if (value && ['summary', 'description'].includes(key) && dossier.thing
         && !descriptionNamesThing(value, dossier.thing)) value = `${dossier.thing}: ${value}`;
     }
+    if (narrative && isFillerSummaryText(value, dossier.thing)) value = '';
     fields[key] = {
       ...field,
       value,
       ...(Array.isArray(field.claims) ? { claims: supported.length ? supported : claims } : {}),
     };
   }
-  const next = { ...dossier, fields };
+  const next = { ...dossier, fields, pages: pages.map((page) => ({
+    ...page,
+    rejectedClaimTexts: [...new Set([...page.rejectedClaimTexts, ...rejected])],
+    ...(rejectedClaims.some((claim) => claim?.sourceUrl === page.url
+      || !claim?.sourceUrl && (claim?.pages || []).some((id) => pages[Number(String(id).slice(1)) - 1]?.url === page.url))
+      ? { summaryExcerptAllowed: false } : {}),
+  })) };
   if (fields.itineraryNote && !fields.itineraryNote.value) next.itineraryNote = '';
   return next;
 }
@@ -142,7 +165,7 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
     }
     if (merged.fields?.[key]) merged.fields[key] = { ...merged.fields[key], value: '' };
     const { bodyWords, ...composed } = composeFromPages(claimRows, pages, minWords, maxWords, thing);
-    if (bodyWords < minWords || !composed.claims.length) return;
+    if (bodyWords < minWords || !composed.claims.length || isFillerSummaryText(composed.value, thing)) return;
     merged.fields = {
       ...(merged.fields || {}),
       [key]: composed,
