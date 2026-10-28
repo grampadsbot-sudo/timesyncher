@@ -38,7 +38,8 @@
     "worker:timestopper": "node scripts/timestopper-worker.mjs",
     "migration:apply-vacation-schema": "node scripts/apply_vacation_schema.mjs",
     "migration:import-neon": "node scripts/import_hosted_bundle_to_neon.mjs",
-    "deploy:staging": "node scripts/deploy-staging.mjs"
+    "deploy:staging": "node scripts/deploy-staging.mjs",
+    "test:dossier-bot-primary-seed": "node scripts/test_dossier_bot_primary_seed.mjs"
   },
   "devDependencies": {
     "vite": "^7.3.1"

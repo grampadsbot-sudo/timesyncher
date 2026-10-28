@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { descriptionNamesThing, fitDescriptionWords } from './thing-dossier-fields.mjs';
 
 export const VK_SEARCH_BOT_ID = 'aa90bc69-c4eb-4237-a2f9-bcd76cd14dce';
 export const VK_SEARCH_PROVIDER = 'vk-search';
@@ -63,14 +64,36 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     dossier.fields[key] = { value, claims: [{ text: value, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }] };
   };
   for (const claim of claims) append(pageIndex(claim.sourceUrl), text(claim.claim || claim.text));
-  if (claims.length) {
-    const value = claims.map((claim) => text(claim.claim || claim.text)).join(' ');
-    const citations = claims.map((claim) => ({ text: text(claim.claim || claim.text), sourceUrl: claim.sourceUrl,
-      pages: [`p${pageIndex(claim.sourceUrl) + 1}`], supported: true }));
-    dossier.fields.summary = { value, claims: citations };
-    dossier.fields.description = { value: `${thing}: ${value}`, claims: citations };
-  } else if (pages.length) {
-    scalar('description', pages.map((page) => page.text).join('\n'), 0);
+  const wordCount = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length;
+  const citations = claims.map((claim) => ({ text: text(claim.claim || claim.text), sourceUrl: claim.sourceUrl,
+    pages: [`p${pageIndex(claim.sourceUrl) + 1}`], supported: true }));
+  const claimText = claims.map((claim) => text(claim.claim || claim.text)).filter(Boolean).join(' ');
+  const pageBits = pages.map((page) => text(page.text)).filter(Boolean);
+  const compose = (minWords, maxWords) => {
+    const parts = [];
+    if (thing) parts.push(thing);
+    if (claimText) parts.push(claimText);
+    for (const bit of pageBits) {
+      if (wordCount(parts.join(' ')) >= minWords) break;
+      const next = bit.replace(/\s+/g, ' ').trim();
+      if (!next || parts.some((part) => part.includes(next.slice(0, 40)))) continue;
+      parts.push(next);
+    }
+    let value = parts.join('. ').replace(/\s+/g, ' ').trim();
+    if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
+    return fitDescriptionWords(value, maxWords);
+  };
+  if (claims.length || pages.length) {
+    const summaryValue = compose(12, 40);
+    const descriptionValue = compose(40, 120);
+    if (wordCount(summaryValue) >= 12 && descriptionNamesThing(summaryValue, thing)) {
+      dossier.fields.summary = { value: summaryValue, claims: citations.length ? citations : [{ text: summaryValue, sourceUrl: pages[0]?.url, pages: ['p1'], supported: true }] };
+    }
+    if (wordCount(descriptionValue) >= 40 && descriptionNamesThing(descriptionValue, thing) && pages.length) {
+      dossier.fields.description = { value: descriptionValue, claims: citations.length ? citations : [{ text: descriptionValue, sourceUrl: pages[0]?.url, pages: ['p1'], supported: true }] };
+    } else if (pages.length && !dossier.fields.description) {
+      scalar('description', descriptionValue || pages.map((page) => page.text).join('\n'), 0);
+    }
   }
   const hint = (key, raw, sourceUrl) => {
     const value = text(raw?.value ?? raw);

@@ -12,6 +12,7 @@ import {
   normalizeDossierWorkerTargets,
   runThingEvidenceDossierStagingTargets,
 } from '../src/vacation/thing-evidence-dossier-execution.mjs';
+import { runBotPrimarySeedTargets } from '../src/vacation/dossier-bot-primary-seed.mjs';
 import { PR336_GATE_B_XAI_PLACE_TARGETS } from '../scripts/fixtures/pr336-gate-b-xai-place-targets.mjs';
 
 function dossierFillPreflight(env = process.env) {
@@ -87,6 +88,11 @@ export default async function handler(req, res) {
       if (!targets?.length) {
         targets = body?.allMissing === true ? [] : PR336_GATE_B_XAI_PLACE_TARGETS;
       }
+    }
+    if (authMode === 'operator' && body?.botSeed === true) {
+      const seeded = await runBotPrimarySeedTargets(targets, { env: process.env });
+      const payload = batch ? { ...seeded, batch, inventorySource, xaiCalled: 0, fillPath: 'bot-primary' } : { ...seeded, xaiCalled: 0, fillPath: 'bot-primary' };
+      return sendJson(res, seeded.ok ? 200 : 503, payload);
     }
     const preflight = dossierFillPreflight(process.env);
     if (!preflight.ok && authMode === 'operator') {
