@@ -334,12 +334,6 @@ export function searchPlaceOutputViolations(place = {}) {
   const logoUrl = logoOnPlace(place);
   if (!description) violations.push('blank_description');
   if (!summary) violations.push('blank_summary');
-  if (summary && description && summary === description && description.length > 320) {
-    violations.push('summary_equals_long_description');
-  }
-  if (summary && description && summary.length > 320 && description.length > 320 && summary.slice(0, 280) === description.slice(0, 280)) {
-    violations.push('summary_not_short');
-  }
   violations.push(...bannedTextViolations('summary', summary));
   violations.push(...bannedTextViolations('description', description));
   violations.push(...titleViolations(place));

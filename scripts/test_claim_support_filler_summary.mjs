@@ -68,7 +68,7 @@ test('short genuine source fragments compose into a usable whole summary', () =>
     assert.ok(dossier.fields.summary?.value);
     assert.deepEqual(dossier.fields.summary.claims.map((row) => row.text), bodies);
     assert.ok(dossier.fields.summary.claims.every((row) => row.supported === true));
-    assert.ok(!dossier.fields.description?.value);
+    assert.ok(dossier.fields.description?.value);
   }
 });
 test('whole stored filler value clears without downgrading short genuine claims', () => {

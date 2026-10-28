@@ -10,6 +10,12 @@ export const VK_SEARCH_PROVIDER = 'vk-search';
 const censusDefault = fileURLToPath(new URL('../../scripts/fixtures/vk-search-census/results/', import.meta.url));
 const text = (value) => typeof value === 'string' ? value.trim() : '';
 const list = (value) => Array.isArray(value) ? value : [];
+function summaryEssenceFromBody(body = '') {
+  const value = String(body || '').trim();
+  if (!value) return '';
+  const sentence = value.match(/[^.!?]+[.!?]+/);
+  return (sentence ? sentence[0] : value).replace(/\s+/g, ' ').trim();
+}
 function publicUrl(value) {
   try {
     const url = new URL(value);
@@ -83,40 +89,50 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
   const wordCount = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length;
   const citations = claims.map((claim) => ({ text: text(claim.claim || claim.text), sourceUrl: claim.sourceUrl,
     pages: [`p${pageIndex(claim.sourceUrl) + 1}`], supported: true }));
-  const compose = (minWords, maxWords) => {
+  const compose = ({ includePageExcerpts = true } = {}) => {
     const parts = [];
     const used = [];
-    let wordsUsed = 0;
     const append = (claim) => {
       if (parts.includes(claim.text) || claimTextWasRejected(claim.text, rejected)) return;
-      const value = claim.text.split(/\s+/).slice(0, maxWords - wordsUsed).join(' ');
+      const value = claim.text;
       if (!value || claimTextWasRejected(value, rejected)
         || !pageSupports(pageIndex(claim.sourceUrl), value)) return;
       parts.push(value);
       used.push({ ...claim, text: value });
-      wordsUsed += wordCount(value);
     };
-    for (const claim of citations) {
-      if (wordsUsed >= maxWords) break;
-      append(claim);
+    for (const claim of citations) append(claim);
+    if (includePageExcerpts) {
+      for (const [index, page] of pages.entries()) {
+        if (!page.summaryExcerptAllowed) continue;
+        const bit = text(page.text).replace(/\s+/g, ' ');
+        if (!pageSupports(index, bit) || parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
+        append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
+      }
     }
-    for (const [index, page] of pages.entries()) {
-      if (wordsUsed >= minWords) break;
-      if (!page.summaryExcerptAllowed) continue;
-      const bit = text(page.text).replace(/\s+/g, ' ');
-      if (!pageSupports(index, bit) || parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
-    }
-    if (wordsUsed < minWords || !used.length) return null;
+    if (!used.length) return null;
     let value = parts.join(' ');
     if (isFillerSummaryText(value, thing)) return null;
     if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
     return { value, claims: used };
   };
-  for (const [key, minWords, maxWords] of [['summary', 12, 40], ['description', 40, 120]]) {
-    const field = compose(minWords, maxWords);
-    if (field) dossier.fields[key] = field;
+  const descriptionField = compose({ includePageExcerpts: true });
+  let summaryField = compose({ includePageExcerpts: false });
+  if (descriptionField) dossier.fields.description = descriptionField;
+  if (!summaryField && descriptionField) {
+    let body = descriptionField.value;
+    if (thing && body.startsWith(`${thing}: `)) body = body.slice(thing.length + 2);
+    let essence = summaryEssenceFromBody(body);
+    if (essence && !isFillerSummaryText(essence, thing)) {
+      if (thing && !descriptionNamesThing(essence, thing)) essence = `${thing}: ${essence}`;
+      const normalizedEssence = essence.replace(/^[^:]+:\s*/, '').replace(/[.!?]+$/, '').trim();
+      const claims = descriptionField.claims.filter((claim) => {
+        const bit = String(claim.text || '').trim();
+        return bit && (bit.includes(normalizedEssence) || normalizedEssence.includes(bit));
+      });
+      summaryField = { value: essence, claims: claims.length ? claims : descriptionField.claims.slice(0, 1) };
+    }
   }
+  if (summaryField) dossier.fields.summary = summaryField;
   const hint = (key, raw, sourceUrl) => {
     if (raw && typeof raw === 'object' && !verdictEligible(raw)) return;
     const value = text(raw?.value ?? raw);
