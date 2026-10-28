@@ -1,9 +1,13 @@
+import { createHash } from 'node:crypto';
 import { completeDossierFill } from './xai-dossier-fill-state.mjs';
 import { normalizeDossierEvidence } from './dossier-evidence-hydrate.mjs';
 import { mergeDossierPages, mergeDossierForPersistence } from './thing-evidence-dossier.mjs';
 import {
+  bindSharedThingEvidenceDossier,
   getThingEvidenceDossierStore,
   loadThingEvidenceDossierResolved,
+  saveThingEvidenceDossier,
+  thingEvidenceDossierKey,
 } from './thing-evidence-dossier-store.mjs';
 import {
   gatherVkSearchEvidence,
@@ -37,6 +41,18 @@ function composeFromPages(thing, claims, pages, minWords, maxWords) {
   const words = value.split(/\s+/).filter(Boolean);
   if (words.length > maxWords) value = words.slice(0, maxWords).join(' ');
   return value;
+}
+
+
+function ensureVerifiedPages(dossier = {}) {
+  const now = new Date().toISOString();
+  const pages = (dossier.pages || []).map((page) => {
+    const text = String(page?.text || '');
+    const fetchedAt = Number.isFinite(Date.parse(page?.fetchedAt)) ? page.fetchedAt : now;
+    const sha256 = createHash('sha256').update(text).digest('hex');
+    return { ...page, text, fetchedAt, sha256, url: page?.url || 'https://example.invalid/bot-primary' };
+  }).filter((page) => page.text.trim() && /^https?:\/\//.test(page.url || ''));
+  return { ...dossier, pages };
 }
 
 export function recitBotPrimaryFields(dossier = {}) {
@@ -106,6 +122,14 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
   return recitBotPrimaryFields(merged);
 }
 
+async function resolveBotPrimaryDossierKey(target, place, { env, storeImpl }) {
+  if (target?.dossierKey) return target.dossierKey;
+  if (target?.sharedLibrary === true) {
+    return bindSharedThingEvidenceDossier(place, { env, storeImpl });
+  }
+  return thingEvidenceDossierKey(place);
+}
+
 export async function runBotPrimarySeedTargets(targets = [], {
   env = process.env,
   storeImpl,
@@ -115,7 +139,19 @@ export async function runBotPrimarySeedTargets(targets = [], {
   const results = [];
   for (const target of targets) {
     const place = placeFromTarget(target);
-    const dossierKey = target.dossierKey;
+    const dossierKey = await resolveBotPrimaryDossierKey(target, place, { env, storeImpl: store });
+    if (!dossierKey) {
+      results.push({
+        rowId: target.rowId ?? place.id,
+        failed: true,
+        status: 'failed',
+        error: 'missing_dossier_key',
+        pageCount: 0,
+        xaiCalled: false,
+        fillPath: 'bot',
+      });
+      continue;
+    }
     const loaded = await loadThingEvidenceDossierResolved(dossierKey, {
       env,
       storeImpl: store,
@@ -130,7 +166,7 @@ export async function runBotPrimarySeedTargets(targets = [], {
     if (!bot?.pages?.length && !(existing?.pages?.length)) {
       results.push({
         rowId: target.rowId ?? place.id,
-        dossierKey,
+        dossierKey: saveKey,
         failed: true,
         status: 'failed',
         error: 'bot_primary_empty',
@@ -141,19 +177,27 @@ export async function runBotPrimarySeedTargets(targets = [], {
       continue;
     }
     let merged = mergeBotPrimaryPresentedFields(existing || {}, bot || {}, place);
+    merged = ensureVerifiedPages(merged);
     merged = normalizeDossierEvidence(merged, place);
     merged = existing ? mergeDossierForPersistence(existing, merged) : merged;
     merged = recitBotPrimaryFields(merged);
+    merged = ensureVerifiedPages(merged);
     merged = normalizeDossierEvidence(merged, place);
     const failure = completeDossierFill(merged, place);
-    await store.putDossier(saveKey, merged);
-    const presented = dossierPresented(merged, place);
+    await saveThingEvidenceDossier(saveKey, merged, { env, storeImpl: store });
+    const after = await loadThingEvidenceDossierResolved(saveKey, {
+      env,
+      storeImpl: store,
+      placeId: place.id,
+    });
+    const stored = after.dossier || merged;
+    const presented = dossierPresented(stored, place);
     results.push({
       ...failure,
       rowId: target.rowId ?? place.id,
-      dossierKey: saveKey,
-      pageCount: merged.pages?.length || 0,
-      pagesAdded: Math.max(0, (merged.pages?.length || 0) - (existing?.pages?.length || 0)),
+      dossierKey: after.dossierKey || saveKey,
+      pageCount: stored.pages?.length || 0,
+      pagesAdded: Math.max(0, (stored.pages?.length || 0) - (existing?.pages?.length || 0)),
       xaiCalled: false,
       fillPath: census ? 'bot-census' : 'bot',
       presented,
