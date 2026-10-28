@@ -130,8 +130,7 @@ const truncated = mergeBotPrimaryPresentedFields({}, {
     { text: breakfast, sourceUrl: second.url, supported: true },
   ] } },
 }, { title });
-assert.ok(truncated.fields.description.value.includes(detail));
-assert.ok(truncated.fields.summary.value.length < truncated.fields.description.value.length);
-assert.equal(truncated.fields.summary.claims.length, 1, 'summary essence keeps citations for the lead claim');
-assert.ok(detail.startsWith(truncated.fields.summary.value.replace(/^[^:]+:\s*/, '')));
+assert.equal(truncated.fields.summary.value.split(/\s+/).length, 40);
+assert.equal(truncated.fields.summary.claims.length, 1, 'truncation must not cite unused sources');
+assert.ok(detail.startsWith(truncated.fields.summary.claims[0].text));
 console.log(JSON.stringify({ ok: true, checked: 'bot-primary-recit-provenance', reorderedPages: ['p2', 'p1'], composedCitations: composed.fields.description.claims.length }));

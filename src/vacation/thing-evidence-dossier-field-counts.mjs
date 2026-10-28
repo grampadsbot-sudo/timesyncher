@@ -121,7 +121,7 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
   }
 
   const summaryVal = text(fields.summary?.value ?? fields.summary);
-  counts.summary = summaryVal && descriptionNamesThing(summaryVal, dossier.thing)
+  counts.summary = summaryVal && words(summaryVal) >= 12 && descriptionNamesThing(summaryVal, dossier.thing)
     ? { status: 'ok' } : { status: 'missing' };
 
   const descVal = text(
@@ -132,7 +132,7 @@ export function computeDossierFieldCounts(dossier = {}, place = {}) {
     ?? fields.details?.value
     ?? fields.details,
   );
-  counts.description = descVal ? { status: 'ok' } : { status: 'missing' };
+  counts.description = descVal && words(descVal) >= 40 ? { status: 'ok' } : { status: 'missing' };
 
   counts.itineraryNote = text(fields.itineraryNote?.value ?? fields.itineraryNote).length >= 12
     ? { status: 'ok' } : { status: 'missing' };

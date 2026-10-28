@@ -181,11 +181,13 @@ export function prepareDossierFindings(dossier, findings = {}) {
   for (const key of ['summary', 'description', 'price', 'itineraryNote', 'neighborhood']) {
     const claim = findings[key];
     if (!claim || !norm(claim.value) || !claimsSupported(dossier, claim)) continue;
+    if (key === 'itineraryNote' && norm(claim.value).length > 280) continue;
     if (key === 'price') {
       const value = Number(claim.value);
       if (!(value > 0) || !norm(claim.unit)) continue;
     }
-    if (key === 'description' && (!norm(claim.value) || !descriptionNamesThing(claim.value, dossier.thing))) continue;
+    if (key === 'description' && (words(claim.value).length < 40 || words(claim.value).length > 120
+      || !descriptionNamesThing(claim.value, dossier.thing))) continue;
     next.fields[key] = { ...claim, url: claimUrls(dossier, claim) };
     if (key === 'description' && placeSupportsDossierReviews(dossier) && !next.reviewsRead) {
       next.fields[key].value = `${String(claim.value).trim()}\n${NO_REVIEWS_FLAG}`;

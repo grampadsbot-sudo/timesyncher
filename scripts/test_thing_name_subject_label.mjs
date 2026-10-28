@@ -22,21 +22,21 @@ for (const mode of ['adapter', 'seed']) {
     }
     assert.equal(dossier.pages[0].text, body);
   });
-  test(`${mode}: short sourced prose presents without word minimums`, () => {
-    assert.ok(compose('Fresh seasonal vegetables served beside shaded garden paths.').fields.summary?.value);
+  test(`${mode}: label cannot meet word minimums`, () => {
+    assert.ok(!compose('Fresh seasonal vegetables served beside shaded garden paths.').fields.summary?.value);
     const short = body.split(/\s+/).slice(0, 39).join(' ');
-    assert.ok(compose(short).fields.description?.value);
+    assert.ok(!compose(short).fields.description?.value);
   });
   test(`${mode}: an existing name needs no label`, () => {
     const dossier = compose(`Garden walks around ${thing} offer relaxing afternoons. ${body}`);
     assert.equal(dossier.fields.summary.value.startsWith(`${thing}: `), false);
   });
 }
-test('seed keeps claim-supported description after subject-label uncap', () => {
+test('seed excludes an existing subject label from word minimums', () => {
   const short = body.split(/\s+/).slice(0, 39).join(' ');
   const page = { url: 'https://garden.test/info', text: short, fetchedAt: '2026-10-28T00:00:00Z' };
   const claim = { text: short, sourceUrl: page.url, pages: ['p1'], supported: true };
   const field = { value: `${thing}: ${short}`, claims: [claim] };
   const dossier = mergeBotPrimaryPresentedFields({}, { thing, pages: [page], fields: { description: field, summary: field } }, { title: thing });
-  assert.equal(dossier.fields.description?.value, `${thing}: ${short}`);
+  assert.ok(!dossier.fields.description?.value);
 });

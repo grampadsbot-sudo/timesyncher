@@ -25,13 +25,6 @@ function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-function summaryEssenceFromBody(body = '') {
-  const text = String(body || '').trim();
-  if (!text) return '';
-  const sentence = text.match(/[^.!?]+[.!?]+/);
-  return (sentence ? sentence[0] : text).replace(/\s+/g, ' ').trim();
-}
-
 function savedDatedPage(page) {
   try {
     const url = new URL(page?.url);
@@ -57,32 +50,36 @@ function recitClaim(claim, pages) {
   return { ...claim, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true };
 }
 
-function composeFromPages(claims, pages, thing, { includePageExcerpts = true } = {}) {
+function composeFromPages(claims, pages, minWords, maxWords, thing) {
   const parts = [];
   const citations = [];
+  let wordsUsed = 0;
   const append = (claim) => {
     const body = String(claim.text || claim.claim || '').trim();
     if (parts.includes(body)) return;
-    if (!body || recitClaim({ ...claim, text: body }, pages).supported !== true) return;
-    parts.push(body);
-    citations.push({ ...claim, text: body });
+    const words = body.split(/\s+/).filter(Boolean);
+    const text = words.slice(0, maxWords - wordsUsed).join(' ');
+    if (!text || recitClaim({ ...claim, text }, pages).supported !== true) return;
+    parts.push(text);
+    citations.push({ ...claim, text });
+    wordsUsed += wordCount(text);
   };
   for (const claim of claims || []) {
     const cited = recitClaim(claim, pages);
     if (cited.supported === true) append(cited);
+    if (wordsUsed >= maxWords) break;
   }
-  if (includePageExcerpts) {
-    for (const [index, page] of (pages || []).entries()) {
-      if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
-      const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
-      if (!bit) continue;
-      if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
-    }
+  for (const [index, page] of (pages || []).entries()) {
+    if (wordsUsed >= minWords) break;
+    if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
+    const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
+    if (!bit) continue;
+    if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
+    append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
   }
   const body = parts.join(' ');
   const value = thing && body && !descriptionNamesThing(body, thing) ? `${thing}: ${body}` : body;
-  return { value, claims: citations, bodyWords: wordCount(body) };
+  return { value, claims: citations, bodyWords: wordsUsed };
 }
 
 
@@ -125,7 +122,8 @@ export function recitBotPrimaryFields(dossier = {}) {
     if (!supported.length) value = '';
     else if (supported.length !== claims.length || contradictsValue) {
       const body = supported.map((claim) => claim.text || claim.claim).join(' ');
-      value = body.trim() ? body : '';
+      const minWords = key === 'summary' ? 12 : key === 'description' ? 40 : 0;
+      value = wordCount(body) >= minWords ? body : '';
       if (value && ['summary', 'description'].includes(key) && dossier.thing
         && !descriptionNamesThing(value, dossier.thing)) value = `${dossier.thing}: ${value}`;
     }
@@ -158,39 +156,23 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
   merged.thing = thing || merged.thing;
   const pages = merged.pages || [];
   const claimRows = Object.values(bot.fields || {}).flatMap((field) => field?.claims || []);
-  const ensure = (key, { includePageExcerpts = true, fromDescription = false } = {}) => {
+  const ensure = (key, minWords, maxWords) => {
     let existing = String(merged.fields?.[key]?.value || '').trim();
     if (thing && existing.startsWith(`${thing}: `)) existing = existing.slice(thing.length + 2);
-    if (existing) {
+    if (wordCount(existing) >= minWords) {
       if (thing && !descriptionNamesThing(existing, thing)) merged.fields[key] = { ...merged.fields[key], value: `${thing}: ${existing}` };
       return;
     }
     if (merged.fields?.[key]) merged.fields[key] = { ...merged.fields[key], value: '' };
-    if (fromDescription) {
-      const desc = String(merged.fields?.description?.value || '').trim();
-      if (!desc) return;
-      let essence = summaryEssenceFromBody(thing && desc.startsWith(`${thing}: `) ? desc.slice(thing.length + 2) : desc);
-      if (!essence || isFillerSummaryText(essence, thing)) return;
-      if (thing && !descriptionNamesThing(essence, thing)) essence = `${thing}: ${essence}`;
-      const essenceBody = thing && essence.startsWith(`${thing}: `) ? essence.slice(thing.length + 2) : essence;
-      const normalizedEssence = essenceBody.replace(/[.!?]+$/, '').trim();
-      const claims = (merged.fields.description?.claims || []).filter((claim) => {
-        const bit = String(claim.text || claim.claim || '').trim();
-        return bit && (bit.includes(normalizedEssence) || normalizedEssence.includes(bit));
-      });
-      merged.fields = { ...(merged.fields || {}), [key]: { value: essence, claims: claims.length ? claims : [merged.fields.description.claims[0]] } };
-      return;
-    }
-    const composed = composeFromPages(claimRows, pages, thing, { includePageExcerpts });
-    if (!composed.claims.length || !String(composed.value || '').trim() || isFillerSummaryText(composed.value, thing)) return;
+    const { bodyWords, ...composed } = composeFromPages(claimRows, pages, minWords, maxWords, thing);
+    if (bodyWords < minWords || !composed.claims.length || isFillerSummaryText(composed.value, thing)) return;
     merged.fields = {
       ...(merged.fields || {}),
       [key]: composed,
     };
   };
-  ensure('description');
-  ensure('summary', { fromDescription: true });
-  if (!String(merged.fields?.summary?.value || '').trim()) ensure('summary', { includePageExcerpts: false });
+  ensure('summary', 12, 40);
+  ensure('description', 40, 120);
   if (bot.fields?.itineraryNote && !merged.fields?.itineraryNote) {
     merged.fields = { ...(merged.fields || {}), itineraryNote: bot.fields.itineraryNote };
     merged.itineraryNote = bot.fields.itineraryNote.value;

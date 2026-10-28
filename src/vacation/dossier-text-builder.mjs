@@ -2,10 +2,10 @@ import { dossierPageFailure } from './dossier-page-integrity.mjs';
 import { collectDossierClaims } from './xai-dossier-judge-prompt.mjs';
 import { computeDossierFieldCounts } from './thing-evidence-dossier-field-counts.mjs';
 import { dossierPresented, passbPresentedHardTextViolations } from './passb-dossier-presented.mjs';
-import { claimsSupported, dossierPageById, prepareDossierFindings } from './thing-dossier-fields.mjs';
+import { claimsSupported, dossierPageById, fitDescriptionWords, prepareDossierFindings } from './thing-dossier-fields.mjs';
 export { dossierTextEvidencePages } from './dossier-text-evidence.mjs';
 export { dossierPresented };
-export const DOSSIER_ITINERARY_NOTE_PRIORITY = 'Priority: return itineraryNote as a snappy cited vibe + what-to-try line. Cite only saved pages. Do not skip itineraryNote when pages support a dish, drink, happy hour, or atmosphere highlight.';
+export const DOSSIER_ITINERARY_NOTE_PRIORITY = 'Priority: return itineraryNote as a snappy cited vibe + what-to-try line (<=280 chars). Cite only saved pages. Do not skip itineraryNote when pages support a dish, drink, happy hour, or atmosphere highlight.';
 
 function dossierTextBuildProblems(dossier = {}, place = {}) {
   const counts = computeDossierFieldCounts(dossier, place);
@@ -64,6 +64,7 @@ export async function buildDossierText(dossier, place, {
     if (trace) trace.builder.ran = true;
     const result = await build(options);
     const findings = result.findings && typeof result.findings === 'object' && !Array.isArray(result.findings) ? result.findings : {};
+    if (findings.description?.value) findings.description.value = fitDescriptionWords(findings.description.value);
     const judge = await judgeFindings(findings, !options.includeReviews);
     const outcome = builderOutcome(result, dossier, findings);
     if (trace) {
