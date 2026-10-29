@@ -169,7 +169,7 @@
   "review3Rating": "4.3",
   "review3Theme": "Atmosphere",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-  "review4": "Service is described as friendly and reliable, with families and groups reporting smooth, enjoyable evenings from start to finish. Most of the review set points the same way on this.",
+  "review4": "Service is described as friendly and reliable, with families and groups reporting smooth, enjoyable evenings and the food and drinks holding up well alongside the attentive table service.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.3",
   "review4Theme": "Service",
@@ -191,5 +191,11 @@
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.265998+00:00"
+  }
 }

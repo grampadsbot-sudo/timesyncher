@@ -262,7 +262,7 @@
   },
   "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Rosa Mexicano's tableside guacamole is the dish diners recommend most, alongside drinks they describe as strong and well made. Most of the review set points the same way on this.",
+  "review1": "Rosa Mexicano's guacamole made fresh at the table is the most recommended order, alongside spectacular food and strong drinks, though the popular dining room runs noisy and arriving early avoids waits.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Food and drinks",
@@ -327,5 +327,11 @@
   "reviewsLabel": "Representative reviews written from 37 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.267014+00:00"
+  }
 }

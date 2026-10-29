@@ -224,13 +224,13 @@
   "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Dizzy's Club combines excellent jazz with a beautiful setting overlooking Central Park, and some visitors enjoy the food too.",
+  "review1": "Dizzy's Club pairs excellent jazz with a beautiful setting overlooking Central Park, and the food can be a pleasant surprise, with dishes like the branzino singled out as worth ordering.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Food and drinks",
   "review1SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review1Stars": 5,
-  "review2": "The club regularly features world-class musicians, creating memorable performances in an intimate room.",
+  "review2": "The club regularly books world-class musicians, including large ensembles improvising on the standards, creating memorable performances in an intimate room that works especially well for a special night out.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Music",
@@ -242,7 +242,7 @@
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review3Stars": 5,
-  "review4": "Food is inconsistent, with some dishes criticized, so many recommend going mainly for drinks and the music.",
+  "review4": "Food is inconsistent, with some pasta and crab cake dishes criticized for blandness or saltiness, so going mainly for drinks and the excellent jazz band is the safer approach.",
   "review4Source": "Exa place listing",
   "review4Rating": "3/5",
   "review4Theme": "Music",
@@ -277,11 +277,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.964651+00:00",
-    "summary": "2026-10-29T20:08:57.964658+00:00"
+    "reviews": "2026-10-29T20:22:18.188033+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "summary"
+    "reviews"
   ]
 }

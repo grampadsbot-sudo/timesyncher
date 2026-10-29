@@ -252,25 +252,25 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
-  "review1": "Smoke Jazz & Supper Club is praised for excellent pianists and performers, though larger groups should arrange seating ahead.",
+  "review1": "Smoke Jazz & Supper Club is praised for excellent pianists on a beautiful Steinway, though groups of five struggle with table layouts, refunds become credits only, and amplification can feel loud.",
   "review1Source": "Restaurantji",
   "review1Rating": "5/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
   "review1Stars": 5,
-  "review2": "Visitors highlight outstanding performances, good food and attentive service from start to finish.",
+  "review2": "Outstanding performances from top ensembles, phenomenal food and wonderful, attentive staff come up repeatedly, making the venue an easy recommendation for a complete dinner-and-jazz evening in the neighborhood.",
   "review2Source": "Restaurantji",
   "review2Rating": "5/5",
   "review2Theme": "Food and drinks",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
   "review2Stars": 5,
-  "review3": "The atmosphere and cocktails are strong, though some visitors report slow service or tight seating at busy shows. Most of the review set points the same way on this.",
+  "review3": "Red velvet, candlelight and close-up live jazz create a standout atmosphere with top-tier cocktails and strong food, though a mandatory entree rule frustrates anyone wanting only drinks and small plates.",
   "review3Source": "Exa place listing",
   "review3Rating": "3/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
   "review3Stars": 3,
-  "review4": "The larger new venue is seen as an upgrade, with excellent cocktails and food alongside top-quality jazz.",
+  "review4": "The larger new venue is seen as a major upgrade, with a stronger bar pouring some of the best cocktails in the city, consistently great food and sharp, modern jazz sets.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Music",
@@ -314,6 +314,6 @@
     "reviews"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.965605+00:00"
+    "reviews": "2026-10-29T20:22:18.188717+00:00"
   }
 }

@@ -148,25 +148,25 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, though at very high prices.",
+  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, unique and beautifully crafted, though at very high prices that start well above thirty dollars a drink.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
   "review1Theme": "Breakfast and dining",
   "review1SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review1Stars": 4,
-  "review2": "Service is consistently described as exceptional, matching the club's luxury positioning.",
+  "review2": "Service is consistently described as exceptional, with very good staff whose polish matches the club's top-tier price point and luxury positioning inside the Aman hotel on Fifth Avenue.",
   "review2Source": "Exa place listing",
   "review2Rating": "4.4/5",
   "review2Theme": "Service",
   "review2SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review2Stars": 5,
-  "review3": "Staff respond well when tables are not ideal, letting guests move to better spots.",
+  "review3": "Staff respond well when a table is not ideal, accommodating requests and letting guests move around until they find a better spot, which keeps the evening relaxed even on busy nights.",
   "review3Source": "Exa place listing",
   "review3Rating": "4.4/5",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review3Stars": 4,
-  "review4": "The speakeasy-style club offers lively live music and dancing in a sophisticated members-style setting.",
+  "review4": "The speakeasy-style club offers lively live music and dancing for a more mature crowd in a sophisticated setting, with names and reservations checked before entry to the building.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Music",
@@ -194,11 +194,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.973546+00:00",
-    "description": "2026-10-29T20:08:57.973551+00:00"
+    "reviews": "2026-10-29T20:22:18.273649+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "description"
+    "reviews"
   ]
 }

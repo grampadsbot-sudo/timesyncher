@@ -187,7 +187,7 @@
   "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
-  "review1": "Carmine's is a popular choice for celebrations, with diners praising quality food, top service and a festive atmosphere.",
+  "review1": "Carmine's is a popular choice for birthdays and celebrations, with super food quality, top-notch service, a festive atmosphere and portions so large that arriving hungry is the standard advice.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Service",
@@ -199,7 +199,7 @@
   "review2Theme": "Service",
   "review2SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
   "review2Stars": 4,
-  "review3": "Repeat visitors say the experience is consistent across visits, with favorite dishes they order every time.",
+  "review3": "Repeat visits across several cities are described as consistently on point, with favorite family-style dishes reordered every time and takeout orders traveling well, apart from cheesy bread that softens.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Atmosphere",
@@ -254,6 +254,6 @@
     "reviews"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.970604+00:00"
+    "reviews": "2026-10-29T20:22:18.270588+00:00"
   }
 }

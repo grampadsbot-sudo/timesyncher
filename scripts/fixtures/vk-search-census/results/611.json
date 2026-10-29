@@ -202,13 +202,13 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
-  "review1": "Blue Note performances are praised, but late door openings and a required minimum spend frustrate some visitors.",
+  "review1": "Blue Note performances earn warm praise, but late door openings well past the posted time and a required food and drink minimum on top of ticket prices frustrate some attendees.",
   "review1Source": "Restaurantji",
   "review1Rating": "3/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "review2": "Table seating is intimate with strong sound and efficient service, though guests feel the room is packed tightly.",
+  "review2": "Reserved table seating is intimate, with a charged atmosphere, great sound and fast, efficient service, though tables are packed tightly and can seat more people than feels comfortable.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
@@ -261,7 +261,7 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.956949+00:00"
+    "reviews": "2026-10-29T20:22:18.182196+00:00"
   },
   "writtenOrder": [
     "reviews"

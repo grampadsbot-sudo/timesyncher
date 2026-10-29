@@ -95,7 +95,7 @@
   "review2Theme": "Food and drinks",
   "review2SourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
   "review2Stars": 5,
-  "review3": "Regulars praise friendly, welcoming staff and treat it as a dependable go-to for pizza when they are nearby. Most of the review set points the same way on this.",
+  "review3": "Friendly, sweet and welcoming staff make this a dependable go-to for pizza, with fresh food from the food bar and especially good chicken wings rounding out the warm atmosphere.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
@@ -143,5 +143,11 @@
     "representative": true
   },
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.268391+00:00"
+  }
 }

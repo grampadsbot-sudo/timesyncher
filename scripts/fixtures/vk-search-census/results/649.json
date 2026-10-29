@@ -189,22 +189,22 @@
   "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Whole Foods Upper West Side is praised for fresh produce and good sales, especially for Prime members.",
+  "review1": "Whole Foods on the Upper West Side stands out for great fresh produce and good sales, with Prime member pricing adding extra value for regular grocery runs in the neighborhood.",
   "review1Source": "Exa place listing",
   "review1Rating": "3.2/5",
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review2": "Prices are slightly higher than some neighborhood grocers, a trade-off for the quality and selection. Most of the review set points the same way on this.",
+  "review2": "Prices run slightly higher than at some neighborhood grocers, a trade-off many accept for the quality, the broad selection and conveniences like the hot food bar and the cafe area.",
   "review2Source": "Exa place listing",
   "review2Rating": "3.2/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review3": "Service has slipped for some regular customers, who describe dismissive or unhelpful interactions recently.",
+  "review3": "Service has slipped for some regular shoppers, with recent accounts of dismissive or unhelpful interactions, particularly at the deli counter, at a store usually known for friendliness and professionalism.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Service",
   "review3SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review4": "Many shoppers still find friendly cashiers, a pleasant atmosphere and a tempting bakery and health section.",
+  "review4": "Friendly, patient cashiers and a pleasant atmosphere still come up often, along with a tempting bakery, a vitamins and health section, a Prime pickup station and reliable delivery service.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Food and drinks",
@@ -236,6 +236,6 @@
     "reviews"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.962533+00:00"
+    "reviews": "2026-10-29T20:22:18.186259+00:00"
   }
 }

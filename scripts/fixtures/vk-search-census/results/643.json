@@ -170,7 +170,7 @@
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
   "review1Stars": 5,
-  "review2": "The store is always busy, so expect a wait even though it is larger than many branches. Most of the review set points the same way on this.",
+  "review2": "The store is almost always busy, so a wait at checkout or the counters is common even though this branch is larger than most, and building extra time into the stop helps.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0/5",
   "review2Theme": "Overall experience",
@@ -210,5 +210,11 @@
   "reviewsLabel": "Representative reviews written from 15 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.184451+00:00"
+  }
 }

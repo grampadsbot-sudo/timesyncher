@@ -213,19 +213,19 @@
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "review2": "The atmosphere and sound are excellent, with friendly door staff and efficient servers, though seating is tight.",
+  "review2": "The atmosphere is charged and the sound is excellent, with servers moving quickly and efficiently through the room, though seating is tight and tables can feel crowded during popular sets.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
   "review2SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
   "review2Stars": 4,
-  "review3": "The club's place in jazz history and strong lineup remain the draw, with bar seating offering limited sightlines. Most of the review set points the same way on this.",
+  "review3": "The club's long-secured place in jazz history and a strong lineup remain the draw, while the bar seating carries a minimum and sits off to the side with limited sightlines.",
   "review3Source": "Exa place listing",
   "review3Rating": "4/5",
   "review3Theme": "Seating",
   "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
   "review3Stars": 4,
-  "review4": "Arriving well before showtime is recommended to eat and secure good seats in the crowded room.",
+  "review4": "Arriving well before showtime is the most common advice, leaving time to eat and secure good seats in a crowded room where tables are shared and seating is first-come first-served.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Seating",
@@ -266,7 +266,7 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.963759+00:00"
+    "reviews": "2026-10-29T20:22:18.187221+00:00"
   },
   "writtenOrder": [
     "reviews"

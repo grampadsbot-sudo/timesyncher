@@ -170,7 +170,7 @@
   "review1Theme": "Pastries",
   "review1SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
   "review1Stars": 5,
-  "review2": "Lines are the main watch-out, especially at busy times close to Times Square, so plan a little extra time. Most of the review set points the same way on this.",
+  "review2": "Lines can get long, especially at busy times so close to Times Square, so arriving outside peak hours or allowing a little extra time keeps the stop from eating into show plans.",
   "review2Source": "aggregated guest reviews",
   "review2Rating": "4.3",
   "review2Theme": "Lines",
@@ -214,5 +214,11 @@
   "reviewsLabel": "Representative reviews written from 21 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.272578+00:00"
+  }
 }

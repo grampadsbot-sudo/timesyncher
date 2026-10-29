@@ -176,7 +176,7 @@
   "review1Theme": "The burger",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
   "review1Stars": 5,
-  "review2": "Praise for the burger is independent and repeated across the review set, which makes it the clearest reason to choose this spot over nearby options.",
+  "review2": "The burger draws the most consistent praise, singled out as one of the best in a long time, which makes it the clearest reason to choose this spot over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.4",
   "review2Theme": "Repeat praise",
@@ -219,6 +219,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T12:52:46-07:00"
-  }
+    "reviews": "2026-10-29T20:22:18.266569+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
 }

@@ -166,7 +166,7 @@
   },
   "itineraryNote": "The Consulate UWS: a stylish French brasserie on Columbus Avenue; come for weekday happy hour or a relaxed Sunday supper.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The Consulate impresses with its interior design, generous food, friendly service and well-crafted cocktails, according to many diners. Most of the review set points the same way on this.",
+  "review1": "The Consulate impresses with its striking interior design, finger-licking food, friendly service and well-crafted cocktails, making it a strong all-round choice for a relaxed dinner with drinks in the neighborhood.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.5",
   "review1Theme": "Design and food",
@@ -178,7 +178,7 @@
   "review2Theme": "Sunday supper",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
   "review2Stars": 5,
-  "review3": "Individual servers are praised by name, and warm, attentive service is a recurring reason guests return.",
+  "review3": "Individual servers are singled out by name for amazing service, and warm, attentive hospitality combined with consistently amazing food is a recurring reason for return visits to the restaurant.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.5",
   "review3Theme": "Service",
@@ -213,6 +213,6 @@
     "reviews"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.971031+00:00"
+    "reviews": "2026-10-29T20:22:18.271028+00:00"
   }
 }

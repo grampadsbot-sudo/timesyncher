@@ -199,13 +199,13 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
-  "review1": "Blue Note shows are widely praised, though some visitors are frustrated by delayed entry and mandatory minimum spending.",
+  "review1": "Blue Note shows are widely praised, though delayed entry well past the posted door time and a mandatory per-person minimum on top of the ticket price frustrate some attendees.",
   "review1Source": "Restaurantji",
   "review1Rating": "3/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "review2": "The intimate table seating, great sound and efficient service are highlights, even if the room feels crowded.",
+  "review2": "Intimate table seating, a charged atmosphere, great sound and amazing, efficient service are clear highlights, even if the club squeezes extra people onto tables and the room feels crowded.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
@@ -217,7 +217,7 @@
   "review3Theme": "Seating",
   "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
   "review3Stars": 4,
-  "review4": "Buying table tickets and arriving early helps secure better seats, as staff can be pushy during busy seating. Most of the review set points the same way on this.",
+  "review4": "Buying table tickets and arriving about an hour early leaves time to eat and claim better seats, since tables are shared and the room fills quickly before showtime.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Seating",
@@ -258,7 +258,7 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.963286+00:00"
+    "reviews": "2026-10-29T20:22:18.186716+00:00"
   },
   "writtenOrder": [
     "reviews"

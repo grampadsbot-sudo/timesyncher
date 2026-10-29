@@ -159,13 +159,13 @@
   "review2Theme": "Steak au poivre",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review2Stars": 5,
-  "review3": "Diners describe it as a neighborhood institution that draws locals and well-dressed regulars, adding to its classic bistro feel.",
+  "review3": "Described as a true institution, the bistro draws locals, fashion figures and well-dressed regulars, and that people-watching adds to its classic downtown feel as much as the menu does.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.8",
   "review3Theme": "Local institution",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review3Stars": 5,
-  "review4": "Despite a busy room, diners describe service as impeccable and the bistro-style food as well executed. Most of the review set points the same way on this.",
+  "review4": "Despite a very busy room, service is described as impeccable and the bistro-style food as pretty good, with specials like the peanut butter ice cream standing out as memorable highlights.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
@@ -195,7 +195,7 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.973918+00:00"
+    "reviews": "2026-10-29T20:22:18.273977+00:00"
   },
   "writtenOrder": [
     "reviews"

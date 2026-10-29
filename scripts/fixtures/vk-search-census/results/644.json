@@ -154,22 +154,22 @@
   "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Juice Generation on 72nd Street gets strong praise for friendly, attentive customer service that keeps regulars coming back. Most of the review set points the same way on this.",
+  "review1": "Juice Generation on 72nd Street earns strong marks for exceptional customer service, with friendly and attentive staff that make quick stops pleasant and keep regulars returning to this branch.",
   "review1Source": "Restaurantji",
   "review1Rating": "3.9/5",
   "review1Theme": "Service",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review2": "Loud music in the shop is a recurring complaint, so it is better for a grab-and-go visit than lingering.",
+  "review2": "Loud music in this branch is a recurring complaint, so the shop works better for a quick grab-and-go order than for sitting down to linger or hold a conversation.",
   "review2Source": "Restaurantji",
   "review2Rating": "3.9/5",
   "review2Theme": "Noise",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review3": "Customers describe drinks as fresh, clean-tasting and well blended without being overly sweet, made with high-quality ingredients.",
+  "review3": "Drinks taste fresh and clean, smoothies are well blended without being overly sweet, ingredients seem high quality, and the menu is accommodating for vegans looking for a reliable healthy option.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/4gf42trfy0r",
-  "review4": "Freshly made cold-pressed green juices are a highlight, described as refreshing and well balanced.",
+  "review4": "Cold-pressed green juices made on the spot are a highlight, described as refreshing and balanced, with a pleasant hint of sweetness and tang rather than an overly grassy or sugary taste.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
@@ -204,6 +204,6 @@
     "reviews"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.960390+00:00"
+    "reviews": "2026-10-29T20:22:18.184794+00:00"
   }
 }

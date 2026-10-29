@@ -202,7 +202,7 @@
   "review1Rating": "5/5",
   "review1Theme": "Selection",
   "review1SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
-  "review2": "Staff in departments like bedding are described as genuinely helpful, even suggesting when online sales would save money. Most of the review set points the same way on this.",
+  "review2": "Staff in departments such as bedding come across as genuinely helpful, even pointing out when an upcoming online sale would save money, and the historic wooden escalators add charm.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Service",
@@ -256,12 +256,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "summary": "2026-10-29T12:53:54-07:00"
+    "reviews": "2026-10-29T20:22:18.182654+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "reviews"
   ]
 }

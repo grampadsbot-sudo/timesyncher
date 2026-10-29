@@ -124,22 +124,22 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
-  "review1": "Booking jazz club tickets in advance and arriving early is recommended to secure good seats.",
+  "review1": "Booking jazz club tickets well in advance and arriving early is the most repeated advice, since the best seats go to those who come first on popular nights.",
   "review1Source": "Exa place listing",
   "review1Rating": "4/5",
   "review1Theme": "Seating",
   "review1SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review2": "Live trio performances are praised for their energy and musicianship, making for memorable shows.",
+  "review2": "Live trio performances featuring drums, piano and double bass are praised for their energy and musicianship, delivering memorable shows that justify the cover and the trip to the club.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Live performance",
   "review2SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review3": "Visitors describe musicians who keep audiences engaged from the first song to the last.",
+  "review3": "The musicians come across as extremely talented and skilled at holding a room, keeping the audience engaged and entertained from the first song of the set through the very last.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review4": "Service is described as friendly and attentive, helping the evening run smoothly.",
+  "review4": "Service is described as friendly and attentive, with staff keeping drinks and orders moving quietly during the set and helping the whole evening run smoothly from arrival to the final song.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
@@ -167,11 +167,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:08:57.966988+00:00",
-    "summary": "2026-10-29T20:08:57.966994+00:00"
+    "reviews": "2026-10-29T20:22:18.265681+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "summary"
+    "reviews"
   ]
 }
