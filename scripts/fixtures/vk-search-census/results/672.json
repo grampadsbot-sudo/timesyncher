@@ -8,8 +8,16 @@
       "url": "https://e-barnyc.com/",
       "title": "Friendly UWS Neighborhood Bar - e's BAR",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West S … Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling peo … Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West S … eople. Reminiscent of the dive bars we grew up in … for grown ups. Events & Reservations Tour Menu Fun Stuff Press Contact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 1",
-      "snippet": "Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Ams",
+      "text": "tact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 11PM Tuesday | 5PM - 12AM Wednesday | 5PM - 12AM Thursday | 4PM - 2AM Friday | 2PM - 2AM Saturday | 12PM - 2AM Sunday | 12PM - 11PM Mo …  Menu (opens in a new tab) Newsletter Signup Reservations Fun Stuff Contact Press #ebarscrapbook (opens in a new tab) (opens in a new tab) e’s BAR is a neighborhood joint with good food, good drinks, fun games and smiling people. Reminiscent of the dive bars we grew up in … for grown ups. Events & Reservations Tour Menu Fun Stuff Press Contact Indoor and Outdoor Dining! Walk  … tact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 11PM Tuesday | 5PM - 12AM Wednesday | 5PM - 12AM Thursday | 4PM - 2AM Friday | 2PM - 2AM Saturday | 12PM - 2AM Sunday | 12PM - 11PM Mo … eople. Reminiscent of the dive bars we grew up in … for grown ups. Events & Reservations Tour Menu Fun Stuff Press Contact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 1 … ks, fun games and smiling people. Reminiscent of the dive bars we grew up in … for grown ups. Events & Reservations Tour Menu Fun Stuff Press Contact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th",
+      "snippet": "tact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 11PM Tuesday | 5PM - 12AM Wednesday | 5PM - 12AM Thursday | 4PM - 2AM Friday | 2PM - 2AM Saturday | 12P",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.thedeadpoet.com/",
+      "title": "The Dead Poet - Upper West Side, New York, NY",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "d their tents like the Nomad, and silently steal away.\" - Henry Wadsworth Longfellow Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate t … w Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate the lives and spirits of famous writers and poets. The mahogany-paneled wa … et in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate the lives and spirits of famous writers and poets. The mahogany-paneled walls are adorned with black and white portraits, musing quotations, and poetic passages pertaining to the universal quandaries of life. Read More about us Events Christmas Friday December 25th Happ",
+      "snippet": "d their tents like the Nomad, and silently steal away.\" - Henry Wadsworth Longfellow Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high scho",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -28,10 +36,14 @@
   "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person — stoop.bar lists 5–7pm daily (third-party)",
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "511 Amsterdam in the Upper West Side",
-    "neighborhood joint with good food, drinks, games, and smiling people",
-    "511 Amsterdam in the Upper West Side",
-    "Walk ins Welcome"
+    "511 Amsterdam Ave (btw 84/85th)",
+    "Combining his passion for Irish pubs and literature",
+    "a neighborhood joint with good food, good drinks, fun games and smiling people",
+    "511 Amsterdam Ave (btw 84/85th)",
+    "opened The Dead Poet in September of 2000",
+    "The mahogany-paneled walls are adorned with black and white portraits",
+    "Walk ins Welcome",
+    "Indoor and Outdoor Dining"
   ],
   "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
   "voicePass": {
@@ -63,34 +75,50 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine shortlist, led by e's BAR at 511 Amsterdam.",
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine pairs two Upper West Side bars: e's BAR on Amsterdam Avenue with games, and The Dead Poet's literary Irish pub.",
       "claims": [
         {
-          "text": "511 Amsterdam in the Upper West Side",
+          "text": "511 Amsterdam Ave (btw 84/85th)",
           "sourceUrl": "https://e-barnyc.com/"
+        },
+        {
+          "text": "Combining his passion for Irish pubs and literature",
+          "sourceUrl": "https://www.thedeadpoet.com/"
         }
       ]
     },
     "description": {
-      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine is an Upper West Side bar shortlist led by e's BAR. The bar calls itself your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side, and walk ins are welcome.",
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine groups Upper West Side drinking spots for one evening. e's BAR describes itself as a neighborhood joint with good food, good drinks, fun games and smiling people, at 511 Amsterdam Ave between 84th and 85th. The Dead Poet opened in September of 2000 and celebrates famous writers, with mahogany-paneled walls and drinks named after authors. Walk-ins are welcome at e's BAR, which offers indoor and outdoor dining.",
       "claims": [
         {
-          "text": "neighborhood joint with good food, drinks, games, and smiling people",
+          "text": "a neighborhood joint with good food, good drinks, fun games and smiling people",
           "sourceUrl": "https://e-barnyc.com/"
         },
         {
-          "text": "511 Amsterdam in the Upper West Side",
+          "text": "511 Amsterdam Ave (btw 84/85th)",
           "sourceUrl": "https://e-barnyc.com/"
+        },
+        {
+          "text": "opened The Dead Poet in September of 2000",
+          "sourceUrl": "https://www.thedeadpoet.com/"
+        },
+        {
+          "text": "The mahogany-paneled walls are adorned with black and white portraits",
+          "sourceUrl": "https://www.thedeadpoet.com/"
         },
         {
           "text": "Walk ins Welcome",
+          "sourceUrl": "https://e-barnyc.com/"
+        },
+        {
+          "text": "Indoor and Outdoor Dining",
           "sourceUrl": "https://e-barnyc.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-603-710-715-624-20261028",
+    "pass": "vk728-rewrite-672-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
