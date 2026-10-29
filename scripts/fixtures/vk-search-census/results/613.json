@@ -14,7 +14,7 @@
       "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html",
       "title": "Macy's TA",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "4.0\u2605 \u00b7 4988 reviews"
+      "snippet": "4.0★ · 4988 reviews"
     }
   ],
   "rating": {
@@ -30,7 +30,7 @@
     "google": 81122
   },
   "priceHint": "$$$ department store",
-  "hoursHint": "Mon\u2013Thu 10am\u20139pm; Fri\u2013Sat 10am\u201310pm; Sun 11am\u20139pm (store page)",
+  "hoursHint": "Mon–Thu 10am–9pm; Fri–Sat 10am–10pm; Sun 11am–9pm (store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -72,5 +72,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Macy's Herald Square is the giant flagship department store on West 34th Street in Midtown Manhattan.",
+      "claims": [
+        {
+          "text": "151 W 34th St",
+          "sourceUrl": "https://www.macys.com/stores/ny/newyork/herald-square_3.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Macy's Herald Square is the famous flagship department store at 151 W 34th St, spanning a whole city block. It is worth a visit for the scale alone, plus the original wooden escalators. Use it for practical shopping or souvenirs, then walk a few blocks north to the Empire State Building.",
+      "claims": [
+        {
+          "text": "151 W 34th St",
+          "sourceUrl": "https://www.macys.com/stores/ny/newyork/herald-square_3.html"
+        },
+        {
+          "text": "4.0★ · 4988 reviews",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

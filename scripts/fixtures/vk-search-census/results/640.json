@@ -22,7 +22,7 @@
     "booking": 1769
   },
   "priceHint": "4-star boutique UWS",
-  "hoursHint": "Hotel \u2014 24h; lounge with live music",
+  "hoursHint": "Hotel — 24h; lounge with live music",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Wallace Hotel is a highly rated boutique hotel on the Upper West Side near Central Park.",
+      "claims": [
+        {
+          "text": "The Wallace Hotel on the Upper West Side.",
+          "sourceUrl": "https://thewallace.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Wallace Hotel is a boutique hotel on West 71st Street in the Upper West Side, close to Lincoln Center and Central Park. It has some of the best guest scores of any hotel on this list. The quiet residential setting suits travelers who want calm evenings after busy days.",
+      "claims": [
+        {
+          "text": "The Wallace Hotel on the Upper West Side.",
+          "sourceUrl": "https://thewallace.com/"
+        },
+        {
+          "text": "Booking 9.3 / TA 4.8",
+          "sourceUrl": "https://thewallace.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

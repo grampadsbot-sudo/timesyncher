@@ -29,13 +29,13 @@
       "sourceUrl": "https://www.juicegeneration.com/locations"
     },
     {
-      "claim": "Chain known for juices, smoothies, a\u00e7a\u00ed bowls",
+      "claim": "Chain known for juices, smoothies, açaí bowls",
       "sourceUrl": "https://www.juicegeneration.com/locations"
     }
   ],
-  "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie\u2014confirm exact shop hours on the locations page.",
+  "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
   "voicePass": {
-    "itineraryNote": "Hit the UWS Juice Generation for a post-park smoothie\u2014confirm exact shop hours on the locations page.",
+    "itineraryNote": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
     "shortDescription": "Juice Generation Upper West Side.",
     "unsupportedFlags": [
       "Exact UWS street address not hard-confirmed in this pass"
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Juice Generation Upper West Side is the neighborhood branch of the New York juice and smoothie bowl chain.",
+      "claims": [
+        {
+          "text": "Juice Generation Locations",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
+    },
+    "description": {
+      "value": "Juice Generation Upper West Side is one of the chain's several Manhattan shops. It is a quick place to grab a cold-pressed juice, smoothie, or acai bowl on the go. Stop in for breakfast before heading to Central Park or the Museum of Natural History.",
+      "claims": [
+        {
+          "text": "Multiple Manhattan shops including UWS",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

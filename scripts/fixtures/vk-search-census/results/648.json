@@ -21,7 +21,7 @@
     "aggregator": 3972
   },
   "priceHint": "$$$$ jewelry flagship",
-  "hoursHint": "Mon\u2013Sat 10am\u20138pm; Sun 11am\u20137pm (Tiffany Landmark listing)",
+  "hoursHint": "Mon–Sat 10am–8pm; Sun 11am–7pm (Tiffany Landmark listing)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -30,13 +30,13 @@
       "sourceUrl": "https://www.tiffany.com/world-of-tiffany/events/the-landmark-fifth-avenue.html"
     },
     {
-      "claim": "Mon\u2013Sat 10\u20138, Sun 11\u20137",
+      "claim": "Mon–Sat 10–8, Sun 11–7",
       "sourceUrl": "https://www.tiffany.com/world-of-tiffany/events/the-landmark-fifth-avenue.html"
     }
   ],
-  "itineraryNoteCandidate": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe\u2014expect waits at peak hours.",
+  "itineraryNoteCandidate": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe—expect waits at peak hours.",
   "voicePass": {
-    "itineraryNote": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe\u2014expect waits at peak hours.",
+    "itineraryNote": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe—expect waits at peak hours.",
     "shortDescription": "Tiffany & Co. Fifth Avenue Landmark flagship.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -63,5 +63,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Tiffany & Co. The Landmark is Tiffany's renovated flagship jewelry store on Fifth Avenue at 57th Street.",
+      "claims": [
+        {
+          "text": "727 Fifth Ave",
+          "sourceUrl": "https://www.tiffany.com/world-of-tiffany/events/the-landmark-fifth-avenue.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Tiffany & Co. The Landmark is the famous flagship at 727 Fifth Ave, the store made iconic by Breakfast at Tiffany's. Its renovated floors showcase jewelry, art, and a cafe. Even a quick browse is a classic New York moment on Fifth Avenue.",
+      "claims": [
+        {
+          "text": "727 Fifth Ave",
+          "sourceUrl": "https://www.tiffany.com/world-of-tiffany/events/the-landmark-fifth-avenue.html"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "thingId": 672,
-  "thingName": "e\u2019s BAR / The Dead Poet / Lilly\u2019s Cocktail & Wine",
+  "thingName": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
   "type": "restaurant",
   "provider": "grok-bot",
   "sources": [
@@ -28,8 +28,8 @@
     "yelp": 441
   },
   "priceHint": "$$ neighborhood bar; HH $5 burger noted by NY Mag",
-  "hoursHint": "Mon 5\u201311; Tue\u2013Wed 5\u201312; Thu 4\u20132am; Fri 2\u20132am; Sat 12\u20132am; Sun 12\u201311 (official; page also shows updated Thu\u2013Sun daytime)",
-  "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person \u2014 stoop.bar lists 5\u20137pm daily (third-party)",
+  "hoursHint": "Mon 5–11; Tue–Wed 5–12; Thu 4–2am; Fri 2–2am; Sat 12–2am; Sun 12–11 (official; page also shows updated Thu–Sun daytime)",
+  "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person — stoop.bar lists 5–7pm daily (third-party)",
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
@@ -41,14 +41,14 @@
       "sourceUrl": "https://e-barnyc.com/"
     },
     {
-      "claim": "Cluster Thing also lists The Dead Poet / Lilly's \u2014 only e's BAR official fetched",
+      "claim": "Cluster Thing also lists The Dead Poet / Lilly's — only e's BAR official fetched",
       "sourceUrl": "https://e-barnyc.com/"
     }
   ],
-  "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger\u2014verify Dead Poet / Lilly's separately.",
+  "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
   "voicePass": {
-    "itineraryNote": "Start the UWS bar hop at e's for games and a casual burger\u2014verify Dead Poet / Lilly's separately.",
-    "shortDescription": "e's BAR \u2014 friendly UWS neighborhood bar (cluster includes Dead Poet / Lilly's).",
+    "itineraryNote": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
+    "shortDescription": "e's BAR — friendly UWS neighborhood bar (cluster includes Dead Poet / Lilly's).",
     "unsupportedFlags": [
       "Cluster Thing; HH times from third-party soft-flagged"
     ],
@@ -76,5 +76,35 @@
   "censusReuse": null,
   "botFieldScore": 7,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine are neighborhood bars on Amsterdam Avenue, led by e's BAR.",
+      "claims": [
+        {
+          "text": "511 Amsterdam",
+          "sourceUrl": "https://e-barnyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine groups three relaxed Upper West Side bars along Amsterdam Avenue. The anchor, e's BAR at 511 Amsterdam, is a friendly walk-in spot with hundreds of reviews. It is an easy late-night drink close to the hotels on this trip.",
+      "claims": [
+        {
+          "text": "511 Amsterdam; daily hours; walk-ins",
+          "sourceUrl": "https://e-barnyc.com/"
+        },
+        {
+          "text": "441 reviews",
+          "sourceUrl": "https://www.yelp.com/biz/es-bar-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

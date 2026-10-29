@@ -22,7 +22,7 @@
     "yelp": 736
   },
   "priceHint": "$$$$ luxury department store",
-  "hoursHint": "Mon\u2013Sat 11am\u20137pm; Sun 11am\u20136pm (BG store page)",
+  "hoursHint": "Mon–Sat 11am–7pm; Sun 11am–6pm (BG store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -31,7 +31,7 @@
       "sourceUrl": "https://www.bergdorfgoodman.com/stores/bergdorf-goodman-womens-store/"
     },
     {
-      "claim": "Typical hours Mon\u2013Sat 11\u20137, Sun 11\u20136",
+      "claim": "Typical hours Mon–Sat 11–7, Sun 11–6",
       "sourceUrl": "https://www.bergdorfgoodman.com/stores/bergdorf-goodman-womens-store/"
     }
   ],
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Bergdorf Goodman is the legendary luxury department store on Fifth Avenue at the corner of Central Park.",
+      "claims": [
+        {
+          "text": "754 Fifth Ave",
+          "sourceUrl": "https://www.bergdorfgoodman.com/stores/bergdorf-goodman-womens-store/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Bergdorf Goodman is New York's most storied luxury department store, housed at 754 Fifth Ave near the Plaza and Central Park. Shoppers come for designer fashion, beauty, and its famously theatrical window displays. Even if you are only browsing, the elegant floors make a classic Fifth Avenue stop.",
+      "claims": [
+        {
+          "text": "754 Fifth Ave",
+          "sourceUrl": "https://www.bergdorfgoodman.com/stores/bergdorf-goodman-womens-store/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

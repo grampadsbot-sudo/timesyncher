@@ -22,7 +22,7 @@
     "yelp": 978
   },
   "priceHint": "$$$$ luxury department store",
-  "hoursHint": "Mon\u2013Sat 11am\u20137pm; Sun noon\u20136pm (Saks NYC location page)",
+  "hoursHint": "Mon–Sat 11am–7pm; Sun noon–6pm (Saks NYC location page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -31,13 +31,13 @@
       "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
     },
     {
-      "claim": "Mon\u2013Sat 11\u20137, Sun 12\u20136",
+      "claim": "Mon–Sat 11–7, Sun 12–6",
       "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
     }
   ],
-  "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors\u2014service can be uneven, so keep plans flexible.",
+  "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
   "voicePass": {
-    "itineraryNote": "Tour the Fifth Avenue flagship for holiday windows and luxury floors\u2014service can be uneven, so keep plans flexible.",
+    "itineraryNote": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
     "shortDescription": "Saks Fifth Avenue Manhattan flagship.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Saks Fifth Avenue is the classic luxury department store on Fifth Avenue facing Rockefeller Center.",
+      "claims": [
+        {
+          "text": "611 Fifth Ave",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Saks Fifth Avenue is New York's flagship luxury department store at 611 Fifth Ave, directly across from Rockefeller Center. It is known for designer fashion, a huge shoe floor, and famous holiday windows. Pair a visit with St. Patrick's Cathedral next door.",
+      "claims": [
+        {
+          "text": "611 Fifth Ave",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -8,13 +8,13 @@
       "url": "https://www.hotelbelleclaire.com/amenities",
       "title": "Amenities / Wine Hour",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Complimentary wine hour Wed\u2013Fri 5\u20136pm at Allure; 24h fitness; dog-friendly"
+      "snippet": "Complimentary wine hour Wed–Fri 5–6pm at Allure; 24h fitness; dog-friendly"
     },
     {
       "url": "https://www.hotelbelleclaire.com/eat-drink",
       "title": "Eat & Drink",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Mille-Feuille 7am\u20136pm; Allure 5\u201311pm; live jazz Fri 5\u20137pm; Wine Hour Wed\u2013Fri 5\u20136"
+      "snippet": "Mille-Feuille 7am–6pm; Allure 5–11pm; live jazz Fri 5–7pm; Wine Hour Wed–Fri 5–6"
     },
     {
       "url": "https://www.hotelbelleclaire.com/",
@@ -32,15 +32,15 @@
     "google": 2100
   },
   "priceHint": "Baseline overnight ~$518 floor; boutique UWS rates vary",
-  "hoursHint": "Hotel 24h front desk; Mille-Feuille 7am\u20136pm; Allure 5\u201311pm nightly (official)",
-  "happyHourHint": "Complimentary Triumph Wine Hour Wed\u2013Fri 5\u20136pm at Allure for guests (official amenities)",
+  "hoursHint": "Hotel 24h front desk; Mille-Feuille 7am–6pm; Allure 5–11pm nightly (official)",
+  "happyHourHint": "Complimentary Triumph Wine Hour Wed–Fri 5–6pm at Allure for guests (official amenities)",
   "summaryClaims": [
     {
       "claim": "2175 Broadway, Upper West Side, near Central Park",
       "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
     },
     {
-      "claim": "Complimentary wine hour Wed\u2013Fri 5\u20136pm at Allure",
+      "claim": "Complimentary wine hour Wed–Fri 5–6pm at Allure",
       "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
     },
     {
@@ -48,10 +48,10 @@
       "sourceUrl": "https://www.hotelbelleclaire.com/eat-drink"
     }
   ],
-  "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed\u2013Fri wine hour.",
+  "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
   "voicePass": {
-    "itineraryNote": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed\u2013Fri wine hour.",
-    "shortDescription": "Historic UWS boutique on Broadway with Allure lounge and guest wine hour Wed\u2013Fri.",
+    "itineraryNote": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
+    "shortDescription": "Historic UWS boutique on Broadway with Allure lounge and guest wine hour Wed–Fri.",
     "unsupportedFlags": [],
     "claimSupportOk": true
   },
@@ -84,5 +84,39 @@
   },
   "botFieldScore": 7,
   "baseFieldScore": 5,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Hotel Belleclaire Central Park is a boutique Upper West Side hotel on Broadway steps from Central Park.",
+      "claims": [
+        {
+          "text": "2175 Broadway Upper West Side boutique near Central Park",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Belleclaire Central Park is a boutique hotel at 2175 Broadway on the Upper West Side, a short walk from Central Park. Guests get a complimentary wine hour Wednesday through Friday at its Allure bar. There is also live jazz on Friday evenings, a 24-hour gym, and a dog-friendly policy.",
+      "claims": [
+        {
+          "text": "Complimentary wine hour Wed–Fri 5–6pm at Allure",
+          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+        },
+        {
+          "text": "live jazz Fri 5–7pm",
+          "sourceUrl": "https://www.hotelbelleclaire.com/eat-drink"
+        },
+        {
+          "text": "dog-friendly",
+          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

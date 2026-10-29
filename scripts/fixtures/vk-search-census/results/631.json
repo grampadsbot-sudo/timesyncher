@@ -1,14 +1,14 @@
 {
   "thingId": 631,
-  "thingName": "Southwest LAS \u2192 LGA 11:30\u201322:25",
+  "thingName": "Southwest LAS → LGA 11:30–22:25",
   "type": "flight",
   "provider": "grok-bot",
   "sources": [
     {
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
-      "title": "Southwest LAS\u2192LGA 11:30\u201322:25",
+      "title": "Southwest LAS→LGA 11:30–22:25",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "SW midday LAS\u2013LGA variant"
+      "snippet": "SW midday LAS–LGA variant"
     }
   ],
   "rating": {
@@ -17,12 +17,12 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $194",
-  "hoursHint": "Southwest LAS\u2192LGA 11:30\u201322:25 \u2014 schedule per airline booking tool",
+  "hoursHint": "Southwest LAS→LGA 11:30–22:25 — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "SW midday LAS\u2013LGA variant",
+      "claim": "SW midday LAS–LGA variant",
       "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
     },
     {
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip"
     }
   ],
-  "itineraryNoteCandidate": "Later Southwest LAS\u2013LGA departure if you want a leisurely Vegas morning.",
+  "itineraryNoteCandidate": "Later Southwest LAS–LGA departure if you want a leisurely Vegas morning.",
   "voicePass": {
-    "itineraryNote": "Later Southwest LAS\u2013LGA departure if you want a leisurely Vegas morning.",
-    "shortDescription": "Southwest LAS\u2192LGA 11:30\u201322:25",
+    "itineraryNote": "Later Southwest LAS–LGA departure if you want a leisurely Vegas morning.",
+    "shortDescription": "Southwest LAS→LGA 11:30–22:25",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Southwest LAS → LGA 11:30–22:25 is a nonstop Southwest Airlines option from Las Vegas to LaGuardia.",
+      "claims": [
+        {
+          "text": "Southwest LAS→LGA 11:30–22:25",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Southwest LAS → LGA 11:30–22:25 flies nonstop from Las Vegas to LaGuardia Airport in Queens. The midday departure suits a relaxed morning but lands late at night. Southwest includes two free checked bags, which helps keep the all-in cost down. Confirm the exact June fare and schedule on southwest.com before booking.",
+      "claims": [
+        {
+          "text": "Southwest LAS→LGA 11:30–22:25",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

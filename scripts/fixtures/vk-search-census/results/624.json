@@ -22,7 +22,7 @@
     "usnews": 1386
   },
   "priceHint": "4-star Lower Manhattan waterfront",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
     }
   ],
-  "itineraryNoteCandidate": "Downtown Marriott for Battery Park / ferry mornings\u2014expect elevator waits at peak.",
+  "itineraryNoteCandidate": "Downtown Marriott for Battery Park / ferry mornings—expect elevator waits at peak.",
   "voicePass": {
-    "itineraryNote": "Downtown Marriott for Battery Park / ferry mornings\u2014expect elevator waits at peak.",
+    "itineraryNote": "Downtown Marriott for Battery Park / ferry mornings—expect elevator waits at peak.",
     "shortDescription": "New York Marriott Downtown on West Street.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "New York Marriott Downtown is a Lower Manhattan hotel on West Street near the World Trade Center.",
+      "claims": [
+        {
+          "text": "New York Marriott Downtown on West Street.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        }
+      ]
+    },
+    "description": {
+      "value": "New York Marriott Downtown is a full-service hotel on West Street in Lower Manhattan, near the 9/11 Memorial and Battery Park. It is a good base for the Statue of Liberty ferry and Financial District sights. Guests rate it well for its comfort and waterfront location.",
+      "claims": [
+        {
+          "text": "New York Marriott Downtown on West Street.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        },
+        {
+          "text": "TA 4.1",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

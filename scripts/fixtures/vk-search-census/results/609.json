@@ -22,7 +22,7 @@
     "primarySource": null
   },
   "reviewCount": {},
-  "priceHint": "Opaque Express Deal \u2014 prepaid/nonrefundable; compare all-in vs named brands",
+  "priceHint": "Opaque Express Deal — prepaid/nonrefundable; compare all-in vs named brands",
   "hoursHint": "Airport pickup per supplier after reveal",
   "happyHourHint": null,
   "happyHourRejectReason": null,
@@ -36,12 +36,12 @@
       "sourceUrl": "https://www.priceline.com/static-pages/terms_en.html"
     }
   ],
-  "itineraryNoteCandidate": "Only use opaque JFK sedan if plans are locked\u2014otherwise named brands may be safer.",
+  "itineraryNoteCandidate": "Only use opaque JFK sedan if plans are locked—otherwise named brands may be safer.",
   "voicePass": {
-    "itineraryNote": "Only use opaque JFK sedan if plans are locked\u2014otherwise named brands may be safer.",
+    "itineraryNote": "Only use opaque JFK sedan if plans are locked—otherwise named brands may be safer.",
     "shortDescription": "Priceline opaque standard sedan at JFK.",
     "unsupportedFlags": [
-      "Opaque product \u2014 company unknown pre-purchase"
+      "Opaque product — company unknown pre-purchase"
     ],
     "claimSupportOk": true
   },
@@ -69,5 +69,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 4,
-  "winner": "tie-brave-deeper-pages"
+  "winner": "tie-brave-deeper-pages",
+  "fields": {
+    "summary": {
+      "value": "The Priceline opaque Standard sedan is a discounted JFK rental car booked as a Priceline Express Deal.",
+      "claims": [
+        {
+          "text": "JFK rental deals landing",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Priceline opaque Standard sedan is an Express Deal rental picked up at JFK, priced below named-brand bookings. The catch is that the rental company stays hidden until after you book, and the deal is nonrefundable. It makes sense only if your plans are fixed and the all-in price beats a regular reservation.",
+      "claims": [
+        {
+          "text": "Company hidden until after book; nonrefundable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

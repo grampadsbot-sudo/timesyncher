@@ -22,7 +22,7 @@
     "tripadvisor": 17
   },
   "priceHint": "Same-day Broadway/Off-Broadway up to 50% off + $8 TKTS service fee",
-  "hoursHint": "Times Square booth: Mon/Tue/Fri 3\u20138; Wed/Thu/Sat 11\u20138; Sun 11\u20137 (search listing; confirm TKTS Live)",
+  "hoursHint": "Times Square booth: Mon/Tue/Fri 3–8; Wed/Thu/Sat 11–8; Sun 11–7 (search listing; confirm TKTS Live)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -35,12 +35,12 @@
       "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
     }
   ],
-  "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps\u2014Lincoln Center booth is often shorter.",
+  "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
   "voicePass": {
-    "itineraryNote": "For a matinee, check TKTS Live first, then queue under the red steps\u2014Lincoln Center booth is often shorter.",
-    "shortDescription": "Afternoon matinee via TKTS discount booths (placeholder attraction).",
+    "itineraryNote": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
+    "shortDescription": "Afternoon matinee via TKTS discount booths",
     "unsupportedFlags": [
-      "Thing is a generic \"Afternoon matinee show\" \u2014 mapped to TKTS discovery path"
+      "Thing is a generic \"Afternoon matinee show\" — mapped to TKTS discovery path"
     ],
     "claimSupportOk": true
   },
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 5,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Afternoon matinee show: this plan uses the TKTS by TDF booth for discounted same-day Broadway tickets.",
+      "claims": [
+        {
+          "text": "TKTS by TDF",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Afternoon matinee show: the plan centers on TKTS by TDF, the nonprofit booth that sells discounted same-day and next-day theater seats. You can line up at the Times Square booth or the quieter Lincoln Center location. Pick a matinee, see a Broadway show by early evening, and still have the night free for dinner.",
+      "claims": [
+        {
+          "text": "Same-day + next-day matinee discounts",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "Times Square & Lincoln Center booths",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

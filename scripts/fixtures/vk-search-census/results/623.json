@@ -24,7 +24,7 @@
     "expedia": 1000
   },
   "priceHint": "Suite hotel Chelsea",
-  "hoursHint": "Hotel \u2014 24h; breakfast",
+  "hoursHint": "Hotel — 24h; breakfast",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -70,5 +70,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hyatt House New York/Chelsea is a suite-style hotel in Chelsea with breakfast included for guests.",
+      "claims": [
+        {
+          "text": "Hyatt House suites in Chelsea.",
+          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hyatt House New York/Chelsea is a suite-style hotel on West 28th Street, close to the High Line and Chelsea Market. Rooms are larger than typical Manhattan hotel rooms, and breakfast is included. Strong guest ratings make it a practical pick for families or longer trips.",
+      "claims": [
+        {
+          "text": "Hyatt House suites in Chelsea.",
+          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+        },
+        {
+          "text": "TA 4.2 / Booking 8.6",
+          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

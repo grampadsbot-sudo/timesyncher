@@ -14,13 +14,13 @@
       "url": "https://www.yelp.com/biz/zabars-new-york",
       "title": "Zabar's Yelp",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "3.9\u2605 \u00b7 1448 reviews"
+      "snippet": "3.9★ · 1448 reviews"
     },
     {
       "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565663-Reviews-Zabar_s-New_York_City_New_York.html",
       "title": "Zabar's Tripadvisor",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "4.4\u2605 \u00b7 726 reviews"
+      "snippet": "4.4★ · 726 reviews"
     }
   ],
   "rating": {
@@ -34,7 +34,7 @@
     "tripadvisor": 726
   },
   "priceHint": "$$ gourmet market / cafe",
-  "hoursHint": "Mon\u2013Sat 8am\u20137:30pm; Sun 9am\u20136pm (official directions)",
+  "hoursHint": "Mon–Sat 8am–7:30pm; Sun 9am–6pm (official directions)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -43,7 +43,7 @@
       "sourceUrl": "https://www.zabars.com/directions.html"
     },
     {
-      "claim": "Main store Mon\u2013Sat 8am\u20137:30pm, Sun 9am\u20136pm",
+      "claim": "Main store Mon–Sat 8am–7:30pm, Sun 9am–6pm",
       "sourceUrl": "https://www.zabars.com/directions.html"
     },
     {
@@ -82,5 +82,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 5,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Zabar's is the Upper West Side gourmet market on Broadway famous for smoked fish, coffee, and bagels.",
+      "claims": [
+        {
+          "text": "2245 Broadway",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        }
+      ]
+    },
+    "description": {
+      "value": "Zabar's is a family-run gourmet market at 2245 Broadway that has fed the Upper West Side for generations. Go for the smoked fish counter, fresh bread, and a pound of house coffee to take home. The store opens at 8am Monday through Saturday, and the cafe next door keeps its own hours.",
+      "claims": [
+        {
+          "text": "2245 Broadway; Mon-Sat 8-7:30 Sun 9-6",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "cafe hours separate",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

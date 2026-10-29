@@ -22,7 +22,7 @@
     "booking": 1601
   },
   "priceHint": "4-star boutique UWS",
-  "hoursHint": "Hotel \u2014 24h front desk; 3 on-site dining venues (official)",
+  "hoursHint": "Hotel — 24h front desk; 3 on-site dining venues (official)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 4,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Arthouse Hotel is a spacious boutique hotel on the Upper West Side with three on-site dining spots.",
+      "claims": [
+        {
+          "text": "Spacious boutique hotel on the Upper West Side.",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Arthouse Hotel is a spacious boutique hotel on the Upper West Side with rooms, suites, and lofts. Guests can eat without leaving the building at the Arthouse Bar, Serafina, or RedFarm. It is a comfortable, residential base close to Central Park and the Museum of Natural History.",
+      "claims": [
+        {
+          "text": "rooms/suites/lofts",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        },
+        {
+          "text": "Arthouse Bar, Serafina, RedFarm",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

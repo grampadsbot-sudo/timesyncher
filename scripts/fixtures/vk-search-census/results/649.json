@@ -20,7 +20,7 @@
     "yelp": 394
   },
   "priceHint": "$$$ grocery",
-  "hoursHint": "Daily 7am\u201310pm (official store page)",
+  "hoursHint": "Daily 7am–10pm (official store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -29,7 +29,7 @@
       "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
     },
     {
-      "claim": "Open daily 7am\u201310pm",
+      "claim": "Open daily 7am–10pm",
       "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
     }
   ],
@@ -62,5 +62,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Whole Foods Market Upper West Side is the Columbus Avenue grocery store on the Upper West Side.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Whole Foods Market Upper West Side is a full grocery store at 808 Columbus Ave. It is a convenient place to grab prepared foods, snacks, and drinks for your room. The store is open daily from 7am to 10pm, so it fits early starts and late returns.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave; daily 7-10",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

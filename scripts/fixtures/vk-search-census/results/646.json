@@ -20,7 +20,7 @@
     "google": 78
   },
   "priceHint": "$$ juice bar",
-  "hoursHint": "Daily ~7am\u20139pm (franchise UWS listing)",
+  "hoursHint": "Daily ~7am–9pm (franchise UWS listing)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -29,7 +29,7 @@
       "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
     },
     {
-      "claim": "Listed open daily 7am\u20139pm",
+      "claim": "Listed open daily 7am–9pm",
       "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
     }
   ],
@@ -62,5 +62,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Pure Green UWS is a Broadway juice bar on the Upper West Side serving cold-pressed juices and smoothies.",
+      "claims": [
+        {
+          "text": "2041 Broadway",
+          "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Pure Green UWS is a juice bar at 2041 Broadway, serving organic cold-pressed juices, smoothies, and bowls. It opens early and stays open into the evening, so it works for breakfast or an afternoon pick-me-up. It is a short walk from the Beacon Theatre and Zabar's.",
+      "claims": [
+        {
+          "text": "2041 Broadway; 7am-9pm",
+          "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

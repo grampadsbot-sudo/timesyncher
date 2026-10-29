@@ -24,7 +24,7 @@
   },
   "reviewCount": {},
   "priceHint": "$20 F&B minimum at Birdland (official FAQ)",
-  "hoursHint": "Birdland box office daily ~2\u201311pm; show doors vary (birdlandjazz.com FAQ)",
+  "hoursHint": "Birdland box office daily ~2–11pm; show doors vary (birdlandjazz.com FAQ)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -37,12 +37,12 @@
       "sourceUrl": "https://www.birdlandjazz.com/faq/"
     }
   ],
-  "itineraryNoteCandidate": "Use this as a jazz-crawl hub\u2014confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
+  "itineraryNoteCandidate": "Use this as a jazz-crawl hub—confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
   "voicePass": {
-    "itineraryNote": "Use this as a jazz-crawl hub\u2014confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
-    "shortDescription": "Cluster placeholder spanning Birdland and peer Village jazz rooms.",
+    "itineraryNote": "Use this as a jazz-crawl hub—confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
+    "shortDescription": "Cluster",
     "unsupportedFlags": [
-      "Cluster Thing \u2014 Birdland confirmed; peers need per-venue tickets"
+      "Cluster Thing — Birdland confirmed; peers need per-venue tickets"
     ],
     "claimSupportOk": true
   },
@@ -68,5 +68,31 @@
   "censusReuse": null,
   "botFieldScore": 5,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery groups top New York jazz clubs, including Birdland near Times Square.",
+      "claims": [
+        {
+          "text": "Times Square jazz club & theater",
+          "sourceUrl": "https://www.birdlandjazz.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery is a shortlist of the city's best jazz rooms for a night out. Birdland, at 315 W 44th near Times Square, is the easiest to pair with a Broadway day. It charges a $20 food and drink minimum on top of the ticket.",
+      "claims": [
+        {
+          "text": "315 W 44th; $20 min",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

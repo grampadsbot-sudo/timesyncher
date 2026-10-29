@@ -22,7 +22,7 @@
     "booking": 1819
   },
   "priceHint": "Times Square flagship Marriott",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
     }
   ],
-  "itineraryNoteCandidate": "Stay in the Marquis atrium for Broadway nights\u2014elevators and crowds come with the address.",
+  "itineraryNoteCandidate": "Stay in the Marquis atrium for Broadway nights—elevators and crowds come with the address.",
   "voicePass": {
-    "itineraryNote": "Stay in the Marquis atrium for Broadway nights\u2014elevators and crowds come with the address.",
+    "itineraryNote": "Stay in the Marquis atrium for Broadway nights—elevators and crowds come with the address.",
     "shortDescription": "New York Marriott Marquis in Times Square.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "New York Marriott Marquis is the huge flagship Marriott hotel in the middle of Times Square.",
+      "claims": [
+        {
+          "text": "New York Marriott Marquis in Times Square.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
+        }
+      ]
+    },
+    "description": {
+      "value": "New York Marriott Marquis is a massive hotel right on Times Square, with the Marquis Theatre built into the building. Its revolving rooftop restaurant, The View, offers sweeping skyline views. With thousands of reviews, it is a reliable choice if you want to be at the center of Broadway.",
+      "claims": [
+        {
+          "text": "New York Marriott Marquis in Times Square.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
+        },
+        {
+          "text": "Marriott 4.2 / 13k reviews",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycmq-new-york-marriott-marquis/overview/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

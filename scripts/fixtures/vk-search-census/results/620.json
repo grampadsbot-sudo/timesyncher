@@ -23,7 +23,7 @@
     "google": 6634
   },
   "priceHint": "4-star Times Square",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -40,9 +40,9 @@
       "sourceUrl": "https://www.edisonhotelnyc.com/"
     }
   ],
-  "itineraryNoteCandidate": "Classic Times Square base\u2014expect energy and some noise; location is the draw.",
+  "itineraryNoteCandidate": "Classic Times Square base—expect energy and some noise; location is the draw.",
   "voicePass": {
-    "itineraryNote": "Classic Times Square base\u2014expect energy and some noise; location is the draw.",
+    "itineraryNote": "Classic Times Square base—expect energy and some noise; location is the draw.",
     "shortDescription": "Historic Times Square hotel near Broadway theaters.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -69,5 +69,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Edison is a historic Times Square hotel just steps from the Broadway theaters.",
+      "claims": [
+        {
+          "text": "Historic Times Square hotel near Broadway theaters.",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Edison is a historic Art Deco hotel on West 47th Street in the heart of the Theater District. Its location means you can walk to most Broadway shows in minutes. It has thousands of reviews, and guests mostly praise the location and value for Times Square.",
+      "claims": [
+        {
+          "text": "Historic Times Square hotel near Broadway theaters.",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        },
+        {
+          "text": "TA 3.9 / 18k+ reviews",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

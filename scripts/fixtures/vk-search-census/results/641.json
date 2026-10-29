@@ -8,7 +8,7 @@
       "url": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/",
       "title": "TownePlace Suites Marriott Manhattan/Chelsea.",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking ~8.3\u20138.4"
+      "snippet": "Booking ~8.3–8.4"
     }
   ],
   "rating": {
@@ -20,7 +20,7 @@
     "booking": 7000
   },
   "priceHint": "3.5-star suite hotel; breakfast",
-  "hoursHint": "Hotel \u2014 24h; complimentary breakfast; fitness",
+  "hoursHint": "Hotel — 24h; complimentary breakfast; fitness",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -66,5 +66,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is a suite hotel in Chelsea with breakfast included.",
+      "claims": [
+        {
+          "text": "TownePlace Suites Marriott Manhattan/Chelsea.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+        }
+      ]
+    },
+    "description": {
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay style hotel on West 28th Street. Rooms come with kitchen basics, and breakfast is included in the rate. Good guest scores and a central Chelsea location make it a practical, good-value base.",
+      "claims": [
+        {
+          "text": "TownePlace Suites Marriott Manhattan/Chelsea.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+        },
+        {
+          "text": "Booking ~8.3–8.4",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

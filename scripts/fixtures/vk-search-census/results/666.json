@@ -21,9 +21,9 @@
     "tripadvisor": 573,
     "yelp": 475
   },
-  "priceHint": "Tickets ~$25\u2013$65; dinner entr\u00e9e min on early sets; $20 min on 10pm",
-  "hoursHint": "Lounge & listening room Wed\u2013Sun 4pm\u2013close (official FAQ)",
-  "happyHourHint": "Happy hour cocktails/apps ~$7 between 4\u20135:30pm (official FAQ)",
+  "priceHint": "Tickets ~$25–$65; dinner entrée min on early sets; $20 min on 10pm",
+  "hoursHint": "Lounge & listening room Wed–Sun 4pm–close (official FAQ)",
+  "happyHourHint": "Happy hour cocktails/apps ~$7 between 4–5:30pm (official FAQ)",
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
@@ -31,21 +31,21 @@
       "sourceUrl": "https://smokejazz.com/faq/"
     },
     {
-      "claim": "Open Wed\u2013Sun from 4pm",
+      "claim": "Open Wed–Sun from 4pm",
       "sourceUrl": "https://smokejazz.com/faq/"
     },
     {
-      "claim": "Dinner shows require one entr\u00e9e per person; 10pm set has $20 min",
+      "claim": "Dinner shows require one entrée per person; 10pm set has $20 min",
       "sourceUrl": "https://smokejazz.com/faq/"
     },
     {
-      "claim": "Happy hour ~$7 drinks/apps 4\u20135:30pm per FAQ",
+      "claim": "Happy hour ~$7 drinks/apps 4–5:30pm per FAQ",
       "sourceUrl": "https://smokejazz.com/faq/"
     }
   ],
-  "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set\u2014buy tickets ahead for dinner shows.",
+  "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
   "voicePass": {
-    "itineraryNote": "Arrive for happy hour, then catch a listening-room set\u2014buy tickets ahead for dinner shows.",
+    "itineraryNote": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
     "shortDescription": "UWS jazz supper club with listening room and lounge.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -72,5 +72,31 @@
   "censusReuse": null,
   "botFieldScore": 7,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Smoke Jazz & Supper Club is an Upper West Side jazz club on Broadway with dinner and nightly sets.",
+      "claims": [
+        {
+          "text": "2751 Broadway",
+          "sourceUrl": "https://smokejazz.com/faq/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Smoke Jazz & Supper Club is a cozy jazz room at 2751 Broadway on the Upper West Side. It pairs serious live jazz with a full dinner menu. The club opens Wednesday through Sunday, and early sets carry dinner minimums.",
+      "claims": [
+        {
+          "text": "2751 Broadway; Wed-Sun 4pm; dinner mins",
+          "sourceUrl": "https://smokejazz.com/faq/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

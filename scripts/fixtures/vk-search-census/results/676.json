@@ -21,7 +21,7 @@
     "hilton": 299
   },
   "priceHint": "Motto compact rooms; ~$30 destination fee noted in reviews",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -38,9 +38,9 @@
       "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
     }
   ],
-  "itineraryNoteCandidate": "Compact Motto rooms put you on 48th\u2014budget the destination fee into the nightly rate.",
+  "itineraryNoteCandidate": "Compact Motto rooms put you on 48th—budget the destination fee into the nightly rate.",
   "voicePass": {
-    "itineraryNote": "Compact Motto rooms put you on 48th\u2014budget the destination fee into the nightly rate.",
+    "itineraryNote": "Compact Motto rooms put you on 48th—budget the destination fee into the nightly rate.",
     "shortDescription": "Motto by Hilton Times Square micro-hotel.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -67,5 +67,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 4,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Motto by Hilton New York City Times Square is a compact micro-hotel near Times Square in Midtown.",
+      "claims": [
+        {
+          "text": "Motto by Hilton Times Square micro-hotel.",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Motto by Hilton New York City Times Square is a modern micro-hotel with small, smartly designed rooms. It sits within walking distance of Times Square and Broadway theaters. It is a good-value base if you plan to spend most of your time out exploring.",
+      "claims": [
+        {
+          "text": "Motto by Hilton Times Square micro-hotel.",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+        },
+        {
+          "text": "Hilton 4.1/299",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

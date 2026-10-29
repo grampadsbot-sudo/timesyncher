@@ -6,21 +6,21 @@
   "sources": [
     {
       "url": "https://www.ameliewinebar.com/uws",
-      "title": "Am\u00e9lie UWS official",
+      "title": "Amélie UWS official",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "566 Amsterdam Ave; dinner Mon\u2013Thu/Sun 4\u20139:30, Fri\u2013Sat 4\u201310:30; HH daily 4\u20136"
+      "snippet": "566 Amsterdam Ave; dinner Mon–Thu/Sun 4–9:30, Fri–Sat 4–10:30; HH daily 4–6"
     },
     {
       "url": "https://www.ameliewinebar.com/uws/menus/happy-hour",
       "title": "UWS Happy Hour menu",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Every day 4\u20136pm: $14 flights, $10 wine of day, HH cocktails $9\u201311, food specials"
+      "snippet": "Every day 4–6pm: $14 flights, $10 wine of day, HH cocktails $9–11, food specials"
     },
     {
       "url": "https://www.opentable.com/r/amelie-uws-new-york",
       "title": "Amelie OpenTable",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.7 \u2605 \u00b7 49 reviews \u00b7 $31\u201350 French"
+      "snippet": "4.7 ★ · 49 reviews · $31–50 French"
     }
   ],
   "rating": {
@@ -33,16 +33,16 @@
     "google": 619,
     "opentable": 49
   },
-  "priceHint": "OT $31\u201350; HH wine flight $14 / wine of day $10",
-  "hoursHint": "Dinner Mon\u2013Thu & Sun 4\u20139:30pm, Fri\u2013Sat 4\u201310:30pm; Lunch Tue\u2013Fri 12\u20133pm; Brunch Sat\u2013Sun 11am\u20133pm (official)",
-  "happyHourHint": "Daily 4\u20136pm: $14 wine flights, $10 wine of the day, HH cocktails $9\u201311 (official menu)",
+  "priceHint": "OT $31–50; HH wine flight $14 / wine of day $10",
+  "hoursHint": "Dinner Mon–Thu & Sun 4–9:30pm, Fri–Sat 4–10:30pm; Lunch Tue–Fri 12–3pm; Brunch Sat–Sun 11am–3pm (official)",
+  "happyHourHint": "Daily 4–6pm: $14 wine flights, $10 wine of the day, HH cocktails $9–11 (official menu)",
   "summaryClaims": [
     {
       "claim": "566 Amsterdam Avenue, Upper West Side",
       "sourceUrl": "https://www.ameliewinebar.com/uws"
     },
     {
-      "claim": "Happy hour every day 4\u20136pm with $14 flights and $10 wine of the day",
+      "claim": "Happy hour every day 4–6pm with $14 flights and $10 wine of the day",
       "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
     },
     {
@@ -50,10 +50,10 @@
       "sourceUrl": "https://www.opentable.com/r/amelie-uws-new-york"
     }
   ],
-  "itineraryNoteCandidate": "Hit Am\u00e9lie UWS at 4pm for $14 wine flights before a Central Park stroll.",
+  "itineraryNoteCandidate": "Hit Amélie UWS at 4pm for $14 wine flights before a Central Park stroll.",
   "voicePass": {
-    "itineraryNote": "Hit Am\u00e9lie UWS at 4pm for $14 wine flights before a Central Park stroll.",
-    "shortDescription": "Cozy French bistro and wine bar on Amsterdam Ave with daily 4\u20136pm happy hour.",
+    "itineraryNote": "Hit Amélie UWS at 4pm for $14 wine flights before a Central Park stroll.",
+    "shortDescription": "Cozy French bistro and wine bar on Amsterdam Ave with daily 4–6pm happy hour.",
     "unsupportedFlags": [],
     "claimSupportOk": true
   },
@@ -78,5 +78,39 @@
   },
   "botFieldScore": 7,
   "baseFieldScore": 1,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Amelie Bistro & Wine Bar is a cozy French wine bar on Amsterdam Avenue in the Upper West Side.",
+      "claims": [
+        {
+          "text": "566 Amsterdam Ave",
+          "sourceUrl": "https://www.ameliewinebar.com/uws"
+        }
+      ]
+    },
+    "description": {
+      "value": "Amelie Bistro & Wine Bar is a French bistro at 566 Amsterdam Ave known for its wine list and small plates. Its daily happy hour from 4 to 6pm offers wine flights and discounted glasses. Diners on OpenTable rate it highly, so book a table for a relaxed evening.",
+      "claims": [
+        {
+          "text": "566 Amsterdam Ave",
+          "sourceUrl": "https://www.ameliewinebar.com/uws"
+        },
+        {
+          "text": "Every day 4–6pm: $14 flights, $10 wine of day",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        },
+        {
+          "text": "4.7 ★ · 49 reviews",
+          "sourceUrl": "https://www.opentable.com/r/amelie-uws-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

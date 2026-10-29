@@ -8,7 +8,7 @@
       "url": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york",
       "title": "United LAS-EWR 07:00-15:00",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "United nonstop LAS\u2013EWR; June RT economy from ~$259\u2013$267 in SERP samples"
+      "snippet": "United nonstop LAS–EWR; June RT economy from ~$259–$267 in SERP"
     }
   ],
   "rating": {
@@ -17,12 +17,12 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $257",
-  "hoursHint": "United LAS-EWR 07:00-15:00 \u2014 schedule per airline booking tool",
+  "hoursHint": "United LAS-EWR 07:00-15:00 — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "United nonstop LAS\u2013EWR; June RT economy from ~$259\u2013$267 in SERP samples",
+      "claim": "United nonstop LAS–EWR; June RT economy from ~$259–$267 in SERP",
       "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
     },
     {
@@ -35,7 +35,7 @@
     "itineraryNote": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
     "shortDescription": "United LAS-EWR 07:00-15:00",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "claims": [
+        {
+          "text": "United LAS-EWR 07:00-15:00",
+          "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. The morning United nonstop lands at Newark in New Jersey mid-afternoon, with train links into Manhattan. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "claims": [
+        {
+          "text": "United nonstop LAS–EWR",
+          "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

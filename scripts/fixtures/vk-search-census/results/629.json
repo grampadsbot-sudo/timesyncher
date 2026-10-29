@@ -22,7 +22,7 @@
     "booking": 1265
   },
   "priceHint": "4-star Hell's Kitchen",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
     }
   ],
-  "itineraryNoteCandidate": "Romer HK for restaurant-row nights\u2014spacious rooms, small bathrooms per reviews.",
+  "itineraryNoteCandidate": "Romer HK for restaurant-row nights—spacious rooms, small bathrooms per reviews.",
   "voicePass": {
-    "itineraryNote": "Romer HK for restaurant-row nights\u2014spacious rooms, small bathrooms per reviews.",
+    "itineraryNote": "Romer HK for restaurant-row nights—spacious rooms, small bathrooms per reviews.",
     "shortDescription": "Romer Hell's Kitchen hotel.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Romer Hell's Kitchen is a modern boutique hotel in Hell's Kitchen near the Theater District.",
+      "claims": [
+        {
+          "text": "Romer Hell's Kitchen hotel.",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        }
+      ]
+    },
+    "description": {
+      "value": "Romer Hell's Kitchen is a stylish hotel on West 47th Street, a few blocks west of Times Square. The neighborhood is full of affordable restaurants and bars along Ninth Avenue. Excellent guest ratings make it a strong value for a Broadway-focused trip.",
+      "claims": [
+        {
+          "text": "Romer Hell's Kitchen hotel.",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        },
+        {
+          "text": "TA 4.5 / Booking 8.6",
+          "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

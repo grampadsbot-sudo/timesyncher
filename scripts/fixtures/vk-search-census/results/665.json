@@ -22,7 +22,7 @@
     "viator": 4407
   },
   "priceHint": "From ~$62/24h Downtown; ~$83/48h both routes",
-  "hoursHint": "Red route ~9:00am\u20134:30pm; Blue ~10:00am\u20134:00pm (Big Bus NY)",
+  "hoursHint": "Red route ~9:00am–4:30pm; Blue ~10:00am–4:00pm (Big Bus NY)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -35,9 +35,9 @@
       "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d2173651-Reviews-Big_Bus_New_York-New_York_City_New_York.html"
     }
   ],
-  "itineraryNoteCandidate": "Use for orientation on day one\u2014buy the shorter pass if you only need Midtown/Downtown.",
+  "itineraryNoteCandidate": "Use for orientation on day one—buy the shorter pass if you only need Midtown/Downtown.",
   "voicePass": {
-    "itineraryNote": "Use for orientation on day one\u2014buy the shorter pass if you only need Midtown/Downtown.",
+    "itineraryNote": "Use for orientation on day one—buy the shorter pass if you only need Midtown/Downtown.",
     "shortDescription": "Big Bus NYC open-top hop-on/hop-off candidate.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Open-air bus tour candidates center on Big Bus New York's hop-on hop-off sightseeing routes.",
+      "claims": [
+        {
+          "text": "Big Bus New York",
+          "sourceUrl": "https://www.bigbustours.com/en/new-york/new-york-bus-tours"
+        }
+      ]
+    },
+    "description": {
+      "value": "Open-air bus tour candidates for this trip center on Big Bus New York, which runs hop-on hop-off sightseeing buses. Its routes loop through Midtown, Downtown, and the parks, with ticket tiers by length of stay. It is a good way to see many landmarks on a first day.",
+      "claims": [
+        {
+          "text": "Hop-on hop-off routes and ticket tiers",
+          "sourceUrl": "https://www.bigbustours.com/en/new-york/new-york-bus-tours"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

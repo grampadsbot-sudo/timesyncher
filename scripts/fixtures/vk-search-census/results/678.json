@@ -31,5 +31,31 @@
     "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
     "reviewedAt": "2026-10-28",
     "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "Famous Original Ray's Pizza is a classic Manhattan pizzeria serving New York-style Italian pizza.",
+      "claims": [
+        {
+          "text": "Famous Original Rays Pizza",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Famous Original Ray's Pizza is a long-running name in Manhattan pizza. It bills itself as an Italian pizza restaurant serving classic New York slices and pies. It is a quick, budget-friendly meal between sights, and ordering direct online is an option.",
+      "claims": [
+        {
+          "text": "Best Italian Pizza Restaurant in Manhattan",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
   }
 }

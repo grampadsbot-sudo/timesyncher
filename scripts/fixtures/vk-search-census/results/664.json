@@ -23,7 +23,7 @@
   },
   "reviewCount": {},
   "priceHint": "Free (tips not accepted)",
-  "hoursHint": "Visits typically 2\u20134 hours between ~9am\u20133pm; request ahead",
+  "hoursHint": "Visits typically 2–4 hours between ~9am–3pm; request ahead",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -32,13 +32,13 @@
       "sourceUrl": "https://www.bigapplegreeter.org/"
     },
     {
-      "claim": "Request in advance; groups up to 6; 2\u20134 hour visits",
+      "claim": "Request in advance; groups up to 6; 2–4 hour visits",
       "sourceUrl": "https://www.bigapplegreeter.org/request-a-greeter"
     }
   ],
-  "itineraryNoteCandidate": "Request a Big Apple Greeter before arrival for a free neighborhood walk\u2014bring confirmed lodging dates.",
+  "itineraryNoteCandidate": "Request a Big Apple Greeter before arrival for a free neighborhood walk—bring confirmed lodging dates.",
   "voicePass": {
-    "itineraryNote": "Request a Big Apple Greeter before arrival for a free neighborhood walk\u2014bring confirmed lodging dates.",
+    "itineraryNote": "Request a Big Apple Greeter before arrival for a free neighborhood walk—bring confirmed lodging dates.",
     "shortDescription": "Free volunteer walking welcome via Big Apple Greeter.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -65,5 +65,35 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Guided walking/audio history tours start with Big Apple Greeter's free volunteer walks through New York neighborhoods.",
+      "claims": [
+        {
+          "text": "Free volunteer welcome walks",
+          "sourceUrl": "https://www.bigapplegreeter.org/request-a-greeter"
+        }
+      ]
+    },
+    "description": {
+      "value": "Guided walking/audio history tours for this trip start with Big Apple Greeter, a nonprofit that pairs visitors with local volunteers. The free welcome walks are small, with a group size cap of six. Request a greeter ahead of time, and note that tips are not accepted.",
+      "claims": [
+        {
+          "text": "Free volunteer welcome walks; max 6",
+          "sourceUrl": "https://www.bigapplegreeter.org/request-a-greeter"
+        },
+        {
+          "text": "no tips",
+          "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -1,14 +1,14 @@
 {
   "thingId": 635,
-  "thingName": "American Airlines JFK \u2192 LAS",
+  "thingName": "American Airlines JFK → LAS",
   "type": "flight",
   "provider": "grok-bot",
   "sources": [
     {
       "url": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york",
-      "title": "American Airlines JFK\u2192LAS",
+      "title": "American Airlines JFK→LAS",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Return AA JFK\u2013LAS nonstop; fares date-dependent"
+      "snippet": "Return AA JFK–LAS nonstop; fares date-dependent"
     }
   ],
   "rating": {
@@ -17,12 +17,12 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $257",
-  "hoursHint": "American Airlines JFK\u2192LAS \u2014 schedule per airline booking tool",
+  "hoursHint": "American Airlines JFK→LAS — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "Return AA JFK\u2013LAS nonstop; fares date-dependent",
+      "claim": "Return AA JFK–LAS nonstop; fares date-dependent",
       "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
     },
     {
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1"
     }
   ],
-  "itineraryNoteCandidate": "Return on American nonstop JFK\u2013LAS \u2014 lock seats when outbound is set.",
+  "itineraryNoteCandidate": "Return on American nonstop JFK–LAS — lock seats when outbound is set.",
   "voicePass": {
-    "itineraryNote": "Return on American nonstop JFK\u2013LAS \u2014 lock seats when outbound is set.",
-    "shortDescription": "American Airlines JFK\u2192LAS",
+    "itineraryNote": "Return on American nonstop JFK–LAS — lock seats when outbound is set.",
+    "shortDescription": "American Airlines JFK→LAS",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "American Airlines JFK → LAS is the nonstop return flight from New York's JFK back to Las Vegas.",
+      "claims": [
+        {
+          "text": "American Airlines JFK→LAS",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "American Airlines JFK → LAS is the nonstop return from Kennedy Airport to Las Vegas. Flying direct avoids a connection at the end of a long trip. Fares depend on the date, so check aa.com for the June 30 return before booking.",
+      "claims": [
+        {
+          "text": "Return AA JFK–LAS nonstop; fares date-dependent",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

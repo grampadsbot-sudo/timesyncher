@@ -52,7 +52,7 @@
     "itineraryNote": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
     "shortDescription": "Legendary Greenwich Village jazz club with nightly sets.",
     "unsupportedFlags": [
-      "Inventory website pointed at Dizzy's \u2014 corrected to bluenotejazz.com"
+      "Inventory website pointed at Dizzy's — corrected to bluenotejazz.com"
     ],
     "claimSupportOk": true
   },
@@ -78,5 +78,43 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Blue Note is the famous Greenwich Village jazz club on West 3rd Street with two sets most nights.",
+      "claims": [
+        {
+          "text": "131 W 3rd",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Blue Note is one of the most famous jazz clubs in the world, at 131 W 3rd St in Greenwich Village. The room holds about 200 people, so the music feels close and personal. Expect evening sets, a ticket plus a $20 minimum, and a mix of legends and rising players.",
+      "claims": [
+        {
+          "text": "131 W 3rd",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "capacity 200",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Hours music 8 & 10:30",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        },
+        {
+          "text": "$20 min",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

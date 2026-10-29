@@ -8,13 +8,13 @@
       "url": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/",
       "title": "Hours & Location",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "951 Amsterdam Ave; Mon\u2013Fri 12pm\u20132am; Sat\u2013Sun 11am\u20132am"
+      "snippet": "951 Amsterdam Ave; Mon–Fri 12pm–2am; Sat–Sun 11am–2am"
     },
     {
       "url": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
       "title": "UWS Happy Hour",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "3\u20136pm daily: draft $7, wine $10, cocktails $12, oysters $2 (min 4), snacks $5"
+      "snippet": "3–6pm daily: draft $7, wine $10, cocktails $12, oysters $2 (min 4), snacks $5"
     }
   ],
   "rating": {
@@ -25,27 +25,27 @@
   "reviewCount": {
     "google": 522
   },
-  "priceHint": "HH drinks $7\u201312; oysters $2; snacks $5; baseline floor $24 cocktail",
-  "hoursHint": "Mon\u2013Fri 12pm\u20132am; Sat\u2013Sun 11am\u20132am (official)",
-  "happyHourHint": "Daily 3\u20136pm: draft $7, wine $10, cocktails $12, oysters $2 min 4 (official menu)",
+  "priceHint": "HH drinks $7–12; oysters $2; snacks $5; baseline floor $24 cocktail",
+  "hoursHint": "Mon–Fri 12pm–2am; Sat–Sun 11am–2am (official)",
+  "happyHourHint": "Daily 3–6pm: draft $7, wine $10, cocktails $12, oysters $2 min 4 (official menu)",
   "summaryClaims": [
     {
       "claim": "951 Amsterdam Ave, UWS",
       "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
     },
     {
-      "claim": "Happy hour daily 3\u20136pm with listed drink and oyster prices",
+      "claim": "Happy hour daily 3–6pm with listed drink and oyster prices",
       "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
     },
     {
-      "claim": "Hours Mon\u2013Fri noon\u20132am / weekends 11am\u20132am",
+      "claim": "Hours Mon–Fri noon–2am / weekends 11am–2am",
       "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
     }
   ],
-  "itineraryNoteCandidate": "Nobody Told Me for $2 oysters and $12 cocktails at the 3\u20136pm happy hour.",
+  "itineraryNoteCandidate": "Nobody Told Me for $2 oysters and $12 cocktails at the 3–6pm happy hour.",
   "voicePass": {
-    "itineraryNote": "Nobody Told Me for $2 oysters and $12 cocktails at the 3\u20136pm happy hour.",
-    "shortDescription": "UWS cocktail bar at 951 Amsterdam with daily 3\u20136pm HH and $2 oysters.",
+    "itineraryNote": "Nobody Told Me for $2 oysters and $12 cocktails at the 3–6pm happy hour.",
+    "shortDescription": "UWS cocktail bar at 951 Amsterdam with daily 3–6pm HH and $2 oysters.",
     "unsupportedFlags": [],
     "claimSupportOk": true
   },
@@ -70,5 +70,35 @@
   },
   "botFieldScore": 7,
   "baseFieldScore": 1,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Nobody Told Me is a lively Upper West Side bar and restaurant on Amsterdam Avenue with a daily happy hour.",
+      "claims": [
+        {
+          "text": "951 Amsterdam Ave",
+          "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Nobody Told Me is a bar and restaurant at 951 Amsterdam Ave near Columbia University. Its daily happy hour from 3 to 6pm includes $2 oysters and cheap draft beer. The kitchen and bar stay open until 2am every day, so it works for a late meal.",
+      "claims": [
+        {
+          "text": "3–6pm daily: draft $7, wine $10, cocktails $12, oysters $2",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        },
+        {
+          "text": "Mon–Fri 12pm–2am; Sat–Sun 11am–2am",
+          "sourceUrl": "https://www.nobodytoldme.nyc/location/nobody-told-me-uws/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -22,7 +22,7 @@
     "booking": 2922
   },
   "priceHint": "4-star UWS; kitchenette studios",
-  "hoursHint": "Hotel \u2014 24h; kitchenettes; laundry",
+  "hoursHint": "Hotel — 24h; kitchenettes; laundry",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.beaconhotel.com/"
     }
   ],
-  "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway\u2014ideal for longer NYC stays.",
+  "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
   "voicePass": {
-    "itineraryNote": "Book a kitchenette studio near 72nd St subway\u2014ideal for longer NYC stays.",
+    "itineraryNote": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
     "shortDescription": "Historic Upper West Side hotel with apartment-style rooms.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Beacon is a historic Upper West Side hotel with apartment-style rooms near Central Park.",
+      "claims": [
+        {
+          "text": "Historic Upper West Side hotel with apartment-style rooms.",
+          "sourceUrl": "https://www.beaconhotel.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Beacon is a historic hotel on Broadway in the Upper West Side, known for its apartment-style rooms. Many rooms include kitchenettes, which helps families and longer stays save on meals. Central Park and Zabar's are a short walk away, giving it a true neighborhood feel.",
+      "claims": [
+        {
+          "text": "kitchenettes, Central Park proximity",
+          "sourceUrl": "https://www.beaconhotel.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -21,7 +21,7 @@
     "tripadvisor": 6535
   },
   "priceHint": "Hyatt near Grand Central",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -38,9 +38,9 @@
       "sourceUrl": "https://www.hyatt.com/"
     }
   ],
-  "itineraryNoteCandidate": "Use as a Grand Central hub for Midtown East days\u2014confirm current renovation status before booking.",
+  "itineraryNoteCandidate": "Use as a Grand Central hub for Midtown East days—confirm current renovation status before booking.",
   "voicePass": {
-    "itineraryNote": "Use as a Grand Central hub for Midtown East days\u2014confirm current renovation status before booking.",
+    "itineraryNote": "Use as a Grand Central hub for Midtown East days—confirm current renovation status before booking.",
     "shortDescription": "Hyatt Grand Central New York.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -67,5 +67,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hyatt Grand Central New York is the large business-friendly hotel right next to Grand Central Terminal.",
+      "claims": [
+        {
+          "text": "Hyatt Grand Central New York.",
+          "sourceUrl": "https://www.hyatt.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hyatt Grand Central New York sits directly beside Grand Central Terminal on East 42nd Street. Its main advantage is transit: trains and subways to almost anywhere are steps from the lobby. Guest scores are solid, and it suits travelers who value convenience over boutique charm.",
+      "claims": [
+        {
+          "text": "Hyatt Grand Central New York.",
+          "sourceUrl": "https://www.hyatt.com/"
+        },
+        {
+          "text": "Booking ~8.4",
+          "sourceUrl": "https://www.hyatt.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

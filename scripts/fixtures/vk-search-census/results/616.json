@@ -22,7 +22,7 @@
     "yelp": 913
   },
   "priceHint": "$$$ grocery / prepared foods",
-  "hoursHint": "Daily 7:00am\u201310:00pm (official store page)",
+  "hoursHint": "Daily 7:00am–10:00pm (official store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -31,7 +31,7 @@
       "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
     },
     {
-      "claim": "Open daily 7am\u201310pm",
+      "claim": "Open daily 7am–10pm",
       "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
     }
   ],
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Whole Foods Market Columbus Circle is the large grocery store under the Deutsche Bank Center at Columbus Circle.",
+      "claims": [
+        {
+          "text": "10 Columbus Cir",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Whole Foods Market Columbus Circle is a big grocery and prepared-foods store at 10 Columbus Cir, right beside Central Park. It is a handy place to grab picnic supplies, salads, and snacks before a park walk. The store is open every day from 7am to 10pm, so it works for early or late runs.",
+      "claims": [
+        {
+          "text": "10 Columbus Cir; daily 7am-10pm",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

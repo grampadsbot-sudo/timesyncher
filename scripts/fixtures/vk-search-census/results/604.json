@@ -32,7 +32,7 @@
     "thirdParty": 44396
   },
   "priceHint": "Adult general admission ferry ~$26; child/senior lower; crown/pedestal extra (SCC FAQ via search)",
-  "hoursHint": "Ferry-only access; schedules seasonal \u2014 buy via Statue City Cruises; NPS park hours page refers to ferry schedule",
+  "hoursHint": "Ferry-only access; schedules seasonal — buy via Statue City Cruises; NPS park hours page refers to ferry schedule",
   "happyHourHint": null,
   "summaryClaims": [
     {
@@ -91,5 +91,39 @@
   },
   "botFieldScore": 6,
   "baseFieldScore": 5,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "The Statue of Liberty walking tour starts with the official Statue City Cruises ferry from Battery Park.",
+      "claims": [
+        {
+          "text": "Statue City Cruises ONLY authorized ferry",
+          "sourceUrl": "https://www.statueofliberty.org/visit/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Statue of Liberty walking tour is a half-day trip to Liberty Island, reached only by the authorized Statue City Cruises ferry. Boats leave from Battery Park in Manhattan or Liberty State Park in New Jersey. Ferry tickets include the island museums, and pedestal or crown access costs extra.",
+      "claims": [
+        {
+          "text": "Battery Park or Liberty State Park",
+          "sourceUrl": "https://www.statueofliberty.org/visit/"
+        },
+        {
+          "text": "museums included",
+          "sourceUrl": "https://www.statueofliberty.org/visit/"
+        },
+        {
+          "text": "pedestal/crown add-on",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -19,8 +19,8 @@
   "reviewCount": {
     "hilton": 940
   },
-  "priceHint": "Hilton Club floors 36\u201338",
-  "hoursHint": "Hotel \u2014 24h",
+  "priceHint": "Hilton Club floors 36–38",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -66,5 +66,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hilton Club New York is the members-style suite hotel on upper floors atop the Midtown Hilton.",
+      "claims": [
+        {
+          "text": "Hilton Club New York atop the Midtown Hilton.",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hilton Club New York sits atop the Midtown Hilton on the Avenue of the Americas, a short walk from Rockefeller Center and Central Park. It offers larger apartment-style rooms on high floors above the busy main hotel. The official Hilton listing rates it well, making it a comfortable Midtown choice for a longer stay.",
+      "claims": [
+        {
+          "text": "Hilton Club New York atop the Midtown Hilton.",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
+        },
+        {
+          "text": "Official Hilton listing 4.3/940",
+          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

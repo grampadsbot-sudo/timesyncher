@@ -14,7 +14,7 @@
       "url": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/",
       "title": "Variety 2026 lineup",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "June 1\u2013July 1 2026"
+      "snippet": "June 1–July 1 2026"
     }
   ],
   "rating": {
@@ -22,13 +22,13 @@
     "primarySource": null
   },
   "reviewCount": {},
-  "priceHint": "Festival tickets ~$40\u2013$200 (press reports)",
-  "hoursHint": "June 1\u2013July 1 2026 across Blue Note, Sony Hall, SummerStage (press + official fest)",
+  "priceHint": "Festival tickets ~$40–$200 (press reports)",
+  "hoursHint": "June 1–July 1 2026 across Blue Note, Sony Hall, SummerStage (press + official fest)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "2026 festival runs June 1\u2013July 1",
+      "claim": "2026 festival runs June 1–July 1",
       "sourceUrl": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/"
     },
     {
@@ -39,7 +39,7 @@
   "itineraryNoteCandidate": "If your June dates overlap, pick a festival night at Blue Note or SummerStage and buy early.",
   "voicePass": {
     "itineraryNote": "If your June dates overlap, pick a festival night at Blue Note or SummerStage and buy early.",
-    "shortDescription": "Blue Note Jazz Festival New York 2026 (June 1\u2013July 1).",
+    "shortDescription": "Blue Note Jazz Festival New York 2026 (June 1–July 1).",
     "unsupportedFlags": [],
     "claimSupportOk": true
   },
@@ -65,5 +65,35 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Blue Note Jazz Festival New York 2026 is a month-long jazz festival across Blue Note and other city venues.",
+      "claims": [
+        {
+          "text": "Blue Note Jazz Festival NYC",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Blue Note Jazz Festival New York 2026 runs from June 1 to July 1, overlapping the June trip dates. Shows take place at the Blue Note club and larger venues around the city. Check the official festival hub for the lineup and book any must-see show early.",
+      "claims": [
+        {
+          "text": "June 1–July 1 2026",
+          "sourceUrl": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/"
+        },
+        {
+          "text": "Official festival hub",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

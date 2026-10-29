@@ -8,25 +8,25 @@
       "url": "https://thesmithrestaurant.com/location/lincoln-square/",
       "title": "The Smith Lincoln Square official",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "1900 Broadway at 63rd; Mon\u2013Thu 8am\u201311pm, Fri 8am\u2013midnight, Sat 9am\u2013midnight, Sun 9am\u201311pm"
+      "snippet": "1900 Broadway at 63rd; Mon–Thu 8am–11pm, Fri 8am–midnight, Sat 9am–midnight, Sun 9am–11pm"
     },
     {
       "url": "https://www.opentable.com/the-smith-lincoln-square",
       "title": "OpenTable",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.5 \u2605 \u00b7 13404 reviews"
+      "snippet": "4.5 ★ · 13404 reviews"
     },
     {
       "url": "https://www.yelp.com/biz/the-smith-new-york-3",
       "title": "Yelp",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "3.9 \u2605 \u00b7 ~2430 reviews \u00b7 1900 Broadway"
+      "snippet": "3.9 ★ · ~2430 reviews · 1900 Broadway"
     },
     {
       "url": "https://happy-hour.nyc/bars-restaurants/the-smith",
       "title": "happy-hour.nyc (SOFT)",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Martini Hour weekdays 3\u20136pm and nightly from 10pm; $12 martinis \u2014 NOT official site"
+      "snippet": "Martini Hour weekdays 3–6pm and nightly from 10pm; $12 martinis — NOT official site"
     }
   ],
   "rating": {
@@ -40,15 +40,15 @@
     "yelp": 2430
   },
   "priceHint": "Brunch/entrees ~mid $$; OT mid-range; martini HH $12 if third-party accurate",
-  "hoursHint": "Mon\u2013Thu 8am\u201311pm; Fri 8am\u2013midnight; Sat 9am\u2013midnight; Sun 9am\u201311pm (official)",
-  "happyHourHint": "SOFT: Martini Hour weekdays 3\u20136pm + nightly from 10pm ($12) \u2014 third-party only; not on fetched official page",
+  "hoursHint": "Mon–Thu 8am–11pm; Fri 8am–midnight; Sat 9am–midnight; Sun 9am–11pm (official)",
+  "happyHourHint": "SOFT: Martini Hour weekdays 3–6pm + nightly from 10pm ($12) — third-party only; not on fetched official page",
   "summaryClaims": [
     {
       "claim": "1900 Broadway at 63rd Street across from Lincoln Center",
       "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
     },
     {
-      "claim": "Hours Mon\u2013Thu 8am\u201311pm; Fri to midnight; Sat 9am\u2013midnight; Sun 9am\u201311pm",
+      "claim": "Hours Mon–Thu 8am–11pm; Fri to midnight; Sat 9am–midnight; Sun 9am–11pm",
       "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
     },
     {
@@ -56,7 +56,7 @@
       "sourceUrl": "https://www.opentable.com/the-smith-lincoln-square"
     },
     {
-      "claim": "Martini HH times/prices only from third-party aggregator \u2014 unsupported for hard claim",
+      "claim": "Martini HH times/prices only from third-party aggregator — unsupported for hard claim",
       "sourceUrl": "https://happy-hour.nyc/bars-restaurants/the-smith"
     }
   ],
@@ -65,7 +65,7 @@
     "itineraryNote": "Pre-theater brunch or dinner at The Smith Lincoln Square, steps from curtain.",
     "shortDescription": "Busy Lincoln Square brasserie at 1900 Broadway with long hours for pre- and post-show.",
     "unsupportedFlags": [
-      "Martini happy hour prices/times not confirmed on official page \u2014 omitted from itineraryNote"
+      "Martini happy hour prices/times not confirmed on official page — omitted from itineraryNote"
     ],
     "claimSupportOk": true,
     "note": "Voice deliberately avoids HH claim pending official confirmation."
@@ -91,5 +91,35 @@
   },
   "botFieldScore": 7,
   "baseFieldScore": 1,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "The Smith - Lincoln Square is a busy American brasserie on Broadway across from Lincoln Center.",
+      "claims": [
+        {
+          "text": "1900 Broadway at 63rd",
+          "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Smith - Lincoln Square is a lively American brasserie at 1900 Broadway at 63rd Street. It serves brunch, lunch, and dinner from early morning to late night. With thousands of OpenTable reviews, it is a reliable pre-theater or post-concert choice near Lincoln Center.",
+      "claims": [
+        {
+          "text": "1900 Broadway at 63rd",
+          "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        },
+        {
+          "text": "4.5 ★ · 13404 reviews",
+          "sourceUrl": "https://www.opentable.com/the-smith-lincoln-square"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

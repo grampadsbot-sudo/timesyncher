@@ -8,7 +8,7 @@
       "url": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail",
       "title": "The Manhattan at Times Square Hotel.",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking 5.8 \u2014 mixed/dated reviews"
+      "snippet": "Booking 5.8 — mixed/dated reviews"
     }
   ],
   "rating": {
@@ -22,7 +22,7 @@
     "hotels": 4008
   },
   "priceHint": "Times Square hotel (IHG/SPND)",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
     }
   ],
-  "itineraryNoteCandidate": "Central but dated per recent reviews\u2014only pick if the rate is sharply better than peers.",
+  "itineraryNoteCandidate": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
   "voicePass": {
-    "itineraryNote": "Central but dated per recent reviews\u2014only pick if the rate is sharply better than peers.",
+    "itineraryNote": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
     "shortDescription": "The Manhattan at Times Square Hotel.",
     "unsupportedFlags": [
       "Low guest scores; renovation/maintenance complaints in SERP"
@@ -70,5 +70,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Manhattan at Times Square Hotel is a large budget-minded hotel on Seventh Avenue near Times Square.",
+      "claims": [
+        {
+          "text": "The Manhattan at Times Square Hotel.",
+          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Manhattan at Times Square Hotel is a big hotel on Seventh Avenue, a couple of blocks from Times Square and Carnegie Hall. Its main selling point is location at a lower price. Guest reviews are mixed and note dated rooms, so check recent feedback before booking.",
+      "claims": [
+        {
+          "text": "The Manhattan at Times Square Hotel.",
+          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+        },
+        {
+          "text": "Booking 5.8 — mixed/dated reviews",
+          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

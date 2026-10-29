@@ -20,7 +20,7 @@
     "aggregator": 1761
   },
   "priceHint": "$$$$ luxury department store",
-  "hoursHint": "Mon\u2013Sat 10am\u20139pm; Sun 11am\u20137pm (Nordstrom store details)",
+  "hoursHint": "Mon–Sat 10am–9pm; Sun 11am–7pm (Nordstrom store details)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -29,7 +29,7 @@
       "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
     },
     {
-      "claim": "Mon\u2013Sat 10\u20139, Sun 11\u20137 per store listing",
+      "claim": "Mon–Sat 10–9, Sun 11–7 per store listing",
       "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
     }
   ],
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Nordstrom NYC Flagship is the multi-level Nordstrom department store on West 57th Street.",
+      "claims": [
+        {
+          "text": "225 W 57th",
+          "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
+        }
+      ]
+    },
+    "description": {
+      "value": "Nordstrom NYC Flagship is the chain's huge Manhattan store at 225 W 57th St, near Columbus Circle and Carnegie Hall. It spans several floors of fashion, shoes, and beauty, with cafes and a bar inside. The store's strong service makes it an easy one-stop shop in Midtown.",
+      "claims": [
+        {
+          "text": "225 W 57th",
+          "sourceUrl": "https://www.nordstrom.com/store-details/united-states/ny/new-york/nordstrom-nyc-flagship"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

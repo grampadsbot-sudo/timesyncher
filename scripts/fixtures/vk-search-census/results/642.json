@@ -35,9 +35,9 @@
       "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
     }
   ],
-  "itineraryNoteCandidate": "Drop into the always-open Fifth Avenue cube anytime\u2014Genius Bar still needs a reservation.",
+  "itineraryNoteCandidate": "Drop into the always-open Fifth Avenue cube anytime—Genius Bar still needs a reservation.",
   "voicePass": {
-    "itineraryNote": "Drop into the always-open Fifth Avenue cube anytime\u2014Genius Bar still needs a reservation.",
+    "itineraryNote": "Drop into the always-open Fifth Avenue cube anytime—Genius Bar still needs a reservation.",
     "shortDescription": "Iconic 24-hour Apple glass-cube flagship on Fifth Avenue.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -64,5 +64,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Apple Fifth Avenue is Apple's famous glass-cube flagship store on Fifth Avenue across from Central Park.",
+      "claims": [
+        {
+          "text": "767 Fifth Ave",
+          "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Apple Fifth Avenue is the flagship Apple Store at 767 Fifth Ave, marked by its iconic glass cube entrance on the plaza. The store is famously always open, so you can drop in at any hour. It is a fun quick stop near Central Park and the Plaza Hotel, even if you are not buying.",
+      "claims": [
+        {
+          "text": "767 Fifth Ave; Always Open",
+          "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

@@ -8,25 +8,25 @@
       "url": "https://carbonenewyork.com/",
       "title": "Carbone New York official",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "181 Thompson St; Lunch Tue\u2013Sun 11:30am\u20132pm; Dinner daily 5\u201311:30pm; corkage $110"
+      "snippet": "181 Thompson St; Lunch Tue–Sun 11:30am–2pm; Dinner daily 5–11:30pm; corkage $110"
     },
     {
       "url": "https://www.yelp.com/biz/carbone-new-york",
       "title": "CARBONE Yelp",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.0 \u2605 \u00b7 2129 reviews \u00b7 $$$$ \u00b7 181 Thompson St; Spicy Rigatoni Vodka $49"
+      "snippet": "4.0 ★ · 2129 reviews · $$$$ · 181 Thompson St; Spicy Rigatoni Vodka $49"
     },
     {
       "url": "https://www.opentable.com/r/carbone",
       "title": "Carbone OpenTable",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.5 \u2605 \u00b7 664 reviews \u00b7 $50+"
+      "snippet": "4.5 ★ · 664 reviews · $50+"
     },
     {
       "url": "https://www.stoop.bar/happy-hour/noho/carbone-new-york",
       "title": "stoop.bar HH (REJECTED)",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Lists 168 Sullivan St \u2014 DIFFERENT venue; claim-support REJECT"
+      "snippet": "Lists 168 Sullivan St — DIFFERENT venue; claim-support REJECT"
     }
   ],
   "rating": {
@@ -40,7 +40,7 @@
     "opentable": 664
   },
   "priceHint": "$$$$ / OT $50+; Spicy Rigatoni Vodka $49 (Yelp menu)",
-  "hoursHint": "Lunch Tue\u2013Sun 11:30am\u20132pm; Dinner Mon\u2013Sun 5\u201311:30pm (official)",
+  "hoursHint": "Lunch Tue–Sun 11:30am–2pm; Dinner Mon–Sun 5–11:30pm (official)",
   "happyHourHint": null,
   "happyHourRejectReason": "Third-party HH page maps to 168 Sullivan St, not 181 Thompson St",
   "summaryClaims": [
@@ -49,7 +49,7 @@
       "sourceUrl": "https://carbonenewyork.com/"
     },
     {
-      "claim": "Lunch Tue\u2013Sun 11:30am\u20132pm; dinner daily 5\u201311:30pm",
+      "claim": "Lunch Tue–Sun 11:30am–2pm; dinner daily 5–11:30pm",
       "sourceUrl": "https://carbonenewyork.com/"
     },
     {
@@ -102,5 +102,43 @@
   },
   "botFieldScore": 6,
   "baseFieldScore": 6,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Carbone is the celebrated Greenwich Village Italian-American restaurant on Thompson Street, known for spicy rigatoni.",
+      "claims": [
+        {
+          "text": "181 Thompson St",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "Spicy Rigatoni Vodka $49",
+          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Carbone is a glamorous Italian-American restaurant at 181 Thompson St in Greenwich Village, styled like a mid-century red-sauce supper club. Its signature dish is the Spicy Rigatoni Vodka, and tableside service is part of the show. Reservations are famously hard to get, so book as early as possible for dinner.",
+      "claims": [
+        {
+          "text": "181 Thompson St",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "Spicy Rigatoni Vodka $49",
+          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+        },
+        {
+          "text": "Dinner daily 5–11:30pm",
+          "sourceUrl": "https://carbonenewyork.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

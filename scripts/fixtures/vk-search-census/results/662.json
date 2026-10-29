@@ -17,7 +17,7 @@
     "getyourguide": 4.5
   },
   "reviewCount": {},
-  "priceHint": "Liberty Midtown cruise ~$25\u2013$27; Best of NYC ~$39",
+  "priceHint": "Liberty Midtown cruise ~$25–$27; Best of NYC ~$39",
   "hoursHint": "Pier 83 Liberty Midtown typical ~10:30am & 4:30pm shoulder; check circleline.com",
   "happyHourHint": null,
   "happyHourRejectReason": null,
@@ -27,7 +27,7 @@
       "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
     },
     {
-      "claim": "Third-party ratings ~4.4\u20134.6 for Liberty/Best of NYC products",
+      "claim": "Third-party ratings ~4.4–4.6 for Liberty/Best of NYC products",
       "sourceUrl": "https://www.getyourguide.com/new-york-city-l59/nyc-circle-line-1hr-lady-liberty-cruise-skip-the-box-office-t684/"
     }
   ],
@@ -60,5 +60,31 @@
   "censusReuse": null,
   "botFieldScore": 5,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Boat tour candidates center on the Circle Line Liberty Cruise, a one-hour harbor trip from Pier 83.",
+      "claims": [
+        {
+          "text": "Circle Line Liberty Cruise",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        }
+      ]
+    },
+    "description": {
+      "value": "Boat tour candidates for this trip center on the Circle Line Liberty Cruise from Pier 83 in Midtown. The one-hour sail passes the Statue of Liberty and the Lower Manhattan skyline. It is an easy way to see the harbor without the Liberty Island ferry lines.",
+      "claims": [
+        {
+          "text": "1hr Liberty Midtown from Pier 83",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

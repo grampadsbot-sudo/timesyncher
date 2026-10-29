@@ -8,7 +8,7 @@
       "url": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK",
       "title": "JetBlue LAS-JFK overnight",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "JetBlue overnight nonstop ~11pm\u20137am class"
+      "snippet": "JetBlue overnight nonstop ~11pm–7am class"
     }
   ],
   "rating": {
@@ -17,12 +17,12 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $252",
-  "hoursHint": "JetBlue LAS-JFK overnight \u2014 schedule per airline booking tool",
+  "hoursHint": "JetBlue LAS-JFK overnight — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "JetBlue overnight nonstop ~11pm\u20137am class",
+      "claim": "JetBlue overnight nonstop ~11pm–7am class",
       "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
     },
     {
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.jetblue.com/booking/flights?from=LAS&to=JFK&departure=2026-06-23&return=2026-06-30&adults=1"
     }
   ],
-  "itineraryNoteCandidate": "Red-eye JetBlue LAS\u2013JFK to wake up in New York \u2014 save a hotel night.",
+  "itineraryNoteCandidate": "Red-eye JetBlue LAS–JFK to wake up in New York — save a hotel night.",
   "voicePass": {
-    "itineraryNote": "Red-eye JetBlue LAS\u2013JFK to wake up in New York \u2014 save a hotel night.",
+    "itineraryNote": "Red-eye JetBlue LAS–JFK to wake up in New York — save a hotel night.",
     "shortDescription": "JetBlue LAS-JFK overnight",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "claims": [
+        {
+          "text": "JetBlue LAS-JFK overnight",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        }
+      ]
+    },
+    "description": {
+      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. This JetBlue red-eye leaves just before midnight and lands at JFK the next morning, saving a hotel night. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "claims": [
+        {
+          "text": "JetBlue overnight nonstop",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

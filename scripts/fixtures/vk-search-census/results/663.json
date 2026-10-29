@@ -1,6 +1,6 @@
 {
   "thingId": 663,
-  "thingName": "Dizzy\u2019s Club / Jazz at Lincoln Center",
+  "thingName": "Dizzy’s Club / Jazz at Lincoln Center",
   "type": "attraction",
   "provider": "grok-bot",
   "sources": [
@@ -25,8 +25,8 @@
   "reviewCount": {
     "tripadvisor": 880
   },
-  "priceHint": "~$60 + $25 F&B minimum; student $15\u2013$25",
-  "hoursHint": "Mon\u2013Sat sets 7 & 9pm; Sun 5 & 7:30pm; late night Thu\u2013Sat 10:45pm (Dizzy's FAQ)",
+  "priceHint": "~$60 + $25 F&B minimum; student $15–$25",
+  "hoursHint": "Mon–Sat sets 7 & 9pm; Sun 5 & 7:30pm; late night Thu–Sat 10:45pm (Dizzy's FAQ)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,13 +39,13 @@
       "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
     },
     {
-      "claim": "Mon\u2013Sat 7pm & 9pm sets; Sunday 5pm & 7:30pm",
+      "claim": "Mon–Sat 7pm & 9pm sets; Sunday 5pm & 7:30pm",
       "sourceUrl": "https://jazz.org/dizzys/"
     }
   ],
-  "itineraryNoteCandidate": "Book Dizzy's for skyline jazz above Columbus Circle\u2014budget ticket plus the $25 F&B minimum.",
+  "itineraryNoteCandidate": "Book Dizzy's for skyline jazz above Columbus Circle—budget ticket plus the $25 F&B minimum.",
   "voicePass": {
-    "itineraryNote": "Book Dizzy's for skyline jazz above Columbus Circle\u2014budget ticket plus the $25 F&B minimum.",
+    "itineraryNote": "Book Dizzy's for skyline jazz above Columbus Circle—budget ticket plus the $25 F&B minimum.",
     "shortDescription": "Dizzy's Club at Jazz at Lincoln Center.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -72,5 +72,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz room overlooking Central Park at Columbus Circle.",
+      "claims": [
+        {
+          "text": "Jazz at Lincoln Center",
+          "sourceUrl": "https://jazz.org/dizzys/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is an intimate jazz club on the fifth floor of the Time Warner building at Broadway and 60th. Its stage backs onto huge windows overlooking Central Park at night. Shows carry a $25 food and drink minimum in addition to the ticket.",
+      "claims": [
+        {
+          "text": "Broadway@60th 5th floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        },
+        {
+          "text": "$25 F&B min",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

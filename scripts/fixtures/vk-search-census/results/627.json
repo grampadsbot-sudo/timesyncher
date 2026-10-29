@@ -22,7 +22,7 @@
     "booking": 3968
   },
   "priceHint": "4-star Midtown near Central Park",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.parkcentralny.com/"
     }
   ],
-  "itineraryNoteCandidate": "Park Central puts you on Seventh Avenue near the park\u2014factor elevator waits into morning plans.",
+  "itineraryNoteCandidate": "Park Central puts you on Seventh Avenue near the park—factor elevator waits into morning plans.",
   "voicePass": {
-    "itineraryNote": "Park Central puts you on Seventh Avenue near the park\u2014factor elevator waits into morning plans.",
+    "itineraryNote": "Park Central puts you on Seventh Avenue near the park—factor elevator waits into morning plans.",
     "shortDescription": "Park Central Hotel New York.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 4,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Park Central Hotel New York is a large Midtown hotel on Seventh Avenue near Central Park and Carnegie Hall.",
+      "claims": [
+        {
+          "text": "Park Central Hotel New York.",
+          "sourceUrl": "https://www.parkcentralny.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Park Central Hotel New York is a classic Midtown hotel at Seventh Avenue and 56th Street. It is a short walk to Central Park, Carnegie Hall, and the Theater District. With thousands of reviews and a solid average, it is a dependable mid-range choice.",
+      "claims": [
+        {
+          "text": "Park Central Hotel New York.",
+          "sourceUrl": "https://www.parkcentralny.com/"
+        },
+        {
+          "text": "TA 4.0 / ~9.9k",
+          "sourceUrl": "https://www.parkcentralny.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

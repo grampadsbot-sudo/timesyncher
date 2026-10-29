@@ -17,7 +17,7 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $249",
-  "hoursHint": "Southwest LAS-LGA 06:50-18:55 \u2014 schedule per airline booking tool",
+  "hoursHint": "Southwest LAS-LGA 06:50-18:55 — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip"
     }
   ],
-  "itineraryNoteCandidate": "Southwest 06:50 LAS\u2013LGA inventory option.",
+  "itineraryNoteCandidate": "Southwest 06:50 LAS–LGA inventory option.",
   "voicePass": {
-    "itineraryNote": "Southwest 06:50 LAS\u2013LGA inventory option.",
+    "itineraryNote": "Southwest 06:50 LAS–LGA inventory option.",
     "shortDescription": "Southwest LAS-LGA 06:50-18:55",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "claims": [
+        {
+          "text": "Southwest LAS-LGA 06:50-18:55",
+          "sourceUrl": "https://www.southwest.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 06:50-18:55 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. This Southwest departure has a longer travel time and lands at LaGuardia in the early evening. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "claims": [
+        {
+          "text": "Southwest LAS-LGA 06:50-18:55",
+          "sourceUrl": "https://www.southwest.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

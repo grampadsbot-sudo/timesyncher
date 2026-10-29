@@ -22,7 +22,7 @@
     "tripadvisor": 3645
   },
   "priceHint": "3-star compact / pod rooms",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Pod Times Square is an affordable pod-style hotel near Times Square with compact, efficient rooms.",
+      "claims": [
+        {
+          "text": "Affordable pod-style hotel near Times Square.",
+          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
+        }
+      ]
+    },
+    "description": {
+      "value": "Pod Times Square is an affordable hotel on West 42nd Street, close to Times Square and the Port Authority. Rooms are small and smartly designed, which keeps prices low for Midtown. The rooftop bar and strong guest reviews make it a fun pick for travelers who spend most of the day out.",
+      "claims": [
+        {
+          "text": "Affordable pod-style hotel near Times Square.",
+          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
+        },
+        {
+          "text": "TA 4.3",
+          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

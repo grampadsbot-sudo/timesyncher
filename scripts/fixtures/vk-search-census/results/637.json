@@ -22,7 +22,7 @@
     "hotels": 7222
   },
   "priceHint": "4-star near Columbus Circle; rooftop",
-  "hoursHint": "Hotel \u2014 24h; rooftop bar/seasonal pool",
+  "hoursHint": "Hotel — 24h; rooftop bar/seasonal pool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.empirehotelnyc.com/"
     }
   ],
-  "itineraryNoteCandidate": "Empire for Columbus Circle nights\u2014rooftop is the scene; rooms get mixed scores.",
+  "itineraryNoteCandidate": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
   "voicePass": {
-    "itineraryNote": "Empire for Columbus Circle nights\u2014rooftop is the scene; rooms get mixed scores.",
+    "itineraryNote": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
     "shortDescription": "Empire Hotel near Lincoln Center / Columbus Circle.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 4,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Empire Hotel New York is a stylish hotel near Lincoln Center and Columbus Circle with a rooftop bar.",
+      "claims": [
+        {
+          "text": "Empire Hotel near Lincoln Center / Columbus Circle.",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Empire Hotel New York sits across from Lincoln Center, a short walk from Columbus Circle and Central Park. Its rooftop bar, with views over the Upper West Side, is the main draw. It also offers suites, making it a good base for concerts, opera, or ballet.",
+      "claims": [
+        {
+          "text": "Empire Hotel near Lincoln Center / Columbus Circle.",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        },
+        {
+          "text": "Official rooftop + suites",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

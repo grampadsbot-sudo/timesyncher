@@ -17,7 +17,7 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $257",
-  "hoursHint": "Delta LAS-JFK 07:05-15:13 \u2014 schedule per airline booking tool",
+  "hoursHint": "Delta LAS-JFK 07:05-15:13 — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.delta.com/flight-search/book-a-flight?cacheKeySuffix=1932f&tripType=ROUND_TRIP&originCity=LAS&destinationCity=JFK&departureDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&paxCount=1"
     }
   ],
-  "itineraryNoteCandidate": "Delta early nonstop LAS\u2013JFK lands mid-afternoon for a full first day.",
+  "itineraryNoteCandidate": "Delta early nonstop LAS–JFK lands mid-afternoon for a full first day.",
   "voicePass": {
-    "itineraryNote": "Delta early nonstop LAS\u2013JFK lands mid-afternoon for a full first day.",
+    "itineraryNote": "Delta early nonstop LAS–JFK lands mid-afternoon for a full first day.",
     "shortDescription": "Delta LAS-JFK 07:05-15:13",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -61,5 +61,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "claims": [
+        {
+          "text": "Delta LAS-JFK 07:05-15:13",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        }
+      ]
+    },
+    "description": {
+      "value": "Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. The early Delta departure lands at JFK mid-afternoon, and Delta runs several nonstops on this route daily. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "claims": [
+        {
+          "text": "multiple daily DL options",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

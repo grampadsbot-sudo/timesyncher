@@ -8,19 +8,19 @@
       "url": "https://rosamexicano.com/location/lincoln-center/",
       "title": "Rosa Mexicano Lincoln Center",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "44 W 63rd St Empire Hotel; Mon\u2013Wed 7am\u201311pm, Thu\u2013Sat later, Sun to 10pm"
+      "snippet": "44 W 63rd St Empire Hotel; Mon–Wed 7am–11pm, Thu–Sat later, Sun to 10pm"
     },
     {
       "url": "https://rosamexicano.com/happy-hour/",
       "title": "Fiesta Hour official",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area all NYC incl Lincoln Center; Margarita Mondays $5"
+      "snippet": "Fiesta Hour Mon–Fri 4–7pm bar area all NYC incl Lincoln Center; Margarita Mondays $5"
     },
     {
       "url": "https://www.opentable.com/r/rosa-mexicano-lincoln-center-new-york-3",
       "title": "OpenTable",
       "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.5 \u2605 \u00b7 10218 reviews \u00b7 $30 and under"
+      "snippet": "4.5 ★ · 10218 reviews · $30 and under"
     }
   ],
   "rating": {
@@ -32,15 +32,15 @@
     "opentable": 10218
   },
   "priceHint": "OT $30 and under; Margarita Mondays $5; Fiesta Hour bar specials",
-  "hoursHint": "Mon\u2013Wed 7am\u201311pm; Thu\u2013Sat 7am\u2013midnight (Fri/Sat late to 1am on some pages); Sun 7am\u201310pm (official location)",
-  "happyHourHint": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area only; Margarita Mondays $5; Taco Tuesdays half-price (official)",
+  "hoursHint": "Mon–Wed 7am–11pm; Thu–Sat 7am–midnight (Fri/Sat late to 1am on some pages); Sun 7am–10pm (official location)",
+  "happyHourHint": "Fiesta Hour Mon–Fri 4–7pm bar area only; Margarita Mondays $5; Taco Tuesdays half-price (official)",
   "summaryClaims": [
     {
       "claim": "Now at Empire Hotel, 44 W 63rd St across from Lincoln Center",
       "sourceUrl": "https://rosamexicano.com/location/lincoln-center/"
     },
     {
-      "claim": "Fiesta Hour Mon\u2013Fri 4\u20137pm bar area at all NYC locations including Lincoln Center",
+      "claim": "Fiesta Hour Mon–Fri 4–7pm bar area at all NYC locations including Lincoln Center",
       "sourceUrl": "https://rosamexicano.com/happy-hour/"
     },
     {
@@ -78,5 +78,39 @@
   },
   "botFieldScore": 7,
   "baseFieldScore": 1,
-  "censusReuse": "full10"
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Rosa Mexicano - Lincoln Center is a festive Mexican restaurant across from Lincoln Center on West 63rd Street.",
+      "claims": [
+        {
+          "text": "44 W 63rd St",
+          "sourceUrl": "https://rosamexicano.com/location/lincoln-center/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Rosa Mexicano - Lincoln Center is an upscale Mexican restaurant at 44 W 63rd St, inside the Empire Hotel. It is famous for guacamole made tableside and pomegranate margaritas. Fiesta Hour runs weekdays from 4 to 7pm at the bar, which suits a pre-show bite.",
+      "claims": [
+        {
+          "text": "44 W 63rd St Empire Hotel",
+          "sourceUrl": "https://rosamexicano.com/location/lincoln-center/"
+        },
+        {
+          "text": "Fiesta Hour Mon–Fri 4–7pm",
+          "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        },
+        {
+          "text": "4.5 ★ · 10218 reviews",
+          "sourceUrl": "https://www.opentable.com/r/rosa-mexicano-lincoln-center-new-york-3"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

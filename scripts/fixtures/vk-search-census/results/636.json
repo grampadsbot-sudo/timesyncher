@@ -22,7 +22,7 @@
     "booking": 2962
   },
   "priceHint": "4-star Times Square Sheraton",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
     }
   ],
-  "itineraryNoteCandidate": "Sheraton TSQ is a big-box Midtown base\u2014location strong, rooms/service mixed in recent reviews.",
+  "itineraryNoteCandidate": "Sheraton TSQ is a big-box Midtown base—location strong, rooms/service mixed in recent reviews.",
   "voicePass": {
-    "itineraryNote": "Sheraton TSQ is a big-box Midtown base\u2014location strong, rooms/service mixed in recent reviews.",
+    "itineraryNote": "Sheraton TSQ is a big-box Midtown base—location strong, rooms/service mixed in recent reviews.",
     "shortDescription": "Sheraton New York Times Square Hotel.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Sheraton New York Times Square Hotel is a large Sheraton on Seventh Avenue a few blocks from Times Square.",
+      "claims": [
+        {
+          "text": "Sheraton New York Times Square Hotel.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Sheraton New York Times Square Hotel is a big convention-style hotel on Seventh Avenue at 53rd Street. It is within walking distance of Times Square, Central Park, and Rockefeller Center. Reviews are middling, so it is mainly a location play for a busy Midtown itinerary.",
+      "claims": [
+        {
+          "text": "Sheraton New York Times Square Hotel.",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
+        },
+        {
+          "text": "TA 3.7",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycst-sheraton-new-york-times-square-hotel/overview/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

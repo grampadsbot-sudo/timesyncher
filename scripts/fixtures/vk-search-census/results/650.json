@@ -17,7 +17,7 @@
   },
   "reviewCount": {},
   "priceHint": "Inventory/list price $257",
-  "hoursHint": "American LAS-JFK 12:37-20:59 \u2014 schedule per airline booking tool",
+  "hoursHint": "American LAS-JFK 12:37-20:59 — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -30,12 +30,12 @@
       "sourceUrl": "https://www.aa.com/booking/find-flights?fromAirport=LAS&toAirport=JFK&departDate=06%2F23%2F2026&returnDate=06%2F30%2F2026&tripType=roundTrip&adults=1"
     }
   ],
-  "itineraryNoteCandidate": "Afternoon American LAS\u2013JFK nonstop on June 23 \u2014 verify still published.",
+  "itineraryNoteCandidate": "Afternoon American LAS–JFK nonstop on June 23 — verify still published.",
   "voicePass": {
-    "itineraryNote": "Afternoon American LAS\u2013JFK nonstop on June 23 \u2014 verify still published.",
+    "itineraryNote": "Afternoon American LAS–JFK nonstop on June 23 — verify still published.",
     "shortDescription": "American LAS-JFK 12:37-20:59",
     "unsupportedFlags": [
-      "Flight Thing \u2014 ratings N/A; fare not locked without live booking quote"
+      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
     ],
     "claimSupportOk": true
   },
@@ -63,5 +63,31 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 3,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "claims": [
+        {
+          "text": "American LAS-JFK 12:37-20:59",
+          "sourceUrl": "https://www.aa.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. The midday American departure lands at JFK in the evening, leaving the morning free in Las Vegas. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "claims": [
+        {
+          "text": "Specific AA inventory option 2026-06-23",
+          "sourceUrl": "https://www.aa.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

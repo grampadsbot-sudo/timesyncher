@@ -22,7 +22,7 @@
     "booking": 1413
   },
   "priceHint": "4-star boutique UWS",
-  "hoursHint": "Hotel \u2014 24h; Nice Matin on site",
+  "hoursHint": "Hotel — 24h; Nice Matin on site",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -68,5 +68,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Lucerne is a boutique Upper West Side hotel with the French bistro Nice Matin on site.",
+      "claims": [
+        {
+          "text": "Boutique Upper West Side hotel with on-site French restaurant.",
+          "sourceUrl": "https://thelucernehotel.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Lucerne is a boutique hotel at Amsterdam Avenue and 79th Street on the Upper West Side. It has an on-site French restaurant, Nice Matin, which is popular for brunch. The hotel is a short walk from Central Park and the Museum of Natural History.",
+      "claims": [
+        {
+          "text": "Boutique Upper West Side hotel with on-site French restaurant.",
+          "sourceUrl": "https://thelucernehotel.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

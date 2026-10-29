@@ -37,5 +37,35 @@
     "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
     "reviewedAt": "2026-10-28",
     "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "La Traviata Pizzeria is a neighborhood pizza shop on West 68th Street near Lincoln Center.",
+      "claims": [
+        {
+          "text": "101 W 68th St",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-"
+        }
+      ]
+    },
+    "description": {
+      "value": "La Traviata Pizzeria is a casual pizza shop at 101 W 68th St on the Upper West Side. It has served the local community for years and is a Slice partner, so ordering is easy. It is a quick, inexpensive slice before or after a show at Lincoln Center.",
+      "claims": [
+        {
+          "text": "101 W 68th St",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-"
+        },
+        {
+          "text": "They've been serving the local community for a while now",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
   }
 }

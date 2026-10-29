@@ -22,7 +22,7 @@
     "primarySource": null
   },
   "reviewCount": {},
-  "priceHint": "Adult GA $26; seniors/military $23; kids 4\u201312 $17.30 (official FAQ)",
+  "priceHint": "Adult GA $26; seniors/military $23; kids 4–12 $17.30 (official FAQ)",
   "hoursHint": "Ferries daily except Thanksgiving & Christmas; ticket offices open 30 min before first ferry",
   "happyHourHint": null,
   "happyHourRejectReason": null,
@@ -65,5 +65,35 @@
   "censusReuse": null,
   "botFieldScore": 4,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Statue of Liberty / Ellis Island tour candidate uses Statue City Cruises, the only authorized ferry.",
+      "claims": [
+        {
+          "text": "Only authorized ferry",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Statue of Liberty / Ellis Island tour candidate is a day trip on Statue City Cruises, the official ferry to Liberty and Ellis Islands. One ticket covers both islands, including the immigration museum on Ellis Island. Adult general admission is $26, so book ahead in summer.",
+      "claims": [
+        {
+          "text": "Official ferry to Liberty & Ellis",
+          "sourceUrl": "https://statuecitycruises.com/"
+        },
+        {
+          "text": "adult $26 GA",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

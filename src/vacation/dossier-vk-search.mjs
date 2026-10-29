@@ -57,31 +57,41 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       stage: 'discovery', status: thin ? 'thin' : supported ? 'ok' : 'claim_support_failed', botId: VK_SEARCH_BOT_ID }],
   };
   const pageIndex = (url) => pages.findIndex((page) => page.url === url);
+  const inputClaims = list(result.summaryClaims);
+  const verdictEligible = (claim) => claim && (!Object.hasOwn(claim, 'supported') || claim.supported === true);
+  const rejected = inputClaims.filter((claim) => !voiceAllowed || claim?.supported === false)
+    .map((claim) => text(claim?.claim || claim?.text)).filter(Boolean);
+  for (const page of pages) {
+    page.inputClaimVerdicts = inputClaims.filter((claim) => claim?.sourceUrl === page.url && Object.hasOwn(claim, 'supported'))
+      .map((claim) => ({ text: text(claim.claim || claim.text), supported: typeof claim.supported === 'boolean' ? claim.supported : null }));
+    page.rejectedClaimTexts = [...rejected];
+    page.summaryExcerptAllowed = voiceAllowed && !inputClaims.some((claim) => claim?.supported === false && claim.sourceUrl === page.url);
+  }
+  const pageSupports = (index, value) => voiceAllowed && typeof pages[index]?.fetchedAt === 'string'
+    && Number.isFinite(Date.parse(pages[index].fetchedAt))
+    && claimTextVerdictEligible(value, pages[index].inputClaimVerdicts)
+    && claimTextSupportedByPage(value, pages[index].text);
   const mapWrittenField = (raw) => {
     if (!raw || typeof raw !== 'object') return null;
     const value = text(raw.value);
     const rows = list(raw.claims);
     if (!value && !rows.length) return null;
-    const claims = rows.map((claim) => {
+    const claims = rows.flatMap((claim) => {
+      if (!verdictEligible(claim)) return [];
       const body = text(claim.text || claim.claim);
+      if (!body || claimTextWasRejected(body, rejected)) return [];
       const sourceUrl = text(claim.sourceUrl || raw.sourceUrl);
       const index = sourceUrl ? pageIndex(sourceUrl) : -1;
-      const row = {
+      if (index < 0 || !pageSupports(index, body)) return [];
+      return [{
         text: body,
-        ...(sourceUrl ? { sourceUrl } : {}),
-        ...(Object.hasOwn(claim, 'supported') ? { supported: claim.supported } : {}),
-      };
-      if (index >= 0) {
-        row.sourceUrl = pages[index].url;
-        row.pages = [`p${index + 1}`];
-        if (!Object.hasOwn(row, 'supported')) row.supported = true;
-      } else if (claim.pages?.length) {
-        row.pages = claim.pages;
-      }
-      return row;
-    }).filter((claim) => claim.text);
-    if (!value && !claims.length) return null;
-    return { value: value || claims.map((claim) => claim.text).join(' '), claims };
+        sourceUrl: pages[index].url,
+        pages: [`p${index + 1}`],
+        ...(Object.hasOwn(claim, 'supported') ? { supported: claim.supported } : { supported: true }),
+      }];
+    });
+    if (!claims.length) return null;
+    return { value, claims };
   };
   const written = result.fields && typeof result.fields === 'object' ? result.fields
     : result.dossierFields && typeof result.dossierFields === 'object' ? result.dossierFields : null;
@@ -92,22 +102,8 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     }
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
   }
-  const pageSupports = (index, value) => voiceAllowed && typeof pages[index]?.fetchedAt === 'string'
-    && Number.isFinite(Date.parse(pages[index].fetchedAt))
-    && claimTextVerdictEligible(value, pages[index].inputClaimVerdicts)
-    && claimTextSupportedByPage(value, pages[index].text);
-  const inputClaims = list(result.summaryClaims);
-  const verdictEligible = (claim) => claim && (!Object.hasOwn(claim, 'supported') || claim.supported === true);
   const eligible = (claim) => verdictEligible(claim)
     && pageSupports(pageIndex(claim?.sourceUrl), text(claim?.claim || claim?.text));
-  const rejected = inputClaims.filter((claim) => !voiceAllowed || claim?.supported === false)
-    .map((claim) => text(claim?.claim || claim?.text)).filter(Boolean);
-  for (const page of pages) {
-    page.inputClaimVerdicts = inputClaims.filter((claim) => claim?.sourceUrl === page.url && Object.hasOwn(claim, 'supported'))
-      .map((claim) => ({ text: text(claim.claim || claim.text), supported: typeof claim.supported === 'boolean' ? claim.supported : null }));
-    page.rejectedClaimTexts = [...rejected];
-    page.summaryExcerptAllowed = voiceAllowed && !inputClaims.some((claim) => claim?.supported === false && claim.sourceUrl === page.url);
-  }
   const claims = inputClaims.filter((claim) => eligible(claim)
     && !claimTextWasRejected(text(claim.claim || claim.text), rejected));
   const scalar = (key, value, index) => {

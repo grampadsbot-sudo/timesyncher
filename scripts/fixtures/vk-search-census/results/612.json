@@ -14,7 +14,7 @@
       "url": "https://www.yelp.com/biz/chelsea-market-new-york",
       "title": "Chelsea Market Yelp",
       "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "4.3\u2605 \u00b7 2638 reviews"
+      "snippet": "4.3★ · 2638 reviews"
     }
   ],
   "rating": {
@@ -30,7 +30,7 @@
     "tripadvisor": 10012
   },
   "priceHint": "$$ food hall / market",
-  "hoursHint": "Daily 7:00 AM \u2013 10:00 PM (official visit page; vendor hours vary)",
+  "hoursHint": "Daily 7:00 AM – 10:00 PM (official visit page; vendor hours vary)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,7 +39,7 @@
       "sourceUrl": "https://www.chelseamarket.com/visit"
     },
     {
-      "claim": "Concourse hours daily 7am\u201310pm",
+      "claim": "Concourse hours daily 7am–10pm",
       "sourceUrl": "https://www.chelseamarket.com/visit"
     },
     {
@@ -76,5 +76,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Chelsea Market is the indoor food hall on Ninth Avenue, packed with vendors next to the High Line.",
+      "claims": [
+        {
+          "text": "75 Ninth Ave",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        }
+      ]
+    },
+    "description": {
+      "value": "Chelsea Market is a bustling food hall inside a former factory at 75 Ninth Ave in Chelsea. It is a great stop for tacos, lobster rolls, pastries, and browsing small shops under one roof. The hall opens early every day, so arrive in the morning for shorter lines before walking the High Line.",
+      "claims": [
+        {
+          "text": "75 Ninth Ave; Mon-Sun 7am-10pm",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        },
+        {
+          "text": "4.3★ · 2638 reviews",
+          "sourceUrl": "https://www.yelp.com/biz/chelsea-market-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

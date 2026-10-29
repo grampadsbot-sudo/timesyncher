@@ -20,7 +20,7 @@
     "aggregator": 250
   },
   "priceHint": "$$ juice / bowls",
-  "hoursHint": "Mon\u2013Fri 7am\u20139pm; Sat\u2013Sun 8am\u20139pm (location listing)",
+  "hoursHint": "Mon–Fri 7am–9pm; Sat–Sun 8am–9pm (location listing)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -29,13 +29,13 @@
       "sourceUrl": "https://www.juicegeneration.com/locations"
     },
     {
-      "claim": "Weekday hours typically 7am\u20139pm",
+      "claim": "Weekday hours typically 7am–9pm",
       "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
     }
   ],
-  "itineraryNoteCandidate": "Grab a quick juice or a\u00e7a\u00ed bowl before a Central Park loop.",
+  "itineraryNoteCandidate": "Grab a quick juice or açaí bowl before a Central Park loop.",
   "voicePass": {
-    "itineraryNote": "Grab a quick juice or a\u00e7a\u00ed bowl before a Central Park loop.",
+    "itineraryNote": "Grab a quick juice or açaí bowl before a Central Park loop.",
     "shortDescription": "Juice Generation near Columbus Circle.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -62,5 +62,31 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Juice Generation Columbus Circle is a juice and smoothie bowl shop on Eighth Avenue near Central Park.",
+      "claims": [
+        {
+          "text": "Columbus Circle 979 8th Ave",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
+    },
+    "description": {
+      "value": "Juice Generation Columbus Circle is a branch of the New York juice chain at 979 8th Ave. It serves cold-pressed juices, smoothies, and acai bowls that make a quick, healthy breakfast. It is a handy stop before a morning walk into Central Park.",
+      "claims": [
+        {
+          "text": "Columbus Circle 979 8th Ave",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

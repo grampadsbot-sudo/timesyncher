@@ -22,7 +22,7 @@
     "expedia": 3292
   },
   "priceHint": "UWS budget boutique; free NYSC access",
-  "hoursHint": "Hotel \u2014 24h",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -39,9 +39,9 @@
       "sourceUrl": "https://www.nighthotelbroadway.com/"
     }
   ],
-  "itineraryNoteCandidate": "Budget UWS stay with gym access\u2014rooms are sparse, location near subway is the win.",
+  "itineraryNoteCandidate": "Budget UWS stay with gym access—rooms are sparse, location near subway is the win.",
   "voicePass": {
-    "itineraryNote": "Budget UWS stay with gym access\u2014rooms are sparse, location near subway is the win.",
+    "itineraryNote": "Budget UWS stay with gym access—rooms are sparse, location near subway is the win.",
     "shortDescription": "Night Hotel Broadway on the Upper West Side.",
     "unsupportedFlags": [],
     "claimSupportOk": true
@@ -68,5 +68,35 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 2,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Night Hotel Broadway is a budget-friendly boutique hotel on Broadway in the Upper West Side.",
+      "claims": [
+        {
+          "text": "Night Hotel Broadway on the Upper West Side.",
+          "sourceUrl": "https://www.nighthotelbroadway.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Night Hotel Broadway is a compact boutique hotel on the Upper West Side, priced below most of its neighbors. Its moody, design-forward rooms trade space for style. Reviews are mixed, so it works best as a value base near the subway rather than a place to linger.",
+      "claims": [
+        {
+          "text": "Night Hotel Broadway on the Upper West Side.",
+          "sourceUrl": "https://www.nighthotelbroadway.com/"
+        },
+        {
+          "text": "Booking 6.7",
+          "sourceUrl": "https://www.nighthotelbroadway.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }

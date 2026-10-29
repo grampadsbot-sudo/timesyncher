@@ -78,5 +78,35 @@
     "sha": "6d32a103602be23e3f0c38d0cf9fc506f2220e2d",
     "reviewedAt": "2026-10-28",
     "notes": "Selected narrative statements from saved page bytes; no new provider or model call."
+  },
+  "fields": {
+    "summary": {
+      "value": "MoMA Design Store - 53rd Street sells modern design gifts and home goods across from the Museum of Modern Art.",
+      "claims": [
+        {
+          "text": "Classic modern and cutting edge design products",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
+    },
+    "description": {
+      "value": "MoMA Design Store - 53rd Street is the museum's flagship shop for clever, beautifully made objects. It carries classic modern and cutting edge design products, including pieces made exclusively for the Museum of Modern Art. It is the best place in Midtown to find a unique gift or a souvenir that is actually useful.",
+      "claims": [
+        {
+          "text": "Classic modern and cutting edge design products for adults and kids",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "items produced exclusively for the Museum of Modern Art",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
   }
 }

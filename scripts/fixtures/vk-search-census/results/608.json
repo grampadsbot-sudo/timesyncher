@@ -6,46 +6,32 @@
   "sources": [
     {
       "url": "https://www.manhattanclub.com/",
-      "title": "The Manhattan Club all-suite stay.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking 8.3 for Manhattan Club"
+      "title": "The Manhattan Club | Luxury Hotel in New York City",
+      "fetchedAt": "2026-10-29T05:35:00Z",
+      "snippet": "THE MANHATTAN CLUB – ALL-SUITE HOTEL. Steps from Times Square, Central Park, and the Theater District, The Manhattan Club is the ideal base to explore Manhattan. Our spacious suites blend classic charm with metropolitan style. Take advantage of exclusive access to member amenities throughout the length of your stay—including our gym, valet parking, and our member-only Club Lounge and Terraces. Carnegie Hall, 2 minute walk. 200 W 56th St. New York, NY 10019"
     }
   ],
-  "rating": {
-    "primary": 8.3,
-    "primarySource": "booking",
-    "booking": 8.3,
-    "hotels": 9.0
-  },
-  "reviewCount": {
-    "booking": 2215,
-    "hotels": 2061
-  },
-  "priceHint": "Condo-style all-suite Midtown",
-  "hoursHint": "Hotel \u2014 24h",
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "All-suite Midtown hotel",
+  "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     {
-      "claim": "Address/area: 200 W 56th St (Manhattan Club)",
+      "claim": "THE MANHATTAN CLUB – ALL-SUITE HOTEL",
       "sourceUrl": "https://www.manhattanclub.com/"
     },
     {
-      "claim": "Official site https://www.manhattanclub.com/",
-      "sourceUrl": "https://www.manhattanclub.com/"
-    },
-    {
-      "claim": "Guest rating primary 8.3 via booking",
+      "claim": "200 W 56th St.",
       "sourceUrl": "https://www.manhattanclub.com/"
     }
   ],
-  "itineraryNoteCandidate": "Suite kitchenettes near Midtown West\u2014good for longer stays if the rate clears fees.",
+  "itineraryNoteCandidate": "Settle into a full suite two minutes from Carnegie Hall, then walk to Central Park.",
   "voicePass": {
-    "itineraryNote": "Suite kitchenettes near Midtown West\u2014good for longer stays if the rate clears fees.",
-    "shortDescription": "The Manhattan Club all-suite stay.",
-    "unsupportedFlags": [
-      "Inventory labeled The Manhattan Club; website manhattanclub.com"
-    ],
+    "itineraryNote": "Settle into a full suite two minutes from Carnegie Hall, then walk to Central Park.",
+    "shortDescription": "All-suite hotel at 200 W 56th St, steps from Times Square and Central Park.",
+    "unsupportedFlags": [],
     "claimSupportOk": true
   },
   "callCounts": {
@@ -70,5 +56,47 @@
   "censusReuse": null,
   "botFieldScore": 6,
   "baseFieldScore": 4,
-  "winner": "grok-bot"
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St, steps from Central Park and Times Square.",
+      "claims": [
+        {
+          "text": "THE MANHATTAN CLUB – ALL-SUITE HOTEL",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "200 W 56th St.",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St in Midtown, steps from Times Square, Central Park, and the Theater District. Its spacious suites blend classic charm with metropolitan style, and guests can use the gym and the member-only Club Lounge and Terraces. Carnegie Hall is a two-minute walk away, which makes it a strong base for a show-heavy trip.",
+      "claims": [
+        {
+          "text": "Steps from Times Square, Central Park, and the Theater District, The Manhattan Club is the ideal base to explore Manhattan.",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "Our spacious suites blend classic charm with metropolitan style.",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "by": "vk-search-bot",
+    "at": "2026-10-29T05:35:00Z",
+    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
+    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+  }
 }
