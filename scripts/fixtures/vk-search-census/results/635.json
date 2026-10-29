@@ -8,17 +8,9 @@
       "url": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york",
       "title": "Flights from Las Vegas to New York | American Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. … irport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage s … Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding pass Check in online or on the American app to download your boarding pass or print it before you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into th … of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. … ). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn mile",
+      "text": "of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. … fore you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral … irport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage s … s to New York ## Your trip to New York American Airlines offers flights from Las Vegas to New York. Browse available flight options and fares between McCarran International Airport (LAS) and New York All Airports (NYC) for business trips, family visits and short getaways. Compare fares and schedules and choose the option that fits you … of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. …  with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. … e Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward fu … ). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn mile",
       "snippet": "of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage service. ### Can I earn AAdvantage® miles on my flight? AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards.",
       "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
-    },
-    {
-      "url": "https://en.wikipedia.org/wiki/American_Airlines",
-      "title": "American Airlines - Wikipedia",
-      "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor International Airport",
-      "snippet": "t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor Internati",
-      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -32,10 +24,12 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "AAdvantage® members can earn miles on eligible American Airlines flights",
-    "New York–JFK",
+    "John F. Kennedy International Airport (JFK)",
     "have Admiral's Club® lounges in the American Airlines terminals",
-    "Check in online or on the American app",
+    "McCarran International Airport (LAS)",
     "AAdvantage® members can earn miles on eligible American Airlines flights",
+    "Miles can be used toward future travel, upgrades and other rewards",
+    "Enjoy beer, wine and spirits on flights with full beverage service",
     "More space with seats at the front of the Main Cabin or in exit rows"
   ],
   "itineraryNoteCandidate": "Return on American nonstop JFK–LAS — lock seats when outbound is set.",
@@ -68,7 +62,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "American Airlines JFK → LAS is the return leg home from New York JFK to Las Vegas, earning AAdvantage miles on eligible American flights.",
+      "value": "On the return row American Airlines JFK → LAS, AAdvantage® members can earn miles on eligible American Airlines flights from New York back to Las Vegas.",
       "claims": [
         {
           "text": "AAdvantage® members can earn miles on eligible American Airlines flights",
@@ -77,22 +71,30 @@
       ]
     },
     "description": {
-      "value": "American Airlines JFK → LAS is the return American Airlines row, flying from New York JFK back to Las Vegas. JFK is one of American's hubs, so the return starts from an American terminal with an Admirals Club lounge. Check in online or on the American app before heading out to Queens. AAdvantage members earn miles on eligible flights, and seats at the front of the Main Cabin or in exit rows offer extra legroom.",
+      "value": "The return row American Airlines JFK → LAS flies from John F. Kennedy International Airport (JFK), where American terminals have Admiral's Club® lounges, back to McCarran International Airport (LAS). AAdvantage® members can earn miles on eligible American Airlines flights. Miles can be used toward future travel, upgrades and other rewards. Enjoy beer, wine and spirits on flights with full beverage service. More space with seats at the front of the Main Cabin or in exit rows.",
       "claims": [
         {
-          "text": "New York–JFK",
-          "sourceUrl": "https://en.wikipedia.org/wiki/American_Airlines"
+          "text": "John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         },
         {
           "text": "have Admiral's Club® lounges in the American Airlines terminals",
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Check in online or on the American app",
+          "text": "McCarran International Airport (LAS)",
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         },
         {
           "text": "AAdvantage® members can earn miles on eligible American Airlines flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Miles can be used toward future travel, upgrades and other rewards",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Enjoy beer, wine and spirits on flights with full beverage service",
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         },
         {
@@ -103,7 +105,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

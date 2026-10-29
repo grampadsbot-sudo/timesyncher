@@ -8,8 +8,8 @@
       "url": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK",
       "title": "JetBlue flights from Las Vegas Harry Reid to New York John F. Kennedy.",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "n F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sun 06:35 Las Vegas Harry Reid (LAS) 3 14:27 New York John F. Kennedy (JFK) 5 JetBlue B6 148 Non-stop Airbus A318/319/320/321 (32S) 4:52 Valid until 2026-01-04 Daily 06:40 Las Vegas Harry Reid (LAS) 3 14:32 New York John F. Kennedy (JFK) 5 JetBlue B6  … (French) Português (Portuguese) Suomi (Finnish) 日本語 (Japanese) 한국말 (Korean) 简体中文 (Chinese,Simplified) 繁體中文 (Chinese,Traditional) JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sun 06:35 Las Vegas Harry Reid (LAS) 3 14:27 New York John F.  … n F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sun 06:35 Las Vegas Harry Reid (LAS) 3 14:27 New York John F. Kennedy (JFK) 5 JetBlue B6 148 Non-stop Airbus A318/319/320/321 (32S) 4:52 Valid until 2026-01-04 Daily 06:40 Las Vegas Harry Reid (LAS) 3 14:32 New York John F. Kennedy (JFK) 5 JetBlue B6 ",
-      "snippet": "n F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sun 06:35 Las Vegas Harry Reid (LAS) 3 14:27 New York John F. Kennedy (JFK) 5 JetBlue B6 148 Non-stop Airbus A318/319/320/321 (32S) 4:52 Valid until 2026-01-04 Daily 06:40 Las Vegas Harry Reid (LAS) 3 14:32 New York John F. Kenn",
+      "text": "eid (LAS) 3 05:08 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-stop Airbus A318/319/320/321 (32S) 5:08 Effective 2026-04-29 through 2026-06-10 The flight arrives 1 day after departure. Mon-Fri,Sun 21:20 Las Vegas Harry Reid (LAS) 3 05:12 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-stop Airbus A318/319/320/321 (32S) 4:52 Eff …  (Spanish) Française (French) Português (Portuguese) Suomi (Finnish) 日本語 (Japanese) 한국말 (Korean) 简体中文 (Chinese,Simplified) 繁體中文 (Chinese,Traditional) JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). Select flight date: FLIGHT SCHEDULE Direct Flights: Sun 06:35 Las Vegas Harry Reid (LAS) 3 14:27 New York John F. Kennedy (JFK) 5 JetBlue B6 148 Non …  JetBlue B6 948 Non-stop Airbus A318/319/320/321 (32S) 4:50 Effective 2026-02-06 through 2026-02-11 The flight arrives 1 day after departure. --> 1 2 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight distance is 2241 miles, or 3607 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . C … eid (LAS) 3 05:08 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-stop Airbus A318/319/320/321 (32S) 5:08 Effective 2026-04-29 through 2026-06-10 The flight arrives 1 day after departure. Mon-Fri,Sun 21:20 Las Vegas Harry Reid (LAS) 3 05:12 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-stop Airbus A318/319/320/321 (32S) 4:52 Eff … ter departure. --> 1 2 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight distance is 2241 miles, or 3607 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . Current time at the point of departure is (loadi … the point of departure is (loading...) , and (loading...) at the point of arrival. There is a (loading...) hour time difference between the airports. For direct flights, the flight time varies between 4:44 and 5:15. All LAS-JFK flights All JetBlue flights Return (JFK-LAS) flights Feedback - Disclaimer - Privacy FlightMapper.net Flight Search Countries Airlines L",
+      "snippet": "eid (LAS) 3 05:08 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-stop Airbus A318/319/320/321 (32S) 5:08 Effective 2026-04-29 through 2026-06-10 The flight arrives 1 day after departure. Mon-Fri,Sun 21:20 Las Vegas Harry Reid (LAS) 3 05:12 New York John F. Kennedy (JFK) 5 JetBlue B6 248 Non-sto",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -23,9 +23,12 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "JetBlue B6 148 Non-stop",
-    "Las Vegas Harry Reid (LAS)",
-    "JetBlue B6 148 Non-stop"
+    "The flight arrives 1 day after departure",
+    "JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK)",
+    "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK)",
+    "The flight arrives 1 day after departure",
+    "The flight distance is 2241 miles, or 3607 km",
+    "For direct flights, the flight time varies between 4:44 and 5:15"
   ],
   "itineraryNoteCandidate": "Red-eye JetBlue LAS–JFK to wake up in New York — save a hotel night.",
   "voicePass": {
@@ -57,30 +60,42 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a JetBlue red-eye nonstop leaving Las Vegas at 11:59 pm and landing at JFK at 8:04 the next morning.",
+      "value": "JetBlue's overnight Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure.",
       "claims": [
         {
-          "text": "JetBlue B6 148 Non-stop",
+          "text": "The flight arrives 1 day after departure",
           "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
         }
       ]
     },
     "description": {
-      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a JetBlue nonstop from Las Vegas Harry Reid to New York JFK, leaving at 23:59 on June 23, 2026 and landing at 08:04 Eastern the next day. FlightMapper lists JetBlue B6 148 Non-stop on the route. The overnight timing saves a hotel night but means a full first day on little sleep, so confirm the schedule and fare on JetBlue first.",
+      "value": "FlightMapper's JetBlue schedule for the red-eye Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 covers JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK). The flight arrives 1 day after departure. The flight distance is 2241 miles, or 3607 km. For direct flights, the flight time varies between 4:44 and 5:15.",
       "claims": [
         {
-          "text": "Las Vegas Harry Reid (LAS)",
+          "text": "JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK)",
           "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
         },
         {
-          "text": "JetBlue B6 148 Non-stop",
+          "text": "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK)",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        },
+        {
+          "text": "The flight arrives 1 day after departure",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        },
+        {
+          "text": "The flight distance is 2241 miles, or 3607 km",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        },
+        {
+          "text": "For direct flights, the flight time varies between 4:44 and 5:15",
           "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

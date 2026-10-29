@@ -11,17 +11,33 @@
       "text": "sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM – 11:00 PM Friday 11:30 AM – 12:00 AM Sa … sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM – 11:00 PM Friday 11:30 AM – 12:00 AM Sa … 's Italian Restaurant Times Square, NYC | Make a Reservation Now! | Carmine's Italian restaurant is located right in the heart of Times Square. Enjoy traditional, family-style Italian food served in generous portions. Make your online reservation today! Carmine's Italian restaurant is location is right in the heart of Times Square. Enjoy traditional, family-style ",
       "snippet": "sed. --> ORDER ONLINE VIEW THE MENU CATER A PARTY HOST A PARTY Contact Telephone 212.221.3800 Take Out 212.221.3800 x2 Address Carmine’s Times Square 200 West 44th Street New York, NY 10036 Hours Monday 11:30 AM – 11:00 PM Tuesday 11:30 AM – 11:00 PM Wednesday 11:00 AM – 11:00 PM Thursday 11:30 AM –",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/carmines-44th-street-nyc",
+      "title": "Carmine's - 44th Street - NYC Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi",
+      "snippet": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Str",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.6,
+    "primarySource": "opentable",
+    "opentable": 4.6
+  },
+  "reviewCount": {
+    "opentable": 33242
+  },
   "priceHint": null,
-  "hoursHint": null,
+  "hoursHint": "Mon–Thu 11:30 am–11:00 pm Fri 11:30 am–11:59 pm Sat 11:00 am–11:59 pm Sun 11:00 am–11:00 pm (OpenTable)",
   "happyHourHint": null,
   "summaryClaims": [
     "200 West 44th Street New York, NY 10036",
     "200 West 44th Street New York, NY 10036",
-    "traditional, family-style Italian food served in generous portions"
+    "traditional, family-style Italian food served in generous portions",
+    "4.6 (33242)",
+    "Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -44,7 +60,7 @@
       ]
     },
     "description": {
-      "value": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show.",
+      "value": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews, and the review summary says Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing.",
       "claims": [
         {
           "text": "200 West 44th Street New York, NY 10036",
@@ -53,12 +69,20 @@
         {
           "text": "traditional, family-style Italian food served in generous portions",
           "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+        },
+        {
+          "text": "4.6 (33242)",
+          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+        },
+        {
+          "text": "Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing",
+          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

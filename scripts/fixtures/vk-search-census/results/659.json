@@ -5,11 +5,19 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.bluenotejazz.com/nyc/faqs/",
-      "title": "FAQs Blue Note New York",
+      "url": "https://www.bluenotejazz.com/nyc/shows/",
+      "title": "Shows | Blue Note New York",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can … ns about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in perso … In addition to the menu online, we also offer a fine selection of mocktails and non-alcoholic beverages. Do you require a minimum spend at the table? There is a $20 consumption minimum for each show. Can I bring my own bottle? Customers can bring their own wine bottle but there is a corking fee of $35. Can I bring a birthday cake? There is a $30 ",
-      "snippet": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where c",
+      "text": "c Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 17 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note …  PM & 10:30 PM Blue Note Jazz Club 12 Eric Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 13 Eric Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note … o 8:00 PM & 10:30 PM Blue Note Jazz Club 19 Amber Mark 8:00 PM & 10:30 PM Blue Note Jazz Club 20 Amber Mark 8:00 PM & 10:30 PM Blue Note Jazz Club 21 Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club 22 Robert Glasper X Wyclef Presents Q Theory 8:00 PM & 10:30 PM Blue Note Jazz Club 23 Robert Glasper X Wyclef Presents Q Theory 8:00 PM & 10:30 PM B … 0 PM & 10:30 PM Blue Note Jazz Club 3 Robert Glasper 8:00 PM & 10:30 PM Blue Note Jazz Club 4 Robert Glasper 8:00 PM & 10:30 PM Blue Note Jazz Club 5 Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club 6 Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club 7 Robert Glasper X Terrace Martin with Special Guest Phoelix 8:00 PM & 10:30 PM Blu",
+      "snippet": "c Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jaz",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/contact/",
+      "title": "Contact Us | Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question?  … e hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to ",
+      "snippet": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note ",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -26,9 +34,12 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "located at 131 West 3rd Street",
-    "right in the heart of Manhattan’s Greenwich Village",
-    "There is a $20 consumption minimum for each show"
+    "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club",
+    "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
+    "Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club",
+    "Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club",
+    "Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club",
+    "Box Office Phone Number: 212-475-8592"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -60,30 +71,42 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note is the Greenwich Village jazz club at 131 West 3rd Street with nightly shows.",
+      "value": "Blue Note's October 2026 calendar is a Robert Glasper residency, with Robert Glasper OG Acoustic Piano Trio and other sets at 8:00 PM & 10:30 PM.",
       "claims": [
         {
-          "text": "located at 131 West 3rd Street",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note is located at 131 West 3rd Street, right in the heart of Manhattan’s Greenwich Village. The club FAQ says there is a $20 consumption minimum for each show, on top of the ticket. It is a classic stop for a night of live jazz downtown.",
+      "value": "Blue Note runs two sets a night, and its contact page lists Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. The October 2026 calendar includes Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club on the 14th. Other October bookings include Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club and Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club. The Box Office Phone Number: 212-475-8592 handles ticket questions.",
       "claims": [
         {
-          "text": "right in the heart of Manhattan’s Greenwich Village",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
         },
         {
-          "text": "There is a $20 consumption minimum for each show",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Box Office Phone Number: 212-475-8592",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -8,8 +8,8 @@
       "url": "https://www.bluenotejazz.com/jazz-festival-nyc/",
       "title": "Blue Note Jazz Festival | New York",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi,  … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi,  … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mar",
-      "snippet": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, ",
+      "text": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026 … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mar … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi,  … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mar",
+      "snippet": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -23,7 +23,8 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "the Blue Note Jazz Festival New York is back in June 2026",
+    "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in",
+    "Ledisi, Big Freedia, SHABAKA, Kokoroko",
     "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
     "Ledisi, Big Freedia, SHABAKA, Kokoroko"
   ],
@@ -57,10 +58,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Festival New York 2026 returns in June 2026, celebrating its fifteenth year.",
+      "value": "Blue Note Jazz Festival New York 2026 returns in June 2026 for its fifteenth year, with Ledisi, Big Freedia, SHABAKA and Kokoroko on the lineup.",
       "claims": [
         {
-          "text": "the Blue Note Jazz Festival New York is back in June 2026",
+          "text": "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        },
+        {
+          "text": "Ledisi, Big Freedia, SHABAKA, Kokoroko",
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]
@@ -80,7 +85,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

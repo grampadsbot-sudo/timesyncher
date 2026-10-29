@@ -11,13 +11,23 @@
       "text": "Classic upper west side American brasserie since 1983. The menu offers the classics with a nod to French cuisine. | Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood  … Classic upper west side American brasserie since 1983. The menu offers the classics with a nod to French cuisine. | Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine. Legendary Upper West Side A … an brasserie since 1983. The menu offers the classics with a nod to French cuisine. | Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine. Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborho … h cuisine. | Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine. Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood staple and a popular destination. The menu serves ",
       "snippet": "Classic upper west side American brasserie since 1983. The menu offers the classics with a nod to French cuisine. | Legendary Upper West Side American brasserie in NYC since 1983. This is a neighborhood ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/cafe-luxembourg",
+      "title": "Cafe Luxembourg Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Cafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou …  West Side institution, delivers consistently delightful experiences with \"excellent classic upper west spot\" and \"delicious food and great service.\" Patrons adore the \"French onion soup\" and the \"best fries in town,\" while the \"friendly staff\" and \"great ambiance\" enhance every visit. 9,547 Reviews Good neighborhood spot, conveniently close to Lincoln Center. Love",
+      "snippet": "Cafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
   "summaryClaims": [
     "Classic upper west side American brasserie since 1983",
     "Legendary Upper West Side American brasserie in NYC since 1983",
     "This is a neighborhood staple and a popular destination",
-    "American classics with a nod to Fre"
+    "American classics with a nod to Fre",
+    "4.8 (9547)",
+    "Patrons adore the \"French onion soup\" and the \"best fries in town,\""
   ],
   "voicePass": {
     "claimSupportOk": true,
@@ -39,7 +49,7 @@
       ]
     },
     "description": {
-      "value": "Cafe Luxembourg is a legendary Upper West Side American brasserie in NYC since 1983. Its site calls it a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine, which suits dinner after Lincoln Center.",
+      "value": "Cafe Luxembourg is a legendary Upper West Side American brasserie in NYC since 1983. Its site calls it a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine, which suits dinner after Lincoln Center. OpenTable diners rate Cafe Luxembourg 4.8 from 9,547 reviews, and patrons adore the \"French onion soup\" and the \"best fries in town,\" according to the review summary.",
       "claims": [
         {
           "text": "Legendary Upper West Side American brasserie in NYC since 1983",
@@ -52,12 +62,28 @@
         {
           "text": "American classics with a nod to Fre",
           "sourceUrl": "https://www.cafeluxembourg.com/"
+        },
+        {
+          "text": "4.8 (9547)",
+          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
+        },
+        {
+          "text": "Patrons adore the \"French onion soup\" and the \"best fries in town,\"",
+          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
         }
       ]
     }
   },
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "opentable",
+    "opentable": 4.8
+  },
+  "reviewCount": {
+    "opentable": 9547
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

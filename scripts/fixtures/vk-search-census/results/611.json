@@ -5,11 +5,19 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.bluenotejazz.com/nyc/faqs/",
-      "title": "FAQs Blue Note New York",
+      "url": "https://www.bluenotejazz.com/nyc/about/",
+      "title": "About Blue Note New York",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can … ns about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in perso … In addition to the menu online, we also offer a fine selection of mocktails and non-alcoholic beverages. Do you require a minimum spend at the table? There is a $20 consumption minimum for each show. Can I bring my own bottle? Customers can bring their own wine bottle but there is a corking fee of $35. Can I bring a birthday cake? There is a $30 ",
-      "snippet": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where c",
+      "text": "About Blue Note New York | Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. | About Blue Note New York N … About Blue Note New York | Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. | About Blue Note New York N … toric Greenwich Village About Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting. Artists who had stopped playing in jazz clubs decades before, such as Sarah Vaughn, Lionel Hampton, Dizzy Gillespie, Stanley Turrentine, Oscar Peter … a, Rio, Milan and Beijing Over the years, Blue Note has been an economic engine for Greenwich Village, bringing in jazz fans from all over the world. The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines. What makes Blue Note so special is that on a given night, anything can happen. It is not uncommon to see the likes of Stevie Wonder, Tony Bennett, L",
+      "snippet": "About Blue Note New York | Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. | About Blue Note New York N",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/contact/",
+      "title": "Contact Us | Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" indicates required fields Instagram This … 00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" indicates required fields Instagram This",
+      "snippet": "00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" in",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -26,9 +34,12 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "located at 131 West 3rd Street",
-    "right in the heart of Manhattan’s Greenwich Village",
-    "There is a $20 consumption minimum for each show"
+    "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
+    "131 West 3rd Street New York, NY 10012",
+    "131 West 3rd Street New York, NY 10012",
+    "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
+    "Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting",
+    "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -62,30 +73,42 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Club is the Greenwich Village jazz club at 131 West 3rd Street with nightly shows.",
+      "value": "Blue Note Jazz Club has been a Greenwich Village cultural institution since 1981, at 131 West 3rd Street, one of the premiere jazz clubs in the world.",
       "claims": [
         {
-          "text": "located at 131 West 3rd Street",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
+        },
+        {
+          "text": "131 West 3rd Street New York, NY 10012",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, right in the heart of Manhattan’s Greenwich Village. The club FAQ says there is a $20 consumption minimum for each show, on top of the ticket. It is a classic stop for a night of live jazz downtown.",
+      "value": "Blue Note Jazz Club sits at 131 West 3rd Street in New York's Greenwich Village. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting. The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines.",
       "claims": [
         {
-          "text": "right in the heart of Manhattan’s Greenwich Village",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "131 West 3rd Street New York, NY 10012",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
         },
         {
-          "text": "There is a $20 consumption minimum for each show",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+          "text": "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
+        },
+        {
+          "text": "Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
+        },
+        {
+          "text": "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

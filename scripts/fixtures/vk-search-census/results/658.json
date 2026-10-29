@@ -5,11 +5,11 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://en.wikipedia.org/wiki/United_Airlines",
-      "title": "United Airlines - Wikipedia",
+      "url": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR",
+      "title": "United Airlines flights from Las Vegas Harry Reid to Newark Liberty, New York.",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "onal Airport|Guam]]\\n | [[George Bush Intercontinental Airport|Houston–Intercontinental]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Newark Liberty International Airport|Newark]]\\n | [[San Francisco International Airport|San Francisco]]\\n | [[Dulles International Airport|Washington–Dulles … diary of United Aircraft and Transport Corporation [ 1 ] Commenced operations March 28, 1931 (95 years ago) ( 1931-03-28 ) [ 2 ] AOC # CALA014A [ 3 ] Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark San Francisco Washington–Dulles Frequent-flyer program MileagePlus Alliance Star Alliance Subsidiaries United Express Republic Airways Holdings (18.2",
-      "snippet": "onal Airport|Guam]]\\n | [[George Bush Intercontinental Airport|Houston–Intercontinental]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Newark Liberty International Airport|Newark]]\\n | [[San Francisco International Airport|San Francisco]]\\n | [[Dulles International Airport|Washington–",
+      "text": "rlines flights from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). Select flight date: FLIGHT SCHEDULE Direct Flights: Mon,Thu,Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop Boeing 737-900 (739) 4:52 Effective 2026-01-08 through 2026-02-02 Mon,Wed-Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York ( …  (EWR). Select flight date: FLIGHT SCHEDULE Direct Flights: Mon,Thu,Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop Boeing 737-900 (739) 4:52 Effective 2026-01-08 through 2026-02-02 Mon,Wed-Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airline …  Português (Portuguese) Suomi (Finnish) 日本語 (Japanese) 한국말 (Korean) 简体中文 (Chinese,Simplified) 繁體中文 (Chinese,Traditional) United Airlines flights from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). Select flight date: FLIGHT SCHEDULE Direct Flights: Mon,Thu,Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newar … (Finnish) 日本語 (Japanese) 한국말 (Korean) 简体中文 (Chinese,Simplified) 繁體中文 (Chinese,Traditional) United Airlines flights from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). Select flight date: FLIGHT SCHEDULE Direct Flights: Mon,Thu,Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United …  (EWR) C United Airlines UA 1640 Non-stop Boeing 737 MAX 8 (7M8) 4:47 Operates only on 2026-03-07 The flight arrives 1 day after departure. --> 1 2 3 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR). The flight distance is 2220 miles, or 3573 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . C … r departure. --> 1 2 3 A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR). The flight distance is 2220 miles, or 3573 km. The timezone of the departure airport is UTC-8 , and the timezone of the arrival airport is UTC-5 . Current time at the point of departure is (loadi … the point of departure is (loading...) , and (loading...) at the point of arrival. There is a (loading...) hour time difference between the airports. For direct flights, the flight time varies between 4:38 and 5:08. All LAS-EWR flights All United Airlines flights Return (EWR-LAS) flights Feedback - Disclaimer - Privacy FlightMapper.net Flight Search Countries Ai",
+      "snippet": "rlines flights from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). Select flight date: FLIGHT SCHEDULE Direct Flights: Mon,Thu,Fri,Sun 07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop Boeing 737-900 (739) 4:52 Effective 2026-01-",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -20,8 +20,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Newark",
-    "Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark"
+    "07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop",
+    "United Airlines UA 394 Non-stop Boeing 737-900 (739)",
+    "Las Vegas Harry Reid (LAS)",
+    "Newark Liberty, New York (EWR)",
+    "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR)",
+    "The flight distance is 2220 miles, or 3573 km",
+    "For direct flights, the flight time varies between 4:38 and 5:08"
   ],
   "itineraryNoteCandidate": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
   "voicePass": {
@@ -53,26 +58,46 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a United morning departure from Las Vegas at 7:00, landing at Newark, a United hub, at 3:00 pm.",
+      "value": "United's 07:00 Newark departure Flight option: United LAS-EWR 2026-06-23 07:00-15:00 matches FlightMapper's United Airlines UA 394 Non-stop from Las Vegas Harry Reid to Newark Liberty.",
       "claims": [
         {
-          "text": "Newark",
-          "sourceUrl": "https://en.wikipedia.org/wiki/United_Airlines"
+          "text": "07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
         }
       ]
     },
     "description": {
-      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a United Airlines option from Las Vegas to Newark Liberty International Airport, departing 07:00 and arriving 15:00 Eastern on June 23, 2026. United lists Newark among its hubs, along with Chicago–O'Hare and Denver. The times come from the census schedule, so confirm the flight and fare on United before booking.",
+      "value": "FlightMapper's United schedule behind Flight option: United LAS-EWR 2026-06-23 07:00-15:00 lists United Airlines UA 394 Non-stop Boeing 737-900 (739) from Las Vegas Harry Reid (LAS) to Newark Liberty, New York (EWR). A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR). The flight distance is 2220 miles, or 3573 km. For direct flights, the flight time varies between 4:38 and 5:08.",
       "claims": [
         {
-          "text": "Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark",
-          "sourceUrl": "https://en.wikipedia.org/wiki/United_Airlines"
+          "text": "United Airlines UA 394 Non-stop Boeing 737-900 (739)",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        },
+        {
+          "text": "Las Vegas Harry Reid (LAS)",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        },
+        {
+          "text": "Newark Liberty, New York (EWR)",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        },
+        {
+          "text": "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at Newark Liberty, New York airport (EWR)",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        },
+        {
+          "text": "The flight distance is 2220 miles, or 3573 km",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        },
+        {
+          "text": "For direct flights, the flight time varies between 4:38 and 5:08",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

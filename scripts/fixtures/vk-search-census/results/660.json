@@ -8,8 +8,16 @@
       "url": "https://www.bluenotejazz.com/nyc/faqs/",
       "title": "FAQs Blue Note New York",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can … ns about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in perso … In addition to the menu online, we also offer a fine selection of mocktails and non-alcoholic beverages. Do you require a minimum spend at the table? There is a $20 consumption minimum for each show. Can I bring my own bottle? Customers can bring their own wine bottle but there is a corking fee of $35. Can I bring a birthday cake? There is a $30 ",
-      "snippet": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where c",
+      "text": "ive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that parties arriving separately or late will be seated  … sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in person at the box offi … ere can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in person at the box office. Everyone needs a ticket to enter the club. When should I expect my tickets to be delivered? Tickets will be e-mailed to customers 48 hours prior to the event. This is a security method instal …  also call in or buy tickets in person at the box office. Everyone needs a ticket to enter the club. When should I expect my tickets to be delivered? Tickets will be e-mailed to customers 48 hours prior to the event. This is a security method installed to avoid scalping. What time should I arrive? How does the seating arrangement work? Doors open at 6pm for 8pm s … 48 hours prior to the event. This is a security method installed to avoid scalping. What time should I arrive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that par",
+      "snippet": "ive? How does the seating arrangement work? Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Seating is always first come, first come serve. No exceptions. We suggest you arrive early and with your full party, as we cannot guarantee that parti",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/",
+      "title": "Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King Of The World: A Steely Dan Revue Tick … unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King Of The World: A Steely Dan Revue Tick",
+      "snippet": "unch Shows SEE ALL previous next Nov 7 Strictly Sinatra A Tribute To Frank Sinatra Starring Michael Dutra & His 9-Pc. Big Band Ensemble Tickets Nov 8 The World Famous Harlem Gospel Choir Tickets Nov 14 The Music Of The Buena Vista Social Club A Tribute To The Golden Age Of Cuba Tickets Nov 21 King O",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -26,9 +34,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "located at 131 West 3rd Street",
-    "right in the heart of Manhattan’s Greenwich Village",
-    "There is a $20 consumption minimum for each show"
+    "Seating is always first come, first come serve",
+    "The World Famous Harlem Gospel Choir",
+    "located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City",
+    "Everyone needs a ticket to enter the club",
+    "Tickets will be e-mailed to customers 48 hours prior to the event",
+    "Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches)",
+    "The World Famous Harlem Gospel Choir"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -60,30 +72,46 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Club is the Greenwich Village jazz club at 131 West 3rd Street with nightly shows.",
+      "value": "Blue Note Jazz Club in Greenwich Village seats first come, first served, and runs Sunday brunch shows such as The World Famous Harlem Gospel Choir.",
       "claims": [
         {
-          "text": "located at 131 West 3rd Street",
+          "text": "Seating is always first come, first come serve",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "The World Famous Harlem Gospel Choir",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, right in the heart of Manhattan’s Greenwich Village. The club FAQ says there is a $20 consumption minimum for each show, on top of the ticket. It is a classic stop for a night of live jazz downtown.",
+      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir.",
       "claims": [
         {
-          "text": "right in the heart of Manhattan’s Greenwich Village",
+          "text": "located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
         },
         {
-          "text": "There is a $20 consumption minimum for each show",
+          "text": "Everyone needs a ticket to enter the club",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Tickets will be e-mailed to customers 48 hours prior to the event",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches)",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        },
+        {
+          "text": "The World Famous Harlem Gospel Choir",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
+    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
