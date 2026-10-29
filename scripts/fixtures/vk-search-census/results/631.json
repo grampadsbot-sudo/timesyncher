@@ -57,7 +57,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "A relaxed Vegas morning comes first on Southwest LAS → LGA 11:30–22:25, which lands at 22:25 Eastern. You can rent a car at La Guardia Airport.",
+      "value": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick, and You can rent a car at La Guardia Airport after the 22:25 arrival.",
       "claims": [
         {
           "text": "You can rent a car at La Guardia Airport",
@@ -66,7 +66,7 @@
       ]
     },
     "description": {
-      "value": "Departure at 11:30 leaves time for a slow Vegas morning before boarding Southwest LAS → LGA 11:30–22:25. Wheels touch down at LaGuardia at 22:25 Eastern, close to eight hours after leaving once the clock shift is counted. For that late landing, Southwest's route page answers the airport question directly: You can rent a car at La Guardia Airport. Questions beyond the flight itself go to the Help Center, as Southwest puts it: Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
+      "value": "Anyone who wants a slow Vegas morning can take Southwest LAS → LGA 11:30–22:25, boarding at 11:30. It lands at LaGuardia at 22:25 Eastern, when transit options thin out, and Southwest notes that You can rent a car at La Guardia Airport. For baggage or booking questions, Southwest says to Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
       "claims": [
         {
           "text": "You can rent a car at La Guardia Airport",
@@ -80,7 +80,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-flight-dedupe-narrow-sw-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

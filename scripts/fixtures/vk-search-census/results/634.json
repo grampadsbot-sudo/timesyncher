@@ -8,7 +8,7 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Business Group Travel Help Cente … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … 88 * Seen: 6 hrs ago Book now Book now Two happy travelers riding a scooter at sunset, promoting low-fare flights. Looking for more low-fare flights? Check out the Low Fare Calendar to find a fare that works for you. Just choose the month you want to depart and return, and we’ll show you the best fares available. Find low fares Explore flights from Las Vegas to N … 88 - $343 chevron_left chevron_right *Fares displayed have been collected within the last 24 hours and may no longer be available at time of booking. Additional fees and charges for optional products and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which … to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything Southwest. Explore Flights from Other Popular Origins Flights from Chicago-Midway Flights from Atlanta Flights from Dallas-Love Field Flights from Houston Hobb",
+      "text": "estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Business Group Travel Help Cente … estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Business Group Travel Help Cente … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … ere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything",
       "snippet": "estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Busin",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -24,11 +24,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Upgrade to Business Select®",
+    "Upgrade to Business Select®",
     "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Check out the Low Fare Calendar to find a fare that works for you",
-    "Additional fees and charges for optional products and services may apply",
-    "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
+    "Check the status of your upcoming Southwest flight"
   ],
   "itineraryNoteCandidate": "Southwest option with longer elapsed time — compare total vs nonstop AA/Delta.",
   "voicePass": {
@@ -60,7 +58,16 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest LAS → LGA 06:50–18:55 is the 06:50 row landing at 18:55, and Southwest offers Upgrade to Business Select® on its Las Vegas (LAS) to New York LaGuardia (LGA) route.",
+      "value": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern.",
+      "claims": [
+        {
+          "text": "Upgrade to Business Select®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "description": {
+      "value": "Upgrade to Business Select® is the premium add-on to consider on a long travel day. Southwest LAS → LGA 06:50–18:55 departs at 06:50 and reaches LaGuardia only at 18:55 Eastern, the longest of the kept Southwest options on Las Vegas (LAS) to New York LaGuardia (LGA). Before heading to the airport, Southwest's page says to Check the status of your upcoming Southwest flight.",
       "claims": [
         {
           "text": "Upgrade to Business Select®",
@@ -69,33 +76,16 @@
         {
           "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        }
-      ]
-    },
-    "description": {
-      "value": "With a 06:50 departure and an 18:55 landing, Southwest LAS → LGA 06:50–18:55 serves Las Vegas (LAS) to New York LaGuardia (LGA). Check out the Low Fare Calendar to find a fare that works for you. Additional fees and charges for optional products and services may apply. Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
-      "claims": [
-        {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Check out the Low Fare Calendar to find a fare that works for you",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "Additional fees and charges for optional products and services may apply",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "Check out the Southwest Airlines ® Help Center for answers about everything Southwest",
+          "text": "Check the status of your upcoming Southwest flight",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-flight-dedupe-narrow-sw-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
