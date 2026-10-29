@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
+import { isSkippedTopUpSentence, mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
 import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
 import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
 import { descriptionNamesThing } from '../src/vacation/thing-dossier-fields.mjs';
@@ -10,6 +10,10 @@ import { rewriteDossierCitations } from '../src/vacation/dossier-page-integrity.
 
 const place = { id: 602, title: "Zabar's", name: "Zabar's", category: 'store' };
 const env = { VK_SEARCH_CENSUS_DIR: 'scripts/fixtures/vk-search-census/results' };
+
+assert.equal(isSkippedTopUpSentence('Foo Deli - Menu - soups, salads, and sandwiches'), true);
+assert.equal(isSkippedTopUpSentence('Shop artisan gifts today!'), true);
+assert.equal(isSkippedTopUpSentence('Zabar\'s is a landmark deli on the Upper West Side.'), false);
 
 function ensureVerifiedPages(dossier = {}) {
   const pages = [];

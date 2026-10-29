@@ -20,6 +20,7 @@ import { dossierPresented } from './passb-dossier-presented.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
 import { claimTextSupportedByPage, claimTextContradictsPage, claimTextWasRejected, claimTextVerdictEligible, isFillerSummaryText } from './dossier-claim-support.mjs';
 import { rewriteDossierCitations } from './dossier-page-integrity.mjs';
+import { BANNED_VALUE_RE } from './search-place-output.mjs';
 
 function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
@@ -64,22 +65,23 @@ function descriptionTopUpComplete(value, thing) {
   return wordCount(value) >= 40 && sentences.length >= 3;
 }
 
-function isSkippedTopUpSentence(sentence) {
+export function isSkippedTopUpSentence(sentence) {
   const s = String(sentence || '').trim();
   const lower = s.toLowerCase();
   if (!s || s.length > 480) return true;
+  if (BANNED_VALUE_RE.test(s)) return true;
   if (/\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b/.test(s)) return true;
   if (/\bfax\s*:/i.test(s)) return true;
   if (/@[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return true;
-  if (/replacement window screens|spline tool|how to install replacement/i.test(s)) return true;
   if (/^online menus, items, descriptions and prices/i.test(s)) return true;
   if (/^menus for .+ - singleplatform/i.test(lower)) return true;
-  if (/^zabar's - menu -/i.test(s)) return true;
-  if (/order your lunch or dinner from zabars\.com/i.test(lower)) return true;
+  if (/^.{0,80}\s[-|]\s*menu\b/i.test(s)) return true;
+  if (/\border (?:online|now|your .{0,20}) from\b/i.test(lower)) return true;
+  if (/\bshop .{0,40}today!?$/i.test(s)) return true;
+  if (/today!$/i.test(s)) return true;
   if (/call us:|email us:|directions & parking|main store hours/i.test(lower)) return true;
   if (/^(?:nav|home|cart|sign in)\b/i.test(s)) return true;
-  if ((s.match(/,/g) || []).length >= 4 && (/\$|\d+\.\d{2}/.test(s) || /nova scotia salmon/i.test(lower))) return true;
-  if (/shop for gifts, coffee, smoked fish & more today!/i.test(s)) return true;
+  if ((s.match(/,/g) || []).length >= 4) return true;
   return false;
 }
 
