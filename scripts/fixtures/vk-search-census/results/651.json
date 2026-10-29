@@ -59,10 +59,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK.",
+      "value": "FlightMapper lists Delta Air Lines DL 510 Non-stop at 07:05 from Las Vegas, the departure behind Flight option: Delta LAS-JFK 2026-06-23 07:05-15:13 into New York JFK. The route is a nonstop on an Airbus A321neo, and the 15:13 Eastern arrival leaves time to check in before dinner.",
       "claims": [
         {
           "text": "Daily 07:05 Las Vegas Harry Reid (LAS) 1 15:17 New York John F. Kennedy (JFK) 4 Delta Air Lines DL 510 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
+        },
+        {
+          "text": "Airbus A321neo (32Q)",
           "sourceUrl": "https://info.flightmapper.net/route/Delta_Air_Lines_DL_LAS_JFK"
         }
       ]

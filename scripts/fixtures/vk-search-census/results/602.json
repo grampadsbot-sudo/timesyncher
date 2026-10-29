@@ -23,7 +23,7 @@
     {
       "url": "https://exa.ai/library/place/1rgnf7mjmnf",
       "title": "Zabar's reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:07-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_1rgnf7mjmnf.html",
       "text": "If you’ve never been to Zabars, WHAT ARE YOU DOING???? The hand sliced nova is NOT the only thing they have. I highly recommend the new addition Cinnamon Babka bread pudding, absolutely TO DIE FOR. The cafe is also a great quick eats spot with good coffee and amazing bagels. Highly recommend This is a great neighborhood store. Usually very busy in the morning. They have all the Jewish food and breakfast options that you can think of and the service is usually good. This is a staple on the upper west side and has been around for years. Run don’t walk to zabars!! Not exactly a hidden gem but an underrated one maybe? I don’t think many visitors know about it. A much better version of whole foods. Prices were very fair or even cheap for most things in NYC. The selection is amazing. Fresh prepared food and sandwiches. Great bagels. I can’t say enough good things about it. An institution for a reason! Support local and come check this place out. You will not be disappointed. I finally made it to Zabars, a NYC institution! I got some chocolate babka, which was one of the best babkas I've had. I also got some cinnamon rugelach, which was really tasty. Their house blend coffee was glorious and perfect on a cold winter's day. Zabars has so many high quality products and I can't wait to go back."
     }
@@ -79,10 +79,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Zabar's is the Upper West Side food store at 2245 Broadway at 80th Street, open every day.",
+      "value": "Zabar's is the Upper West Side food store at 2245 Broadway at 80th Street, open every day. Zabar's is open 365 days a year, so it works on any day of the trip for smoked fish, bagels, coffee and a Central Park picnic.",
       "claims": [
         {
           "text": "2245 Broadway at 80th Street",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "open 365 days a year",
           "sourceUrl": "https://www.zabars.com/directions.html"
         }
       ]

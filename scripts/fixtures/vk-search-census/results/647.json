@@ -23,7 +23,7 @@
     {
       "url": "https://exa.ai/library/place/qh4zp9t6vdv",
       "title": "Saks Fifth Avenue reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:09-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_qh4zp9t6vdv.html",
       "text": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co. Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see. Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent. Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!"
     }
@@ -83,10 +83,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue across from Rockefeller Center.",
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue across from Rockefeller Center. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks.",
       "claims": [
         {
           "text": "611 Fifth Avenue New York, NY 10022",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks.",
           "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
         }
       ]

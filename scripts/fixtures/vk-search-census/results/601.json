@@ -62,7 +62,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "American Airlines offers flights from Las Vegas to New York, and American Airlines LAS → JFK is the outbound row into John F. Kennedy International Airport (JFK).",
+      "value": "American Airlines offers flights from Las Vegas to New York, and American Airlines LAS → JFK is the outbound row into John F. Kennedy International Airport (JFK). Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first. Plan to arrive at least 2 hours before domestic flights, and check in online or in the American app first.",
       "claims": [
         {
           "text": "American Airlines offers flights from Las Vegas to New York",
@@ -70,6 +70,10 @@
         },
         {
           "text": "John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Arrive at least 2 hours before domestic flights",
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]

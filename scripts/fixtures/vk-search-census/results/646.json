@@ -62,10 +62,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Pure Green UWS is a juice bar on Broadway serving acai bowls, smoothies and cold-pressed juice.",
+      "value": "Pure Green UWS is a juice bar on Broadway serving acai bowls, smoothies and cold-pressed juice. It is at 2041 Broadway, opening at 7 AM, which makes it an easy breakfast stop before heading into Central Park or Lincoln Center.",
       "claims": [
         {
           "text": "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice",
+          "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+        },
+        {
+          "text": "2041 Broadway New York, NY 10023",
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
         }
       ]

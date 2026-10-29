@@ -27,6 +27,13 @@
       "text": "Cafe Luxembourg | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 1186 ratings … Pre or post play or ballet … The steak au poivre is delicious … Wonderful meal! Pre or post play or ballet. Great service. … The steak au poivre is delicious and they make their own in house ice cream … Such an institution you’ll see all sorts of fashion icons here.",
       "snippet": "4.3 1186 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/fbmhh49gx6m",
+      "title": "Cafe Luxembourg reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:34-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_fbmhh49gx6m.html",
+      "text": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there."
     }
   ],
   "summaryClaims": [
@@ -154,6 +161,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Service",
+        "value": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
+        "claims": [
+          {
+            "text": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
+            "sourceUrl": "https://exa.ai/library/place/fbmhh49gx6m"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/fbmhh49gx6m",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 118,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/fbmhh49gx6m",
+          "savedHtml": "r8/exa_fbmhh49gx6m.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -228,5 +257,11 @@
   "review3Rating": "4.8",
   "review3Theme": "Local institution",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-  "review3Stars": 5
+  "review3Stars": 5,
+  "review4": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/fbmhh49gx6m",
+  "review4Stars": 5
 }

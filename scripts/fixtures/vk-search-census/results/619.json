@@ -24,7 +24,9 @@
       "url": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
       "text": " | Guest Reviews 8.8/10 85 verified reviews … This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch! … The public transport access is great, and the quality of the accommodation is also excellent. … And the view from the room is absolutely fantastic! … Although the hotel is a bit old, the hygiene and service are excellent.",
       "title": "Trip.com reviews",
-      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:16-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/619.json"
     }
   ],
   "rating": {

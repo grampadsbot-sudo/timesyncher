@@ -31,9 +31,16 @@
     {
       "url": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
       "title": "Smoke Jazz & Supper Club reviews | Restaurantji",
-      "fetchedAt": "2026-10-29T09:20:00-07:00",
+      "fetchedAt": "2026-10-29T09:16:09-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_e191b0b5ec.html",
       "text": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get. Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!"
+    },
+    {
+      "url": "https://exa.ai/library/place/9pfhjt1b9gq",
+      "title": "Smoke Jazz & Supper Club reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:35-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_9pfhjt1b9gq.html",
+      "text": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten. The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless."
     }
   ],
   "rating": {
@@ -90,11 +97,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side of Manhattan.",
+      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side of Manhattan. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance.",
       "claims": [
         {
           "text": "jazz club located at 2751 Broadway on the Upper West Side",
           "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+        },
+        {
+          "text": "Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance.",
+          "sourceUrl": "https://smokejazz.com/faq/"
         }
       ]
     },
@@ -187,6 +198,50 @@
           "page": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
           "savedHtml": "r7/raw/st_e191b0b5ec.html",
           "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Music",
+        "value": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten.",
+        "claims": [
+          {
+            "text": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten.",
+            "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+        "rating": "3/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 102,
+        "stars": 3,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9pfhjt1b9gq",
+          "savedHtml": "r8/exa_9pfhjt1b9gq.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Music",
+        "value": "The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless.",
+        "claims": [
+          {
+            "text": "The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless.",
+            "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 96,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9pfhjt1b9gq",
+          "savedHtml": "r8/exa_9pfhjt1b9gq.html",
+          "basis": "per-review star value in Exa page JSON"
         }
       }
     ],
@@ -286,6 +341,7 @@
   "itineraryNote": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
   "review1": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
   "review1Source": "Restaurantji",
   "review1Rating": "5/5",
@@ -298,5 +354,16 @@
   "review2Theme": "Food and drinks",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
   "review2Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "review3": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "3/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+  "review3Stars": 3,
+  "review4": "The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
+  "review4Stars": 5
 }

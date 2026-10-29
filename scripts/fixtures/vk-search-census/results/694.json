@@ -22,9 +22,11 @@
     },
     {
       "url": "https://exa.ai/library/place/8t7j7x9qnkg",
-      "text": "The Jazz Club at Aman New York | Exa | Jazz and Blues Venue 4.4 (190 reviews) … The drinks were the best I've had in NYC and for over $30 a drink, they better be. … Price Point $$$$$ Staff was very good, service was exceptional. … The private \"members only\" club is beautiful and sophisticated. … We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
+      "text": "The Jazz Club at Aman New York | Exa | Jazz and Blues Venue 4.4 (190 reviews) … The drinks were the best I've had in NYC and for over $30 a drink, they better be. … Price Point $$$$$ Staff was very good, service was exceptional. … The private \"members only\" club is beautiful and sophisticated. … We had issues with our table, and they were accommodating and let us table hop to find the perfect spot. This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
       "title": "Exa place listing reviews",
-      "via": "live curl fetch 2026-10-29 of Exa place listing (4.4, 190 reviews; 8 dated guest excerpts); verbatim review sentences only"
+      "via": "live curl fetch 2026-10-29 of Exa place listing (4.4, 190 reviews; 8 dated guest excerpts); verbatim review sentences only",
+      "fetchedAt": "2026-10-29T09:07:05-07:00",
+      "fetchMethod": "live curl 2026-10-29; saved r7/raw/694.html"
     }
   ],
   "rating": {
@@ -57,16 +59,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the Crown Building on Fifth Avenue.",
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the Crown Building on Fifth Avenue. It shares the hotel with the Lounge Bar and the Arva and Akari restaurants, so it suits a late drink and live music after dinner in Midtown.",
       "claims": [
         {
           "text": "subterranean Jazz Club",
           "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        },
+        {
+          "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
         }
       ]
     },
     "description": {
-      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street.",
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street; since 1921 it has stood there, and it was formerly the first home of the Museum of Modern Art.",
       "claims": [
         {
           "text": "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
@@ -74,6 +80,14 @@
         },
         {
           "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "Since 1921, the Crown Building has presided over the midpoint of Manhattan",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "Formerly the first home of the Museum of Modern Art",
           "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
         }
       ]
@@ -157,6 +171,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 4
+      },
+      {
+        "theme": "Music",
+        "value": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
+        "claims": [
+          {
+            "text": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
+            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 64,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8t7j7x9qnkg",
+          "savedHtml": "r8/exa_8t7j7x9qnkg.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -227,5 +263,11 @@
   "review3Rating": "4.4/5",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-  "review3Stars": 4
+  "review3Stars": 4,
+  "review4": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
+  "review4Stars": 4
 }

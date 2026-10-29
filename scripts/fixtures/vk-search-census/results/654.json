@@ -56,10 +56,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Priority boarding comes with Upgrade to Business Select®, which Southwest sells for Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55 into LaGuardia.",
+      "value": "Priority boarding comes with Upgrade to Business Select®, which Southwest sells for Flight option: Southwest LAS-LGA 2026-06-23 06:30-16:55 into LaGuardia. It departs 06:30 on June 23, 2026 and lands at 16:55 Eastern, and optional extras such as bags may add fees.",
       "claims": [
         {
           "text": "Upgrade to Business Select®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Additional fees and charges for optional products and services may apply",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

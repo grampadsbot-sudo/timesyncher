@@ -31,7 +31,7 @@
     {
       "url": "https://exa.ai/library/place/qstwz1dv09v",
       "title": "Statue of Liberty / Ellis Island tour candidate reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:12-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_qstwz1dv09v.html",
       "text": "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat. Enjoyable day trip. Needed more time to explore Ellis Island properly but that was the fault of our planning The official ferry to get you to the Statue of Liberty in Ellis Island. The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice. Plenty of stating for people who may need it, and efficient at loading and unloading everyone. This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands. We started around 9:00 AM, which I highly recommend to avoid the rush. The ferry from Battery Park is only about 20–25 minutes. We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum. Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours. A must-do if you want to see both islands properly without feeling rushed! Great experience overall! Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience! The National Park officers were very pleasant. We definitely need to come back here during the warmer months cause the weather dampened our day a bit"
     }
@@ -91,7 +91,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Statue of Liberty / Ellis Island tour candidate: official Statue City Cruises ferry from Battery Park to Liberty Island and Ellis Island, with both island museums included.",
+      "value": "Statue of Liberty / Ellis Island tour candidate: official Statue City Cruises ferry from Battery Park to Liberty Island and Ellis Island, with both island museums included. Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands.",
       "claims": [
         {
           "text": "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
@@ -99,6 +99,10 @@
         },
         {
           "text": "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands.",
           "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
         }
       ]

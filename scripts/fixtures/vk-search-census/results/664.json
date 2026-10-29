@@ -58,16 +58,20 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Guided walking/audio history tours option: a Big Apple Greeter volunteer neighborhood visit.",
+      "value": "Guided walking/audio history tours option: a Big Apple Greeter volunteer neighborhood visit. You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
       "claims": [
         {
           "text": "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
+          "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
+        },
+        {
+          "text": "You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         }
       ]
     },
     "description": {
-      "value": "Guided walking/audio history tours can start with Big Apple Greeter. Visitors are paired by language and by the neighborhoods the visitor requests. On the visit you get to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places, which suits a slower history walk.",
+      "value": "Guided walking/audio history tours can start with Big Apple Greeter. Visitors are paired by language and by the neighborhoods the visitor requests, and visitors’ personal interests are also considered and fulfilled if possible. On the visit you get to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places, which suits a slower history walk.",
       "claims": [
         {
           "text": "By language and by the neighborhoods the visitor requests",
@@ -75,6 +79,10 @@
         },
         {
           "text": "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
+          "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
+        },
+        {
+          "text": "Visitors’ personal interests are also considered and fulfilled if possible",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         }
       ]

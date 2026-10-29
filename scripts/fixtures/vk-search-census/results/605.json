@@ -96,10 +96,14 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Strand Book Store is the independent bookstore at 828 Broadway famous for its 18 Miles Of Books.",
+      "value": "Strand Book Store is the independent bookstore at 828 Broadway famous for its 18 Miles Of Books. The company's slogan is \"18 Miles Of Books\", as featured on its stickers, t-shirts, and other merchandise.",
       "claims": [
         {
           "text": "independent bookstore located at 828 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
+        },
+        {
+          "text": "The company's slogan is \"18 Miles Of Books\", as featured on its stickers, t-shirts, and other merchandise.",
           "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         }
       ]

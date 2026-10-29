@@ -19,6 +19,13 @@
       "text": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS! … Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS! … Best burger I have had in a long time! … Fantastic food great atmosphere",
       "snippet": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS!",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/j1y4y07dzl4",
+      "title": "Nobody Told Me reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:33-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_j1y4y07dzl4.html",
+      "text": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander."
     }
   ],
   "rating": {
@@ -180,6 +187,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
+        "claims": [
+          {
+            "text": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
+            "sourceUrl": "https://exa.ai/library/place/j1y4y07dzl4"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/j1y4y07dzl4",
+        "rating": "3/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 106,
+        "stars": 3,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/j1y4y07dzl4",
+          "savedHtml": "r8/exa_j1y4y07dzl4.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -245,5 +274,11 @@
   "review3Rating": "4.4",
   "review3Theme": "Atmosphere",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-  "review3Stars": 5
+  "review3Stars": 5,
+  "review4": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "3/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/j1y4y07dzl4",
+  "review4Stars": 3
 }

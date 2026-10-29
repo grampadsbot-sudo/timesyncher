@@ -59,10 +59,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia.",
+      "value": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia. It lands at LaGuardia at 16:55 Eastern after a flight of 2242 miles, ahead of the evening rush into Manhattan.",
       "claims": [
         {
           "text": "EarlyBird Check-in®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Distance: 2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

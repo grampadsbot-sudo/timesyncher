@@ -31,7 +31,7 @@
     {
       "url": "https://exa.ai/library/place/04qc8w8hrwx",
       "title": "Macy's Herald Square reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:08-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_04qc8w8hrwx.html",
       "text": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge. We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun. If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!! I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!"
     }
@@ -88,10 +88,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Macy's Herald Square is the flagship department store on West 34th Street at Herald Square.",
+      "value": "Macy's Herald Square is the flagship department store on West 34th Street at Herald Square. At about 2.2 million square feet it is the largest department store in the United States, and several of its original wooden escalators still run between floors.",
       "claims": [
         {
           "text": "department store building on West 34th Street at Herald Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store boasts several wooden escalators still in operation",
           "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
         }
       ]

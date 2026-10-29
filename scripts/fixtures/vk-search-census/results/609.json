@@ -68,16 +68,24 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Priceline opaque Standard sedan rental at New York JFK booked as an Express Deal with the brand hidden.",
+      "value": "Priceline opaque Standard sedan rental at New York JFK booked as an Express Deal with the brand hidden. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use.",
       "claims": [
         {
           "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "You do not find out the rental car company until you pay for the rental.",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use.",
           "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
         }
       ]
     },
     "description": {
-      "value": "Priceline opaque Standard sedan is a hidden-brand Express Deal rental at JFK. AutoSlash notes that Express Deal rental reservations are non-refundable, non-transferable, and non-changeable. Priceline lists a Standard Car from $73/day at JFK, so compare it with a named-brand booking first.",
+      "value": "Priceline opaque Standard sedan is a hidden-brand Express Deal rental at JFK. AutoSlash notes that Express Deal rental reservations are non-refundable, non-transferable, and non-changeable, and that you must pay for your Express Deal car rental in full at the time of booking. Priceline lists a Standard Car from $73/day at JFK and says deals are updated frequently, so compare it with a named-brand booking first.",
       "claims": [
         {
           "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
@@ -85,6 +93,14 @@
         },
         {
           "text": "Standard Car from $73/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "pay for your Express Deal car rental in full at the time of booking",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "deals are updated frequently",
           "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
         }
       ]

@@ -57,7 +57,7 @@
   "tripRowTitle": "Thrifty JFK — Compact SUV",
   "fields": {
     "summary": {
-      "value": "Thrifty JFK — Compact SUV (Thrifty Compact SUV at JFK) swaps the sedan for Thrifty's Nissan Kicks or similar compact SUV, picked up at JFK's Federal Circle rental car center.",
+      "value": "Thrifty JFK — Compact SUV (Thrifty Compact SUV at JFK) swaps the sedan for Thrifty's Nissan Kicks or similar compact SUV, picked up at JFK's Federal Circle rental car center. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations.",
       "claims": [
         {
           "text": "Compact SUV Nissan Kicks or similar 5 people 2",
@@ -65,6 +65,10 @@
         },
         {
           "text": "Federal Circle is accessible by the AirTrain from any terminal",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations.",
           "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]

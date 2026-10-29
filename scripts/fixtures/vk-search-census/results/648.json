@@ -31,9 +31,9 @@
     {
       "url": "https://exa.ai/library/place/mycb4xpm3kv",
       "title": "Tiffany & Co. The Landmark reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:10-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_mycb4xpm3kv.html",
-      "text": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list. What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time ! An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment."
+      "text": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list. What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time ! An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment. Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable.."
     }
   ],
   "rating": {
@@ -88,10 +88,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Tiffany & Co. The Landmark is the Tiffany flagship store at 727 Fifth Avenue at 57th Street.",
+      "value": "Tiffany & Co. The Landmark is the Tiffany flagship store at 727 Fifth Avenue at 57th Street. The building has served as Tiffany's flagship since 1940, reopened on April 27, 2023 after renovation, and sells some pieces found only at this location.",
       "claims": [
         {
           "text": "727 Fifth Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
+        },
+        {
+          "text": "The main store reopened on April 27, 2023",
           "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
         }
       ]
@@ -200,6 +204,28 @@
           "savedHtml": "r8/exa_mycb4xpm3kv.html",
           "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
         }
+      },
+      {
+        "theme": "Service",
+        "value": "Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable..",
+        "claims": [
+          {
+            "text": "Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable..",
+            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 100,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mycb4xpm3kv",
+          "savedHtml": "r8/exa_mycb4xpm3kv.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -265,6 +291,7 @@
   "itineraryNote": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
   "review1": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
@@ -283,5 +310,10 @@
   "review3Theme": "Selection",
   "review3SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
   "review3Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "review4": "Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable..",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+  "review4Stars": 5
 }

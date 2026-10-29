@@ -58,7 +58,7 @@
   "tripRowTitle": "Dollar JFK — Full-size sedan",
   "fields": {
     "summary": {
-      "value": "Dollar JFK — Full-size sedan (Dollar Full-size sedan at JFK) is the roomiest sedan here, a Toyota Camry or similar full-size car for 5 people from Dollar's JFK counter.",
+      "value": "Dollar JFK — Full-size sedan (Dollar Full-size sedan at JFK) is the roomiest sedan here, a Toyota Camry or similar full-size car for 5 people from Dollar's JFK counter. Children under five can ride AirTrain free of charge.",
       "claims": [
         {
           "text": "Full-Size Car Toyota Camry or similar 5 people 3",
@@ -66,6 +66,10 @@
         },
         {
           "text": "Dollar +1 (866) 434-2226",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        },
+        {
+          "text": "Children under five can ride AirTrain free of charge.",
           "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]

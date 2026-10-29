@@ -58,7 +58,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick, and You can rent a car at La Guardia Airport after the 22:25 arrival.",
+      "value": "A late-morning departure makes Southwest LAS → LGA 11:30–22:25 the easy-going pick, and You can rent a car at La Guardia Airport after the 22:25 arrival. The 22:25 Eastern arrival means a late night at LaGuardia, so a pre-booked car or taxi plan matters more than on the earlier departures.",
       "claims": [
         {
           "text": "You can rent a car at La Guardia Airport",

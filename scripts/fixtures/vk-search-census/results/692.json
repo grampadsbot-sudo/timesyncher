@@ -19,6 +19,13 @@
       "text": "sed Save Call Web Share Directions Advertisement Advertisement Photos LOGO 233 Bleecker Street, New York, NY, 10014 Welcome to Venchi New York, where Italian chocolate excellence meets authentic italian gelato. Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our excellence line, alongside Gianduiotto, Cremino, and chocolat … t Photos LOGO 233 Bleecker Street, New York, NY, 10014 Welcome to Venchi New York, where Italian chocolate excellence meets authentic italian gelato. Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our excellence line, alongside Gianduiotto, Cremino, and chocolate pralines. ",
       "snippet": "sed Save Call Web Share Directions Advertisement Advertisement Photos LOGO 233 Bleecker Street, New York, NY, 10014 Welcome to Venchi New York, where Italian chocolate excellence meets authentic italian gelato. Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our ex",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/nf1thr7pn4k",
+      "title": "Venchi Bleecker Street reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:35-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_nf1thr7pn4k.html",
+      "text": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence. Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian."
     }
   ],
   "rating": {
@@ -54,11 +61,15 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Venchi Bleecker Street is the Italian chocolate and gelato shop at 233 Bleecker Street in Greenwich Village.",
+      "value": "Venchi Bleecker Street is the Italian chocolate and gelato shop at 233 Bleecker Street in Greenwich Village. Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our excellence line, alongside Gianduiotto, Cremino, and chocolate pralines.",
       "claims": [
         {
           "text": "233 Bleecker Street",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
+        },
+        {
+          "text": "Since 1878, we celebrate Made in Italy taste with iconic creations like Chocoviar, our excellence line, alongside Gianduiotto, Cremino, and chocolate pralines.",
+          "sourceUrl": "https://www.mapquest.com/us/new-york/venchi-chocolate-bleecker-st-800849389"
         }
       ]
     },
@@ -144,6 +155,50 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
+        "claims": [
+          {
+            "text": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
+            "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
+        "rating": "1/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 73,
+        "stars": 1,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/nf1thr7pn4k",
+          "savedHtml": "r8/exa_nf1thr7pn4k.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Building and design",
+        "value": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
+        "claims": [
+          {
+            "text": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
+            "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 80,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/nf1thr7pn4k",
+          "savedHtml": "r8/exa_nf1thr7pn4k.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ]
   },
@@ -183,5 +238,17 @@
   "review2Rating": "4.8/5",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-  "review2Stars": 5
+  "review2Stars": 5,
+  "review3": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
+  "review3Stars": 1,
+  "review4": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Building and design",
+  "review4SourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
+  "review4Stars": 5
 }

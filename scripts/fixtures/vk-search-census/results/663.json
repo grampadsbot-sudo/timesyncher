@@ -23,7 +23,7 @@
     {
       "url": "https://exa.ai/library/place/2c9y5y3vgly",
       "title": "Dizzy’s Club / Jazz at Lincoln Center reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:12-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_2c9y5y3vgly.html",
       "text": "The best time! We love jazz so we enjoyed the show very much with a bottle of wine! We were pleasantly surprised by the food. It was delicious. I recommend the branzino! Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together. This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year. Definitely recommend it for a legendary vibe. Owens' performance, I would say she is now a full-blown jazz enthusiast. It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance. She could not get enough of the incredible live music, solos, improvising, etc. What an experience for us both. I loved the music just as much, but had never been to Dizzy's. The backdrop view of Central Park, Columbus Circle, and the NYC skyline Pasta tasted as if it was blanched in tomato water and crab cakes were too salty. Great jazz band though, Recommend you only come for drinks and music"
     }
@@ -81,10 +81,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor.",
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor. Large windows put Central Park behind the band, and every set carries a food and beverage minimum of $25 per person.",
       "claims": [
         {
           "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        },
+        {
+          "text": "there is a food and beverage minimum of $25 per person, per set",
           "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
         }
       ]

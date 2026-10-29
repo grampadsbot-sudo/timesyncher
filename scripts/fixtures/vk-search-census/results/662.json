@@ -15,9 +15,9 @@
     {
       "url": "https://exa.ai/library/place/0kx49hqyqgw",
       "title": "Boat tour candidates reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:20:53-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_0kx49hqyqgw.html",
-      "text": "We took the 2 hour night cruise and we are so glad we did! It was a great experience from start to finish, the photo opportunities were great! Dave the tour guide was a fountain of knowledge and kept it interesting and entertaining! (All the staff were friendly and welcoming), the boat was spacious and warm (we went today 24th Jan 26 and it was extremely cold outside) Cant recommend this trip enough, well worth the ticket price! We took the two-hour Harbor Lights evening cruise. The views of Manhattan from different angles and the Statue of Liberty at night were truly impressive. The guide was very informative. We arrived at boarding 15 minutes before departure, and the ship was packed with passengers—all the good seats were taken. So if you want a good seat, arrive early. It's not that important, though, as people move around during the cruise, and you're guaranteed great photos and videos. The bar onboard seemed a bit pricey. Honestly, two hours seemed a bit long. Next time, I'd prefer a shorter tour. Great ride,smooth on the water, very knowledgeable tour guide. A bit too fast of a talker, I struggled a bit to keep up, but thats probably on me! Would live to go again on A different tour they offer, lots of information! Bathroom and snacks on the boat, inside and outside seating available, doesn't matter where you sit, you'll see it all!"
+      "text": "We took the 2 hour night cruise and we are so glad we did! It was a great experience from start to finish, the photo opportunities were great! Dave the tour guide was a fountain of knowledge and kept it interesting and entertaining! (All the staff were friendly and welcoming), the boat was spacious and warm (we went today 24th Jan 26 and it was extremely cold outside) Cant recommend this trip enough, well worth the ticket price! We took the two-hour Harbor Lights evening cruise. The views of Manhattan from different angles and the Statue of Liberty at night were truly impressive. The guide was very informative. We arrived at boarding 15 minutes before departure, and the ship was packed with passengers—all the good seats were taken. So if you want a good seat, arrive early. It's not that important, though, as people move around during the cruise, and you're guaranteed great photos and videos. The bar onboard seemed a bit pricey. Honestly, two hours seemed a bit long. Next time, I'd prefer a shorter tour. Great ride,smooth on the water, very knowledgeable tour guide. A bit too fast of a talker, I struggled a bit to keep up, but thats probably on me! Would live to go again on A different tour they offer, lots of information! Bathroom and snacks on the boat, inside and outside seating available, doesn't matter where you sit, you'll see it all! As a French tourist who went there on October of 2025, i have got to say that this activity is an absolut must if you are coming to New York, it’s not extremely expensive, and the fact that you are on the river gives you a superb view of the skyline. I would recommend to do this at night or during sunset. Concerning the crew members, they are great, boarding is quick and easy, the boat is quite stable so it doesn’t tend to get you nauseous, and the person who talks is great. It’s a great way to get great pics of the city, for my friend photographer."
     }
   ],
   "rating": {
@@ -66,16 +66,24 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Boat tour candidates include the Circle Line one-hour Midtown cruise past the Statue of Liberty.",
+      "value": "Boat tour candidates include the Circle Line one-hour Midtown cruise past the Statue of Liberty. It is the quick way to get skyline views, live narration and outdoor decks in a single hour, without giving half a day to Liberty and Ellis Islands.",
       "claims": [
         {
           "text": "See the Statue of Liberty fast on this one hour Midtown cruise",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        },
+        {
+          "text": "Enjoy skyline views, live narration, outdoor decks, and amazing photo moments with Circle Line.",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        },
+        {
+          "text": "See the Statue of Liberty fast on this one hour Midtown cruise.",
           "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
         }
       ]
     },
     "description": {
-      "value": "Boat tour candidates start with Circle Line's Liberty cruise. Circle Line says to see the Statue of Liberty fast on this one hour Midtown cruise. The cruise promises skyline views, live narration, outdoor decks, and amazing photo moments, which fits a short sightseeing slot.",
+      "value": "Boat tour candidates start with Circle Line's Liberty Midtown Cruise. Circle Line says to see the Statue of Liberty fast on this one hour Midtown cruise. The cruise promises skyline views, live narration, outdoor decks, and amazing photo moments, which fits a short sightseeing slot and suits a first afternoon in the city.",
       "claims": [
         {
           "text": "See the Statue of Liberty fast on this one hour Midtown cruise",
@@ -83,6 +91,10 @@
         },
         {
           "text": "skyline views, live narration, outdoor decks, and amazing photo moments",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        },
+        {
+          "text": "Liberty Midtown Cruise",
           "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
         }
       ]
@@ -162,6 +174,28 @@
           "savedHtml": "r8/exa_0kx49hqyqgw.html",
           "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
         }
+      },
+      {
+        "theme": "Value",
+        "value": "As a French tourist who went there on October of 2025, i have got to say that this activity is an absolut must if you are coming to New York, it’s not extremely expensive, and the fact that you are on the river gives you a superb view of the skyline. I would recommend to do this at night or during sunset. Concerning the crew members, they are great, boarding is quick and easy, the boat is quite stable so it doesn’t tend to get you nauseous, and the person who talks is great. It’s a great way to get great pics of the city, for my friend photographer.",
+        "claims": [
+          {
+            "text": "As a French tourist who went there on October of 2025, i have got to say that this activity is an absolut must if you are coming to New York, it’s not extremely expensive, and the fact that you are on the river gives you a superb view of the skyline. I would recommend to do this at night or during sunset. Concerning the crew members, they are great, boarding is quick and easy, the boat is quite stable so it doesn’t tend to get you nauseous, and the person who talks is great. It’s a great way to get great pics of the city, for my friend photographer.",
+            "sourceUrl": "https://exa.ai/library/place/0kx49hqyqgw"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/0kx49hqyqgw",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 109,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/0kx49hqyqgw",
+          "savedHtml": "r8/exa_0kx49hqyqgw.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsScope": "Reviews are for Circle Line Sightseeing Cruises, Pier 83 (anchor named in summary), not every candidate in this row"
@@ -173,6 +207,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Boat tour candidates: a quick harbor fix; try the one hour Midtown cruise for Statue of Liberty views.",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
   "review1": "We took the 2 hour night cruise and we are so glad we did! It was a great experience from start to finish, the photo opportunities were great! Dave the tour guide was a fountain of knowledge and kept it interesting and entertaining! (All the staff were friendly and welcoming), the boat was spacious and warm (we went today 24th Jan 26 and it was extremely cold outside) Cant recommend this trip enough, well worth the ticket price!",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
@@ -191,5 +226,10 @@
   "review3Theme": "Seating",
   "review3SourceUrl": "https://exa.ai/library/place/0kx49hqyqgw",
   "review3Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "review4": "As a French tourist who went there on October of 2025, i have got to say that this activity is an absolut must if you are coming to New York, it’s not extremely expensive, and the fact that you are on the river gives you a superb view of the skyline. I would recommend to do this at night or during sunset. Concerning the crew members, they are great, boarding is quick and easy, the boat is quite stable so it doesn’t tend to get you nauseous, and the person who talks is great. It’s a great way to get great pics of the city, for my friend photographer.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Value",
+  "review4SourceUrl": "https://exa.ai/library/place/0kx49hqyqgw",
+  "review4Stars": 5
 }

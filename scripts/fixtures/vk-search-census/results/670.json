@@ -35,6 +35,13 @@
       "text": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings … $1.5 oysters … The best restaurant on the UWS … beef tartare, salade nicoise, moules-frites, burger … make you feel at home the moment you walk in … Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible … Great vibe. The mussels were excellent. … Everyone who works there is so warm and friendly",
       "snippet": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/8gzhdlplw0b",
+      "title": "Amelie Bistro & Wine Bar reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:41-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_8gzhdlplw0b.html",
+      "text": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it."
     }
   ],
   "rating": {
@@ -225,6 +232,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
+        "claims": [
+          {
+            "text": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
+            "sourceUrl": "https://exa.ai/library/place/8gzhdlplw0b"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8gzhdlplw0b",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 50,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8gzhdlplw0b",
+          "savedHtml": "r8/exa_8gzhdlplw0b.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -293,5 +322,11 @@
   "review3Rating": "4.3",
   "review3Theme": "Warm service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-  "review3Stars": 5
+  "review3Stars": 5,
+  "review4": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/8gzhdlplw0b",
+  "review4Stars": 4
 }

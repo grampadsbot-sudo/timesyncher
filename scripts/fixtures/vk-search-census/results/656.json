@@ -57,10 +57,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest's 07:25 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35, lands at 16:35, with EarlyBird Check-in® offered on the route.",
+      "value": "Southwest's 07:25 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35, lands at 16:35, with EarlyBird Check-in® offered on the route. It runs Las Vegas (LAS) to New York LaGuardia (LGA), with rental cars available at La Guardia Airport after landing.",
       "claims": [
         {
           "text": "EarlyBird Check-in®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

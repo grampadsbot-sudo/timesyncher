@@ -24,7 +24,9 @@
       "url": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
       "text": " | Guest Reviews 8.9/10 70 verified reviews … This hotel is quite good for its New York City location. … The bed was clean, and the bathroom mirror was large. … It was the most comfortable hotel I stayed at during my trip to New York. … However, the decor is a bit dated, and while there are two elevators, they are old.",
       "title": "Trip.com reviews",
-      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:19-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/621.json"
     }
   ],
   "rating": {

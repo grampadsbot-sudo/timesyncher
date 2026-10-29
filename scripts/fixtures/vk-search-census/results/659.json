@@ -31,9 +31,16 @@
     {
       "url": "https://www.restaurantji.com/ny/new-york/blue-note-/",
       "title": "Blue Note reviews | Restaurantji",
-      "fetchedAt": "2026-10-29T09:20:00-07:00",
+      "fetchedAt": "2026-10-29T09:16:08-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_124430a340.html",
       "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+    },
+    {
+      "url": "https://exa.ai/library/place/3yp348r72jp",
+      "title": "Blue Note reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:34-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_3yp348r72jp.html",
+      "text": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾 Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served! If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves."
     }
   ],
   "rating": {
@@ -89,11 +96,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note's October 2026 calendar is a Robert Glasper residency, with Robert Glasper OG Acoustic Piano Trio and other sets at 8:00 PM & 10:30 PM.",
+      "value": "Blue Note's October 2026 calendar is a Robert Glasper residency, with Robert Glasper OG Acoustic Piano Trio and other sets at 8:00 PM & 10:30 PM. Music starts at 8:00 p.m. and 10:30 p.m. with doors at 6:00 p.m. and 10:00 p.m.",
       "claims": [
         {
           "text": "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
         }
       ]
     },
@@ -161,6 +172,72 @@
           "savedHtml": "r7/raw/st_124430a340.html",
           "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
         }
+      },
+      {
+        "theme": "Seating",
+        "value": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾",
+        "claims": [
+          {
+            "text": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾",
+            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 68,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/3yp348r72jp",
+          "savedHtml": "r8/exa_3yp348r72jp.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Seating",
+        "value": "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!",
+        "claims": [
+          {
+            "text": "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!",
+            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 84,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/3yp348r72jp",
+          "savedHtml": "r8/exa_3yp348r72jp.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Seating",
+        "value": "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves.",
+        "claims": [
+          {
+            "text": "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves.",
+            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 86,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/3yp348r72jp",
+          "savedHtml": "r8/exa_3yp348r72jp.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -223,11 +300,29 @@
   "itineraryNote": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
   "review1": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
   "review1Source": "Restaurantji",
   "review1Rating": "3/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "review2": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Seating",
+  "review2SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review2Stars": 4,
+  "review3": "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4/5",
+  "review3Theme": "Seating",
+  "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review3Stars": 4,
+  "review4": "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Seating",
+  "review4SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review4Stars": 5
 }

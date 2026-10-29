@@ -82,10 +82,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Bergdorf Goodman is the Fifth Avenue luxury department store founded in 1899 by Herman Bergdorf.",
+      "value": "Bergdorf Goodman is the Fifth Avenue luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
       "claims": [
         {
           "text": "luxury department store founded in 1899 by Herman Bergdorf",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
         }
       ]

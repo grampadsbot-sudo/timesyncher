@@ -40,7 +40,9 @@
       "url": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
       "text": " | Guest Reviews 8.1/10 129 verified reviews … This hotel is located in a great, safe area of Upper Manhattan. … The room is very big, the bed is also very comfortable, and it is clean. … The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey. … The lobby seems to have been recently renovated, but the guest rooms are clearly dated.",
       "title": "Trip.com reviews",
-      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:13-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/617.json"
     }
   ],
   "rating": {

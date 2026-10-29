@@ -16,7 +16,7 @@
       "url": "https://exa.ai/library/place/dl6s896ycgb",
       "title": "Exa place listing: Angelina Bakery, 1675 Broadway",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "g: Angelina Bakery, 1675 Broadway | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long … ve curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long … t stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long",
+      "text": "g: Angelina Bakery, 1675 Broadway | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long … ve curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long … t stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long I tried their pistachio gelato and their tiramisu. Both were decent. I’ve been a couple times. They have other things on the menu. Bomboloni and some pizza. They can be busy during warmer days. Average price for this area. So many options to choose from. From pastries, pizza, cakes, gelato, donuts, croissaints. There's really something for everyone here. We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato. Everything was very tasty. I would go there again if I was in the area.",
       "snippet": "g: Angelina Bakery, 1675 Broadway | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.3 out of 5 · 2,262 reviews … This beautiful Italian bakery on Broadway near 52nd Street has great pastries … Lines can get long",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -142,6 +142,50 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "So many options to choose from. From pastries, pizza, cakes, gelato, donuts, croissaints. There's really something for everyone here. We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato. Everything was very tasty. I would go there again if I was in the area.",
+        "claims": [
+          {
+            "text": "So many options to choose from. From pastries, pizza, cakes, gelato, donuts, croissaints. There's really something for everyone here. We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato. Everything was very tasty. I would go there again if I was in the area.",
+            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 44,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/dl6s896ycgb",
+          "savedHtml": "r8/exa_dl6s896ycgb.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "I tried their pistachio gelato and their tiramisu. Both were decent. I’ve been a couple times. They have other things on the menu. Bomboloni and some pizza. They can be busy during warmer days. Average price for this area.",
+        "claims": [
+          {
+            "text": "I tried their pistachio gelato and their tiramisu. Both were decent. I’ve been a couple times. They have other things on the menu. Bomboloni and some pizza. They can be busy during warmer days. Average price for this area.",
+            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 39,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/dl6s896ycgb",
+          "savedHtml": "r8/exa_dl6s896ycgb.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -219,5 +263,17 @@
   "review2Rating": "4.3",
   "review2Theme": "Lines",
   "review2SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
-  "review2Stars": 5
+  "review2Stars": 5,
+  "review3": "So many options to choose from. From pastries, pizza, cakes, gelato, donuts, croissaints. There's really something for everyone here. We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato. Everything was very tasty. I would go there again if I was in the area.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+  "review3Stars": 4,
+  "review4": "I tried their pistachio gelato and their tiramisu. Both were decent. I’ve been a couple times. They have other things on the menu. Bomboloni and some pizza. They can be busy during warmer days. Average price for this area.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+  "review4Stars": 4
 }

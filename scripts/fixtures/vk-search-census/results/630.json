@@ -59,10 +59,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern.",
+      "value": "Southwest LAS → LGA 07:25–16:35 covers Las Vegas (LAS) to New York LaGuardia (LGA), leaving mid-morning and arriving at 16:35 Eastern. The flight covers 2242 miles, a long morning in the air that still leaves the evening free in Manhattan.",
       "claims": [
         {
           "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

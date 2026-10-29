@@ -59,10 +59,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines.",
+      "value": "The earliest kept option, Southwest LAS → LGA 05:05–15:45, departs Las Vegas before dawn on a route where There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. It covers 2242 miles and lands mid-afternoon.",
       "claims": [
         {
           "text": "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Distance: 2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

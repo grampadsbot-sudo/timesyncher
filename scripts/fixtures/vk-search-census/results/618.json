@@ -24,7 +24,9 @@
       "url": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
       "text": " | Guest Reviews 8.9/10 101 verified reviews … Other than that, we enjoyed our stay very much … Rooms were clean and comfortable and as quiet as a NYC room can be. … Room service is missing and breakfast is very expensive, $50 when it was advertised at $18. … Our first room had a leaking A/C and wet carpet.",
       "title": "Trip.com reviews",
-      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:15-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/618.json"
     }
   ],
   "rating": {

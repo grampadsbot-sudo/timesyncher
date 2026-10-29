@@ -57,7 +57,7 @@
   "tripRowTitle": "Hertz JFK — Compact SUV",
   "fields": {
     "summary": {
-      "value": "Hertz JFK — Compact SUV (Hertz Compact SUV at JFK) is a Nissan Kicks or similar compact SUV from Hertz, whose JFK renters on Priceline give it 8.4 from 266 reviews.",
+      "value": "Hertz JFK — Compact SUV (Hertz Compact SUV at JFK) is a Nissan Kicks or similar compact SUV from Hertz, whose JFK renters on Priceline give it 8.4 from 266 reviews. After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight.",
       "claims": [
         {
           "text": "Compact SUV Nissan Kicks or similar 5 people 2",
@@ -66,6 +66,10 @@
         {
           "text": "Hertz Corporation 8.4 266 reviews Typical Wait Time 0-15 Minutes",
           "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight.",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]
     },

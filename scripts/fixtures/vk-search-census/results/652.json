@@ -61,10 +61,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "JetBlue's overnight Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure.",
+      "value": "JetBlue's overnight Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a red-eye, and FlightMapper notes for late JetBlue departures that the flight arrives 1 day after departure. The direct flight time runs between 4:44 and 5:15.",
       "claims": [
         {
           "text": "The flight arrives 1 day after departure",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        },
+        {
+          "text": "For direct flights, the flight time varies between 4:44 and 5:15",
           "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
         }
       ]

@@ -27,6 +27,13 @@
       "text": "The Consulate UWS | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.6 828 ratings … Blown away by interior design, topped with finger-licking food, friendly service … nice casual/not too casual joint … great for Sunday supper … Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks! … The food was amazing. Bibi is an amazing waitress.",
       "snippet": "4.6 828 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/jv3tf57qdxs",
+      "title": "The Consulate UWS reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:33-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_jv3tf57qdxs.html",
+      "text": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!"
     }
   ],
   "rating": {
@@ -180,6 +187,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!",
+        "claims": [
+          {
+            "text": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!",
+            "sourceUrl": "https://exa.ai/library/place/jv3tf57qdxs"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/jv3tf57qdxs",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 47,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/jv3tf57qdxs",
+          "savedHtml": "r8/exa_jv3tf57qdxs.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -245,5 +274,11 @@
   "review3Rating": "4.5",
   "review3Theme": "Service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-  "review3Stars": 5
+  "review3Stars": 5,
+  "review4": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/jv3tf57qdxs",
+  "review4Stars": 5
 }

@@ -31,7 +31,7 @@
     {
       "url": "https://exa.ai/library/place/vnffv79vcj0",
       "title": "Whole Foods Market Columbus Circle reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:09-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_vnffv79vcj0.html",
       "text": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals! We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us. It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home. This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic."
     }
@@ -95,11 +95,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Whole Foods Market Columbus Circle is the big grocery conveniently located in the lower level of 10 Columbus Circle, with a hot bar, sushi and café seating.",
+      "value": "Whole Foods Market Columbus Circle is the big grocery conveniently located in the lower level of 10 Columbus Circle, with a hot bar, sushi and café seating. It is a practical stop for a Central Park picnic, with a hot and salad bar, Genji sushi and a coffee bar under one roof.",
       "claims": [
         {
           "text": "conveniently located in the lower level of 10 Columbus Circle",
           "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-3"
+        },
+        {
+          "text": "Genji Sushi Authentic sushi freshly rolled",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
         }
       ]
     },

@@ -60,7 +60,7 @@
   "tripRowTitle": "Dollar JFK — Compact SUV",
   "fields": {
     "summary": {
-      "value": "Dollar JFK — Compact SUV (Dollar Compact SUV at JFK) is Dollar's Nissan Kicks or similar compact SUV at $97/day on Priceline, below the $104/day Hertz rate.",
+      "value": "Dollar JFK — Compact SUV (Dollar Compact SUV at JFK) is Dollar's Nissan Kicks or similar compact SUV at $97/day on Priceline, below the $104/day Hertz rate. To return it, enter Federal Circle Station in your GPS, then take the AirTrain to your terminal.",
       "claims": [
         {
           "text": "Compact SUV Nissan Kicks or similar 5 people 2",
@@ -73,6 +73,10 @@
         {
           "text": "Hertz Corporation $104/day",
           "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "After you drop off your rental, take the AirTrain to reach your designated terminal to catch your flight",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]
     },

@@ -16,7 +16,7 @@
       "url": "https://exa.ai/library/place/9t58jkr8sn4",
       "title": "Exa place listing: Whole Foods Market, 808 Columbus Ave",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "uest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices …  (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices … le Foods Market, 808 Columbus Ave | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves … ive curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher pric",
+      "text": "uest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices …  (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices … le Foods Market, 808 Columbus Ave | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves … ive curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher pric I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism. Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
       "snippet": "uest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … Rating 4.2 out of 5 · 2,920 reviews … A very large supermarket serving the Upper Westside, with very fully stocked shelves and slightly higher prices",
       "fetchMethod": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts"
     },
@@ -89,11 +89,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Whole Foods Market Upper West Side at 808 Columbus Ave is a large neighborhood supermarket with sushi, made-to-order sandwiches, a wine store and a hot bar.",
+      "value": "Whole Foods Market Upper West Side at 808 Columbus Ave is a large neighborhood supermarket with sushi, made-to-order sandwiches, a wine store and a hot bar. Reviewers note it carries more groceries than the Columbus Circle branch, with good fresh produce and sales, though prices run slightly higher.",
       "claims": [
         {
           "text": "808 Columbus Ave, New York, NY 10025-5139",
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "More groceries than the Columbus Circle Location.",
+          "sourceUrl": "https://www.yelp.com/biz/whole-foods-market-new-york-10"
         }
       ]
     },
@@ -203,6 +207,50 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Service",
+        "value": "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism.",
+        "claims": [
+          {
+            "text": "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism.",
+            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+        "rating": "1/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 84,
+        "stars": 1,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9t58jkr8sn4",
+          "savedHtml": "r8/exa_9t58jkr8sn4.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
+        "claims": [
+          {
+            "text": "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
+            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 69,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9t58jkr8sn4",
+          "savedHtml": "r8/exa_9t58jkr8sn4.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ]
   },
@@ -242,5 +290,17 @@
   "review2Rating": "3.2/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review2Stars": 5
+  "review2Stars": 5,
+  "review3": "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review3Stars": 1,
+  "review4": "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review4Stars": 5
 }

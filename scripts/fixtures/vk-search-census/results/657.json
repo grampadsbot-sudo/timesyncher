@@ -57,10 +57,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest's 11:30 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25, lands at 22:25, and you can rent a car at La Guardia Airport.",
+      "value": "Southwest's 11:30 departure on June 23, Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25, lands at 22:25, and you can rent a car at La Guardia Airport. The route is 2242 miles, and the fares shown are Basic, so check the extra conditions.",
       "claims": [
         {
           "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

@@ -63,10 +63,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "On the return row American Airlines JFK → LAS, AAdvantage® members can earn miles on eligible American Airlines flights from New York back to Las Vegas.",
+      "value": "On the return row American Airlines JFK → LAS, AAdvantage® members can earn miles on eligible American Airlines flights from New York back to Las Vegas. Seats at the front of the Main Cabin or in exit rows give more space, and full beverage service is offered.",
       "claims": [
         {
           "text": "AAdvantage® members can earn miles on eligible American Airlines flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "More space with seats at the front of the Main Cabin or in exit rows",
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]

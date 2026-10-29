@@ -19,6 +19,13 @@
       "text": "d their tents like the Nomad, and silently steal away.\" - Henry Wadsworth Longfellow Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate t … w Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate the lives and spirits of famous writers and poets. The mahogany-paneled wa … et in September of 2000. Drew, a former high school English teacher, designed the bar to celebrate the lives and spirits of famous writers and poets. The mahogany-paneled walls are adorned with black and white portraits, musing quotations, and poetic passages pertaining to the universal quandaries of life. Read More about us Events Christmas Friday December 25th Happ",
       "snippet": "d their tents like the Nomad, and silently steal away.\" - Henry Wadsworth Longfellow Specials We are updating our specials Please stay tuned About Us Combining his passion for Irish pubs and literature, Owner/Proprietor Drew Dvorkin opened The Dead Poet in September of 2000. Drew, a former high scho",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/n75jlxhmk9d",
+      "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:50:03-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_n75jlxhmk9d.html",
+      "text": "I celebrated my 30th birthday at E’s, and I truly could not have asked for a better experience!!!!!!!!! Ajay and Mia took amazing care of us and were so attentive to our group of 23, making sure we had everything we needed to enjoy the night. The food and drinks were incredible !!! Our open bar package was immaculate and so smooth! We also ordered large platters, and everything was handled with so much care and attention. My friend and I went last night and this place was SO FUNNNNNNNNNNN! The drinks were amazing and Ruben took great care of us! Definitely will be coming back when we’re in New York again:) happy hour ends at 4p on saturdays fyi. but i fw this place, def was the 1/3 black people in here BUT the fries and smash burger are delish anddddd Franklin is the best. give him a raise 👏🏽 and there are card games! not reg cards tho if you’re trying to play spades or spoons Came to e’s Bar on a crowded weekend night with a big group of friends and had a blast! Service was prompt and friendly. Food was tasty. Tons of drink options at reasonable prices. Would recommend!"
     }
   ],
   "rating": {
@@ -125,7 +132,98 @@
           "sourceUrl": "https://e-barnyc.com/"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Food and drinks",
+        "value": "I celebrated my 30th birthday at E’s, and I truly could not have asked for a better experience!!!!!!!!! Ajay and Mia took amazing care of us and were so attentive to our group of 23, making sure we had everything we needed to enjoy the night. The food and drinks were incredible !!! Our open bar package was immaculate and so smooth! We also ordered large platters, and everything was handled with so much care and attention.",
+        "claims": [
+          {
+            "text": "I celebrated my 30th birthday at E’s, and I truly could not have asked for a better experience!!!!!!!!! Ajay and Mia took amazing care of us and were so attentive to our group of 23, making sure we had everything we needed to enjoy the night. The food and drinks were incredible !!! Our open bar package was immaculate and so smooth! We also ordered large platters, and everything was handled with so much care and attention.",
+            "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 77,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/n75jlxhmk9d",
+          "savedHtml": "r8/exa_n75jlxhmk9d.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "My friend and I went last night and this place was SO FUNNNNNNNNNNN! The drinks were amazing and Ruben took great care of us! Definitely will be coming back when we’re in New York again:)",
+        "claims": [
+          {
+            "text": "My friend and I went last night and this place was SO FUNNNNNNNNNNN! The drinks were amazing and Ruben took great care of us! Definitely will be coming back when we’re in New York again:)",
+            "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 35,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/n75jlxhmk9d",
+          "savedHtml": "r8/exa_n75jlxhmk9d.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "happy hour ends at 4p on saturdays fyi. but i fw this place, def was the 1/3 black people in here BUT the fries and smash burger are delish anddddd Franklin is the best. give him a raise 👏🏽 and there are card games! not reg cards tho if you’re trying to play spades or spoons",
+        "claims": [
+          {
+            "text": "happy hour ends at 4p on saturdays fyi. but i fw this place, def was the 1/3 black people in here BUT the fries and smash burger are delish anddddd Franklin is the best. give him a raise 👏🏽 and there are card games! not reg cards tho if you’re trying to play spades or spoons",
+            "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 56,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/n75jlxhmk9d",
+          "savedHtml": "r8/exa_n75jlxhmk9d.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "Came to e’s Bar on a crowded weekend night with a big group of friends and had a blast! Service was prompt and friendly. Food was tasty. Tons of drink options at reasonable prices. Would recommend!",
+        "claims": [
+          {
+            "text": "Came to e’s Bar on a crowded weekend night with a big group of friends and had a blast! Service was prompt and friendly. Food was tasty. Tons of drink options at reasonable prices. Would recommend!",
+            "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 36,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/n75jlxhmk9d",
+          "savedHtml": "r8/exa_n75jlxhmk9d.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      }
+    ],
+    "reviewsScope": "Reviews are for e's BAR, 511 Amsterdam Ave (first venue named in this row), not every candidate in this row"
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -133,5 +231,29 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine: an Upper West Side bar crawl; start with games at e's BAR, then a pint among the authors at The Dead Poet."
+  "itineraryNote": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine: an Upper West Side bar crawl; start with games at e's BAR, then a pint among the authors at The Dead Poet.",
+  "review1": "I celebrated my 30th birthday at E’s, and I truly could not have asked for a better experience!!!!!!!!! Ajay and Mia took amazing care of us and were so attentive to our group of 23, making sure we had everything we needed to enjoy the night. The food and drinks were incredible !!! Our open bar package was immaculate and so smooth! We also ordered large platters, and everything was handled with so much care and attention.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+  "review1Stars": 5,
+  "review2": "My friend and I went last night and this place was SO FUNNNNNNNNNNN! The drinks were amazing and Ruben took great care of us! Definitely will be coming back when we’re in New York again:)",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Atmosphere",
+  "review2SourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+  "review2Stars": 5,
+  "review3": "happy hour ends at 4p on saturdays fyi. but i fw this place, def was the 1/3 black people in here BUT the fries and smash burger are delish anddddd Franklin is the best. give him a raise 👏🏽 and there are card games! not reg cards tho if you’re trying to play spades or spoons",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+  "review3Stars": 5,
+  "review4": "Came to e’s Bar on a crowded weekend night with a big group of friends and had a blast! Service was prompt and friendly. Food was tasty. Tons of drink options at reasonable prices. Would recommend!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/n75jlxhmk9d",
+  "review4Stars": 5
 }

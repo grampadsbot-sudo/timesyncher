@@ -56,10 +56,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Tuesday, June 23, 2026 starts before dawn for Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45, landing 15:45 at La Guardia Airport, Distance: 2242 miles.",
+      "value": "Tuesday, June 23, 2026 starts before dawn for Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45, landing 15:45 at La Guardia Airport, Distance: 2242 miles. Leaving at 05:05 means an early alarm, but the mid-afternoon landing leaves the whole evening free in New York.",
       "claims": [
         {
           "text": "Distance: 2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

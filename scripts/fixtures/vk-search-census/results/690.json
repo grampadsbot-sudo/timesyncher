@@ -27,6 +27,13 @@
       "text": "Westville Hell's Kitchen | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.5 448 ratings … you call relax and have a conversation … Chicken Salad Fritters!!!!! … Jess is the best bartender in the biz! … Always good and you call relax and have a conversation … Jess is the best bartender in the biz! She makes us feel so at home",
       "snippet": "4.5 448 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/xjgkwjzrsty",
+      "title": "Westville Hell's Kitchen reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:33-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_xjgkwjzrsty.html",
+      "text": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible."
     }
   ],
   "rating": {
@@ -176,6 +183,28 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
+        "claims": [
+          {
+            "text": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
+            "sourceUrl": "https://exa.ai/library/place/xjgkwjzrsty"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/xjgkwjzrsty",
+        "rating": "2/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 80,
+        "stars": 2,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/xjgkwjzrsty",
+          "savedHtml": "r8/exa_xjgkwjzrsty.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ],
     "reviewsUnstarred": [
@@ -241,5 +270,11 @@
   "review3Rating": "4.6",
   "review3Theme": "Bar team",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-  "review3Stars": 5
+  "review3Stars": 5,
+  "review4": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "2/5",
+  "review4Theme": "Atmosphere",
+  "review4SourceUrl": "https://exa.ai/library/place/xjgkwjzrsty",
+  "review4Stars": 2
 }

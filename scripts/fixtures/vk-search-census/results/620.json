@@ -32,7 +32,9 @@
       "url": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
       "text": " | Guest Reviews 8.4/10 131 verified reviews … It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean. … The service was usually friendly though sometimes only perfunctory. … I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices. … My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
       "title": "Trip.com reviews",
-      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:18-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/620.json"
     }
   ],
   "rating": {

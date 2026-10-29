@@ -31,7 +31,7 @@
     {
       "url": "https://exa.ai/library/place/lb1lwzx35s1",
       "title": "Friend meetup at Bryant Park reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:11-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_lb1lwzx35s1.html",
       "text": "I had so much fun walking through Bryant Park on my way to see the NYC Public Library. There was a Lunar New Year celebration taking place. I watched an adorable group of kids perform an ice skating routine, then watched the New York Chinese Cultural Center Lions perform (watch the video I posted, it was awesome). Next trip back to NYC I'll have to see what adventure Bryant Park holds in store for me. Midtown's backyard. Grab a coffee, snag one of those green chairs, and just exist. Ice skating in winter, movies in summer, ping pong tables, chess, random pop-ups. Bathrooms are clean which is a miracle. Gets busy but never feels chaotic. Right behind the library. Solid spot. I just love Bryant Park at Christmas. The winter village is really nice, with lots of options for seasonal food, drinks and activities (including gift shopping, ice skating, and a carousel). The decorations are always tasteful and the fact that the park sits between the majestic National Library building at one end and a lovely French restaurant at the other gives it a very charming feel. Visited in February. Great place to relax. Ice rink is a free admission but with a catch, if you bring your own skates. Otherwise it’s about $20 to rent skates. Great park overall"
     }
@@ -93,11 +93,15 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Friend meetup at Bryant Park: a Midtown green behind the library where Bryant Park has a French-style merry-go-round, open year-round, plus a well-maintained lawn, with chairs and tables.",
+      "value": "Friend meetup at Bryant Park: a Midtown green behind the library where Bryant Park has a French-style merry-go-round, open year-round, plus a well-maintained lawn, with chairs and tables. Located on the northeast corner of the park by 42nd Street.",
       "claims": [
         {
           "text": "Bryant Park has a French-style merry-go-round, open year-round, plus a well-maintained lawn, with chairs and tables.",
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+        },
+        {
+          "text": "Located on the northeast corner of the park by 42nd Street.",
+          "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
         }
       ]
     },

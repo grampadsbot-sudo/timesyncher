@@ -59,10 +59,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern.",
+      "value": "Travelers wanting more comfort can look at Upgrade to Business Select® on Southwest LAS → LGA 06:50–18:55, which lands at 18:55 Eastern. It flies Las Vegas (LAS) to New York LaGuardia (LGA) on the longest day of the kept Southwest options, departing 06:50.",
       "claims": [
         {
           "text": "Upgrade to Business Select®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]

@@ -23,7 +23,7 @@
     {
       "url": "https://exa.ai/library/place/l2vthp9k49x",
       "title": "Chelsea Market reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:07-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_l2vthp9k49x.html",
       "text": "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner. They had a Chinese new year event that was simple but nice for the children. Lots of little indie shops with really interesting items and few other gift types shops. Must visit after doing the high line (if you ended at 10th side exit). It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes. We had oysters and really liked them. This was our 1st time visiting Chelsea Market and Wow is all I can say. This place left us speechless. First of all the building is beautiful, then all the restaurant and shops are just amazing. This is such a unique place and we will definitely be back to explore more spots. • Really glad I finally got to visit Chelsea Market! • Such a great variety of food and shopping stalls—you really can’t go wrong with any of them. My favorites were the fresh noodle spot and Seed + Mill for dessert. • We also loved the artist flea market area—so many amazing finds! Picked up some souvenirs and bath + skincare goodies from IE. • Beautiful, spacious interiors and clean restrooms. • Chelsea Market is definitely a must-visit when you’re in NYC! 💛"
     }
@@ -78,7 +78,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Chelsea Market is the indoor food hall at 75 Ninth Avenue between 15th and 16th Streets.",
+      "value": "Chelsea Market is the indoor food hall at 75 Ninth Avenue between 15th and 16th Streets. Chelsea Market sits beside the High Line, and it is best treated as a grazing stop across several food stalls and indie shops rather than one sit-down meal.",
       "claims": [
         {
           "text": "75 Ninth Avenue (between 15th & 16th St.)",
@@ -110,11 +110,11 @@
     },
     "reviews": [
       {
-        "theme": "Selection",
-        "value": "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner. They had a Chinese new year event that was simple but nice for the children. Lots of little indie shops with really interesting items and few other gift types shops. Must visit after doing the high line (if you ended at 10th side exit).",
+        "theme": "Indie shops",
+        "value": "Lots of little indie shops with really interesting items and few other gift types shops.",
         "claims": [
           {
-            "text": "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner. They had a Chinese new year event that was simple but nice for the children. Lots of little indie shops with really interesting items and few other gift types shops. Must visit after doing the high line (if you ended at 10th side exit).",
+            "text": "Lots of little indie shops with really interesting items and few other gift types shops.",
             "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
           }
         ],
@@ -123,7 +123,7 @@
         "rating": "5/5",
         "ratingBasis": "per-review stars",
         "polarity": "praise",
-        "words": 66,
+        "words": 15,
         "stars": 5,
         "starsEvidence": {
           "page": "https://exa.ai/library/place/l2vthp9k49x",
@@ -132,11 +132,11 @@
         }
       },
       {
-        "theme": "Food and drinks",
-        "value": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes. We had oysters and really liked them.",
+        "theme": "Food stalls",
+        "value": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
         "claims": [
           {
-            "text": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes. We had oysters and really liked them.",
+            "text": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
             "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
           }
         ],
@@ -145,7 +145,7 @@
         "rating": "4/5",
         "ratingBasis": "per-review stars",
         "polarity": "praise",
-        "words": 25,
+        "words": 18,
         "stars": 4,
         "starsEvidence": {
           "page": "https://exa.ai/library/place/l2vthp9k49x",
@@ -155,10 +155,10 @@
       },
       {
         "theme": "Building and design",
-        "value": "This was our 1st time visiting Chelsea Market and Wow is all I can say. This place left us speechless. First of all the building is beautiful, then all the restaurant and shops are just amazing. This is such a unique place and we will definitely be back to explore more spots.",
+        "value": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
         "claims": [
           {
-            "text": "This was our 1st time visiting Chelsea Market and Wow is all I can say. This place left us speechless. First of all the building is beautiful, then all the restaurant and shops are just amazing. This is such a unique place and we will definitely be back to explore more spots.",
+            "text": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
             "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
           }
         ],
@@ -167,7 +167,7 @@
         "rating": "5/5",
         "ratingBasis": "per-review stars",
         "polarity": "praise",
-        "words": 52,
+        "words": 16,
         "stars": 5,
         "starsEvidence": {
           "page": "https://exa.ai/library/place/l2vthp9k49x",
@@ -176,11 +176,11 @@
         }
       },
       {
-        "theme": "Selection",
-        "value": "• Really glad I finally got to visit Chelsea Market! • Such a great variety of food and shopping stalls—you really can’t go wrong with any of them. My favorites were the fresh noodle spot and Seed + Mill for dessert. • We also loved the artist flea market area—so many amazing finds! Picked up some souvenirs and bath + skincare goodies from IE. • Beautiful, spacious interiors and clean restrooms. • Chelsea Market is definitely a must-visit when you’re in NYC! 💛",
+        "theme": "Artist market",
+        "value": "We also loved the artist flea market area—so many amazing finds!",
         "claims": [
           {
-            "text": "• Really glad I finally got to visit Chelsea Market! • Such a great variety of food and shopping stalls—you really can’t go wrong with any of them. My favorites were the fresh noodle spot and Seed + Mill for dessert. • We also loved the artist flea market area—so many amazing finds! Picked up some souvenirs and bath + skincare goodies from IE. • Beautiful, spacious interiors and clean restrooms. • Chelsea Market is definitely a must-visit when you’re in NYC! 💛",
+            "text": "We also loved the artist flea market area—so many amazing finds!",
             "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
           }
         ],
@@ -189,7 +189,7 @@
         "rating": "5/5",
         "ratingBasis": "per-review stars",
         "polarity": "praise",
-        "words": 83,
+        "words": 11,
         "stars": 5,
         "starsEvidence": {
           "page": "https://exa.ai/library/place/l2vthp9k49x",
@@ -206,28 +206,28 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
-  "review1": "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner. They had a Chinese new year event that was simple but nice for the children. Lots of little indie shops with really interesting items and few other gift types shops. Must visit after doing the high line (if you ended at 10th side exit).",
+  "review1": "Lots of little indie shops with really interesting items and few other gift types shops.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
-  "review1Theme": "Selection",
+  "review1Theme": "Indie shops",
   "review1SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review1Stars": 5,
-  "review2": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes. We had oysters and really liked them.",
+  "review2": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
-  "review2Theme": "Food and drinks",
+  "review2Theme": "Food stalls",
   "review2SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review2Stars": 4,
-  "review3": "This was our 1st time visiting Chelsea Market and Wow is all I can say. This place left us speechless. First of all the building is beautiful, then all the restaurant and shops are just amazing. This is such a unique place and we will definitely be back to explore more spots.",
+  "review3": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Building and design",
   "review3SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review3Stars": 5,
-  "review4": "• Really glad I finally got to visit Chelsea Market! • Such a great variety of food and shopping stalls—you really can’t go wrong with any of them. My favorites were the fresh noodle spot and Seed + Mill for dessert. • We also loved the artist flea market area—so many amazing finds! Picked up some souvenirs and bath + skincare goodies from IE. • Beautiful, spacious interiors and clean restrooms. • Chelsea Market is definitely a must-visit when you’re in NYC! 💛",
+  "review4": "We also loved the artist flea market area—so many amazing finds!",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
-  "review4Theme": "Selection",
+  "review4Theme": "Artist market",
   "review4SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review4Stars": 5,
   "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"

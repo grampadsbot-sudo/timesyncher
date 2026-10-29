@@ -59,7 +59,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Festival New York 2026 returns in June 2026 for its fifteenth year, with Ledisi, Big Freedia, SHABAKA and Kokoroko on the lineup.",
+      "value": "Blue Note Jazz Festival New York 2026 returns in June 2026 for its fifteenth year, with Ledisi, Big Freedia, SHABAKA and Kokoroko on the lineup. It is a multi-venue festival, so the trip only fits if the June dates line up with the specific shows chosen.",
       "claims": [
         {
           "text": "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in",
@@ -68,11 +68,15 @@
         {
           "text": "Ledisi, Big Freedia, SHABAKA, Kokoroko",
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        },
+        {
+          "text": "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Festival New York 2026 is a multi-venue jazz festival. The festival site says Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026. The listed lineup includes Ledisi, Big Freedia, SHABAKA and Kokoroko, so check dates against the trip.",
+      "value": "Blue Note Jazz Festival New York 2026 is a multi-venue jazz festival. The festival site says Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026. The listed lineup includes Ledisi, Big Freedia, SHABAKA and Kokoroko, plus UMI, Mario + more, so check individual show dates and venues against the trip before buying tickets.",
       "claims": [
         {
           "text": "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
@@ -80,6 +84,10 @@
         },
         {
           "text": "Ledisi, Big Freedia, SHABAKA, Kokoroko",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        },
+        {
+          "text": "UMI, Mario + more",
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]

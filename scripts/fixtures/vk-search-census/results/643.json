@@ -19,6 +19,13 @@
       "text": "ge); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick … heatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick up as soon as they are made … antji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, s … avors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls … This store is always busy, so there is a bit of a wait despite being larger than most … the juices are labeled and put in the refrigerator for pick up as soon as they are made",
       "snippet": "ge); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … 4 231 ratings … Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, sala",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/4dx7w0476ks",
+      "title": "Juice Generation Columbus Circle reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:35-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_4dx7w0476ks.html",
+      "text": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back. Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did."
     }
   ],
   "rating": {
@@ -74,11 +81,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Juice Generation Columbus Circle is a busy juice and smoothie bar at 979 Eighth Avenue, known for custom blends, protein add-ins and quick pickup.",
+      "value": "Juice Generation Columbus Circle is a busy juice and smoothie bar at 979 Eighth Avenue, known for custom blends, protein add-ins and quick pickup. Juice comes labeled and is put in the refrigerator for pick up as soon as it is made, but expect a short wait because the shop is always busy.",
       "claims": [
         {
           "text": "979 Eighth Avenue btw 57th & 58th",
           "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "the juices are labeled and put in the refrigerator for pick up as soon as they are made",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
         }
       ]
     },
@@ -168,6 +179,50 @@
           "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
         },
         "stars": 5
+      },
+      {
+        "theme": "Service",
+        "value": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
+        "claims": [
+          {
+            "text": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
+            "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+        "rating": "1/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 111,
+        "stars": 1,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/4dx7w0476ks",
+          "savedHtml": "r8/exa_4dx7w0476ks.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
+        "claims": [
+          {
+            "text": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
+            "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 91,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/4dx7w0476ks",
+          "savedHtml": "r8/exa_4dx7w0476ks.html",
+          "basis": "per-review star value in Exa page JSON"
+        }
       }
     ]
   },
@@ -210,5 +265,17 @@
   "review2Rating": "4.0/5",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-  "review2Stars": 5
+  "review2Stars": 5,
+  "review3": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+  "review3Stars": 1,
+  "review4": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "4/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
+  "review4Stars": 4
 }

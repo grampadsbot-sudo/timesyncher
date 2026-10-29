@@ -31,7 +31,7 @@
     {
       "url": "https://exa.ai/library/place/jwz8k9zhbtm",
       "title": "MoMA Design Store - 53rd Street reviews | Exa place listing",
-      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchedAt": "2026-10-29T09:19:08-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_jwz8k9zhbtm.html",
       "text": "The MoMA design store is a wonderful place to gift shop. They have a lot of very unique decorations and practical house items. This is a great stop before or after visiting the museum. It is also nice to go to as an independent endeavor. Every piece there looks perfectly curated. It's good for tourists and New Yorkers alike. They displayed many different items and you really can spend some time browsing through these items sections by sections. This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts! An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment. Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits. Great shop, unique products. MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York. The store offers a variety of products that incorporate contemporary art into lifestyle design. Products range from fashion accessories, household items, interior decoration, and design stationery. The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers."
     }
@@ -97,10 +97,14 @@
   },
   "fields": {
     "summary": {
-      "value": "MoMA Design Store - 53rd Street, across from the museum, showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more.",
+      "value": "MoMA Design Store - 53rd Street, across from the museum, showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. Spread across two floors, it is an easy gift stop before or after the museum, and it stays open until 9:00 p.m. every Friday.",
       "claims": [
         {
           "text": "showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "Every Friday, the store will remain open until 9:00 p.m.",
           "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
         }
       ]
