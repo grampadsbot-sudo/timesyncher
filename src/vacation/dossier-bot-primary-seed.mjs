@@ -74,6 +74,8 @@ function composeFromClaims(claims, pages, thing) {
       for (const sentence of pageTextSentences(page.text)) {
         const bit = sentence.trim();
         if (!bit) continue;
+        if (thing && !descriptionNamesThing(bit, thing)) continue;
+        if (isFillerSummaryText(bit, thing)) continue;
         if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
         const before = parts.length;
         append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });

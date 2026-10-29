@@ -59,4 +59,59 @@ for (const claim of field.claims) {
   assert.ok(!claim.text.includes(rejectedText));
 }
 
+const zabarsAbout =
+  "Zabar's is a gourmet food store on the Upper West Side known for smoked fish, coffee and bagels. Nav Home Cart.";
+const junkPage = {
+  url: 'https://x.test/w',
+  text: 'How to install replacement window screens using a spline tool. Measure the frame.',
+  fetchedAt,
+};
+const onTopicPage = {
+  url: 'https://zabars.com/about',
+  text: zabarsAbout,
+  fetchedAt,
+};
+const mixedPages = [onTopicPage, junkPage];
+const mixedPersisted = {
+  thing: place.title,
+  pages: mixedPages,
+  fields: {
+    description: {
+      value: '',
+      claims: [{
+        text: rejectedText,
+        sourceUrl: 'https://stale-refill.example/bad',
+        pages: ['p99'],
+        supported: false,
+      }],
+    },
+  },
+};
+const mixedBot = {
+  thing: place.title,
+  pages: mixedPages,
+  fields: {
+    description: {
+      value: '',
+      claims: [{
+        text: 'Bot claim with no matching saved page citation.',
+        sourceUrl: 'https://bot-unverifiable.example/nope',
+        pages: ['p99'],
+        supported: true,
+      }],
+    },
+  },
+};
+const mixedMerged = mergeBotPrimaryPresentedFields(mixedPersisted, mixedBot, place);
+const mixedField = mixedMerged.fields?.description;
+assert.ok(mixedField?.value, 'mixed pages: description composes from on-topic page only');
+assert.ok(
+  mixedField.value.includes("Zabar's is a gourmet food store"),
+  'mixed pages: Zabar\'s sentence present',
+);
+assert.ok(
+  !mixedField.value.includes('replacement window screens'),
+  'mixed pages: off-topic window-screens sentence must not appear',
+);
+
 console.log(JSON.stringify({ ok: true, checked: 'bot-primary-seed-602-relock', descriptionWords: field.value.split(/\s+/).length }));

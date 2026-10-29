@@ -4,8 +4,8 @@ import { vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
 import { mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
 
 const sources = [
-  { url: 'https://garden.test/first', fetchedAt: '2026-10-28T00:00:00Z', text: 'Fresh seasonal vegetables are served beside the sunny garden terrace each afternoon.' },
-  { url: 'https://garden.test/second', fetchedAt: '2026-10-28T00:00:00Z', text: 'Guests can explore the shaded paths and enjoy a quiet meal after visiting nearby galleries and shops. The dining room overlooks flowering trees while the terrace offers comfortable seating throughout the warmer months of the year.' },
+  { url: 'https://garden.test/first', fetchedAt: '2026-10-28T00:00:00Z', text: 'The garden house serves fresh seasonal vegetables beside the sunny terrace each afternoon.' },
+  { url: 'https://garden.test/second', fetchedAt: '2026-10-28T00:00:00Z', text: 'At the garden house, guests can explore the shaded paths and enjoy a quiet meal after visiting nearby galleries and shops. The dining room overlooks flowering trees while the terrace offers comfortable seating throughout the warmer months of the year.' },
 ];
 const place = { title: 'Garden House' };
 for (const mode of ['adapter excerpts', 'adapter claims and excerpts', 'seed ensure']) {
