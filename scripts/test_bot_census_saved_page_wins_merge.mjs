@@ -71,15 +71,13 @@ const seeded = await runBotPrimarySeedTargets([{
 }], { env: {}, storeImpl });
 
 assert.equal(seeded.results[0].fillPath, 'bot-census');
-assert.equal(seeded.results[0].pageCount, 2, 'stale home sha dropped; amenities + bot home remain');
+assert.equal(seeded.results[0].pageCount, 3, 'archived stale home kept; amenities + bot home appended');
 
 const stored = mem.get('trip:1:place:603');
 const homePages = stored.pages.filter((page) => page.url === HOME);
-assert.equal(homePages.length, 1, 'persistence merge must keep one saved page per cited URL');
-assert.ok(
-  claimTextSupportedByPage(summaryClaim, homePages[0].text),
-  'bot-saved home page text must contain the summary claim verbatim',
-);
+assert.equal(homePages.length, 2, 'persistence keeps archived and bot-saved bytes for the same URL');
+const botHomePage = homePages.find((page) => claimTextSupportedByPage(summaryClaim, page.text));
+assert.ok(botHomePage, 'bot-saved home page text must contain the summary claim verbatim');
 
 const summaryField = stored.fields?.summary;
 assert.ok(String(summaryField?.value || '').trim(), 'summary value must remain after merge');

@@ -37,9 +37,9 @@ function claimCitationPageIndex(claim, pages) {
     if (sameUrl.length) {
       const cited = sameUrl.find(({ i }) => i === citedIndex);
       if (cited && claimTextSupportedByPage(body, cited.page.text)) return cited.i;
-      const supported = sameUrl.find(({ page }) => claimTextSupportedByPage(body, page.text));
+      const supported = [...sameUrl].reverse().find(({ page }) => claimTextSupportedByPage(body, page.text));
       if (supported) return supported.i;
-      return sameUrl[0].i;
+      return sameUrl[sameUrl.length - 1].i;
     }
     return pages.findIndex((page) => page.url === claim.sourceUrl);
   }
