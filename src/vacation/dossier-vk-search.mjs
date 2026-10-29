@@ -162,8 +162,6 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     hint('itineraryNote', result.itineraryNoteCandidate, result.itineraryNoteSourceUrl);
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
   }
-  // Bot-written review lines (review1..4) reach the card only when each one quotes a verbatim
-  // excerpt that the cited review page supports. No excerpt on the page, no review.
   const themes = result.reviewThemes && typeof result.reviewThemes === 'object' ? result.reviewThemes : {};
   const excerpts = [...list(themes.praise), ...list(themes.watchOuts), ...list(themes.complaints)].map(text).filter(Boolean);
   const reviewPage = text(themes.source) ? pageIndex(text(themes.source)) : -1;
