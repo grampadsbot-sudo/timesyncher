@@ -255,6 +255,19 @@ async function recordRegions(page, shot, full) {
       regions[shot].budget_row_count = budget.budget_row_count;
       regions[shot].budget_membership = budget.budget_membership;
       regions[shot].budget_text = budget.budget_text;
+      const items = Array.isArray(regions[shot].items) ? regions[shot].items : [];
+      for (const row of budget.budget_membership) {
+        items.push({
+          name: row.name,
+          price_text: row.amount_text,
+          box: row.box,
+          place_id: row.place_id,
+          cat: 'budget',
+          budget_row: true,
+          text: `${row.name} ${row.amount_text || ''}`.trim(),
+        });
+      }
+      regions[shot].items = items;
       regions[shot].row_count = (regions[shot].row_count || 0) + budget.budget_row_count;
       regions[shot].row_selector = `${ROW_SEL}, [data-ts-budget-row], div budget lines`;
     }
@@ -396,7 +409,10 @@ function recordLogoShot(w, shot) {
   if (regions[shot]) delete regions[shot].passive_logo_events;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  executablePath: process.env.CHROME_PATH || undefined,
+  args: ['--no-sandbox', '--disable-dev-shm-usage'],
+});
 let failed = 0;
 try {
   for (const [w, h] of VIEWPORTS) {

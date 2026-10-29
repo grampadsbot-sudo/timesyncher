@@ -43,5 +43,7 @@ assert.match(capture, /budget_row_count/);
 assert.match(capture, /budget_membership/);
 assert.match(capture, /budget_text/);
 assert.match(capture, /row_count = \(regions\[shot\]\.row_count \|\| 0\) \+ budget\.budget_row_count/);
+assert.match(capture, /budget_row: true/);
+assert.match(capture, /CHROME_PATH/);
 
 console.log('budget row capture counts flex div lines, not only list li');
