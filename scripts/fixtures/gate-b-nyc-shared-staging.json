@@ -2849,7 +2849,7 @@
    },
    "reservation_status": "considering",
    "place_time": "11:00",
-   "website": "https://www.esbarnyc.com/",
+   "website": "https://e-barnyc.com/",
    "notes": "",
    "source": "fixture-nyc",
    "logoUrl": "https://www.esbarnyc.com/favicon.ico",
@@ -6388,7 +6388,7 @@
    "category": "restaurant",
    "title": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine",
    "address": "Upper West Side, New York, NY",
-   "website": "https://www.esbarnyc.com/",
+   "website": "https://e-barnyc.com/",
    "summary": "UWS bar crawl shortlist; Price: $22 cocktail floor.",
    "longDetails": "Upper West Side bar crawl shortlist with cocktail/wine focus near Lincoln Center. Price: $22 cocktail floor; Status: candidate only.",
    "lat": 40.787,
@@ -6397,7 +6397,7 @@
    "timeline": false,
    "logoUrl": "https://www.esbarnyc.com/favicon.ico",
    "source": "fixture-nyc",
-   "url": "https://www.esbarnyc.com/",
+   "url": "https://e-barnyc.com/",
    "details": "Upper West Side bar crawl shortlist with cocktail/wine focus near Lincoln Center. Price: $22 cocktail floor; Status: candidate only."
   },
   "place:673": {
