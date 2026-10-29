@@ -37,10 +37,14 @@ assert.equal(
 
 for (const field of ['summary', 'description']) {
   for (const claim of bot.fields[field].claims || []) {
+    const citedUrl = claim.sourceUrl || claim.url;
+    assert.ok(citedUrl, `${field} claim must cite a source URL`);
+    const citedPage = bot.pages.find((page) => page.url === citedUrl);
+    assert.ok(citedPage?.text, `${field} claim must cite a saved bot page (${citedUrl})`);
     assert.equal(
-      claimTextSupportedByPage(claim.text || claim.claim, censusPage.text),
+      claimTextSupportedByPage(claim.text || claim.claim, citedPage.text),
       true,
-      `${field} claim must stay supported on census page`,
+      `${field} claim must stay supported on cited page`,
     );
   }
 }

@@ -11,17 +11,23 @@
       "text": "Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere … Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere … Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere else. Setting a new standard for NYC hotels, our century-old building retains many of its historic acc",
       "snippet": "Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html",
+      "title": "ARTHOUSE HOTEL NEW YORK CITY - Updated 2026 Prices & Reviews",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "- Updated 2026 Prices & Reviews Location 2178 Broadway at West 77th Street, New York City, NY 10024-6647 Reviews Tips/Q&A (1,527) All reviews (8,181) 4.2 Good (8,181) Excellent 4,267",
+      "snippet": "- Updated 2026 Prices & Reviews Location 2178 Broadway at West 77th Street, New York City, NY 10024-6647 Reviews Tips/Q&A (1,527) All reviews (8,181) 4.2 Good (8,181) Excellent 4,267",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
   "rating": {
     "primary": 4.2,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.2,
-    "booking": 7.9
+    "tripadvisor": 4.2
   },
   "reviewCount": {
-    "tripadvisor": 8181,
-    "booking": 1601
+    "tripadvisor": 8181
   },
   "priceHint": "4-star boutique UWS",
   "hoursHint": "Hotel — 24h front desk; 3 on-site dining venues (official)",
@@ -30,7 +36,8 @@
   "summaryClaims": [
     "Boutique Hotel on the Upper West Side",
     "Boutique Hotel on the Upper West Side",
-    "our century-old building retains many of its historic accents"
+    "our century-old building retains many of its historic accents",
+    "4.2 Good (8,181)"
   ],
   "itineraryNoteCandidate": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
   "voicePass": {
@@ -71,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "Arthouse Hotel is a boutique hotel on the Upper West Side. The hotel says our century-old building retains many of its historic accents, mixed with modern art and design. It is near the subway on Broadway and a short walk from Central Park and Riverside Park.",
+      "value": "Arthouse Hotel is a boutique hotel on the Upper West Side. The hotel says our century-old building retains many of its historic accents, mixed with modern art and design. It is near the subway on Broadway and a short walk from Central Park and Riverside Park. Arthouse Hotel carries a Tripadvisor score of 4.2 Good (8,181) from traveler reviews.",
       "claims": [
         {
           "text": "Boutique Hotel on the Upper West Side",
@@ -80,12 +87,16 @@
         {
           "text": "our century-old building retains many of its historic accents",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
+        },
+        {
+          "text": "4.2 Good (8,181)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
