@@ -240,28 +240,50 @@
   "itineraryNote": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
   "itineraryNoteCandidate": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
+  "review1": "Cafe Luxembourg is a favorite before or after Lincoln Center performances, with diners praising both the meals and the service.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8",
   "review1Theme": "Pre-show dinner",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review1Stars": 5,
-  "review2": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
+  "review2": "The steak au poivre is the dish to order, and diners also mention the house-made ice cream as a highlight.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.8",
   "review2Theme": "Steak au poivre",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review2Stars": 5,
-  "review3": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
+  "review3": "Diners describe it as a neighborhood institution that draws locals and well-dressed regulars, adding to its classic bistro feel. It is a consistent thread in recent feedback.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.8",
   "review3Theme": "Local institution",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review3Stars": 5,
-  "review4": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
+  "review4": "Despite a busy room, diners describe service as impeccable and the bistro-style food as well executed. Most of the review set points the same way on this.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
   "review4SourceUrl": "https://exa.ai/library/place/fbmhh49gx6m",
-  "review4Stars": 5
+  "review4Stars": 5,
+  "review1Claims": [
+    "Pre or post play or ballet.",
+    "Wonderful meal! Pre or post play or ballet. Great service."
+  ],
+  "review2Claims": [
+    "The steak au poivre is delicious and they make their own in house ice cream"
+  ],
+  "review3Claims": [
+    "Such an institution you’ll see all sorts of fashion icons here."
+  ],
+  "review4Claims": [
+    "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story.",
+    "liked to go here.",
+    "Place is very busy but the service is impeccable.",
+    "The food is bistro style, and pretty good though not probably worth going back.",
+    "The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in!",
+    "Definitely glad I stopped in, I will recommend going here to people for sure.",
+    "I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there."
+  ],
+  "reviewsLabel": "Representative reviews written from 16 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

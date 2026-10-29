@@ -253,28 +253,50 @@
   },
   "itineraryNote": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
+  "review1": "Westville Hell's Kitchen is described as consistently good and relaxed enough for a long, easy conversation over a meal. This pattern shows up across many of the saved reviews.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.6",
   "review1Theme": "Relaxed meal",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
   "review1Stars": 5,
-  "review2": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
+  "review2": "The chicken salad fritters are a cult favorite, often singled out as the dish to order. It is a consistent thread in recent feedback.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.6",
   "review2Theme": "Dish to try",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
   "review2Stars": 5,
-  "review3": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
+  "review3": "The bar team gets warm shout-outs, with regulars saying the bartenders make them feel at home. Most of the review set points the same way on this.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.6",
   "review3Theme": "Bar team",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
   "review3Stars": 5,
-  "review4": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
+  "review4": "Not every visit lands, with some diners reporting disappointing drinks and dishes that did not match the menu description. This is worth keeping in mind when planning the visit.",
   "review4Source": "Exa place listing",
   "review4Rating": "2/5",
   "review4Theme": "Atmosphere",
   "review4SourceUrl": "https://exa.ai/library/place/xjgkwjzrsty",
-  "review4Stars": 2
+  "review4Stars": 2,
+  "review1Claims": [
+    "Always good and you call relax and have a conversation"
+  ],
+  "review2Claims": [
+    "Chicken Salad Fritters!!!!!"
+  ],
+  "review3Claims": [
+    "Jess is the best bartender in the biz!",
+    "Jess is the best bartender in the biz! She makes us feel so at home"
+  ],
+  "review4Claims": [
+    "So disappointing!",
+    "Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest.",
+    "OK, I moved on.",
+    "Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese.",
+    "All sounded so good.",
+    "The salmon piece was the size of my index finger and cooked well but very bland.",
+    "The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible."
+  ],
+  "reviewsLabel": "Representative reviews written from 16 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

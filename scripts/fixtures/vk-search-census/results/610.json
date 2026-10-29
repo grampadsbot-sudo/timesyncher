@@ -266,28 +266,40 @@
   },
   "itineraryNote": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Restaurantji diners keep returning to the hospitality at Carbone: one wrote that your hosts go above and beyond for that true over the top experience, which is the reason people chase a table here.",
+  "review1": "Hospitality is the defining theme at Carbone, with diners describing hosts and servers who go out of their way to make the evening feel theatrical and special.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Over-the-top hospitality",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-  "review1Stars": 5,
-  "review2": "A Restaurantji reviewer marking a birthday and a new job said the staff made the night special, a good sign for anyone booking Carbone around an anniversary or milestone.",
+  "review2": "Celebrations come up often, and guests marking birthdays and milestones say the team helped turn the dinner into a memorable occasion worth the effort of booking.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Celebration dinners",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-  "review2Stars": 5,
-  "review3": "The cooking and the room earn equal praise from Restaurantji guests at Carbone: The food was exceptional, the decor is so chic, with the whole experience was just wonderful summing up the visit.",
+  "review3": "Food and room earn equal praise, with diners calling the cooking exceptional and the decor stylish, so the whole experience feels like the point of going.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Food and decor",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-  "review3Stars": 5,
-  "review4": "The practical watch-out at Carbone is access, since one Restaurantji diner says It’s worth securing a reservation when they go live; plan around the release time before the trip.",
+  "review4": "Access is the real watch-out: tables are hard to get, and diners advise grabbing a reservation the moment the booking window opens.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Booking strategy",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-  "review4Stars": 5
+  "review1Claims": [
+    "your hosts go above and beyond for that true over the top experience"
+  ],
+  "review2Claims": [
+    "a birthday and a new job"
+  ],
+  "review3Claims": [
+    "The food was exceptional, the decor is so chic"
+  ],
+  "review4Claims": [
+    "It’s worth securing a reservation when they go live"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

@@ -244,28 +244,49 @@
   "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Restaurantji reviewer on Juice Generation Upper West Side: The customer service at the 72nd st Juice Generation is exceptional. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Juice Generation on 72nd Street gets strong praise for friendly, attentive customer service that keeps regulars coming back. Most of the review set points the same way on this.",
   "review1Source": "Restaurantji",
   "review1Rating": "3.9/5",
   "review1Theme": "Service",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review1Stars": 5,
-  "review2": "Watch-out from a Restaurantji reviewer at Juice Generation Upper West Side: The music in this branch is so loud. Worth weighing alongside the overall 3.9/5 score before locking in the plan.",
+  "review2": "Loud music in the shop is a recurring complaint, so it is better for a grab-and-go visit than lingering. This is worth keeping in mind when planning the visit.",
   "review2Source": "Restaurantji",
   "review2Rating": "3.9/5",
   "review2Theme": "Noise",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review2Stars": 4,
-  "review3": "Juice Generation never disappoints. Everything tastes fresh, clean, and actually makes you feel good after having it. The smoothies are perfectly blended, not overly sweet, and you can tell the ingredients are high quality. It’s consistent, reliable, and exactly what you want when you’re craving something healthy but still delicious. Always a solid go-to. Vegan accomodating!!!",
+  "review3": "Customers describe drinks as fresh, clean-tasting and well blended without being overly sweet, made with high-quality ingredients. Several separate reviews echo this point.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/4gf42trfy0r",
-  "review3Stars": 5,
-  "review4": "I tried one of the fresh cold-pressed juices they made right on the spot, either the Supa Dupa Greens or Get Your Green On — the one with pineapple. It was incredibly refreshing and perfectly balanced, with just the right amount of sweetness and tang. Not too green or too sweet, just a clean, energizing juice that tasted super fresh. Definitely one of the best cold-pressed juices I’ve had in New York Cit",
+  "review4": "Freshly made cold-pressed green juices are a highlight, described as refreshing and well balanced. It comes up often enough to plan around.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
   "review4SourceUrl": "https://exa.ai/library/place/4gf42trfy0r",
-  "review4Stars": 5
+  "review1Claims": [
+    "The customer service at the 72nd st Juice Generation is exceptional.",
+    "The customer service at the 72nd st Juice Generation is exceptional"
+  ],
+  "review2Claims": [
+    "The music in this branch is so loud"
+  ],
+  "review3Claims": [
+    "Juice Generation never disappoints.",
+    "Everything tastes fresh, clean, and actually makes you feel good after having it.",
+    "The smoothies are perfectly blended, not overly sweet, and you can tell the ingredients are high quality.",
+    "It’s consistent, reliable, and exactly what you want when you’re craving something healthy but still delicious.",
+    "Always a solid go-to.",
+    "Vegan accomodating!!!"
+  ],
+  "review4Claims": [
+    "I tried one of the fresh cold-pressed juices they made right on the spot, either the Supa Dupa Greens or Get Your Green On — the one with pineapple.",
+    "It was incredibly refreshing and perfectly balanced, with just the right amount of sweetness and tang.",
+    "Not too green or too sweet, just a clean, energizing juice that tasted super fresh.",
+    "Definitely one of the best cold-pressed juices I’ve had in New York Cit"
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 3.90 >0.5",
+  "reviewsLabel": "Representative reviews written from 17 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

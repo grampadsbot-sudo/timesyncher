@@ -103,5 +103,8 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Guided walking/audio history tours: a local's-eye walk; let a Greeter show you their favorite neighborhoods, restaurants, shops, and hidden places."
+  "itineraryNote": "Guided walking/audio history tours: a local's-eye walk; let a Greeter show you their favorite neighborhoods, restaurants, shops, and hidden places.",
+  "missingFields": [
+    "reviews"
+  ]
 }

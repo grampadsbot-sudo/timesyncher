@@ -209,5 +209,23 @@
   },
   "itineraryNote": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Book lovers describe the Strand as a paradise for browsing, with new, used and rare titles packed across floors of shelving near Union Square.",
+  "review1Claims": [
+    "Book lovers you have found your heaven."
+  ],
+  "review1Source": "Tripadvisor",
+  "review1SourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
+  "review2": "The recurring caveat is that the layout can feel disorganized, so browsing works better than hunting for one specific book in a hurry.",
+  "review2Claims": [
+    "It does feel a bit disorganized"
+  ],
+  "review2Source": "Tripadvisor",
+  "review2SourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
+  "reviewsLabel": "Representative reviews written from 2 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [
+    "reviews"
+  ]
 }

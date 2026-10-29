@@ -206,29 +206,47 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
-  "review1": "Lots of little indie shops with really interesting items and few other gift types shops.",
+  "review1": "Chelsea Market's small independent shops are a draw, with shoppers finding unusual items and gifts beyond the typical souvenir stores.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Indie shops",
   "review1SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review1Stars": 5,
-  "review2": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
+  "review2": "The food halls are the main reason many visit, offering a wide variety of tasty dishes in a lively, welcoming atmosphere.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Food stalls",
   "review2SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review2Stars": 4,
-  "review3": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
+  "review3": "Visitors admire the building itself, a handsome converted industrial space that makes wandering between restaurants and shops part of the fun.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Building and design",
   "review3SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review3Stars": 5,
-  "review4": "We also loved the artist flea market area—so many amazing finds!",
+  "review4": "The artist and flea market area earns special mention for creative finds, adding a craft-market feel to a food-focused visit.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Artist market",
   "review4SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Lots of little indie shops with really interesting items and few other gift types shops."
+  ],
+  "review2Claims": [
+    "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes."
+  ],
+  "review3Claims": [
+    "First of all the building is beautiful, then all the restaurant and shops are just amazing."
+  ],
+  "review4Claims": [
+    "We also loved the artist flea market area—so many amazing finds!"
+  ],
+  "reviewsLabel": "Representative reviews written from 4 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

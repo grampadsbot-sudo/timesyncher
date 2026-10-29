@@ -321,29 +321,55 @@
   "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The best time! We love jazz so we enjoyed the show very much with a bottle of wine! We were pleasantly surprised by the food. It was delicious. I recommend the branzino!",
+  "review1": "Dizzy's Club combines excellent jazz with a beautiful setting overlooking Central Park, and some visitors enjoy the food too. This is worth keeping in mind when planning the visit.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Food and drinks",
   "review1SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review1Stars": 5,
-  "review2": "Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together. This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year. Definitely recommend it for a legendary vibe.",
+  "review2": "The club regularly features world-class musicians, creating memorable performances in an intimate room. Several separate reviews echo this point. It comes up often enough to plan around.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Music",
   "review2SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review2Stars": 5,
-  "review3": "Owens' performance, I would say she is now a full-blown jazz enthusiast. It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance. She could not get enough of the incredible live music, solos, improvising, etc. What an experience for us both. I loved the music just as much, but had never been to Dizzy's. The backdrop view of Central Park, Columbus Circle, and the NYC skyline",
+  "review3": "First-time jazz fans are often captivated by the live music, making it a strong pick for introducing guests to jazz.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review3Stars": 5,
-  "review4": "Pasta tasted as if it was blanched in tomato water and crab cakes were too salty. Great jazz band though, Recommend you only come for drinks and music",
+  "review4": "Food is inconsistent, with some dishes criticized, so many recommend going mainly for drinks and the music. This pattern shows up across many of the saved reviews.",
   "review4Source": "Exa place listing",
   "review4Rating": "3/5",
   "review4Theme": "Music",
   "review4SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review4Stars": 3,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "We love jazz so we enjoyed the show very much with a bottle of wine!",
+    "We were pleasantly surprised by the food.",
+    "It was delicious.",
+    "I recommend the branzino!"
+  ],
+  "review2Claims": [
+    "Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together.",
+    "This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year.",
+    "Definitely recommend it for a legendary vibe."
+  ],
+  "review3Claims": [
+    "Owens' performance, I would say she is now a full-blown jazz enthusiast.",
+    "It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance.",
+    "She could not get enough of the incredible live music, solos, improvising, etc.",
+    "What an experience for us both.",
+    "I loved the music just as much, but had never been to Dizzy's.",
+    "The backdrop view of Central Park, Columbus Circle, and the NYC skyline"
+  ],
+  "review4Claims": [
+    "Pasta tasted as if it was blanched in tomato water and crab cakes were too salty.",
+    "Great jazz band though, Recommend you only come for drinks and music"
+  ],
+  "reviewsLabel": "Representative reviews written from 23 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

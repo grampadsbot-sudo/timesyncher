@@ -257,28 +257,51 @@
   },
   "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The burger is the headline at Nobody Told Me: Restaurantji diners write They have the best burgers on the UWS! and call it a household favorite.",
+  "review1": "The burger is the headline at Nobody Told Me, with diners repeatedly calling it one of the best on the Upper West Side and a household favorite.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.4",
   "review1Theme": "The burger",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
   "review1Stars": 5,
-  "review2": "A second Restaurantji reviewer independently backs the burger at Nobody Told Me, calling it the Best burger I have had in a long time! Keep this in mind as the main reason to choose Nobody Told Me over nearby options.",
+  "review2": "Praise for the burger is independent and repeated across the review set, which makes it the clearest reason to choose this spot over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.4",
   "review2Theme": "Repeat praise",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
   "review2Stars": 5,
-  "review3": "Nobody Told Me works as a relaxed neighborhood hangout; one Restaurantji guest summed it up as Fantastic food great atmosphere. Travelers comparing spots should weigh this honestly when picking Nobody Told Me.",
+  "review3": "Guests describe a relaxed, friendly neighborhood atmosphere with good food that suits a casual dinner or drinks without much planning.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.4",
   "review3Theme": "Atmosphere",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
   "review3Stars": 5,
-  "review4": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
+  "review4": "Service is the variable point, with regulars noting that it depends on who is working, even though food, prices and cocktails stay reliably good.",
   "review4Source": "Exa place listing",
   "review4Rating": "3/5",
   "review4Theme": "Food and drinks",
   "review4SourceUrl": "https://exa.ai/library/place/j1y4y07dzl4",
-  "review4Stars": 3
+  "review4Stars": 3,
+  "review1Claims": [
+    "They have the best burgers on the UWS!"
+  ],
+  "review2Claims": [
+    "Best burger I have had in a long time!"
+  ],
+  "review3Claims": [
+    "Fantastic food great atmosphere"
+  ],
+  "review4Claims": [
+    "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars.",
+    "The food is always good, and prices reasonable .",
+    "Their cocktails are interesting and delicious.",
+    "The service depends on whose on that day, but it's usually ok.",
+    "And I love the design of the place.",
+    "Today, however, a customer bought a dog and a cat inside the restaurant.",
+    "Who the hell brings a cat INSIDE of a restaurant??",
+    "Aren't there sanitary rules about this?",
+    "The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander."
+  ],
+  "reviewsLabel": "Representative reviews written from 17 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

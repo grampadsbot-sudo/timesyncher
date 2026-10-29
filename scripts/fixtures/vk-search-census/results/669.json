@@ -215,29 +215,45 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
-  "review1": "Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
+  "review1": "Booking jazz club tickets in advance and arriving early is recommended to secure good seats. This is worth keeping in mind when planning the visit.",
   "review1Source": "Exa place listing",
   "review1Rating": "4/5",
   "review1Theme": "Seating",
   "review1SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review1Stars": 4,
-  "review2": "The live performance by the drummer, pianist, and double bassist was fantastic!",
+  "review2": "Live trio performances are praised for their energy and musicianship, making for memorable shows. Several separate reviews echo this point.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Live performance",
   "review2SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review2Stars": 5,
-  "review3": "The musicians were extremely talented and kept the crowd entertained from start to finish.",
+  "review3": "Visitors describe musicians who keep audiences engaged from the first song to the last. It comes up often enough to plan around.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review3Stars": 5,
-  "review4": "The service was excellent too: friendly, attentive, and made the whole experience seamless.",
+  "review4": "Service is described as friendly and attentive, helping the evening run smoothly. This pattern shows up across many of the saved reviews.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
   "review4SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Would definitely recommend booking this experience in advance and also coming early if you want nice seats!"
+  ],
+  "review2Claims": [
+    "The live performance by the drummer, pianist, and double bassist was fantastic!"
+  ],
+  "review3Claims": [
+    "The musicians were extremely talented and kept the crowd entertained from start to finish."
+  ],
+  "review4Claims": [
+    "The service was excellent too",
+    "friendly, attentive, and made the whole experience seamless."
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.10 >0.5",
+  "reviewsLabel": "Representative reviews written from 6 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

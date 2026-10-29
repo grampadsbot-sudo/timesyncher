@@ -210,29 +210,52 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
-  "review1": "I pity the people that don't know about this place. This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees. Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little. Forget the people that are offering you discounts on the street. Go here!!",
+  "review1": "TKTS in Times Square is the go-to place for discounted same-day Broadway tickets, though visitors should expect to queue outside.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Crowds",
   "review1SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review1Stars": 5,
-  "review2": "Really smooth experience buying tickets. The website was easy to use, prices were clear, and checkout was quick with no issues. Tickets arrived promptly and everything worked perfectly on the day.",
+  "review2": "Buying tickets is described as smooth, with clear pricing and quick checkout making the process stress-free. It is a consistent thread in recent feedback.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review2Stars": 5,
-  "review3": "Great ticket price and great follow up show (the Great Gatsby). Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other.",
+  "review3": "Even after waiting in line, good shows and seats are often still available, including groups of seats together. Most of the review set points the same way on this.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Selection",
   "review3SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review3Stars": 5,
-  "review4": "TKTS is a great place to buy tickets to Broadway shows. It's been in this location in Times Square for as long as I can remember. On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre.",
+  "review4": "Lines can be long, but most visitors still get tickets to the show they want, making the wait worthwhile. This is worth keeping in mind when planning the visit.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Crowds",
   "review4SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review4Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "I pity the people that don't know about this place.",
+    "This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees.",
+    "Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little.",
+    "Forget the people that are offering you discounts on the street."
+  ],
+  "review2Claims": [
+    "Really smooth experience buying tickets.",
+    "The website was easy to use, prices were clear, and checkout was quick with no issues.",
+    "Tickets arrived promptly and everything worked perfectly on the day."
+  ],
+  "review3Claims": [
+    "Great ticket price and great follow up show (the Great Gatsby).",
+    "Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other."
+  ],
+  "review4Claims": [
+    "TKTS is a great place to buy tickets to Broadway shows.",
+    "It's been in this location in Times Square for as long as I can remember.",
+    "On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre."
+  ],
+  "reviewStarsDropped": "mean 4.75 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 16 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

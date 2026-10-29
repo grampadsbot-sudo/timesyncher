@@ -227,28 +227,49 @@
   "itineraryNote": "Venchi Bleecker Street: Italian chocolate Since 1878 at 233 Bleecker; try a gelato cone on a Village stroll.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Restaurantji reviewer on Venchi Bleecker Street: Easy to get gifts, and staff super friendly and helpful. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Venchi on Bleecker Street is an easy place to pick up gifts, with staff described as friendly and helpful. Most of the review set points the same way on this.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8/5",
   "review1Theme": "Service",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-  "review1Stars": 5,
-  "review2": "Restaurantji reviewer on Venchi Bleecker Street: Wonderful chocolate in nyc. Worth weighing alongside the overall 4.8/5 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review2": "Shoppers consider its chocolate among the best in the city, with high ratings for quality. This is worth keeping in mind when planning the visit.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.8/5",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-  "review2Stars": 5,
-  "review3": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
+  "review3": "Gelato service policies frustrate some customers, such as limits on tasting or mixing flavors, so ask before ordering. Several separate reviews echo this point.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Atmosphere",
   "review3SourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
-  "review3Stars": 1,
-  "review4": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
+  "review4": "Many visitors praise the polished, welcoming shop and beautifully presented chocolates and gelato reflecting Italian craftsmanship. It comes up often enough to plan around.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Building and design",
   "review4SourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
-  "review4Stars": 5
+  "review1Claims": [
+    "Easy to get gifts, and staff super friendly and helpful.",
+    "Easy to get gifts, and staff super friendly and helpful"
+  ],
+  "review2Claims": [
+    "Wonderful chocolate in nyc"
+  ],
+  "review3Claims": [
+    "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies.",
+    "We bought a regular cup but they didn’t let us choose 2 different flavours.",
+    "We were only given option to choose one flavour.",
+    "They normally put a piece of chocolate on top but that day they didn’t put anything at all.",
+    "Some flavours were also empty.",
+    "Attaching the photo as evidence."
+  ],
+  "review4Claims": [
+    "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency.",
+    "From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition.",
+    "The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence.",
+    "The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian."
+  ],
+  "reviewStarsDropped": "mean 4.00 vs venue 4.80 >0.5",
+  "reviewsLabel": "Representative reviews written from 18 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

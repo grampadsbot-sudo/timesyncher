@@ -46,21 +46,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "available 24 hours a day in our Reading Room",
-    "299 Madison Ave, at E.41st Street New York City 10017",
-    "Access to our collection of over 6,000 books",
-    "available 24 hours a day in our Reading Room",
-    "9.3 / 10 Great 103 reviews",
-    "The hotel has a great location and good service",
-    "the facilities are old",
-    "299 Madison Ave, at E.41st Street New York City 10017",
-    "Access to our collection of over 6,000 books",
-    "available 24 hours a day in our Reading Room",
-    "The hotel has a great location and good service",
-    "the facilities are old",
-    "9.3 / 10 Great 103 reviews"
+    "299 Madison Ave, at E.41st Street New York City 10017"
   ],
-  "itineraryNoteCandidate": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
+  "itineraryNoteCandidate": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -90,37 +78,21 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Library Hotel by Library Hotel Collection is a book-themed boutique at 299 Madison Ave, at E.41st Street New York City 10017, near the New York Public Library and Grand Central. Its story is the books: guests get Access to our collection of over 6,000 books, with refreshments available 24 hours a day in our Reading Room. Trip.com guests rate it 9.3 / 10 Great 103 reviews and say “The hotel has a great location and good service”; the honest watch-out is that the facilities are old.",
+      "value": "Library Hotel by Library Hotel Collection, at 299 Madison Ave, at E.41st Street New York City 10017, is a book-themed Midtown boutique that guests rate very highly for location and service, near the New York Public Library and Grand Central. The only recurring caveat is that some facilities feel old.",
       "claims": [
         {
           "text": "299 Madison Ave, at E.41st Street New York City 10017",
           "sourceUrl": "https://www.libraryhotel.com/"
-        },
-        {
-          "text": "Access to our collection of over 6,000 books",
-          "sourceUrl": "https://www.libraryhotel.com/"
-        },
-        {
-          "text": "available 24 hours a day in our Reading Room",
-          "sourceUrl": "https://www.libraryhotel.com/"
-        },
-        {
-          "text": "9.3 / 10 Great 103 reviews",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
-        },
-        {
-          "text": "The hotel has a great location and good service",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
-        },
-        {
-          "text": "the facilities are old",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         }
       ]
     },
     "description": {
-      "value": "Library Hotel by Library Hotel Collection is a boutique hotel at 299 Madison Ave, at E.41st Street New York City 10017. Guests get access to our collection of over 6,000 books, and refreshments are available 24 hours a day in our Reading Room. The hotel sits a block from the New York Public Library and Grand Central. Trip.com shows 9.3 / 10 Great 103 reviews. Representative Trip.com praise (guest reviews): “The hotel has a great location and good service”. Representative watch-outs: “the facilities are old”.",
+      "value": "Library Hotel by Library Hotel Collection stands at 299 Madison Ave, at E.41st Street New York City 10017, and its story is literary: guests get Access to our collection of over 6,000 books, with refreshments available 24 hours a day in our Reading Room. Trip.com shows 9.3 / 10 Great 103 reviews, and guests say The hotel has a great location and good service. The honest note is that the facilities are old, which most guests accept for the charm.",
       "claims": [
+        {
+          "text": "available 24 hours a day in our Reading Room",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
         {
           "text": "299 Madison Ave, at E.41st Street New York City 10017",
           "sourceUrl": "https://www.libraryhotel.com/"
@@ -130,8 +102,8 @@
           "sourceUrl": "https://www.libraryhotel.com/"
         },
         {
-          "text": "available 24 hours a day in our Reading Room",
-          "sourceUrl": "https://www.libraryhotel.com/"
+          "text": "9.3 / 10 Great 103 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         },
         {
           "text": "The hotel has a great location and good service",
@@ -139,16 +111,12 @@
         },
         {
           "text": "the facilities are old",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
-        },
-        {
-          "text": "9.3 / 10 Great 103 reviews",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
+      "value": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
       "claims": [
         {
           "text": "available 24 hours a day in our Reading Room",
@@ -230,20 +198,32 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
+  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Library Hotel by Library Hotel Collection: The hotel has a great location and good service. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Guests consistently praise the Library Hotel's location together with attentive, good-quality service. This is worth keeping in mind when planning the visit.",
   "review1Source": "Trip.com",
   "review1Rating": "7.5/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-  "review1Stars": 4,
-  "review2": "Watch-out from a Trip.com reviewer at Library Hotel by Library Hotel Collection: the facilities are old. Worth weighing alongside the overall 9.3/10 score before locking in the plan.",
+  "review2": "The main caveat in the saved reviews is that some facilities feel old, though it does not seem to dent the hotel's very high overall score.",
   "review2Source": "Trip.com",
   "review2Rating": "7.5/10",
   "review2Theme": "Facilities",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-  "review2Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The hotel has a great location and good service.",
+    "The hotel has a great location and good service"
+  ],
+  "review2Claims": [
+    "the facilities are old"
+  ],
+  "reviewStarsDropped": "mean 4.00 vs venue 4.65 >0.5",
+  "reviewsLabel": "Representative reviews written from 5 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [
+    "reviews"
+  ]
 }

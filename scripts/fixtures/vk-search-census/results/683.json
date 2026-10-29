@@ -237,28 +237,40 @@
   },
   "itineraryNote": "Joe's Pizza Carmine Street: the classic Village slice since 1975; grab a plain or pepperoni slice and eat it on the sidewalk.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Joe's Pizza Carmine Street earns its reputation on the basics; a Restaurantji reviewer calls it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese.",
+  "review1": "Joe's on Carmine Street is described as a classic New York slice, with a crisp thin crust, a softer center and well-balanced cheese.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Classic slice",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review1Stars": 5,
-  "review2": "Locals send visitors to Joe's Pizza Carmine Street; one Restaurantji guest wrote that all of the locals I met told me I HAD to come to this Joe's location specifically.",
+  "review2": "Locals routinely send visitors to this specific Joe's location, which reinforces its reputation as the original and best branch. This pattern shows up across many of the saved reviews.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Local pick",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review2Stars": 5,
-  "review3": "The honest nitpick at Joe's Pizza Carmine Street is the sauce: Sauce is great, but on the lighter side, so the same Restaurantji reviewer suggests pepperoni for more flavor.",
+  "review3": "The honest nitpick is a lighter sauce, and diners suggest pepperoni for anyone who wants a slice with more flavor.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Lighter sauce",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review3Stars": 5,
-  "review4": "Joe's Pizza Carmine Street is easy on the wallet; a diner paid $4.50 in cash and returned for a second slice after a few bites.",
+  "review4": "It is cheap and quick, with diners paying a few dollars in cash and often going back for a second slice.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Cheap and quick",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review4Stars": 5
+  "review1Claims": [
+    "Top five classic New York slice"
+  ],
+  "review2Claims": [
+    "all of the locals I met told me I HAD to come to this Joe's location specifically"
+  ],
+  "review3Claims": [
+    "Sauce is great, but on the lighter side"
+  ],
+  "review4Claims": [
+    "$4.50 in cash"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

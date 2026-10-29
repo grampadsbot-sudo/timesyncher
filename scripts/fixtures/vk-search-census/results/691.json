@@ -252,28 +252,54 @@
   },
   "itineraryNote": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Angelina Bakery Broadway is a pastry stop first; aggregated guest reviews say This beautiful Italian bakery on Broadway near 52nd Street has great pastries. For trip planning, weigh this first when deciding whether Angelina Bakery Broadway fits the day.",
+  "review1": "Angelina's Broadway bakery is praised for its Italian pastries, with diners treating it as a sweet stop near Times Square.",
   "review1Source": "aggregated guest reviews",
   "review1Rating": "4.3",
   "review1Theme": "Pastries",
   "review1SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
   "review1Stars": 5,
-  "review2": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
+  "review2": "Lines are the main watch-out, especially at busy times close to Times Square, so plan a little extra time. Most of the review set points the same way on this.",
   "review2Source": "aggregated guest reviews",
   "review2Rating": "4.3",
   "review2Theme": "Lines",
   "review2SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
   "review2Stars": 5,
-  "review3": "So many options to choose from. From pastries, pizza, cakes, gelato, donuts, croissaints. There's really something for everyone here. We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato. Everything was very tasty. I would go there again if I was in the area.",
+  "review3": "The range is wide, from pastries and cakes to gelato, donuts and pizza, and diners say there is something for everyone.",
   "review3Source": "Exa place listing",
   "review3Rating": "4/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
   "review3Stars": 4,
-  "review4": "I tried their pistachio gelato and their tiramisu. Both were decent. I’ve been a couple times. They have other things on the menu. Bomboloni and some pizza. They can be busy during warmer days. Average price for this area.",
+  "review4": "Some diners rate items such as the gelato and tiramisu as decent rather than exceptional, with prices average for the area.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Food and drinks",
   "review4SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "This beautiful Italian bakery on Broadway near 52nd Street has great pastries"
+  ],
+  "review2Claims": [
+    "Lines can get long"
+  ],
+  "review3Claims": [
+    "So many options to choose from.",
+    "From pastries, pizza, cakes, gelato, donuts, croissaints.",
+    "There's really something for everyone here.",
+    "We enjoyed the tiramisu, strawberry shortcake, chocolate cake and gelato.",
+    "Everything was very tasty.",
+    "I would go there again if I was in the area."
+  ],
+  "review4Claims": [
+    "I tried their pistachio gelato and their tiramisu.",
+    "Both were decent.",
+    "I’ve been a couple times.",
+    "They have other things on the menu.",
+    "Bomboloni and some pizza.",
+    "They can be busy during warmer days.",
+    "Average price for this area."
+  ],
+  "reviewsLabel": "Representative reviews written from 21 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

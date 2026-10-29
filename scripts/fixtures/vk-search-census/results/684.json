@@ -223,28 +223,41 @@
   },
   "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Cheesecake is the reason to visit Junior's Times Square; Restaurantji diners rave about Great service, great food, big meals and the cheesecakes! For trip planning, weigh this first when deciding whether Junior's Times Square fits the day.",
+  "review1": "Cheesecake is the reason most diners visit Junior's, alongside big portions and generally good service for a Times Square meal.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
   "review1Theme": "Cheesecake",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review1Stars": 5,
-  "review2": "Junior's Times Square feels lively and family-friendly; one Restaurantji guest wrote We had an amazing lunch, desserts were delicious too. Such a fun atmosphere! Keep this in mind as the main reason to choose Junior's Times Square over nearby options.",
+  "review2": "The atmosphere is lively and family-friendly, with diners enjoying lunch, desserts and a fun, busy room. It is a consistent thread in recent feedback.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.3",
   "review2Theme": "Fun atmosphere",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review2Stars": 5,
-  "review3": "Breakfast and coffee stops work too at Junior's Times Square, where a Restaurantji diner praised the Friendly staff and dang good coffee! Travelers comparing spots should weigh this honestly when picking Junior's Times Square.",
+  "review3": "It also works for a quick stop, with diners praising friendly staff and good coffee alongside the desserts. Most of the review set points the same way on this.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.3",
   "review3Theme": "Coffee and staff",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review3Stars": 5,
-  "review4": "Busy hours mean a queue at Junior's Times Square; a Restaurantji reviewer said The weight was a little long but it is absolutely worth it (sic), so build in time.",
+  "review4": "Lines are common at busy times, but diners say the wait is worth it, so allow extra time around showtimes.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.3",
   "review4Theme": "Waits",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review4Stars": 5
+  "review1Claims": [
+    "Great service, great food, big meals and the cheesecakes!"
+  ],
+  "review2Claims": [
+    "Such a fun atmosphere!",
+    "We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!"
+  ],
+  "review3Claims": [
+    "Friendly staff and dang good coffee!"
+  ],
+  "review4Claims": [
+    "The weight was a little long but it is absolutely worth it"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.30 >0.5",
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

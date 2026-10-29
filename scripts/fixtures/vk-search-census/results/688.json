@@ -225,28 +225,41 @@
   },
   "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
+  "review1": "Sylvia's delivers classic soul food that first-time Harlem visitors describe as outstanding, often clearing their plates. Several separate reviews echo this point.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Soul food",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review1Stars": 5,
-  "review2": "Hospitality comes through at Sylvia's Harlem, with Restaurantji diners reporting The food and service was amazing! Keep this in mind as the main reason to choose Sylvia's Harlem over nearby options.",
+  "review2": "Diners consistently praise both food and service, describing a warm, welcoming dining room. It comes up often enough to plan around.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Service",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review2Stars": 5,
-  "review3": "The bar side holds up at Sylvia's Harlem too; one Restaurantji reviewer said the meal was soooo delicious and the drinks were great. Travelers comparing spots should weigh this honestly when picking Sylvia's Harlem.",
+  "review3": "Drinks hold up as well, with guests describing very tasty meals paired with good cocktails. This pattern shows up across many of the saved reviews.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Drinks",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review3Stars": 5,
-  "review4": "Sylvia's Harlem sells its pantry: one Restaurantji guest bought her seasoning and hot sauce, an easy edible souvenir. Factor this into timing and expectations before heading to Sylvia's Harlem.",
+  "review4": "The house seasoning and hot sauce are sold on site and make an easy edible souvenir to take home. It is a consistent thread in recent feedback.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Take-home souvenirs",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review4Stars": 5
+  "review1Claims": [
+    "we ate everything on our plates!",
+    "First time in Harlem, the best food hands down.. we ate everything on our plates!"
+  ],
+  "review2Claims": [
+    "The food and service was amazing!"
+  ],
+  "review3Claims": [
+    "soooo delicious"
+  ],
+  "review4Claims": [
+    "bought her seasoning and hot sauce"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

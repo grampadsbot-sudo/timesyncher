@@ -56,13 +56,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "stylish Studios and spacious Suites with skyline views",
-    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
-    "4.3 of 5 bubbles (940 reviews)",
-    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
-    "4.3 of 5 bubbles (940 reviews)"
+    "stylish Studios and spacious Suites with skyline views"
   ],
-  "itineraryNoteCandidate": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
+  "itineraryNoteCandidate": "Hilton Club New York: stylish Studios and spacious Suites with skyline views in Midtown; walk to Rockefeller Center, then retreat to a quiet room.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -92,21 +88,21 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hilton Club New York is a Hilton Grand Vacations club offering stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. It suits travelers who want apartment-like space close to Fifth Avenue shopping, Rockefeller Center and Broadway, and it is well regarded by Tripadvisor guests at 4.3 of 5 bubbles (940 reviews). Saved reviews do not list specific complaints, so check fees and unit type when booking.",
+      "value": "Hilton Club New York offers stylish Studios and spacious Suites with skyline views in a vacation-club stay in the heart of Midtown that guests describe as clean, comfortable and unusually quiet for the area. Most leave happy, but reviews flag missing room service, pricey breakfast and the occasional maintenance problem worth checking on arrival.",
       "claims": [
         {
-          "text": "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
+          "text": "stylish Studios and spacious Suites with skyline views",
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
-        },
-        {
-          "text": "4.3 of 5 bubbles (940 reviews)",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html"
         }
       ]
     },
     "description": {
-      "value": "Hilton Club New York is a Hilton Grand Vacations club in Midtown. It offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. Rockefeller Center, Fifth Avenue shopping and the Theater District are all within walking distance. On Tripadvisor, The Hilton Club - New York is rated 4.3 of 5 bubbles (940 reviews).",
+      "value": "Run by Hilton Grand Vacations, Hilton Club New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan, so Fifth Avenue, Rockefeller Center and Broadway are a walk away. Tripadvisor travelers give it 4.3 of 5 bubbles (940 reviews). Guest feedback is warm on rooms, which feel calm and well kept, and cooler on extras: there is no room service, breakfast costs more than many expect, and one stay started with an air-conditioning leak, so inspect the room early.",
       "claims": [
+        {
+          "text": "stylish Studios and spacious Suites with skyline views",
+          "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
+        },
         {
           "text": "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
@@ -118,7 +114,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
+      "value": "Hilton Club New York: stylish Studios and spacious Suites with skyline views in Midtown; walk to Rockefeller Center, then retreat to a quiet room.",
       "claims": [
         {
           "text": "stylish Studios and spacious Suites with skyline views",
@@ -227,7 +223,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
+  "itineraryNote": "Hilton Club New York: stylish Studios and spacious Suites with skyline views in Midtown; walk to Rockefeller Center, then retreat to a quiet room.",
   "reviewThemes": {
     "representative": true,
     "source": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
@@ -254,29 +250,47 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Hilton Club New York: Other than that, we enjoyed our stay very much. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Overall the Hilton Club gets warm verdicts, with guests saying that despite a few hiccups they enjoyed the stay and would consider returning to the property.",
   "review1Source": "Trip.com",
   "review1Rating": "10.0/10",
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
   "review1Stars": 5,
-  "review2": "Trip.com reviewer on Hilton Club New York: Rooms were clean and comfortable and as quiet as a NYC room can be. Worth weighing alongside the overall 10.0/10 score before locking in the plan.",
+  "review2": "Rooms are praised as clean, comfortable and about as quiet as Midtown allows, which matters to guests coming back after long days of sightseeing.",
   "review2Source": "Trip.com",
   "review2Rating": "10.0/10",
   "review2Theme": "Rooms",
   "review2SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
   "review2Stars": 5,
-  "review3": "Watch-out from a Trip.com reviewer at Hilton Club New York: Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+  "review3": "Dining is a weaker point: there is no room service and guests found breakfast pricing much higher than they had expected from the advertised rate.",
   "review3Source": "Trip.com",
   "review3Rating": "8.5/10",
   "review3Theme": "Rooms",
   "review3SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
   "review3Stars": 4,
-  "review4": "Watch-out from a Trip.com reviewer at Hilton Club New York: Our first room had a leaking A/C and wet carpet. A practical point to factor into the decision before the trip.",
+  "review4": "Maintenance issues appear in the set, including an air-conditioning leak that forced a room change, so it is worth inspecting the room promptly after check-in.",
   "review4Source": "Trip.com",
   "review4Rating": "8.0/10",
   "review4Theme": "Rooms",
   "review4SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
   "review4Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "Other than that, we enjoyed our stay very much"
+  ],
+  "review2Claims": [
+    "Rooms were clean and comfortable and as quiet as a NYC room can be.",
+    "Rooms were clean and comfortable and as quiet as a NYC room can be"
+  ],
+  "review3Claims": [
+    "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+    "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18"
+  ],
+  "review4Claims": [
+    "Our first room had a leaking A/C and wet carpet.",
+    "Our first room had a leaking A/C and wet carpet"
+  ],
+  "reviewsLabel": "Representative reviews written from 11 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

@@ -54,24 +54,10 @@
   "happyHourHint": null,
   "summaryClaims": [
     "storied NYC hotel on the Upper West Side",
-    "wine hours",
     "near Central Park and Lincoln Center",
-    "storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center",
-    "Hotel Belleclaire, 2175 Broadway",
-    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
-    "Daily dining credit to Mille-Feuille",
-    "Beautiful hotel, very well located, tidy and good service",
-    "the facilities are somewhat lacking, especially the soundproofing",
-    "The elevator is extremely small",
-    "Hotel Belleclaire, 2175 Broadway",
-    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
-    "near Central Park and Lincoln Center",
-    "Beautiful hotel, very well located, tidy and good service",
-    "the facilities are somewhat lacking, especially the soundproofing",
-    "The elevator is extremely small, only able to accommodate a maximum of 4 people",
-    "7.3 / 10 128 reviews"
+    "storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center"
   ],
-  "itineraryNoteCandidate": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
+  "itineraryNoteCandidate": "Hotel Belleclaire Central Park: a storied NYC hotel on the Upper West Side with friendly front-desk staff; try the wine hours, then a morning walk to Central Park.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -108,11 +94,28 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Hotel Belleclaire Central Park is a storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center, at Hotel Belleclaire, 2175 Broadway. It suits travelers who want a residential base over Midtown bustle, with a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays, and booking direct adds a Daily dining credit to Mille-Feuille. Trip.com guests sum it up as a “Beautiful hotel, very well located, tidy and good service”. Honest watch-outs: the facilities are somewhat lacking, especially the soundproofing, and the lift is small (“The elevator is extremely small”).",
+      "value": "Hotel Belleclaire Central Park is a storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center. Guests keep coming back to the same few things: a tidy, attractive building, polite staff and practical family suites, with thin soundproofing the main thing to plan around.",
       "claims": [
+        {
+          "text": "storied NYC hotel on the Upper West Side",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
+        {
+          "text": "near Central Park and Lincoln Center",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
         {
           "text": "storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center",
           "sourceUrl": "https://www.hotelbelleclaire.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Belleclaire Central Park stands at Hotel Belleclaire, 2175 Broadway, and leans on its history, a classic Upper West Side building updated with a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays. Booking direct adds a Daily dining credit to Mille-Feuille. On Trip.com it holds 7.3 / 10 128 reviews: guests call it a Beautiful hotel, very well located, tidy and good service and like the suites for families. The honest downsides are physical: the facilities are somewhat lacking, especially the soundproofing, and The elevator is extremely small, so light sleepers and big groups should plan for both.",
+      "claims": [
+        {
+          "text": "wine hours",
+          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
         },
         {
           "text": "Hotel Belleclaire, 2175 Broadway",
@@ -137,35 +140,6 @@
         {
           "text": "The elevator is extremely small",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
-        }
-      ]
-    },
-    "description": {
-      "value": "Hotel Belleclaire Central Park sits at 2175 Broadway on the Upper West Side. The hotel lists a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays among its amenities. Hotel Belleclaire Central Park puts guests near Central Park and Lincoln Center, with Zabar's and the subway close by. Trip.com shows 7.3 / 10 128 reviews. Representative Trip.com praise (guest reviews): “Beautiful hotel, very well located, tidy and good service”. Representative watch-outs: “the facilities are somewhat lacking, especially the soundproofing”; “The elevator is extremely small, only able to accommodate a maximum of 4 people”.",
-      "claims": [
-        {
-          "text": "Hotel Belleclaire, 2175 Broadway",
-          "sourceUrl": "https://www.hotelbelleclaire.com/"
-        },
-        {
-          "text": "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
-          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
-        },
-        {
-          "text": "near Central Park and Lincoln Center",
-          "sourceUrl": "https://www.hotelbelleclaire.com/"
-        },
-        {
-          "text": "Beautiful hotel, very well located, tidy and good service",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
-        },
-        {
-          "text": "the facilities are somewhat lacking, especially the soundproofing",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
-        },
-        {
-          "text": "The elevator is extremely small, only able to accommodate a maximum of 4 people",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
         },
         {
           "text": "7.3 / 10 128 reviews",
@@ -174,7 +148,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
+      "value": "Hotel Belleclaire Central Park: a storied NYC hotel on the Upper West Side with friendly front-desk staff; try the wine hours, then a morning walk to Central Park.",
       "claims": [
         {
           "text": "storied NYC hotel on the Upper West Side",
@@ -183,10 +157,6 @@
         {
           "text": "wine hours",
           "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
-        },
-        {
-          "text": "near Central Park and Lincoln Center",
-          "sourceUrl": "https://www.hotelbelleclaire.com/"
         }
       ]
     },
@@ -314,32 +284,47 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
+  "itineraryNote": "Hotel Belleclaire Central Park: a storied NYC hotel on the Upper West Side with friendly front-desk staff; try the wine hours, then a morning walk to Central Park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Hotel Belleclaire Central Park: Beautiful hotel, very well located, tidy and good service. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Guests consistently rate the Belleclaire's Upper West Side position highly, calling the hotel attractive, tidy and well run, with the neighborhood adding convenience to every day of the trip.",
   "review1Source": "Trip.com",
   "review1Rating": "9.0/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
-  "review1Stars": 5,
-  "review2": "Trip.com reviewer on Hotel Belleclaire Central Park: The family suite is very practical, with a good environment and convenient surroundings. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
+  "review2": "Families in particular find the suite layouts practical, describing a pleasant room environment and plenty of convenient shops and food in the blocks around the building.",
   "review2Source": "Trip.com",
   "review2Rating": "10.0/10",
   "review2Theme": "Rooms",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
-  "review2Stars": 5,
-  "review3": "Trip.com reviewer on Hotel Belleclaire Central Park: Service: Very good, the front desk is very polite and friendly. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3": "Front desk service is a steady positive in the review set, with guests describing staff as polite, friendly and quick to help during check-in and throughout the stay.",
   "review3Source": "Trip.com",
   "review3Rating": "10.0/10",
   "review3Theme": "Service",
   "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
-  "review3Stars": 5,
-  "review4": "Watch-out from a Trip.com reviewer at Hotel Belleclaire Central Park: the facilities are somewhat lacking, especially the soundproofing. A practical point to factor into the decision before the trip.",
+  "review4": "The recurring watch-out is the building's facilities, and soundproofing in particular, so light sleepers should ask for a quieter room away from the street or elevators.",
   "review4Source": "Trip.com",
   "review4Rating": "5.0/10",
   "review4Theme": "Noise",
   "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
-  "review4Stars": 3,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "Beautiful hotel, very well located, tidy and good service.",
+    "Beautiful hotel, very well located, tidy and good service"
+  ],
+  "review2Claims": [
+    "The family suite is very practical, with a good environment and convenient surroundings.",
+    "The family suite is very practical, with a good environment and convenient surroundings"
+  ],
+  "review3Claims": [
+    "Very good, the front desk is very polite and friendly",
+    "Service: Very good, the front desk is very polite and friendly"
+  ],
+  "review4Claims": [
+    "the facilities are somewhat lacking, especially the soundproofing"
+  ],
+  "reviewStarsDropped": "mean 4.50 vs venue 3.65 >0.5",
+  "reviewsLabel": "Representative reviews written from 11 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

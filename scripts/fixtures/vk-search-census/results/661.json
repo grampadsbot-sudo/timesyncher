@@ -108,5 +108,8 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip."
+  "itineraryNote": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip.",
+  "missingFields": [
+    "reviews"
+  ]
 }

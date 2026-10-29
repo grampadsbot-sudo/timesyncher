@@ -107,5 +107,8 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Pure Green UWS: a healthy-fuel stop at 2041 Broadway New York, NY 10023; try an acai bowl for breakfast."
+  "itineraryNote": "Pure Green UWS: a healthy-fuel stop at 2041 Broadway New York, NY 10023; try an acai bowl for breakfast.",
+  "missingFields": [
+    "reviews"
+  ]
 }

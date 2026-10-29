@@ -88,7 +88,7 @@ test('census Hilton 618 summary is genuine prose, not filler', async () => {
   assert.ok(censusSummary);
   assert.equal(isFillerSummaryText(censusSummary, thing), false);
   const recit = recitBotPrimaryFields(vkSearchResultToDossier(census, place));
-  assert.ok(recit.fields.summary?.value.includes('Midtown Manhattan'));
+  assert.ok(recit.fields.summary?.value.includes('Midtown'));
   const mem = new Map();
   const storeImpl = {
     async getDossier(key) { return mem.get(key) || null; },

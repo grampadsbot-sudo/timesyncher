@@ -240,28 +240,43 @@
   },
   "itineraryNote": "Piccola Cucina Uptown: a warm Sicilian-Italian room by Central Park; book dinner and try the Cacio E Pepe Made at Table in a Wheel of Cheese.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Piccola Cucina Uptown wins on freshness; a Restaurantji diner wrote Everything they make is delicious and very fresh, with timely service on top. For trip planning, weigh this first when deciding whether Piccola Cucina Uptown fits the day.",
+  "review1": "Freshness is the strongest theme at Piccola Cucina Uptown, with diners describing carefully made, delicious Italian food and timely service.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8",
   "review1Theme": "Fresh, careful cooking",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
   "review1Stars": 5,
-  "review2": "Diners with dietary needs do well at Piccola Cucina Uptown: They have gluten free bread, pasta and even their eggplant parmesan is gluten free, one Restaurantji reviewer reports.",
+  "review2": "It is a reliable choice for gluten-free diners, who report gluten-free bread, pasta and even eggplant parmesan without compromising flavor.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.8",
   "review2Theme": "Gluten-free friendly",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
   "review2Stars": 5,
-  "review3": "Service is a recurring high point at Piccola Cucina Uptown; one guest called it the Best service I've maybe ever had at a restaurant! and another said Service was exceptional.",
+  "review3": "Service is a standout, with diners describing it as exceptional and among the best they have had at any restaurant.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.8",
   "review3Theme": "Standout service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
   "review3Stars": 5,
-  "review4": "The honest watch-out at Piccola Cucina Uptown: a Restaurantji reviewer said One element that could be improved is the variety (and quality) of the wines by the glass.",
+  "review4": "The one recurring nitpick is the wine-by-the-glass list, which diners would like to see broader and stronger. It comes up often enough to plan around.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.8",
   "review4Theme": "Wine by the glass",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-  "review4Stars": 5
+  "review4Stars": 5,
+  "review1Claims": [
+    "Everything they make is delicious and very fresh"
+  ],
+  "review2Claims": [
+    "They have gluten free bread, pasta and even their eggplant parmesan is gluten free"
+  ],
+  "review3Claims": [
+    "Best service I've maybe ever had at a restaurant!"
+  ],
+  "review4Claims": [
+    "One element that could be improved is the variety (and quality) of the wines by the glass"
+  ],
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

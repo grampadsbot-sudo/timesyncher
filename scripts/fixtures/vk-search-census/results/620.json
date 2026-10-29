@@ -64,15 +64,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "historic, art deco hotel in the Theatre District, steps from Times Square",
-    "historic, art deco hotel in the Theatre District, steps from Times Square",
-    "228 West 47th Street",
-    "3.9 Good (18,818)",
-    "historic, art deco hotel in the Theatre District, steps from Times Square",
-    "228 West 47th Street",
-    "3.9 Good (18,818)"
+    "228 West 47th Street"
   ],
-  "itineraryNoteCandidate": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights.",
+  "itineraryNoteCandidate": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -102,24 +96,16 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. It suits travelers whose plan is Broadway shows and Midtown sightseeing, with restaurants on site and subway lines close by. Tripadvisor scores it 3.9 Good (18,818), so expect a busy, classic big-city hotel rather than a quiet boutique.",
+      "value": "Hotel Edison, at 228 West 47th Street, is a big, classic Theater District hotel that guests like for surprisingly large, clean rooms at a fair price so close to Broadway. Service is friendly if sometimes routine, and street and building noise is the main warning for light sleepers.",
       "claims": [
-        {
-          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
-          "sourceUrl": "https://www.edisonhotelnyc.com/"
-        },
         {
           "text": "228 West 47th Street",
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
-        },
-        {
-          "text": "3.9 Good (18,818)",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html"
         }
       ]
     },
     "description": {
-      "value": "Hotel Edison is a historic art deco hotel in the Theatre District, steps from Times Square. Wikipedia places it at 228 West 47th Street. It is a practical base for Broadway shows, with several restaurants on site and the subway close by. Tripadvisor shows Hotel Edison at 3.9 Good (18,818) across its traveler reviews.",
+      "value": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. Tripadvisor scores it 3.9 Good (18,818), typical of a busy, high-volume landmark. Reviews praise room size and cleanliness for the location and suggest eating along Eighth Avenue for more choice. The recurring complaint is noise: some guests lost sleep over several nights, so earplugs or a quieter room request are sensible.",
       "claims": [
         {
           "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
@@ -136,7 +122,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights.",
+      "value": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
       "claims": [
         {
           "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
@@ -245,7 +231,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights.",
+  "itineraryNote": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square, with big, clean rooms; base yourself here for back-to-back Broadway nights.",
   "reviewThemes": {
     "representative": true,
     "source": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
@@ -271,29 +257,48 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Hotel Edison: It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
+  "review1": "The Edison's historic Times Square building wins guests over with rooms that feel generous for the area and the rate, and cleanliness that is regularly praised.",
   "review1Source": "Trip.com",
   "review1Rating": "8.7/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
   "review1Stars": 4,
-  "review2": "Trip.com reviewer on Hotel Edison: The service was usually friendly though sometimes only perfunctory. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
+  "review2": "Service is described as generally friendly, though some guests found the interactions routine rather than warm, which is typical for a hotel this large.",
   "review2Source": "Trip.com",
   "review2Rating": "8.5/10",
   "review2Theme": "Service",
   "review2SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
   "review2Stars": 4,
-  "review3": "Trip.com reviewer on Hotel Edison: I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3": "Guests share practical tips about eating nearby, pointing to restaurants on Eighth Avenue around 47th Street when the in-house choices feel limited.",
   "review3Source": "Trip.com",
   "review3Rating": "8.0/10",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
   "review3Stars": 4,
-  "review4": "Watch-out from a Trip.com reviewer at Hotel Edison: My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
+  "review4": "Noise is the main watch-out, with light sleepers reporting several poor nights, so earplugs or a request for a higher, quieter room are worth considering.",
   "review4Source": "Trip.com",
   "review4Rating": "8.5/10",
   "review4Theme": "Overall experience",
   "review4SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
   "review4Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
+    "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean"
+  ],
+  "review2Claims": [
+    "The service was usually friendly though sometimes only perfunctory.",
+    "The service was usually friendly though sometimes only perfunctory"
+  ],
+  "review3Claims": [
+    "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices.",
+    "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices"
+  ],
+  "review4Claims": [
+    "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
+    "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip"
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

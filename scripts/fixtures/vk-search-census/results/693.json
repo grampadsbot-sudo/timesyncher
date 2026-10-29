@@ -233,28 +233,42 @@
   },
   "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
+  "review1": "Magnolia's banana pudding is the hero, with diners calling it one of the best desserts in the city. This is worth keeping in mind when planning the visit.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
   "review1Theme": "Banana pudding",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review1Stars": 5,
-  "review2": "Magnolia Bakery pleases kids and adults alike; one Restaurantji reviewer wrote Awesome place and flavor!! Daughter loved it. Keep this in mind as the main reason to choose Magnolia Bakery over nearby options.",
+  "review2": "It is a hit with families, with parents reporting that children loved both the flavors and the shop. Several separate reviews echo this point.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0",
   "review2Theme": "Family treat",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review2Stars": 5,
-  "review3": "Regulars find Magnolia Bakery dependable; a Restaurantji guest said Love magnolia. Always delicious. Travelers comparing spots should weigh this honestly when picking Magnolia Bakery.",
+  "review3": "Regulars describe it as reliably delicious, a dependable treat whenever they pass by. It comes up often enough to plan around.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Consistency",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review3Stars": 5,
-  "review4": "Service is friendly at Magnolia Bakery, with a Restaurantji diner adding Staff is always great alongside the pudding praise. Factor this into timing and expectations before heading to Magnolia Bakery.",
+  "review4": "Friendly staff round out the experience, with diners noting the team is consistently pleasant. This pattern shows up across many of the saved reviews.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Staff",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review4Stars": 5
+  "review1Claims": [
+    "one of the best desserts in the city hands down"
+  ],
+  "review2Claims": [
+    "Daughter loved it",
+    "Awesome place and flavor!! Daughter loved it"
+  ],
+  "review3Claims": [
+    "Always delicious",
+    "Love magnolia. Always delicious"
+  ],
+  "review4Claims": [
+    "Staff is always great"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

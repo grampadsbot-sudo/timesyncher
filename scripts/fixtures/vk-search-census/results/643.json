@@ -254,28 +254,50 @@
   "itineraryNote": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Restaurantji reviewer on Juice Generation Columbus Circle: Great selection of flavors. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Juice Generation Columbus Circle is liked for its wide range of smoothie and juice flavors, making it easy to find a favorite drink.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0/5",
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
   "review1Stars": 5,
-  "review2": "Watch-out from a Restaurantji reviewer at Juice Generation Columbus Circle: This store is always busy, so there is a bit of a wait despite being larger than most.",
+  "review2": "The store is always busy, so expect a wait even though it is larger than many branches. Most of the review set points the same way on this.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0/5",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
   "review2Stars": 5,
-  "review3": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
+  "review3": "App order pickups can run late, with customers reporting extra waits beyond the promised time, so ordering ahead may not save much time.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Service",
   "review3SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
   "review3Stars": 1,
-  "review4": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
+  "review4": "Online orders are a sore point, with walk-in customers sometimes served first, so ordering at the counter may be faster.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Service",
   "review4SourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "Great selection of flavors"
+  ],
+  "review2Claims": [
+    "This store is always busy, so there is a bit of a wait despite being larger than most"
+  ],
+  "review3Claims": [
+    "The service at this location is bad.",
+    "I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order.",
+    "Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready.",
+    "When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back."
+  ],
+  "review4Claims": [
+    "Slow service for online orders.",
+    "I ordered on the app which predicted the smoothie would be ready in 15 minutes.",
+    "I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine.",
+    "When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it.",
+    "There must have been 6 walk-ins that got their drinks before I did."
+  ],
+  "reviewsLabel": "Representative reviews written from 15 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

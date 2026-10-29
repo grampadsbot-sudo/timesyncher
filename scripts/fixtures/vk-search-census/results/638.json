@@ -47,19 +47,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
-    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
-    "The location of the hotel is great and right in the middle of it all",
-    "6.4 / 10 245 reviews",
-    "There was constant, loud renovation noise from upstairs next door",
-    "The room's hygiene was terrible",
-    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
-    "The location of the hotel is great and right in the middle of it all",
-    "There was constant, loud renovation noise from upstairs next door",
-    "The room's hygiene was terrible",
-    "6.4 / 10 245 reviews"
+    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square"
   ],
-  "itineraryNoteCandidate": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
+  "itineraryNoteCandidate": "The Manhattan at Times Square Hotel: now the Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square; pick it for location at a good rate.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -89,32 +79,16 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Manhattan at Times Square Hotel now trades as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square, in the heart of Midtown. Its strength is position: Trip.com guests say “The location of the hotel is great and right in the middle of it all”. But it scores 6.4 / 10 245 reviews, and honest watch-outs include “There was constant, loud renovation noise from upstairs next door” and “The room's hygiene was terrible”, so pick it only at a strong rate.",
+      "value": "The Manhattan at Times Square Hotel, now Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square, wins on position in the middle of Times Square and can be worth it at a deal price. Recent reviews warn of renovation noise and hygiene lapses, so expectations should stay modest.",
       "claims": [
         {
           "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
           "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
-        },
-        {
-          "text": "The location of the hotel is great and right in the middle of it all",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-        },
-        {
-          "text": "6.4 / 10 245 reviews",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-        },
-        {
-          "text": "There was constant, loud renovation noise from upstairs next door",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-        },
-        {
-          "text": "The room's hygiene was terrible",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         }
       ]
     },
     "description": {
-      "value": "The Manhattan at Times Square Hotel has been rebranded. Times Square Alliance lists it as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square. Book under the new Crowne Plaza name, and confirm room types and rates directly with IHG. Trip.com shows 6.4 / 10 245 reviews. Representative Trip.com praise (guest reviews): “The location of the hotel is great and right in the middle of it all”. Representative watch-outs: “There was constant, loud renovation noise from upstairs next door”; “The room's hygiene was terrible”.",
+      "value": "The Manhattan at Times Square Hotel now trades as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square, so look for the IHG name. Trip.com shows 6.4 / 10 245 reviews. Guests agree The location of the hotel is great and right in the middle of it all and that a discounted rate makes it worthwhile. The serious watch-outs: There was constant, loud renovation noise from upstairs next door, and one guest reports The room's hygiene was terrible, so inspect the room at check-in.",
       "claims": [
         {
           "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
@@ -125,21 +99,21 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         },
         {
+          "text": "6.4 / 10 245 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
           "text": "There was constant, loud renovation noise from upstairs next door",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         },
         {
           "text": "The room's hygiene was terrible",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-        },
-        {
-          "text": "6.4 / 10 245 reviews",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         }
       ]
     },
     "itineraryNote": {
-      "value": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
+      "value": "The Manhattan at Times Square Hotel: now the Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square; pick it for location at a good rate.",
       "claims": [
         {
           "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
@@ -272,32 +246,49 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
+  "itineraryNote": "The Manhattan at Times Square Hotel: now the Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square; pick it for location at a good rate.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on The Manhattan at Times Square Hotel: The location of the hotel is great and right in the middle of it all. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Location is the main reason guests choose this hotel, with reviews describing it as right in the middle of Times Square and the theater district.",
   "review1Source": "Trip.com",
   "review1Rating": "8.5/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
   "review1Stars": 4,
-  "review2": "Trip.com reviewer on The Manhattan at Times Square Hotel: If this hotel is on a deal, it's worth it. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
+  "review2": "Guests frame it as a good pick when booked at a deal price, with value depending heavily on the rate secured for the dates.",
   "review2Source": "Trip.com",
   "review2Rating": "8.5/10",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
   "review2Stars": 4,
-  "review3": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: There was constant, loud renovation noise from upstairs next door. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3": "Noise from renovation work next door is a recurring complaint in the set, so light sleepers should ask about construction before arrival.",
   "review3Source": "Trip.com",
   "review3Rating": "4.0/10",
   "review3Theme": "Noise",
   "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
   "review3Stars": 2,
-  "review4": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: The room's hygiene was terrible. A practical point to factor into the decision before the trip.",
+  "review4": "Some guests report disappointing room hygiene, which is the most serious watch-out and worth checking immediately at check-in. It comes up often enough to plan around.",
   "review4Source": "Trip.com",
   "review4Rating": "4.0/10",
   "review4Theme": "Rooms",
   "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
   "review4Stars": 2,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The location of the hotel is great and right in the middle of it all"
+  ],
+  "review2Claims": [
+    "If this hotel is on a deal, it's worth it.",
+    "If this hotel is on a deal, it's worth it"
+  ],
+  "review3Claims": [
+    "There was constant, loud renovation noise from upstairs next door"
+  ],
+  "review4Claims": [
+    "The room's hygiene was terrible.",
+    "The room's hygiene was terrible"
+  ],
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

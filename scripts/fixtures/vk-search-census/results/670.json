@@ -305,28 +305,46 @@
   },
   "itineraryNote": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Amelie Bistro & Wine Bar shines early: a Restaurantji regular says Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, which makes it an easy pre-dinner stop.",
+  "review1": "Happy hour is Amelie's best-known draw, with regulars pointing to cheap oysters, small plates and wine flights that make it an easy early-evening stop.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
   "review1Theme": "Happy hour value",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
   "review1Stars": 5,
-  "review2": "Restaurantji diners point to the French staples at Amelie, listing beef tartare, salade nicoise, moules-frites, burger as favorites and adding that The mussels were excellent.",
+  "review2": "French bistro staples such as tartare, salade nicoise, moules-frites and the burger are the dishes diners return for, with the mussels getting particular praise.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.3",
   "review2Theme": "Bistro classics",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
   "review2Stars": 5,
-  "review3": "Staff warmth is a steady theme at Amelie Bistro & Wine Bar; one Restaurantji reviewer writes that Everyone who works there is so warm and friendly and that guests feel at home right away.",
+  "review3": "Warm, welcoming staff are a steady theme, with diners saying the team makes first-time visitors feel at home almost immediately.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.3",
   "review3Theme": "Warm service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
   "review3Stars": 5,
-  "review4": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
+  "review4": "Crowds are the caveat: the room fills quickly even early in the evening, so diners recommend booking ahead rather than hoping to walk in.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Food and drinks",
   "review4SourceUrl": "https://exa.ai/library/place/8gzhdlplw0b",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible"
+  ],
+  "review2Claims": [
+    "beef tartare, salade nicoise, moules-frites, burger"
+  ],
+  "review3Claims": [
+    "Everyone who works there is so warm and friendly"
+  ],
+  "review4Claims": [
+    "+ Get $25 off using the link on my profile!",
+    "Was surprised to see so many people here during happy hour!",
+    "If you want a table, make sure to get a reservation no matter how early.",
+    "The wine flight was nice and the finger food went very well with it."
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

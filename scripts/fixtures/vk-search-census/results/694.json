@@ -246,28 +246,48 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Exa place listing reviewer on The Jazz Club at Aman New York: The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
+  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, though at very high prices. Several separate reviews echo this point.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
   "review1Theme": "Breakfast and dining",
   "review1SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review1Stars": 4,
-  "review2": "Exa place listing reviewer on The Jazz Club at Aman New York: Price Point $$$$$ Staff was very good, service was exceptional. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+  "review2": "Service is consistently described as exceptional, matching the club's luxury positioning. It comes up often enough to plan around. This pattern shows up across many of the saved reviews.",
   "review2Source": "Exa place listing",
   "review2Rating": "4.4/5",
   "review2Theme": "Service",
   "review2SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review2Stars": 5,
-  "review3": "Watch-out from a Exa place listing reviewer at The Jazz Club at Aman New York: We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
+  "review3": "Staff respond well when tables are not ideal, letting guests move to better spots. This pattern shows up across many of the saved reviews.",
   "review3Source": "Exa place listing",
   "review3Rating": "4.4/5",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review3Stars": 4,
-  "review4": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
+  "review4": "The speakeasy-style club offers lively live music and dancing in a sophisticated members-style setting. It is a consistent thread in recent feedback.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Music",
   "review4SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
+    "The drinks were the best I've had in NYC and for over $30 a drink, they better be"
+  ],
+  "review2Claims": [
+    "Price Point $$$$$ Staff was very good, service was exceptional.",
+    "Price Point $$$$$ Staff was very good, service was exceptional"
+  ],
+  "review3Claims": [
+    "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
+    "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot"
+  ],
+  "review4Claims": [
+    "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing.",
+    "The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally.",
+    "They also check names and reservations before you can even enter the building."
+  ],
+  "reviewsLabel": "Representative reviews written from 14 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

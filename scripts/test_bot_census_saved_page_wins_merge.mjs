@@ -92,7 +92,7 @@ for (const claim of supportedClaims) {
 const homeClaim = supportedClaims.find((claim) => stored.pages[Number(claim.pages[0].slice(1)) - 1]?.url === HOME);
 assert.ok(homeClaim, 'at least one supported summary claim cites the bot-saved home page');
 assert.ok(
-  String(stored.fields?.summary?.value || '').includes('2175 Broadway'),
+  String(stored.fields?.summary?.value || '').includes('Upper West Side'),
   'merged summary keeps census essence text',
 );
 

@@ -74,30 +74,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Boutique Hotel on the Upper West Side",
-    "Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuis",
-    "Boutique Hotel on the Upper West Side",
-    "our century-old building retains many of its historic accents",
-    "three on-site restaurants and bars",
-    "a mere two blocks away from our property",
-    "favorably located near Central Park and the subway",
-    "the music too loud",
-    "experiences with housekeeping and room size vary",
-    "some travelers feel the hotel is overpriced with limited amenities",
-    "Boutique Hotel on the Upper West Side",
-    "our century-old building retains many of its historic accents",
-    "approximately 240 square feet",
-    "three on-site restaurants and bars",
-    "a mere two blocks away from our property",
-    "4.2 Good (8,181)",
-    "favorably located near Central Park and the subway",
-    "the music too loud",
-    "experiences with housekeeping and room size vary",
-    "some travelers feel the hotel is overpriced with limited amenities",
-    "Based on 1601 hotel reviews 7.9",
-    "Location 9.2"
+    "Boutique Hotel on the Upper West Side"
   ],
-  "itineraryNoteCandidate": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
+  "itineraryNoteCandidate": "Arthouse Hotel: a Boutique Hotel on the Upper West Side with roomy beds and a lively lobby; try Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine, downstairs.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -127,7 +106,16 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Arthouse Hotel is a Boutique Hotel on the Upper West Side whose century-old building keeps its character (the hotel says our century-old building retains many of its historic accents), with three on-site restaurants and bars and the natural history museum a mere two blocks away from our property. It suits museum-and-park travelers who like a lively lobby scene; Tripadvisor's review summary says it is favorably located near Central Park and the subway. Honest watch-outs from the same summary: guests flag the music too loud, experiences with housekeeping and room size vary, and some travelers feel the hotel is overpriced with limited amenities.",
+      "value": "Arthouse Hotel is a character-filled Boutique Hotel on the Upper West Side whose guests praise a safe, pleasant neighborhood, big comfortable rooms and good food steps away. The trade-offs come up just as often: lobby music can run loud, room sizes and upkeep vary, and dining nearby adds to the bill.",
+      "claims": [
+        {
+          "text": "Boutique Hotel on the Upper West Side",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Arthouse Hotel is a Boutique Hotel on the Upper West Side, and the hotel says our century-old building retains many of its historic accents. Rooms start at approximately 240 square feet, there are three on-site restaurants and bars, and the Natural History Museum sits a mere two blocks away from our property. Tripadvisor rates it 4.2 Good (8,181) and its summary finds it favorably located near Central Park and the subway. Honest watch-outs from the same summary: guests flag the music too loud, experiences with housekeeping and room size vary, and some travelers feel the hotel is overpriced with limited amenities.",
       "claims": [
         {
           "text": "Boutique Hotel on the Upper West Side",
@@ -160,64 +148,19 @@
         {
           "text": "some travelers feel the hotel is overpriced with limited amenities",
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        }
-      ]
-    },
-    "description": {
-      "value": "Arthouse Hotel is a Boutique Hotel on the Upper West Side, and the hotel says its century-old building retains many of its historic accents. Rooms start with a Standard Queen of approximately 240 square feet, and the hotel lists three on-site restaurants and bars, including Serafina and RedFarm. Its neighborhood page puts the American Museum of Natural History a mere two blocks away. Tripadvisor rates it 4.2 Good (8,181), and its review summary says guests like the location near Central Park and the subway and the lively atmosphere. Watch-outs from the same summary: the music can be too loud for some, room size and housekeeping vary, and some feel it is overpriced with limited amenities; Booking.com scores it 7.9 overall with Location 9.2.",
-      "claims": [
-        {
-          "text": "Boutique Hotel on the Upper West Side",
-          "sourceUrl": "https://www.arthousehotelnyc.com/"
-        },
-        {
-          "text": "our century-old building retains many of its historic accents",
-          "sourceUrl": "https://www.arthousehotelnyc.com/"
         },
         {
           "text": "approximately 240 square feet",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         },
         {
-          "text": "three on-site restaurants and bars",
-          "sourceUrl": "https://www.arthousehotelnyc.com/"
-        },
-        {
-          "text": "a mere two blocks away from our property",
-          "sourceUrl": "https://www.arthousehotelnyc.com/neighborhood/"
-        },
-        {
           "text": "4.2 Good (8,181)",
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        },
-        {
-          "text": "favorably located near Central Park and the subway",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        },
-        {
-          "text": "the music too loud",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        },
-        {
-          "text": "experiences with housekeeping and room size vary",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        },
-        {
-          "text": "some travelers feel the hotel is overpriced with limited amenities",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
-        },
-        {
-          "text": "Based on 1601 hotel reviews 7.9",
-          "sourceUrl": "https://www.booking.com/reviews/us/hotel/arthouse-hotel.html"
-        },
-        {
-          "text": "Location 9.2",
-          "sourceUrl": "https://www.booking.com/reviews/us/hotel/arthouse-hotel.html"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
+      "value": "Arthouse Hotel: a Boutique Hotel on the Upper West Side with roomy beds and a lively lobby; try Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine, downstairs.",
       "claims": [
         {
           "text": "Boutique Hotel on the Upper West Side",
@@ -330,7 +273,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
+  "itineraryNote": "Arthouse Hotel: a Boutique Hotel on the Upper West Side with roomy beds and a lively lobby; try Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine, downstairs.",
   "reviewThemes": {
     "representative": true,
     "source": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
@@ -357,29 +300,48 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Arthouse Hotel: This hotel is located in a great, safe area of Upper Manhattan. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Guests like the Arthouse's location, describing a safe, pleasant residential area that still feels connected to the rest of Manhattan.",
   "review1Source": "Trip.com",
   "review1Rating": "10.0/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
   "review1Stars": 5,
-  "review2": "Trip.com reviewer on Arthouse Hotel: The room is very big, the bed is also very comfortable, and it is clean. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
+  "review2": "Rooms are generally described as roomy by city standards, with comfortable beds and good cleanliness that make longer stays feel relaxed.",
   "review2Source": "Trip.com",
   "review2Rating": "8.7/10",
   "review2Theme": "Rooms",
   "review2SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
   "review2Stars": 4,
-  "review3": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3": "Dining nearby is a plus, with well-regarded restaurants right next to the hotel, though guests warn that eating there adds noticeably to the cost of the trip.",
   "review3Source": "Trip.com",
   "review3Rating": "10.0/10",
   "review3Theme": "Breakfast and dining",
   "review3SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
   "review3Stars": 5,
-  "review4": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The lobby seems to have been recently renovated, but the guest rooms are clearly dated. A practical point to factor into the decision before the trip.",
+  "review4": "The main watch-out is that the public areas feel freshly renovated while some guest rooms still look clearly dated, so expectations for the room decor should be modest.",
   "review4Source": "Trip.com",
   "review4Rating": "8.5/10",
   "review4Theme": "Rooms",
   "review4SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
   "review4Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "This hotel is located in a great, safe area of Upper Manhattan.",
+    "This hotel is located in a great, safe area of Upper Manhattan"
+  ],
+  "review2Claims": [
+    "The room is very big, the bed is also very comfortable, and it is clean.",
+    "The room is very big, the bed is also very comfortable, and it is clean"
+  ],
+  "review3Claims": [
+    "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey.",
+    "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey"
+  ],
+  "review4Claims": [
+    "The lobby seems to have been recently renovated, but the guest rooms are clearly dated.",
+    "The lobby seems to have been recently renovated, but the guest rooms are clearly dated"
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

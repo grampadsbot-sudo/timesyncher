@@ -299,28 +299,53 @@
   },
   "itineraryNote": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Estiatorio Milos Hudson Yards pairs fish with scenery; a Restaurantji diner had an amazing view of Hudson River and Hudson Yards and Loved their grilled octopus.",
+  "review1": "Milos Hudson Yards pairs Mediterranean seafood with sweeping views of the Hudson River and Hudson Yards, and the grilled octopus is a favorite.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8",
   "review1Theme": "Views and octopus",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
   "review1Stars": 5,
-  "review2": "Many guests at Estiatorio Milos Hudson Yards praise the floor team; one Restaurantji reviewer wrote We were blown away by the service! Keep this in mind as the main reason to choose Estiatorio Milos Hudson Yards over nearby options.",
+  "review2": "The service team is the most praised element, with diners describing staff who are attentive, polished and memorable. Several separate reviews echo this point.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.8",
   "review2Theme": "Service at its best",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
   "review2Stars": 5,
-  "review3": "Lovely view of the Vessel landmarks and city. Great spot for business or elegant evening. Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had! 2 thumbs up for the fried octopus! Stairs and elevators so would say it's accessible as well.",
+  "review3": "Diners call it a fine choice for business meals or elegant evenings, praising dishes such as the fried calamari alongside the views of the Vessel.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
   "review3Stars": 5,
-  "review4": "Had an incredible experience at Milos in Hudson Yards! The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared. But what truly made the night special was the outstanding service from Mario at the bar. He was beyond attentive, knowledgeable about the menu, and made the best recommendations. His passion for hospitality really stood out, and he created such a warm and engaging experience. Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience. Will definitely be back!",
+  "review4": "Guests describe an elegant yet welcoming room with top-notch, beautifully prepared food, with outstanding service completing the experience. This pattern shows up across many of the saved reviews.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
   "review4SourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
-  "review4Stars": 5
+  "review4Stars": 5,
+  "review1Claims": [
+    "an amazing view of Hudson River and Hudson Yards"
+  ],
+  "review2Claims": [
+    "We were blown away by the service!"
+  ],
+  "review3Claims": [
+    "Lovely view of the Vessel landmarks and city.",
+    "Great spot for business or elegant evening.",
+    "Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had!",
+    "2 thumbs up for the fried octopus!",
+    "Stairs and elevators so would say it's accessible as well."
+  ],
+  "review4Claims": [
+    "Had an incredible experience at Milos in Hudson Yards!",
+    "The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared.",
+    "But what truly made the night special was the outstanding service from Mario at the bar.",
+    "He was beyond attentive, knowledgeable about the menu, and made the best recommendations.",
+    "His passion for hospitality really stood out, and he created such a warm and engaging experience.",
+    "Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience.",
+    "Will definitely be back!"
+  ],
+  "reviewsLabel": "Representative reviews written from 20 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

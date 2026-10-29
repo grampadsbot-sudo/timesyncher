@@ -235,28 +235,43 @@
   "itineraryNote": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
   "itineraryNoteCandidate": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "La Traviata Pizzeria is a speed stop; a Restaurantji diner said The service was quick and the pizza good and recommended it for a quick bite.",
+  "review1": "La Traviata is valued as a fast stop near Lincoln Center, with diners describing quick service and good pizza when time is short.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Quick slice",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
   "review1Stars": 4,
-  "review2": "Regulars like the people behind the counter at La Traviata Pizzeria, with one Restaurantji reviewer praising the Lovely owners and good pizza. Keep this in mind as the main reason to choose La Traviata Pizzeria over nearby options.",
+  "review2": "The owners are a recurring positive, and regulars mention the friendly, personal welcome as part of why they come back.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Owners",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
   "review2Stars": 5,
-  "review3": "Prices stay friendly at La Traviata Pizzeria: one Restaurantji guest grabbed a slice and soda for about $5.50, cheap for the Lincoln Center area. Travelers comparing spots should weigh this honestly when picking La Traviata Pizzeria.",
+  "review3": "Prices stay low for the neighborhood, with diners reporting a slice and a drink for only a few dollars. It is a consistent thread in recent feedback.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Value",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
   "review3Stars": 4,
-  "review4": "Plan to eat on the move at La Traviata Pizzeria, since a Restaurantji reviewer notes Only 4 small tables inside and a few standing tables outside.",
+  "review4": "Seating is very limited inside, so plan to take the slice to go or stand at the small tables outside.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Limited seating",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "The service was quick and the pizza good"
+  ],
+  "review2Claims": [
+    "Lovely owners and good pizza."
+  ],
+  "review3Claims": [
+    "about $5.50"
+  ],
+  "review4Claims": [
+    "Only 4 small tables inside and a few standing tables outside"
+  ],
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

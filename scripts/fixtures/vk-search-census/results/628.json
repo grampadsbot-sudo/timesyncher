@@ -56,21 +56,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "400 W 42nd St",
-    "an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadw",
-    "400 W 42nd St",
-    "The location is fantastic!",
-    "The room was cleaned daily at 10 AM and was very tidy",
-    "The room was a little small",
-    "there's a nightly resort fee of $29.84 collected at the front desk",
-    "an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadw",
-    "400 W 42nd St",
-    "The room was cleaned daily at 10 AM and was very tidy",
-    "The location is fantastic!",
-    "there's a nightly resort fee of $29.84 collected at the front desk",
-    "The room was a little small"
+    "400 W 42nd St"
   ],
-  "itineraryNoteCandidate": "Pod Times Square: smart, small rooms at 400 W 42nd St; save on the room and spend on Broadway.",
+  "itineraryNoteCandidate": "Pod Times Square: smart, small rooms at 400 W 42nd St with helpful staff; save on the room and spend on Broadway.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -100,65 +88,45 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Pod Times Square is an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadway, at 400 W 42nd St. It suits solo travelers and couples who will be out all day; Trip.com guests say “The location is fantastic!” and “The room was cleaned daily at 10 AM and was very tidy”. Honest watch-outs: “The room was a little small”, and there's a nightly resort fee of $29.84 collected at the front desk.",
+      "value": "Pod Times Square, at 400 W 42nd St, is a compact, budget-smart hotel guests love for its location and helpful desk team, including free luggage storage. Rooms are tight and a nightly fee lifts the real price, so it suits travelers out all day.",
       "claims": [
-        {
-          "text": "an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadw",
-          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
-        },
         {
           "text": "400 W 42nd St",
           "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
-        },
-        {
-          "text": "The location is fantastic!",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
-        },
-        {
-          "text": "The room was cleaned daily at 10 AM and was very tidy",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
-        },
-        {
-          "text": "The room was a little small",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
-        },
-        {
-          "text": "there's a nightly resort fee of $29.84 collected at the front desk",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
         }
       ]
     },
     "description": {
-      "value": "Pod Times Square is an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadway. The hotel is at 400 W 42nd St. Its compact rooms suit travelers who plan to spend most of the day out in the city. Representative Trip.com praise (guest reviews): “The room was cleaned daily at 10 AM and was very tidy”; “The location is fantastic!”. Representative watch-outs: “there's a nightly resort fee of $29.84 collected at the front desk”; “The room was a little small”.",
+      "value": "Pod Times Square is an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadway, at 400 W 42nd St on the far west side of Times Square. Guests write The location is fantastic! and The room was cleaned daily at 10 AM and was very tidy, and the front desk wins praise for luggage storage and a lounge for waiting. Watch-outs: The room was a little small, and there's a nightly resort fee of $29.84 collected at the front desk.",
       "claims": [
-        {
-          "text": "an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadw",
-          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
-        },
         {
           "text": "400 W 42nd St",
           "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
         },
         {
-          "text": "The room was cleaned daily at 10 AM and was very tidy",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
+          "text": "an affordable Midtown NYC hotel with smart rooms, free Wi-Fi, walking tours and a prime location near Broadw",
+          "sourceUrl": "https://www.thepodhotel.com/pod-times-square"
         },
         {
           "text": "The location is fantastic!",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
         },
         {
-          "text": "there's a nightly resort fee of $29.84 collected at the front desk",
+          "text": "The room was cleaned daily at 10 AM and was very tidy",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
         },
         {
           "text": "The room was a little small",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
+        },
+        {
+          "text": "there's a nightly resort fee of $29.84 collected at the front desk",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Pod Times Square: smart, small rooms at 400 W 42nd St; save on the room and spend on Broadway.",
+      "value": "Pod Times Square: smart, small rooms at 400 W 42nd St with helpful staff; save on the room and spend on Broadway.",
       "claims": [
         {
           "text": "400 W 42nd St",
@@ -291,32 +259,45 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Pod Times Square: smart, small rooms at 400 W 42nd St; save on the room and spend on Broadway.",
+  "itineraryNote": "Pod Times Square: smart, small rooms at 400 W 42nd St with helpful staff; save on the room and spend on Broadway.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Pod Times Square: The location is fantastic. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Pod Times Square's location just off the theater district is repeatedly called fantastic, putting shows, restaurants and the subway within an easy walk.",
   "review1Source": "Trip.com",
   "review1Rating": "10.0/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-  "review1Stars": 5,
-  "review2": "Trip.com reviewer on Pod Times Square: The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on.",
+  "review2": "The front desk earns praise for friendly help, free luggage storage and a comfortable lounge area for guests waiting to check in or leave.",
   "review2Source": "Trip.com",
   "review2Rating": "10.0/10",
   "review2Theme": "Service",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-  "review2Stars": 5,
-  "review3": "Watch-out from a Trip.com reviewer at Pod Times Square: there's a nightly resort fee of $29.84 collected at the front desk. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3": "Guests warn about a nightly resort-style fee collected at check-in, so the real nightly cost is higher than the headline price suggests.",
   "review3Source": "Trip.com",
   "review3Rating": "10.0/10",
   "review3Theme": "Service",
   "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-  "review3Stars": 5,
-  "review4": "Watch-out from a Trip.com reviewer at Pod Times Square: The room was a little small. A practical point to factor into the decision before the trip.",
+  "review4": "As the brand name implies, rooms are compact, and guests recommend packing light and treating the room mainly as a place to sleep.",
   "review4Source": "Trip.com",
   "review4Rating": "9.0/10",
   "review4Theme": "Rooms",
   "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-  "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The location is fantastic"
+  ],
+  "review2Claims": [
+    "The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on.",
+    "The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on"
+  ],
+  "review3Claims": [
+    "there's a nightly resort fee of $29.84 collected at the front desk"
+  ],
+  "review4Claims": [
+    "The room was a little small"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.35 >0.5",
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

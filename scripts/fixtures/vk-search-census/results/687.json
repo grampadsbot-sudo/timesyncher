@@ -234,28 +234,44 @@
   },
   "itineraryNote": "Cilantro UWS: a lively Mexican spot by the Natural History Museum; grab weekend brunch and a margarita on the patio.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Cilantro UWS is handy after the museum; a Restaurantji reviewer called it a Great brunch spot right by the museum of natural history and pushed the margaritas.",
+  "review1": "Cilantro is a convenient brunch stop next to the American Museum of Natural History, and diners often recommend the margaritas.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.1",
   "review1Theme": "Museum-day brunch",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
   "review1Stars": 5,
-  "review2": "On a nice day Cilantro UWS works well outside; one Restaurantji diner praised the great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting.",
+  "review2": "On good days the outdoor seating is a plus, with diners praising the burger, fries, omelettes and drinks served outside.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.1",
   "review2Theme": "Outdoor seating",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
   "review2Stars": 4,
-  "review3": "Restaurantji guests at Cilantro UWS mention the staff: Amazing food! Great customer service would definitely recommend. Travelers comparing spots should weigh this honestly when picking Cilantro UWS.",
+  "review3": "Friendly customer service and good food are common threads in reviews, making it an easy recommendation for a casual meal.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.1",
   "review3Theme": "Friendly service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
   "review3Stars": 5,
-  "review4": "An honest watch-out at Cilantro UWS: one Restaurantji reviewer said service was ok, but the food was delicious, so the food carries the visit. Factor this into timing and expectations before heading to Cilantro UWS.",
+  "review4": "Service can be uneven, with some diners calling it only adequate, though they add that the food still makes the visit worthwhile.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.1",
   "review4Theme": "Service can be middling",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-  "review4Stars": 4
+  "review4Stars": 4,
+  "review1Claims": [
+    "Great brunch spot right by the museum of natural history"
+  ],
+  "review2Claims": [
+    "great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting"
+  ],
+  "review3Claims": [
+    "Great customer service would definitely recommend",
+    "Amazing food! Great customer service would definitely recommend"
+  ],
+  "review4Claims": [
+    "service was ok, but the food was delicious"
+  ],
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

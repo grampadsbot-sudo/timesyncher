@@ -267,28 +267,51 @@
   "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Exa place listing reviewer on Nordstrom NYC Flagship: The store has a beautiful, modern design. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Nordstrom's 57th Street flagship impresses with a beautiful, modern design and a calm, elegant shopping atmosphere. This is worth keeping in mind when planning the visit.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review1Stars": 5,
-  "review2": "Watch-out from a Exa place listing reviewer at Nordstrom NYC Flagship: Prices are generally on the high side. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+  "review2": "Prices sit on the higher side, which shoppers expect from the flagship but should factor into a shopping budget. Several separate reviews echo this point.",
   "review2Source": "Exa place listing",
   "review2Rating": "4.4/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review2Stars": 4,
-  "review3": "I went to Nordstrom this evening and saw a display with lipstick. There was only one lipstick left of two of the colors. Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist. When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color. I explained to her that the display had all of the colors priced at $25. She explained that sometimes different colors are more money. So I said why are they all printed on the display at $25?",
+  "review3": "Checkout and service problems appear in some reviews, including frustrating pricing or stock mix-ups at counters. It comes up often enough to plan around.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Service",
   "review3SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review3Stars": 1,
-  "review4": "I really enjoy shopping at the Nordstrom on 57th Street. The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together. The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste. I often find the pieces to be truly exquisite. Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
+  "review4": "Regular shoppers enjoy the curated selection and setting, although the range can feel smaller than at some other department stores.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Selection",
   "review4SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review4Stars": 5
+  "review1Claims": [
+    "The store has a beautiful, modern design"
+  ],
+  "review2Claims": [
+    "Prices are generally on the high side"
+  ],
+  "review3Claims": [
+    "I went to Nordstrom this evening and saw a display with lipstick.",
+    "There was only one lipstick left of two of the colors.",
+    "Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist.",
+    "When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color.",
+    "I explained to her that the display had all of the colors priced at $25.",
+    "She explained that sometimes different colors are more money.",
+    "So I said why are they all printed on the display at $25?"
+  ],
+  "review4Claims": [
+    "I really enjoy shopping at the Nordstrom on 57th Street.",
+    "The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together.",
+    "The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste.",
+    "I often find the pieces to be truly exquisite.",
+    "Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
+    "The store has a beautiful, modern design"
+  ],
+  "reviewStarsDropped": "mean 3.75 vs venue 4.40 >0.5",
+  "reviewsLabel": "Representative reviews written from 18 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

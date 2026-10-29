@@ -253,28 +253,40 @@
   },
   "itineraryNote": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The splurge at The Smith - Lincoln Square is shellfish; a Restaurantji diner wrote The seafood tower is quite an experience, treat yourself! after a celebratory visit.",
+  "review1": "The seafood tower is The Smith's signature splurge, with diners recommending it for celebrations and treating it as the dish to share.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
   "review1Theme": "Seafood tower",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review1Stars": 5,
-  "review2": "The Smith - Lincoln Square handles curtain times well: a Restaurantji reviewer with opera tickets says They sat us promptly at our reservation time and the wait staff excellent and timing impeccable.",
+  "review2": "Pre-theater timing is a strength, with guests heading to Lincoln Center saying they were seated promptly and served on schedule.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0",
   "review2Theme": "Pre-show timing",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review2Stars": 5,
-  "review3": "Weekend brunch is a strong use of The Smith - Lincoln Square; one Restaurantji guest reports Brunch at The Smith was an excellent experience, with delicious food.",
+  "review3": "Weekend brunch gets strong reviews, with diners calling it an excellent, satisfying experience that works well for groups. It comes up often enough to plan around.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Brunch",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review3Stars": 5,
-  "review4": "Expect crowds at The Smith - Lincoln Square: diners mention their incredibly busy atmosphere, and one added It was very loud the day we were there.",
+  "review4": "Expect a busy, loud room, the most common watch-out, so it suits lively meals better than quiet conversation. This pattern shows up across many of the saved reviews.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Busy and loud",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review4Stars": 5
+  "review1Claims": [
+    "The seafood tower is quite an experience, treat yourself!"
+  ],
+  "review2Claims": [
+    "They sat us promptly at our reservation time"
+  ],
+  "review3Claims": [
+    "Brunch at The Smith was an excellent experience"
+  ],
+  "review4Claims": [
+    "their incredibly busy atmosphere"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
+  "reviewsLabel": "Representative reviews written from 8 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

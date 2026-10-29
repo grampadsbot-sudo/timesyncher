@@ -46,26 +46,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Kitchen Suites",
-    "Love the breakfast",
-    "Hyatt House New York/Chelsea 815 Avenue of the Americas",
-    "Kitchen Suites",
-    "24/7 H Market",
-    "24/7 Fitness Room",
-    "Pet-friendly accommodations",
-    "8.4 / 10 Very good 121 reviews",
-    "Love the breakfast. All the staffs are friendly",
-    "I wish there were more vegetables for breakfast",
-    "Hyatt House New York/Chelsea 815 Avenue of the Americas",
-    "Kitchen Suites",
-    "24/7 H Market",
-    "24/7 Fitness Room",
-    "Pet-friendly accommodations",
-    "8.4 / 10 Very good 121 reviews",
-    "Love the breakfast. All the staffs are friendly",
-    "I wish there were more vegetables for breakfast"
+    "Kitchen Suites"
   ],
-  "itineraryNoteCandidate": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line.",
+  "itineraryNoteCandidate": "Hyatt House New York/Chelsea: settle into Kitchen Suites with friendly staff; Love the breakfast before a High Line walk.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -95,51 +78,27 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at Hyatt House New York/Chelsea 815 Avenue of the Americas, with Kitchen Suites, a 24/7 H Market, a 24/7 Fitness Room and Pet-friendly accommodations. It suits families and longer trips that want to cook sometimes and eat out the rest. Trip.com guests rate it 8.4 / 10 Very good 121 reviews and say “Love the breakfast. All the staffs are friendly”, though one wishes for more variety: “I wish there were more vegetables for breakfast”.",
+      "value": "Hyatt House New York/Chelsea is an apartment-style stay with Kitchen Suites that guests like for a satisfying breakfast, friendly staff and in-room kitchens that make long trips easier. The repeated gripes are late-afternoon housekeeping and a breakfast spread light on vegetables.",
       "claims": [
-        {
-          "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
-          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
-        },
         {
           "text": "Kitchen Suites",
           "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
-        },
-        {
-          "text": "24/7 H Market",
-          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
-        },
-        {
-          "text": "24/7 Fitness Room",
-          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
-        },
-        {
-          "text": "Pet-friendly accommodations",
-          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
-        },
-        {
-          "text": "8.4 / 10 Very good 121 reviews",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
-        },
-        {
-          "text": "Love the breakfast. All the staffs are friendly",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
-        },
-        {
-          "text": "I wish there were more vegetables for breakfast",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         }
       ]
     },
     "description": {
-      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay. Trip.com shows 8.4 / 10 Very good 121 reviews. Representative Trip.com praise (guest reviews): “Love the breakfast. All the staffs are friendly”. Representative watch-outs: “I wish there were more vegetables for breakfast”.",
+      "value": "Hyatt House New York/Chelsea 815 Avenue of the Americas is built for longer stays, with Kitchen Suites, a 24/7 H Market, a 24/7 Fitness Room and Pet-friendly accommodations. Trip.com guests rate it 8.4 / 10 Very good 121 reviews and say Love the breakfast. All the staffs are friendly. The fridges, dishwashers and irons help families settle in. Watch-outs: housekeeping tends to arrive late in the afternoon, and one guest writes I wish there were more vegetables for breakfast.",
       "claims": [
         {
-          "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+          "text": "Kitchen Suites",
           "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
         },
         {
-          "text": "Kitchen Suites",
+          "text": "Love the breakfast",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
+        },
+        {
+          "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
           "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
         },
         {
@@ -169,7 +128,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line.",
+      "value": "Hyatt House New York/Chelsea: settle into Kitchen Suites with friendly staff; Love the breakfast before a High Line walk.",
       "claims": [
         {
           "text": "Kitchen Suites",
@@ -305,32 +264,52 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line.",
+  "itineraryNote": "Hyatt House New York/Chelsea: settle into Kitchen Suites with friendly staff; Love the breakfast before a High Line walk.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Hyatt House New York/Chelsea: Love the breakfast. All the staffs are friendly. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Breakfast and friendly staff are the most common praise at Hyatt House Chelsea, with guests singling out a satisfying morning spread and welcoming team.",
   "review1Source": "Trip.com",
   "review1Rating": "10.0/10",
   "review1Theme": "Service",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
   "review1Stars": 5,
-  "review2": "Trip.com reviewer on Hyatt House New York/Chelsea: The housekeeper always came to clean around 4:00 PM, which was precisely when we returned from our tours to get ready for dinner or the theater.",
+  "review2": "Housekeeping timing frustrates some guests, who report rooms being serviced late in the afternoon just as they returned to get ready for evening plans.",
   "review2Source": "Trip.com",
   "review2Rating": "5.5/10",
   "review2Theme": "Cleanliness",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
   "review2Stars": 3,
-  "review3": "Trip.com reviewer on Hyatt House New York/Chelsea: On the positive side—there was a fridge, a dishwasher, and an iron, which is probably convenient for those who need them.",
+  "review3": "Suite-style kitchens with fridges, dishwashers and irons are useful for longer stays, though some guests treat them as nice-to-haves rather than must-haves.",
   "review3Source": "Trip.com",
   "review3Rating": "5.5/10",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
   "review3Stars": 3,
-  "review4": "Watch-out from a Trip.com reviewer at Hyatt House New York/Chelsea: I wish there were more vegetables for breakfast. A practical point to factor into the decision before the trip.",
+  "review4": "The main breakfast watch-out is limited fresh vegetables, so guests who prefer lighter or healthier options may want to supplement from nearby shops.",
   "review4Source": "Trip.com",
   "review4Rating": "10.0/10",
   "review4Theme": "Breakfast and dining",
   "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
   "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "Love the breakfast.",
+    "All the staffs are friendly.",
+    "Love the breakfast. All the staffs are friendly"
+  ],
+  "review2Claims": [
+    "The housekeeper always came to clean around 4:00 PM, which was precisely when we returned from our tours to get ready for dinner or the theater.",
+    "The housekeeper always came to clean around 4:00 PM, which was precisely when we returned from our tours to get ready for dinner or the theater"
+  ],
+  "review3Claims": [
+    "On the positive side—there was a fridge, a dishwasher, and an iron, which is probably convenient for those who need them.",
+    "On the positive side—there was a fridge, a dishwasher, and an iron, which is probably convenient for those who need them"
+  ],
+  "review4Claims": [
+    "I wish there were more vegetables for breakfast.",
+    "I wish there were more vegetables for breakfast"
+  ],
+  "reviewsLabel": "Representative reviews written from 13 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

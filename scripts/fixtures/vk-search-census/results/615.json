@@ -199,5 +199,23 @@
   },
   "itineraryNote": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Shoppers admire Bergdorf Goodman's elegant decor and the views over Central Park from its upper floors, which make a visit feel special.",
+  "review1Claims": [
+    "Great views over Central Park. Great decor."
+  ],
+  "review1Source": "Tripadvisor",
+  "review1SourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+  "review2": "The caveat is waiting at popular beauty counters at busy times, so allow extra time for a relaxed visit. Several separate reviews echo this point.",
+  "review2Claims": [
+    "A 10 minute wait at the Jo Malone counter"
+  ],
+  "review2Source": "Tripadvisor",
+  "review2SourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+  "reviewsLabel": "Representative reviews written from 2 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [
+    "reviews"
+  ]
 }

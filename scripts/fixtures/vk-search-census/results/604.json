@@ -279,29 +279,56 @@
   "itineraryNote": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat. Enjoyable day trip. Needed more time to explore Ellis Island properly but that was the fault of our planning",
+  "review1": "The Statue of Liberty ferry processes busy crowds quickly, but visitors advise allowing enough time to explore Ellis Island fully.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Crowds",
   "review1SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review1Stars": 5,
-  "review2": "The official ferry to get you to the Statue of Liberty in Ellis Island. The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice. Plenty of stating for people who may need it, and efficient at loading and unloading everyone.",
+  "review2": "The official ferry is described as efficient and safe even in poor weather, with plenty of seating and good onboard refreshments.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Atmosphere",
   "review2SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review2Stars": 5,
-  "review3": "This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands. We started around 9:00 AM, which I highly recommend to avoid the rush. The ferry from Battery Park is only about 20–25 minutes. We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum. Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours. A must-do if you want to see both islands properly without feeling rushed!",
+  "review3": "Starting early is strongly recommended to beat the rush, and the short ride from Battery Park gives access to both islands.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Building and design",
   "review3SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review3Stars": 5,
-  "review4": "Great experience overall! Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience! The National Park officers were very pleasant. We definitely need to come back here during the warmer months cause the weather dampened our day a bit",
+  "review4": "Security checks can happen twice for pedestal tickets, but park rangers are pleasant and most visitors call it a great experience.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
   "review4SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat.",
+    "Enjoyable day trip.",
+    "Needed more time to explore Ellis Island properly but that was the fault of our planning"
+  ],
+  "review2Claims": [
+    "The official ferry to get you to the Statue of Liberty in Ellis Island.",
+    "The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice.",
+    "Plenty of stating for people who may need it, and efficient at loading and unloading everyone."
+  ],
+  "review3Claims": [
+    "This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands.",
+    "We started around 9:00 AM, which I highly recommend to avoid the rush.",
+    "The ferry from Battery Park is only about 20–25 minutes.",
+    "We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum.",
+    "Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours.",
+    "A must-do if you want to see both islands properly without feeling rushed!"
+  ],
+  "review4Claims": [
+    "Great experience overall!",
+    "Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience!",
+    "The National Park officers were very pleasant.",
+    "We definitely need to come back here during the warmer months cause the weather dampened our day a bit"
+  ],
+  "reviewsLabel": "Representative reviews written from 22 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

@@ -330,29 +330,52 @@
   "itineraryNote": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The MoMA design store is a wonderful place to gift shop. They have a lot of very unique decorations and practical house items. This is a great stop before or after visiting the museum. It is also nice to go to as an independent endeavor. Every piece there looks perfectly curated. It's good for tourists and New Yorkers alike.",
+  "review1": "The MoMA Design Store is a favorite gift stop near the museum, packed with distinctive home decor and practical design pieces.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Building and design",
   "review1SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-  "review1Stars": 5,
-  "review2": "They displayed many different items and you really can spend some time browsing through these items sections by sections. This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts!",
+  "review2": "Shoppers enjoy taking time to browse section by section and find it a good place for souvenirs that go beyond standard tourist T-shirts.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Atmosphere",
   "review2SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-  "review2Stars": 5,
-  "review3": "An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment. Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits. Great shop, unique products.",
+  "review3": "The collection is described as carefully curated, mixing classic and contemporary design, including small versions of museum pieces. Several separate reviews echo this point.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Selection",
   "review3SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-  "review3Stars": 5,
-  "review4": "MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York. The store offers a variety of products that incorporate contemporary art into lifestyle design. Products range from fashion accessories, household items, interior decoration, and design stationery. The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers.",
+  "review4": "It can get crowded around midday, and some shoppers note better prices online, so browsing in store and buying later is an option.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Building and design",
   "review4SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-  "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "The MoMA design store is a wonderful place to gift shop.",
+    "They have a lot of very unique decorations and practical house items.",
+    "This is a great stop before or after visiting the museum.",
+    "It is also nice to go to as an independent endeavor.",
+    "Every piece there looks perfectly curated.",
+    "It's good for tourists and New Yorkers alike."
+  ],
+  "review2Claims": [
+    "They displayed many different items and you really can spend some time browsing through these items sections by sections.",
+    "This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts!"
+  ],
+  "review3Claims": [
+    "An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment.",
+    "Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits.",
+    "Great shop, unique products."
+  ],
+  "review4Claims": [
+    "MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York.",
+    "The store offers a variety of products that incorporate contemporary art into lifestyle design.",
+    "Products range from fashion accessories, household items, interior decoration, and design stationery.",
+    "The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers."
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.40 >0.5",
+  "reviewsLabel": "Representative reviews written from 22 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

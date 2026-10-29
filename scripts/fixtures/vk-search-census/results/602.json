@@ -215,29 +215,65 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
-  "review1": "If you’ve never been to Zabars, WHAT ARE YOU DOING???? The hand sliced nova is NOT the only thing they have. I highly recommend the new addition Cinnamon Babka bread pudding, absolutely TO DIE FOR. The cafe is also a great quick eats spot with good coffee and amazing bagels. Highly recommend",
+  "review1": "Zabar's is treated as an essential Upper West Side food stop, with shoppers praising the smoked fish counter and extras like bread pudding and the cafe.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Food and drinks",
   "review1SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
-  "review1Stars": 5,
-  "review2": "This is a great neighborhood store. Usually very busy in the morning. They have all the Jewish food and breakfast options that you can think of and the service is usually good. This is a staple on the upper west side and has been around for years.",
+  "review2": "Shoppers describe it as a busy neighborhood institution, especially on mornings, with a deep range of Jewish deli and breakfast foods and generally good service.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Service",
   "review2SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
-  "review2Stars": 5,
-  "review3": "Run don’t walk to zabars!! Not exactly a hidden gem but an underrated one maybe? I don’t think many visitors know about it. A much better version of whole foods. Prices were very fair or even cheap for most things in NYC. The selection is amazing. Fresh prepared food and sandwiches. Great bagels. I can’t say enough good things about it. An institution for a reason! Support local and come check this place out. You will not be disappointed.",
+  "review3": "Visitors often call it an underrated find, comparing it favorably with big chain grocers for selection and finding prices fair for Manhattan.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
-  "review3Stars": 5,
-  "review4": "I finally made it to Zabars, a NYC institution! I got some chocolate babka, which was one of the best babkas I've had. I also got some cinnamon rugelach, which was really tasty. Their house blend coffee was glorious and perfect on a cold winter's day. Zabars has so many high quality products and I can't wait to go back.",
+  "review4": "The baked goods and coffee are a verdict highlight, with chocolate babka, rugelach and the house blend coffee among the most recommended buys.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Food and drinks",
   "review4SourceUrl": "https://exa.ai/library/place/1rgnf7mjmnf",
-  "review4Stars": 5,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "If you’ve never been to Zabars, WHAT ARE YOU DOING????",
+    "The hand sliced nova is NOT the only thing they have.",
+    "I highly recommend the new addition Cinnamon Babka bread pudding, absolutely TO DIE FOR.",
+    "The cafe is also a great quick eats spot with good coffee and amazing bagels.",
+    "Highly recommend"
+  ],
+  "review2Claims": [
+    "This is a great neighborhood store.",
+    "Usually very busy in the morning.",
+    "They have all the Jewish food and breakfast options that you can think of and the service is usually good.",
+    "This is a staple on the upper west side and has been around for years."
+  ],
+  "review3Claims": [
+    "Run don’t walk to zabars!!",
+    "Not exactly a hidden gem but an underrated one maybe?",
+    "I don’t think many visitors know about it.",
+    "A much better version of whole foods.",
+    "Prices were very fair or even cheap for most things in NYC.",
+    "The selection is amazing.",
+    "Fresh prepared food and sandwiches.",
+    "I can’t say enough good things about it.",
+    "An institution for a reason!",
+    "Support local and come check this place out.",
+    "You will not be disappointed."
+  ],
+  "review4Claims": [
+    "I finally made it to Zabars, a NYC institution!",
+    "I got some chocolate babka, which was one of the best babkas I've had.",
+    "I also got some cinnamon rugelach, which was really tasty.",
+    "Their house blend coffee was glorious and perfect on a cold winter's day.",
+    "Zabars has so many high quality products and I can't wait to go back."
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 3.90 >0.5",
+  "reviewsLabel": "Representative reviews written from 29 reviews",
+  "reviewsRepresentative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }

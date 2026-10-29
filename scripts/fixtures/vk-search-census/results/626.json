@@ -47,19 +47,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "just 2-3 minutes from 96th Street",
-    "Hotel on the Upper West Side, New York City",
-    "The location is outstanding, just 2-3 minutes from 96th Street",
-    "the staff cleans and makes the beds every day",
-    "6.7 / 10 64 reviews",
-    "hotel is somewhat out dated",
-    "Hotel on the Upper West Side, New York City",
-    "The location is outstanding, just 2-3 minutes from 96th Street",
-    "the staff cleans and makes the beds every day",
-    "hotel is somewhat out dated",
-    "6.7 / 10 64 reviews"
+    "Hotel on the Upper West Side, New York City"
   ],
-  "itineraryNoteCandidate": "Night Hotel Broadway: a simple Upper West Side stay near the 96th Street subway; use it as a budget launchpad.",
+  "itineraryNoteCandidate": "Night Hotel Broadway: a budget Upper West Side stay just 2-3 minutes from 96th Street; ask for a renovated room and use it as a subway launchpad.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
@@ -89,33 +79,21 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Night Hotel Broadway is a Hotel on the Upper West Side, New York City, on Broadway near Riverside Park and Central Park. It suits budget travelers who mainly need a clean bed by the subway: Trip.com guests say “The location is outstanding, just 2-3 minutes from 96th Street” and the staff cleans and makes the beds every day. It scores 6.7 / 10 64 reviews, and the honest watch-out is that the hotel is somewhat out dated.",
+      "value": "Night Hotel Broadway is a simple, quirky budget Hotel on the Upper West Side, New York City whose biggest asset is a quick walk to the 96th Street subway. Guests warm to its unusual style and like the renovated rooms, but older parts of the hotel feel tired.",
       "claims": [
         {
           "text": "Hotel on the Upper West Side, New York City",
           "sourceUrl": "https://www.nighthotelbroadway.com/"
-        },
-        {
-          "text": "The location is outstanding, just 2-3 minutes from 96th Street",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-        },
-        {
-          "text": "the staff cleans and makes the beds every day",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-        },
-        {
-          "text": "6.7 / 10 64 reviews",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-        },
-        {
-          "text": "hotel is somewhat out dated",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
         }
       ]
     },
     "description": {
-      "value": "Night Hotel Broadway is a hotel on the Upper West Side, New York City. It sits on Broadway with easy subway access to Midtown and downtown. The area offers Central Park, Riverside Park and many neighborhood restaurants within a few blocks. Trip.com shows 6.7 / 10 64 reviews. Representative Trip.com praise (guest reviews): “The location is outstanding, just 2-3 minutes from 96th Street”; “the staff cleans and makes the beds every day”. Representative watch-outs: “hotel is somewhat out dated”.",
+      "value": "Night Hotel Broadway is a Hotel on the Upper West Side, New York City, on Broadway with Riverside Park and Central Park nearby. Trip.com shows 6.7 / 10 64 reviews. Guests say The location is outstanding, just 2-3 minutes from 96th Street and appreciate that the staff cleans and makes the beds every day. Renovated rooms in quiet positions earn the best feedback; the watch-out is that the hotel is somewhat out dated elsewhere, so choose an updated room category.",
       "claims": [
+        {
+          "text": "just 2-3 minutes from 96th Street",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
+        },
         {
           "text": "Hotel on the Upper West Side, New York City",
           "sourceUrl": "https://www.nighthotelbroadway.com/"
@@ -129,17 +107,17 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
         },
         {
-          "text": "hotel is somewhat out dated",
+          "text": "6.7 / 10 64 reviews",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
         },
         {
-          "text": "6.7 / 10 64 reviews",
+          "text": "hotel is somewhat out dated",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Night Hotel Broadway: a simple Upper West Side stay near the 96th Street subway; use it as a budget launchpad.",
+      "value": "Night Hotel Broadway: a budget Upper West Side stay just 2-3 minutes from 96th Street; ask for a renovated room and use it as a subway launchpad.",
       "claims": [
         {
           "text": "just 2-3 minutes from 96th Street",
@@ -271,32 +249,46 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Night Hotel Broadway: a simple Upper West Side stay near the 96th Street subway; use it as a budget launchpad.",
+  "itineraryNote": "Night Hotel Broadway: a budget Upper West Side stay just 2-3 minutes from 96th Street; ask for a renovated room and use it as a subway launchpad.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Trip.com reviewer on Night Hotel Broadway: The location is outstanding, just 2-3 minutes from 96th Street. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1": "Night Hotel Broadway's Upper West Side location near the 96th Street station is its strongest selling point, making subway trips quick and simple.",
   "review1Source": "Trip.com",
   "review1Rating": "7.5/10",
   "review1Theme": "Location",
   "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-  "review1Stars": 4,
-  "review2": "Trip.com reviewer on Night Hotel Broadway: I was a bit baffled at first, but it became comfortable once I got used to it. Worth weighing alongside the overall 7.5/10 score before locking in the plan.",
+  "review2": "Guests describe the hotel's unusual design as surprising at first, but most say it becomes comfortable and enjoyable once they settle in.",
   "review2Source": "Trip.com",
   "review2Rating": "7.5/10",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-  "review2Stars": 4,
-  "review3": "Trip.com reviewer on Night Hotel Broadway: The 'Gold' type room had been renovated, and our room was in a quiet spot, which made for a very comfortable stay.",
+  "review3": "Renovated rooms in quieter positions get the best reviews, with guests describing restful nights after choosing an updated room category.",
   "review3Source": "Trip.com",
   "review3Rating": "9.5/10",
   "review3Theme": "Rooms",
   "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-  "review3Stars": 5,
-  "review4": "Watch-out from a Trip.com reviewer at Night Hotel Broadway: hotel is somewhat out dated. A practical point to factor into the decision before the trip.",
+  "review4": "The recurring watch-out is that parts of the hotel feel dated, so it pays to book a renovated room rather than the most basic option.",
   "review4Source": "Trip.com",
   "review4Rating": "7.5/10",
   "review4Theme": "Facilities",
   "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-  "review4Stars": 4,
-  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The location is outstanding, just 2-3 minutes from 96th Street"
+  ],
+  "review2Claims": [
+    "I was a bit baffled at first, but it became comfortable once I got used to it.",
+    "I was a bit baffled at first, but it became comfortable once I got used to it"
+  ],
+  "review3Claims": [
+    "The 'Gold' type room had been renovated, and our room was in a quiet spot, which made for a very comfortable stay.",
+    "The 'Gold' type room had been renovated, and our room was in a quiet spot, which made for a very comfortable stay"
+  ],
+  "review4Claims": [
+    "hotel is somewhat out dated"
+  ],
+  "reviewStarsDropped": "mean 4.25 vs venue 3.35 >0.5",
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
 }
