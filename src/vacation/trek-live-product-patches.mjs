@@ -8,6 +8,7 @@ import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
+import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -256,13 +257,8 @@ export function patchTripMapHarnessHook(source = '') {
   return js;
 }
 
-const DN_HOST_NEEDLE = 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)';
-const DN_HOST_PATCH = 'dn=typeof window<"u"&&(/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/(^127\\.0\\.0\\.1$|^localhost$)/i.test(window.location.hostname))';
-
 export function patchSharedTripHostnameForLocalHarness(js = '') {
-  const source = String(js || '');
-  if (!source.includes(DN_HOST_NEEDLE)) return source;
-  return source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  return forceSharedDayByDayUi(js);
 }
 
 export function applyLiveProductPatches(patched = '', options = {}) {
@@ -278,7 +274,7 @@ export function applyLiveProductPatches(patched = '', options = {}) {
   if (served && !js.includes('AI-assisted vacation itinerary planning')) {
     throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
   }
-  if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  js = forceSharedDayByDayUi(js);
   js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
