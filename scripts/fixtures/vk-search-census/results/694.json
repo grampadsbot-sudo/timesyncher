@@ -1,0 +1,74 @@
+{
+  "thingId": "694",
+  "thingName": "The Jazz Club at Aman New York",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.aman.com/hotels/aman-new-york/dining",
+      "title": "Private dining & rooftop bar in Manhattan - Aman New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ri. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are currently open to hotel gu …  with signature Aman restaurants Arva and Akari. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are currently open to hotel gu",
+      "snippet": "ri. Celebrating the traditions of rustic Italian and Japanese “washoku” preparation with seasonal flare, Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. ​​ Aman New York’s culinary destinations, in the heart of NYC's Midtown, are curr",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.aman.com/hotels/aman-new-york",
+      "title": "Luxury Hotel & Spa, Fifth Avenue, Manhattan - Aman New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ating design, exclusivity and collection of private spaces. Discover more Since 1921, the Crown Building has presided over the midpoint of Manhattan; the corner of Fifth Avenue and 57th Street. Formerly the first home of the Museum of Modern Art, the over 100-year-old building has undergone a monumental transformation, which has seen it ful",
+      "snippet": "ating design, exclusivity and collection of private spaces. Discover more Since 1921, the Crown Building has presided over the midpoint of Manhattan; the corner of Fifth Avenue and 57th Street. Formerly the first home of the Museum of Modern Art, the over 100-year-old building has undergone a monume",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "subterranean Jazz Club",
+    "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
+    "the corner of Fifth Avenue and 57th Street"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the Crown Building on Fifth Avenue.",
+      "claims": [
+        {
+          "text": "subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street.",
+      "claims": [
+        {
+          "text": "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        },
+        {
+          "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

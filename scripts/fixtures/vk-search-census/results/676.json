@@ -5,45 +5,29 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/",
-      "title": "Motto by Hilton Times Square micro-hotel.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Hilton 4.1/299"
+      "url": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens",
+      "title": "Motto by Hilton New York City Times Square Opens | Hilton News",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Motto by Hilton New York City Times Square Opens | Hilton News | Motto by Hilton is taking Midtown with a second New York City hotel as part of a nearly 2,000‑room addition across multiple Hil … ct on the cityscape, moments from the best of Broadway, museums, dining and culture.” Reimagining the large-scale footprint of a New York City hotel, Motto New York City Times Square will entice guests looking for connection and efficiency . Guest rooms designed with an intentional footprint feature soft neutral textures offering a cozy escape, while dynamic storage and technology featu … ining the large-scale footprint of a New York City hotel, Motto New York City Times Square will entice guests looking for connection and efficiency . Guest rooms designed with an intentional footprint feature soft neutral textures offering a cozy escape, while dynamic storage and technology features synthesize their stay. The property's signature r",
+      "snippet": "Motto by Hilton New York City Times Square Opens | Hilton News | Motto by Hilton is taking Midtown with a second New York City hotel as part of a nearly 2,000‑room addition across multiple Hil",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 4.1,
-    "primarySource": "hilton",
-    "hilton": 4.1,
-    "tripadvisor": 4.1
-  },
-  "reviewCount": {
-    "hilton": 299
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Motto compact rooms; ~$30 destination fee noted in reviews",
-  "hoursHint": "Hotel — 24h",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 150A West 48th Street",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
-    },
-    {
-      "claim": "Official site https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
-    },
-    {
-      "claim": "Guest rating primary 4.1 via hilton",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
-    }
+    "Motto by Hilton New York City Times Square",
+    "Motto New York City Times Square will entice guests looking for connection and efficiency",
+    "Guest rooms designed with an intentional footprint"
   ],
   "itineraryNoteCandidate": "Compact Motto rooms put you on 48th—budget the destination fee into the nightly rate.",
   "voicePass": {
-    "itineraryNote": "Compact Motto rooms put you on 48th—budget the destination fee into the nightly rate.",
-    "shortDescription": "Motto by Hilton Times Square micro-hotel.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -70,32 +54,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Motto by Hilton New York City Times Square is a compact micro-hotel near Times Square in Midtown.",
+      "value": "Motto by Hilton New York City Times Square is a compact-room Hilton hotel in the Times Square area.",
       "claims": [
         {
-          "text": "Motto by Hilton Times Square micro-hotel.",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+          "text": "Motto by Hilton New York City Times Square",
+          "sourceUrl": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens"
         }
       ]
     },
     "description": {
-      "value": "Motto by Hilton New York City Times Square is a modern micro-hotel with small, smartly designed rooms. It sits within walking distance of Times Square and Broadway theaters. It is a good-value base if you plan to spend most of your time out exploring.",
+      "value": "Motto by Hilton New York City Times Square is a Hilton lifestyle hotel in Midtown. Hilton says Motto will entice guests looking for connection and efficiency. Its guest rooms are designed with an intentional footprint, so expect compact rooms and a central location near Broadway.",
       "claims": [
         {
-          "text": "Motto by Hilton Times Square micro-hotel.",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+          "text": "Motto New York City Times Square will entice guests looking for connection and efficiency",
+          "sourceUrl": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens"
         },
         {
-          "text": "Hilton 4.1/299",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycmoua-motto-new-york-city-times-square/"
+          "text": "Guest rooms designed with an intentional footprint",
+          "sourceUrl": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

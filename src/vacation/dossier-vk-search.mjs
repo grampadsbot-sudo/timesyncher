@@ -16,15 +16,47 @@ function publicUrl(value) {
   } catch { return false; }
 }
 const sourcesOf = (result) => list(result?.sources).filter((source) => publicUrl(source?.url));
+const normalizeWhitespace = (value) => String(value || '').toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+const sourceSearchText = (source) => [source?.title, source?.text, source?.snippet].filter(text).join('\n');
+const claimBody = (claim) => typeof claim === 'string' ? text(claim) : text(claim?.claim || claim?.text);
+
+function resolveStringClaimBody(body, sources) {
+  const claimBody = text(body);
+  if (!claimBody) return null;
+  for (const source of sources) {
+    const page = normalizeWhitespace(sourceSearchText(source));
+    const claim = normalizeWhitespace(claimBody);
+    if (claim && page.includes(claim)) {
+      return { claim: claimBody, text: claimBody, sourceUrl: source.url };
+    }
+  }
+  return null;
+}
+
+function normalizeSummaryClaimEntry(claim, sources) {
+  if (typeof claim === 'string') return resolveStringClaimBody(claim, sources);
+  if (claim && typeof claim === 'object') return claim;
+  return null;
+}
+
+function normalizeFieldClaimEntry(claim, sources) {
+  if (typeof claim === 'string') return resolveStringClaimBody(claim, sources);
+  if (claim && typeof claim === 'object') return claim;
+  return null;
+}
 
 export function isThinVkSearchResult(result) {
   return !sourcesOf(result).length && !result?.rating?.primary && !list(result?.summaryClaims).length;
 }
 
 export function vkSearchClaimSupportOk(result) {
-  const urls = new Set(sourcesOf(result).map((source) => source.url));
-  return result?.voicePass?.claimSupportOk === true
-    && list(result?.summaryClaims).every((claim) => urls.has(claim?.sourceUrl));
+  if (result?.voicePass?.claimSupportOk !== true) return false;
+  const sources = sourcesOf(result);
+  const urls = new Set(sources.map((source) => source.url));
+  return list(result?.summaryClaims).every((claim) => {
+    if (typeof claim === 'string') return resolveStringClaimBody(claim, sources) !== null;
+    return Boolean(claim?.sourceUrl && urls.has(claim.sourceUrl));
+  });
 }
 
 export function loadVkSearchCensusResult(place, { env = process.env, censusDir } = {}) {
@@ -57,13 +89,16 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       stage: 'discovery', status: thin ? 'thin' : supported ? 'ok' : 'claim_support_failed', botId: VK_SEARCH_BOT_ID }],
   };
   const pageIndex = (url) => pages.findIndex((page) => page.url === url);
-  const inputClaims = list(result.summaryClaims);
+  const rawInputClaims = list(result.summaryClaims);
+  const inputClaims = rawInputClaims
+    .map((claim) => normalizeSummaryClaimEntry(claim, sources))
+    .filter(Boolean);
   const verdictEligible = (claim) => claim && (!Object.hasOwn(claim, 'supported') || claim.supported === true);
-  const rejected = inputClaims.filter((claim) => !voiceAllowed || claim?.supported === false)
-    .map((claim) => text(claim?.claim || claim?.text)).filter(Boolean);
+  const rejected = rawInputClaims.filter((claim) => !voiceAllowed || claim?.supported === false)
+    .map((claim) => claimBody(claim)).filter(Boolean);
   for (const page of pages) {
     page.inputClaimVerdicts = inputClaims.filter((claim) => claim?.sourceUrl === page.url && Object.hasOwn(claim, 'supported'))
-      .map((claim) => ({ text: text(claim.claim || claim.text), supported: typeof claim.supported === 'boolean' ? claim.supported : null }));
+      .map((claim) => ({ text: claimBody(claim), supported: typeof claim.supported === 'boolean' ? claim.supported : null }));
     page.rejectedClaimTexts = [...rejected];
     page.summaryExcerptAllowed = voiceAllowed && !inputClaims.some((claim) => claim?.supported === false && claim.sourceUrl === page.url);
   }
@@ -76,9 +111,10 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const value = text(raw.value);
     const rows = list(raw.claims);
     if (!value && !rows.length) return null;
-    const claims = rows.flatMap((claim) => {
+    const claims = rows.flatMap((entry) => {
+      const claim = normalizeFieldClaimEntry(entry, sources) || entry;
       if (!verdictEligible(claim)) return [];
-      const body = text(claim.text || claim.claim);
+      const body = claimBody(claim);
       if (!body || claimTextWasRejected(body, rejected)) return [];
       const sourceUrl = text(claim.sourceUrl || raw.sourceUrl);
       const index = sourceUrl ? pageIndex(sourceUrl) : -1;
@@ -103,9 +139,9 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
   }
   const eligible = (claim) => verdictEligible(claim)
-    && pageSupports(pageIndex(claim?.sourceUrl), text(claim?.claim || claim?.text));
+    && pageSupports(pageIndex(claim?.sourceUrl), claimBody(claim));
   const claims = inputClaims.filter((claim) => eligible(claim)
-    && !claimTextWasRejected(text(claim.claim || claim.text), rejected));
+    && !claimTextWasRejected(claimBody(claim), rejected));
   const scalar = (key, value, index) => {
     if (!text(value) || claimTextWasRejected(value, rejected) || !pageSupports(index, value)) return;
     dossier.fields[key] = { value, claims: [{ text: value, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }] };
@@ -114,7 +150,7 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     if (raw && typeof raw === 'object' && !verdictEligible(raw)) return;
     const value = text(raw?.value ?? raw);
     const explicit = raw?.sourceUrl || sourceUrl;
-    const claim = claims.find((row) => text(row.claim || row.text).includes(value) && pageSupports(pageIndex(row.sourceUrl), value));
+    const claim = claims.find((row) => claimBody(row).includes(value) && pageSupports(pageIndex(row.sourceUrl), value));
     const official = sources.findIndex((source) => !/yelp\.|google\.|tripadvisor\./i.test(new URL(source.url).hostname));
     const index = explicit ? pageIndex(explicit) : claim ? pageIndex(claim.sourceUrl) : official >= 0 ? official : pages.length ? 0 : -1;
     scalar(key, value, index);
@@ -131,7 +167,7 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
   if (voiceAllowed && verdictEligible(result.rating)
     && ['yelp', 'google', 'tripadvisor'].includes(source) && average > 0 && average <= 5) {
     const url = result.rating.sourceUrl || result.rating.primarySourceUrl;
-    const claim = claims.find((row) => text(row.claim || row.text).toLowerCase().includes(source));
+    const claim = claims.find((row) => claimBody(row).toLowerCase().includes(source));
     const index = url ? pageIndex(url) : sources.findIndex((row) => new URL(row.url).hostname.includes(`${source}.`));
     const citing = index >= 0 ? index : !url && claim ? pageIndex(claim.sourceUrl) : -1;
     const count = Number(result.reviewCount?.[source]);

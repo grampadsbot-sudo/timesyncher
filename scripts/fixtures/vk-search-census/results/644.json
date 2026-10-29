@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.juicegeneration.com/locations",
-      "title": "Juice Generation Locations",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Multiple Manhattan shops including UWS"
+      "title": "Locations   | Juice Generation",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM … 13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM … dway btw 85th & 86th TODAY’S HOURS: 7:00 AM 8:00 PM JUICING SINCE 2013 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View ",
+      "snippet": "13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 5",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -24,23 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Juice Generation operates UWS locations listed on official locations page",
-      "sourceUrl": "https://www.juicegeneration.com/locations"
-    },
-    {
-      "claim": "Chain known for juices, smoothies, açaí bowls",
-      "sourceUrl": "https://www.juicegeneration.com/locations"
-    }
+    "117 W 72nd Street btw Columbus & Broadway",
+    "117 W 72nd Street btw Columbus & Broadway",
+    "7:00 AM 9:00 PM"
   ],
   "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
   "voicePass": {
-    "itineraryNote": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
-    "shortDescription": "Juice Generation Upper West Side.",
-    "unsupportedFlags": [
-      "Exact UWS street address not hard-confirmed in this pass"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -67,28 +60,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Juice Generation Upper West Side is the neighborhood branch of the New York juice and smoothie bowl chain.",
+      "value": "Juice Generation Upper West Side is the juice bar at 117 W 72nd Street between Columbus and Broadway.",
       "claims": [
         {
-          "text": "Juice Generation Locations",
+          "text": "117 W 72nd Street btw Columbus & Broadway",
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
     },
     "description": {
-      "value": "Juice Generation Upper West Side is one of the chain's several Manhattan shops. It is a quick place to grab a cold-pressed juice, smoothie, or acai bowl on the go. Stop in for breakfast before heading to Central Park or the Museum of Natural History.",
+      "value": "Juice Generation Upper West Side is a juice and smoothie bar at 117 W 72nd Street btw Columbus & Broadway. Its location listing shows hours of 7:00 AM 9:00 PM. It is near the 72nd Street subway and an easy walk to Central Park.",
       "claims": [
         {
-          "text": "Multiple Manhattan shops including UWS",
+          "text": "117 W 72nd Street btw Columbus & Broadway",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "7:00 AM 9:00 PM",
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

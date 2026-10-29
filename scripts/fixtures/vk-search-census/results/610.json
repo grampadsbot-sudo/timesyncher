@@ -6,27 +6,11 @@
   "sources": [
     {
       "url": "https://carbonenewyork.com/",
-      "title": "Carbone New York official",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "181 Thompson St; Lunch Tue–Sun 11:30am–2pm; Dinner daily 5–11:30pm; corkage $110"
-    },
-    {
-      "url": "https://www.yelp.com/biz/carbone-new-york",
-      "title": "CARBONE Yelp",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.0 ★ · 2129 reviews · $$$$ · 181 Thompson St; Spicy Rigatoni Vodka $49"
-    },
-    {
-      "url": "https://www.opentable.com/r/carbone",
-      "title": "Carbone OpenTable",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.5 ★ · 664 reviews · $50+"
-    },
-    {
-      "url": "https://www.stoop.bar/happy-hour/noho/carbone-new-york",
-      "title": "stoop.bar HH (REJECTED)",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Lists 168 Sullivan St — DIFFERENT venue; claim-support REJECT"
+      "title": "Carbone New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … ecame Your Favorite Celebs' Favorite Restaurant The Wall Street Journal Mario Carbone Doesn't Care for Your Fancy Kitchen Gadgets HOURS & INFORMATION 181 Thompson Street (between Bleecker & Houston) New York, NY 10012 Lunch Tuesday - Sunday 11:30am - 2:00pm Dinner Monday - Sunday 5:00pm - 11:30pm We welcome guests to  … merica and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu filled with signatures inspired by the culinary history of Little Italy. CHEF MARIO CARBONE Gro",
+      "snippet": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -44,34 +28,15 @@
   "happyHourHint": null,
   "happyHourRejectReason": "Third-party HH page maps to 168 Sullivan St, not 181 Thompson St",
   "summaryClaims": [
-    {
-      "claim": "Located at 181 Thompson Street, Greenwich Village",
-      "sourceUrl": "https://carbonenewyork.com/"
-    },
-    {
-      "claim": "Lunch Tue–Sun 11:30am–2pm; dinner daily 5–11:30pm",
-      "sourceUrl": "https://carbonenewyork.com/"
-    },
-    {
-      "claim": "Yelp 4.0 from ~2129 reviews",
-      "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
-    },
-    {
-      "claim": "Corkage $110 per 750ml bottle",
-      "sourceUrl": "https://carbonenewyork.com/"
-    },
-    {
-      "claim": "No verified happy hour at 181 Thompson (Sullivan St listing rejected)",
-      "sourceUrl": "https://www.stoop.bar/happy-hour/noho/carbone-new-york"
-    }
+    "Located on historic Thompson Street",
+    "Located on historic Thompson Street",
+    "181 Thompson Street",
+    "captains sporting tuxedos by Zac Posen"
   ],
   "itineraryNoteCandidate": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
   "voicePass": {
-    "itineraryNote": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
-    "shortDescription": "Glamorous Italian-American on Thompson Street with tuxedo captains and hard-to-get reservations.",
-    "unsupportedFlags": [],
     "claimSupportOk": true,
-    "note": "Note leans on Yelp signature dishes + official address/hours; no HH claimed."
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -105,40 +70,36 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Carbone is the celebrated Greenwich Village Italian-American restaurant on Thompson Street, known for spicy rigatoni.",
+      "value": "Carbone is the Italian-American restaurant on Thompson Street in Greenwich Village from Mario Carbone.",
       "claims": [
         {
-          "text": "181 Thompson St",
+          "text": "Located on historic Thompson Street",
           "sourceUrl": "https://carbonenewyork.com/"
-        },
-        {
-          "text": "Spicy Rigatoni Vodka $49",
-          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
         }
       ]
     },
     "description": {
-      "value": "Carbone is a glamorous Italian-American restaurant at 181 Thompson St in Greenwich Village, styled like a mid-century red-sauce supper club. Its signature dish is the Spicy Rigatoni Vodka, and tableside service is part of the show. Reservations are famously hard to get, so book as early as possible for dinner.",
+      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead.",
       "claims": [
         {
-          "text": "181 Thompson St",
+          "text": "Located on historic Thompson Street",
           "sourceUrl": "https://carbonenewyork.com/"
         },
         {
-          "text": "Spicy Rigatoni Vodka $49",
-          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+          "text": "181 Thompson Street",
+          "sourceUrl": "https://carbonenewyork.com/"
         },
         {
-          "text": "Dinner daily 5–11:30pm",
+          "text": "captains sporting tuxedos by Zac Posen",
           "sourceUrl": "https://carbonenewyork.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

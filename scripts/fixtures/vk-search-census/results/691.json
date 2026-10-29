@@ -1,0 +1,66 @@
+{
+  "thingId": "691",
+  "thingName": "Angelina Bakery Broadway",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://angelinabakery.com/",
+      "title": "Angelina Bakery | Italian Bakery in New York City",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Angelina Bakery | Italian Bakery in New York City | | Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018. Bomboloni Baked Daily. Address 1675 BroadwayNew York, NY 10019 … Angelina Bakery | Italian Bakery in New York City | | Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018. Bomboloni Baked Daily. Address 1675 BroadwayNew York, NY 10019 … kery in New York City | | Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018. Bomboloni Baked Daily. Address 1675 BroadwayNew York, NY 10019",
+      "snippet": "Angelina Bakery | Italian Bakery in New York City | | Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018. Bomboloni Baked Daily. Address 1675 BroadwayNew York, NY 10019",
+      "fetchMethod": "WebFetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "opened Angelina Bakery in Times Square in 2018",
+    "Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018.",
+    "Bomboloni Baked Daily"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Angelina Bakery Broadway is an Italian bakery at 1675 Broadway near Times Square, opened in 2018.",
+      "claims": [
+        {
+          "text": "opened Angelina Bakery in Times Square in 2018",
+          "sourceUrl": "https://angelinabakery.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Angelina Bakery Broadway is a Sicilian-style Italian bakery at 1675 Broadway. Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018. The bakery promotes Bomboloni Baked Daily, a good breakfast treat.",
+      "claims": [
+        {
+          "text": "Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018.",
+          "sourceUrl": "https://angelinabakery.com/"
+        },
+        {
+          "text": "Bomboloni Baked Daily",
+          "sourceUrl": "https://angelinabakery.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

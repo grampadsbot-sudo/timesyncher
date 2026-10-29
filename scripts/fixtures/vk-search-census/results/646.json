@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.puregreenfranchise.com/new-york/uws/",
-      "title": "Pure Green UWS",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "2041 Broadway; 7am-9pm"
+      "title": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-press … Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West ",
+      "snippet": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-press",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -24,21 +26,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "UWS shop at 2041 Broadway",
-      "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
-    },
-    {
-      "claim": "Listed open daily 7am–9pm",
-      "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
-    }
+    "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice",
+    "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY"
   ],
   "itineraryNoteCandidate": "Quick cold-pressed juice stop on Broadway before a Lincoln Center evening.",
   "voicePass": {
-    "itineraryNote": "Quick cold-pressed juice stop on Broadway before a Lincoln Center evening.",
-    "shortDescription": "Pure Green juice bar on the Upper West Side.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -65,28 +59,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Pure Green UWS is a Broadway juice bar on the Upper West Side serving cold-pressed juices and smoothies.",
+      "value": "Pure Green UWS is a juice bar on Broadway serving acai bowls, smoothies and cold-pressed juice.",
       "claims": [
         {
-          "text": "2041 Broadway",
+          "text": "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice",
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
         }
       ]
     },
     "description": {
-      "value": "Pure Green UWS is a juice bar at 2041 Broadway, serving organic cold-pressed juices, smoothies, and bowls. It opens early and stays open into the evening, so it works for breakfast or an afternoon pick-me-up. It is a short walk from the Beacon Theatre and Zabar's.",
+      "value": "Pure Green UWS is a neighborhood juice bar on the Upper West Side. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. It is a light breakfast or snack stop before heading into Central Park or Riverside Park.",
       "claims": [
         {
-          "text": "2041 Broadway; 7am-9pm",
+          "text": "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY",
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

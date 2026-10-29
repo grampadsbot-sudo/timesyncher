@@ -1,0 +1,66 @@
+{
+  "thingId": "681",
+  "thingName": "Estiatorio Milos Hudson Yards",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.estiatoriomilos.com/location/nyhudsonyards/",
+      "title": "Hudson Yards - Estiatorio Milos",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … :00 pm Dinner: 4:00 pm to 11:00 pm We are proud to be the centerpiece of a brand-new Manhattan neighborhood. Hudson Yards is west of Times Square and offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets that illuminate the Hudson River. The stunning new Hudson Yards location features views of sky and river, presented in hues of blue that shift as the",
+      "snippet": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "20 Hudson Yards, Fifth Floor",
+    "20 Hudson Yards, Fifth Floor",
+    "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Estiatorio Milos Hudson Yards is a Greek seafood restaurant at 20 Hudson Yards, Fifth Floor.",
+      "claims": [
+        {
+          "text": "20 Hudson Yards, Fifth Floor",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters.",
+      "claims": [
+        {
+          "text": "20 Hudson Yards, Fifth Floor",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        },
+        {
+          "text": "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets",
+          "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

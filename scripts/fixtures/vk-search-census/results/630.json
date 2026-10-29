@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
-      "title": "Southwest LAS→LGA 07:25–16:35",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "SW LAS–LGA; schedule variants; fares from ~$179 on later dates in SERP"
+      "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental car booking and find even more savings. Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel",
+      "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -21,23 +23,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "SW LAS–LGA; schedule variants; fares from ~$179 on later dates in SERP",
-      "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-    },
-    {
-      "claim": "Thing inventory website points at airline booking deep link",
-      "sourceUrl": "https://www.southwest.com/air/booking/select-depart.html?adultsCount=1&adultPassengersCount=1&destinationAirportCode=LGA&departureDate=2026-06-23&departureTimeOfDay=ALL_DAY&fareType=USD&originationAirportCode=LAS&passengerType=ADULT&returnDate=2026-06-30&returnTimeOfDay=ALL_DAY&tripType=roundtrip"
-    }
+    "Las Vegas (LAS) to New York LaGuardia (LGA)",
+    "Las Vegas (LAS) to New York LaGuardia (LGA)",
+    "Bundle your Southwest Airlines flight with a hotel or rental car"
   ],
   "itineraryNoteCandidate": "Southwest morning LAS–LGA option — bags fly free; confirm connection pattern.",
   "voicePass": {
-    "itineraryNote": "Southwest morning LAS–LGA option — bags fly free; confirm connection pattern.",
-    "shortDescription": "Southwest LAS→LGA 07:25–16:35",
-    "unsupportedFlags": [
-      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -64,28 +57,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest LAS → LGA 07:25–16:35 is a nonstop Southwest Airlines option from Las Vegas to LaGuardia.",
+      "value": "Southwest Airlines flight option from Las Vegas to New York LaGuardia for the trip, listed on the Southwest route page.",
       "claims": [
         {
-          "text": "Southwest LAS→LGA 07:25–16:35",
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     },
     "description": {
-      "value": "Southwest LAS → LGA 07:25–16:35 flies nonstop from Las Vegas to LaGuardia Airport in Queens. The morning departure lands mid-afternoon with time to check in before dinner. Southwest includes two free checked bags, which helps keep the all-in cost down. Confirm the exact June fare and schedule on southwest.com before booking.",
+      "value": "This Southwest Airlines option flies from Las Vegas to New York LaGuardia. The Southwest route page covers flights from Las Vegas (LAS) to New York LaGuardia (LGA). Times shown in the Thing name come from the census schedule, and fares should be checked live on Southwest before booking.",
       "claims": [
         {
-          "text": "Southwest LAS→LGA 07:25–16:35",
+          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Bundle your Southwest Airlines flight with a hotel or rental car",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

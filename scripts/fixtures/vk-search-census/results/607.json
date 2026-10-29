@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://bryantpark.org/the-park/hours-and-directions",
-      "title": "Bryant Park Hours",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Oct daily 7am-10pm; behind NYPL"
+      "title": "Hours and Directions",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze site traffic, and deli … Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze site traffic, and deli … esult of weather or necessary maintenance. Angelito Jusay Photography Monthly hours ❮ January – April Daily, 7am-10pm May – September Daily, 7am-11pm October Daily, 7am-10pm November - December* Monday - Wednesday: 7am-10pm Thursday - Sunday: 7am-midnight *On New Year’s Eve the park closes early, usually before 8pm. Park ",
+      "snippet": "Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze s",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -24,21 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Between 40th–42nd & Fifth–Sixth behind NYPL",
-      "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
-    },
-    {
-      "claim": "October hours daily 7am–10pm",
-      "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
-    }
+    "behind the New York Public Library's Stephen A. Schwarzman building",
+    "behind the New York Public Library's Stephen A. Schwarzman building",
+    "October Daily, 7am-10pm"
   ],
   "itineraryNoteCandidate": "Meet at the lawn or carousel—check bryantpark.org calendar for games and events that day.",
   "voicePass": {
-    "itineraryNote": "Meet at the lawn or carousel—check bryantpark.org calendar for games and events that day.",
-    "shortDescription": "Midtown lawn park behind the main Public Library.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -67,32 +62,32 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Friend meetup at Bryant Park is a free, easy rendezvous on the green lawn behind the library.",
+      "value": "Friend meetup at Bryant Park, the Midtown park behind the New York Public Library main building.",
       "claims": [
         {
-          "text": "behind NYPL",
+          "text": "behind the New York Public Library's Stephen A. Schwarzman building",
           "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
         }
       ]
     },
     "description": {
-      "value": "Friend meetup at Bryant Park takes place in the leafy Midtown park right behind the New York Public Library main branch. Entry is free and there are movable chairs, kiosks, and shade, so it is an easy spot to find each other. The park opens at 7am and stays open late into the evening.",
+      "value": "Friend meetup at Bryant Park is an easy Midtown plan. The park sits behind the New York Public Library's Stephen A. Schwarzman building between Fifth and Sixth Avenues. Its posted hours for October are daily, 7am-10pm, so an afternoon or early evening meetup fits well.",
       "claims": [
         {
-          "text": "behind NYPL",
+          "text": "behind the New York Public Library's Stephen A. Schwarzman building",
           "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
         },
         {
-          "text": "Oct daily 7am-10pm",
+          "text": "October Daily, 7am-10pm",
           "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

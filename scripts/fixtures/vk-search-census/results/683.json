@@ -1,0 +1,71 @@
+{
+  "thingId": "683",
+  "thingName": "Joe's Pizza Carmine Street",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.joespizzanyc.com/",
+      "title": "Joe's Pizza",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "on\" offering the classic New York slice for over 47 years. First, we served our customers from our corner location at Bleecker and Carmine Street and now three doors down at 7 Carmine Street. At 75 years of age, Joe Pozzuoli still owns and operates the restaurant. … has become just as popular with visitors and tourists as it is with native New Yorkers who know where to come for an authentic New York street slice. Established in 1975 by Joe Pozzuoli, who is originally from Naples, Italy, the birthplace of pizza, Joe's Pizza is a \"Greenwich Village institution\" offering the classic New York slice  … r an authentic New York street slice. Established in 1975 by Joe Pozzuoli, who is originally from Naples, Italy, the birthplace of pizza, Joe's Pizza is a \"Greenwich Village institution\" offering the classic New York slice for over 47 years. First, we served our customers from our corner location at Bleecker and Carmine Street and now … on\" offering the classic New York slice for over 47 years. First, we served our customers from our corner location at Bleecker and Carmine Street and now three doors down at 7 Carmine Street. At 75 years of age, Joe Pozzuoli still owns and operates the restaurant.",
+      "snippet": "on\" offering the classic New York slice for over 47 years. First, we served our customers from our corner location at Bleecker and Carmine Street and now three doors down at 7 Carmine Street. At 75 years of age, Joe Pozzuoli still owns and operates the restaurant.",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "now three doors down at 7 Carmine Street",
+    "Established in 1975 by Joe Pozzuoli",
+    "is a \"Greenwich Village institution\"",
+    "now three doors down at 7 Carmine Street"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Joe's Pizza Carmine Street is the Greenwich Village slice shop at 7 Carmine Street, opened by Joe Pozzuoli.",
+      "claims": [
+        {
+          "text": "now three doors down at 7 Carmine Street",
+          "sourceUrl": "https://www.joespizzanyc.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Joe's Pizza Carmine Street is a classic New York slice shop. It was established in 1975 by Joe Pozzuoli and is a \"Greenwich Village institution\". The shop is now three doors down at 7 Carmine Street, and the line moves fast for a quick slice.",
+      "claims": [
+        {
+          "text": "Established in 1975 by Joe Pozzuoli",
+          "sourceUrl": "https://www.joespizzanyc.com/"
+        },
+        {
+          "text": "is a \"Greenwich Village institution\"",
+          "sourceUrl": "https://www.joespizzanyc.com/"
+        },
+        {
+          "text": "now three doors down at 7 Carmine Street",
+          "sourceUrl": "https://www.joespizzanyc.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

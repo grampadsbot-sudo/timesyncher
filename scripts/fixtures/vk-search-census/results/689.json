@@ -1,0 +1,71 @@
+{
+  "thingId": "689",
+  "thingName": "Zinc Bar",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.zincbar.com/",
+      "title": "Zinc Bar | Historic Bar and Jazz Club in Greenwich Village",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi … Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi … Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed and Thelonious Monk was a house pianist. Art Deco elegance meets the soulful energy of the City. Hours Monday - Wednesday 5 pm - 12 am Thursday 5 pm  … elonious Monk was a house pianist. Art Deco elegance meets the soulful energy of the City. Hours Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2 pm - 2 am Sunday 5 pm - 12 am",
+      "snippet": "Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi",
+      "fetchMethod": "WebFetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": "Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2 pm - 2 am Sunday 5 pm - 12 am",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Historic Bar and Jazz Club in Greenwich Village",
+    "Historic Bar and Jazz Club in Greenwich Village",
+    "famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed",
+    "Friday 5 pm - 2 am"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Zinc Bar is a historic bar and jazz club at 82 W 3rd Street in Greenwich Village with live music.",
+      "claims": [
+        {
+          "text": "Historic Bar and Jazz Club in Greenwich Village",
+          "sourceUrl": "https://www.zincbar.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Zinc Bar is a historic bar and jazz club in Greenwich Village. It occupies the famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed. Posted hours run late, with Friday 5 pm - 2 am, so it suits a late night.",
+      "claims": [
+        {
+          "text": "Historic Bar and Jazz Club in Greenwich Village",
+          "sourceUrl": "https://www.zincbar.com/"
+        },
+        {
+          "text": "famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed",
+          "sourceUrl": "https://www.zincbar.com/"
+        },
+        {
+          "text": "Friday 5 pm - 2 am",
+          "sourceUrl": "https://www.zincbar.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

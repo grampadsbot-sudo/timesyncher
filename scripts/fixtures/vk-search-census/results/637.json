@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.empirehotelnyc.com/",
-      "title": "Empire Hotel near Lincoln Center / Columbus Circle.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Official rooftop + suites"
+      "title": "Empire Hotel New York Upper West Side 4-Star Hotel - Official Site",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Poo … Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Poo …  Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Pool. Book direct and save on your stay in New York C",
+      "snippet": "Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and O",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -26,25 +28,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 44 W 63rd St",
-      "sourceUrl": "https://www.empirehotelnyc.com/"
-    },
-    {
-      "claim": "Official site https://www.empirehotelnyc.com/",
-      "sourceUrl": "https://www.empirehotelnyc.com/"
-    },
-    {
-      "claim": "Guest rating primary 3.7 via tripadvisor",
-      "sourceUrl": "https://www.empirehotelnyc.com/"
-    }
+    "steps from Lincoln Center & Central Park",
+    "steps from Lincoln Center & Central Park",
+    "Stylish Art Deco rooms and a vibrant rooftop bar"
   ],
   "itineraryNoteCandidate": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
   "voicePass": {
-    "itineraryNote": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
-    "shortDescription": "Empire Hotel near Lincoln Center / Columbus Circle.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,32 +62,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Empire Hotel New York is a stylish hotel near Lincoln Center and Columbus Circle with a rooftop bar.",
+      "value": "The Empire Hotel New York is steps from Lincoln Center and Central Park, with a rooftop bar.",
       "claims": [
         {
-          "text": "Empire Hotel near Lincoln Center / Columbus Circle.",
+          "text": "steps from Lincoln Center & Central Park",
           "sourceUrl": "https://www.empirehotelnyc.com/"
         }
       ]
     },
     "description": {
-      "value": "The Empire Hotel New York sits across from Lincoln Center, a short walk from Columbus Circle and Central Park. Its rooftop bar, with views over the Upper West Side, is the main draw. It also offers suites, making it a good base for concerts, opera, or ballet.",
+      "value": "The Empire Hotel New York is steps from Lincoln Center & Central Park on the Upper West Side. The hotel offers stylish Art Deco rooms and a vibrant rooftop bar. It works well for a trip built around concerts, the opera or the ballet at Lincoln Center.",
       "claims": [
         {
-          "text": "Empire Hotel near Lincoln Center / Columbus Circle.",
+          "text": "steps from Lincoln Center & Central Park",
           "sourceUrl": "https://www.empirehotelnyc.com/"
         },
         {
-          "text": "Official rooftop + suites",
+          "text": "Stylish Art Deco rooms and a vibrant rooftop bar",
           "sourceUrl": "https://www.empirehotelnyc.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

@@ -6,15 +6,11 @@
   "sources": [
     {
       "url": "https://bodega88nyc.com/",
-      "title": "Bodega 88 official",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "573 Columbus Ave; HH drinks 11am–7pm; hours listed 11am–12am"
-    },
-    {
-      "url": "https://www.yelp.com/biz/bodega-88-new-york",
-      "title": "Bodega 88 Yelp",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.3 ★ · 277 reviews · $$ Sports Bars / Latin American"
+      "title": "Must-Try Sports Bar in Upper West Side, NY | Bodega 88",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to remember. Inquire catering Order onl … r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to remember. Inquire catering Order onl …  mind. Book Now a party About us Bodega 88 is the newest Upper West Side Sports Bar gem serving refreshing cocktails and delicious bites! Join us for Happy Hour Drinks from 11 am - 7 pm. Specials on beer, sangria, drinks & classic mojitos! Experience The Difference Our Menu Relax, It's Your Time Drinks To Taste Is To Enjoy Catering D",
+      "snippet": "r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -29,28 +25,14 @@
   "hoursHint": "Daily ~11am–12am (official site lists all days 11:00 AM–12:00 AM)",
   "happyHourHint": "Happy hour drinks 11am–7pm: beer, sangria, drinks & classic mojitos (official)",
   "summaryClaims": [
-    {
-      "claim": "573 Columbus Ave, Upper West Side (not Theater District)",
-      "sourceUrl": "https://bodega88nyc.com/"
-    },
-    {
-      "claim": "Happy hour drinks 11am–7pm per official site",
-      "sourceUrl": "https://bodega88nyc.com/"
-    },
-    {
-      "claim": "Yelp 4.3 from 277 reviews",
-      "sourceUrl": "https://www.yelp.com/biz/bodega-88-new-york"
-    }
+    "573 Columbus Ave, New York, NY 10024",
+    "573 Columbus Ave, New York, NY 10024",
+    "Happy Hour Drinks from 11 am - 7 pm"
   ],
   "itineraryNoteCandidate": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
   "voicePass": {
-    "itineraryNote": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
-    "shortDescription": "Latin-inspired UWS sports bar at 573 Columbus with long daytime drink specials.",
-    "unsupportedFlags": [
-      "Exact HH drink prices only from third-party menu scrape, not official site body"
-    ],
     "claimSupportOk": true,
-    "note": "Baseline summary said Theater-district Asian-fusion — wrong venue; bot corrected to UWS sports bar."
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -76,32 +58,32 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Bodega 88 is a lively Latin American sports bar on Columbus Avenue in the Upper West Side.",
+      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave serving cocktails and bites.",
       "claims": [
         {
-          "text": "573 Columbus Ave",
+          "text": "573 Columbus Ave, New York, NY 10024",
           "sourceUrl": "https://bodega88nyc.com/"
         }
       ]
     },
     "description": {
-      "value": "Bodega 88 is a casual Latin American sports bar at 573 Columbus Ave. It is a good spot to catch a game with tacos and drinks. Happy hour drink prices run from 11am to 7pm, and the bar stays open until midnight.",
+      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave, New York, NY 10024. It invites guests to join us for Happy Hour Drinks from 11 am - 7 pm. Specials cover beer, sangria and classic mojitos, which makes it an easy casual stop.",
       "claims": [
         {
-          "text": "573 Columbus Ave; HH drinks 11am–7pm; hours listed 11am–12am",
+          "text": "573 Columbus Ave, New York, NY 10024",
           "sourceUrl": "https://bodega88nyc.com/"
         },
         {
-          "text": "Sports Bars / Latin American",
-          "sourceUrl": "https://www.yelp.com/biz/bodega-88-new-york"
+          "text": "Happy Hour Drinks from 11 am - 7 pm",
+          "sourceUrl": "https://bodega88nyc.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

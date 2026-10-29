@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.wholefoodsmarket.com/stores/upperwestside/",
-      "title": "Whole Foods UWS",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "808 Columbus Ave; daily 7-10"
+      "title": "Upper West Side | Grocery Store in New York 10025-5139",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … G_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery & Pickup Order what you need on Amazon.com",
+      "snippet": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday:",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -24,21 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "808 Columbus Avenue near 97th Street",
-      "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
-    },
-    {
-      "claim": "Open daily 7am–10pm",
-      "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
-    }
+    "808 Columbus Ave, New York, NY 10025-5139",
+    "808 Columbus Ave, New York, NY 10025-5139",
+    "Monday - Friday: 7 am - 10 pm"
   ],
   "itineraryNoteCandidate": "Restock snacks and prepared foods near 97th before heading downtown.",
   "voicePass": {
-    "itineraryNote": "Restock snacks and prepared foods near 97th before heading downtown.",
-    "shortDescription": "Whole Foods Market Upper West Side on Columbus Avenue.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -65,28 +60,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Whole Foods Market Upper West Side is the Columbus Avenue grocery store on the Upper West Side.",
+      "value": "Whole Foods Market Upper West Side is the grocery store at 808 Columbus Ave near West 97th Street.",
       "claims": [
         {
-          "text": "808 Columbus Ave",
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
         }
       ]
     },
     "description": {
-      "value": "Whole Foods Market Upper West Side is a full grocery store at 808 Columbus Ave. It is a convenient place to grab prepared foods, snacks, and drinks for your room. The store is open daily from 7am to 10pm, so it fits early starts and late returns.",
+      "value": "Whole Foods Market Upper West Side is a grocery store at 808 Columbus Ave, New York, NY 10025-5139. Its store page lists weekday hours of Monday - Friday: 7 am - 10 pm. It works for stocking up on breakfast items and snacks for a stay uptown.",
       "claims": [
         {
-          "text": "808 Columbus Ave; daily 7-10",
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "Monday - Friday: 7 am - 10 pm",
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

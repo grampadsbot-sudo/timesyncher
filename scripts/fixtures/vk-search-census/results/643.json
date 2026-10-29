@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.juicegeneration.com/locations",
-      "title": "Juice Generation Locations",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Columbus Circle 979 8th Ave"
+      "title": "Locations   | Juice Generation",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 …  2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 … dway btw 85th & 86th TODAY’S HOURS: 7:00 AM 8:00 PM JUICING SINCE 2013 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View ",
+      "snippet": " 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -24,21 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Columbus Circle shop at 979 Eighth Avenue",
-      "sourceUrl": "https://www.juicegeneration.com/locations"
-    },
-    {
-      "claim": "Weekday hours typically 7am–9pm",
-      "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
-    }
+    "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
+    "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
+    "7:00 AM 9:00 PM"
   ],
   "itineraryNoteCandidate": "Grab a quick juice or açaí bowl before a Central Park loop.",
   "voicePass": {
-    "itineraryNote": "Grab a quick juice or açaí bowl before a Central Park loop.",
-    "shortDescription": "Juice Generation near Columbus Circle.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -65,28 +60,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Juice Generation Columbus Circle is a juice and smoothie bowl shop on Eighth Avenue near Central Park.",
+      "value": "Juice Generation Columbus Circle is the juice bar at 979 Eighth Avenue between 57th and 58th Streets.",
       "claims": [
         {
-          "text": "Columbus Circle 979 8th Ave",
+          "text": "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
     },
     "description": {
-      "value": "Juice Generation Columbus Circle is a branch of the New York juice chain at 979 8th Ave. It serves cold-pressed juices, smoothies, and acai bowls that make a quick, healthy breakfast. It is a handy stop before a morning walk into Central Park.",
+      "value": "Juice Generation Columbus Circle is a juice and smoothie bar at Columbus Circle 979 Eighth Avenue btw 57th & 58th. Its location listing shows hours of 7:00 AM 9:00 PM. It is a handy grab-and-go stop before a walk into Central Park.",
       "claims": [
         {
-          "text": "Columbus Circle 979 8th Ave",
+          "text": "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "7:00 AM 9:00 PM",
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

@@ -1,0 +1,66 @@
+{
+  "thingId": "684",
+  "thingName": "Junior's Times Square",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.juniorscheesecake.com/pages/45th-st-nyc",
+      "title": "45TH ST – NYC\n – Junior's Cheesecake",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start Earning Rewards Order Delivery Order Take Out Our Menus Restaurant Menu Bar ",
+      "snippet": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturda",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": "Sunday – Monday 7am - 11pm",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "1515 Broadway @ 45th Street",
+    "1515 Broadway @ 45th Street",
+    "Sunday – Monday 7am - 11pm"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Junior's Times Square is the cheesecake restaurant at 1515 Broadway at 45th Street in Times Square.",
+      "claims": [
+        {
+          "text": "1515 Broadway @ 45th Street",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        }
+      ]
+    },
+    "description": {
+      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show.",
+      "claims": [
+        {
+          "text": "1515 Broadway @ 45th Street",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        },
+        {
+          "text": "Sunday – Monday 7am - 11pm",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

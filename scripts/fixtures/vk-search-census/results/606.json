@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
-      "title": "TKTS by TDF",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Same-day + next-day matinee discounts; Times Square & Lincoln Center booths"
+      "title": "TKTS by TDF | TDF",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se",
+      "snippet": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -26,23 +28,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "TKTS sells same-day and next-day matinee discounts up to 50%",
-      "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
-    },
-    {
-      "claim": "$8 per-ticket TDF service charge",
-      "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
-    }
+    "same-day performances and next-day matinees up to 50% off",
+    "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off"
   ],
   "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
   "voicePass": {
-    "itineraryNote": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
-    "shortDescription": "Afternoon matinee via TKTS discount booths",
-    "unsupportedFlags": [
-      "Thing is a generic \"Afternoon matinee show\" — mapped to TKTS discovery path"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,32 +63,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Afternoon matinee show: this plan uses the TKTS by TDF booth for discounted same-day Broadway tickets.",
+      "value": "Afternoon matinee show using the TKTS booth for discounted same-day and next-day matinee Broadway tickets.",
       "claims": [
         {
-          "text": "TKTS by TDF",
+          "text": "same-day performances and next-day matinees up to 50% off",
           "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
         }
       ]
     },
     "description": {
-      "value": "Afternoon matinee show: the plan centers on TKTS by TDF, the nonprofit booth that sells discounted same-day and next-day theater seats. You can line up at the Times Square booth or the quieter Lincoln Center location. Pick a matinee, see a Broadway show by early evening, and still have the night free for dinner.",
+      "value": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says to visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Arrive early in the day for the best choice of Broadway and Off-Broadway shows.",
       "claims": [
         {
-          "text": "Same-day + next-day matinee discounts",
-          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
-        },
-        {
-          "text": "Times Square & Lincoln Center booths",
+          "text": "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
           "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

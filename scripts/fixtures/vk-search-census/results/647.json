@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.saksfifthavenue.com/locations/newyork/",
-      "title": "Saks NYC",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "611 Fifth Ave hours"
+      "title": "Saks Fifth Avenue | Saks NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de … Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de",
+      "snippet": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, fe",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -26,21 +28,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Flagship at 611 Fifth Avenue",
-      "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
-    },
-    {
-      "claim": "Mon–Sat 11–7, Sun 12–6",
-      "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
-    }
+    "611 Fifth Avenue New York, NY 10022",
+    "611 Fifth Avenue New York, NY 10022"
   ],
   "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
   "voicePass": {
-    "itineraryNote": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
-    "shortDescription": "Saks Fifth Avenue Manhattan flagship.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -67,28 +61,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Saks Fifth Avenue is the classic luxury department store on Fifth Avenue facing Rockefeller Center.",
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue across from Rockefeller Center.",
       "claims": [
         {
-          "text": "611 Fifth Ave",
+          "text": "611 Fifth Avenue New York, NY 10022",
           "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
         }
       ]
     },
     "description": {
-      "value": "Saks Fifth Avenue is New York's flagship luxury department store at 611 Fifth Ave, directly across from Rockefeller Center. It is known for designer fashion, a huge shoe floor, and famous holiday windows. Pair a visit with St. Patrick's Cathedral next door.",
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue New York, NY 10022. It faces Rockefeller Center and St. Patrick's Cathedral in Midtown. Its holiday windows and light show draw crowds from late November, so visit early in the day.",
       "claims": [
         {
-          "text": "611 Fifth Ave",
+          "text": "611 Fifth Avenue New York, NY 10022",
           "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

@@ -5,46 +5,29 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.beaconhotel.com/",
-      "title": "Historic Upper West Side hotel with apartment-style rooms.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Official: kitchenettes, Central Park proximity"
+      "url": "https://en.wikipedia.org/wiki/Hotel_Beacon",
+      "title": "Hotel Beacon - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geographic coordinat … 2 ] Design and construction Architect Walter W. Ahlschlager [ 3 ] Main contractor Havemeyer Construction Co. [ 4 ] The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of  … The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of the Tilden Club House [ 5 ] and the Dakota Stables. [ 6 ] At the time of its opening, apartments co",
+      "snippet": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geograp",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 4.5,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.5,
-    "booking": 8.8
-  },
-  "reviewCount": {
-    "tripadvisor": 5533,
-    "booking": 2922
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "4-star UWS; kitchenette studios",
-  "hoursHint": "Hotel — 24h; kitchenettes; laundry",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 2130 Broadway",
-      "sourceUrl": "https://www.beaconhotel.com/"
-    },
-    {
-      "claim": "Official site https://www.beaconhotel.com/",
-      "sourceUrl": "https://www.beaconhotel.com/"
-    },
-    {
-      "claim": "Guest rating primary 4.5 via tripadvisor",
-      "sourceUrl": "https://www.beaconhotel.com/"
-    }
+    "2130 Broadway",
+    "24-story building on the Upper West Side of Manhattan",
+    "It was built in 1928 at 2130 Broadway"
   ],
   "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
   "voicePass": {
-    "itineraryNote": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
-    "shortDescription": "Historic Upper West Side hotel with apartment-style rooms.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,28 +54,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Beacon is a historic Upper West Side hotel with apartment-style rooms near Central Park.",
+      "value": "Hotel Beacon is an Upper West Side hotel at 2130 Broadway at the corner with 75th Street.",
       "claims": [
         {
-          "text": "Historic Upper West Side hotel with apartment-style rooms.",
-          "sourceUrl": "https://www.beaconhotel.com/"
+          "text": "2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
         }
       ]
     },
     "description": {
-      "value": "Hotel Beacon is a historic hotel on Broadway in the Upper West Side, known for its apartment-style rooms. Many rooms include kitchenettes, which helps families and longer stays save on meals. Central Park and Zabar's are a short walk away, giving it a true neighborhood feel.",
+      "value": "Hotel Beacon is a 24-story building on the Upper West Side of Manhattan. It was built in 1928 at 2130 Broadway, at the corner with 75th Street. The location is next to the Beacon Theatre and a short walk from Central Park and Zabar's.",
       "claims": [
         {
-          "text": "kitchenettes, Central Park proximity",
-          "sourceUrl": "https://www.beaconhotel.com/"
+          "text": "24-story building on the Upper West Side of Manhattan",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "It was built in 1928 at 2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

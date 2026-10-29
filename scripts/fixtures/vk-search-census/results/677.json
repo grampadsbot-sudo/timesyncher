@@ -5,32 +5,22 @@
   "provider": "vk-search",
   "sources": [
     {
-      "url": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-",
-      "fetchedAt": "2026-10-27T08:45:15.986Z",
-      "text": "La Traviata Pizzeria, New York - Restaurantji\nPublished Time: Mon, 16 Jun 2025 23:04:43 GMT La Traviata Pizzeria, New York - Menu, Reviews (241), Photos (46) - Restaurantji 101 W 68th St, New York (212) 721-1101 721-1101) La Traviata Pizzeria is a fantastic spot for slices in the Lincoln Square area. They offer a nice slice assortment each day, along with plenty of beverages to choose from. The service is quick and kind, and they offer delivery as well as some outdoor seating. Customers have praised the delicious pizza, with one reviewer ordering eight pies for a group of students and being very impressed with the prompt service and quality. Overall, La Traviata Pizzeria is a gem in the neighborhood, offering great pizza at reasonable prices. Plain Slice of Cheese Pizza Grand MA Large Pie Pizza Share your opinion about La Traviata Pizzeria People in New York Also Viewed _Restaurants in New York, NY_ 101 W 68th St, New York, NY 10023 (212) 721-1101 721-1101) ### Take-Out/Delivery Options ### More Info #### Nearby Restaurants Coffee Shops, Coffee & Tea, Coffee Roasteries #### You May Also Like Dining with Pets: Celebrating National Pet Day : Dining with Pets: Celebrating National Pet Day Celebrate Pi Day 2025 with Top Restaurants and Home Recipes : Celebrate Pi Day 2025 with Top Restaurants and Home Recipes PizzaExpress Plans American Debut After 60 Years in Britain : PizzaExpress Plans American Debut After 60 Years in Britain California Pizza Kitchen to Grow in Nevada and Utah : California Pizza Kitchen to Grow in Nevada and Utah A Guide to the Best Pizzerias in Nashville : A Guide to the Best Pizzerias in Nashville _Updated on: Jun 16, 2025_ Cookies help us to deliver our services, provide you with a personalised experience on our websites. ##### Quick Links ##### Follow Us * : Get Restaurantji on App Store * : Get Restaurantji on Google Play Get more info in our app Cookies help us to deliver our services, provide you with a personalised experience on our websites. ### La Traviata Pizzeria 101 W 68th St, New York Are you affiliated with La Traviata Pizzeria? ### La Traviata Pizzeria 101 W 68th St, New York - [x] Yes, this business is permanently closed",
-      "title": ""
-    },
-    {
       "url": "https://www.latraviatapizzany.com/",
-      "fetchedAt": "2026-10-27T08:44:53.041Z",
-      "text": "La Traviata Pizza - New York, NY - 101 West 68th Street ...\nLa Traviata Pizza has been a Slice partner since 2011. They've been serving the local community for a while now, so you can rely on them providing great pizza.",
-      "title": ""
+      "title": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicelife.com | La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order Skip to main con",
+      "snippet": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "summaryClaims": [
-    {
-      "claim": "La Traviata Pizzeria is a fantastic spot for slices in the Lincoln Square area. They offer a nice slice assortment each day, along with plenty of beverages to choose from. The service is quick and kind, and they offer delivery as well as some outdoor seating.",
-      "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-",
-      "supported": true
-    },
-    {
-      "claim": "La Traviata Pizza has been a Slice partner since 2011. They've been serving the local community for a while now, so you can rely on them providing great pizza.",
-      "sourceUrl": "https://www.latraviatapizzany.com/",
-      "supported": true
-    }
+    "101 West 68th Street",
+    "101 West 68th Street",
+    "the menu, hours, address, and photos for La Traviata Pizza in New York, NY"
   ],
   "voicePass": {
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "evidenceReuse": {
     "source": "READY preview saved evidenceDossier.pages",
@@ -40,32 +30,32 @@
   },
   "fields": {
     "summary": {
-      "value": "La Traviata Pizzeria is a neighborhood pizza shop on West 68th Street near Lincoln Center.",
+      "value": "La Traviata Pizzeria is a pizza shop at 101 West 68th Street near Lincoln Center on the Upper West Side.",
       "claims": [
         {
-          "text": "101 W 68th St",
-          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-"
+          "text": "101 West 68th Street",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
         }
       ]
     },
     "description": {
-      "value": "La Traviata Pizzeria is a casual pizza shop at 101 W 68th St on the Upper West Side. It has served the local community for years and is a Slice partner, so ordering is easy. It is a quick, inexpensive slice before or after a show at Lincoln Center.",
+      "value": "La Traviata Pizzeria is a neighborhood pizza shop at 101 West 68th Street on the Upper West Side. Its site lists the menu, hours, address, and photos for La Traviata Pizza in New York, NY. It is a quick slice stop a block from Lincoln Center.",
       "claims": [
         {
-          "text": "101 W 68th St",
-          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-"
+          "text": "101 West 68th Street",
+          "sourceUrl": "https://www.latraviatapizzany.com/"
         },
         {
-          "text": "They've been serving the local community for a while now",
+          "text": "the menu, hours, address, and photos for La Traviata Pizza in New York, NY",
           "sourceUrl": "https://www.latraviatapizzany.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

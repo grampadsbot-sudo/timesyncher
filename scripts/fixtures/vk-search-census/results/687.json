@@ -1,0 +1,66 @@
+{
+  "thingId": "687",
+  "thingName": "Cilantro UWS",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ",
+      "title": "Order Cilantro - Menu & Prices - New York Delivery | Uber Eats",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very well \" • Shauna F. • 06/19/26 \" Tree … ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very well \" • Shauna F. • 06/19/26 \" Tree … te a business account Add your restaurant Sign up to deliver Get a ride Skip to content Enter delivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ra",
+      "snippet": "ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "485 Columbus Ave, New York, NY 10024",
+    "485 Columbus Ave, New York, NY 10024",
+    "Mexican • Tacos • Burritos"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Cilantro UWS is a Mexican restaurant at 485 Columbus Ave on the Upper West Side of Manhattan.",
+      "claims": [
+        {
+          "text": "485 Columbus Ave, New York, NY 10024",
+          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+        }
+      ]
+    },
+    "description": {
+      "value": "Cilantro UWS is a casual Mexican restaurant at 485 Columbus Ave, New York, NY 10024. Its Uber Eats store lists Mexican • Tacos • Burritos as the main categories. It is a relaxed neighborhood choice near the American Museum of Natural History.",
+      "claims": [
+        {
+          "text": "485 Columbus Ave, New York, NY 10024",
+          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+        },
+        {
+          "text": "Mexican • Tacos • Burritos",
+          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

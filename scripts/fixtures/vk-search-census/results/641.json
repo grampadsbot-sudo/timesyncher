@@ -5,44 +5,28 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/",
-      "title": "TownePlace Suites Marriott Manhattan/Chelsea.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking ~8.3–8.4"
+      "url": "https://www.cvent.com/venues/new-york/hotel/towneplace-suites-by-marriott-new-york-manhattan-chelsea/venue-d0629f95-6dea-4430-9118-7b5f9a0681e3",
+      "title": "TownePlace Suites by Marriott New York Manhattan/Chelsea | Cvent",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "end request Booking Compare proposals and book your ideal event space Find venues Learn more TownePlace Suites by Marriott New York Manhattan/Chelsea 140 West 28th Street, New York, NY, USA, 10001 | Contact us Removed from favorites Removed from favorites Select venue Request quote Overview Meeting Space Guest Rooms Lo … end request Booking Compare proposals and book your ideal event space Find venues Learn more TownePlace Suites by Marriott New York Manhattan/Chelsea 140 West 28th Street, New York, NY, USA, 10001 | Contact us Removed from favorites Removed from favorites Select venue Request quote Overview Meeting Space Guest Rooms Location Affiliations FAQs V",
+      "snippet": "end request Booking Compare proposals and book your ideal event space Find venues Learn more TownePlace Suites by Marriott New York Manhattan/Chelsea 140 West 28th Street, New York, NY, USA, 10001 | Contact us Removed from favorites Removed from favorites Select venue Request quote Overview Meeting ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 8.3,
-    "primarySource": "booking",
-    "booking": 8.3
-  },
-  "reviewCount": {
-    "booking": 7000
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "3.5-star suite hotel; breakfast",
-  "hoursHint": "Hotel — 24h; complimentary breakfast; fitness",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: Chelsea / TownePlace Suites",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
-    },
-    {
-      "claim": "Official site https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
-    },
-    {
-      "claim": "Guest rating primary 8.3 via booking",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
-    }
+    "140 West 28th Street",
+    "140 West 28th Street, New York, NY, USA, 10001"
   ],
   "itineraryNoteCandidate": "TownePlace Chelsea for suite + breakfast value after High Line days.",
   "voicePass": {
-    "itineraryNote": "TownePlace Chelsea for suite + breakfast value after High Line days.",
-    "shortDescription": "TownePlace Suites Marriott Manhattan/Chelsea.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -69,32 +53,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is a suite hotel in Chelsea with breakfast included.",
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street.",
       "claims": [
         {
-          "text": "TownePlace Suites Marriott Manhattan/Chelsea.",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+          "text": "140 West 28th Street",
+          "sourceUrl": "https://www.cvent.com/venues/new-york/hotel/towneplace-suites-by-marriott-new-york-manhattan-chelsea/venue-d0629f95-6dea-4430-9118-7b5f9a0681e3"
         }
       ]
     },
     "description": {
-      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay style hotel on West 28th Street. Rooms come with kitchen basics, and breakfast is included in the rate. Good guest scores and a central Chelsea location make it a practical, good-value base.",
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001. It sits between Chelsea and Midtown South near Penn Station. Suites with kitchens suit a longer stay or a family trip.",
       "claims": [
         {
-          "text": "TownePlace Suites Marriott Manhattan/Chelsea.",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
-        },
-        {
-          "text": "Booking ~8.3–8.4",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nyctl-towneplace-suites-new-york-manhattan-chelsea/overview/"
+          "text": "140 West 28th Street, New York, NY, USA, 10001",
+          "sourceUrl": "https://www.cvent.com/venues/new-york/hotel/towneplace-suites-by-marriott-new-york-manhattan-chelsea/venue-d0629f95-6dea-4430-9118-7b5f9a0681e3"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

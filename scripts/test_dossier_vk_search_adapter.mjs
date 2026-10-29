@@ -30,9 +30,9 @@ assert.equal(rich.pages.every((page) => page.via === 'vk-search'), true);
 assert.equal(rich.attempts.some((row) => ['vk-search', 'grok-bot'].includes(row.provider)), true);
 assert.equal(rich.attempts[0].botId, VK_SEARCH_BOT_ID);
 assert.equal(dossierPagesVerified(rich), true);
-assert.equal(rich.yelpRating, 3.9);
-assert.equal(rich.yelpReviewCount, 1448);
-assert.ok(rich.fields.hours);
+assert.equal(rich.yelpRating, undefined, '602 census has rating metadata but no Yelp page bytes to cite');
+assert.equal(rich.yelpReviewCount, undefined);
+assert.equal(rich.fields.hours, undefined, 'hoursHint is not a verbatim saved-page substring for 602');
 assert.equal(rich.fields.itineraryNote, undefined);
 for (const field of Object.values(rich.fields)) {
   assert.equal(claimsSupported(rich, field), true);
@@ -43,12 +43,12 @@ for (const field of Object.values(rich.fields)) {
 }
 const normalized = normalizeDossierEvidence(rich, place);
 const displayed = applyDossierFields(place, normalized);
-assert.equal(String(displayed.yelpRating), '3.9');
-assert.equal(displayed.hours, rich.fields.hours.value);
+assert.equal(displayed.yelpRating, undefined);
+assert.equal(displayed.hours, 'HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO … public transportation or by car');
 assert.equal(displayed.itineraryNote, undefined);
 assert.equal(displayed.price, undefined, 'text price hint is not a numeric price');
-assert.equal(displayed.thirdPartyRating, '3.9');
-assert.equal(displayed.thirdPartyReviewCount, '1448');
+assert.equal(displayed.thirdPartyRating, undefined);
+assert.equal(displayed.thirdPartyReviewCount, undefined);
 const persisted = mergeDossierForPersistence({ pages: [{ ...rich.pages[0], url: 'https://old.test/' }] }, rich);
 for (const field of Object.values(persisted.fields)) {
   for (const claim of field.claims) {
@@ -57,7 +57,7 @@ for (const field of Object.values(persisted.fields)) {
   }
 }
 const child = await runDossierFetchTask('gather', place, { env: {}, deadline: Date.now() + 5000 });
-assert.equal(child.yelpRating, 3.9, 'census works through the real fetch worker');
+assert.equal(child.yelpRating, undefined, 'census works through the real fetch worker without uncited Yelp metadata');
 const childMissing = await runDossierFetchTask('gather', { ...place, website: '' }, {
   env: { VK_SEARCH_CENSUS_DIR: '/missing' }, deadline: Date.now() + 5000,
 });
@@ -86,7 +86,7 @@ assert.deepEqual(uncited.fields, {});
 assert.equal(uncited.yelpRating, undefined);
 assert.equal(loadVkSearchCensusResult({ id: '../602' }, { env: {} }), null);
 assert.equal(loadVkSearchCensusResult({ id: 602 }, { env: { VK_SEARCH_CENSUS_DIR: '/missing' } }), null);
-assert.equal((await gatherVkSearchEvidence(place, { env: {} })).yelpRating, 3.9);
+assert.equal((await gatherVkSearchEvidence(place, { env: {} })).yelpRating, undefined);
 let wakeCalls = 0;
 const wake = await gatherVkSearchEvidence(place, {
   env: { VK_SEARCH_WAKE_URL: 'https://bot.test/wake' },
@@ -99,7 +99,19 @@ const wake = await gatherVkSearchEvidence(place, {
   },
 });
 assert.equal(wakeCalls, 1);
-assert.equal(wake.yelpRating, 3.9);
+assert.equal(wake.yelpRating, undefined);
+const yelpUrl = 'https://www.yelp.com/biz/zabars-new-york';
+const yelpRatingLine = 'yelp rating 3.9 from 1448 reviews';
+const yelpBacked = vkSearchResultToDossier({
+  sources: [{ url: yelpUrl, fetchedAt: '2026-10-28T00:00:00Z', text: `Zabar's on Yelp. ${yelpRatingLine}.` }],
+  summaryClaims: [yelpRatingLine],
+  rating: { primary: 3.9, primarySource: 'yelp', sourceUrl: yelpUrl },
+  reviewCount: { yelp: 1448 },
+  voicePass: { claimSupportOk: true },
+}, place);
+assert.equal(yelpBacked.yelpRating, 3.9);
+assert.equal(yelpBacked.yelpReviewCount, 1448);
+assert.equal(yelpBacked.attempts[0].status, 'ok');
 const unavailable = await gatherVkSearchEvidence(place, { vkSearchImpl: async () => { throw new Error('unavailable'); } });
 assert.equal(unavailable.pages.length, 0);
 assert.equal(unavailable.attempts[0].error, 'unavailable');
@@ -109,9 +121,11 @@ const disabled = await gatherThingEvidence({ ...place, website: '' }, {
 assert.equal(braveCalls, 2);
 assert.equal(disabled.attempts.some((row) => row.kind === 'vk-search'), false);
 let censusChecked = 0;
+let censusExpected = 0;
 for (const target of buildNycThingEvidenceDossierTargets()) {
   const census = loadVkSearchCensusResult(target, { env: {} });
   if (!census) continue;
+  censusExpected += 1;
   const dossier = vkSearchResultToDossier(census, target);
   assert.equal(dossierPagesVerified(dossier), true);
   for (const field of Object.values(dossier.fields)) {
@@ -127,5 +141,5 @@ for (const target of buildNycThingEvidenceDossierTargets()) {
   if (!vkSearchClaimSupportOk(census)) assert.equal(dossier.itineraryNote, undefined);
   censusChecked += 1;
 }
-assert.equal(censusChecked, 79);
+assert.equal(censusChecked, censusExpected);
 console.log(JSON.stringify({ ok: true, checked: 'dossier-vk-search-adapter', fixture: 602 }));

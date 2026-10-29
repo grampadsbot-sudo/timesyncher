@@ -1,0 +1,79 @@
+{
+  "thingId": "693",
+  "thingName": "Magnolia Bakery",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/",
+      "title": "Magnolia Bakery on Bleecker Street (the Original), West Village · LovelyNYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "West Village · LovelyNYC | The original Magnolia Bakery at 401 Bleecker St: cupcakes, banana pudding and the Sex and the City corner. Hours and tips. The original 1996 Magnolia Bakery on Bleecker Street, made famous by Sex and the City's cupcake scene. | Magnolia Bakery on Bleecker Street (the Original), West Village · LovelyNYC Skip to content Lovel … ore details last reviewed October 27, 2026. Confirm practical details with the official site before you go. Current Google rating & reviews ↗ Address 401 Bleecker St, New York, NY 10014 Nearest subway 1 Christopher St-Stonewall · 5 min walk 1 2 3 14 St · 8 min walk Price Under $25 Cuisine Bakery Known for Bakery, Neighborhood Café Re … ery into a pilgrimage stop. It has since grown into a chain, but this corner shop is where it started, and it still feels like a neighborhood bakery. Come for a cupcake or the famous banana pudding, eat it on the street the way the show did, and walk it off down Bleecker. Evenings and weekend afternoons draw a line, so a weekday morning is calme",
+      "snippet": "West Village · LovelyNYC | The original Magnolia Bakery at 401 Bleecker St: cupcakes, banana pudding and the Sex and the City corner. Hours and tips. The original 1996 Magnolia Bakery on Bleecker Street, made famous by Sex and the City's cupcake scene. | Magnolia Bakery on Bleecker Street (the Origi",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.magnoliabakery.com/pages/our-story",
+      "title": "Our Story\n– Magnolia Bakery",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "putes regarding rewards allocations or these program terms in its sole discretion and you agree to abide by any such adjudication. 1996 First Opening Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street. 2000 'Sex and the City' Feature Magnolia Bakery appears on the popular TV show, 'Sex and the City', kicking off the world’s “cupcake craze” with line",
+      "snippet": "putes regarding rewards allocations or these program terms in its sole discretion and you agree to abide by any such adjudication. 1996 First Opening Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street. 2000 'Sex and the City' Feature Magnol",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "The original 1996 Magnolia Bakery on Bleecker Street",
+    "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
+    "401 Bleecker St, New York, NY 10014",
+    "Come for a cupcake or the famous banana pudding"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Magnolia Bakery is the original 1996 bakery at 401 Bleecker Street, famous for cupcakes and banana pudding.",
+      "claims": [
+        {
+          "text": "The original 1996 Magnolia Bakery on Bleecker Street",
+          "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening.",
+      "claims": [
+        {
+          "text": "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
+          "sourceUrl": "https://www.magnoliabakery.com/pages/our-story"
+        },
+        {
+          "text": "401 Bleecker St, New York, NY 10014",
+          "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        },
+        {
+          "text": "Come for a cupcake or the famous banana pudding",
+          "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

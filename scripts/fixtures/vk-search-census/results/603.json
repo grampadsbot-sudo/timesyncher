@@ -5,22 +5,20 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.hotelbelleclaire.com/amenities",
-      "title": "Amenities / Wine Hour",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Complimentary wine hour Wed–Fri 5–6pm at Allure; 24h fitness; dog-friendly"
-    },
-    {
-      "url": "https://www.hotelbelleclaire.com/eat-drink",
-      "title": "Eat & Drink",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Mille-Feuille 7am–6pm; Allure 5–11pm; live jazz Fri 5–7pm; Wine Hour Wed–Fri 5–6"
-    },
-    {
       "url": "https://www.hotelbelleclaire.com/",
-      "title": "Hotel Belleclaire home",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "2175 Broadway Upper West Side boutique near Central Park"
+      "title": "Beaux-Arts Landmark Hotel on the Upper West Side | Hotel Belleclaire",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat … ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat",
+      "snippet": "ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credi",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.hotelbelleclaire.com/amenities",
+      "title": "Upper West Side Hotel Amenities | Hotel Belleclaire",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Upper West Side Hotel Amenities | Hotel Belleclaire | Explore Hotel Belleclaire amenities including on-site dining, a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays. Explore Hotel Belleclaire amenities including on-site dining, a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays. | Upper W",
+      "snippet": "Upper West Side Hotel Amenities | Hotel Belleclaire | Explore Hotel Belleclaire amenities including on-site dining, a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays. Explore Hotel Belleclaire amenities including on-site dining, a 24-hour fitness center, walking tours, wine",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -33,27 +31,16 @@
   },
   "priceHint": "Baseline overnight ~$518 floor; boutique UWS rates vary",
   "hoursHint": "Hotel 24h front desk; Mille-Feuille 7am–6pm; Allure 5–11pm nightly (official)",
-  "happyHourHint": "Complimentary Triumph Wine Hour Wed–Fri 5–6pm at Allure for guests (official amenities)",
+  "happyHourHint": null,
   "summaryClaims": [
-    {
-      "claim": "2175 Broadway, Upper West Side, near Central Park",
-      "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
-    },
-    {
-      "claim": "Complimentary wine hour Wed–Fri 5–6pm at Allure",
-      "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
-    },
-    {
-      "claim": "24-hour fitness center and on-site Mille-Feuille + Allure",
-      "sourceUrl": "https://www.hotelbelleclaire.com/eat-drink"
-    }
+    "Hotel Belleclaire, 2175 Broadway",
+    "Hotel Belleclaire, 2175 Broadway",
+    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays"
   ],
   "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
   "voicePass": {
-    "itineraryNote": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
-    "shortDescription": "Historic UWS boutique on Broadway with Allure lounge and guest wine hour Wed–Fri.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -87,36 +74,32 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Hotel Belleclaire Central Park is a boutique Upper West Side hotel on Broadway steps from Central Park.",
+      "value": "Hotel Belleclaire is an Upper West Side hotel at 2175 Broadway near Central Park and Riverside Park.",
       "claims": [
         {
-          "text": "2175 Broadway Upper West Side boutique near Central Park",
+          "text": "Hotel Belleclaire, 2175 Broadway",
           "sourceUrl": "https://www.hotelbelleclaire.com/"
         }
       ]
     },
     "description": {
-      "value": "Hotel Belleclaire Central Park is a boutique hotel at 2175 Broadway on the Upper West Side, a short walk from Central Park. Guests get a complimentary wine hour Wednesday through Friday at its Allure bar. There is also live jazz on Friday evenings, a 24-hour gym, and a dog-friendly policy.",
+      "value": "Hotel Belleclaire sits at 2175 Broadway on the Upper West Side. The hotel lists a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays among its amenities. It puts guests close to the subway, Zabar's and the park for an easy uptown base.",
       "claims": [
         {
-          "text": "Complimentary wine hour Wed–Fri 5–6pm at Allure",
-          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+          "text": "Hotel Belleclaire, 2175 Broadway",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
         },
         {
-          "text": "live jazz Fri 5–7pm",
-          "sourceUrl": "https://www.hotelbelleclaire.com/eat-drink"
-        },
-        {
-          "text": "dog-friendly",
+          "text": "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
           "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

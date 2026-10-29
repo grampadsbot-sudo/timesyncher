@@ -1,0 +1,79 @@
+{
+  "thingId": "715",
+  "thingName": "Dollar Full-size sedan at JFK",
+  "type": "car",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "22/day Special Offer $58/day Show 5 more Show less Car Company ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a Car $67/day Thrifty Car R …  Jetta or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Full-Size Car Toyota Camry or similar 5 people 3 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 135 /day $942 total, incl. taxes and fees Mid-Size SUV Ford",
+      "snippet": "22/day Special Offer $58/day Show 5 more Show less Car Company ACE $62/day Alamo Rent a Car $75/day Avis Rent a Car $71/day Budget Rent a Car $66/day Dollar Rent A Car $97/day Enterprise Rent-A-Car $82/day Hertz Corporation $104/day National Car Rental $85/day Payless Car Rental $68/day Sixt Rent a ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.jfkairport.com/transportation/car-rentals",
+      "title": "Car Rentals - JFK Airport",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "K Airport Skip to Content Flights Transportation & Parking Explore JFK Dine, Shop, Relax Advisories Build your plan Content Car Rentals One easy stop Car rentals are located at Federal Circle Our car rental partners are conveniently located at Federal Circle. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaic …  plan Content Car Rentals One easy stop Car rentals are located at Federal Circle Our car rental partners are conveniently located at Federal Circle. Federal Circle is accessible by the AirTrain from any terminal or from the Jamaica and Howard Beach AirTrain Stations. AirTrain rides between terminals and Federal Circle are free. The fare f",
+      "snippet": "K Airport Skip to Content Flights Transportation & Parking Explore JFK Dine, Shop, Relax Advisories Build your plan Content Car Rentals One easy stop Car rentals are located at Federal Circle Our car rental partners are conveniently located at Federal Circle. Federal Circle is accessible by the AirT",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": "Dollar from $97/day on Priceline JFK (checked Oct 28)",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Car rentals are located at Federal Circle",
+    "Dollar Rent A Car $97/day",
+    "Full-Size Car Toyota Camry or similar",
+    "Federal Circle is accessible by the AirTr"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Dollar Full-size sedan at JFK: a full-size sedan rental picked up at the Federal Circle rental car center at New York JFK.",
+      "claims": [
+        {
+          "text": "Car rentals are located at Federal Circle",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    },
+    "description": {
+      "value": "Dollar Full-size sedan at JFK is a rental car option at New York JFK, compared on Priceline. Priceline lists Dollar Rent A Car $97/day among JFK rental agencies, and its full-size sedan class shows a Full-Size Car Toyota Camry or similar type of car. Rental desks sit at Federal Circle, reached from the terminals by the AirTrain.",
+      "claims": [
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Full-Size Car Toyota Camry or similar",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        },
+        {
+          "text": "Federal Circle is accessible by the AirTr",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

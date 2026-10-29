@@ -5,59 +5,28 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.strandbooks.com/hours-locations",
-      "title": "Hours & Locations official",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "828 Broadway Mon–Sun 10am–9pm; Rare Book Room weekdays 10–5 / weekends 10–6"
-    },
-    {
-      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html",
-      "title": "Tripadvisor",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "4.7/5 · ~843 reviews"
-    },
-    {
-      "url": "https://www.yelp.com/search?find_desc=Strand+Bookstore&find_loc=SoHo%2C+Manhattan%2C+NY",
-      "title": "Yelp search context",
-      "fetchedAt": "2026-10-28T04:18:20Z",
-      "snippet": "Yelp ~4.4 from ~1800 reviews (baseline)"
+      "url": "https://en.wikipedia.org/wiki/Strand_Bookstore",
+      "title": "Strand Bookstore - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "tropolitan area Products New, used, and rare books Owner Nancy Bass Wyden Number of employees 238 Website strandbooks .com The Strand Bookstore is an independent bookstore located at 828 Broadway , at the corner of East 12th Street in the East Village neighborhood of Manhattan , New York City, two blocks south of Union Square . [ 1 ] [ 2 ] The … tropolitan area Products New, used, and rare books Owner Nancy Bass Wyden Number of employees 238 Website strandbooks .com The Strand Bookstore is an independent bookstore located at 828 Broadway , at the corner of East 12th Street in the East Village neighborhood of Manhattan , New York City, two blocks south of Union Square . [ 1 ] [ 2 ] The … he Upper West Side , [ 4 ] as well as kiosks in Central Park and Times Square , and a curated shelf at Moynihan Train Hall . The company's slogan is \"18 Miles Of Books\", as featured on its stickers, t-shirts, and other merchandise. In 2016, The New York Times called The Strand \"the undisputed king of the city’s inde",
+      "snippet": "tropolitan area Products New, used, and rare books Owner Nancy Bass Wyden Number of employees 238 Website strandbooks .com The Strand Bookstore is an independent bookstore located at 828 Broadway , at the corner of East 12th Street in the East Village neighborhood of Manhattan , New York City, two b",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 4.7,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.7,
-    "yelp": 4.4,
-    "google": 4.8
-  },
-  "reviewCount": {
-    "tripadvisor": 843,
-    "yelp": 1800,
-    "google": 16273
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Free entry; books/totes vary; baseline souvenir floor $22",
-  "hoursHint": "Main store Mon–Sun 10am–9pm; Rare Book Room Mon–Fri 10am–5pm, Sat–Sun 10am–6pm (official)",
+  "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
-    {
-      "claim": "Flagship at 828 Broadway / 12th St open daily 10am–9pm",
-      "sourceUrl": "https://www.strandbooks.com/hours-locations"
-    },
-    {
-      "claim": "Rare Book Room weekday 10–5 / weekend 10–6",
-      "sourceUrl": "https://www.strandbooks.com/hours-locations"
-    },
-    {
-      "claim": "Tripadvisor ~4.7; Google baseline 4.8",
-      "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
-    }
+    "independent bookstore located at 828 Broadway",
+    "independent bookstore located at 828 Broadway",
+    "18 Miles Of Books"
   ],
   "itineraryNoteCandidate": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
   "voicePass": {
-    "itineraryNote": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
-    "shortDescription": "Iconic independent bookstore at 828 Broadway, open daily 10am–9pm with a Rare Book Room upstairs.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -91,32 +60,32 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Strand Book Store is the famous independent bookstore at 828 Broadway, open daily with a Rare Book Room.",
+      "value": "Strand Book Store is the independent bookstore at 828 Broadway famous for its 18 Miles Of Books.",
       "claims": [
         {
-          "text": "828 Broadway Mon–Sun 10am–9pm",
-          "sourceUrl": "https://www.strandbooks.com/hours-locations"
+          "text": "independent bookstore located at 828 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         }
       ]
     },
     "description": {
-      "value": "Strand Book Store is a landmark independent bookstore at 828 Broadway near Union Square, known for miles of new and used books. The main floor stays open daily until 9pm, so it fits easily into an evening. Head upstairs to the Rare Book Room for first editions, and grab a signature tote on the way out.",
+      "value": "Strand Book Store is an independent bookstore located at 828 Broadway near Union Square. The store is known for its slogan 18 Miles Of Books, covering new, used and rare titles. It is an easy browse for an hour between Greenwich Village and Union Square.",
       "claims": [
         {
-          "text": "828 Broadway Mon–Sun 10am–9pm",
-          "sourceUrl": "https://www.strandbooks.com/hours-locations"
+          "text": "independent bookstore located at 828 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         },
         {
-          "text": "Rare Book Room weekdays 10–5 / weekends 10–6",
-          "sourceUrl": "https://www.strandbooks.com/hours-locations"
+          "text": "18 Miles Of Books",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

@@ -5,48 +5,28 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail",
-      "title": "The Manhattan at Times Square Hotel.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking 5.8 — mixed/dated reviews"
+      "url": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel",
+      "title": "TSQ",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square No items found. No items found. The Manhattan at Times Square Hotel prov … utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square No items found. No items found. The Manhattan at Times Square Hotel prov",
+      "snippet": "utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Squ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 5.8,
-    "primarySource": "booking",
-    "booking": 5.8,
-    "hotels": 6.0
-  },
-  "reviewCount": {
-    "booking": 4133,
-    "hotels": 4008
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Times Square hotel (IHG/SPND)",
-  "hoursHint": "Hotel — 24h",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: Times Square / Manhattan at TSQ",
-      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
-    },
-    {
-      "claim": "Official site https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail",
-      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
-    },
-    {
-      "claim": "Guest rating primary 5.8 via booking",
-      "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
-    }
+    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square"
   ],
   "itineraryNoteCandidate": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
   "voicePass": {
-    "itineraryNote": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
-    "shortDescription": "The Manhattan at Times Square Hotel.",
-    "unsupportedFlags": [
-      "Low guest scores; renovation/maintenance complaints in SERP"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,32 +53,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Manhattan at Times Square Hotel is a large budget-minded hotel on Seventh Avenue near Times Square.",
+      "value": "The Manhattan at Times Square Hotel now operates as Crowne Plaza Manhattan Times Square in Midtown.",
       "claims": [
         {
-          "text": "The Manhattan at Times Square Hotel.",
-          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+          "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+          "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
         }
       ]
     },
     "description": {
-      "value": "The Manhattan at Times Square Hotel is a big hotel on Seventh Avenue, a couple of blocks from Times Square and Carnegie Hall. Its main selling point is location at a lower price. Guest reviews are mixed and note dated rooms, so check recent feedback before booking.",
+      "value": "The Manhattan at Times Square Hotel has been rebranded. Times Square Alliance lists it as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square. Book under the new Crowne Plaza name, and confirm room types and rates directly with IHG.",
       "claims": [
         {
-          "text": "The Manhattan at Times Square Hotel.",
-          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
-        },
-        {
-          "text": "Booking 5.8 — mixed/dated reviews",
-          "sourceUrl": "https://www.ihg.com/spnd/hotels/us/en/new-york/nycat/hoteldetail"
+          "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+          "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

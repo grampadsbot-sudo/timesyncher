@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://thewallace.com/",
-      "title": "The Wallace Hotel on the Upper West Side.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Booking 9.3 / TA 4.8"
+      "title": "Luxury Hotel Upper West Side | The Wallace NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. … Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City.",
+      "snippet": "Luxury Hotel Upper West Side | The Wallace NYC | The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York City. Experience the best of the city in comfort. The Wallace Hotel offers the ultimate luxury and sophistication on the Upper West Side of New York Cit",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -26,25 +28,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 242 W 76th St",
-      "sourceUrl": "https://thewallace.com/"
-    },
-    {
-      "claim": "Official site https://thewallace.com/",
-      "sourceUrl": "https://thewallace.com/"
-    },
-    {
-      "claim": "Guest rating primary 4.8 via tripadvisor",
-      "sourceUrl": "https://thewallace.com/"
-    }
+    "on the Upper West Side of New York City",
+    "offers the ultimate luxury and sophistication on the Upper West Side of New York City"
   ],
   "itineraryNoteCandidate": "Wallace for residential-feel UWS nights with a live-music lounge.",
   "voicePass": {
-    "itineraryNote": "Wallace for residential-feel UWS nights with a live-music lounge.",
-    "shortDescription": "The Wallace Hotel on the Upper West Side.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,32 +61,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Wallace Hotel is a highly rated boutique hotel on the Upper West Side near Central Park.",
+      "value": "The Wallace Hotel is a luxury hotel on the Upper West Side of New York City near Lincoln Center.",
       "claims": [
         {
-          "text": "The Wallace Hotel on the Upper West Side.",
+          "text": "on the Upper West Side of New York City",
           "sourceUrl": "https://thewallace.com/"
         }
       ]
     },
     "description": {
-      "value": "The Wallace Hotel is a boutique hotel on West 71st Street in the Upper West Side, close to Lincoln Center and Central Park. It has some of the best guest scores of any hotel on this list. The quiet residential setting suits travelers who want calm evenings after busy days.",
+      "value": "The Wallace Hotel is a luxury hotel on the Upper West Side. The hotel says it offers the ultimate luxury and sophistication on the Upper West Side of New York City. It is a short walk to Lincoln Center, Central Park and the Broadway subway lines.",
       "claims": [
         {
-          "text": "The Wallace Hotel on the Upper West Side.",
-          "sourceUrl": "https://thewallace.com/"
-        },
-        {
-          "text": "Booking 9.3 / TA 4.8",
+          "text": "offers the ultimate luxury and sophistication on the Upper West Side of New York City",
           "sourceUrl": "https://thewallace.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

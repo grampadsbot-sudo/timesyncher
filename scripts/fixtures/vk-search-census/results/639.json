@@ -7,32 +7,28 @@
     {
       "url": "https://www.manhattanclub.com/",
       "title": "The Manhattan Club | Luxury Hotel in New York City",
-      "fetchedAt": "2026-10-29T05:35:00Z",
-      "snippet": "THE MANHATTAN CLUB – ALL-SUITE HOTEL. Steps from Times Square, Central Park, and the Theater District, The Manhattan Club is the ideal base to explore Manhattan. Our spacious suites blend classic charm with metropolitan style. Take advantage of exclusive access to member amenities throughout the length of your stay—including our gym, valet parking, and our member-only Club Lounge and Terraces. Carnegie Hall, 2 minute walk. 200 W 56th St. New York, NY 10019"
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … r, 15 minute walk The Bites & Sips SUGARFISH , 1 minute walk PATSY'S , 2 minute walk Serafina , 3 minute walk Brooklyn Diner , 3 minute walk The Arts Carnegie Hall, 2 minute walk Broadway Theater, 5 minute walk Gershwin Theater , 10 minute walk MUSEUM OF MODERN ART, 10 minute walk The Shops NORDSTROM, 4 minute walk SHOPS AT CO … htfully arranged. Take advantage of exclusive access to member amenities throughout the length of your stay—including our gym, valet parking, and our member-only Club Lounge and Terraces. Suites One Bedroom Suite with Two Bathrooms Comfort & Privacy Experience exceptional comfort in our functionally designed suites, each offering the ",
+      "snippet": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESER",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": null,
   "reviewCount": null,
   "priceHint": "All-suite Midtown hotel",
-  "hoursHint": "Hotel — 24h; Reading Room refreshments",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "THE MANHATTAN CLUB – ALL-SUITE HOTEL",
-      "sourceUrl": "https://www.manhattanclub.com/"
-    },
-    {
-      "claim": "200 W 56th St.",
-      "sourceUrl": "https://www.manhattanclub.com/"
-    }
+    "200 W 56th St. New York, NY 10019",
+    "200 W 56th St. New York, NY 10019",
+    "Carnegie Hall, 2 minute walk",
+    "member-only Club Lounge and Terraces"
   ],
-  "itineraryNoteCandidate": "Settle into a full suite two minutes from Carnegie Hall, then walk to Central Park.",
+  "itineraryNoteCandidate": "Library Hotel for bookish Midtown East quiet—budget the daily resort fee that includes breakfast.",
   "voicePass": {
-    "itineraryNote": "Settle into a full suite two minutes from Carnegie Hall, then walk to Central Park.",
-    "shortDescription": "All-suite hotel at 200 W 56th St, steps from Times Square and Central Park.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -59,40 +55,36 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St, steps from Central Park and Times Square.",
+      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St in Midtown Manhattan, near Carnegie Hall.",
       "claims": [
         {
-          "text": "THE MANHATTAN CLUB – ALL-SUITE HOTEL",
-          "sourceUrl": "https://www.manhattanclub.com/"
-        },
-        {
-          "text": "200 W 56th St.",
+          "text": "200 W 56th St. New York, NY 10019",
           "sourceUrl": "https://www.manhattanclub.com/"
         }
       ]
     },
     "description": {
-      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St in Midtown, close to Times Square, Central Park, and the Theater District. Its spacious suites blend classic charm with metropolitan style. Guests also get access to the member-only Club Lounge and Terraces, and Carnegie Hall is a two-minute walk away.",
+      "value": "The Manhattan Club is an all-suite hotel in Midtown Manhattan at 200 W 56th St. Its official site says Carnegie Hall is a two minute walk away. Guests also get a member-only Club Lounge and Terraces, which makes it a calm base between Central Park and the Theater District.",
       "claims": [
         {
-          "text": "Our spacious suites blend classic charm with metropolitan style.",
-          "sourceUrl": "https://www.manhattanclub.com/"
-        },
-        {
-          "text": "member-only Club Lounge and Terraces",
+          "text": "200 W 56th St. New York, NY 10019",
           "sourceUrl": "https://www.manhattanclub.com/"
         },
         {
           "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
           "sourceUrl": "https://www.manhattanclub.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

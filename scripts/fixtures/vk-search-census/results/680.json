@@ -1,0 +1,71 @@
+{
+  "thingId": "680",
+  "thingName": "Piccola Cucina Uptown",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/",
+      "title": "Piccola Cucina Uptown: the best restaurant for dinner in New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, which opened in the horrible year of 2020 but survived. The good … la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, which opened in the horrible year of 2020 but survived. The good … Piccola Cucina Uptown: the best restaurant for dinner in New York | Want to experience authentic Italian cuisine? Visit Piccola Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. Want to experience authentic Italian cuisine? Vi … e good news is that it | Piccola Cucina Uptown: the best restaurant for dinner in New York Skip to content Book a table Toggle Navigation Restaurants Piccola Cucina Sicilian Osteria Piccola Cucina Uptown Piccola Cucina Estiatorio Piccola Cucina Casa Piccola Cucina Enoteca Tapas Piccola Cucina at Ox Pasture Piccola Cucina in Ibiza",
+      "snippet": "la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, whi",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Piccola Cucina Uptown, located right across from Central Park",
+    "Piccola Cucina Uptown, located right across from Central Park",
+    "Want to experience authentic Italian cuisine?",
+    "Piccola Cucina Sicilian Osteria"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Piccola Cucina Uptown is an Italian restaurant across from Central Park, part of the Piccola Cucina group.",
+      "claims": [
+        {
+          "text": "Piccola Cucina Uptown, located right across from Central Park",
+          "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Piccola Cucina Uptown is an Italian restaurant, located right across from Central Park. The group invites guests to experience authentic Italian cuisine and indulge in Italian delicacies. It belongs to the Piccola Cucina family, which started with a Sicilian osteria downtown.",
+      "claims": [
+        {
+          "text": "Piccola Cucina Uptown, located right across from Central Park",
+          "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
+        },
+        {
+          "text": "Want to experience authentic Italian cuisine?",
+          "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
+        },
+        {
+          "text": "Piccola Cucina Sicilian Osteria",
+          "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

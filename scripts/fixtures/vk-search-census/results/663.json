@@ -6,15 +6,11 @@
   "sources": [
     {
       "url": "https://jazz.org/dizzys/dizzys-faq/",
-      "title": "Dizzy's FAQ",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "$25 F&B min; door times; Broadway@60th 5th floor"
-    },
-    {
-      "url": "https://jazz.org/dizzys/",
-      "title": "Dizzy's Club",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Jazz at Lincoln Center"
+      "title": "Dizzy’s FAQ | Jazz at Lincoln Center",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and beverage menu will be available for … at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and beverage menu will be available for … or sold out sets, we have a standby list for walk-ups, so you may still be able to get in to see the show. Is there a food and beverage minimum? Yes, there is a food and beverage minimum of $25 per person, per set. What time does the club open? The Club opens at 6pm for dinner service for the 7:00pm set. It opens at 8:30pm for the 9:00pm set. On Sundays, the Cl",
+      "snippet": "at Lincoln Center Dizzy’s Club is located within Jazz at Lincoln Center, inside the Deutsche Bank Center. We encourage purchasing tickets in advance. Broadway at 60th Street, 5th Floor New York, NY 10019 VIEW SETS VIEW MENU Will food and beverage be available for my performance? A curated food and b",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -30,25 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Broadway at 60th Street, 5th Floor, Jazz at Lincoln Center",
-      "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
-    },
-    {
-      "claim": "$25 food & beverage minimum per person per set",
-      "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
-    },
-    {
-      "claim": "Mon–Sat 7pm & 9pm sets; Sunday 5pm & 7:30pm",
-      "sourceUrl": "https://jazz.org/dizzys/"
-    }
+    "Broadway at 60th Street, 5th Floor",
+    "Broadway at 60th Street, 5th Floor",
+    "there is a food and beverage minimum of $25 per person, per set"
   ],
   "itineraryNoteCandidate": "Book Dizzy's for skyline jazz above Columbus Circle—budget ticket plus the $25 F&B minimum.",
   "voicePass": {
-    "itineraryNote": "Book Dizzy's for skyline jazz above Columbus Circle—budget ticket plus the $25 F&B minimum.",
-    "shortDescription": "Dizzy's Club at Jazz at Lincoln Center.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -75,32 +60,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz room overlooking Central Park at Columbus Circle.",
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor.",
       "claims": [
         {
-          "text": "Jazz at Lincoln Center",
-          "sourceUrl": "https://jazz.org/dizzys/"
+          "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
         }
       ]
     },
     "description": {
-      "value": "Dizzy’s Club / Jazz at Lincoln Center is an intimate jazz club on the fifth floor of the Time Warner building at Broadway and 60th. Its stage backs onto huge windows overlooking Central Park at night. Shows carry a $25 food and drink minimum in addition to the ticket.",
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is a jazz club inside the Deutsche Bank Center at Broadway at 60th Street, 5th Floor. The FAQ says there is a food and beverage minimum of $25 per person, per set. Large windows look out over Central Park behind the band.",
       "claims": [
         {
-          "text": "Broadway@60th 5th floor",
+          "text": "Broadway at 60th Street, 5th Floor",
           "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
         },
         {
-          "text": "$25 F&B min",
+          "text": "there is a food and beverage minimum of $25 per person, per set",
           "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

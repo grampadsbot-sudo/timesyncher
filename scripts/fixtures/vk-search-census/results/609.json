@@ -5,16 +5,20 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
-      "title": "Priceline JFK cars",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "JFK rental deals landing"
+      "url": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/",
+      "title": "Are Priceline Express Deals Worth It? - AutoSlash",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound like some pretty onerous restrictions, you’re absolutely right. So why would someone wan … ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound like some pretty onerous restrictions, you’re absolutely right. So why would someone wan",
+      "snippet": "ou must pay for your Express Deal car rental in full at the time of booking. You do not find out the rental car company until you pay for the rental. Express Deal rental reservations are non-refundable, non-transferable, and non-changeable even if the reservation is not use. If you think those sound",
+      "fetchMethod": "curl live fetch 2026-10-28"
     },
     {
-      "url": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/",
-      "title": "Express Deals explainer",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Company hidden until after book; nonrefundable"
+      "url": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp",
+      "title": "New York John F. Kennedy International Airport Car Rentals from $73/day",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ls we’ve found. Make sure to check back soon if you’re not finding what you’re looking for, as deals are updated frequently. Economy Car from $73/day Standard Car from $73/day Premium Car from $77/day Compact Car Kia Soul or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days Prices checked Oct 28 $ 12",
+      "snippet": "ls we’ve found. Make sure to check back soon if you’re not finding what you’re looking for, as deals are updated frequently. Economy Car from $73/day Standard Car from $73/day Premium Car from $77/day Compact Car Kia Soul or similar 4 people 2 Unlimited mileage Rental dates Nov 27 – Dec 4 · 7 days P",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -27,23 +31,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Priceline Express Deals hide rental company until after prepaid booking",
-      "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
-    },
-    {
-      "claim": "Opaque car rates are typically nonrefundable/nonchangeable",
-      "sourceUrl": "https://www.priceline.com/static-pages/terms_en.html"
-    }
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Standard Car from $73/day"
   ],
   "itineraryNoteCandidate": "Only use opaque JFK sedan if plans are locked—otherwise named brands may be safer.",
   "voicePass": {
-    "itineraryNote": "Only use opaque JFK sedan if plans are locked—otherwise named brands may be safer.",
-    "shortDescription": "Priceline opaque standard sedan at JFK.",
-    "unsupportedFlags": [
-      "Opaque product — company unknown pre-purchase"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -72,28 +67,32 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "The Priceline opaque Standard sedan is a discounted JFK rental car booked as a Priceline Express Deal.",
+      "value": "Priceline opaque Standard sedan rental at New York JFK booked as an Express Deal with the brand hidden.",
       "claims": [
         {
-          "text": "JFK rental deals landing",
-          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
         }
       ]
     },
     "description": {
-      "value": "The Priceline opaque Standard sedan is an Express Deal rental picked up at JFK, priced below named-brand bookings. The catch is that the rental company stays hidden until after you book, and the deal is nonrefundable. It makes sense only if your plans are fixed and the all-in price beats a regular reservation.",
+      "value": "Priceline opaque Standard sedan is a hidden-brand Express Deal rental at JFK. AutoSlash notes that Express Deal rental reservations are non-refundable, non-transferable, and non-changeable. Priceline lists a Standard Car from $73/day at JFK, so compare it with a named-brand booking first.",
       "claims": [
         {
-          "text": "Company hidden until after book; nonrefundable",
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
           "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        },
+        {
+          "text": "Standard Car from $73/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

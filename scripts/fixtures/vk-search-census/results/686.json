@@ -1,0 +1,71 @@
+{
+  "thingId": "686",
+  "thingName": "The Consulate UWS",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://theconsulate.nyc/upper-west-side-ny",
+      "title": "The Consulate - Upper West Side NY",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … 0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new tab , The Consulate UWS is situated on the corner of Columbus Avenue and West 85th Street in Manhattan’s Upper West Side. The restaurant is just steps from Central Park and a short walk from the American Mu …  – Friday: 11:00 AM – 3:30 PM LUNCH MENU Dinner Monday – Sunday: 4:30 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 5",
+      "snippet": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you a",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": "Monday – Friday: 11:00 AM – 10:00 PM Saturday & Sunday: 10:00 AM – 10:00 PM",
+  "happyHourHint": "Monday – Friday: 3:30 – 6:30 PM",
+  "summaryClaims": [
+    "519 Columbus Avenue New York, NY 10024",
+    "519 Columbus Avenue New York, NY 10024",
+    "on the corner of Col",
+    "Happy Hour Monday – Friday: 3:30 – 6:30 PM"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "The Consulate UWS is a French restaurant at 519 Columbus Avenue on the Upper West Side near Central Park.",
+      "claims": [
+        {
+          "text": "519 Columbus Avenue New York, NY 10024",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Consulate UWS is a French brasserie at 519 Columbus Avenue New York, NY 10024. It sits on the corner of Columbus Avenue and West 85th Street near Central Park. The restaurant lists Happy Hour Monday – Friday: 3:30 – 6:30 PM, and brunch on weekends.",
+      "claims": [
+        {
+          "text": "519 Columbus Avenue New York, NY 10024",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "on the corner of Col",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

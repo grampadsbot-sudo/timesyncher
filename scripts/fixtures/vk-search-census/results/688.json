@@ -1,0 +1,66 @@
+{
+  "thingId": "688",
+  "thingName": "Sylvia's Harlem",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem",
+      "title": "Sylvia's Restaurant of Harlem - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac … t WikiMiniAtlas]]</span>\"}}'/> Website sylviasrestaurant .com Sylvia's Restaurant of Harlem , often called Sylvia's Soul Food or just Sylvia's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared  … via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac",
+      "snippet": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woo",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Founded in 1962 by Sylvia Woods",
+    "soul food restaurant located at 328 Malcolm X Boulevard",
+    "Founded in 1962 by Sylvia Woods"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Sylvia's Harlem is the soul food restaurant at 328 Malcolm X Boulevard, founded by Sylvia Woods in 1962.",
+      "claims": [
+        {
+          "text": "Founded in 1962 by Sylvia Woods",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        }
+      ]
+    },
+    "description": {
+      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit.",
+      "claims": [
+        {
+          "text": "soul food restaurant located at 328 Malcolm X Boulevard",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        },
+        {
+          "text": "Founded in 1962 by Sylvia Woods",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

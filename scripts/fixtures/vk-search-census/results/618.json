@@ -5,44 +5,28 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/",
-      "title": "Hilton Club New York atop the Midtown Hilton.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Official Hilton listing 4.3/940"
+      "url": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york",
+      "title": "The Hilton Club - New York | Midtown Manhattan",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the  … The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. | The Hilton Cl",
+      "snippet": "The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 4.3,
-    "primarySource": "hilton",
-    "hilton": 4.3
-  },
-  "reviewCount": {
-    "hilton": 940
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Hilton Club floors 36–38",
-  "hoursHint": "Hotel — 24h",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 1335 Avenue of the Americas",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
-    },
-    {
-      "claim": "Official site https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
-    },
-    {
-      "claim": "Guest rating primary 4.3 via hilton",
-      "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
-    }
+    "stylish Studios and spacious Suites with skyline views",
+    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan"
   ],
   "itineraryNoteCandidate": "Stay high above Midtown in Club suites with Hilton dining downstairs.",
   "voicePass": {
-    "itineraryNote": "Stay high above Midtown in Club suites with Hilton dining downstairs.",
-    "shortDescription": "Hilton Club New York atop the Midtown Hilton.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -69,32 +53,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hilton Club New York is the members-style suite hotel on upper floors atop the Midtown Hilton.",
+      "value": "Hilton Club New York offers studios and suites with skyline views in the heart of Midtown Manhattan.",
       "claims": [
         {
-          "text": "Hilton Club New York atop the Midtown Hilton.",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
+          "text": "stylish Studios and spacious Suites with skyline views",
+          "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
         }
       ]
     },
     "description": {
-      "value": "Hilton Club New York sits atop the Midtown Hilton on the Avenue of the Americas, a short walk from Rockefeller Center and Central Park. It offers larger apartment-style rooms on high floors above the busy main hotel. The official Hilton listing rates it well, making it a comfortable Midtown choice for a longer stay.",
+      "value": "Hilton Club New York is a Hilton Grand Vacations club in Midtown. It offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. Rockefeller Center, Fifth Avenue shopping and the Theater District are all within walking distance.",
       "claims": [
         {
-          "text": "Hilton Club New York atop the Midtown Hilton.",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
-        },
-        {
-          "text": "Official Hilton listing 4.3/940",
-          "sourceUrl": "https://www.hilton.com/en/hotels/nycgvgv-the-hilton-club-new-york/"
+          "text": "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
+          "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

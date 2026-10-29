@@ -6,6 +6,25 @@ import { mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-prim
 import { applyStoredDossiersToSharedTripSync } from '../src/vacation/shared-trip-dossier-overlay.mjs';
 
 const text = (value) => (typeof value === 'string' ? value.trim() : '');
+const normalizeWhitespace = (value) => String(value || '').toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+const sourceSearchText = (source) => [source?.title, source?.text, source?.snippet].filter(text).join('\n');
+const resolveStringClaimBody = (body, sources) => {
+  const claimBody = text(body);
+  if (!claimBody) return null;
+  for (const source of sources) {
+    const page = normalizeWhitespace(sourceSearchText(source));
+    const claim = normalizeWhitespace(claimBody);
+    if (claim && page.includes(claim)) {
+      return { claim: claimBody, text: claimBody, sourceUrl: source.url };
+    }
+  }
+  return null;
+};
+const normalizeSummaryClaimEntry = (claim, sources) => {
+  if (typeof claim === 'string') return resolveStringClaimBody(claim, sources);
+  if (claim && typeof claim === 'object') return claim;
+  return null;
+};
 const censusBotNarrative = (census) => {
   const written = census?.fields && typeof census.fields === 'object' ? census.fields
     : census?.dossierFields && typeof census.dossierFields === 'object' ? census.dossierFields : null;
@@ -15,8 +34,10 @@ const censusBotNarrative = (census) => {
   };
 };
 const inlineBotFieldsFromCensus = (census) => {
-  const claims = Array.isArray(census?.summaryClaims) ? census.summaryClaims : [];
-  const primary = claims.find((row) => row?.supported === true && text(row.claim)) || claims[0];
+  const sources = Array.isArray(census?.sources) ? census.sources : [];
+  const rawClaims = Array.isArray(census?.summaryClaims) ? census.summaryClaims : [];
+  const claims = rawClaims.map((entry) => normalizeSummaryClaimEntry(entry, sources)).filter(Boolean);
+  const primary = claims.find((row) => row?.supported === true && text(row.claim || row.text)) || claims[0];
   const secondary = claims.find((row) => row !== primary && text(row.claim || row.text)) || primary;
   const summaryText = text(primary?.claim || primary?.text);
   const descriptionText = text(secondary?.claim || secondary?.text) || summaryText;
@@ -58,30 +79,49 @@ for (const id of [614, 677, 678]) {
   const census = loadVkSearchCensusResult(place, { env: {} });
   const botFromCensus = vkSearchResultToDossier(census, place);
   const narrative = censusBotNarrative(census);
-  if (narrative.summary) {
-    assert.equal(botFromCensus.fields.summary?.value, narrative.summary);
+  const voiceOk = census?.voicePass?.claimSupportOk === true;
+  if (voiceOk) {
+    if (narrative.summary) {
+      assert.equal(botFromCensus.fields.summary?.value, narrative.summary);
+    } else {
+      assert.equal(botFromCensus.fields.summary?.value, undefined);
+    }
+    if (narrative.description) {
+      assert.equal(botFromCensus.fields.description?.value, narrative.description);
+    } else {
+      assert.equal(botFromCensus.fields.description?.value, undefined);
+    }
+    const inlineFields = inlineBotFieldsFromCensus(census);
+    assert.ok(inlineFields, `row ${id} census must cite at least one saved page for inline bot narrative`);
+    const bot = vkSearchResultToDossier({ ...census, fields: inlineFields }, place);
+    assert.equal(bot.fields.summary?.value, inlineFields.summary.value);
+    assert.equal(bot.fields.description?.value, inlineFields.description.value);
+    const badText = `${row.name}: How to Clean Window Screens and choose the right meat thermometer for your kitchen.`;
+    const old = { thing: row.name, pages: [{ url: 'https://example.test/unrelated', fetchedAt: '2026-10-01T00:00:00Z', text: badText }], fields: {
+      summary: { value: badText, claims: [{ text: badText, pages: ['p1'], sourceUrl: 'https://example.test/unrelated', supported: true }] },
+    } };
+    const merged = mergeBotPrimaryPresentedFields(old, botFromCensus, place);
+    assert.equal(merged.pages.some((page) => page.text === badText), true, 'keep historical source bytes');
+    assert.equal(merged.fields.summary.value.includes('Window Screens'), false, 'display the new venue narrative');
+    assert.equal(merged.fields.description.value.includes('Window Screens'), false);
   } else {
     assert.equal(botFromCensus.fields.summary?.value, undefined);
-  }
-  if (narrative.description) {
-    assert.equal(botFromCensus.fields.description?.value, narrative.description);
-  } else {
     assert.equal(botFromCensus.fields.description?.value, undefined);
+    assert.equal(botFromCensus.attempts[0].status, 'claim_support_failed');
+    const inlineFields = inlineBotFieldsFromCensus(census);
+    assert.ok(inlineFields, `row ${id} inline helper must still resolve object claims to saved URLs`);
+    const bot = vkSearchResultToDossier({ ...census, fields: inlineFields }, place);
+    assert.equal(bot.fields.summary?.value, undefined, 'false voicePass must not present injected narrative');
+    assert.equal(bot.fields.description?.value, undefined);
+    assert.equal(bot.attempts[0].status, 'claim_support_failed');
   }
-  const inlineFields = inlineBotFieldsFromCensus(census);
-  assert.ok(inlineFields, `row ${id} census must cite at least one saved page for inline bot narrative`);
-  const bot = vkSearchResultToDossier({ ...census, fields: inlineFields }, place);
-  assert.equal(bot.fields.summary?.value, inlineFields.summary.value);
-  assert.equal(bot.fields.description?.value, inlineFields.description.value);
-  const badText = `${row.name}: How to Clean Window Screens and choose the right meat thermometer for your kitchen.`;
-  const old = { thing: row.name, pages: [{ url: 'https://example.test/unrelated', fetchedAt: '2026-10-01T00:00:00Z', text: badText }], fields: {
-    summary: { value: badText, claims: [{ text: badText, pages: ['p1'], sourceUrl: 'https://example.test/unrelated', supported: true }] },
-  } };
-  const merged = mergeBotPrimaryPresentedFields(old, bot, place);
-  assert.equal(merged.pages.some((page) => page.text === badText), true, 'keep historical source bytes');
-  assert.equal(merged.fields.summary.value.includes('Window Screens'), false, 'display the new venue narrative');
-  assert.equal(merged.fields.description.value.includes('Window Screens'), false);
 }
+
+assert.equal(
+  inlineBotFieldsFromCensus({ sources: [{ url: 'https://example.test/a', text: 'Saved venue bytes only.' }], summaryClaims: ['Fabricated claim absent from page'] }),
+  null,
+  'unresolvable string summaryClaims must not synthesize inline narrative',
+);
 
 const blueNote = buildGateBSearchPlaceForRow(rows.find((row) => row.id === 660));
 const selected = { places: [{ id: 660, name: blueNote.title, category_name: 'Event', website: blueNote.url, sourceRecord: blueNote.sourceRecord }], thingOverrides: { 'place:660': { logoUrl: 'https://www.bluenotejazz.com/favicon.ico' } } };

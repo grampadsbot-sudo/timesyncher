@@ -11,18 +11,8 @@
       "snippet": "TA 4.2 / Booking 8.6"
     }
   ],
-  "rating": {
-    "primary": 4.2,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.2,
-    "booking": 8.6,
-    "expedia": 8.8
-  },
-  "reviewCount": {
-    "tripadvisor": 1423,
-    "booking": 621,
-    "expedia": 1000
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Suite hotel Chelsea",
   "hoursHint": "Hotel — 24h; breakfast",
   "happyHourHint": null,
@@ -43,10 +33,8 @@
   ],
   "itineraryNoteCandidate": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
   "voicePass": {
-    "itineraryNote": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
-    "shortDescription": "Hyatt House suites in Chelsea.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": false,
+    "note": "Hyatt House New York/Chelsea: hyatt.com 403 to fetcher; no fetchable official or reference page"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,32 +61,20 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hyatt House New York/Chelsea is a suite-style hotel in Chelsea with breakfast included for guests.",
-      "claims": [
-        {
-          "text": "Hyatt House suites in Chelsea.",
-          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-        }
-      ]
+      "value": null,
+      "claims": []
     },
     "description": {
-      "value": "Hyatt House New York/Chelsea is a suite-style hotel on West 28th Street, close to the High Line and Chelsea Market. Rooms are larger than typical Manhattan hotel rooms, and breakfast is included. Strong guest ratings make it a practical pick for families or longer trips.",
-      "claims": [
-        {
-          "text": "Hyatt House suites in Chelsea.",
-          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-        },
-        {
-          "text": "TA 4.2 / Booking 8.6",
-          "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-        }
-      ]
+      "value": null,
+      "claims": []
     }
   },
+  "thin": true,
+  "claimSupportFailed": true,
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

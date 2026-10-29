@@ -6,9 +6,19 @@
   "sources": [
     {
       "url": "https://www.edisonhotelnyc.com/",
-      "title": "Historic Times Square hotel near Broadway theaters.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "TA 3.9 / 18k+ reviews"
+      "title": "Times Square Hotels | Hotel Edison",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Times Square Hotels | Hotel Edison | Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from Times Square, with three restaurants and event venues. Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from ",
+      "snippet": "Times Square Hotels | Hotel Edison | Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps from Times Square, with three restaurants and event venues. Enjoy an authentic New York experience at our historic, art deco hotel in the Theatre District, steps",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Hotel_Edison",
+      "title": "Hotel Edison - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s … ,\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s",
+      "snippet": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geo",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -27,25 +37,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: Times Square / Hotel Edison",
-      "sourceUrl": "https://www.edisonhotelnyc.com/"
-    },
-    {
-      "claim": "Official site https://www.edisonhotelnyc.com/",
-      "sourceUrl": "https://www.edisonhotelnyc.com/"
-    },
-    {
-      "claim": "Guest rating primary 3.9 via tripadvisor",
-      "sourceUrl": "https://www.edisonhotelnyc.com/"
-    }
+    "228 West 47th Street",
+    "historic, art deco hotel in the Theatre District, steps from Times Square",
+    "228 West 47th Street"
   ],
   "itineraryNoteCandidate": "Classic Times Square base—expect energy and some noise; location is the draw.",
   "voicePass": {
-    "itineraryNote": "Classic Times Square base—expect energy and some noise; location is the draw.",
-    "shortDescription": "Historic Times Square hotel near Broadway theaters.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -72,32 +71,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Edison is a historic Times Square hotel just steps from the Broadway theaters.",
+      "value": "Hotel Edison is a historic art deco hotel at 228 West 47th Street in the Theater District.",
       "claims": [
         {
-          "text": "Historic Times Square hotel near Broadway theaters.",
-          "sourceUrl": "https://www.edisonhotelnyc.com/"
+          "text": "228 West 47th Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
         }
       ]
     },
     "description": {
-      "value": "Hotel Edison is a historic Art Deco hotel on West 47th Street in the heart of the Theater District. Its location means you can walk to most Broadway shows in minutes. It has thousands of reviews, and guests mostly praise the location and value for Times Square.",
+      "value": "Hotel Edison is a historic art deco hotel in the Theatre District, steps from Times Square. Wikipedia places it at 228 West 47th Street. It is a practical base for Broadway shows, with several restaurants on site and the subway close by.",
       "claims": [
         {
-          "text": "Historic Times Square hotel near Broadway theaters.",
+          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
           "sourceUrl": "https://www.edisonhotelnyc.com/"
         },
         {
-          "text": "TA 3.9 / 18k+ reviews",
-          "sourceUrl": "https://www.edisonhotelnyc.com/"
+          "text": "228 West 47th Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

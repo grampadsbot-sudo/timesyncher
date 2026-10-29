@@ -1,0 +1,66 @@
+{
+  "thingId": "682",
+  "thingName": "The Original John's of Bleecker Street",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street",
+      "title": "John's of Bleecker Street - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato … Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato … n's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie . [ 2 ] [ 3 ] In 2015, it was ranked the 10th best pizzeria in the United States by TripAdvisor . [ 4 ] [ 5 ] John's is known for its graffiti-carved",
+      "snippet": "Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    }
+  ],
+  "rating": null,
+  "reviewCount": null,
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": null,
+  "summaryClaims": [
+    "historic pizzeria on Bleecker Street in the Greenwich Village",
+    "historic pizzeria on Bleecker Street in the Greenwich Village",
+    "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie"
+  ],
+  "itineraryNoteCandidate": null,
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "The Original John's of Bleecker Street is a historic coal-fired pizzeria on Bleecker Street in Greenwich Village.",
+      "claims": [
+        {
+          "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
+          "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend.",
+      "claims": [
+        {
+          "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
+          "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        },
+        {
+          "text": "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie",
+          "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-refill-20261028",
+    "new": true,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
+  }
+}

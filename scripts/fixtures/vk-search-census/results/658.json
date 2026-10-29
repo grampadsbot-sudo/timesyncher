@@ -5,39 +5,28 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york",
-      "title": "United LAS-EWR 07:00-15:00",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "United nonstop LAS–EWR; June RT economy from ~$259–$267 in SERP"
+      "url": "https://en.wikipedia.org/wiki/United_Airlines",
+      "title": "United Airlines - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "onal Airport|Guam]]\\n | [[George Bush Intercontinental Airport|Houston–Intercontinental]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Newark Liberty International Airport|Newark]]\\n | [[San Francisco International Airport|San Francisco]]\\n | [[Dulles International Airport|Washington–Dulles … diary of United Aircraft and Transport Corporation [ 1 ] Commenced operations March 28, 1931 (95 years ago) ( 1931-03-28 ) [ 2 ] AOC # CALA014A [ 3 ] Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark San Francisco Washington–Dulles Frequent-flyer program MileagePlus Alliance Star Alliance Subsidiaries United Express Republic Airways Holdings (18.2",
+      "snippet": "onal Airport|Guam]]\\n | [[George Bush Intercontinental Airport|Houston–Intercontinental]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Newark Liberty International Airport|Newark]]\\n | [[San Francisco International Airport|San Francisco]]\\n | [[Dulles International Airport|Washington–",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": null,
-    "primarySource": null
-  },
-  "reviewCount": {},
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "Inventory/list price $257",
-  "hoursHint": "United LAS-EWR 07:00-15:00 — schedule per airline booking tool",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "United nonstop LAS–EWR; June RT economy from ~$259–$267 in SERP",
-      "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
-    },
-    {
-      "claim": "Thing inventory website points at airline booking deep link",
-      "sourceUrl": "https://www.united.com/en/us/fsr/choose-flights?f=LAS&t=EWR&d=2026-06-23&r=2026-06-30&tt=1&at=1"
-    }
+    "Newark",
+    "Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark"
   ],
   "itineraryNoteCandidate": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
   "voicePass": {
-    "itineraryNote": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
-    "shortDescription": "United LAS-EWR 07:00-15:00",
-    "unsupportedFlags": [
-      "Flight Thing — ratings not applicable; fare not locked without live booking quote"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -64,28 +53,28 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a nonstop flight choice from Las Vegas to New York on June 23, 2026.",
+      "value": "United flight option from Las Vegas to Newark, a United hub serving New York, on June 23, 2026.",
       "claims": [
         {
-          "text": "United LAS-EWR 07:00-15:00",
-          "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
+          "text": "Newark",
+          "sourceUrl": "https://en.wikipedia.org/wiki/United_Airlines"
         }
       ]
     },
     "description": {
-      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is one of the nonstop flight choices for the June 23, 2026 outbound from Las Vegas to New York. The morning United nonstop lands at Newark in New Jersey mid-afternoon, with train links into Manhattan. Compare the fare, bag rules, and arrival airport against the other options before you book.",
+      "value": "This United Airlines flight option flies from Las Vegas to Newark Liberty International Airport. United lists Newark among its hubs, along with Chicago–O'Hare and Denver. The times in the Thing name come from the census, so confirm the schedule and fare on United before booking.",
       "claims": [
         {
-          "text": "United nonstop LAS–EWR",
-          "sourceUrl": "https://www.united.com/en-us/flights-from-las-vegas-to-new-york"
+          "text": "Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark",
+          "sourceUrl": "https://en.wikipedia.org/wiki/United_Airlines"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

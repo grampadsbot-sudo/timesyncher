@@ -6,15 +6,11 @@
   "sources": [
     {
       "url": "https://www.bluenotejazz.com/jazz-festival-nyc/",
-      "title": "Blue Note Jazz Festival NYC",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Official festival hub"
-    },
-    {
-      "url": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/",
-      "title": "Variety 2026 lineup",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "June 1–July 1 2026"
+      "title": "Blue Note Jazz Festival | New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi,  … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi,  … Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mar",
+      "snippet": "Blue Note Jazz Festival | New York | Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, Big Freedia, SHABAKA, Kokoroko, UMI, Mario + more Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026! Ledisi, ",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -27,21 +23,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "2026 festival runs June 1–July 1",
-      "sourceUrl": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/"
-    },
-    {
-      "claim": "Venues include Blue Note, Sony Hall, SummerStage",
-      "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
-    }
+    "the Blue Note Jazz Festival New York is back in June 2026",
+    "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
+    "Ledisi, Big Freedia, SHABAKA, Kokoroko"
   ],
   "itineraryNoteCandidate": "If your June dates overlap, pick a festival night at Blue Note or SummerStage and buy early.",
   "voicePass": {
-    "itineraryNote": "If your June dates overlap, pick a festival night at Blue Note or SummerStage and buy early.",
-    "shortDescription": "Blue Note Jazz Festival New York 2026 (June 1–July 1).",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -68,32 +57,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Festival New York 2026 is a month-long jazz festival across Blue Note and other city venues.",
+      "value": "Blue Note Jazz Festival New York 2026 returns in June 2026, celebrating its fifteenth year.",
       "claims": [
         {
-          "text": "Blue Note Jazz Festival NYC",
+          "text": "the Blue Note Jazz Festival New York is back in June 2026",
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Festival New York 2026 runs from June 1 to July 1, overlapping the June trip dates. Shows take place at the Blue Note club and larger venues around the city. Check the official festival hub for the lineup and book any must-see show early.",
+      "value": "Blue Note Jazz Festival New York 2026 is a multi-venue jazz festival. The festival site says Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026. The listed lineup includes Ledisi, Big Freedia, SHABAKA and Kokoroko, so check dates against the trip.",
       "claims": [
         {
-          "text": "June 1–July 1 2026",
-          "sourceUrl": "https://variety.com/2026/music/news/blue-note-jazz-festival-new-york-2026-lineup-1236684996/"
+          "text": "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         },
         {
-          "text": "Official festival hub",
+          "text": "Ledisi, Big Freedia, SHABAKA, Kokoroko",
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

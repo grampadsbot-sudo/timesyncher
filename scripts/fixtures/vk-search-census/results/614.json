@@ -17,16 +17,8 @@
       "title": ""
     }
   ],
-  "rating": {
-    "primary": 4.4,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.4,
-    "yelp": 3.3
-  },
-  "reviewCount": {
-    "tripadvisor": 636,
-    "yelp": 68
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "$$$ design gifts",
   "hoursHint": "Daily 9:30am–6:30pm; Fri until 9pm (official store page)",
   "happyHourHint": null,
@@ -45,10 +37,8 @@
   ],
   "itineraryNoteCandidate": "Browse curated design objects across from MoMA—best before or after a museum visit.",
   "voicePass": {
-    "itineraryNote": "Browse curated design objects across from MoMA—best before or after a museum visit.",
-    "shortDescription": "MoMA's design gift store on West 53rd Street.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": false,
+    "note": "MoMA Design Store 53rd Street: store.moma.org and moma.org 403/empty to fetcher"
   },
   "callCounts": {
     "webSearch": 1,
@@ -81,32 +71,20 @@
   },
   "fields": {
     "summary": {
-      "value": "MoMA Design Store - 53rd Street sells modern design gifts and home goods across from the Museum of Modern Art.",
-      "claims": [
-        {
-          "text": "Classic modern and cutting edge design products",
-          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
-        }
-      ]
+      "value": null,
+      "claims": []
     },
     "description": {
-      "value": "MoMA Design Store - 53rd Street is the museum's flagship shop for clever, beautifully made objects. It carries classic modern and cutting edge design products, including pieces made exclusively for the Museum of Modern Art. It is the best place in Midtown to find a unique gift or a souvenir that is actually useful.",
-      "claims": [
-        {
-          "text": "Classic modern and cutting edge design products for adults and kids",
-          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
-        },
-        {
-          "text": "items produced exclusively for the Museum of Modern Art",
-          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
-        }
-      ]
+      "value": null,
+      "claims": []
     }
   },
+  "thin": true,
+  "claimSupportFailed": true,
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

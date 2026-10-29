@@ -6,9 +6,19 @@
   "sources": [
     {
       "url": "https://smokejazz.com/faq/",
-      "title": "Smoke Jazz FAQ",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "2751 Broadway; Wed-Sun 4pm; dinner mins; HH"
+      "title": "FAQ - Smoke Jazz Club",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "'d like to walk up and take your chances. I'd like more information about the dinner show. All 6:30 p.m. & 8:30 p.m. shows at Smoke are dinner shows. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a standing room ticket purchase, but there is a $20 consumption minimum. If  … chase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a standing room ticket purchase, but there is a $20 consumption minimum. If desired, guests with standing room tickets may enjoy dinner in the bar/lounge before the set begins. Is there an entrance fee? A ticket must be p",
+      "snippet": "'d like to walk up and take your chances. I'd like more information about the dinner show. All 6:30 p.m. & 8:30 p.m. shows at Smoke are dinner shows. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance. Dinner is not required with a s",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)",
+      "title": "Smoke (jazz club) - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach …  Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach",
+      "snippet": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Sta",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -23,32 +33,18 @@
   },
   "priceHint": "Tickets ~$25–$65; dinner entrée min on early sets; $20 min on 10pm",
   "hoursHint": "Lounge & listening room Wed–Sun 4pm–close (official FAQ)",
-  "happyHourHint": "Happy hour cocktails/apps ~$7 between 4–5:30pm (official FAQ)",
+  "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "2751 Broadway, Upper West Side",
-      "sourceUrl": "https://smokejazz.com/faq/"
-    },
-    {
-      "claim": "Open Wed–Sun from 4pm",
-      "sourceUrl": "https://smokejazz.com/faq/"
-    },
-    {
-      "claim": "Dinner shows require one entrée per person; 10pm set has $20 min",
-      "sourceUrl": "https://smokejazz.com/faq/"
-    },
-    {
-      "claim": "Happy hour ~$7 drinks/apps 4–5:30pm per FAQ",
-      "sourceUrl": "https://smokejazz.com/faq/"
-    }
+    "jazz club located at 2751 Broadway on the Upper West Side",
+    "jazz club located at 2751 Broadway on the Upper West Side",
+    "Dinner shows require a minimum purchase of at least one entrée per person",
+    "there is a $20 consumption minimum"
   ],
   "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
   "voicePass": {
-    "itineraryNote": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
-    "shortDescription": "UWS jazz supper club with listening room and lounge.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -75,28 +71,36 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Smoke Jazz & Supper Club is an Upper West Side jazz club on Broadway with dinner and nightly sets.",
+      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side of Manhattan.",
       "claims": [
         {
-          "text": "2751 Broadway",
-          "sourceUrl": "https://smokejazz.com/faq/"
+          "text": "jazz club located at 2751 Broadway on the Upper West Side",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
         }
       ]
     },
     "description": {
-      "value": "Smoke Jazz & Supper Club is a cozy jazz room at 2751 Broadway on the Upper West Side. It pairs serious live jazz with a full dinner menu. The club opens Wednesday through Sunday, and early sets carry dinner minimums.",
+      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there.",
       "claims": [
         {
-          "text": "2751 Broadway; Wed-Sun 4pm; dinner mins",
+          "text": "jazz club located at 2751 Broadway on the Upper West Side",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+        },
+        {
+          "text": "Dinner shows require a minimum purchase of at least one entrée per person",
+          "sourceUrl": "https://smokejazz.com/faq/"
+        },
+        {
+          "text": "there is a $20 consumption minimum",
           "sourceUrl": "https://smokejazz.com/faq/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

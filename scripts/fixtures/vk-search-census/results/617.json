@@ -6,9 +6,11 @@
   "sources": [
     {
       "url": "https://www.arthousehotelnyc.com/",
-      "title": "Spacious boutique hotel on the Upper West Side.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Official: rooms/suites/lofts; Arthouse Bar, Serafina, RedFarm"
+      "title": "Arthouse Hotel - Boutique Hotel on the Upper West Side",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere … Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere … Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere else. Setting a new standard for NYC hotels, our century-old building retains many of its historic acc",
+      "snippet": "Arthouse Hotel - Boutique Hotel on the Upper West Side | Setting a new standard for NYC hotels, our century-old building retains many of its historic accents, offering a warm space you won't find anywhere",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -26,25 +28,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 2178 Broadway / W 77th",
-      "sourceUrl": "https://www.arthousehotelnyc.com/"
-    },
-    {
-      "claim": "Official site https://www.arthousehotelnyc.com/",
-      "sourceUrl": "https://www.arthousehotelnyc.com/"
-    },
-    {
-      "claim": "Guest rating primary 4.2 via tripadvisor",
-      "sourceUrl": "https://www.arthousehotelnyc.com/"
-    }
+    "Boutique Hotel on the Upper West Side",
+    "Boutique Hotel on the Upper West Side",
+    "our century-old building retains many of its historic accents"
   ],
   "itineraryNoteCandidate": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
   "voicePass": {
-    "itineraryNote": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
-    "shortDescription": "Spacious boutique hotel on the Upper West Side.",
-    "unsupportedFlags": [],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,32 +62,32 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Arthouse Hotel is a spacious boutique hotel on the Upper West Side with three on-site dining spots.",
+      "value": "Arthouse Hotel is a boutique hotel on the Upper West Side in a century-old building near the park.",
       "claims": [
         {
-          "text": "Spacious boutique hotel on the Upper West Side.",
+          "text": "Boutique Hotel on the Upper West Side",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         }
       ]
     },
     "description": {
-      "value": "Arthouse Hotel is a spacious boutique hotel on the Upper West Side with rooms, suites, and lofts. Guests can eat without leaving the building at the Arthouse Bar, Serafina, or RedFarm. It is a comfortable, residential base close to Central Park and the Museum of Natural History.",
+      "value": "Arthouse Hotel is a boutique hotel on the Upper West Side. The hotel says our century-old building retains many of its historic accents, mixed with modern art and design. It is near the subway on Broadway and a short walk from Central Park and Riverside Park.",
       "claims": [
         {
-          "text": "rooms/suites/lofts",
+          "text": "Boutique Hotel on the Upper West Side",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         },
         {
-          "text": "Arthouse Bar, Serafina, RedFarm",
+          "text": "our century-old building retains many of its historic accents",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

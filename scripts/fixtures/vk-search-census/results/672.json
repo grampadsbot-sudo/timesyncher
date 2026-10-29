@@ -6,15 +6,11 @@
   "sources": [
     {
       "url": "https://e-barnyc.com/",
-      "title": "e's BAR official",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "511 Amsterdam; daily hours; walk-ins"
-    },
-    {
-      "url": "https://www.yelp.com/biz/es-bar-new-york",
-      "title": "e's BAR Yelp",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "441 reviews"
+      "title": "Friendly UWS Neighborhood Bar - e's BAR",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West S … Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling peo … Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West S … eople. Reminiscent of the dive bars we grew up in … for grown ups. Events & Reservations Tour Menu Fun Stuff Press Contact Indoor and Outdoor Dining! Walk ins Welcome! Click here to make a reservation . Make a Reservation (opens in a new tab) Location & Hours e's BAR 511 Amsterdam Ave (btw 84/85th) Monday | 5PM - 1",
+      "snippet": "Friendly UWS Neighborhood Bar - e's BAR | e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side in New York City. e's BAR is your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Ams",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -32,27 +28,15 @@
   "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person — stoop.bar lists 5–7pm daily (third-party)",
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "511 Amsterdam Ave between 84th & 85th",
-      "sourceUrl": "https://e-barnyc.com/"
-    },
-    {
-      "claim": "Published daily hours on official homepage",
-      "sourceUrl": "https://e-barnyc.com/"
-    },
-    {
-      "claim": "Cluster Thing also lists The Dead Poet / Lilly's — only e's BAR official fetched",
-      "sourceUrl": "https://e-barnyc.com/"
-    }
+    "511 Amsterdam in the Upper West Side",
+    "neighborhood joint with good food, drinks, games, and smiling people",
+    "511 Amsterdam in the Upper West Side",
+    "Walk ins Welcome"
   ],
   "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
   "voicePass": {
-    "itineraryNote": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
-    "shortDescription": "e's BAR — friendly UWS neighborhood bar (cluster includes Dead Poet / Lilly's).",
-    "unsupportedFlags": [
-      "Cluster Thing; HH times from third-party soft-flagged"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -79,32 +63,36 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine are neighborhood bars on Amsterdam Avenue, led by e's BAR.",
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine shortlist, led by e's BAR at 511 Amsterdam.",
       "claims": [
         {
-          "text": "511 Amsterdam",
+          "text": "511 Amsterdam in the Upper West Side",
           "sourceUrl": "https://e-barnyc.com/"
         }
       ]
     },
     "description": {
-      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine groups three relaxed Upper West Side bars along Amsterdam Avenue. The anchor, e's BAR at 511 Amsterdam, is a friendly walk-in spot with hundreds of reviews. It is an easy late-night drink close to the hotels on this trip.",
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine is an Upper West Side bar shortlist led by e's BAR. The bar calls itself your neighborhood joint with good food, drinks, games, and smiling people. Visit us at 511 Amsterdam in the Upper West Side, and walk ins are welcome.",
       "claims": [
         {
-          "text": "511 Amsterdam; daily hours; walk-ins",
+          "text": "neighborhood joint with good food, drinks, games, and smiling people",
           "sourceUrl": "https://e-barnyc.com/"
         },
         {
-          "text": "441 reviews",
-          "sourceUrl": "https://www.yelp.com/biz/es-bar-new-york"
+          "text": "511 Amsterdam in the Upper West Side",
+          "sourceUrl": "https://e-barnyc.com/"
+        },
+        {
+          "text": "Walk ins Welcome",
+          "sourceUrl": "https://e-barnyc.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }

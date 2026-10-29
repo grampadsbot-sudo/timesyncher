@@ -6,15 +6,11 @@
   "sources": [
     {
       "url": "https://www.bluenotejazz.com/nyc/faqs/",
-      "title": "Blue Note NYC FAQ",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "131 W 3rd; $20 min; corkage $35; capacity 200"
-    },
-    {
-      "url": "https://www.bluenotejazz.com/nyc/contact/",
-      "title": "Blue Note Contact",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "Hours music 8 & 10:30"
+      "title": "FAQs Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can … ns about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where can I purchase tickets? You can purchase tickets online at www.bluenotejazz.com. You can also call in or buy tickets in perso … In addition to the menu online, we also offer a fine selection of mocktails and non-alcoholic beverages. Do you require a minimum spend at the table? There is a $20 consumption minimum for each show. Can I bring my own bottle? Customers can bring their own wine bottle but there is a corking fee of $35. Can I bring a birthday cake? There is a $30 ",
+      "snippet": "sit Blue Note New York on Instagram FAQs Explore Frequently Asked Questions about Blue Note New York Where is the Blue Note located? The Blue Note is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Where c",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -30,31 +26,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "131 West 3rd Street, Greenwich Village",
-      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
-    },
-    {
-      "claim": "$20 consumption minimum per show",
-      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
-    },
-    {
-      "claim": "Sets ~8pm and 10:30pm; doors 6pm/10pm",
-      "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
-    },
-    {
-      "claim": "Inventory website jazz.org/dizzys is incorrect for Blue Note",
-      "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
-    }
+    "located at 131 West 3rd Street",
+    "right in the heart of Manhattan’s Greenwich Village",
+    "There is a $20 consumption minimum for each show"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
-    "itineraryNote": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
-    "shortDescription": "Legendary Greenwich Village jazz club with nightly sets.",
-    "unsupportedFlags": [
-      "Inventory website pointed at Dizzy's — corrected to bluenotejazz.com"
-    ],
-    "claimSupportOk": true
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -83,40 +62,32 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Club is the storied Greenwich Village jazz room on West 3rd Street with nightly sets.",
+      "value": "Blue Note Jazz Club is the Greenwich Village jazz club at 131 West 3rd Street with nightly shows.",
       "claims": [
         {
-          "text": "131 W 3rd",
+          "text": "located at 131 West 3rd Street",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
         }
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Club is one of the most famous jazz clubs in the world, set at 131 W 3rd St in Greenwich Village. It seats about 200 people, so every table feels close to the band. Expect two sets a night, a ticket plus a $20 minimum, and a mix of jazz legends and rising players.",
+      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, right in the heart of Manhattan’s Greenwich Village. The club FAQ says there is a $20 consumption minimum for each show, on top of the ticket. It is a classic stop for a night of live jazz downtown.",
       "claims": [
         {
-          "text": "131 W 3rd",
+          "text": "right in the heart of Manhattan’s Greenwich Village",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
         },
         {
-          "text": "capacity 200",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
-        },
-        {
-          "text": "Hours music 8 & 10:30",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
-        },
-        {
-          "text": "$20 min",
+          "text": "There is a $20 consumption minimum for each show",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "by": "vk-search-bot",
-    "at": "2026-10-29T05:35:00Z",
-    "request": "bot-admin/requests/vk-search-bot-728-write-pass-20261028",
-    "baseRef": "vk-data/vk-search-adapter-14b1cfe0@c6623d40"
+    "pass": "vk728-refill-20261028",
+    "new": false,
+    "at": "2026-10-29T06:30:00Z",
+    "writer": "grok-bot"
   }
 }
