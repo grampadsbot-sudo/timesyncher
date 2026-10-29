@@ -35,7 +35,16 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Kitchen Suites",
+    "Love the breakfast",
     "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+    "Kitchen Suites",
+    "24/7 H Market",
+    "24/7 Fitness Room",
+    "Pet-friendly accommodations",
+    "8.4 / 10 Very good 121 reviews",
+    "Love the breakfast. All the staffs are friendly",
+    "I wish there were more vegetables for breakfast",
     "Hyatt House New York/Chelsea 815 Avenue of the Americas",
     "Kitchen Suites",
     "24/7 H Market",
@@ -45,10 +54,10 @@
     "Love the breakfast. All the staffs are friendly",
     "I wish there were more vegetables for breakfast"
   ],
-  "itineraryNoteCandidate": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
+  "itineraryNoteCandidate": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -75,11 +84,39 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas with kitchen suites.",
+      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at Hyatt House New York/Chelsea 815 Avenue of the Americas, with Kitchen Suites, a 24/7 H Market, a 24/7 Fitness Room and Pet-friendly accommodations. It suits families and longer trips that want to cook sometimes and eat out the rest. Trip.com guests rate it 8.4 / 10 Very good 121 reviews and say “Love the breakfast. All the staffs are friendly”, though one wishes for more variety: “I wish there were more vegetables for breakfast”.",
       "claims": [
         {
           "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
           "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "Kitchen Suites",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "24/7 H Market",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "24/7 Fitness Room",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "Pet-friendly accommodations",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "8.4 / 10 Very good 121 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
+        },
+        {
+          "text": "Love the breakfast. All the staffs are friendly",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
+        },
+        {
+          "text": "I wish there were more vegetables for breakfast",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         }
       ]
     },
@@ -119,6 +156,19 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line.",
+      "claims": [
+        {
+          "text": "Kitchen Suites",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "Love the breakfast",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -134,9 +184,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hyatt House New York/Chelsea: settle into Kitchen Suites for a longer stay; try the included breakfast before the High Line."
 }

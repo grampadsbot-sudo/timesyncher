@@ -40,12 +40,17 @@
     "8.9 / 10 Very good 655 reviews",
     "The hotel has a fantastic location and the rooms are very clean",
     "it can get a bit noisy at night",
+    "the hotel charges a mandatory $40 daily fee",
+    "Marriott hotel on Times Square",
+    "8.9 / 10 Very good 655 reviews",
+    "The hotel has a fantastic location and the rooms are very clean",
+    "it can get a bit noisy at night",
     "the hotel charges a mandatory $40 daily fee"
   ],
-  "itineraryNoteCandidate": "Stay in the Marquis atrium for Broadway nights—elevators and crowds come with the address.",
+  "itineraryNoteCandidate": "New York Marriott Marquis: a big Marriott hotel on Times Square; walk straight out to Broadway shows.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -72,11 +77,27 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "New York Marriott Marquis is the large Marriott hotel on Times Square in the Theater District.",
+      "value": "New York Marriott Marquis is the large Marriott hotel on Times Square, with the Marquis Theatre in the building and Broadway houses all around. It suits first-timers and theater fans who want to be in the middle of it all, and Trip.com guests rate it 8.9 / 10 Very good 655 reviews, saying “The hotel has a fantastic location and the rooms are very clean”. Honest watch-outs: it can get a bit noisy at night, and the hotel charges a mandatory $40 daily fee.",
       "claims": [
         {
           "text": "Marriott hotel on Times Square",
           "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        },
+        {
+          "text": "8.9 / 10 Very good 655 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "The hotel has a fantastic location and the rooms are very clean",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "it can get a bit noisy at night",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "the hotel charges a mandatory $40 daily fee",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
         }
       ]
     },
@@ -104,6 +125,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "New York Marriott Marquis: a big Marriott hotel on Times Square; walk straight out to Broadway shows.",
+      "claims": [
+        {
+          "text": "Marriott hotel on Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -120,9 +150,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "New York Marriott Marquis: a big Marriott hotel on Times Square; walk straight out to Broadway shows."
 }

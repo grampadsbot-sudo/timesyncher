@@ -35,7 +35,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "available 24 hours a day in our Reading Room",
     "299 Madison Ave, at E.41st Street New York City 10017",
+    "Access to our collection of over 6,000 books",
+    "available 24 hours a day in our Reading Room",
+    "9.3 / 10 Great 103 reviews",
+    "The hotel has a great location and good service",
+    "the facilities are old",
     "299 Madison Ave, at E.41st Street New York City 10017",
     "Access to our collection of over 6,000 books",
     "available 24 hours a day in our Reading Room",
@@ -43,10 +49,10 @@
     "the facilities are old",
     "9.3 / 10 Great 103 reviews"
   ],
-  "itineraryNoteCandidate": "Library Hotel for bookish Midtown East quiet—budget the daily resort fee that includes breakfast.",
+  "itineraryNoteCandidate": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,11 +79,31 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Library Hotel by Library Hotel Collection is a boutique Midtown hotel at 299 Madison Ave at East 41st Street.",
+      "value": "Library Hotel by Library Hotel Collection is a book-themed boutique at 299 Madison Ave, at E.41st Street New York City 10017, near the New York Public Library and Grand Central. Its story is the books: guests get Access to our collection of over 6,000 books, with refreshments available 24 hours a day in our Reading Room. Trip.com guests rate it 9.3 / 10 Great 103 reviews and say “The hotel has a great location and good service”; the honest watch-out is that the facilities are old.",
       "claims": [
         {
           "text": "299 Madison Ave, at E.41st Street New York City 10017",
           "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "Access to our collection of over 6,000 books",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "available 24 hours a day in our Reading Room",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "9.3 / 10 Great 103 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "The hotel has a great location and good service",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "the facilities are old",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         }
       ]
     },
@@ -109,6 +135,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
+      "claims": [
+        {
+          "text": "available 24 hours a day in our Reading Room",
+          "sourceUrl": "https://www.libraryhotel.com/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -124,9 +159,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day."
 }

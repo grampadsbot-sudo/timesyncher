@@ -36,17 +36,23 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Carnegie Hall, 2 minute walk",
+    "member-only Club Lounge and Terraces",
     "200 W 56th St. New York, NY 10019",
+    "Carnegie Hall, 2 minute walk",
+    "The rooms were spacious and with enough privacy for everyone",
+    "The location to central park was awesome and the staff were great",
+    "member-only Club Lounge and Terraces",
     "200 W 56th St. New York, NY 10019",
     "Carnegie Hall, 2 minute walk",
     "member-only Club Lounge and Terraces",
     "The rooms were spacious and with enough privacy for everyone",
     "The location to central park was awesome and the staff were great"
   ],
-  "itineraryNoteCandidate": "Suite kitchenettes near Midtown West—good for longer stays if the rate clears fees.",
+  "itineraryNoteCandidate": "The Manhattan Club: an all-suite base two minutes from Carnegie Hall; try the member-only Club Lounge and Terraces before a concert.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,10 +79,26 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St in Midtown Manhattan, near Carnegie Hall.",
+      "value": "The Manhattan Club is an all-suite hotel at 200 W 56th St. New York, NY 10019, with Carnegie Hall, 2 minute walk from the door and Central Park a few blocks north. It suits families and small groups who want separate space: Trip.com guests report The rooms were spacious and with enough privacy for everyone and The location to central park was awesome and the staff were great. Its distinguishing perk is the member-only Club Lounge and Terraces, a quiet retreat from Midtown.",
       "claims": [
         {
           "text": "200 W 56th St. New York, NY 10019",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "The rooms were spacious and with enough privacy for everyone",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
+        },
+        {
+          "text": "The location to central park was awesome and the staff were great",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
           "sourceUrl": "https://www.manhattanclub.com/"
         }
       ]
@@ -105,6 +127,19 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "The Manhattan Club: an all-suite base two minutes from Carnegie Hall; try the member-only Club Lounge and Terraces before a concert.",
+      "claims": [
+        {
+          "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -119,9 +154,10 @@
     "watchOuts": []
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "The Manhattan Club: an all-suite base two minutes from Carnegie Hall; try the member-only Club Lounge and Terraces before a concert."
 }

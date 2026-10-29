@@ -35,7 +35,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "southwest of Carnegie Hall at 870 7th Avenue",
     "hotel located southwest of Carnegie Hall at 870 7th Avenue",
+    "between West 55th and 56th streets",
+    "8.0 / 10 Very good 185 reviews",
+    "The hotel's biggest advantage is its incredibly convenient location",
+    "The room amenities are basic",
+    "My room faced the street, which was a bit noisy",
     "hotel located southwest of Carnegie Hall at 870 7th Avenue",
     "between West 55th and 56th streets",
     "8.0 / 10 Very good 185 reviews",
@@ -43,10 +49,10 @@
     "The room amenities are basic",
     "My room faced the street, which was a bit noisy"
   ],
-  "itineraryNoteCandidate": "Park Central puts you on Seventh Avenue near the park—factor elevator waits into morning plans.",
+  "itineraryNoteCandidate": "Park Central Hotel New York: a big Midtown base southwest of Carnegie Hall; walk to Central Park in the morning and Broadway at night.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,11 +79,31 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Park Central Hotel New York is a 761-room hotel just southwest of Carnegie Hall in Midtown.",
+      "value": "Park Central Hotel New York is a large hotel located southwest of Carnegie Hall at 870 7th Avenue, between West 55th and 56th streets, a few blocks from Central Park and the Theater District. It suits first-time visitors who value walkability, and Trip.com guests rate it 8.0 / 10 Very good 185 reviews, saying “The hotel's biggest advantage is its incredibly convenient location”. Honest watch-outs: The room amenities are basic, and “My room faced the street, which was a bit noisy”.",
       "claims": [
         {
           "text": "hotel located southwest of Carnegie Hall at 870 7th Avenue",
           "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "between West 55th and 56th streets",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "8.0 / 10 Very good 185 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "The hotel's biggest advantage is its incredibly convenient location",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "The room amenities are basic",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "My room faced the street, which was a bit noisy",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
         }
       ]
     },
@@ -109,6 +135,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Park Central Hotel New York: a big Midtown base southwest of Carnegie Hall; walk to Central Park in the morning and Broadway at night.",
+      "claims": [
+        {
+          "text": "southwest of Carnegie Hall at 870 7th Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -125,9 +160,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Park Central Hotel New York: a big Midtown base southwest of Carnegie Hall; walk to Central Park in the morning and Broadway at night."
 }

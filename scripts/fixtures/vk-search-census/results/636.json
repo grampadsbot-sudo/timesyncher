@@ -37,14 +37,18 @@
   "summaryClaims": [
     "51-story hotel located near Times Square",
     "51-story hotel located near Times Square",
+    "7.8 / 10 Good 158 reviews",
+    "Room is great and clean",
+    "I expected a sauna/Spa as it is listed under amenities",
+    "51-story hotel located near Times Square",
     "Room is great and clean",
     "I expected a sauna/Spa as it is listed under amenities",
     "7.8 / 10 Good 158 reviews"
   ],
-  "itineraryNoteCandidate": "Sheraton TSQ is a big-box Midtown base—location strong, rooms/service mixed in recent reviews.",
+  "itineraryNoteCandidate": "Sheraton New York Times Square Hotel: a 51-story Midtown tower; walk to Broadway, Rockefeller Center and Central Park.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,11 +75,23 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Sheraton New York Times Square Hotel is a 51-story hotel near Times Square on Seventh Avenue.",
+      "value": "Sheraton New York Times Square Hotel is a 51-story hotel located near Times Square on Seventh Avenue, a big full-service base for groups and conventions. Trip.com guests rate it 7.8 / 10 Good 158 reviews and report “Room is great and clean”. Honest watch-out: one guest notes “I expected a sauna/Spa as it is listed under amenities”, so confirm facilities before you book.",
       "claims": [
         {
           "text": "51-story hotel located near Times Square",
           "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
+        },
+        {
+          "text": "7.8 / 10 Good 158 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+        },
+        {
+          "text": "Room is great and clean",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+        },
+        {
+          "text": "I expected a sauna/Spa as it is listed under amenities",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
         }
       ]
     },
@@ -99,6 +115,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Sheraton New York Times Square Hotel: a 51-story Midtown tower; walk to Broadway, Rockefeller Center and Central Park.",
+      "claims": [
+        {
+          "text": "51-story hotel located near Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -114,9 +139,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Sheraton New York Times Square Hotel: a 51-story Midtown tower; walk to Broadway, Rockefeller Center and Central Park."
 }

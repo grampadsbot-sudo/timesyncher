@@ -42,15 +42,18 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "historic, art deco hotel in the Theatre District, steps from Times Square",
+    "historic, art deco hotel in the Theatre District, steps from Times Square",
     "228 West 47th Street",
+    "3.9 Good (18,818)",
     "historic, art deco hotel in the Theatre District, steps from Times Square",
     "228 West 47th Street",
     "3.9 Good (18,818)"
   ],
-  "itineraryNoteCandidate": "Classic Times Square base—expect energy and some noise; location is the draw.",
+  "itineraryNoteCandidate": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -77,11 +80,19 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Edison is a historic art deco hotel at 228 West 47th Street in the Theater District.",
+      "value": "Hotel Edison is a historic, art deco hotel in the Theatre District, steps from Times Square, at 228 West 47th Street. It suits travelers whose plan is Broadway shows and Midtown sightseeing, with restaurants on site and subway lines close by. Tripadvisor scores it 3.9 Good (18,818), so expect a busy, classic big-city hotel rather than a quiet boutique.",
       "claims": [
+        {
+          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        },
         {
           "text": "228 West 47th Street",
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
+        },
+        {
+          "text": "3.9 Good (18,818)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html"
         }
       ]
     },
@@ -101,12 +112,22 @@
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights.",
+      "claims": [
+        {
+          "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
+          "sourceUrl": "https://www.edisonhotelnyc.com/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hotel Edison: a historic, art deco hotel in the Theatre District, steps from Times Square; base yourself here for back-to-back Broadway nights."
 }

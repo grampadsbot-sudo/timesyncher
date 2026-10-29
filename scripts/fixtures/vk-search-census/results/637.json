@@ -36,6 +36,13 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "steps from Lincoln Center & Central Park",
+    "vibrant rooftop bar",
+    "steps from Lincoln Center & Central Park",
+    "Stylish Art Deco rooms and a vibrant rooftop bar",
+    "7.8 / 10 Good 112 reviews",
+    "Staff was generally quite nice",
+    "the hotel is quite old",
+    "rooms are tiny with old fashioned floor air conditioner which was very loud",
     "steps from Lincoln Center & Central Park",
     "Stylish Art Deco rooms and a vibrant rooftop bar",
     "Staff was generally quite nice",
@@ -43,10 +50,10 @@
     "rooms are tiny with old fashioned floor air conditioner which was very loud",
     "7.8 / 10 Good 112 reviews"
   ],
-  "itineraryNoteCandidate": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
+  "itineraryNoteCandidate": "The Empire Hotel New York: steps from Lincoln Center & Central Park; try the vibrant rooftop bar before the opera.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -73,11 +80,31 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Empire Hotel New York is steps from Lincoln Center and Central Park, with a rooftop bar.",
+      "value": "The Empire Hotel New York sits steps from Lincoln Center & Central Park and offers Stylish Art Deco rooms and a vibrant rooftop bar, so it suits concert, ballet and opera nights. Trip.com guests rate it 7.8 / 10 Good 112 reviews and say “Staff was generally quite nice”. Honest watch-outs: the hotel is quite old, and some rooms are tiny with old fashioned floor air conditioner which was very loud.",
       "claims": [
         {
           "text": "steps from Lincoln Center & Central Park",
           "sourceUrl": "https://www.empirehotelnyc.com/"
+        },
+        {
+          "text": "Stylish Art Deco rooms and a vibrant rooftop bar",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        },
+        {
+          "text": "7.8 / 10 Good 112 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "Staff was generally quite nice",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "the hotel is quite old",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "rooms are tiny with old fashioned floor air conditioner which was very loud",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
         }
       ]
     },
@@ -109,6 +136,19 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "The Empire Hotel New York: steps from Lincoln Center & Central Park; try the vibrant rooftop bar before the opera.",
+      "claims": [
+        {
+          "text": "steps from Lincoln Center & Central Park",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        },
+        {
+          "text": "vibrant rooftop bar",
+          "sourceUrl": "https://www.empirehotelnyc.com/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -125,9 +165,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "The Empire Hotel New York: steps from Lincoln Center & Central Park; try the vibrant rooftop bar before the opera."
 }

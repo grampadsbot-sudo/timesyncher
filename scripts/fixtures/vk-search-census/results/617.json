@@ -53,8 +53,15 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Boutique Hotel on the Upper West Side",
-    "2178 Broadway at West 77th Street",
+    "Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuis",
+    "Boutique Hotel on the Upper West Side",
+    "our century-old building retains many of its historic accents",
     "three on-site restaurants and bars",
+    "a mere two blocks away from our property",
+    "favorably located near Central Park and the subway",
+    "the music too loud",
+    "experiences with housekeeping and room size vary",
+    "some travelers feel the hotel is overpriced with limited amenities",
     "Boutique Hotel on the Upper West Side",
     "our century-old building retains many of its historic accents",
     "approximately 240 square feet",
@@ -68,10 +75,10 @@
     "Based on 1601 hotel reviews 7.9",
     "Location 9.2"
   ],
-  "itineraryNoteCandidate": "Stretch out in apartment-style rooms on Broadway, then dinner at Serafina or RedFarm downstairs.",
+  "itineraryNoteCandidate": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -98,19 +105,39 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Arthouse Hotel is a boutique hotel at 2178 Broadway at West 77th Street, with apartment-style rooms and three on-site restaurants and bars.",
+      "value": "Arthouse Hotel is a Boutique Hotel on the Upper West Side whose century-old building keeps its character (the hotel says our century-old building retains many of its historic accents), with three on-site restaurants and bars and the natural history museum a mere two blocks away from our property. It suits museum-and-park travelers who like a lively lobby scene; Tripadvisor's review summary says it is favorably located near Central Park and the subway. Honest watch-outs from the same summary: guests flag the music too loud, experiences with housekeeping and room size vary, and some travelers feel the hotel is overpriced with limited amenities.",
       "claims": [
         {
           "text": "Boutique Hotel on the Upper West Side",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         },
         {
-          "text": "2178 Broadway at West 77th Street",
-          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
+          "text": "our century-old building retains many of its historic accents",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
         },
         {
           "text": "three on-site restaurants and bars",
           "sourceUrl": "https://www.arthousehotelnyc.com/"
+        },
+        {
+          "text": "a mere two blocks away from our property",
+          "sourceUrl": "https://www.arthousehotelnyc.com/neighborhood/"
+        },
+        {
+          "text": "favorably located near Central Park and the subway",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
+        },
+        {
+          "text": "the music too loud",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
+        },
+        {
+          "text": "experiences with housekeeping and room size vary",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
+        },
+        {
+          "text": "some travelers feel the hotel is overpriced with limited amenities",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html"
         }
       ]
     },
@@ -166,12 +193,26 @@
           "sourceUrl": "https://www.booking.com/reviews/us/hotel/arthouse-hotel.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
+      "claims": [
+        {
+          "text": "Boutique Hotel on the Upper West Side",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        },
+        {
+          "text": "Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuis",
+          "sourceUrl": "https://www.arthousehotelnyc.com/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine."
 }

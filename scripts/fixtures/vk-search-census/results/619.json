@@ -34,15 +34,18 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "2130 Broadway",
+    "It was built in 1928 at 2130 Broadway",
+    "24-story building on the Upper West Side of Manhattan",
+    "It was built in 1928 at 2130 Broadway",
+    "4.5 of 5 bubbles (5,535 reviews)",
     "24-story building on the Upper West Side of Manhattan",
     "It was built in 1928 at 2130 Broadway",
     "4.5 of 5 bubbles (5,535 reviews)"
   ],
-  "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
+  "itineraryNoteCandidate": "Hotel Beacon: a 1928 Upper West Side landmark next to the Beacon Theatre; grab a show, then breakfast at Zabar's around the corner.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -69,11 +72,19 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Beacon is an Upper West Side hotel at 2130 Broadway at the corner with 75th Street.",
+      "value": "Hotel Beacon is a 24-story building on the Upper West Side of Manhattan; It was built in 1928 at 2130 Broadway, at 75th Street beside the Beacon Theatre. It suits longer, neighborhood-style stays near Central Park, Riverside Park and Zabar's, and Tripadvisor travelers rate it highly at 4.5 of 5 bubbles (5,535 reviews). It is a residential-feeling base rather than a Midtown scene.",
       "claims": [
         {
-          "text": "2130 Broadway",
+          "text": "24-story building on the Upper West Side of Manhattan",
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "It was built in 1928 at 2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "4.5 of 5 bubbles (5,535 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html"
         }
       ]
     },
@@ -93,12 +104,22 @@
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Beacon: a 1928 Upper West Side landmark next to the Beacon Theatre; grab a show, then breakfast at Zabar's around the corner.",
+      "claims": [
+        {
+          "text": "It was built in 1928 at 2130 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hotel Beacon: a 1928 Upper West Side landmark next to the Beacon Theatre; grab a show, then breakfast at Zabar's around the corner."
 }

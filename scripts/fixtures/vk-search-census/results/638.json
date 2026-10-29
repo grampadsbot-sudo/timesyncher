@@ -38,14 +38,19 @@
     "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
     "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
     "The location of the hotel is great and right in the middle of it all",
+    "6.4 / 10 245 reviews",
+    "There was constant, loud renovation noise from upstairs next door",
+    "The room's hygiene was terrible",
+    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+    "The location of the hotel is great and right in the middle of it all",
     "There was constant, loud renovation noise from upstairs next door",
     "The room's hygiene was terrible",
     "6.4 / 10 245 reviews"
   ],
-  "itineraryNoteCandidate": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
+  "itineraryNoteCandidate": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -72,11 +77,27 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "The Manhattan at Times Square Hotel now operates as Crowne Plaza Manhattan Times Square in Midtown.",
+      "value": "The Manhattan at Times Square Hotel now trades as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square, in the heart of Midtown. Its strength is position: Trip.com guests say “The location of the hotel is great and right in the middle of it all”. But it scores 6.4 / 10 245 reviews, and honest watch-outs include “There was constant, loud renovation noise from upstairs next door” and “The room's hygiene was terrible”, so pick it only at a strong rate.",
       "claims": [
         {
           "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
           "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
+        },
+        {
+          "text": "The location of the hotel is great and right in the middle of it all",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "6.4 / 10 245 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "There was constant, loud renovation noise from upstairs next door",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "The room's hygiene was terrible",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         }
       ]
     },
@@ -104,6 +125,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
+      "claims": [
+        {
+          "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+          "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -120,9 +150,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking."
 }

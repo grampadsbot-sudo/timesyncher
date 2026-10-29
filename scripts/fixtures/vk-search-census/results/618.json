@@ -36,12 +36,14 @@
   "summaryClaims": [
     "stylish Studios and spacious Suites with skyline views",
     "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
+    "4.3 of 5 bubbles (940 reviews)",
+    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
     "4.3 of 5 bubbles (940 reviews)"
   ],
-  "itineraryNoteCandidate": "Stay high above Midtown in Club suites with Hilton dining downstairs.",
+  "itineraryNoteCandidate": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -68,11 +70,15 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hilton Club New York offers studios and suites with skyline views in the heart of Midtown Manhattan.",
+      "value": "Hilton Club New York is a Hilton Grand Vacations club offering stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. It suits travelers who want apartment-like space close to Fifth Avenue shopping, Rockefeller Center and Broadway, and it is well regarded by Tripadvisor guests at 4.3 of 5 bubbles (940 reviews). Saved reviews do not list specific complaints, so check fees and unit type when booking.",
       "claims": [
         {
-          "text": "stylish Studios and spacious Suites with skyline views",
+          "text": "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
+        },
+        {
+          "text": "4.3 of 5 bubbles (940 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html"
         }
       ]
     },
@@ -88,12 +94,22 @@
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
+      "claims": [
+        {
+          "text": "stylish Studios and spacious Suites with skyline views",
+          "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs."
 }

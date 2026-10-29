@@ -42,7 +42,16 @@
   "hoursHint": "Hotel 24h front desk; Mille-Feuille 7am–6pm; Allure 5–11pm nightly (official)",
   "happyHourHint": null,
   "summaryClaims": [
+    "storied NYC hotel on the Upper West Side",
+    "wine hours",
+    "near Central Park and Lincoln Center",
+    "storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center",
     "Hotel Belleclaire, 2175 Broadway",
+    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
+    "Daily dining credit to Mille-Feuille",
+    "Beautiful hotel, very well located, tidy and good service",
+    "the facilities are somewhat lacking, especially the soundproofing",
+    "The elevator is extremely small",
     "Hotel Belleclaire, 2175 Broadway",
     "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
     "near Central Park and Lincoln Center",
@@ -51,10 +60,10 @@
     "The elevator is extremely small, only able to accommodate a maximum of 4 people",
     "7.3 / 10 128 reviews"
   ],
-  "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
+  "itineraryNoteCandidate": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -88,11 +97,35 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Hotel Belleclaire Central Park is an Upper West Side hotel at 2175 Broadway near Central Park and Lincoln Center.",
+      "value": "Hotel Belleclaire Central Park is a storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center, at Hotel Belleclaire, 2175 Broadway. It suits travelers who want a residential base over Midtown bustle, with a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays, and booking direct adds a Daily dining credit to Mille-Feuille. Trip.com guests sum it up as a “Beautiful hotel, very well located, tidy and good service”. Honest watch-outs: the facilities are somewhat lacking, especially the soundproofing, and the lift is small (“The elevator is extremely small”).",
       "claims": [
+        {
+          "text": "storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
         {
           "text": "Hotel Belleclaire, 2175 Broadway",
           "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
+        {
+          "text": "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
+          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+        },
+        {
+          "text": "Daily dining credit to Mille-Feuille",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
+        {
+          "text": "Beautiful hotel, very well located, tidy and good service",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+        },
+        {
+          "text": "the facilities are somewhat lacking, especially the soundproofing",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+        },
+        {
+          "text": "The elevator is extremely small",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
         }
       ]
     },
@@ -128,6 +161,23 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
+      "claims": [
+        {
+          "text": "storied NYC hotel on the Upper West Side",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        },
+        {
+          "text": "wine hours",
+          "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+        },
+        {
+          "text": "near Central Park and Lincoln Center",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -144,9 +194,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park."
 }

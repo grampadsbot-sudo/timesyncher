@@ -35,17 +35,22 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "140 West 28th Street",
+    "The breakfast offers a good variety",
+    "140 West 28th Street, New York, NY, USA, 10001",
+    "8.7 / 10 Very good 138 reviews",
+    "Nicely updated room",
+    "The breakfast offers a good variety",
+    "it took a long time for the shower water to get hot",
     "140 West 28th Street, New York, NY, USA, 10001",
     "8.7 / 10 Very good 138 reviews",
     "The breakfast offers a good variety",
     "Nicely updated room",
     "it took a long time for the shower water to get hot"
   ],
-  "itineraryNoteCandidate": "TownePlace Chelsea for suite + breakfast value after High Line days.",
+  "itineraryNoteCandidate": "TownePlace Suites by Marriott New York Manhattan/Chelsea: suite space near Penn Station; start with the free breakfast before the High Line.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -72,11 +77,27 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street.",
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001, between Chelsea and Midtown South. It suits families and longer trips wanting kitchen suites, and Trip.com guests rate it 8.7 / 10 Very good 138 reviews, noting a “Nicely updated room” and that “The breakfast offers a good variety”. Honest watch-out: it took a long time for the shower water to get hot.",
       "claims": [
         {
-          "text": "140 West 28th Street",
+          "text": "140 West 28th Street, New York, NY, USA, 10001",
           "sourceUrl": "https://www.cvent.com/venues/new-york/hotel/towneplace-suites-by-marriott-new-york-manhattan-chelsea/venue-d0629f95-6dea-4430-9118-7b5f9a0681e3"
+        },
+        {
+          "text": "8.7 / 10 Very good 138 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+        },
+        {
+          "text": "Nicely updated room",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+        },
+        {
+          "text": "The breakfast offers a good variety",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+        },
+        {
+          "text": "it took a long time for the shower water to get hot",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         }
       ]
     },
@@ -104,6 +125,15 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea: suite space near Penn Station; start with the free breakfast before the High Line.",
+      "claims": [
+        {
+          "text": "The breakfast offers a good variety",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -120,9 +150,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "TownePlace Suites by Marriott New York Manhattan/Chelsea: suite space near Penn Station; start with the free breakfast before the High Line."
 }

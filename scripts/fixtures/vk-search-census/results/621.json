@@ -34,15 +34,18 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Dine At Nice Matin",
     "201 WEST 79TH STREET, NEW YORK, NY 10024",
+    "Dine At Nice Matin",
+    "4.4 of 5 bubbles (3,589 reviews)",
     "201 WEST 79TH STREET, NEW YORK, NY 10024",
     "Dine At Nice Matin",
     "4.4 of 5 bubbles (3,589 reviews)"
   ],
-  "itineraryNoteCandidate": "Settle into The Lucerne for UWS calm and Nice Matin downstairs.",
+  "itineraryNoteCandidate": "Hotel Lucerne: a calm Upper West Side boutique at 79th and Amsterdam; try brunch when you Dine At Nice Matin downstairs.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -69,11 +72,19 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Hotel Lucerne is a boutique Upper West Side hotel at 201 West 79th Street with Nice Matin downstairs.",
+      "value": "Hotel Lucerne is a boutique hotel at 201 WEST 79TH STREET, NEW YORK, NY 10024, a short walk from the American Museum of Natural History and Central Park. Its French bistro is part of the appeal (Dine At Nice Matin), and it suits travelers who want a quieter neighborhood base. Tripadvisor travelers give it 4.4 of 5 bubbles (3,589 reviews).",
       "claims": [
         {
           "text": "201 WEST 79TH STREET, NEW YORK, NY 10024",
           "sourceUrl": "https://thelucernehotel.com/"
+        },
+        {
+          "text": "Dine At Nice Matin",
+          "sourceUrl": "https://thelucernehotel.com/"
+        },
+        {
+          "text": "4.4 of 5 bubbles (3,589 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html"
         }
       ]
     },
@@ -93,12 +104,22 @@
           "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Lucerne: a calm Upper West Side boutique at 79th and Amsterdam; try brunch when you Dine At Nice Matin downstairs.",
+      "claims": [
+        {
+          "text": "Dine At Nice Matin",
+          "sourceUrl": "https://thelucernehotel.com/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hotel Lucerne: a calm Upper West Side boutique at 79th and Amsterdam; try brunch when you Dine At Nice Matin downstairs."
 }
