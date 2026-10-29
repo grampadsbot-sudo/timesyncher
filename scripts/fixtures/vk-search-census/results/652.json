@@ -57,7 +57,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "JetBlue nonstop flight option from Las Vegas to New York JFK, an overnight red-eye on June 23, 2026.",
+      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a JetBlue red-eye nonstop leaving Las Vegas at 11:59 pm and landing at JFK at 8:04 the next morning.",
       "claims": [
         {
           "text": "JetBlue B6 148 Non-stop",
@@ -66,7 +66,7 @@
       ]
     },
     "description": {
-      "value": "This JetBlue option flies nonstop from Las Vegas Harry Reid to New York JFK. FlightMapper lists JetBlue B6 148 Non-stop on the route. The late departure in the Thing name is a red-eye that lands the next morning, so confirm the schedule and fare on JetBlue first.",
+      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1 is a JetBlue nonstop from Las Vegas Harry Reid to New York JFK, leaving at 23:59 on June 23, 2026 and landing at 08:04 Eastern the next day. FlightMapper lists JetBlue B6 148 Non-stop on the route. The overnight timing saves a hotel night but means a full first day on little sleep, so confirm the schedule and fare on JetBlue first.",
       "claims": [
         {
           "text": "Las Vegas Harry Reid (LAS)",
@@ -80,7 +80,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

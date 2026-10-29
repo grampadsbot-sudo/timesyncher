@@ -11,10 +11,24 @@
       "text": "la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, which opened in the horrible year of 2020 but survived. The good … la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, which opened in the horrible year of 2020 but survived. The good … Piccola Cucina Uptown: the best restaurant for dinner in New York | Want to experience authentic Italian cuisine? Visit Piccola Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. Want to experience authentic Italian cuisine? Vi … e good news is that it | Piccola Cucina Uptown: the best restaurant for dinner in New York Skip to content Book a table Toggle Navigation Restaurants Piccola Cucina Sicilian Osteria Piccola Cucina Uptown Piccola Cucina Estiatorio Piccola Cucina Casa Piccola Cucina Enoteca Tapas Piccola Cucina at Ox Pasture Piccola Cucina in Ibiza",
       "snippet": "la Cucina Uptown, the best restaurant in New York City and indulge in Italian delicacies. BOOKINGS IN THE HEART OF CENTRAL PARK Piccola Cucina Uptown Piccola Cucina Uptown, located right across from Central Park, is the jewel in the crown, one of Uptown New York’s most sophisticated restaurants, whi",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/r/piccola-cucina-uptown-new-york",
+      "title": "Piccola Cucina Uptown Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Piccola Cucina Uptown Restaurant - New York, NY | OpenTable | | Piccola Cucina Uptown Restaurant - New York, NY | OpenTable # Piccola Cucina Uptown 4.8 (2842) $31 to $50 Italian 106 E 60th St, New York, NY 10022 The menu features fresh seafood, handmade pastas, and traditional Sicilian specialties like the ",
+      "snippet": "Piccola Cucina Uptown Restaurant - New York, NY | OpenTable | | Piccola Cucina Uptown Restaurant - New York, NY | OpenTable # Piccola Cucina Uptown 4.8 (2842) $31 to $50 Italian 106 E 60th St, New York, NY 10022 The menu features fresh seafood, handmade pastas, and traditional Sicilian specialties l",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "opentable",
+    "opentable": 4.8
+  },
+  "reviewCount": {
+    "opentable": 2842
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
@@ -22,7 +36,8 @@
     "Piccola Cucina Uptown, located right across from Central Park",
     "Piccola Cucina Uptown, located right across from Central Park",
     "Want to experience authentic Italian cuisine?",
-    "Piccola Cucina Sicilian Osteria"
+    "Piccola Cucina Sicilian Osteria",
+    "4.8 (2842)"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -45,7 +60,7 @@
       ]
     },
     "description": {
-      "value": "Piccola Cucina Uptown is an Italian restaurant, located right across from Central Park. The group invites guests to experience authentic Italian cuisine and indulge in Italian delicacies. It belongs to the Piccola Cucina family, which started with a Sicilian osteria downtown.",
+      "value": "Piccola Cucina Uptown is an Italian restaurant, located right across from Central Park. The group invites guests to experience authentic Italian cuisine and indulge in Italian delicacies. It belongs to the Piccola Cucina family, which started with a Sicilian osteria downtown. OpenTable diners rate Piccola Cucina Uptown 4.8 from 2,842 reviews.",
       "claims": [
         {
           "text": "Piccola Cucina Uptown, located right across from Central Park",
@@ -58,12 +73,16 @@
         {
           "text": "Piccola Cucina Sicilian Osteria",
           "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
+        },
+        {
+          "text": "4.8 (2842)",
+          "sourceUrl": "https://www.opentable.com/r/piccola-cucina-uptown-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

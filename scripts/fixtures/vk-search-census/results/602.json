@@ -11,17 +11,23 @@
       "text": " public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO …  public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO … rain, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HOURS Monday - Sunday: 9 am - 6 pm CAFE HOURS Monday - Saturd",
       "snippet": " public transportation or by car. Please check current bus, train, subway and road conditions for up to date transportation information. OUR LOCATION 2245 Broadway at 80th Street New York, NY 10024 212-787-2000 We're open 365 days a year. STORE HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.yelp.com/biz/zabars-new-york",
+      "title": "ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "| | ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp # Zabar's 3.9 (1.4k reviews) Unclaimed $$ Bakeries, Coffee & Tea, Bagels Dogs allowed ## Location & Hours 2245 Broadway New York, NY 10024 Upper West Side | Mon | 8:00 AM - 7:30 ",
+      "snippet": "| | ZABAR’S - Updated October 2026 - 1448 Reviews - 1254 Photos - 2245 Broadway, New York, New York - Bakeries - Phone Number - Menu - Yelp # Zabar's 3.9 (1.4k reviews) Unclaimed $$ Bakeries, Coffee & Tea, Bagels Dogs allowed ## Location & Hours 2245 Broadway New York, NY 10024 Upper West Side | Mon",
+      "fetchMethod": "Yelp page text as captured by the WebSearch index on 2026-10-28 (direct curl 403, WebFetch timed out); saved verbatim from the indexed page snapshot"
     }
   ],
   "rating": {
     "primary": 3.9,
     "primarySource": "yelp",
-    "yelp": 3.9,
-    "tripadvisor": 4.4
+    "yelp": 3.9
   },
   "reviewCount": {
-    "yelp": 1448,
-    "tripadvisor": 726
+    "yelp": 1448
   },
   "priceHint": "$$ gourmet market / cafe",
   "hoursHint": "Mon–Sat 8am–7:30pm; Sun 9am–6pm (official directions)",
@@ -30,7 +36,8 @@
   "summaryClaims": [
     "2245 Broadway at 80th Street",
     "2245 Broadway at 80th Street",
-    "We're open 365 days a year"
+    "We're open 365 days a year",
+    "3.9 (1.4k reviews)"
   ],
   "itineraryNoteCandidate": "Grab hand-sliced nova and a cafe coffee at this UWS food landmark, then picnic two blocks from the park.",
   "voicePass": {
@@ -73,7 +80,7 @@
       ]
     },
     "description": {
-      "value": "Zabar's is a landmark Upper West Side food store at 2245 Broadway at 80th Street. Its directions page says the store is open 365 days a year. It is a good stop for smoked fish, bagels, coffee and picnic supplies before a walk in Central Park.",
+      "value": "Zabar's is a landmark Upper West Side food store at 2245 Broadway at 80th Street. Its directions page says the store is open 365 days a year. It is a good stop for smoked fish, bagels, coffee and picnic supplies before a walk in Central Park. On Yelp, Zabar's holds a 3.9 rating from about 1,400 reviews.",
       "claims": [
         {
           "text": "2245 Broadway at 80th Street",
@@ -82,12 +89,16 @@
         {
           "text": "We're open 365 days a year",
           "sourceUrl": "https://www.zabars.com/directions.html"
+        },
+        {
+          "text": "3.9 (1.4k reviews)",
+          "sourceUrl": "https://www.yelp.com/biz/zabars-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

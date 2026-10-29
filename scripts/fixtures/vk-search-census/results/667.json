@@ -8,8 +8,16 @@
       "url": "https://statuecitycruises.com/faq",
       "title": "FAQs - Statue of Liberty Ferry & Ellis Island Answers",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace. General Admission: • Adults: $ … w York and New Jersey landmarks! What are the different ticket combinations possible and how much do they cost? All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your o …  All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace. General Admission: • Adults: $",
-      "snippet": " All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace.",
+      "text": "ilable. Where do Statue City Cruises ferries depart from for Liberty and Ellis Islands? Ferries depart from two main locations: Depart From New York: Castle Clinton National Monument Battery Park, New York, NY 10004 Depart From New Jersey: Liberty State Park 1 Audrey Zapp Drive, Jersey City, NJ Both locations are well-marked, but we recommend arriving early to al",
+      "snippet": "ilable. Where do Statue City Cruises ferries depart from for Liberty and Ellis Islands? Ferries depart from two main locations: Depart From New York: Castle Clinton National Monument Battery Park, New York, NY 10004 Depart From New Jersey: Liberty State Park 1 Audrey Zapp Drive, Jersey City, NJ Both",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.nps.gov/stli/planyourvisit/index.htm",
+      "title": "Plan Your Visit - Statue Of Liberty National Monument (U.S. National Park Service)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access requ … Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one …  to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access requ … Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one … s to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one day, the National Park Service recommends an early  … only through Statue City Cruises . Crown Ticket : Tickets are limited. Crown tickets allow visitors to access the crown of the statue, which includes a walk up 162 steps from the feet of the statue to the crown. There is no elevator access to the crown. Tickets are purchased online only through Statue City Cruises . The time listed on the ferry ticket is the time you need to join the queue for the s … tional Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one day, the National Park Service recommends an early ferry departure. What Are My Ticket Options? General Admission: This ticket is our most widely available ticket. Visitors will have access to both islands, including … d on the ferry ticket is the time you need to join the queue for the security screening facility. It is not a reservation time for a ferry departure. Wait time can be an hour or more during peak times, including summer, weekends, and holidays. Statue City Cruises Statue City Cruises is our official source for tickets to the island. Click this link for more information. National Museum of I",
+      "snippet": " to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ell",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -23,9 +31,15 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Liberty Island and Ellis Island",
-    "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
-    "Liberty Island and Ellis Island"
+    "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
+    "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
+    "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
+    "Castle Clinton National Monument Battery Park, New York, NY 10004",
+    "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
+    "Pedestal and crown access require advance purchase",
+    "a walk up 162 steps from the feet of the statue to the crown. There is no elevator access to the crown",
+    "To visit both islands in one day, the National Park Service recommends an early ferry departure",
+    "Wait time can be an hour or more during peak times, including summer, weekends, and holidays"
   ],
   "itineraryNoteCandidate": "Book statuecitycruises.com early for pedestal/crown; GA covers Liberty + Ellis ferry.",
   "voicePass": {
@@ -57,30 +71,54 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Statue of Liberty / Ellis Island tour candidate using the official ferry from Battery Park.",
+      "value": "Statue of Liberty / Ellis Island tour candidate: official Statue City Cruises ferry from Battery Park to Liberty Island and Ellis Island, with both island museums included.",
       "claims": [
         {
-          "text": "Liberty Island and Ellis Island",
-          "sourceUrl": "https://statuecitycruises.com/faq"
+          "text": "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
         }
       ]
     },
     "description": {
-      "value": "Statue of Liberty / Ellis Island tour candidate: the official Statue City Cruises ferry. It runs round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City. Boats call at Liberty Island and Ellis Island, so allow most of a day.",
+      "value": "Statue of Liberty / Ellis Island tour candidate uses Statue City Cruises, the only ferry service to Liberty and Ellis Islands, departing from Castle Clinton in Battery Park or Liberty State Park in Jersey City. Every ferry ticket includes the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access must be bought in advance, and the crown climb is 162 steps with no elevator. The National Park Service recommends an early ferry to see both islands in one day, and security waits can run an hour or more in summer.",
       "claims": [
         {
-          "text": "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
+          "text": "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "Castle Clinton National Monument Battery Park, New York, NY 10004",
           "sourceUrl": "https://statuecitycruises.com/faq"
         },
         {
-          "text": "Liberty Island and Ellis Island",
-          "sourceUrl": "https://statuecitycruises.com/faq"
+          "text": "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "Pedestal and crown access require advance purchase",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "a walk up 162 steps from the feet of the statue to the crown. There is no elevator access to the crown",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "To visit both islands in one day, the National Park Service recommends an early ferry departure",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "Wait time can be an hour or more during peak times, including summer, weekends, and holidays",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

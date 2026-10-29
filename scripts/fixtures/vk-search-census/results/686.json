@@ -11,10 +11,24 @@
       "text": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … 0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new tab , The Consulate UWS is situated on the corner of Columbus Avenue and West 85th Street in Manhattan’s Upper West Side. The restaurant is just steps from Central Park and a short walk from the American Mu …  – Friday: 11:00 AM – 3:30 PM LUNCH MENU Dinner Monday – Sunday: 4:30 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 5",
       "snippet": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you a",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/r/the-consulate-new-york",
+      "title": "The Consulate Upper West Side Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "st Side Restaurant - New York, NY | OpenTable | | The Consulate Upper West Side Restaurant - New York, NY | OpenTable # The Consulate Upper West Side 4.5 (528) $31 to $50 French American 519 Columbus Ave, New York, NY 10024-3402 ## Reviews OpenTable reviews from verified diners Reviews from people who have d",
+      "snippet": "st Side Restaurant - New York, NY | OpenTable | | The Consulate Upper West Side Restaurant - New York, NY | OpenTable # The Consulate Upper West Side 4.5 (528) $31 to $50 French American 519 Columbus Ave, New York, NY 10024-3402 ## Reviews OpenTable reviews from verified diners Reviews from people w",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "opentable",
+    "opentable": 4.5
+  },
+  "reviewCount": {
+    "opentable": 528
+  },
   "priceHint": null,
   "hoursHint": "Monday – Friday: 11:00 AM – 10:00 PM Saturday & Sunday: 10:00 AM – 10:00 PM",
   "happyHourHint": "Monday – Friday: 3:30 – 6:30 PM",
@@ -22,7 +36,8 @@
     "519 Columbus Avenue New York, NY 10024",
     "519 Columbus Avenue New York, NY 10024",
     "on the corner of Col",
-    "Happy Hour Monday – Friday: 3:30 – 6:30 PM"
+    "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
+    "4.5 (528)"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -45,7 +60,7 @@
       ]
     },
     "description": {
-      "value": "The Consulate UWS is a French brasserie at 519 Columbus Avenue New York, NY 10024. It sits on the corner of Columbus Avenue and West 85th Street near Central Park. The restaurant lists Happy Hour Monday – Friday: 3:30 – 6:30 PM, and brunch on weekends.",
+      "value": "The Consulate UWS is a French brasserie at 519 Columbus Avenue New York, NY 10024. It sits on the corner of Columbus Avenue and West 85th Street near Central Park. The restaurant lists Happy Hour Monday – Friday: 3:30 – 6:30 PM, and brunch on weekends. OpenTable diners rate The Consulate UWS 4.5 from 528 reviews.",
       "claims": [
         {
           "text": "519 Columbus Avenue New York, NY 10024",
@@ -58,12 +73,16 @@
         {
           "text": "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
           "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "4.5 (528)",
+          "sourceUrl": "https://www.opentable.com/r/the-consulate-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

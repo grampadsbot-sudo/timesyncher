@@ -11,17 +11,32 @@
       "text": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11:30 am to 3:30 pm Dinner: 4: … :00 pm Dinner: 4:00 pm to 11:00 pm We are proud to be the centerpiece of a brand-new Manhattan neighborhood. Hudson Yards is west of Times Square and offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets that illuminate the Hudson River. The stunning new Hudson Yards location features views of sky and river, presented in hues of blue that shift as the",
       "snippet": "nu Reserve a Table Book an Event Menu Reserve a Table Menu Reserve a Table Book an Event Menu Reserve a Table Book an Event Hudson Yards Hudson Yards 20 Hudson Yards, Fifth Floor New York, New York 10001 646-907-1970 [email protected] Menu Reserve a Table Book an Event Opening Hours Monday Lunch: 11",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york",
+      "title": "Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "rds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms, walls of ",
+      "snippet": "rds Restaurant - New York, NY | OpenTable | | Estiatorio Milos – Hudson Yards Restaurant - New York, NY | OpenTable # Estiatorio Milos – Hudson Yards 4.8 (1503) $50 and over Seafood 20 Hudson Yards, Fifth Floor, New York, NY 10001 Milos at Hudson Yards features an open kitchen, private dining rooms,",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "opentable",
+    "opentable": 4.8
+  },
+  "reviewCount": {
+    "opentable": 1503
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
     "20 Hudson Yards, Fifth Floor",
     "20 Hudson Yards, Fifth Floor",
-    "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets"
+    "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets",
+    "4.8 (1503)"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -44,7 +59,7 @@
       ]
     },
     "description": {
-      "value": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters.",
+      "value": "Estiatorio Milos Hudson Yards is a Greek restaurant at 20 Hudson Yards, Fifth Floor. The restaurant offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets over the Hudson River. Book a sunset table if the view matters. OpenTable diners rate Estiatorio Milos Hudson Yards 4.8 from 1,503 reviews.",
       "claims": [
         {
           "text": "20 Hudson Yards, Fifth Floor",
@@ -53,12 +68,16 @@
         {
           "text": "offers the matchless seafood of Milos served high up, with unrivaled views of the spectacular sunsets",
           "sourceUrl": "https://www.estiatoriomilos.com/location/nyhudsonyards/"
+        },
+        {
+          "text": "4.8 (1503)",
+          "sourceUrl": "https://www.opentable.com/r/estiatorio-milos-hudson-yards-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

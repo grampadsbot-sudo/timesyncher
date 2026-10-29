@@ -8,7 +8,7 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental car booking and find even more savings. Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel",
+      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … ind the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly  … estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Business Group Travel Help Cente … 88 * Seen: 6 hrs ago Book now Book now Two happy travelers riding a scooter at sunset, promoting low-fare flights. Looking for more low-fare flights? Check out the Low Fare Calendar to find a fare that works for you. Just choose the month you want to depart and return, and we’ll show you the best fares available. Find low fares E",
       "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -21,8 +21,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Bundle your Southwest Airlines flight with a hotel or rental car"
+    "Departing from: McCarran International Airport Arriving at: La Guardia Airport",
+    "Upgrade to Business Select®",
+    "Check out the Low Fare Calendar"
   ],
   "itineraryNoteCandidate": "Southwest 07:25 LAS–LGA inventory option.",
   "voicePass": {
@@ -54,7 +55,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest Airlines flight option from Las Vegas to New York LaGuardia for the trip, listed on the Southwest route page.",
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35 is the June 23 Southwest flight at 7:25, the fastest dated row at about 6 hours 10 minutes to LaGuardia.",
       "claims": [
         {
           "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
@@ -63,21 +64,25 @@
       ]
     },
     "description": {
-      "value": "This Southwest Airlines option flies from Las Vegas to New York LaGuardia. The Southwest route page covers flights from Las Vegas (LAS) to New York LaGuardia (LGA). Times shown in the Thing name come from the census schedule, and fares should be checked live on Southwest before booking.",
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35 is a Southwest Airlines option from Las Vegas to New York LaGuardia. This Tuesday, June 23, 2026 flight leaves McCarran at 07:25 and lands at La Guardia at 16:35 Eastern. It is the quickest of the dated Southwest options. Upgrade to Business Select is available for priority boarding, and the Low Fare Calendar shows cheaper nearby days.",
       "claims": [
         {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "text": "Departing from: McCarran International Airport Arriving at: La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Bundle your Southwest Airlines flight with a hotel or rental car",
+          "text": "Upgrade to Business Select®",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Check out the Low Fare Calendar",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

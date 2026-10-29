@@ -5,24 +5,37 @@
   "provider": "grok-bot",
   "sources": [
     {
+      "url": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york",
+      "title": "Flights from Las Vegas to New York | American Airlines",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "irport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage s … pp to download your boarding pass or print it before you arrive. ## Which New York airports does American Airlines fly to? Fly American Airlines into three major airports in the New York City area: John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral … on flights to New York. ### Be flexible with dates Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares. ### Arrive early Arrive at least 2 hours before domestic flights. For international travel, plan for 3 hours before departure. ### Get your boarding pass Check in online or on the American app to download your boar … irport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit rows. Enjoy beer, wine and spirits on flights with full beverage s",
+      "snippet": "irport (JFK), LaGuardia Airport (LGA) and Newark Liberty International Airport (EWR). All three airports are just a short distance from Manhattan and have Admiral's Club® lounges in the American Airlines terminals. ### Extra legroom More space with seats at the front of the Main Cabin or in exit row",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
       "url": "https://en.wikipedia.org/wiki/American_Airlines",
       "title": "American Airlines - Wikipedia",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor International Airport … t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor International Airport … al Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor International Airport|Phoenix–Sky Harbor]]\\n | [[Ronald Reagan Was",
+      "text": "t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor International Airport",
       "snippet": "t Worth]]\\n | [[Los Angeles International Airport|Los Angeles]]\\n | [[Miami International Airport|Miami]]\\n | [[John F. Kennedy International Airport|New York–JFK]]\\n | [[LaGuardia Airport|New York–LaGuardia]]\\n | [[Philadelphia International Airport|Philadelphia]]\\n | [[Phoenix Sky Harbor Internati",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": null,
+    "primarySource": null
+  },
+  "reviewCount": {},
   "priceHint": "Inventory/list price $257",
-  "hoursHint": null,
+  "hoursHint": "American Airlines LAS→JFK — schedule per airline booking tool",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "have Admiral's Club® lounges in the American Airlines terminals",
+    "three major airports in the New York City area: John F. Kennedy International Airport (JFK)",
     "New York–JFK",
-    "New York–JFK",
-    "New York–LaGuardia"
+    "Arrive at least 2 hours before domestic flights",
+    "have Admiral's Club® lounges in the American Airlines terminals"
   ],
   "itineraryNoteCandidate": "Nonstop American LAS–JFK for the outbound — confirm June 23 fare on aa.com.",
   "voicePass": {
@@ -54,30 +67,38 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "American Airlines flight option between Las Vegas and New York JFK, one of the airline's hubs, for this trip.",
+      "value": "American Airlines LAS → JFK is the outbound nonstop row, landing at JFK, where American terminals have Admirals Club lounges for arriving travelers.",
       "claims": [
         {
-          "text": "New York–JFK",
-          "sourceUrl": "https://en.wikipedia.org/wiki/American_Airlines"
+          "text": "have Admiral's Club® lounges in the American Airlines terminals",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]
     },
     "description": {
-      "value": "This American Airlines flight option connects Las Vegas and New York JFK. American lists New York–JFK among its hubs, alongside LaGuardia. Schedule times in the Thing name come from the census, and fares should be confirmed live with American Airlines before booking.",
+      "value": "American Airlines LAS → JFK is the outbound American Airlines row from Las Vegas into New York JFK. American flies into three major airports in the New York City area, and JFK is one of the airline's hubs. Its JFK terminal has an Admirals Club lounge, and American advises arriving at least 2 hours before domestic flights at LAS. Exact departure times are not fixed in this row, so pick the schedule in American's booking tool.",
       "claims": [
+        {
+          "text": "three major airports in the New York City area: John F. Kennedy International Airport (JFK)",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
         {
           "text": "New York–JFK",
           "sourceUrl": "https://en.wikipedia.org/wiki/American_Airlines"
         },
         {
-          "text": "New York–LaGuardia",
-          "sourceUrl": "https://en.wikipedia.org/wiki/American_Airlines"
+          "text": "Arrive at least 2 hours before domestic flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "have Admiral's Club® lounges in the American Airlines terminals",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -5,23 +5,34 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ",
-      "title": "Order Cilantro - Menu & Prices - New York Delivery | Uber Eats",
+      "url": "https://www.opentable.com/r/cilantro-new-york",
+      "title": "Cilantro - Updated 2026, Mexican Restaurant in New York, NY",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very well \" • Shauna F. • 06/19/26 \" Tree … ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very well \" • Shauna F. • 06/19/26 \" Tree … te a business account Add your restaurant Sign up to deliver Get a ride Skip to content Enter delivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ra",
-      "snippet": "ivery address Log in Sign up Cilantro 4.7 x (800+) • Mexican • Tacos • Burritos • Info x Min order value for this store is $10 x Delivery unavailable 485 Columbus Ave, New York, NY 10024 Group order Rating and reviews 4.7 800+ Ratings \" You always listen to my special orders and send them done very ",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "text": "ew York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients to ensure an enjoyable experience. Cilantro has a full bar which features specialty cockta … dated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexic … dated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexic … western American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients to ensure an enjoyable experience. Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila. Start out your meal with one of Cilantro's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burrito … alty cocktails as well as many varieties of tequila. Start out your meal with one of Cilantro's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burritos, enchiladas and more. The menu includes plenty of vegetarian options as well as gluten-sensitive options so that everyone in the group can find something to enjoy regardl … 's appetizers to share like the guacamole or the nachos. Choose from menu items like fajitas, tacos, burritos, enchiladas and more. The menu includes plenty of vegetarian options as well as gluten-sensitive options so that everyone in the group can find something to enjoy regardless of dietary restrictions. ## Not available on OpenTable Unfortunately, this resta … ails, Delivery, Dog Friendly, Full Bar, Happy Hour, Late Night, Non-Smoking, Patio/Outdoor Dining, Weekend Brunch, Wheelchair Access, Wine ### Brunch (Friday, Saturday, Sunday 11am-4pm Only) ## Reviews OpenTable reviews from verified diners Reviews from people who have dined at Cilantro. 4.1 (23) - 4.0 Food - 3.8 Service - 4.1 Ambience -  … Cilantro - Updated 2026, Mexican Restaurant in New York, NY | | Cilantro - Updated 2026, Mexican Restaurant in New York, NY # Cilantro 4.1 (23) $31 to $50 Mexican 485 Columbus Ave, New York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, locat",
+      "snippet": "ew York, NY 10024-4628 ## About this restaurant - Neighborhood gem - Charming - Good for groups Cilantro, located in New York City's Upper West Side, serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere. Each meal is made with bold flavors and fresh ingredients t",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "opentable",
+    "opentable": 4.1
+  },
+  "reviewCount": {
+    "opentable": 23
+  },
   "priceHint": null,
-  "hoursHint": null,
+  "hoursHint": "Mon–Thu 1:00 pm–10:00 pm Fri–Sun 11:00 am–11:00 pm (OpenTable)",
   "happyHourHint": null,
   "summaryClaims": [
-    "485 Columbus Ave, New York, NY 10024",
-    "485 Columbus Ave, New York, NY 10024",
-    "Mexican • Tacos • Burritos"
+    "serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere",
+    "485 Columbus Ave, New York, NY 10024-4628",
+    "485 Columbus Ave, New York, NY 10024-4628",
+    "Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila",
+    "Choose from menu items like fajitas, tacos, burritos, enchiladas and more",
+    "plenty of vegetarian options as well as gluten-sensitive options",
+    "(Friday, Saturday, Sunday 11am-4pm Only)",
+    "4.1 (23)"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -35,30 +46,50 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Cilantro UWS is a Mexican restaurant at 485 Columbus Ave on the Upper West Side of Manhattan.",
+      "value": "Cilantro UWS serves Mexican and Southwestern American food on Columbus Avenue, with a full tequila bar and weekend brunch.",
       "claims": [
         {
-          "text": "485 Columbus Ave, New York, NY 10024",
-          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+          "text": "serves authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "485 Columbus Ave, New York, NY 10024-4628",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
         }
       ]
     },
     "description": {
-      "value": "Cilantro UWS is a casual Mexican restaurant at 485 Columbus Ave, New York, NY 10024. Its Uber Eats store lists Mexican • Tacos • Burritos as the main categories. It is a relaxed neighborhood choice near the American Museum of Natural History.",
+      "value": "Cilantro UWS is a casual Mexican restaurant at 485 Columbus Ave on the Upper West Side. OpenTable describes authentic Mexican and Southwestern American cuisine in a casual, upbeat atmosphere, with a full bar of specialty cocktails and many varieties of tequila. The menu runs from guacamole and nachos to fajitas, tacos, burritos and enchiladas, with vegetarian and gluten-sensitive options. Brunch is served Friday through Sunday from 11am to 4pm, and OpenTable diners rate Cilantro UWS 4.1 from 23 reviews.",
       "claims": [
         {
-          "text": "485 Columbus Ave, New York, NY 10024",
-          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+          "text": "485 Columbus Ave, New York, NY 10024-4628",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
         },
         {
-          "text": "Mexican • Tacos • Burritos",
-          "sourceUrl": "https://www.ubereats.com/store/cilantro/LiKCV0bKWeGGKrQr1IdDbQ"
+          "text": "Cilantro has a full bar which features specialty cocktails as well as many varieties of tequila",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "Choose from menu items like fajitas, tacos, burritos, enchiladas and more",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "plenty of vegetarian options as well as gluten-sensitive options",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "(Friday, Saturday, Sunday 11am-4pm Only)",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
+        },
+        {
+          "text": "4.1 (23)",
+          "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

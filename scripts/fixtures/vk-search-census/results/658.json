@@ -53,7 +53,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "United flight option from Las Vegas to Newark, a United hub serving New York, on June 23, 2026.",
+      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a United morning departure from Las Vegas at 7:00, landing at Newark, a United hub, at 3:00 pm.",
       "claims": [
         {
           "text": "Newark",
@@ -62,7 +62,7 @@
       ]
     },
     "description": {
-      "value": "This United Airlines flight option flies from Las Vegas to Newark Liberty International Airport. United lists Newark among its hubs, along with Chicago–O'Hare and Denver. The times in the Thing name come from the census, so confirm the schedule and fare on United before booking.",
+      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00 is a United Airlines option from Las Vegas to Newark Liberty International Airport, departing 07:00 and arriving 15:00 Eastern on June 23, 2026. United lists Newark among its hubs, along with Chicago–O'Hare and Denver. The times come from the census schedule, so confirm the flight and fare on United before booking.",
       "claims": [
         {
           "text": "Hubs Chicago–O'Hare Denver Guam Houston–Intercontinental Los Angeles Newark",
@@ -72,7 +72,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

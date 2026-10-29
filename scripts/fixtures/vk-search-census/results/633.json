@@ -8,7 +8,7 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental car booking and find even more savings. Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel",
+      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca …  which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vega … estinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Business Group Travel Help Cente",
       "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -24,8 +24,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Bundle your Southwest Airlines flight with a hotel or rental car"
+    "Distance: 2242 miles",
+    "Upgrade to Business Select®"
   ],
   "itineraryNoteCandidate": "Southwest mid-morning LAS–LGA candidate.",
   "voicePass": {
@@ -57,7 +57,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest Airlines flight option from Las Vegas to New York LaGuardia for the trip, listed on the Southwest route page.",
+      "value": "Southwest LAS → LGA 06:30–16:55 leaves Las Vegas at 6:30 and reaches LaGuardia just before 5 pm, a balanced early-morning Southwest choice.",
       "claims": [
         {
           "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
@@ -66,21 +66,21 @@
       ]
     },
     "description": {
-      "value": "This Southwest Airlines option flies from Las Vegas to New York LaGuardia. The Southwest route page covers flights from Las Vegas (LAS) to New York LaGuardia (LGA). Times shown in the Thing name come from the census schedule, and fares should be checked live on Southwest before booking.",
+      "value": "Southwest LAS → LGA 06:30–16:55 is a Southwest Airlines option from Las Vegas to New York LaGuardia. Departure is 06:30 and arrival 16:55 Eastern, about 7 hours 25 minutes after the three-hour time change. The flight covers the 2242-mile route from McCarran to La Guardia. Upgrade to Business Select is offered if you want priority boarding on this morning flight.",
       "claims": [
         {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "text": "Distance: 2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Bundle your Southwest Airlines flight with a hotel or rental car",
+          "text": "Upgrade to Business Select®",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

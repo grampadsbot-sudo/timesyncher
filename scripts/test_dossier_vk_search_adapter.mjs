@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { claimTextSupportedByPage } from '../src/vacation/dossier-claim-support.mjs';
 import { gatherThingEvidence, dossierPagesVerified, mergeDossierForPersistence } from '../src/vacation/thing-evidence-dossier.mjs';
 import { claimsSupported, applyDossierFields } from '../src/vacation/thing-dossier-fields.mjs';
@@ -11,7 +14,14 @@ import {
 } from '../src/vacation/dossier-vk-search.mjs';
 
 const place = { id: 602, title: "Zabar's", category: 'store', website: 'https://www.zabars.com/directions.html' };
+const yelpUrl = 'https://www.yelp.com/biz/zabars-new-york';
 const result = loadVkSearchCensusResult(place, { env: {} });
+const census602WithoutYelpSource = () => {
+  const copy = structuredClone(result);
+  copy.sources = copy.sources.filter((source) => source.url !== yelpUrl);
+  copy.summaryClaims = copy.summaryClaims.filter((claim) => claim !== '3.9 (1.4k reviews)');
+  return copy;
+};
 assert.equal(result.thingName, place.title);
 assert.equal(vkSearchClaimSupportOk(result), true);
 assert.equal(isThinVkSearchResult({}), true);
@@ -30,8 +40,12 @@ assert.equal(rich.pages.every((page) => page.via === 'vk-search'), true);
 assert.equal(rich.attempts.some((row) => ['vk-search', 'grok-bot'].includes(row.provider)), true);
 assert.equal(rich.attempts[0].botId, VK_SEARCH_BOT_ID);
 assert.equal(dossierPagesVerified(rich), true);
-assert.equal(rich.yelpRating, undefined, '602 census has rating metadata but no Yelp page bytes to cite');
-assert.equal(rich.yelpReviewCount, undefined);
+assert.equal(result.reviewCount?.yelp, 1448);
+assert.equal(rich.yelpRating, 3.9, '602 census cites Yelp rating from saved page bytes');
+assert.equal(rich.yelpReviewCount, 1448);
+const citedYelpPage = rich.pages.find((page) => page.url === yelpUrl);
+assert.ok(citedYelpPage, '602 dossier includes the Yelp source page');
+assert.equal(citedYelpPage.text.includes('3.9'), true);
 assert.equal(rich.fields.hours, undefined, 'hoursHint is not a verbatim saved-page substring for 602');
 assert.equal(rich.fields.itineraryNote, undefined);
 for (const field of Object.values(rich.fields)) {
@@ -43,12 +57,26 @@ for (const field of Object.values(rich.fields)) {
 }
 const normalized = normalizeDossierEvidence(rich, place);
 const displayed = applyDossierFields(place, normalized);
-assert.equal(displayed.yelpRating, undefined);
+assert.equal(displayed.yelpRating, '3.9');
 assert.equal(displayed.hours, 'HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO … public transportation or by car');
 assert.equal(displayed.itineraryNote, undefined);
 assert.equal(displayed.price, undefined, 'text price hint is not a numeric price');
-assert.equal(displayed.thirdPartyRating, undefined);
-assert.equal(displayed.thirdPartyReviewCount, undefined);
+assert.equal(displayed.thirdPartyRating, '3.9');
+assert.equal(displayed.thirdPartyReviewCount, '1448');
+const noYelpResult = census602WithoutYelpSource();
+const uncitedRich = await gatherThingEvidence(place, { ...options, vkSearchImpl: async () => noYelpResult });
+assert.equal(uncitedRich.yelpRating, undefined, '602 without Yelp page bytes must not surface yelpRating');
+assert.equal(uncitedRich.yelpReviewCount, undefined);
+const uncitedDisplayed = applyDossierFields(place, normalizeDossierEvidence(uncitedRich, place));
+assert.equal(uncitedDisplayed.yelpRating, undefined);
+assert.equal(uncitedDisplayed.thirdPartyRating, undefined);
+assert.equal(uncitedDisplayed.thirdPartyReviewCount, undefined);
+const noYelpCensusDir = mkdtempSync(join(tmpdir(), 'vk728-602-noyelp-'));
+writeFileSync(join(noYelpCensusDir, '602.json'), JSON.stringify(noYelpResult));
+const childNoYelp = await runDossierFetchTask('gather', place, {
+  env: { VK_SEARCH_CENSUS_DIR: noYelpCensusDir }, deadline: Date.now() + 5000,
+});
+assert.equal(childNoYelp.yelpRating, undefined, 'worker must not emit uncited Yelp metadata when Yelp page is absent');
 const persisted = mergeDossierForPersistence({ pages: [{ ...rich.pages[0], url: 'https://old.test/' }] }, rich);
 for (const field of Object.values(persisted.fields)) {
   for (const claim of field.claims) {
@@ -57,7 +85,7 @@ for (const field of Object.values(persisted.fields)) {
   }
 }
 const child = await runDossierFetchTask('gather', place, { env: {}, deadline: Date.now() + 5000 });
-assert.equal(child.yelpRating, undefined, 'census works through the real fetch worker without uncited Yelp metadata');
+assert.equal(child.yelpRating, 3.9, '602 census works through the real fetch worker with cited Yelp metadata');
 const childMissing = await runDossierFetchTask('gather', { ...place, website: '' }, {
   env: { VK_SEARCH_CENSUS_DIR: '/missing' }, deadline: Date.now() + 5000,
 });
@@ -86,7 +114,7 @@ assert.deepEqual(uncited.fields, {});
 assert.equal(uncited.yelpRating, undefined);
 assert.equal(loadVkSearchCensusResult({ id: '../602' }, { env: {} }), null);
 assert.equal(loadVkSearchCensusResult({ id: 602 }, { env: { VK_SEARCH_CENSUS_DIR: '/missing' } }), null);
-assert.equal((await gatherVkSearchEvidence(place, { env: {} })).yelpRating, undefined);
+assert.equal((await gatherVkSearchEvidence(place, { env: {} })).yelpRating, 3.9);
 let wakeCalls = 0;
 const wake = await gatherVkSearchEvidence(place, {
   env: { VK_SEARCH_WAKE_URL: 'https://bot.test/wake' },
@@ -99,8 +127,7 @@ const wake = await gatherVkSearchEvidence(place, {
   },
 });
 assert.equal(wakeCalls, 1);
-assert.equal(wake.yelpRating, undefined);
-const yelpUrl = 'https://www.yelp.com/biz/zabars-new-york';
+assert.equal(wake.yelpRating, 3.9);
 const yelpRatingLine = 'yelp rating 3.9 from 1448 reviews';
 const yelpBacked = vkSearchResultToDossier({
   sources: [{ url: yelpUrl, fetchedAt: '2026-10-28T00:00:00Z', text: `Zabar's on Yelp. ${yelpRatingLine}.` }],

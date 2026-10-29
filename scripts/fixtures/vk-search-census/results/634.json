@@ -8,7 +8,7 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental car booking and find even more savings. Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel",
+      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … 88 * Seen: 6 hrs ago Book now Book now Two happy travelers riding a scooter at sunset, promoting low-fare flights. Looking for more low-fare flights? Check out the Low Fare Calendar to find a fare that works for you. Just choose the month you want to depart and return, and we’ll show you the best fares available. Find low fares E … ervation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to New York (LaGuardia)—or from here or there to anywhere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming South",
       "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -24,8 +24,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Bundle your Southwest Airlines flight with a hotel or rental car"
+    "Check out the Low Fare Calendar",
+    "can be changed with no change fees"
   ],
   "itineraryNoteCandidate": "Southwest option with longer elapsed time — compare total vs nonstop AA/Delta.",
   "voicePass": {
@@ -57,7 +57,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest Airlines flight option from Las Vegas to New York LaGuardia for the trip, listed on the Southwest route page.",
+      "value": "Southwest LAS → LGA 06:50–18:55 has the longest elapsed time of the Southwest rows, about 9 hours 5 minutes, arriving LaGuardia at 6:55 pm.",
       "claims": [
         {
           "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
@@ -66,21 +66,21 @@
       ]
     },
     "description": {
-      "value": "This Southwest Airlines option flies from Las Vegas to New York LaGuardia. The Southwest route page covers flights from Las Vegas (LAS) to New York LaGuardia (LGA). Times shown in the Thing name come from the census schedule, and fares should be checked live on Southwest before booking.",
+      "value": "Southwest LAS → LGA 06:50–18:55 is a Southwest Airlines option from Las Vegas to New York LaGuardia. It leaves at 06:50 and lands at 18:55 Eastern, around 9 hours 5 minutes of travel, the slowest of the morning options. Compare it against the faster 07:25 departure before booking. Southwest's Low Fare Calendar shows the cheapest days, and flights can be changed with no change fees.",
       "claims": [
         {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "text": "Check out the Low Fare Calendar",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Bundle your Southwest Airlines flight with a hotel or rental car",
+          "text": "can be changed with no change fees",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-rewrite-672-20261028",
+    "pass": "vk728-overnight-687-cars-flights-reviews-667-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
