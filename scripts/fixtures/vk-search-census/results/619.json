@@ -11,10 +11,24 @@
       "text": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geographic coordinat … 2 ] Design and construction Architect Walter W. Ahlschlager [ 3 ] Main contractor Havemeyer Construction Co. [ 4 ] The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of  … The Hotel Beacon is a Beaux-Arts , 24-story building on the Upper West Side of Manhattan in New York City , designed by Walter W. Ahlschlager . [ 3 ] It was built in 1928 at 2130 Broadway , at the corner with 75th Street , on the site of the Tilden Club House [ 5 ] and the Dakota Stables. [ 6 ] At the time of its opening, apartments co",
       "snippet": "w York Evening Post April 14, 1928]</ref>\"}},\"i\":0}}]}'> The Hotel Beacon The Hotel Beacon (2026) General information Status Open Type Hotel Location 2130 Broadway New York, NY 10023 United States Coordinates 40°46′50″N 73°58′52″W ﻿ / ﻿ 40.7806402°N 73.9810592°W ﻿ / 40.7806402; -73.9810592 [[Geograp",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+      "title": "HOTEL BEACON - Updated 2026 Prices & Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
+      "snippet": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.5
+  },
+  "reviewCount": {
+    "tripadvisor": 5535
+  },
   "priceHint": "4-star UWS; kitchenette studios",
   "hoursHint": null,
   "happyHourHint": null,
@@ -22,7 +36,8 @@
   "summaryClaims": [
     "2130 Broadway",
     "24-story building on the Upper West Side of Manhattan",
-    "It was built in 1928 at 2130 Broadway"
+    "It was built in 1928 at 2130 Broadway",
+    "4.5 of 5 bubbles (5,535 reviews)"
   ],
   "itineraryNoteCandidate": "Book a kitchenette studio near 72nd St subway—ideal for longer NYC stays.",
   "voicePass": {
@@ -63,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "Hotel Beacon is a 24-story building on the Upper West Side of Manhattan. It was built in 1928 at 2130 Broadway, at the corner with 75th Street. The location is next to the Beacon Theatre and a short walk from Central Park and Zabar's.",
+      "value": "Hotel Beacon is a 24-story building on the Upper West Side of Manhattan. It was built in 1928 at 2130 Broadway, at the corner with 75th Street. The location is next to the Beacon Theatre and a short walk from Central Park and Zabar's. On Tripadvisor, Hotel Beacon is rated 4.5 of 5 bubbles (5,535 reviews).",
       "claims": [
         {
           "text": "24-story building on the Upper West Side of Manhattan",
@@ -72,12 +87,16 @@
         {
           "text": "It was built in 1928 at 2130 Broadway",
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
+        },
+        {
+          "text": "4.5 of 5 bubbles (5,535 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

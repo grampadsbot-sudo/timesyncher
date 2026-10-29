@@ -11,17 +11,23 @@
       "text": "de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet Marketing … de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet Marketing … ort or explore the nearby attractions. | Boutique Hotel Upper West Side | The Lucerne NYC Skip to content Check Availability MENU Home Rooms & Suites Dine At Nice Matin Offers Take A Tour Meeting & Events Home Rooms & Suites Dine At Nice Matin Offers Take A Tour Meeting & Events Check Availability Contact us Blog Loc",
       "snippet": "de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+      "title": "THE LUCERNE HOTEL - Updated 2026 Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
+      "snippet": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
   "rating": {
     "primary": 4.4,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.4,
-    "booking": 8.5
+    "tripadvisor": 4.4
   },
   "reviewCount": {
-    "tripadvisor": 3589,
-    "booking": 1413
+    "tripadvisor": 3589
   },
   "priceHint": "4-star boutique UWS",
   "hoursHint": "Hotel — 24h; Nice Matin on site",
@@ -30,7 +36,8 @@
   "summaryClaims": [
     "201 WEST 79TH STREET, NEW YORK, NY 10024",
     "201 WEST 79TH STREET, NEW YORK, NY 10024",
-    "Dine At Nice Matin"
+    "Dine At Nice Matin",
+    "4.4 of 5 bubbles (3,589 reviews)"
   ],
   "itineraryNoteCandidate": "Settle into The Lucerne for UWS calm and Nice Matin downstairs.",
   "voicePass": {
@@ -71,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "Hotel Lucerne is a boutique hotel at 201 WEST 79TH STREET, NEW YORK, NY 10024 on the Upper West Side. The hotel invites guests to Dine At Nice Matin, its French bistro. It is a short walk to the American Museum of Natural History and Central Park.",
+      "value": "Hotel Lucerne is a boutique hotel at 201 WEST 79TH STREET, NEW YORK, NY 10024 on the Upper West Side. The hotel invites guests to Dine At Nice Matin, its French bistro. It is a short walk to the American Museum of Natural History and Central Park. Tripadvisor travelers give Hotel Lucerne 4.4 of 5 bubbles (3,589 reviews).",
       "claims": [
         {
           "text": "201 WEST 79TH STREET, NEW YORK, NY 10024",
@@ -80,12 +87,16 @@
         {
           "text": "Dine At Nice Matin",
           "sourceUrl": "https://thelucernehotel.com/"
+        },
+        {
+          "text": "4.4 of 5 bubbles (3,589 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

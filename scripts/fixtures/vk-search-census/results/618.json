@@ -11,17 +11,32 @@
       "text": "The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the  … The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. | The Hilton Cl",
       "snippet": "The Hilton Club - New York | Midtown Manhattan | The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. The Hilton Club - New York offers stylish Studios and spacious Suites with skyline views, located in the ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html",
+      "title": "THE HILTON CLUB - NEW YORK - 2026 Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "w York City) | | THE HILTON CLUB - NEW YORK - 2026 Reviews (New York City) The Hilton Club - New York Someone from this business manages the listing. 4.3 of 5 bubbles (940 reviews) 1 (877) 214-9175",
+      "snippet": "w York City) | | THE HILTON CLUB - NEW YORK - 2026 Reviews (New York City) The Hilton Club - New York Someone from this business manages the listing. 4.3 of 5 bubbles (940 reviews) 1 (877) 214-9175",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.3,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.3
+  },
+  "reviewCount": {
+    "tripadvisor": 940
+  },
   "priceHint": "Hilton Club floors 36–38",
   "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     "stylish Studios and spacious Suites with skyline views",
-    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan"
+    "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
+    "4.3 of 5 bubbles (940 reviews)"
   ],
   "itineraryNoteCandidate": "Stay high above Midtown in Club suites with Hilton dining downstairs.",
   "voicePass": {
@@ -62,17 +77,21 @@
       ]
     },
     "description": {
-      "value": "Hilton Club New York is a Hilton Grand Vacations club in Midtown. It offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. Rockefeller Center, Fifth Avenue shopping and the Theater District are all within walking distance.",
+      "value": "Hilton Club New York is a Hilton Grand Vacations club in Midtown. It offers stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan. Rockefeller Center, Fifth Avenue shopping and the Theater District are all within walking distance. On Tripadvisor, The Hilton Club - New York is rated 4.3 of 5 bubbles (940 reviews).",
       "claims": [
         {
           "text": "stylish Studios and spacious Suites with skyline views, located in the heart of Midtown Manhattan",
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
+        },
+        {
+          "text": "4.3 of 5 bubbles (940 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

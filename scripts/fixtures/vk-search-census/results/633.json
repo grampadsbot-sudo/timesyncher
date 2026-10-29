@@ -8,8 +8,8 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca …  Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Busi … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … ind the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vega … 52 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines. What day has the lowest fares from Las Vegas to New York (LaGuardia)? To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation f … ere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything",
-      "snippet": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca",
+      "text": " Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Busi …  Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertainment Southwest Busi …  which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How many Southwest flights occur weekly from Las Vegas to New York (LaGuardia)? There are 152 weekly flights from Las Vega … ere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything",
+      "snippet": " Resource Page New Destinations Explore Destinations Popular Routes Tarmac Delay Plan Contract of Carriage Southwest Products Fare Types and Benefits EarlyBird Check-in® Upgrade to Business Select® Upgrade Boarding Southwest® gift card Hotels open_in_new Southwest Vacations WiFi & Inflight Entertain",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -23,11 +23,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
     "EarlyBird Check-in®",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
-    "To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar",
+    "EarlyBird Check-in®",
+    "Distance: 2242 miles",
     "Check the status of your upcoming Southwest flight"
   ],
   "itineraryNoteCandidate": "Southwest mid-morning LAS–LGA candidate.",
@@ -60,12 +58,8 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest LAS → LGA 06:30–16:55 is the 06:30 morning row on Southwest's route from Las Vegas (LAS) to New York LaGuardia (LGA), with EarlyBird Check-in® offered.",
+      "value": "Boarding position matters on an early start, and EarlyBird Check-in® is sold for Southwest LAS → LGA 06:30–16:55 into LaGuardia.",
       "claims": [
-        {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
         {
           "text": "EarlyBird Check-in®",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
@@ -73,18 +67,14 @@
       ]
     },
     "description": {
-      "value": "Leaving at 06:30 and landing at 16:55, Southwest LAS → LGA 06:30–16:55 is a Las Vegas (LAS) to New York LaGuardia (LGA) row. Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles. To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar. Check the status of your upcoming Southwest flight.",
+      "value": "EarlyBird Check-in® is one of the extras Southwest sells, and it suits an early boarding such as Southwest LAS → LGA 06:30–16:55. That departure lifts off from Las Vegas at 06:30 and arrives at LaGuardia at 16:55 Eastern, just before the evening rush. Southwest's flight details put the trip at a single figure, Distance: 2242 miles. On travel day, the page also says: Check the status of your upcoming Southwest flight.",
       "claims": [
         {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "text": "EarlyBird Check-in®",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar",
+          "text": "Distance: 2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
@@ -95,7 +85,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

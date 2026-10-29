@@ -11,6 +11,14 @@
       "text": "st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk West to Ninth Avenue and 15th Street. By  … st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk West to Ninth Avenue and 15th Street. By ",
       "snippet": "st Food and Beverage Arts and Culture Shopping and Services Chelsea Local Nationwide Shipping Shop Visit Events Our Story Chelsea Local Visit Address 75 Ninth Avenue (between 15th & 16th St.) New York, NY 10011 Directions By Subway – A, C, E, or L train to the 14th Street (8th Avenue) station. Walk ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.yelp.com/biz/chelsea-market-new-york",
+      "title": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp | | CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New Y",
+      "snippet": "CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New York, New York - Public Markets - Phone Number - Yelp | | CHELSEA MARKET - Updated October 2026 - 2638 Reviews - 7240 Photos - 75 9th Ave, New Y",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
   "rating": {
@@ -21,9 +29,7 @@
     "tripadvisor": 4.4
   },
   "reviewCount": {
-    "google": 52413,
-    "yelp": 2638,
-    "tripadvisor": 10012
+    "yelp": 2638
   },
   "priceHint": "$$ food hall / market",
   "hoursHint": "Daily 7:00 AM – 10:00 PM (official visit page; vendor hours vary)",
@@ -31,7 +37,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "75 Ninth Avenue (between 15th & 16th St.)",
-    "75 Ninth Avenue (between 15th & 16th St.)"
+    "75 Ninth Avenue (between 15th & 16th St.)",
+    "2638 Reviews - 7240 Photos - 75 9th Ave"
   ],
   "itineraryNoteCandidate": "Wander the industrial food hall early for shorter lines, then walk the High Line next door.",
   "voicePass": {
@@ -72,17 +79,21 @@
       ]
     },
     "description": {
-      "value": "Chelsea Market is an indoor food hall and shopping arcade at 75 Ninth Avenue (between 15th & 16th St.). It sits next to the High Line in the Meatpacking District edge of Chelsea. Plan to graze through several food stalls rather than one sit-down meal.",
+      "value": "Chelsea Market is an indoor food hall and shopping arcade at 75 Ninth Avenue (between 15th & 16th St.). It sits next to the High Line in the Meatpacking District edge of Chelsea. Plan to graze through several food stalls rather than one sit-down meal. Its Yelp page shows 2638 Reviews - 7240 Photos - 75 9th Ave in Chelsea.",
       "claims": [
         {
           "text": "75 Ninth Avenue (between 15th & 16th St.)",
           "sourceUrl": "https://www.chelseamarket.com/visit"
+        },
+        {
+          "text": "2638 Reviews - 7240 Photos - 75 9th Ave",
+          "sourceUrl": "https://www.yelp.com/biz/chelsea-market-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

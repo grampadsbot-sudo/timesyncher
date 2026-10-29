@@ -11,6 +11,14 @@
       "text": "Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf … Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf … Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. | Fifth Avenue - Apple Store - Apple Apple Store Mac iPad ",
       "snippet": "Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
+      "title": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp | | APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New Yo",
+      "snippet": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp | | APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New Yo",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
   "rating": {
@@ -20,8 +28,7 @@
     "aggregator": 4.4
   },
   "reviewCount": {
-    "yelp": 1220,
-    "aggregator": 22764
+    "yelp": 1220
   },
   "priceHint": "Apple retail",
   "hoursHint": "Always open 24/7 (official Apple retail page)",
@@ -30,7 +37,8 @@
   "summaryClaims": [
     "Fifth Avenue - Apple Store",
     "Fifth Avenue - Apple Store",
-    "Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events"
+    "Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events",
+    "1220 Reviews - 902 Photos - 767 5th Ave"
   ],
   "itineraryNoteCandidate": "Drop into the always-open Fifth Avenue cube anytime—Genius Bar still needs a reservation.",
   "voicePass": {
@@ -71,7 +79,7 @@
       ]
     },
     "description": {
-      "value": "Apple Fifth Avenue is the Apple Store under the glass cube on Fifth Avenue at 59th Street. Apple posts Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events online. It is a quick stop on a walk along Fifth Avenue and Central Park South.",
+      "value": "Apple Fifth Avenue is the Apple Store under the glass cube on Fifth Avenue at 59th Street. Apple posts Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events online. It is a quick stop on a walk along Fifth Avenue and Central Park South. Its Yelp listing counts 1220 Reviews - 902 Photos - 767 5th Ave in Midtown.",
       "claims": [
         {
           "text": "Fifth Avenue - Apple Store",
@@ -80,12 +88,16 @@
         {
           "text": "Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events",
           "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+        },
+        {
+          "text": "1220 Reviews - 902 Photos - 767 5th Ave",
+          "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

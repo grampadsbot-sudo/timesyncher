@@ -8,7 +8,7 @@
       "url": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york",
       "title": "Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … Cheap flights from Las Vegas (LAS) to New York LaGuardia (LGA) | Southwest Airlines | Find flights from Las Vegas (LAS) to New York LaGuardia (LGA). Bundle your Southwest Airlines flight with a hotel or rental ca … es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … ere— can be changed with no change fees . Fare difference may apply. Where can I find the status of my flight from Las Vegas to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything … oducts and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which are subject to additional terms and conditions . Flight Details Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles Questions we hear the most How m … 88 - $343 chevron_left chevron_right *Fares displayed have been collected within the last 24 hours and may no longer be available at time of booking. Additional fees and charges for optional products and services may apply. Modifying this information may result in a different fare. To find the most updated fare, please visit Southwest.com . Fares listed are Basic, which",
+      "text": "es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (LaGuardia)? Yes! Flights from Las Vegas to … to New York (LaGuardia)? Check the status of your upcoming Southwest flight. Where can I find answers to other questions about flying with Southwest? Check out the Southwest Airlines ® Help Center for answers about everything Southwest. Explore Flights from Other Popular Origins Flights from Chicago-Midway Flights from Atlanta Flights from Dallas-Love Field Flights from Houston Hobb",
       "snippet": "es by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar . Can I rent a car at La Guardia Airport? You can rent a car at La Guardia Airport book yours with your flight . Can I change my flight reservation for my flight from Las Vegas to New York (La",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -24,11 +24,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "You can rent a car at La Guardia Airport",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
     "You can rent a car at La Guardia Airport",
-    "Check the status of your upcoming Southwest flight",
-    "Fares listed are Basic, which are subject to additional terms and conditions",
-    "Additional fees and charges for optional products and services may apply"
+    "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
   ],
   "itineraryNoteCandidate": "Later Southwest LAS–LGA departure if you want a leisurely Vegas morning.",
   "voicePass": {
@@ -60,7 +57,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Southwest LAS → LGA 11:30–22:25 is the late-morning row, leaving at 11:30 and landing at 22:25, and you can rent a car at La Guardia Airport on arrival.",
+      "value": "A relaxed Vegas morning comes first on Southwest LAS → LGA 11:30–22:25, which lands at 22:25 Eastern. You can rent a car at La Guardia Airport.",
       "claims": [
         {
           "text": "You can rent a car at La Guardia Airport",
@@ -69,33 +66,21 @@
       ]
     },
     "description": {
-      "value": "The late-morning row Southwest LAS → LGA 11:30–22:25 covers Las Vegas (LAS) to New York LaGuardia (LGA), from 11:30 to 22:25. You can rent a car at La Guardia Airport. Check the status of your upcoming Southwest flight. Fares listed are Basic, which are subject to additional terms and conditions. Additional fees and charges for optional products and services may apply.",
+      "value": "Departure at 11:30 leaves time for a slow Vegas morning before boarding Southwest LAS → LGA 11:30–22:25. Wheels touch down at LaGuardia at 22:25 Eastern, close to eight hours after leaving once the clock shift is counted. For that late landing, Southwest's route page answers the airport question directly: You can rent a car at La Guardia Airport. Questions beyond the flight itself go to the Help Center, as Southwest puts it: Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
       "claims": [
-        {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
         {
           "text": "You can rent a car at La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Check the status of your upcoming Southwest flight",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "Fares listed are Basic, which are subject to additional terms and conditions",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "Additional fees and charges for optional products and services may apply",
+          "text": "Check out the Southwest Airlines ® Help Center for answers about everything Southwest",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

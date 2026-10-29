@@ -19,18 +19,23 @@
       "text": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s … ,\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geographic coordinate s",
       "snippet": ",\"references\":{\"wt\":\"\"},\"footnotes\":{\"wt\":\"\"}},\"i\":0}}]}'> Hotel Edison The hotel as seen from 515 Madison Avenue , 1933 General information Location 228 West 47th Street , Manhattan , New York, United States Coordinates 40°45′35″N 73°59′10″W ﻿ / ﻿ 40.75968°N 73.98611°W ﻿ / 40.75968; -73.98611 [[Geo",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+      "title": "HOTEL EDISON TIMES SQUARE - 2026 Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "26 Reviews (New York City) Location 228 West 47th Street, New York City, NY 10036-1401 1 (212) 840-5000 Reviews Tips/Q&A (4,067) All reviews (18,818) 3.9 Good (18,818)",
+      "snippet": "26 Reviews (New York City) Location 228 West 47th Street, New York City, NY 10036-1401 1 (212) 840-5000 Reviews Tips/Q&A (4,067) All reviews (18,818) 3.9 Good (18,818)",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
     }
   ],
   "rating": {
     "primary": 3.9,
     "primarySource": "tripadvisor",
-    "tripadvisor": 3.9,
-    "booking": 7.8
+    "tripadvisor": 3.9
   },
   "reviewCount": {
-    "tripadvisor": 18814,
-    "booking": 7269,
-    "google": 6634
+    "tripadvisor": 18818
   },
   "priceHint": "4-star Times Square",
   "hoursHint": "Hotel — 24h",
@@ -39,7 +44,8 @@
   "summaryClaims": [
     "228 West 47th Street",
     "historic, art deco hotel in the Theatre District, steps from Times Square",
-    "228 West 47th Street"
+    "228 West 47th Street",
+    "3.9 Good (18,818)"
   ],
   "itineraryNoteCandidate": "Classic Times Square base—expect energy and some noise; location is the draw.",
   "voicePass": {
@@ -80,7 +86,7 @@
       ]
     },
     "description": {
-      "value": "Hotel Edison is a historic art deco hotel in the Theatre District, steps from Times Square. Wikipedia places it at 228 West 47th Street. It is a practical base for Broadway shows, with several restaurants on site and the subway close by.",
+      "value": "Hotel Edison is a historic art deco hotel in the Theatre District, steps from Times Square. Wikipedia places it at 228 West 47th Street. It is a practical base for Broadway shows, with several restaurants on site and the subway close by. Tripadvisor shows Hotel Edison at 3.9 Good (18,818) across its traveler reviews.",
       "claims": [
         {
           "text": "historic, art deco hotel in the Theatre District, steps from Times Square",
@@ -89,12 +95,16 @@
         {
           "text": "228 West 47th Street",
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Edison"
+        },
+        {
+          "text": "3.9 Good (18,818)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-flight-rewrite-601-cars-bluenote-reviews-20261028",
+    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
