@@ -47,7 +47,8 @@ const citedYelpPage = rich.pages.find((page) => page.url === yelpUrl);
 assert.ok(citedYelpPage, '602 dossier includes the Yelp source page');
 assert.equal(citedYelpPage.text.includes('3.9'), true);
 assert.equal(rich.fields.hours, undefined, 'hoursHint is not a verbatim saved-page substring for 602');
-assert.equal(rich.fields.itineraryNote, undefined);
+assert.ok(rich.fields.itineraryNote?.value, '602 census emits an itineraryNote');
+assert.ok(rich.fields.itineraryNote.value.includes("Zabar's"));
 for (const field of Object.values(rich.fields)) {
   assert.equal(claimsSupported(rich, field), true);
   for (const claim of field.claims) {
@@ -59,7 +60,7 @@ const normalized = normalizeDossierEvidence(rich, place);
 const displayed = applyDossierFields(place, normalized);
 assert.equal(displayed.yelpRating, '3.9');
 assert.equal(displayed.hours, 'HOURS Monday - Saturday: 8 am - 7:30 pm Sunday: 9 am - 6 pm HOUSEWARES MEZZANINE HO … public transportation or by car');
-assert.equal(displayed.itineraryNote, undefined);
+assert.equal(displayed.itineraryNote, rich.fields.itineraryNote.value);
 assert.equal(displayed.price, undefined, 'text price hint is not a numeric price');
 assert.equal(displayed.thirdPartyRating, '3.9');
 assert.equal(displayed.thirdPartyReviewCount, '1448');
@@ -106,7 +107,8 @@ assert.equal(failedSupport.attempts[0].status, 'claim_support_failed');
 const invalid = vkSearchResultToDossier({ ...result, summaryClaims: [
   ...result.summaryClaims, { claim: 'Invented assertion', sourceUrl: 'https://absent.test/' },
 ] }, place);
-assert.equal(invalid.fields.itineraryNote, undefined);
+assert.equal(String(invalid.fields.itineraryNote?.value || '').includes('Invented assertion'), false);
+assert.equal(claimsSupported(invalid, invalid.fields.itineraryNote), true);
 assert.equal(String(invalid.fields.summary?.value || '').includes('Invented assertion'), false);
 assert.equal(invalid.pages.some((page) => page.text.includes('Invented assertion')), false);
 const uncited = vkSearchResultToDossier({ ...result, sources: [] }, place);
