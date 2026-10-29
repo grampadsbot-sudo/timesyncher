@@ -28,12 +28,26 @@ function savedDatedPage(page) {
   } catch { return false; }
 }
 
-function recitClaim(claim, pages) {
+function claimCitationPageIndex(claim, pages) {
+  const body = claim?.text || claim?.claim;
   const match = /^p([1-9]\d*)$/.exec(String(claim?.pages?.[0] || ''));
   const citedIndex = match ? Number(match[1]) - 1 : -1;
-  const index = claim?.sourceUrl
-    ? pages[citedIndex]?.url === claim.sourceUrl ? citedIndex : pages.findIndex((page) => page.url === claim.sourceUrl)
-    : citedIndex;
+  if (claim?.sourceUrl) {
+    const sameUrl = pages.map((page, i) => ({ page, i })).filter(({ page }) => page.url === claim.sourceUrl);
+    if (sameUrl.length) {
+      const cited = sameUrl.find(({ i }) => i === citedIndex);
+      if (cited && claimTextSupportedByPage(body, cited.page.text)) return cited.i;
+      const supported = sameUrl.find(({ page }) => claimTextSupportedByPage(body, page.text));
+      if (supported) return supported.i;
+      return sameUrl[0].i;
+    }
+    return pages.findIndex((page) => page.url === claim.sourceUrl);
+  }
+  return citedIndex;
+}
+
+function recitClaim(claim, pages) {
+  const index = claimCitationPageIndex(claim, pages);
   const page = pages[index];
   if (claim?.supported !== true || !savedDatedPage(page) || page.claimSupportOk === false
     || !claimTextVerdictEligible(claim.text || claim.claim, page.inputClaimVerdicts)

@@ -170,6 +170,26 @@ function dossierIsSharedPointer(dossier = {}) {
   return keys.length <= 3 && !(dossier.pages?.length);
 }
 
+function dedupeEvidencePagesByUrl(persistedPages = [], incomingPages = [], mergedPages = []) {
+  const incomingByUrl = new Map(incomingPages.map((page) => [page.url, page]));
+  const chosen = new Map();
+  for (const page of mergedPages) {
+    const incoming = incomingByUrl.get(page.url);
+    if (incoming) {
+      if ((page.sha256 || page.text) === (incoming.sha256 || incoming.text)) chosen.set(page.url, page);
+      continue;
+    }
+    if (!chosen.has(page.url)) chosen.set(page.url, page);
+  }
+  for (const [url, incoming] of incomingByUrl) {
+    if (chosen.has(url)) continue;
+    const match = mergedPages.find((page) => page.url === url
+      && (page.sha256 || page.text) === (incoming.sha256 || incoming.text));
+    if (match) chosen.set(url, match);
+  }
+  return [...chosen.values()];
+}
+
 export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
   if (dossierIsSharedPointer(incoming)) return incoming;
   if (dossierIsSharedPointer(persisted)) return incoming;
@@ -179,7 +199,7 @@ export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
     const identity = JSON.stringify([page.url, page.sha256 || page.text]);
     if (!pages.has(identity) || dossierPageFailure(pages.get(identity)) && !dossierPageFailure(page)) pages.set(identity, page);
   }
-  merged.pages = [...pages.values()];
+  merged.pages = dedupeEvidencePagesByUrl(persisted.pages || [], incoming.pages || [], [...pages.values()]);
   const attempts = new Map();
   for (const attempt of [...(persisted.attempts || []), ...(incoming.attempts || [])]) {
     const stamp = attempt.startedAt || attempt.at;

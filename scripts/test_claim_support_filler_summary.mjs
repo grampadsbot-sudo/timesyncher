@@ -3,6 +3,7 @@ import test from 'node:test';
 import { vkSearchResultToDossier, loadVkSearchCensusResult } from '../src/vacation/dossier-vk-search.mjs';
 import { mergeBotPrimaryPresentedFields, recitBotPrimaryFields, runBotPrimarySeedTargets } from '../src/vacation/dossier-bot-primary-seed.mjs';
 import { dossierPresented } from '../src/vacation/passb-dossier-presented.mjs';
+import { isFillerSummaryText } from '../src/vacation/dossier-claim-support.mjs';
 
 const thing = 'Hilton Club New York';
 const url = 'https://hotel.example/official';
@@ -39,17 +40,75 @@ test('real sourced prose remains usable alongside filler claims', () => {
   assert.ok(dossier.fields.summary?.value.includes(body));
   assert.equal(dossier.fields.summary.claims.some((claim) => /Official website/i.test(claim.text)), false);
 });
-test('census Hilton 618 has no presented filler summary after offline seed', async () => {
-  const census = loadVkSearchCensusResult({ id: 618 }, { env: {} });
-  assert.equal(census.thingName, thing);
+test('offline seed clears synthetic filler summary without census fixture', async () => {
+  const fillerBody = `${thing}: Official site ${url}`;
+  const syntheticPage = { url, fetchedAt: '2026-10-28T12:00:00Z', text: fillerBody };
+  const syntheticBot = vkSearchResultToDossier({
+    thingName: thing,
+    sources: [syntheticPage],
+    voicePass: { claimSupportOk: true },
+    summaryClaims: [{ claim: fillerBody, sourceUrl: url, supported: true }],
+    fields: {
+      summary: {
+        value: fillerBody,
+        claims: [{ text: fillerBody, sourceUrl: url, supported: true }],
+      },
+      description: {
+        value: fillerBody,
+        claims: [{ text: fillerBody, sourceUrl: url, supported: true }],
+      },
+    },
+  }, place);
   const mem = new Map();
-  const storeImpl = { async getDossier(key) { return mem.get(key) || null; }, async putDossier(key, value) { mem.set(key, structuredClone(value)); } };
-  const result = await runBotPrimarySeedTargets([{ placeId: 618, title: thing, category: 'hotel', dossierKey: 'r4-hilton' }], { env: {}, storeImpl, gatherImpl: async () => { throw new Error('unexpected gather'); } });
-  const dossier = mem.get('r4-hilton');
+  const storeImpl = {
+    async getDossier(key) { return mem.get(key) || null; },
+    async putDossier(key, value) { mem.set(key, structuredClone(value)); },
+  };
+  const result = await runBotPrimarySeedTargets([{
+    placeId: 'synthetic-hilton-filler-618',
+    title: thing,
+    category: 'hotel',
+    dossierKey: 'r4-hilton-filler',
+  }], {
+    env: { VK_SEARCH_CENSUS_DIR: '/tmp/vk728-empty-census-for-filler-test' },
+    storeImpl,
+    gatherImpl: async () => syntheticBot,
+  });
+  const dossier = mem.get('r4-hilton-filler');
   assert.ok(!dossier.fields.summary?.value);
+  assert.ok(!dossier.fields.description?.value);
   assert.equal(dossierPresented(dossier, place), false);
   assert.equal(result.results[0].presented, false);
   assert.equal(Object.values(dossier.fields).flatMap((field) => field?.claims || []).some((claim) => claim.supported === true && /^Official site/i.test(claim.text)), false);
+});
+test('census Hilton 618 summary is genuine prose, not filler', async () => {
+  const census = loadVkSearchCensusResult({ id: 618 }, { env: {} });
+  assert.equal(census.thingName, thing);
+  const censusSummary = String(census.fields?.summary?.value || '').trim();
+  assert.ok(censusSummary);
+  assert.equal(isFillerSummaryText(censusSummary, thing), false);
+  const recit = recitBotPrimaryFields(vkSearchResultToDossier(census, place));
+  assert.ok(recit.fields.summary?.value.includes('Midtown Manhattan'));
+  const mem = new Map();
+  const storeImpl = {
+    async getDossier(key) { return mem.get(key) || null; },
+    async putDossier(key, value) { mem.set(key, structuredClone(value)); },
+  };
+  const result = await runBotPrimarySeedTargets([{
+    placeId: 618,
+    title: thing,
+    category: 'hotel',
+    dossierKey: 'r4-hilton',
+  }], {
+    env: {},
+    storeImpl,
+    gatherImpl: async () => { throw new Error('unexpected gather'); },
+  });
+  const dossier = mem.get('r4-hilton');
+  assert.ok(dossier.fields.summary?.value);
+  assert.equal(isFillerSummaryText(dossier.fields.summary.value, thing), false);
+  assert.equal(dossierPresented(dossier, place), true);
+  assert.equal(result.results[0].presented, true);
 });
 test('genuine descriptive summary stays supported with an official site link', () => {
   const body = `Guests enjoy a rooftop pool and free breakfast daily beside the sunny garden terrace. Official site ${url}`;
