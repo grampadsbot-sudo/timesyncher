@@ -85,11 +85,11 @@ export function renderStarRatingHtml(value, { size = 16, idPrefix = 'ts-star' } 
     .map((state, index) => starSvgMarkup(state, `${idPrefix}-${index}`))
     .join('');
   const width = Number(size) || 16;
-  return `<span class="ts-star-rating" role="img" aria-label="${safeLabel}" title="${safeLabel}" style="display:inline-flex;align-items:center;gap:2px;vertical-align:middle">${glyphs.replaceAll('width="16"', `width="${width}"`).replaceAll('height="16"', `height="${width}"`)}</span>`;
+  return `<span class="ts-star-rating" role="img" aria-label="${safeLabel}" title="${safeLabel}" style="display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;vertical-align:middle">${glyphs.replaceAll('width="16"', `width="${width}"`).replaceAll('height="16"', `height="${width}"`)}</span>`;
 }
 
 export const TREK_STAR_RATING_CSS =
-  '.ts-star-rating{display:inline-flex;align-items:center;gap:2px;vertical-align:middle}.ts-star-rating svg{width:16px;height:16px;display:block}.ts-star-full,.ts-star-half-full{color:#f59e0b;fill:currentColor}.ts-star-empty,.ts-star-half-empty{color:#e5e7eb;fill:currentColor}';
+  '.ts-star-rating{display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;vertical-align:middle}.ts-star-rating svg{width:16px;height:16px;flex:0 0 16px}.ts-star-full,.ts-star-half-full{color:#f59e0b;fill:currentColor}.ts-star-empty,.ts-star-half-empty{color:#e5e7eb;fill:currentColor}';
 
 export function trekStarRatingBundleInject() {
   const path = STAR_PATH.replace(/'/g, "\\'");
@@ -100,7 +100,8 @@ export function trekStarRatingBundleInject() {
     `tsStarRatingAria=v=>{const r=tsRoundStarRatingHalf(v);if(r==null)return "";const d=Number.isInteger(r)?String(r):r.toFixed(1);return d+" out of 5 stars";}`,
     `tsStarPath='${path}'`,
     `tsStarSvg=(state,id)=>state==="full"?'<svg class="ts-star ts-star-full" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#f59e0b"/></svg>':state==="empty"?'<svg class="ts-star ts-star-empty" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="'+tsStarPath+'" fill="#e5e7eb"/></svg>':'<svg class="ts-star ts-star-half" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><clipPath id="'+id+'"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path class="ts-star-half-empty" d="'+tsStarPath+'" fill="#e5e7eb"/><path class="ts-star-half-full" d="'+tsStarPath+'" fill="#f59e0b" clip-path="url(#'+id+')"/></svg>'`,
-    `tsRenderStarRatingHtml=v=>{const st=tsStarRatingStates(v);if(!st)return "";const label=String(tsStarRatingAria(v)).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");return '<span class="ts-star-rating" role="img" aria-label="'+label+'" title="'+label+'">'+st.map((state,index)=>tsStarSvg(state,"tsb"+index)).join("")+"</span>";}`,
+    `tsRenderStarRatingHtml=v=>{const st=tsStarRatingStates(v);if(!st)return "";const label=String(tsStarRatingAria(v)).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");return '<span class="ts-star-rating" role="img" aria-label="'+label+'" title="'+label+'" style="display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;vertical-align:middle">'+st.map((state,index)=>tsStarSvg(state,"tsb"+index)).join("")+"</span>";}`,
     `tsPrimaryPlaceStarRating=d=>{for(const k of["googleRating","yelpRating","thirdPartyRating","rating"]){const p=tsParseStarRating(d[k]);if(p!=null)return p;}return null;}`,
+    `tsThingReviewLines=G=>{const d=ha(G)||{},out=[];for(let i=1;i<=4;i++){const body=String(d["review"+i]||"").replace(/\\s+/g," ").trim();if(!body)continue;const stars=tsRenderStarRatingHtml(d["review"+i+"Rating"]);out.push('<div data-ts-thing-review="1">'+(stars?stars+" ":"")+an(body)+"</div>");}if(out.length)return out.join("");const th=d.reviewThemes;let bits=[];if(Array.isArray(th))bits=th;else if(th&&typeof th==="object")bits=[].concat(th.praise||[],th.watchOuts||[]);const text=bits.map(t=>String((t&&t.text)||t||"").replace(/\\s+/g," ").trim()).filter(Boolean).slice(0,2).join(" ");const rating=tsPrimaryPlaceStarRating(d);if(!text||rating==null)return "";const stars=tsRenderStarRatingHtml(rating);return '<div data-ts-thing-review="1">'+(stars?stars+" ":"")+an(text)+"</div>";}`,
   ].join(',');
 }

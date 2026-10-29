@@ -124,5 +124,10 @@ export function patchSharedTripListWrapping(source = '') {
     if (oeIdx < 0) throw new Error('shared trip list wrapping lost Oe() anchor');
     rows = rows.slice(0, oeIdx) + jeBlock + rows.slice(oeIdx);
   }
-  return js.slice(0, start) + rows + js.slice(end);
+  let next = js.slice(0, start) + rows + js.slice(end);
+  const summaryClose = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null';
+  const reviewLine = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})()';
+  if (!next.includes(summaryClose)) throw new Error('thing card review line anchor missing');
+  next = next.replaceAll(summaryClose, reviewLine);
+  return next;
 }
