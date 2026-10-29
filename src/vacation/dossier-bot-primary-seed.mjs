@@ -25,6 +25,10 @@ function wordCount(value) {
   return String(value || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
+function pageTextSentences(pageText) {
+  return String(pageText || '').replace(/\s+/g, ' ').match(/[^.!?\n]{1,600}(?:[.!?]+|$)/g) || [];
+}
+
 function savedDatedPage(page) {
   try {
     const url = new URL(page?.url);
@@ -64,13 +68,17 @@ function composeFromClaims(claims, pages, thing) {
     const cited = recitClaim(claim, pages);
     if (cited.supported === true) append(cited);
   }
-  if (!(claims || []).length) {
+  if (!citations.length) {
     for (const [index, page] of (pages || []).entries()) {
       if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
-      const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
-      if (!bit) continue;
-      if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
+      for (const sentence of pageTextSentences(page.text)) {
+        const bit = sentence.trim();
+        if (!bit) continue;
+        if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
+        const before = parts.length;
+        append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
+        if (parts.length > before) break;
+      }
     }
   }
   const body = parts.join(' ');
@@ -163,7 +171,8 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
       return;
     }
     const priorField = merged.fields?.[key];
-    if (priorField?.claims?.length && !priorField.claims.some((claim) => claim.supported === true)) return;
+    if (priorField?.claims?.length && !priorField.claims.some((claim) => claim.supported === true)
+      && String(priorField.value || '').trim()) return;
     const { bodyWords, ...composed } = composeFromClaims(claimSource, pages, thing);
     const compositionFailed = !bodyWords || !composed.claims.length || !String(composed.value || '').trim()
       || isFillerSummaryText(composed.value, thing);
