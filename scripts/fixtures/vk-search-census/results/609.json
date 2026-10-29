@@ -33,9 +33,10 @@
   "summaryClaims": [
     "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
     "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+    "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
     "Standard Car from $73/day"
   ],
-  "itineraryNoteCandidate": "Only use opaque JFK sedan if plans are locked—otherwise named brands may be safer.",
+  "itineraryNoteCandidate": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -87,12 +88,22 @@
           "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable.",
+      "claims": [
+        {
+          "text": "Express Deal rental reservations are non-refundable, non-transferable, and non-changeable",
+          "sourceUrl": "https://blog.autoslash.com/are-priceline-express-deals-worth-it/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Priceline opaque Standard sedan: a budget rental bet; lock it only if plans are firm, since Express Deal rental reservations are non-refundable, non-transferable, and non-changeable."
 }

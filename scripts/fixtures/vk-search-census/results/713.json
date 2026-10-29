@@ -34,6 +34,7 @@
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
+    "Dollar Rent A Car $97/day",
     "Mid-Size Car Toyota Corolla or similar 5 people 2",
     "Dollar Rent A Car 8 135 reviews Typical Wait Time 0-15 Minutes",
     "Dollar Rent A Car $97/day",
@@ -43,7 +44,7 @@
     "There are gas stations conveniently located within two miles of the airport",
     "Dollar +1 (866) 434-2226"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Dollar Midsize sedan at JFK: a budget Corolla-class pick at Dollar Rent A Car $97/day; good if the plan includes a day trip.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -96,12 +97,22 @@
           "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Dollar Midsize sedan at JFK: a budget Corolla-class pick at Dollar Rent A Car $97/day; good if the plan includes a day trip.",
+      "claims": [
+        {
+          "text": "Dollar Rent A Car $97/day",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Dollar Midsize sedan at JFK: a budget Corolla-class pick at Dollar Rent A Car $97/day; good if the plan includes a day trip."
 }

@@ -42,6 +42,8 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "founded in 1899 by Herman Bergdorf",
+    "Great views over Central Park",
     "luxury department store founded in 1899 by Herman Bergdorf",
     "luxury department store founded in 1899 by Herman Bergdorf",
     "moved to its present location at Fifth Avenue and 58th Street in 1928",
@@ -50,7 +52,7 @@
     "A 10 minute wait at the Jo Malone counter",
     "4 of 5 bubbles (379 reviews)"
   ],
-  "itineraryNoteCandidate": "Window-shop Fifth Avenue luxury, then cross to Central Park if the floors feel overwhelming.",
+  "itineraryNoteCandidate": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -116,6 +118,19 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208851-Reviews-Bergdorf_Goodman-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
+      "claims": [
+        {
+          "text": "founded in 1899 by Herman Bergdorf",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "Great views over Central Park",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -131,9 +146,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park."
 }

@@ -34,12 +34,13 @@
   "happyHourHint": null,
   "summaryClaims": [
     "Liberty Island and Ellis Island",
+    "Liberty Island and Ellis Island",
     "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
     "Liberty Island and Ellis Island",
     "The best part is access to the Statue of Liberty and Ellis Island",
     "the loading and unloading process is crowded and disorganized"
   ],
-  "itineraryNoteCandidate": "Buy Statue City Cruises tickets only, board at Battery Park, then see Liberty and Ellis museums on one ticket.",
+  "itineraryNoteCandidate": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -104,6 +105,15 @@
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
+      "claims": [
+        {
+          "text": "Liberty Island and Ellis Island",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -119,9 +129,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds."
 }

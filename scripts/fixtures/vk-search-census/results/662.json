@@ -24,11 +24,12 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "one hour Midtown cruise",
     "See the Statue of Liberty fast on this one hour Midtown cruise",
     "See the Statue of Liberty fast on this one hour Midtown cruise",
     "skyline views, live narration, outdoor decks, and amazing photo moments"
   ],
-  "itineraryNoteCandidate": "Book a daytime Liberty skyline cruise from Pier 83 if you want harbor views without ferry queues.",
+  "itineraryNoteCandidate": "Boat tour candidates: a quick harbor fix; try the one hour Midtown cruise for Statue of Liberty views.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -78,12 +79,22 @@
           "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Boat tour candidates: a quick harbor fix; try the one hour Midtown cruise for Statue of Liberty views.",
+      "claims": [
+        {
+          "text": "one hour Midtown cruise",
+          "sourceUrl": "https://www.circleline.com/sightseeing-cruises/statue-of-liberty/liberty-cruise"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Boat tour candidates: a quick harbor fix; try the one hour Midtown cruise for Statue of Liberty views."
 }

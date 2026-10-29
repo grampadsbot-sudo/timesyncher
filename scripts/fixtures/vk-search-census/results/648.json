@@ -43,6 +43,7 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "727 Fifth Avenue",
+    "727 Fifth Avenue",
     "The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940",
     "The main store reopened on April 27, 2023",
     "the store had forty artworks",
@@ -50,7 +51,7 @@
     "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
     "4.4 Very Good"
   ],
-  "itineraryNoteCandidate": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe—expect waits at peak hours.",
+  "itineraryNoteCandidate": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -116,6 +117,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208849-Reviews-Tiffany_Co-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside.",
+      "claims": [
+        {
+          "text": "727 Fifth Avenue",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -131,9 +141,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside."
 }

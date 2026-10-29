@@ -25,10 +25,11 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "315 West 44th St",
+    "315 West 44th St",
     "located at 315 West 44th St, between 8th and 9th Ave’s",
     "There is a $20 minimum on food or drinks (per person.)"
   ],
-  "itineraryNoteCandidate": "Use this as a jazz-crawl hub—confirm Village Vanguard / Smoke / Birdland / Jazz Gallery individually before booking.",
+  "itineraryNoteCandidate": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -78,12 +79,22 @@
           "sourceUrl": "https://www.birdlandjazz.com/faq/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
+      "claims": [
+        {
+          "text": "315 West 44th St",
+          "sourceUrl": "https://www.birdlandjazz.com/faq/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show."
 }

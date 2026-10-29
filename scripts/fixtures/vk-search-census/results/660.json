@@ -43,6 +43,7 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Seating is always first come, first come serve",
+    "Seating is always first come, first come serve",
     "The World Famous Harlem Gospel Choir",
     "located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City",
     "Everyone needs a ticket to enter the club",
@@ -52,7 +53,7 @@
     "Door staff were very friendly and welcoming",
     "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
   ],
-  "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
+  "itineraryNoteCandidate": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -126,6 +127,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
+      "claims": [
+        {
+          "text": "Seating is always first come, first come serve",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -141,9 +151,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve."
 }

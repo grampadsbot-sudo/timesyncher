@@ -20,13 +20,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "You can rent a car at La Guardia Airport",
     "EarlyBird Check-in®",
     "Las Vegas (LAS) to New York LaGuardia (LGA)",
     "You can rent a car at La Guardia Airport",
     "To find the lowest fares by day and time to fly Las Vegas to New York (LaGuardia) with Southwest, check out our Low Fare Calendar",
     "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
   ],
-  "itineraryNoteCandidate": "Southwest 07:25 LAS–LGA inventory option.",
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -84,12 +85,22 @@
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport.",
+      "claims": [
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 07:25-16:35: a civilized morning departure; grab a car on landing since You can rent a car at La Guardia Airport."
 }

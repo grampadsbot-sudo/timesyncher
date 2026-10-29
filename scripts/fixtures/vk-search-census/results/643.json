@@ -35,6 +35,7 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "979 Eighth Avenue btw 57th & 58th",
+    "979 Eighth Avenue btw 57th & 58th",
     "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
     "7:00 AM 9:00 PM",
     "Smoothies Fresh Juices Hotties Bowls",
@@ -43,7 +44,7 @@
     "4 231 ratings",
     "This store is always busy, so there is a bit of a wait despite being larger than most"
   ],
-  "itineraryNoteCandidate": "Grab a quick juice or açaí bowl before a Central Park loop.",
+  "itineraryNoteCandidate": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
@@ -113,6 +114,15 @@
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
+      "claims": [
+        {
+          "text": "979 Eighth Avenue btw 57th & 58th",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -128,9 +138,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk."
 }

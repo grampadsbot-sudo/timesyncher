@@ -25,9 +25,10 @@
   "summaryClaims": [
     "You can rent a car at La Guardia Airport",
     "You can rent a car at La Guardia Airport",
+    "You can rent a car at La Guardia Airport",
     "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
   ],
-  "itineraryNoteCandidate": "Later Southwest LAS–LGA departure if you want a leisurely Vegas morning.",
+  "itineraryNoteCandidate": "Southwest LAS → LGA 11:30–22:25: a lazy-morning flight that lands late; consider a rental since You can rent a car at La Guardia Airport.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -77,12 +78,22 @@
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Southwest LAS → LGA 11:30–22:25: a lazy-morning flight that lands late; consider a rental since You can rent a car at La Guardia Airport.",
+      "claims": [
+        {
+          "text": "You can rent a car at La Guardia Airport",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-flight-dedupe-narrow-sw-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Southwest LAS → LGA 11:30–22:25: a lazy-morning flight that lands late; consider a rental since You can rent a car at La Guardia Airport."
 }

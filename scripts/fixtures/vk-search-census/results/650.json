@@ -21,13 +21,14 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+    "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
     "American Airlines offers flights from Las Vegas to New York",
     "John F. Kennedy International Airport (JFK)",
     "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
     "Booking 1 to 3 months ahead can help you find lower fares on flights to New York",
     "Compare fares and schedules and choose the option that fits your trip to New York (NYC)"
   ],
-  "itineraryNoteCandidate": "Afternoon American LAS–JFK nonstop on June 23 — verify still published.",
+  "itineraryNoteCandidate": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -91,12 +92,22 @@
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares.",
+      "claims": [
+        {
+          "text": "Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: American LAS-JFK 2026-06-23 12:37-20:59: a midday Tuesday departure. Midweek flights, such as Tuesdays or Wednesdays, can sometimes offer lower fares."
 }

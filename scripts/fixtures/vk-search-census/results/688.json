@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/sylvias-/",
       "title": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … lvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
+      "text": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … lvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … The food and service was amazing! … bought her seasoning and hot sauce … First time in Harlem, the best food hands down.. we ate everything on our plates! … soooo delicious",
       "snippet": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -34,16 +34,20 @@
   "happyHourHint": null,
   "summaryClaims": [
     "Founded in 1962 by Sylvia Woods",
+    "The food and service was amazing!",
+    "First time in Harlem, the best food hands down",
     "soul food restaurant located at 328 Malcolm X Boulevard",
     "Founded in 1962 by Sylvia Woods",
     "First time in Harlem, the best food hands down",
     "the drinks were great",
-    "4.2 925 ratings"
+    "4.2 925 ratings",
+    "the drinks were great",
+    "bought her seasoning and hot sauce"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -52,16 +56,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Sylvia's Harlem is the soul food restaurant at 328 Malcolm X Boulevard, founded by Sylvia Woods in 1962.",
+      "value": "Sylvia's Harlem is the soul food institution at 328 Malcolm X Boulevard, founded by Sylvia Woods in 1962, and a Sunday gospel brunch here is a classic Harlem outing. Restaurantji diners say The food and service was amazing!, and a first-time visitor wrote First time in Harlem, the best food hands down. It suits a Harlem day with a hearty Southern meal.",
       "claims": [
         {
-          "text": "Founded in 1962 by Sylvia Woods",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+          "text": "The food and service was amazing!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "First time in Harlem, the best food hands down",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
         }
       ]
     },
     "description": {
-      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit. Restaurantji shows 4.2 925 ratings. Representative Restaurantji praise (diner reviews): “First time in Harlem, the best food hands down”; “the drinks were great”.",
+      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit. Restaurantji shows 4.2 925 ratings. Representative Restaurantji praise (diner reviews): “First time in Harlem, the best food hands down”; “the drinks were great”. Restaurantji guests also say the drinks were great, and one diner bought her seasoning and hot sauce to take home.",
       "claims": [
         {
           "text": "soul food restaurant located at 328 Malcolm X Boulevard",
@@ -82,9 +90,92 @@
         {
           "text": "4.2 925 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "the drinks were great",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "bought her seasoning and hot sauce",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
+      "claims": [
+        {
+          "text": "Founded in 1962 by Sylvia Woods",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Soul food",
+        "value": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
+        "claims": [
+          {
+            "text": "First time in Harlem, the best food hands down.. we ate everything on our plates!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      },
+      {
+        "theme": "Service",
+        "value": "Hospitality comes through at Sylvia's Harlem, with Restaurantji diners reporting The food and service was amazing! Keep this in mind as the main reason to choose Sylvia's Harlem over nearby options.",
+        "claims": [
+          {
+            "text": "The food and service was amazing!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 31
+      },
+      {
+        "theme": "Drinks",
+        "value": "The bar side holds up at Sylvia's Harlem too; one Restaurantji reviewer said the meal was soooo delicious and the drinks were great. Travelers comparing spots should weigh this honestly when picking Sylvia's Harlem.",
+        "claims": [
+          {
+            "text": "soooo delicious",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+          },
+          {
+            "text": "the drinks were great",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Take-home souvenirs",
+        "value": "Sylvia's Harlem sells its pantry: one Restaurantji guest bought her seasoning and hot sauce, an easy edible souvenir. Factor this into timing and expectations before heading to Sylvia's Harlem.",
+        "claims": [
+          {
+            "text": "bought her seasoning and hot sauce",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -92,15 +183,41 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "First time in Harlem, the best food hands down",
-      "the drinks were great"
+      "First time in Harlem, the best food hands down.. we ate everything on our plates!",
+      "The food and service was amazing!",
+      "soooo delicious",
+      "bought her seasoning and hot sauce"
     ],
-    "watchOuts": []
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Soul food",
+      "Service",
+      "Drinks",
+      "Take-home souvenirs"
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Soul food",
+  "review2": "Hospitality comes through at Sylvia's Harlem, with Restaurantji diners reporting The food and service was amazing! Keep this in mind as the main reason to choose Sylvia's Harlem over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Service",
+  "review3": "The bar side holds up at Sylvia's Harlem too; one Restaurantji reviewer said the meal was soooo delicious and the drinks were great. Travelers comparing spots should weigh this honestly when picking Sylvia's Harlem.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Drinks",
+  "review4": "Sylvia's Harlem sells its pantry: one Restaurantji guest bought her seasoning and hot sauce, an easy edible souvenir. Factor this into timing and expectations before heading to Sylvia's Harlem.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Take-home souvenirs",
+  "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce."
 }

@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
       "title": "Restaurantji: Joe's Pizza, 7 Carmine Street",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": ", 7 Carmine Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … ed as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side",
+      "text": ", 7 Carmine Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … ed as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … Top five classic New York slice … a crisp thin crust, light doughy center, and delish cheese … $4.50 in cash … Hot, fresh, crispy, cheesey, excellent taste and highly recommend … all of the locals I met told me I HAD to come to this Joe's location specifically",
       "snippet": ", 7 Carmine Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -34,17 +34,21 @@
   "happyHourHint": null,
   "summaryClaims": [
     "now three doors down at 7 Carmine Street",
+    "Top five classic New York slice",
+    "a crisp thin crust, light doughy center, and delish cheese",
     "Established in 1975 by Joe Pozzuoli",
     "is a \"Greenwich Village institution\"",
     "now three doors down at 7 Carmine Street",
     "4.2 1076 ratings",
     "Let me tell you, the classic NY style pizza is just *chefs kiss*",
-    "Sauce is great, but on the lighter side"
+    "Sauce is great, but on the lighter side",
+    "$4.50 in cash",
+    "Hot, fresh, crispy, cheesey, excellent taste and highly recommend"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Joe's Pizza Carmine Street: the classic Village slice since 1975; grab a plain or pepperoni slice and eat it on the sidewalk.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -53,16 +57,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Joe's Pizza Carmine Street is the Greenwich Village slice shop at 7 Carmine Street, opened by Joe Pozzuoli.",
+      "value": "Joe's Pizza Carmine Street is the original Joe's, established in 1975 by Joe Pozzuoli and now at 7 Carmine Street, a Greenwich Village institution for thin, foldable New York slices. Restaurantji diners call it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese, and one first-timer says locals insisted on this location. It suits a quick, cheap, iconic bite.",
       "claims": [
         {
-          "text": "now three doors down at 7 Carmine Street",
-          "sourceUrl": "https://www.joespizzanyc.com/"
+          "text": "Top five classic New York slice",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+        },
+        {
+          "text": "a crisp thin crust, light doughy center, and delish cheese",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
         }
       ]
     },
     "description": {
-      "value": "Joe's Pizza Carmine Street is a classic New York slice shop. It was established in 1975 by Joe Pozzuoli and is a \"Greenwich Village institution\". The shop is now three doors down at 7 Carmine Street. Restaurantji lists the 7 Carmine Street shop at 4.2 from 1076 ratings. Representative Restaurantji praise (guest reviews): “Let me tell you, the classic NY style pizza is just *chefs kiss*”. Representative watch-outs: “Sauce is great, but on the lighter side”.",
+      "value": "Joe's Pizza Carmine Street is a classic New York slice shop. It was established in 1975 by Joe Pozzuoli and is a \"Greenwich Village institution\". The shop is now three doors down at 7 Carmine Street. Restaurantji lists the 7 Carmine Street shop at 4.2 from 1076 ratings. Representative Restaurantji praise (guest reviews): “Let me tell you, the classic NY style pizza is just *chefs kiss*”. Representative watch-outs: “Sauce is great, but on the lighter side”. One Restaurantji diner paid $4.50 in cash for a slice and went straight back for another, and another sums it up as Hot, fresh, crispy, cheesey, excellent taste and highly recommend.",
       "claims": [
         {
           "text": "Established in 1975 by Joe Pozzuoli",
@@ -87,9 +95,92 @@
         {
           "text": "Sauce is great, but on the lighter side",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+        },
+        {
+          "text": "$4.50 in cash",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+        },
+        {
+          "text": "Hot, fresh, crispy, cheesey, excellent taste and highly recommend",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Joe's Pizza Carmine Street: the classic Village slice since 1975; grab a plain or pepperoni slice and eat it on the sidewalk.",
+      "claims": [
+        {
+          "text": "now three doors down at 7 Carmine Street",
+          "sourceUrl": "https://www.joespizzanyc.com/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Classic slice",
+        "value": "Joe's Pizza Carmine Street earns its reputation on the basics; a Restaurantji reviewer calls it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese.",
+        "claims": [
+          {
+            "text": "Top five classic New York slice",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+          },
+          {
+            "text": "a crisp thin crust, light doughy center, and delish cheese",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      },
+      {
+        "theme": "Local pick",
+        "value": "Locals send visitors to Joe's Pizza Carmine Street; one Restaurantji guest wrote that all of the locals I met told me I HAD to come to this Joe's location specifically.",
+        "claims": [
+          {
+            "text": "all of the locals I met told me I HAD to come to this Joe's location specifically",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 30
+      },
+      {
+        "theme": "Lighter sauce",
+        "value": "The honest nitpick at Joe's Pizza Carmine Street is the sauce: Sauce is great, but on the lighter side, so the same Restaurantji reviewer suggests pepperoni for more flavor.",
+        "claims": [
+          {
+            "text": "Sauce is great, but on the lighter side",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      },
+      {
+        "theme": "Cheap and quick",
+        "value": "Joe's Pizza Carmine Street is easy on the wallet; a diner paid $4.50 in cash and returned for a second slice after a few bites.",
+        "claims": [
+          {
+            "text": "$4.50 in cash",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -97,16 +188,44 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "Let me tell you, the classic NY style pizza is just *chefs kiss*"
+      "Top five classic New York slice",
+      "all of the locals I met told me I HAD to come to this Joe's location specifically",
+      "$4.50 in cash"
     ],
     "watchOuts": [
       "Sauce is great, but on the lighter side"
+    ],
+    "complaints": [
+      "Sauce is great, but on the lighter side"
+    ],
+    "themes": [
+      "Classic slice",
+      "Local pick",
+      "Lighter sauce",
+      "Cheap and quick"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Joe's Pizza Carmine Street earns its reputation on the basics; a Restaurantji reviewer calls it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Classic slice",
+  "review2": "Locals send visitors to Joe's Pizza Carmine Street; one Restaurantji guest wrote that all of the locals I met told me I HAD to come to this Joe's location specifically.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Local pick",
+  "review3": "The honest nitpick at Joe's Pizza Carmine Street is the sauce: Sauce is great, but on the lighter side, so the same Restaurantji reviewer suggests pepperoni for more flavor.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Lighter sauce",
+  "review4": "Joe's Pizza Carmine Street is easy on the wallet; a diner paid $4.50 in cash and returned for a second slice after a few bites.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Cheap and quick",
+  "itineraryNote": "Joe's Pizza Carmine Street: the classic Village slice since 1975; grab a plain or pepperoni slice and eat it on the sidewalk."
 }

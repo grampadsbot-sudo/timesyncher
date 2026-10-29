@@ -20,6 +20,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "United Airlines UA 394 Non-stop",
     "07:00 Las Vegas Harry Reid (LAS) 3 14:52 Newark Liberty, New York (EWR) A United Airlines UA 394 Non-stop",
     "United Airlines UA 394 Non-stop Boeing 737-900 (739)",
     "Las Vegas Harry Reid (LAS)",
@@ -28,7 +29,7 @@
     "The flight distance is 2220 miles, or 3573 km",
     "For direct flights, the flight time varies between 4:38 and 5:08"
   ],
-  "itineraryNoteCandidate": "United into Newark if EWR ground transfer beats LGA/JFK that day.",
+  "itineraryNoteCandidate": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -94,12 +95,22 @@
           "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop.",
+      "claims": [
+        {
+          "text": "United Airlines UA 394 Non-stop",
+          "sourceUrl": "https://info.flightmapper.net/route/United_Airlines_UA_LAS_EWR"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: United LAS-EWR 2026-06-23 07:00-15:00: an early nonstop into Newark on United Airlines UA 394 Non-stop."
 }

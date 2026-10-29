@@ -16,7 +16,7 @@
       "url": "https://www.opentable.com/carmines-44th-street-nyc",
       "title": "Carmine's - 44th Street - NYC Restaurant - New York, NY | OpenTable",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi",
+      "text": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi … Servers were really nice, portions were big. … I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
       "snippet": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Str",
       "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
     }
@@ -34,15 +34,15 @@
   "happyHourHint": null,
   "summaryClaims": [
     "200 West 44th Street New York, NY 10036",
+    "Servers were really nice, portions were big.",
     "200 West 44th Street New York, NY 10036",
     "traditional, family-style Italian food served in generous portions",
-    "4.6 (33242)",
-    "Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing"
+    "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too."
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -51,16 +51,16 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Carmine's Times Square is the family-style Italian restaurant at 200 West 44th Street in Times Square.",
+      "value": "Carmine's Times Square is a family-style Italian restaurant at 200 West 44th Street, in the heart of the Theater District, where platters are sized for the table. OpenTable diners rate it 4.6 across a huge review count, and one wrote Servers were really nice, portions were big. It suits a group meal before a Broadway show.",
       "claims": [
         {
-          "text": "200 West 44th Street New York, NY 10036",
-          "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+          "text": "Servers were really nice, portions were big.",
+          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
         }
       ]
     },
     "description": {
-      "value": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews, and the review summary says Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing.",
+      "value": "Carmine's Times Square is an Italian restaurant at 200 West 44th Street New York, NY 10036. Guests can enjoy traditional, family-style Italian food served in generous portions. Platters are made for sharing, so it works well for a group before a Broadway show. OpenTable diners rate Carmine's Times Square 4.6 from 33,242 reviews,. One OpenTable diner wrote I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
       "claims": [
         {
           "text": "200 West 44th Street New York, NY 10036",
@@ -71,20 +71,127 @@
           "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
         },
         {
-          "text": "4.6 (33242)",
-          "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
-        },
-        {
-          "text": "Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing",
+          "text": "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
           "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
+      "claims": [
+        {
+          "text": "200 West 44th Street New York, NY 10036",
+          "sourceUrl": "https://www.carminesnyc.com/locations/times-square"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Big portions",
+        "value": "Carmine's Times Square is built for sharing; an OpenTable diner reported Servers were really nice, portions were big., so order fewer plates than you think.",
+        "claims": [
+          {
+            "text": "Servers were really nice, portions were big.",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      },
+      {
+        "theme": "Dishes to try",
+        "value": "An OpenTable reviewer at Carmine's Times Square named favorites: I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+        "claims": [
+          {
+            "text": "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      },
+      {
+        "theme": "Sub-scores",
+        "value": "OpenTable breaks Carmine's Times Square down as 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value, so value scores a little behind the food. Travelers comparing spots should weigh this honestly when picking Carmine's Times Square.",
+        "claims": [
+          {
+            "text": "4.6 Food 4.6 Service 4.5 Ambience 4.4 Value",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 35
+      },
+      {
+        "theme": "Noise",
+        "value": "Expect a lively room at Carmine's Times Square; OpenTable lists Noise • Moderate, typical of a busy Theater District dining hall. Factor this into timing and expectations before heading to Carmine's Times Square.",
+        "claims": [
+          {
+            "text": "Noise • Moderate",
+            "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/carmines-44th-street-nyc",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      }
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Carmine's Times Square is built for sharing; an OpenTable diner reported Servers were really nice, portions were big., so order fewer plates than you think.",
+  "review1Source": "OpenTable",
+  "review1Rating": "4.6",
+  "review1Theme": "Big portions",
+  "review2": "An OpenTable reviewer at Carmine's Times Square named favorites: I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+  "review2Source": "OpenTable",
+  "review2Rating": "4.6",
+  "review2Theme": "Dishes to try",
+  "review3": "OpenTable breaks Carmine's Times Square down as 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value, so value scores a little behind the food. Travelers comparing spots should weigh this honestly when picking Carmine's Times Square.",
+  "review3Source": "OpenTable",
+  "review3Rating": "4.6",
+  "review3Theme": "Sub-scores",
+  "review4": "Expect a lively room at Carmine's Times Square; OpenTable lists Noise • Moderate, typical of a busy Theater District dining hall. Factor this into timing and expectations before heading to Carmine's Times Square.",
+  "review4Source": "OpenTable",
+  "review4Rating": "4.6",
+  "review4Theme": "Noise",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.opentable.com/carmines-44th-street-nyc",
+    "site": "OpenTable",
+    "praise": [
+      "Servers were really nice, portions were big.",
+      "I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
+      "4.6 Food 4.6 Service 4.5 Ambience 4.4 Value"
+    ],
+    "watchOuts": [
+      "Noise • Moderate"
+    ],
+    "complaints": [
+      "Noise • Moderate"
+    ],
+    "themes": [
+      "Big portions",
+      "Dishes to try",
+      "Sub-scores",
+      "Noise"
+    ],
+    "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+  },
+  "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share."
 }

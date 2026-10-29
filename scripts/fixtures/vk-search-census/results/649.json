@@ -46,6 +46,7 @@
   "summaryClaims": [
     "808 Columbus Ave, New York, NY 10025-5139",
     "808 Columbus Ave, New York, NY 10025-5139",
+    "808 Columbus Ave, New York, NY 10025-5139",
     "Monday - Friday: 7 am - 10 pm",
     "Kikka Sushi Highest quality fresh tuna",
     "Market Sandwich Sandwiches made to order",
@@ -58,7 +59,7 @@
     "great fresh produce and good sales",
     "slightly higher prices"
   ],
-  "itineraryNoteCandidate": "Restock snacks and prepared foods near 97th before heading downtown.",
+  "itineraryNoteCandidate": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -148,6 +149,15 @@
           "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
+      "claims": [
+        {
+          "text": "808 Columbus Ave, New York, NY 10025-5139",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -163,9 +173,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich."
 }

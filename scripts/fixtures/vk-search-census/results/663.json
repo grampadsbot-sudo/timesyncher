@@ -36,6 +36,7 @@
   "summaryClaims": [
     "Broadway at 60th Street, 5th Floor",
     "Broadway at 60th Street, 5th Floor",
+    "Broadway at 60th Street, 5th Floor",
     "there is a food and beverage minimum of $25 per person, per set",
     "Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park",
     "The Dizzy Gillespie tribute was wonderful",
@@ -43,7 +44,7 @@
     "Good music, garbage food",
     "4.5 Very Good"
   ],
-  "itineraryNoteCandidate": "Book Dizzy's for skyline jazz above Columbus Circle—budget ticket plus the $25 F&B minimum.",
+  "itineraryNoteCandidate": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -113,6 +114,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d616668-Reviews-Dizzy_s_Club-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
+      "claims": [
+        {
+          "text": "Broadway at 60th Street, 5th Floor",
+          "sourceUrl": "https://jazz.org/dizzys/dizzys-faq/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -130,9 +140,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table."
 }

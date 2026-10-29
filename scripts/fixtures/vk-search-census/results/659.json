@@ -42,6 +42,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Music at 8:00 p.m. and 10:30 p.m.",
     "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club",
     "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
     "Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club",
@@ -51,7 +52,7 @@
     "the real star was the Gospel Choir show",
     "Staff is quite pushy during the seating process"
   ],
-  "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
+  "itineraryNoteCandidate": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -121,6 +122,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
+      "claims": [
+        {
+          "text": "Music at 8:00 p.m. and 10:30 p.m.",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -136,9 +146,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere."
 }

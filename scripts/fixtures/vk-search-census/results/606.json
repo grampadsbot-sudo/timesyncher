@@ -29,11 +29,12 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "same-day performances and next-day matinees up to 50% off",
+    "same-day performances and next-day matinees up to 50% off",
     "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
     "Share the gift of live theatre with TKTS eGift Cards",
     "real-time display of what’s currently on sale at all TKTS Discount Booths"
   ],
-  "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
+  "itineraryNoteCandidate": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -89,12 +90,22 @@
           "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off.",
+      "claims": [
+        {
+          "text": "same-day performances and next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Afternoon matinee show: a Broadway afternoon on a budget; try a TKTS booth for same-day performances and next-day matinees up to 50% off."
 }

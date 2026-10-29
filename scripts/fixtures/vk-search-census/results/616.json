@@ -43,6 +43,8 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "10 Columbus Circle",
+    "Hot & Salad Bar",
     "conveniently located in the lower level of 10 Columbus Circle",
     "10 Columbus Circle Ste SC101, New York, NY 10019-1232",
     "Hot & Salad Bar Customizable seasonal entrées, salads and sides",
@@ -56,7 +58,7 @@
     "Very spacious, a wide variety of products, all fresh and delicious.",
     "be careful with the price"
   ],
-  "itineraryNoteCandidate": "Stock picnic supplies under the Time Warner Center before a Central Park stroll.",
+  "itineraryNoteCandidate": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -142,6 +144,19 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d952670-Reviews-Whole_Foods_Market-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
+      "claims": [
+        {
+          "text": "10 Columbus Circle",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Hot & Salad Bar",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -157,9 +172,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park."
 }

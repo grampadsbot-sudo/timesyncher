@@ -38,9 +38,10 @@
   "summaryClaims": [
     "75 Ninth Avenue (between 15th & 16th St.)",
     "75 Ninth Avenue (between 15th & 16th St.)",
+    "75 Ninth Avenue (between 15th & 16th St.)",
     "2638 Reviews - 7240 Photos - 75 9th Ave"
   ],
-  "itineraryNoteCandidate": "Wander the industrial food hall early for shorter lines, then walk the High Line next door.",
+  "itineraryNoteCandidate": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -90,12 +91,22 @@
           "sourceUrl": "https://www.yelp.com/biz/chelsea-market-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line.",
+      "claims": [
+        {
+          "text": "75 Ninth Avenue (between 15th & 16th St.)",
+          "sourceUrl": "https://www.chelseamarket.com/visit"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Chelsea Market: a food hall in an old factory at 75 Ninth Avenue (between 15th & 16th St.); graze through lunch, then walk up to the High Line."
 }

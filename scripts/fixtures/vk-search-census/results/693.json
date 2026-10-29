@@ -24,7 +24,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
       "title": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings",
+      "text": " Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … The banana pudding here is simply amazing and is one of the best desserts in the city hands down … Love magnolia. Always delicious … Awesome place and flavor!! Daughter loved it",
       "snippet": " Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -42,17 +42,20 @@
   "happyHourHint": null,
   "summaryClaims": [
     "The original 1996 Magnolia Bakery on Bleecker Street",
+    "4 774 ratings",
+    "The banana pudding here is simply amazing and is one of the best desserts in the city hands down",
     "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
     "401 Bleecker St, New York, NY 10014",
     "Come for a cupcake or the famous banana pudding",
     "4 774 ratings",
     "The banana pudding here is simply amazing",
-    "Staff is always great"
+    "Staff is always great",
+    "Love magnolia. Always delicious"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -61,16 +64,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Magnolia Bakery is the original 1996 bakery at 401 Bleecker Street, famous for cupcakes and banana pudding.",
+      "value": "Magnolia Bakery is the original 1996 bakery at 401 Bleecker Street on the corner of West 11th Street, a small West Village shop famous for cupcakes and banana pudding. Restaurantji diners rate it 4 774 ratings and say The banana pudding here is simply amazing and is one of the best desserts in the city hands down. It suits a sweet stop on a Village walk; expect a line in the evening.",
       "claims": [
         {
-          "text": "The original 1996 Magnolia Bakery on Bleecker Street",
-          "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+          "text": "4 774 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+        },
+        {
+          "text": "The banana pudding here is simply amazing and is one of the best desserts in the city hands down",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
         }
       ]
     },
     "description": {
-      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening. Restaurantji lists the 401 Bleecker Street bakery at 4 from 774 ratings. Representative Restaurantji praise (diner reviews): “The banana pudding here is simply amazing”; “Staff is always great”.",
+      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening. Restaurantji lists the 401 Bleecker Street bakery at 4 from 774 ratings. Representative Restaurantji praise (diner reviews): “The banana pudding here is simply amazing”; “Staff is always great”. Restaurantji guests also write Love magnolia. Always delicious.",
       "claims": [
         {
           "text": "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
@@ -95,9 +102,84 @@
         {
           "text": "Staff is always great",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+        },
+        {
+          "text": "Love magnolia. Always delicious",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
+      "claims": [
+        {
+          "text": "The original 1996 Magnolia Bakery on Bleecker Street",
+          "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Banana pudding",
+        "value": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
+        "claims": [
+          {
+            "text": "one of the best desserts in the city hands down",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+        "rating": "4.0",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 38
+      },
+      {
+        "theme": "Family treat",
+        "value": "Magnolia Bakery pleases kids and adults alike; one Restaurantji reviewer wrote Awesome place and flavor!! Daughter loved it. Keep this in mind as the main reason to choose Magnolia Bakery over nearby options.",
+        "claims": [
+          {
+            "text": "Awesome place and flavor!! Daughter loved it",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+        "rating": "4.0",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      },
+      {
+        "theme": "Consistency",
+        "value": "Regulars find Magnolia Bakery dependable; a Restaurantji guest said Love magnolia. Always delicious. Travelers comparing spots should weigh this honestly when picking Magnolia Bakery.",
+        "claims": [
+          {
+            "text": "Love magnolia. Always delicious",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+        "rating": "4.0",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 24
+      },
+      {
+        "theme": "Staff",
+        "value": "Service is friendly at Magnolia Bakery, with a Restaurantji diner adding Staff is always great alongside the pudding praise. Factor this into timing and expectations before heading to Magnolia Bakery.",
+        "claims": [
+          {
+            "text": "Staff is always great",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+        "rating": "4.0",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 30
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -105,15 +187,41 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "The banana pudding here is simply amazing",
+      "one of the best desserts in the city hands down",
+      "Awesome place and flavor!! Daughter loved it",
+      "Love magnolia. Always delicious",
       "Staff is always great"
     ],
-    "watchOuts": []
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Banana pudding",
+      "Family treat",
+      "Consistency",
+      "Staff"
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.0",
+  "review1Theme": "Banana pudding",
+  "review2": "Magnolia Bakery pleases kids and adults alike; one Restaurantji reviewer wrote Awesome place and flavor!! Daughter loved it. Keep this in mind as the main reason to choose Magnolia Bakery over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.0",
+  "review2Theme": "Family treat",
+  "review3": "Regulars find Magnolia Bakery dependable; a Restaurantji guest said Love magnolia. Always delicious. Travelers comparing spots should weigh this honestly when picking Magnolia Bakery.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.0",
+  "review3Theme": "Consistency",
+  "review4": "Service is friendly at Magnolia Bakery, with a Restaurantji diner adding Staff is always great alongside the pudding praise. Factor this into timing and expectations before heading to Magnolia Bakery.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.0",
+  "review4Theme": "Staff",
+  "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll."
 }

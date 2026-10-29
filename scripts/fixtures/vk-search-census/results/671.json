@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
       "title": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … ork - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go.",
+      "text": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … ork - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … Delicious food! Great drinks! Awesome atmosphere! … The service, food and drinks was excellent … this gem of a place",
       "snippet": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go.",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -33,17 +33,20 @@
   "hoursHint": "Daily ~11am–12am (official site lists all days 11:00 AM–12:00 AM)",
   "happyHourHint": "Happy hour drinks 11am–7pm: beer, sangria, drinks & classic mojitos (official)",
   "summaryClaims": [
-    "573 Columbus Ave, New York, NY 10024",
+    "Happy Hour is the time to go",
+    "Delicious food! Great drinks! Awesome atmosphere!",
     "573 Columbus Ave, New York, NY 10024",
     "Happy Hour Drinks from 11 am - 7 pm",
     "The guacamole is fresh and served with both tortilla and plantain chips",
     "Happy Hour is the time to go",
-    "4.3 262 ratings"
+    "4.3 262 ratings",
+    "The service, food and drinks was excellent",
+    "this gem of a place"
   ],
-  "itineraryNoteCandidate": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
+  "itineraryNoteCandidate": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -69,16 +72,16 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave serving cocktails and bites.",
+      "value": "Bodega 88 is a casual Upper West Side sports bar at 573 Columbus Ave with a long happy hour, cocktails and Latin-leaning bar food. Restaurantji diners like the energy and the value, praising Delicious food! Great drinks! Awesome atmosphere! and calling happy hour the best window to visit. It is an easy, unfussy stop for a game, a drink or a group snack.",
       "claims": [
         {
-          "text": "573 Columbus Ave, New York, NY 10024",
-          "sourceUrl": "https://bodega88nyc.com/"
+          "text": "Delicious food! Great drinks! Awesome atmosphere!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
         }
       ]
     },
     "description": {
-      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave, New York, NY 10024. It invites guests to join us for Happy Hour Drinks from 11 am - 7 pm. Specials cover beer, sangria and classic mojitos, which makes it an easy casual stop. Restaurantji shows 4.3 262 ratings. Representative Restaurantji praise (diner reviews): “The guacamole is fresh and served with both tortilla and plantain chips”; “Happy Hour is the time to go”.",
+      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave, New York, NY 10024. It invites guests to join us for Happy Hour Drinks from 11 am - 7 pm. Specials cover beer, sangria and classic mojitos, which makes it an easy casual stop. Restaurantji shows 4.3 262 ratings. Representative Restaurantji praise (diner reviews): “The guacamole is fresh and served with both tortilla and plantain chips”; “Happy Hour is the time to go”. Restaurantji diners also say The service, food and drinks was excellent and describe the place as this gem of a place.",
       "claims": [
         {
           "text": "573 Columbus Ave, New York, NY 10024",
@@ -99,9 +102,88 @@
         {
           "text": "4.3 262 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+        },
+        {
+          "text": "The service, food and drinks was excellent",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+        },
+        {
+          "text": "this gem of a place",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips.",
+      "claims": [
+        {
+          "text": "Happy Hour is the time to go",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Happy hour",
+        "value": "Timing matters at Bodega 88: a Restaurantji reviewer says Happy Hour is the time to go, and the bar's own deals run through the afternoon into early evening.",
+        "claims": [
+          {
+            "text": "Happy Hour is the time to go",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 28
+      },
+      {
+        "theme": "Guacamole and snacks",
+        "value": "The bar food gets specific praise from Restaurantji guests at Bodega 88, who report that The guacamole is fresh and served with both tortilla and plantain chips.",
+        "claims": [
+          {
+            "text": "The guacamole is fresh and served with both tortilla and plantain chips",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "Bodega 88 earns its keep on mood as much as menu; one Restaurantji diner wrote Delicious food! Great drinks! Awesome atmosphere! and recommended stopping by.",
+        "claims": [
+          {
+            "text": "Delicious food! Great drinks! Awesome atmosphere!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      },
+      {
+        "theme": "Service",
+        "value": "Guests describe friendly, reliable service at Bodega 88: a Restaurantji reviewer who came with family said The service, food and drinks was excellent and called it a wonderful evening.",
+        "claims": [
+          {
+            "text": "The service, food and drinks was excellent",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -109,15 +191,44 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "The guacamole is fresh and served with both tortilla and plantain chips",
-      "Happy Hour is the time to go"
+      "Happy Hour is the time to go",
+      "Delicious food! Great drinks! Awesome atmosphere!",
+      "The service, food and drinks was excellent"
     ],
-    "watchOuts": []
+    "watchOuts": [
+      "The guacamole is fresh and served with both tortilla and plantain chips"
+    ],
+    "complaints": [
+      "The guacamole is fresh and served with both tortilla and plantain chips"
+    ],
+    "themes": [
+      "Happy hour",
+      "Guacamole and snacks",
+      "Atmosphere",
+      "Service"
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Timing matters at Bodega 88: a Restaurantji reviewer says Happy Hour is the time to go, and the bar's own deals run through the afternoon into early evening.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.3",
+  "review1Theme": "Happy hour",
+  "review2": "The bar food gets specific praise from Restaurantji guests at Bodega 88, who report that The guacamole is fresh and served with both tortilla and plantain chips.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.3",
+  "review2Theme": "Guacamole and snacks",
+  "review3": "Bodega 88 earns its keep on mood as much as menu; one Restaurantji diner wrote Delicious food! Great drinks! Awesome atmosphere! and recommended stopping by.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.3",
+  "review3Theme": "Atmosphere",
+  "review4": "Guests describe friendly, reliable service at Bodega 88: a Restaurantji reviewer who came with family said The service, food and drinks was excellent and called it a wonderful evening.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.3",
+  "review4Theme": "Service",
+  "itineraryNote": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips."
 }

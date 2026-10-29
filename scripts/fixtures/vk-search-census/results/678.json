@@ -15,12 +15,14 @@
   ],
   "summaryClaims": [
     "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+    "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+    "authentic Italian pizza, pastas, and more",
     "Enjoy authentic Italian pizza, pastas, and more at Famous Original Ray’s Pizza",
     "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West"
   ],
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "evidenceReuse": {
     "source": "READY preview saved evidenceDossier.pages",
@@ -30,10 +32,14 @@
   },
   "fields": {
     "summary": {
-      "value": "Famous Original Ray's Pizza is a family-owned Manhattan pizzeria serving Midtown, Times Square and Upper West.",
+      "value": "Famous Original Ray's Pizza is a Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West, offering authentic Italian pizza, pastas, and more. It suits a quick, casual slice wherever the day lands, so pick the branch closest to that day's plans.",
       "claims": [
         {
           "text": "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+          "sourceUrl": "https://www.rayspizza.com/"
+        },
+        {
+          "text": "authentic Italian pizza, pastas, and more",
           "sourceUrl": "https://www.rayspizza.com/"
         }
       ]
@@ -50,12 +56,23 @@
           "sourceUrl": "https://www.rayspizza.com/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights.",
+      "claims": [
+        {
+          "text": "Family-owned Manhattan pizzeria serving Midtown, Times Square & Upper West",
+          "sourceUrl": "https://www.rayspizza.com/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights.",
+  "itineraryNoteCandidate": "Famous Original Ray's Pizza: a family-owned Manhattan slice chain; grab a quick slice between sights."
 }

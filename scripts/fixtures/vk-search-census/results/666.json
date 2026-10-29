@@ -42,6 +42,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "2751 Broadway",
     "jazz club located at 2751 Broadway on the Upper West Side",
     "jazz club located at 2751 Broadway on the Upper West Side",
     "Dinner shows require a minimum purchase of at least one entrée per person",
@@ -52,7 +53,7 @@
     "Tight seating because so many people want to come here",
     "4.2 of 5 bubbles (574 reviews)"
   ],
-  "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
+  "itineraryNoteCandidate": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -126,6 +127,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
+      "claims": [
+        {
+          "text": "2751 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -143,9 +153,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show."
 }

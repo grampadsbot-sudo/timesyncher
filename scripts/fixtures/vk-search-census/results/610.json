@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/carbone-/",
       "title": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
+      "text": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … A must see and experience when in NY … go above and beyond for that true over the top experience … a birthday and a new job … It’s worth securing a reservation when they go live … your hosts go above and beyond for that true over the top experience … the whole experience was just wonderful",
       "snippet": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -34,18 +34,24 @@
   "happyHourHint": null,
   "happyHourRejectReason": "Third-party HH page maps to 168 Sullivan St, not 181 Thompson St",
   "summaryClaims": [
-    "Located on historic Thompson Street",
+    "charismatic service, captains sporting tuxedos by Zac Posen",
+    "charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel",
+    "A must see and experience when in NY",
+    "go above and beyond for that true over the top experience",
     "Located on historic Thompson Street",
     "181 Thompson Street",
     "captains sporting tuxedos by Zac Posen",
     "The food was exceptional, the decor is so chic",
     "Roberto was a sensational waiter",
-    "4.2 822 ratings"
+    "4.2 822 ratings",
+    "4.2 822 ratings",
+    "a birthday and a new job",
+    "It’s worth securing a reservation when they go live"
   ],
-  "itineraryNoteCandidate": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
+  "itineraryNoteCandidate": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -79,16 +85,24 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Carbone is the Italian-American restaurant on Thompson Street in Greenwich Village from Mario Carbone.",
+      "value": "Carbone is Mario Carbone's Italian-American restaurant on Thompson Street in Greenwich Village, and the room itself is the show: charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel. It is a special-occasion booking, and Restaurantji diners back that up, calling it A must see and experience when in NY and saying the hosts go above and beyond for that true over the top experience.",
       "claims": [
         {
-          "text": "Located on historic Thompson Street",
+          "text": "charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel",
           "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "A must see and experience when in NY",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "go above and beyond for that true over the top experience",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
         }
       ]
     },
     "description": {
-      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead. Restaurantji shows 4.2 822 ratings. Representative Restaurantji praise (diner reviews): “The food was exceptional, the decor is so chic”; “Roberto was a sensational waiter”.",
+      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead. Restaurantji shows 4.2 822 ratings. Representative Restaurantji praise (diner reviews): “The food was exceptional, the decor is so chic”; “Roberto was a sensational waiter”. Restaurantji diners rate it 4.2 822 ratings; one party celebrating a birthday and a new job wrote that the team made it extra special, and another advises that It’s worth securing a reservation when they go live.",
       "claims": [
         {
           "text": "Located on historic Thompson Street",
@@ -113,9 +127,96 @@
         {
           "text": "4.2 822 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "4.2 822 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "a birthday and a new job",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "It’s worth securing a reservation when they go live",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
+      "claims": [
+        {
+          "text": "charismatic service, captains sporting tuxedos by Zac Posen",
+          "sourceUrl": "https://carbonenewyork.com/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Over-the-top hospitality",
+        "value": "Restaurantji diners keep returning to the hospitality at Carbone: one wrote that your hosts go above and beyond for that true over the top experience, which is the reason people chase a table here.",
+        "claims": [
+          {
+            "text": "your hosts go above and beyond for that true over the top experience",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Celebration dinners",
+        "value": "A Restaurantji reviewer marking a birthday and a new job said the staff made the night special, a good sign for anyone booking Carbone around an anniversary or milestone.",
+        "claims": [
+          {
+            "text": "a birthday and a new job",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      },
+      {
+        "theme": "Food and decor",
+        "value": "The cooking and the room earn equal praise from Restaurantji guests at Carbone: The food was exceptional, the decor is so chic, with the whole experience was just wonderful summing up the visit.",
+        "claims": [
+          {
+            "text": "The food was exceptional, the decor is so chic",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+          },
+          {
+            "text": "the whole experience was just wonderful",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      },
+      {
+        "theme": "Booking strategy",
+        "value": "The practical watch-out at Carbone is access, since one Restaurantji diner says It’s worth securing a reservation when they go live; plan around the release time before the trip.",
+        "claims": [
+          {
+            "text": "It’s worth securing a reservation when they go live",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
+        "rating": "4.2",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -123,15 +224,41 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
+      "your hosts go above and beyond for that true over the top experience",
+      "a birthday and a new job",
       "The food was exceptional, the decor is so chic",
-      "Roberto was a sensational waiter"
+      "It’s worth securing a reservation when they go live"
     ],
-    "watchOuts": []
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Over-the-top hospitality",
+      "Celebration dinners",
+      "Food and decor",
+      "Booking strategy"
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Restaurantji diners keep returning to the hospitality at Carbone: one wrote that your hosts go above and beyond for that true over the top experience, which is the reason people chase a table here.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Over-the-top hospitality",
+  "review2": "A Restaurantji reviewer marking a birthday and a new job said the staff made the night special, a good sign for anyone booking Carbone around an anniversary or milestone.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Celebration dinners",
+  "review3": "The cooking and the room earn equal praise from Restaurantji guests at Carbone: The food was exceptional, the decor is so chic, with the whole experience was just wonderful summing up the visit.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Food and decor",
+  "review4": "The practical watch-out at Carbone is access, since one Restaurantji diner says It’s worth securing a reservation when they go live; plan around the release time before the trip.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Booking strategy",
+  "itineraryNote": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast."
 }

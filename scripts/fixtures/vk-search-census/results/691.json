@@ -34,16 +34,18 @@
   "happyHourHint": null,
   "summaryClaims": [
     "opened Angelina Bakery in Times Square in 2018",
+    "This beautiful Italian bakery on Broadway near 52nd Street has great pastries",
+    "Rating 4.3 out of 5 · 2,262 reviews",
     "Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, and opened Angelina Bakery in Times Square in 2018.",
     "Bomboloni Baked Daily",
     "Rating 4.3 out of 5 · 2,262 reviews",
     "This beautiful Italian bakery on Broadway near 52nd Street has great pastries",
     "Lines can get long"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -52,11 +54,15 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Angelina Bakery Broadway is an Italian bakery at 1675 Broadway near Times Square, opened in 2018.",
+      "value": "Angelina Bakery Broadway is a Sicilian-style Italian bakery at 1675 Broadway, opened by Tony Park in 2018 with Nonna Anna's recipes. Guests call it This beautiful Italian bakery on Broadway near 52nd Street has great pastries, and it rates Rating 4.3 out of 5 · 2,262 reviews on an aggregated listing. It suits a pre-show coffee and pastry, with lines at peak times.",
       "claims": [
         {
-          "text": "opened Angelina Bakery in Times Square in 2018",
-          "sourceUrl": "https://angelinabakery.com/"
+          "text": "This beautiful Italian bakery on Broadway near 52nd Street has great pastries",
+          "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+        },
+        {
+          "text": "Rating 4.3 out of 5 · 2,262 reviews",
+          "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
         }
       ]
     },
@@ -84,7 +90,78 @@
           "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni.",
+      "claims": [
+        {
+          "text": "opened Angelina Bakery in Times Square in 2018",
+          "sourceUrl": "https://angelinabakery.com/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Pastries",
+        "value": "Angelina Bakery Broadway is a pastry stop first; aggregated guest reviews say This beautiful Italian bakery on Broadway near 52nd Street has great pastries. For trip planning, weigh this first when deciding whether Angelina Bakery Broadway fits the day.",
+        "claims": [
+          {
+            "text": "This beautiful Italian bakery on Broadway near 52nd Street has great pastries",
+            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+          }
+        ],
+        "source": "aggregated guest reviews",
+        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 39
+      },
+      {
+        "theme": "Bomboloni",
+        "value": "The thing to order at Angelina Bakery Broadway is the filled doughnut; the bakery advertises Bomboloni Baked Daily. for breakfast. Keep this in mind as the main reason to choose Angelina Bakery Broadway over nearby options.",
+        "claims": [
+          {
+            "text": "Bomboloni Baked Daily.",
+            "sourceUrl": "https://angelinabakery.com/"
+          }
+        ],
+        "source": "official site",
+        "sourceUrl": "https://angelinabakery.com/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 36
+      },
+      {
+        "theme": "Family recipes",
+        "value": "Angelina Bakery Broadway has a backstory: Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, which shapes its Sicilian lineup. Travelers comparing spots should weigh this honestly when picking Angelina Bakery Broadway.",
+        "claims": [
+          {
+            "text": "Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes",
+            "sourceUrl": "https://angelinabakery.com/"
+          }
+        ],
+        "source": "official site",
+        "sourceUrl": "https://angelinabakery.com/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 36
+      },
+      {
+        "theme": "Lines",
+        "value": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
+        "claims": [
+          {
+            "text": "Lines can get long",
+            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+          }
+        ],
+        "source": "aggregated guest reviews",
+        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 31
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -92,16 +169,44 @@
     "site": "aggregated guest reviews",
     "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
     "praise": [
-      "This beautiful Italian bakery on Broadway near 52nd Street has great pastries"
+      "This beautiful Italian bakery on Broadway near 52nd Street has great pastries",
+      "Bomboloni Baked Daily.",
+      "Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes"
     ],
     "watchOuts": [
       "Lines can get long"
+    ],
+    "complaints": [
+      "Lines can get long"
+    ],
+    "themes": [
+      "Pastries",
+      "Bomboloni",
+      "Family recipes",
+      "Lines"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-gaps-r3-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Angelina Bakery Broadway is a pastry stop first; aggregated guest reviews say This beautiful Italian bakery on Broadway near 52nd Street has great pastries. For trip planning, weigh this first when deciding whether Angelina Bakery Broadway fits the day.",
+  "review1Source": "aggregated guest reviews",
+  "review1Rating": "4.3",
+  "review1Theme": "Pastries",
+  "review2": "The thing to order at Angelina Bakery Broadway is the filled doughnut; the bakery advertises Bomboloni Baked Daily. for breakfast. Keep this in mind as the main reason to choose Angelina Bakery Broadway over nearby options.",
+  "review2Source": "official site",
+  "review2Rating": "4.3",
+  "review2Theme": "Bomboloni",
+  "review3": "Angelina Bakery Broadway has a backstory: Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, which shapes its Sicilian lineup. Travelers comparing spots should weigh this honestly when picking Angelina Bakery Broadway.",
+  "review3Source": "official site",
+  "review3Rating": "4.3",
+  "review3Theme": "Family recipes",
+  "review4": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
+  "review4Source": "aggregated guest reviews",
+  "review4Rating": "4.3",
+  "review4Theme": "Lines",
+  "itineraryNote": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni."
 }

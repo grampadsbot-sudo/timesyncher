@@ -35,6 +35,7 @@
   "happyHourHint": null,
   "summaryClaims": [
     "Compact SUV Nissan Kicks or similar 5 people 2",
+    "Compact SUV Nissan Kicks or similar 5 people 2",
     "Hertz Corporation 8.4 266 reviews Typical Wait Time 0-15 Minutes",
     "Hertz Corporation 8.4 266 reviews Typical Wait Time 0-15 Minutes",
     "Compact SUV Nissan Kicks or similar 5 people 2",
@@ -43,7 +44,7 @@
     "New York State tolls have switched to cashless tolling, which means you will be billed electronically",
     "Be sure to check with your rental car agency to learn about their toll payment policy"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Hertz Compact SUV at JFK: a roomy small SUV (Compact SUV Nissan Kicks or similar 5 people 2) for airport pickup; expect a short counter wait.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -96,12 +97,22 @@
           "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Hertz Compact SUV at JFK: a roomy small SUV (Compact SUV Nissan Kicks or similar 5 people 2) for airport pickup; expect a short counter wait.",
+      "claims": [
+        {
+          "text": "Compact SUV Nissan Kicks or similar 5 people 2",
+          "sourceUrl": "https://www.priceline.com/rental-car-deals/en-us/JFK/new-york-john-f-kennedy-airport-car-rentals.ssp"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Hertz Compact SUV at JFK: a roomy small SUV (Compact SUV Nissan Kicks or similar 5 people 2) for airport pickup; expect a short counter wait."
 }

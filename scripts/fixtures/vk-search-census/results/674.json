@@ -51,7 +51,9 @@
   "hoursHint": "Mon–Wed 7am–11pm; Thu–Sat 7am–midnight (Fri/Sat late to 1am on some pages); Sun 7am–10pm (official location)",
   "happyHourHint": "Fiesta Hour Mon–Fri 4–7pm bar area only; Margarita Mondays $5; Taco Tuesdays half-price (official)",
   "summaryClaims": [
+    "Fiesta Hour runs Monday to Friday, 4–7pm",
     "61 Columbus Ave The Empire Hotel",
+    "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
     "Its signature dish is guacamole prepared by the table.",
     "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
     "Its signature dish is guacamole prepared by the table.",
@@ -63,10 +65,10 @@
     "Service is indifferent at best.",
     "the pork and beef Enchiladas were disappointing"
   ],
-  "itineraryNoteCandidate": "Tableside guacamole and a Fiesta Hour margarita before curtain at Lincoln Center.",
+  "itineraryNoteCandidate": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -92,10 +94,14 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Rosa Mexicano - Lincoln Center, now at 61 Columbus Ave The Empire Hotel, is a lively Mexican spot where Its signature dish is guacamole prepared by the table.",
+      "value": "Rosa Mexicano - Lincoln Center has moved into 61 Columbus Ave The Empire Hotel, where Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars. The draw is theater-adjacent fun: Its signature dish is guacamole prepared by the table. Reviews are mixed, with Tripadvisor travelers praising the look and staff yet flagging uneven service and some weaker mains, so treat it as a lively, convenient pre-show choice.",
       "claims": [
         {
           "text": "61 Columbus Ave The Empire Hotel",
+          "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Our new flagship space, located on the hotel’s mezzanine floor, offers expanded dining areas, multiple bars",
           "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
         },
         {
@@ -144,7 +150,78 @@
           "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
+      "claims": [
+        {
+          "text": "Fiesta Hour runs Monday to Friday, 4–7pm",
+          "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Decor and staff",
+        "value": "A Tripadvisor traveler (search snapshot) found Rosa Mexicano - Lincoln Center a handsome room with good people on the floor: The decor is gorgeous, the waitstaff attentive.",
+        "claims": [
+          {
+            "text": "The decor is gorgeous, the waitstaff attentive",
+            "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Table-side guacamole",
+        "value": "The dish to order at Rosa Mexicano - Lincoln Center is the guacamole; the Tripadvisor listing says Its signature dish is guacamole prepared by the table., which makes a good start before a show.",
+        "claims": [
+          {
+            "text": "Its signature dish is guacamole prepared by the table.",
+            "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Uneven service",
+        "value": "Service experiences vary at Rosa Mexicano - Lincoln Center; one Tripadvisor reviewer (search snapshot) wrote that Service is indifferent at best., so allow extra time before curtain.",
+        "claims": [
+          {
+            "text": "Service is indifferent at best.",
+            "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Mains to skip",
+        "value": "Some mains draw complaints at Rosa Mexicano - Lincoln Center: a Tripadvisor traveler said the pork and beef Enchiladas were disappointing, so lean on the guacamole and tacos.",
+        "claims": [
+          {
+            "text": "the pork and beef Enchiladas were disappointing",
+            "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ie/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 28
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -152,17 +229,45 @@
     "site": "Tripadvisor",
     "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
     "praise": [
-      "The decor is gorgeous, the waitstaff attentive"
+      "The decor is gorgeous, the waitstaff attentive",
+      "Its signature dish is guacamole prepared by the table."
     ],
     "watchOuts": [
       "Service is indifferent at best.",
       "the pork and beef Enchiladas were disappointing"
+    ],
+    "complaints": [
+      "Service is indifferent at best.",
+      "the pork and beef Enchiladas were disappointing"
+    ],
+    "themes": [
+      "Decor and staff",
+      "Table-side guacamole",
+      "Uneven service",
+      "Mains to skip"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "A Tripadvisor traveler (search snapshot) found Rosa Mexicano - Lincoln Center a handsome room with good people on the floor: The decor is gorgeous, the waitstaff attentive.",
+  "review1Source": "Tripadvisor",
+  "review1Rating": "4.4",
+  "review1Theme": "Decor and staff",
+  "review2": "The dish to order at Rosa Mexicano - Lincoln Center is the guacamole; the Tripadvisor listing says Its signature dish is guacamole prepared by the table., which makes a good start before a show.",
+  "review2Source": "Tripadvisor",
+  "review2Rating": "4.4",
+  "review2Theme": "Table-side guacamole",
+  "review3": "Service experiences vary at Rosa Mexicano - Lincoln Center; one Tripadvisor reviewer (search snapshot) wrote that Service is indifferent at best., so allow extra time before curtain.",
+  "review3Source": "Tripadvisor",
+  "review3Rating": "4.4",
+  "review3Theme": "Uneven service",
+  "review4": "Some mains draw complaints at Rosa Mexicano - Lincoln Center: a Tripadvisor traveler said the pork and beef Enchiladas were disappointing, so lean on the guacamole and tacos.",
+  "review4Source": "Tripadvisor",
+  "review4Rating": "4.4",
+  "review4Theme": "Mains to skip",
+  "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm."
 }

@@ -19,6 +19,14 @@
       "text": "le Hell's Kitchen Restaurant - New York, NY | OpenTable | | Westville Hell's Kitchen Restaurant - New York, NY | OpenTable # Westville Hell's Kitchen 4.6 (489) $30 and under American 809 9th Ave, New York, NY 10019 The menu centers on the signature Market Plate, featuring more than 24 vegetable sides prepare",
       "snippet": "le Hell's Kitchen Restaurant - New York, NY | OpenTable | | Westville Hell's Kitchen Restaurant - New York, NY | OpenTable # Westville Hell's Kitchen 4.6 (489) $30 and under American 809 9th Ave, New York, NY 10019 The menu centers on the signature Market Plate, featuring more than 24 vegetable side",
       "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+      "title": "Westville Hell's Kitchen reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "Westville Hell's Kitchen | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.5 448 ratings … you call relax and have a conversation … Chicken Salad Fritters!!!!! … Jess is the best bartender in the biz! … Always good and you call relax and have a conversation … Jess is the best bartender in the biz! She makes us feel so at home",
+      "snippet": "4.5 448 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -34,15 +42,19 @@
   "happyHourHint": null,
   "summaryClaims": [
     "809 9th Avenue, New York, NY 10019",
+    "4.5 448 ratings",
+    "you call relax and have a conversation",
     "Westville Hell’s Kitchen serves fresh, market-driven American food in the heart of Midtown West",
     "809 9th Avenue, New York, NY 10019",
     "fresh market vegetables (24+ daily!)",
-    "4.6 (489)"
+    "4.6 (489)",
+    "Chicken Salad Fritters!!!!!",
+    "Jess is the best bartender in the biz!"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -51,16 +63,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Westville Hell's Kitchen is an American restaurant at 809 9th Avenue known for its market vegetables.",
+      "value": "Westville Hell's Kitchen is a friendly American cafe at 809 9th Avenue, known for its fresh market vegetables (more than 24 sides daily), seasonal plates and comfort food. Restaurantji diners rate it 4.5 448 ratings and call it a place where you call relax and have a conversation (sic). It suits a light, healthy pre-show meal in Hell's Kitchen.",
       "claims": [
         {
-          "text": "809 9th Avenue, New York, NY 10019",
-          "sourceUrl": "https://westville.com/locations/westville-hells-kitchen/"
+          "text": "4.5 448 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
+        },
+        {
+          "text": "you call relax and have a conversation",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
         }
       ]
     },
     "description": {
-      "value": "Westville Hell’s Kitchen serves fresh, market-driven American food in the heart of Midtown West. It sits at 809 9th Avenue, New York, NY 10019. The restaurant is known for our fresh market vegetables (24+ daily!), which makes it a good light meal before a show. OpenTable diners rate Westville Hell's Kitchen 4.6 from 489 reviews.",
+      "value": "Westville Hell’s Kitchen serves fresh, market-driven American food in the heart of Midtown West. It sits at 809 9th Avenue, New York, NY 10019. The restaurant is known for our fresh market vegetables (24+ daily!), which makes it a good light meal before a show. OpenTable diners rate Westville Hell's Kitchen 4.6 from 489 reviews. A Restaurantji reviewer singles out the Chicken Salad Fritters!!!!!, and another says Jess is the best bartender in the biz!",
       "claims": [
         {
           "text": "Westville Hell’s Kitchen serves fresh, market-driven American food in the heart of Midtown West",
@@ -77,14 +93,130 @@
         {
           "text": "4.6 (489)",
           "sourceUrl": "https://www.opentable.com/r/westville-hells-kitchen-new-york"
+        },
+        {
+          "text": "Chicken Salad Fritters!!!!!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
+        },
+        {
+          "text": "Jess is the best bartender in the biz!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater.",
+      "claims": [
+        {
+          "text": "809 9th Avenue, New York, NY 10019",
+          "sourceUrl": "https://westville.com/locations/westville-hells-kitchen/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Relaxed meal",
+        "value": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
+        "claims": [
+          {
+            "text": "Always good and you call relax and have a conversation",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      },
+      {
+        "theme": "Dish to try",
+        "value": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
+        "claims": [
+          {
+            "text": "Chicken Salad Fritters!!!!!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 31
+      },
+      {
+        "theme": "Bar team",
+        "value": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
+        "claims": [
+          {
+            "text": "Jess is the best bartender in the biz! She makes us feel so at home",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Vegetables",
+        "value": "The signature at Westville Hell's Kitchen is the vegetable lineup; the restaurant says it is known for our fresh market vegetables (24+ daily!). Factor this into timing and expectations before heading to Westville Hell's Kitchen.",
+        "claims": [
+          {
+            "text": "our fresh market vegetables (24+ daily!)",
+            "sourceUrl": "https://westville.com/locations/westville-hells-kitchen/"
+          }
+        ],
+        "source": "official site",
+        "sourceUrl": "https://westville.com/locations/westville-hells-kitchen/",
+        "rating": "4.6",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 35
+      }
+    ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.6",
+  "review1Theme": "Relaxed meal",
+  "review2": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.6",
+  "review2Theme": "Dish to try",
+  "review3": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.6",
+  "review3Theme": "Bar team",
+  "review4": "The signature at Westville Hell's Kitchen is the vegetable lineup; the restaurant says it is known for our fresh market vegetables (24+ daily!). Factor this into timing and expectations before heading to Westville Hell's Kitchen.",
+  "review4Source": "official site",
+  "review4Rating": "4.6",
+  "review4Theme": "Vegetables",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+    "site": "Restaurantji",
+    "praise": [
+      "Always good and you call relax and have a conversation",
+      "Chicken Salad Fritters!!!!!",
+      "Jess is the best bartender in the biz! She makes us feel so at home",
+      "our fresh market vegetables (24+ daily!)"
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Relaxed meal",
+      "Dish to try",
+      "Bar team",
+      "Vegetables"
+    ],
+    "via": "curl live fetch 2026-10-28"
+  },
+  "itineraryNote": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater."
 }

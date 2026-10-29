@@ -23,12 +23,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Celebrating 15 Years",
     "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in",
     "Ledisi, Big Freedia, SHABAKA, Kokoroko",
     "Celebrating 15 Years - the Blue Note Jazz Festival New York is back in June 2026",
     "Ledisi, Big Freedia, SHABAKA, Kokoroko"
   ],
-  "itineraryNoteCandidate": "If your June dates overlap, pick a festival night at Blue Note or SummerStage and buy early.",
+  "itineraryNoteCandidate": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -82,12 +83,22 @@
           "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip.",
+      "claims": [
+        {
+          "text": "Celebrating 15 Years",
+          "sourceUrl": "https://www.bluenotejazz.com/jazz-festival-nyc/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip."
 }

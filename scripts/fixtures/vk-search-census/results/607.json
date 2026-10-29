@@ -42,6 +42,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "French-style merry-go-round",
     "Bryant Park has a French-style merry-go-round, open year-round, plus a well-maintained lawn, with chairs and tables.",
     "between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building",
     "October Daily, 7am-10pm",
@@ -53,7 +54,7 @@
     "Maybe the crowds, which are really heavy on the weekends.",
     "the food here can be a bit overpriced"
   ],
-  "itineraryNoteCandidate": "Meet at the lawn or carousel—check bryantpark.org calendar for games and events that day.",
+  "itineraryNoteCandidate": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -133,6 +134,15 @@
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room.",
+      "claims": [
+        {
+          "text": "French-style merry-go-round",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -149,9 +159,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room."
 }

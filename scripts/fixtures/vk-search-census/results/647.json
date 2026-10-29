@@ -37,6 +37,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "611 Fifth Avenue New York, NY 10022",
+    "L'Avenue at Saks",
+    "611 Fifth Avenue New York, NY 10022",
     "611 Fifth Avenue New York, NY 10022",
     "Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun",
     "212-753-4000",
@@ -44,7 +46,7 @@
     "It is a real treat to see this flag ship store.",
     "Their employees were very snobby in the store."
   ],
-  "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
+  "itineraryNoteCandidate": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -110,6 +112,19 @@
           "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
+      "claims": [
+        {
+          "text": "611 Fifth Avenue New York, NY 10022",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "L'Avenue at Saks",
+          "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -125,9 +140,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks."
 }

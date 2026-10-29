@@ -34,16 +34,19 @@
   "happyHourHint": null,
   "summaryClaims": [
     "historic pizzeria on Bleecker Street in the Greenwich Village",
+    "Founded in 1915",
+    "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato",
+    "4.4 of 5 bubbles (1,975 reviews)",
     "historic pizzeria on Bleecker Street in the Greenwich Village",
     "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie",
     "Pizza was great, staff was friendly and welcoming.",
     "About 40-45 mins of waiting line, but it was worth it.",
     "4.4 of 5 bubbles (1,975 reviews)"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -52,11 +55,19 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "The Original John's of Bleecker Street is a historic coal-fired pizzeria on Bleecker Street in Greenwich Village.",
+      "value": "The Original John's of Bleecker Street is a historic Greenwich Village pizzeria, Founded in 1915, where the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies, so it suits pairs and groups. Tripadvisor travelers (search snapshot) rate it 4.4 of 5 bubbles (1,975 reviews) and say the wait pays off.",
       "claims": [
         {
-          "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
+          "text": "Founded in 1915",
           "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        },
+        {
+          "text": "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato",
+          "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        },
+        {
+          "text": "4.4 of 5 bubbles (1,975 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
         }
       ]
     },
@@ -84,24 +95,123 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line.",
+      "claims": [
+        {
+          "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
+          "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Coal-oven pies",
+        "value": "The Original John's of Bleecker Street keeps its century-old method: Wikipedia notes the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie, the reason people make the trip.",
+        "claims": [
+          {
+            "text": "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato",
+            "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+          }
+        ],
+        "source": "Wikipedia",
+        "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Friendly staff",
+        "value": "Tripadvisor travelers (search snapshot) describe a welcoming room at The Original John's of Bleecker Street: Pizza was great, staff was friendly and welcoming. Keep this in mind as the main reason to choose The Original John's of Bleecker Street over nearby options.",
+        "claims": [
+          {
+            "text": "Pizza was great, staff was friendly and welcoming.",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 42
+      },
+      {
+        "theme": "The line",
+        "value": "Expect to queue at The Original John's of Bleecker Street; one Tripadvisor reviewer reported About 40-45 mins of waiting line, but it was worth it.",
+        "claims": [
+          {
+            "text": "About 40-45 mins of waiting line, but it was worth it.",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 25
+      },
+      {
+        "theme": "History",
+        "value": "The Original John's of Bleecker Street was Founded in 1915, so a meal here doubles as a slice of Village history on a downtown walking day.",
+        "claims": [
+          {
+            "text": "Founded in 1915",
+            "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+          }
+        ],
+        "source": "Wikipedia",
+        "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
-    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
-    "site": "Tripadvisor",
+    "source": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street",
+    "site": "Wikipedia",
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
-      "Pizza was great, staff was friendly and welcoming."
+      "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato",
+      "Pizza was great, staff was friendly and welcoming.",
+      "Founded in 1915"
     ],
     "watchOuts": [
       "About 40-45 mins of waiting line, but it was worth it."
+    ],
+    "complaints": [
+      "About 40-45 mins of waiting line, but it was worth it."
+    ],
+    "themes": [
+      "Coal-oven pies",
+      "Friendly staff",
+      "The line",
+      "History"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "The Original John's of Bleecker Street keeps its century-old method: Wikipedia notes the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie, the reason people make the trip.",
+  "review1Source": "Wikipedia",
+  "review1Rating": "4.4",
+  "review1Theme": "Coal-oven pies",
+  "review2": "Tripadvisor travelers (search snapshot) describe a welcoming room at The Original John's of Bleecker Street: Pizza was great, staff was friendly and welcoming. Keep this in mind as the main reason to choose The Original John's of Bleecker Street over nearby options.",
+  "review2Source": "Tripadvisor",
+  "review2Rating": "4.4",
+  "review2Theme": "Friendly staff",
+  "review3": "Expect to queue at The Original John's of Bleecker Street; one Tripadvisor reviewer reported About 40-45 mins of waiting line, but it was worth it.",
+  "review3Source": "Tripadvisor",
+  "review3Rating": "4.4",
+  "review3Theme": "The line",
+  "review4": "The Original John's of Bleecker Street was Founded in 1915, so a meal here doubles as a slice of Village history on a downtown walking day.",
+  "review4Source": "Wikipedia",
+  "review4Rating": "4.4",
+  "review4Theme": "History",
+  "itineraryNote": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line."
 }

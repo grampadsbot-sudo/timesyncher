@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
       "title": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … kery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it.",
+      "text": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … kery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Such a fun atmosphere! … Friendly staff and dang good coffee! … We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!",
       "snippet": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it.",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -34,16 +34,19 @@
   "happyHourHint": null,
   "summaryClaims": [
     "1515 Broadway @ 45th Street",
+    "Great service, great food, big meals and the cheesecakes!",
+    "Such a fun atmosphere!",
     "1515 Broadway @ 45th Street",
     "Sunday – Monday 7am - 11pm",
     "Great service, great food, big meals and the cheesecakes!",
     "The weight was a little long but it is absolutely worth it",
-    "4.3 1727 ratings"
+    "4.3 1727 ratings",
+    "Friendly staff and dang good coffee!"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -52,16 +55,20 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Junior's Times Square is the cheesecake restaurant at 1515 Broadway at 45th Street in Times Square.",
+      "value": "Junior's Times Square is the Midtown outpost of the Brooklyn cheesecake landmark, at 1515 Broadway at 45th Street in the middle of the Theater District, serving diner classics in big portions. Restaurantji diners praise Great service, great food, big meals and the cheesecakes! and call it Such a fun atmosphere!. Expect a wait at busy times, which guests say is worth it.",
       "claims": [
         {
-          "text": "1515 Broadway @ 45th Street",
-          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+          "text": "Great service, great food, big meals and the cheesecakes!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "Such a fun atmosphere!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
         }
       ]
     },
     "description": {
-      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show. Restaurantji shows 4.3 1727 ratings. Representative Restaurantji praise (diner reviews): “Great service, great food, big meals and the cheesecakes!”. Representative watch-outs: “The weight was a little long but it is absolutely worth it”.",
+      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show. Restaurantji shows 4.3 1727 ratings. Representative Restaurantji praise (diner reviews): “Great service, great food, big meals and the cheesecakes!”. Representative watch-outs: “The weight was a little long but it is absolutely worth it”. A Restaurantji reviewer also liked the Friendly staff and dang good coffee!",
       "claims": [
         {
           "text": "1515 Broadway @ 45th Street",
@@ -82,9 +89,84 @@
         {
           "text": "4.3 1727 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "Friendly staff and dang good coffee!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
+      "claims": [
+        {
+          "text": "1515 Broadway @ 45th Street",
+          "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Cheesecake",
+        "value": "Cheesecake is the reason to visit Junior's Times Square; Restaurantji diners rave about Great service, great food, big meals and the cheesecakes! For trip planning, weigh this first when deciding whether Junior's Times Square fits the day.",
+        "claims": [
+          {
+            "text": "Great service, great food, big meals and the cheesecakes!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 37
+      },
+      {
+        "theme": "Fun atmosphere",
+        "value": "Junior's Times Square feels lively and family-friendly; one Restaurantji guest wrote We had an amazing lunch, desserts were delicious too. Such a fun atmosphere! Keep this in mind as the main reason to choose Junior's Times Square over nearby options.",
+        "claims": [
+          {
+            "text": "We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 40
+      },
+      {
+        "theme": "Coffee and staff",
+        "value": "Breakfast and coffee stops work too at Junior's Times Square, where a Restaurantji diner praised the Friendly staff and dang good coffee! Travelers comparing spots should weigh this honestly when picking Junior's Times Square.",
+        "claims": [
+          {
+            "text": "Friendly staff and dang good coffee!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Waits",
+        "value": "Busy hours mean a queue at Junior's Times Square; a Restaurantji reviewer said The weight was a little long but it is absolutely worth it (sic), so build in time.",
+        "claims": [
+          {
+            "text": "The weight was a little long but it is absolutely worth it",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 30
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -92,16 +174,44 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "Great service, great food, big meals and the cheesecakes!"
+      "Great service, great food, big meals and the cheesecakes!",
+      "We had an amazing lunch, desserts were delicious too. Such a fun atmosphere!",
+      "Friendly staff and dang good coffee!"
     ],
     "watchOuts": [
       "The weight was a little long but it is absolutely worth it"
+    ],
+    "complaints": [
+      "The weight was a little long but it is absolutely worth it"
+    ],
+    "themes": [
+      "Cheesecake",
+      "Fun atmosphere",
+      "Coffee and staff",
+      "Waits"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Cheesecake is the reason to visit Junior's Times Square; Restaurantji diners rave about Great service, great food, big meals and the cheesecakes! For trip planning, weigh this first when deciding whether Junior's Times Square fits the day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.3",
+  "review1Theme": "Cheesecake",
+  "review2": "Junior's Times Square feels lively and family-friendly; one Restaurantji guest wrote We had an amazing lunch, desserts were delicious too. Such a fun atmosphere! Keep this in mind as the main reason to choose Junior's Times Square over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.3",
+  "review2Theme": "Fun atmosphere",
+  "review3": "Breakfast and coffee stops work too at Junior's Times Square, where a Restaurantji diner praised the Friendly staff and dang good coffee! Travelers comparing spots should weigh this honestly when picking Junior's Times Square.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.3",
+  "review3Theme": "Coffee and staff",
+  "review4": "Busy hours mean a queue at Junior's Times Square; a Restaurantji reviewer said The weight was a little long but it is absolutely worth it (sic), so build in time.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.3",
+  "review4Theme": "Waits",
+  "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake."
 }

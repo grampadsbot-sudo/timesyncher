@@ -34,6 +34,7 @@
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
+    "Federal Circle is accessible by the AirTrain from any terminal",
     "Compact SUV Nissan Kicks or similar 5 people 2",
     "Federal Circle is accessible by the AirTrain from any terminal",
     "Thrifty +1 (877) 283-0898",
@@ -43,7 +44,7 @@
     "If they provide you with a transponder, make sure you understand how it works, including any fees and charges",
     "The rental company may also charge an administrative fee for using a toll road"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -96,12 +97,22 @@
           "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal.",
+      "claims": [
+        {
+          "text": "Federal Circle is accessible by the AirTrain from any terminal",
+          "sourceUrl": "https://www.jfkairport.com/transportation/car-rentals"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Thrifty Compact SUV at JFK: a small SUV for the drive in; reach the counter because Federal Circle is accessible by the AirTrain from any terminal."
 }

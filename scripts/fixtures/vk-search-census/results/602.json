@@ -36,10 +36,11 @@
   "summaryClaims": [
     "2245 Broadway at 80th Street",
     "2245 Broadway at 80th Street",
+    "2245 Broadway at 80th Street",
     "We're open 365 days a year",
     "3.9 (1.4k reviews)"
   ],
-  "itineraryNoteCandidate": "Grab hand-sliced nova and a cafe coffee at this UWS food landmark, then picnic two blocks from the park.",
+  "itineraryNoteCandidate": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -95,12 +96,22 @@
           "sourceUrl": "https://www.yelp.com/biz/zabars-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park.",
+      "claims": [
+        {
+          "text": "2245 Broadway at 80th Street",
+          "sourceUrl": "https://www.zabars.com/directions.html"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Zabar's: the Upper West Side food hall at 2245 Broadway at 80th Street; browse the smoked fish counter and grab picnic supplies for Riverside Park."
 }

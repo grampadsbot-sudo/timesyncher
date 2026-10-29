@@ -24,6 +24,7 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "AAdvantage® members can earn miles on eligible American Airlines flights",
+    "AAdvantage® members can earn miles on eligible American Airlines flights",
     "John F. Kennedy International Airport (JFK)",
     "have Admiral's Club® lounges in the American Airlines terminals",
     "McCarran International Airport (LAS)",
@@ -32,7 +33,7 @@
     "Enjoy beer, wine and spirits on flights with full beverage service",
     "More space with seats at the front of the Main Cabin or in exit rows"
   ],
-  "itineraryNoteCandidate": "Return on American nonstop JFK–LAS — lock seats when outbound is set.",
+  "itineraryNoteCandidate": "American Airlines JFK → LAS: the trip home from Kennedy; earn miles since AAdvantage® members can earn miles on eligible American Airlines flights.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -102,12 +103,22 @@
           "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "American Airlines JFK → LAS: the trip home from Kennedy; earn miles since AAdvantage® members can earn miles on eligible American Airlines flights.",
+      "claims": [
+        {
+          "text": "AAdvantage® members can earn miles on eligible American Airlines flights",
+          "sourceUrl": "https://www.aa.com/en-us/flights-from-las-vegas-to-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "American Airlines JFK → LAS: the trip home from Kennedy; earn miles since AAdvantage® members can earn miles on eligible American Airlines flights."
 }

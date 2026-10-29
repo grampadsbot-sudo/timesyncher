@@ -20,14 +20,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "You can rent a car at La Guardia Airport",
-    "Las Vegas (LAS) to New York LaGuardia (LGA)",
-    "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
     "Check the status of your upcoming Southwest flight",
+    "You can rent a car at La Guardia Airport",
+    "2242 miles",
+    "You can rent a car at La Guardia Airport",
     "Fares listed are Basic, which are subject to additional terms and conditions",
-    "Check out the Southwest Airlines ® Help Center for answers about everything Southwest"
+    "Check the status of your upcoming Southwest flight"
   ],
-  "itineraryNoteCandidate": "Southwest midday LAS–LGA inventory option.",
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight).",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -66,18 +66,14 @@
       ]
     },
     "description": {
-      "value": "Southwest's late-morning departure Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25 flies Las Vegas (LAS) to New York LaGuardia (LGA). Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles. Check the status of your upcoming Southwest flight. Fares listed are Basic, which are subject to additional terms and conditions. Check out the Southwest Airlines ® Help Center for answers about everything Southwest.",
+      "value": "Southwest's late-morning departure, Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25, flies Las Vegas to New York LaGuardia, a route of 2242 miles. Leaving at 11:30 allows a relaxed final morning in Las Vegas, and the 22:25 Eastern arrival makes it a late night, so a car helps, and You can rent a car at La Guardia Airport. Southwest notes that Fares listed are Basic, which are subject to additional terms and conditions. On travel day you can Check the status of your upcoming Southwest flight.",
       "claims": [
         {
-          "text": "Las Vegas (LAS) to New York LaGuardia (LGA)",
+          "text": "2242 miles",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
-          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
-        },
-        {
-          "text": "Check the status of your upcoming Southwest flight",
+          "text": "You can rent a car at La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
@@ -85,16 +81,26 @@
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Check out the Southwest Airlines ® Help Center for answers about everything Southwest",
+          "text": "Check the status of your upcoming Southwest flight",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight).",
+      "claims": [
+        {
+          "text": "Check the status of your upcoming Southwest flight",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 11:30-22:25: a late arrival; check flight status on the day (Check the status of your upcoming Southwest flight)."
 }

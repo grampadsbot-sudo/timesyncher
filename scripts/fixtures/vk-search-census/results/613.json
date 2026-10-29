@@ -42,6 +42,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "several wooden escalators still in operation",
     "department store building on West 34th Street at Herald Square",
     "department store building on West 34th Street at Herald Square",
     "making it the largest department store in the United States and one of the largest in the world",
@@ -50,7 +51,7 @@
     "I tend to get lost in and have difficulties finding the things I am looking for",
     "4 of 5 bubbles (4,988 reviews)"
   ],
-  "itineraryNoteCandidate": "Ride the wooden escalators through America's largest store, then duck out before late-day crowds hit Herald Square.",
+  "itineraryNoteCandidate": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -116,6 +117,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
+      "claims": [
+        {
+          "text": "several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -131,9 +141,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays."
 }

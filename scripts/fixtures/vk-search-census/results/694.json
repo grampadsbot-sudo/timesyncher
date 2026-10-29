@@ -27,11 +27,13 @@
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
+    "the corner of Fifth Avenue and 57th Street",
+    "subterranean Jazz Club",
     "subterranean Jazz Club",
     "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
     "the corner of Fifth Avenue and 57th Street"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -63,12 +65,26 @@
           "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
+      "claims": [
+        {
+          "text": "the corner of Fifth Avenue and 57th Street",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
+        },
+        {
+          "text": "subterranean Jazz Club",
+          "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club."
 }

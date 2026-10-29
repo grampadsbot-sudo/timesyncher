@@ -42,6 +42,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Across from the Museum",
     "showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more",
     "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
     "This destination store offers the best selection of new and classic design objects and gifts for everyone",
@@ -53,7 +54,7 @@
     "The store can get quite crowded around midday",
     "Prices are better on the internet than in the store."
   ],
-  "itineraryNoteCandidate": "Browse curated design objects across from MoMA—best before or after a museum visit.",
+  "itineraryNoteCandidate": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
@@ -137,6 +138,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
+      "claims": [
+        {
+          "text": "Across from the Museum",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -153,9 +163,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit."
 }

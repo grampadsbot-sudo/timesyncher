@@ -37,7 +37,8 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "511 Amsterdam Ave (btw 84/85th)",
-    "Combining his passion for Irish pubs and literature",
+    "e’s BAR is a neighborhood joint with good food, good drinks, fun games and smiling people",
+    "Drew Dvorkin opened The Dead Poet in September of 2000",
     "a neighborhood joint with good food, good drinks, fun games and smiling people",
     "511 Amsterdam Ave (btw 84/85th)",
     "opened The Dead Poet in September of 2000",
@@ -45,10 +46,10 @@
     "Walk ins Welcome",
     "Indoor and Outdoor Dining"
   ],
-  "itineraryNoteCandidate": "Start the UWS bar hop at e's for games and a casual burger—verify Dead Poet / Lilly's separately.",
+  "itineraryNoteCandidate": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine: an Upper West Side bar crawl; start with games at e's BAR, then a pint among the authors at The Dead Poet.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 1,
@@ -75,14 +76,14 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine pairs two Upper West Side bars: e's BAR on Amsterdam Avenue with games, and The Dead Poet's literary Irish pub.",
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine groups a relaxed Upper West Side night out on Amsterdam Avenue: e’s BAR is a neighborhood joint with good food, good drinks, fun games and smiling people, and The Dead Poet is a literary Irish pub that Drew Dvorkin opened The Dead Poet in September of 2000 to celebrate famous writers. It suits an easy, walkable evening of drinks.",
       "claims": [
         {
-          "text": "511 Amsterdam Ave (btw 84/85th)",
+          "text": "e’s BAR is a neighborhood joint with good food, good drinks, fun games and smiling people",
           "sourceUrl": "https://e-barnyc.com/"
         },
         {
-          "text": "Combining his passion for Irish pubs and literature",
+          "text": "Drew Dvorkin opened The Dead Poet in September of 2000",
           "sourceUrl": "https://www.thedeadpoet.com/"
         }
       ]
@@ -115,12 +116,22 @@
           "sourceUrl": "https://e-barnyc.com/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine: an Upper West Side bar crawl; start with games at e's BAR, then a pint among the authors at The Dead Poet.",
+      "claims": [
+        {
+          "text": "511 Amsterdam Ave (btw 84/85th)",
+          "sourceUrl": "https://e-barnyc.com/"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "e’s BAR / The Dead Poet / Lilly’s Cocktail & Wine: an Upper West Side bar crawl; start with games at e's BAR, then a pint among the authors at The Dead Poet."
 }

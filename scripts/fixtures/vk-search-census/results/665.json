@@ -20,13 +20,14 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "open top double-decker buses",
     "operator of open top bus sightseeing tours",
     "operator of open top bus sightseeing tours",
     "operates in 28 cities of 18 countries with 444 buses",
     "use open top double-decker buses in burgundy and cream-coloured livery",
     "Big Bus New York"
   ],
-  "itineraryNoteCandidate": "Use for orientation on day one—buy the shorter pass if you only need Midtown/Downtown.",
+  "itineraryNoteCandidate": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -84,12 +85,22 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
+      "claims": [
+        {
+          "text": "open top double-decker buses",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast."
 }

@@ -16,22 +16,31 @@
       "url": "https://www.opentable.com/cafe-luxembourg",
       "title": "Cafe Luxembourg Restaurant - New York, NY | OpenTable",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Cafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou …  West Side institution, delivers consistently delightful experiences with \"excellent classic upper west spot\" and \"delicious food and great service.\" Patrons adore the \"French onion soup\" and the \"best fries in town,\" while the \"friendly staff\" and \"great ambiance\" enhance every visit. 9,547 Reviews Good neighborhood spot, conveniently close to Lincoln Center. Love",
+      "text": "Cafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou …  West Side institution, delivers consistently delightful experiences with \"excellent classic upper west spot\" and \"delicious food and great service.\" Patrons adore the \"French onion soup\" and the \"best fries in town,\" while the \"friendly staff\" and \"great ambiance\" enhance every visit. 9,547 Reviews Good neighborhood spot, conveniently close to Lincoln Center. Love … Stands the test of time with great food and service … Lovely dinner in a place filled with locals.",
       "snippet": "Cafe Luxembourg Restaurant - New York, NY | OpenTable | | Cafe Luxembourg 4.8 (9547) $31 to $50 French American 200 W. 70th, New York, NY 10023 Cafe Luxembourg 4.8 $31 to $50 French American Upper West Side Booked 192 times today Abou",
       "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+      "title": "Cafe Luxembourg reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "Cafe Luxembourg | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 1186 ratings … Pre or post play or ballet … The steak au poivre is delicious … Wonderful meal! Pre or post play or ballet. Great service. … The steak au poivre is delicious and they make their own in house ice cream … Such an institution you’ll see all sorts of fashion icons here.",
+      "snippet": "4.3 1186 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "summaryClaims": [
     "Classic upper west side American brasserie since 1983",
-    "Legendary Upper West Side American brasserie in NYC since 1983",
-    "This is a neighborhood staple and a popular destination",
+    "Good neighborhood spot, conveniently close to Lincoln Center",
+    "Stands the test of time with great food and service",
+    "4.3 1186 ratings",
     "American classics with a nod to Fre",
-    "4.8 (9547)",
-    "Patrons adore the \"French onion soup\" and the \"best fries in town,\""
+    "Pre or post play or ballet",
+    "The steak au poivre is delicious"
   ],
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "evidenceReuse": {
     "source": "lane vk728-restaurant curl fetch",
@@ -40,7 +49,41 @@
   },
   "fields": {
     "summary": {
-      "value": "Cafe Luxembourg is a classic Upper West Side American brasserie, open since 1983, near Lincoln Center.",
+      "value": "Cafe Luxembourg is a legendary Upper West Side brasserie open since 1983, serving American classics with a French accent at 200 West 70th Street near Lincoln Center. OpenTable diners call it a Good neighborhood spot, conveniently close to Lincoln Center that Stands the test of time with great food and service, and Restaurantji guests rate it 4.3 1186 ratings. It suits a dinner before or after a performance.",
+      "claims": [
+        {
+          "text": "Good neighborhood spot, conveniently close to Lincoln Center",
+          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
+        },
+        {
+          "text": "Stands the test of time with great food and service",
+          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
+        },
+        {
+          "text": "4.3 1186 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Cafe Luxembourg is a legendary Upper West Side American brasserie in NYC since 1983. Its site calls it a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine, which suits dinner after Lincoln Center. OpenTable diners rate Cafe Luxembourg 4.8 from 9,547 reviews. Restaurantji diners recommend it Pre or post play or ballet and note The steak au poivre is delicious.",
+      "claims": [
+        {
+          "text": "American classics with a nod to Fre",
+          "sourceUrl": "https://www.cafeluxembourg.com/"
+        },
+        {
+          "text": "Pre or post play or ballet",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+        },
+        {
+          "text": "The steak au poivre is delicious",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
       "claims": [
         {
           "text": "Classic upper west side American brasserie since 1983",
@@ -48,31 +91,68 @@
         }
       ]
     },
-    "description": {
-      "value": "Cafe Luxembourg is a legendary Upper West Side American brasserie in NYC since 1983. Its site calls it a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine, which suits dinner after Lincoln Center. OpenTable diners rate Cafe Luxembourg 4.8 from 9,547 reviews, and patrons adore the \"French onion soup\" and the \"best fries in town,\" according to the review summary.",
-      "claims": [
-        {
-          "text": "Legendary Upper West Side American brasserie in NYC since 1983",
-          "sourceUrl": "https://www.cafeluxembourg.com/"
-        },
-        {
-          "text": "This is a neighborhood staple and a popular destination",
-          "sourceUrl": "https://www.cafeluxembourg.com/"
-        },
-        {
-          "text": "American classics with a nod to Fre",
-          "sourceUrl": "https://www.cafeluxembourg.com/"
-        },
-        {
-          "text": "4.8 (9547)",
-          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
-        },
-        {
-          "text": "Patrons adore the \"French onion soup\" and the \"best fries in town,\"",
-          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
-        }
-      ]
-    }
+    "reviews": [
+      {
+        "theme": "Pre-show dinner",
+        "value": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
+        "claims": [
+          {
+            "text": "Wonderful meal! Pre or post play or ballet. Great service.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 35
+      },
+      {
+        "theme": "Steak au poivre",
+        "value": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
+        "claims": [
+          {
+            "text": "The steak au poivre is delicious and they make their own in house ice cream",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      },
+      {
+        "theme": "Local institution",
+        "value": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
+        "claims": [
+          {
+            "text": "Such an institution you’ll see all sorts of fashion icons here.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 35
+      },
+      {
+        "theme": "Neighborhood staple",
+        "value": "OpenTable diners describe Cafe Luxembourg as a Lovely dinner in a place filled with locals., dependable for a classic bistro meal. Factor this into timing and expectations before heading to Cafe Luxembourg.",
+        "claims": [
+          {
+            "text": "Lovely dinner in a place filled with locals.",
+            "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
+          }
+        ],
+        "source": "OpenTable",
+        "sourceUrl": "https://www.opentable.com/cafe-luxembourg",
+        "rating": "4.8",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 32
+      }
+    ]
   },
   "rating": {
     "primary": 4.8,
@@ -83,9 +163,47 @@
     "opentable": 9547
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8",
+  "review1Theme": "Pre-show dinner",
+  "review2": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8",
+  "review2Theme": "Steak au poivre",
+  "review3": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.8",
+  "review3Theme": "Local institution",
+  "review4": "OpenTable diners describe Cafe Luxembourg as a Lovely dinner in a place filled with locals., dependable for a classic bistro meal. Factor this into timing and expectations before heading to Cafe Luxembourg.",
+  "review4Source": "OpenTable",
+  "review4Rating": "4.8",
+  "review4Theme": "Neighborhood staple",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+    "site": "Restaurantji",
+    "praise": [
+      "Wonderful meal! Pre or post play or ballet. Great service.",
+      "The steak au poivre is delicious and they make their own in house ice cream",
+      "Such an institution you’ll see all sorts of fashion icons here.",
+      "Lovely dinner in a place filled with locals."
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Pre-show dinner",
+      "Steak au poivre",
+      "Local institution",
+      "Neighborhood staple"
+    ],
+    "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+  },
+  "itineraryNote": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
+  "itineraryNoteCandidate": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre."
 }

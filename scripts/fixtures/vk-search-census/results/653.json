@@ -20,11 +20,13 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "La Guardia Airport",
     "Distance: 2242 miles",
-    "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
-    "Just choose the month you want to depart and return, and we’ll show you the best fares available"
+    "La Guardia Airport",
+    "2242 miles",
+    "Just choose the month you want to depart and return, and we’ll show you the best fare"
   ],
-  "itineraryNoteCandidate": "Southwest early LAS–LGA inventory row for June 23.",
+  "itineraryNoteCandidate": "Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45: a predawn start that frees the evening; land at 15:45 at La Guardia Airport.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -63,23 +65,37 @@
       ]
     },
     "description": {
-      "value": "Tuesday, June 23, 2026 is the date tied to Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45, a 05:05 predawn departure. The airport pair is spelled out on Southwest's page as Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles. Landing comes at 15:45 Eastern, leaving the whole evening free in New York. For other dates, the Low Fare Calendar works like this: Just choose the month you want to depart and return, and we’ll show you the best fares available.",
+      "value": "Tuesday, June 23, 2026 starts early with Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45, the predawn Southwest choice from Las Vegas to La Guardia Airport over 2242 miles. Wheels up at 05:05 means an early alarm, but landing at 15:45 Eastern leaves the whole evening free, the main appeal of Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45. For other dates, Southwest's Low Fare Calendar helps: Just choose the month you want to depart and return, and we’ll show you the best fare.",
       "claims": [
         {
-          "text": "Departing from: McCarran International Airport Arriving at: La Guardia Airport Distance: 2242 miles",
+          "text": "La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         },
         {
-          "text": "Just choose the month you want to depart and return, and we’ll show you the best fares available",
+          "text": "2242 miles",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        },
+        {
+          "text": "Just choose the month you want to depart and return, and we’ll show you the best fare",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45: a predawn start that frees the evening; land at 15:45 at La Guardia Airport.",
+      "claims": [
+        {
+          "text": "La Guardia Airport",
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: Southwest LAS-LGA 2026-06-23 05:05-15:45: a predawn start that frees the evening; land at 15:45 at La Guardia Airport."
 }

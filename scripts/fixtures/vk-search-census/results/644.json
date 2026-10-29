@@ -36,12 +36,13 @@
   "summaryClaims": [
     "117 W 72nd Street btw Columbus & Broadway",
     "117 W 72nd Street btw Columbus & Broadway",
+    "117 W 72nd Street btw Columbus & Broadway",
     "7:00 AM 9:00 PM",
     "The customer service at the 72nd st Juice Generation is exceptional.",
     "The music in this branch is so loud",
     "3.9 187 ratings"
   ],
-  "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
+  "itineraryNoteCandidate": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
@@ -103,6 +104,15 @@
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
+      "claims": [
+        {
+          "text": "117 W 72nd Street btw Columbus & Broadway",
+          "sourceUrl": "https://www.juicegeneration.com/locations"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -118,9 +128,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park."
 }

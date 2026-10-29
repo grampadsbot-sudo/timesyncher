@@ -39,6 +39,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "Statue of Liberty Museum",
     "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
     "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
     "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
@@ -50,7 +51,7 @@
     "the boat ride was calm, and the views were amazing",
     "had to wait in the heat for nearly an hour for a boat"
   ],
-  "itineraryNoteCandidate": "Book statuecitycruises.com early for pedestal/crown; GA covers Liberty + Ellis ferry.",
+  "itineraryNoteCandidate": "Statue of Liberty / Ellis Island tour candidate: the official ferry from Battery Park; tickets include the Statue of Liberty Museum, so plan a full morning.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -128,6 +129,15 @@
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Statue of Liberty / Ellis Island tour candidate: the official ferry from Battery Park; tickets include the Statue of Liberty Museum, so plan a full morning.",
+      "claims": [
+        {
+          "text": "Statue of Liberty Museum",
+          "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -143,9 +153,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Statue of Liberty / Ellis Island tour candidate: the official ferry from Battery Park; tickets include the Statue of Liberty Museum, so plan a full morning."
 }

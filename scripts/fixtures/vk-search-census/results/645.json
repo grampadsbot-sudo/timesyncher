@@ -36,6 +36,8 @@
   "summaryClaims": [
     "Nordstrom on 57th Street",
     "Stylist Lounge at Nordstrom",
+    "Nordstrom on 57th Street",
+    "Stylist Lounge at Nordstrom",
     "I really enjoy shopping at the Nordstrom on 57th Street.",
     "The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated",
     "I recently had an appointment in the Stylist Lounge at Nordstrom",
@@ -46,7 +48,7 @@
     "The store has a beautiful, modern design",
     "Prices are generally on the high side"
   ],
-  "itineraryNoteCandidate": "Browse the Central Park Tower flagship for luxury floors without Midtown Fifth Avenue crush.",
+  "itineraryNoteCandidate": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
@@ -128,6 +130,19 @@
           "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
+      "claims": [
+        {
+          "text": "Nordstrom on 57th Street",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "Stylist Lounge at Nordstrom",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -143,9 +158,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-quality-r4-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session."
 }

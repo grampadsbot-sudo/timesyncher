@@ -16,7 +16,7 @@
       "url": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
       "title": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for y … enu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … ji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … a Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had differ",
+      "text": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for y … enu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … ji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … a Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had differ … The atmosphere and music were great. Get there early for your choice of seat.",
       "snippet": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Ge",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -34,6 +34,7 @@
   "happyHourHint": null,
   "summaryClaims": [
     "Historic Bar and Jazz Club in Greenwich Village",
+    "the romantic Art-Deco-era Paris jazz bar vibe",
     "Historic Bar and Jazz Club in Greenwich Village",
     "famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed",
     "Friday 5 pm - 2 am",
@@ -43,10 +44,10 @@
     "Get there early for your choice of seat",
     "4.1 300 ratings"
   ],
-  "itineraryNoteCandidate": null,
+  "itineraryNoteCandidate": "Zinc Bar: a candlelit Greenwich Village jazz cellar with a Billie Holiday past; arrive early for a good seat and stay for a late set.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
   },
   "callCounts": {
     "webSearch": 0,
@@ -55,11 +56,11 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "Zinc Bar is a historic bar and jazz club at 82 W 3rd Street in Greenwich Village with live music.",
+      "value": "Zinc Bar is a historic Greenwich Village bar and jazz club at 82 W 3rd Street, the former Cinderella Club where Billie Holiday performed, with late hours and live music nightly. Restaurantji diners fell for the romantic Art-Deco-era Paris jazz bar vibe, and one couple returned a year later to propose there. It suits a late, music-first night out.",
       "claims": [
         {
-          "text": "Historic Bar and Jazz Club in Greenwich Village",
-          "sourceUrl": "https://www.zincbar.com/"
+          "text": "the romantic Art-Deco-era Paris jazz bar vibe",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
         }
       ]
     },
@@ -99,7 +100,78 @@
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
         }
       ]
-    }
+    },
+    "itineraryNote": {
+      "value": "Zinc Bar: a candlelit Greenwich Village jazz cellar with a Billie Holiday past; arrive early for a good seat and stay for a late set.",
+      "claims": [
+        {
+          "text": "Historic Bar and Jazz Club in Greenwich Village",
+          "sourceUrl": "https://www.zincbar.com/"
+        }
+      ]
+    },
+    "reviews": [
+      {
+        "theme": "Romantic vibe",
+        "value": "Zinc Bar wins hearts on atmosphere; a Restaurantji couple immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe and came back to get engaged.",
+        "claims": [
+          {
+            "text": "immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+        "rating": "4.1",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 27
+      },
+      {
+        "theme": "Staff and cocktails",
+        "value": "Restaurantji guests at Zinc Bar praise the people behind the bar: Really friendly staff and good cocktails. Keep this in mind as the main reason to choose Zinc Bar over nearby options.",
+        "claims": [
+          {
+            "text": "Really friendly staff and good cocktails.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+        "rating": "4.1",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 32
+      },
+      {
+        "theme": "Seating",
+        "value": "Arrive early at Zinc Bar; a Restaurantji reviewer said The atmosphere and music were great. Get there early for your choice of seat. Travelers comparing spots should weigh this honestly when picking Zinc Bar.",
+        "claims": [
+          {
+            "text": "The atmosphere and music were great. Get there early for your choice of seat.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+        "rating": "4.1",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 34
+      },
+      {
+        "theme": "Snack menu",
+        "value": "Food is limited at Zinc Bar, and one Restaurantji reviewer wished for snacks beyond flat bread, so eat dinner before the set. Factor this into timing and expectations before heading to Zinc Bar.",
+        "claims": [
+          {
+            "text": "flat bread",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+        "rating": "4.1",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 33
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -107,18 +179,45 @@
     "site": "Restaurantji",
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
-      "Really friendly staff and good cocktails"
+      "immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
+      "Really friendly staff and good cocktails."
     ],
     "watchOuts": [
-      "I wish they had different snacks for the folks who can't/don't want flat bread",
-      "Get there early for your choice of seat"
+      "The atmosphere and music were great. Get there early for your choice of seat.",
+      "flat bread"
+    ],
+    "complaints": [
+      "The atmosphere and music were great. Get there early for your choice of seat.",
+      "flat bread"
+    ],
+    "themes": [
+      "Romantic vibe",
+      "Staff and cocktails",
+      "Seating",
+      "Snack menu"
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
-    "new": true,
-    "at": "2026-10-29T06:30:00Z",
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "review1": "Zinc Bar wins hearts on atmosphere; a Restaurantji couple immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe and came back to get engaged.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.1",
+  "review1Theme": "Romantic vibe",
+  "review2": "Restaurantji guests at Zinc Bar praise the people behind the bar: Really friendly staff and good cocktails. Keep this in mind as the main reason to choose Zinc Bar over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.1",
+  "review2Theme": "Staff and cocktails",
+  "review3": "Arrive early at Zinc Bar; a Restaurantji reviewer said The atmosphere and music were great. Get there early for your choice of seat. Travelers comparing spots should weigh this honestly when picking Zinc Bar.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.1",
+  "review3Theme": "Seating",
+  "review4": "Food is limited at Zinc Bar, and one Restaurantji reviewer wished for snacks beyond flat bread, so eat dinner before the set. Factor this into timing and expectations before heading to Zinc Bar.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.1",
+  "review4Theme": "Snack menu",
+  "itineraryNote": "Zinc Bar: a candlelit Greenwich Village jazz cellar with a Billie Holiday past; arrive early for a good seat and stay for a late set."
 }

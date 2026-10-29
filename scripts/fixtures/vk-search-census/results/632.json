@@ -25,10 +25,11 @@
   "summaryClaims": [
     "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
     "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+    "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
     "Distance: 2242 miles",
     "Additional fees and charges for optional products and services may apply"
   ],
-  "itineraryNoteCandidate": "Earliest Southwest LAS–LGA in the candidate set — maximize NYC afternoon.",
+  "itineraryNoteCandidate": "Southwest LAS → LGA 05:05–15:45: the predawn option; sleep on the plane and have the whole evening in New York.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -82,12 +83,22 @@
           "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Southwest LAS → LGA 05:05–15:45: the predawn option; sleep on the plane and have the whole evening in New York.",
+      "claims": [
+        {
+          "text": "There are 152 weekly flights from Las Vegas to New York (LaGuardia) on Southwest Airlines",
+          "sourceUrl": "https://www.southwest.com/en/flights/flights-from-las-vegas-to-new-york"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-flight-dedupe-narrow-sw-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Southwest LAS → LGA 05:05–15:45: the predawn option; sleep on the plane and have the whole evening in New York."
 }

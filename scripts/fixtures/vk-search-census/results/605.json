@@ -50,6 +50,7 @@
   "hoursHint": "Main store Mon–Sun 10am–9pm; Rare Book Room Mon–Fri 10am–5pm, Sat–Sun 10am–6pm (official)",
   "happyHourHint": null,
   "summaryClaims": [
+    "18 Miles Of Books",
     "independent bookstore located at 828 Broadway",
     "independent bookstore located at 828 Broadway",
     "18 Miles Of Books",
@@ -58,7 +59,7 @@
     "It does feel a bit disorganized",
     "4.7 of 5 bubbles (843 reviews)"
   ],
-  "itineraryNoteCandidate": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
+  "itineraryNoteCandidate": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -131,6 +132,15 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
+      "claims": [
+        {
+          "text": "18 Miles Of Books",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -146,9 +156,10 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-rating-theme-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front."
 }

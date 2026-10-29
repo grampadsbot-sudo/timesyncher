@@ -23,6 +23,7 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
+    "The flight arrives 1 day after departure.",
     "The flight arrives 1 day after departure",
     "JetBlue flights from Las Vegas Harry Reid (LAS) to New York John F. Kennedy (JFK)",
     "A domestic route departing from the Las Vegas Harry Reid airport (LAS) and arriving at New York John F. Kennedy airport (JFK)",
@@ -30,7 +31,7 @@
     "The flight distance is 2241 miles, or 3607 km",
     "For direct flights, the flight time varies between 4:44 and 5:15"
   ],
-  "itineraryNoteCandidate": "Red-eye JetBlue LAS–JFK to wake up in New York — save a hotel night.",
+  "itineraryNoteCandidate": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -92,12 +93,22 @@
           "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
         }
       ]
+    },
+    "itineraryNote": {
+      "value": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure.",
+      "claims": [
+        {
+          "text": "The flight arrives 1 day after departure.",
+          "sourceUrl": "https://info.flightmapper.net/route/JetBlue_B6_LAS_JFK"
+        }
+      ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-all-things-essence-ladder-20261029",
     "new": false,
-    "at": "2026-10-29T06:30:00Z",
+    "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
-  }
+  },
+  "itineraryNote": "Flight option: JetBlue LAS-JFK 2026-06-23 23:59-08:04+1: the red-eye; sleep aboard and arrive for breakfast, since The flight arrives 1 day after departure."
 }
