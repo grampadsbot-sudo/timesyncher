@@ -162,10 +162,29 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     hint('itineraryNote', result.itineraryNoteCandidate, result.itineraryNoteSourceUrl);
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
   }
+  // Bot-written review lines (review1..4) reach the card only when each one quotes a verbatim
+  // excerpt that the cited review page supports. No excerpt on the page, no review.
+  const themes = result.reviewThemes && typeof result.reviewThemes === 'object' ? result.reviewThemes : {};
+  const excerpts = [...list(themes.praise), ...list(themes.watchOuts), ...list(themes.complaints)].map(text).filter(Boolean);
+  const reviewPage = text(themes.source) ? pageIndex(text(themes.source)) : -1;
+  const reviews = [1, 2, 3, 4].flatMap((n) => {
+    const body = text(result[`review${n}`]);
+    const quote = excerpts.find((row) => body.includes(row));
+    if (!body || !quote || claimTextWasRejected(body, rejected) || !pageSupports(reviewPage, quote)) return [];
+    const stars = Number(result[`review${n}Stars`]);
+    return [{
+      text: body,
+      ...(Number.isInteger(stars) && stars >= 1 && stars <= 5 ? { rating: stars } : {}),
+      ...(text(result[`review${n}Theme`]) ? { theme: text(result[`review${n}Theme`]) } : {}),
+      ...(text(result[`review${n}Source`]) ? { source: text(result[`review${n}Source`]) } : {}),
+      claims: [{ text: quote, sourceUrl: pages[reviewPage].url, pages: [`p${reviewPage + 1}`], supported: true }],
+    }];
+  });
+  if (reviews.length === 4) dossier.reviews = reviews;
   const source = text(result.rating?.primarySource).toLowerCase();
   const average = Number(result.rating?.primary);
   if (voiceAllowed && verdictEligible(result.rating)
-    && ['yelp', 'google', 'tripadvisor'].includes(source) && average > 0 && average <= 5) {
+    && ['yelp', 'google', 'tripadvisor', 'restaurantji'].includes(source) && average > 0 && average <= 5) {
     const url = result.rating.sourceUrl || result.rating.primarySourceUrl;
     const claim = claims.find((row) => claimBody(row).toLowerCase().includes(source));
     const index = url ? pageIndex(url) : sources.findIndex((row) => new URL(row.url).hostname.includes(`${source}.`));
