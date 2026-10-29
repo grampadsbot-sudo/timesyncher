@@ -136,7 +136,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28
+        "words": 28,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Guacamole and snacks",
@@ -151,7 +157,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27
+        "words": 27,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Atmosphere",
@@ -166,7 +178,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25
+        "words": 25,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Service",
@@ -181,7 +199,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29
+        "words": 29,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -214,21 +238,30 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips.",
   "review1": "Timing matters at Bodega 88: a Restaurantji reviewer says Happy Hour is the time to go, and the bar's own deals run through the afternoon into early evening.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
   "review1Theme": "Happy hour",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+  "review1Stars": 5,
   "review2": "The bar food gets specific praise from Restaurantji guests at Bodega 88, who report that The guacamole is fresh and served with both tortilla and plantain chips.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.3",
   "review2Theme": "Guacamole and snacks",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+  "review2Stars": 5,
   "review3": "Bodega 88 earns its keep on mood as much as menu; one Restaurantji diner wrote Delicious food! Great drinks! Awesome atmosphere! and recommended stopping by.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.3",
   "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+  "review3Stars": 5,
   "review4": "Guests describe friendly, reliable service at Bodega 88: a Restaurantji reviewer who came with family said The service, food and drinks was excellent and called it a wonderful evening.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.3",
   "review4Theme": "Service",
-  "itineraryNote": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips."
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

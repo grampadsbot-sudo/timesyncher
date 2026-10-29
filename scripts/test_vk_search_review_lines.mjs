@@ -22,4 +22,12 @@ assert.equal(unsupported.reviews, undefined, 'one unquoted line blocks the whole
 
 const offPage = vkSearchResultToDossier({ ...base, ...lines, reviewThemes: { ...base.reviewThemes, praise: ['not on the page at all', ...quotes.slice(1, 3)] }, review1: 'Diners say not on the page at all.' }, {});
 assert.equal(offPage.reviews, undefined, 'an excerpt the page does not support is rejected');
+const starred = vkSearchResultToDossier({ ...base, ...lines, review1Stars: '5' }, {});
+assert.equal(starred.reviews[0].rating, 5);
+const trip = Object.fromEntries([1, 2, 3, 4].flatMap((n) => [[`review${n}Source`, 'Trip.com'], [`review${n}Score10`, ['9.2', '7', '4.4', '10'][n - 1]]]));
+const tripDossier = vkSearchResultToDossier({ ...base, ...lines, ...trip }, {});
+assert.deepEqual(tripDossier.reviews.map((r) => r.rating), [5, 4, 2, 5], 'Trip.com /10 maps to whole stars by halving');
+assert.equal(tripDossier.reviews[0].starsEvidence, '9.2/10', 'exact /10 score is kept');
+const notTrip = vkSearchResultToDossier({ ...base, ...lines, review1Source: 'Yelp', review1Score10: '9' }, {});
+assert.equal(notTrip.reviews[0].rating, undefined, 'a /10 score only maps for Trip.com');
 console.log('ok vk search review lines');

@@ -127,7 +127,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
         "rating": "4.6",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25
+        "words": 25,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+          "savedHtml": "r7/raw/st_0e1b39db0e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Dish to try",
@@ -142,7 +148,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
         "rating": "4.6",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 31
+        "words": 31,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+          "savedHtml": "r7/raw/st_0e1b39db0e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Bar team",
@@ -157,8 +169,16 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
         "rating": "4.6",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27
-      },
+        "words": 27,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+          "savedHtml": "r7/raw/st_0e1b39db0e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ],
+    "reviewsUnstarred": [
       {
         "theme": "Vegetables",
         "value": "The signature at Westville Hell's Kitchen is the vegetable lineup; the restaurant says it is known for our fresh market vegetables (24+ daily!). Factor this into timing and expectations before heading to Westville Hell's Kitchen.",
@@ -182,22 +202,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
-  "review1Source": "Restaurantji",
-  "review1Rating": "4.6",
-  "review1Theme": "Relaxed meal",
-  "review2": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
-  "review2Source": "Restaurantji",
-  "review2Rating": "4.6",
-  "review2Theme": "Dish to try",
-  "review3": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
-  "review3Source": "Restaurantji",
-  "review3Rating": "4.6",
-  "review3Theme": "Bar team",
-  "review4": "The signature at Westville Hell's Kitchen is the vegetable lineup; the restaurant says it is known for our fresh market vegetables (24+ daily!). Factor this into timing and expectations before heading to Westville Hell's Kitchen.",
-  "review4Source": "official site",
-  "review4Rating": "4.6",
-  "review4Theme": "Vegetables",
   "reviewThemes": {
     "representative": true,
     "source": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
@@ -218,5 +222,24 @@
     ],
     "via": "curl live fetch 2026-10-28"
   },
-  "itineraryNote": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater."
+  "itineraryNote": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater.",
+  "review1": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.6",
+  "review1Theme": "Relaxed meal",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+  "review1Stars": 5,
+  "review2": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.6",
+  "review2Theme": "Dish to try",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+  "review2Stars": 5,
+  "review3": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.6",
+  "review3Theme": "Bar team",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
+  "review3Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

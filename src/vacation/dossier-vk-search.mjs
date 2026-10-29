@@ -59,6 +59,15 @@ export function vkSearchClaimSupportOk(result) {
   });
 }
 
+function reviewStars(result, n) {
+  const stars = Number(result[`review${n}Stars`]);
+  if (Number.isInteger(stars) && stars >= 1 && stars <= 5) return { rating: stars, evidence: `${stars}/5` };
+  const raw = text(result[`review${n}Score10`]);
+  const score = Number(raw);
+  if (!raw || !/trip\.com/i.test(text(result[`review${n}Source`])) || !Number.isFinite(score) || score <= 0 || score > 10) return null;
+  return { rating: Math.min(5, Math.max(1, Math.round(score / 2))), evidence: `${raw}/10` };
+}
+
 export function loadVkSearchCensusResult(place, { env = process.env, censusDir } = {}) {
   const id = String(place?.id || place?.placeId || place?.rowId || '');
   if (!/^[a-zA-Z0-9_-]+$/.test(id)) return null;
@@ -169,10 +178,10 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const body = text(result[`review${n}`]);
     const quote = excerpts.find((row) => body.includes(row));
     if (!body || !quote || claimTextWasRejected(body, rejected) || !pageSupports(reviewPage, quote)) return [];
-    const stars = Number(result[`review${n}Stars`]);
+    const stars = reviewStars(result, n);
     return [{
       text: body,
-      ...(Number.isInteger(stars) && stars >= 1 && stars <= 5 ? { rating: stars } : {}),
+      ...(stars ? { rating: stars.rating, starsEvidence: stars.evidence } : {}),
       ...(text(result[`review${n}Theme`]) ? { theme: text(result[`review${n}Theme`]) } : {}),
       ...(text(result[`review${n}Source`]) ? { source: text(result[`review${n}Source`]) } : {}),
       claims: [{ text: quote, sourceUrl: pages[reviewPage].url, pages: [`p${reviewPage + 1}`], supported: true }],

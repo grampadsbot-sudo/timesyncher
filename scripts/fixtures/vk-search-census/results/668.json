@@ -134,7 +134,74 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Village_Vanguard"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: This place definitely lives up to the reputation. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "This place definitely lives up to the reputation",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Village Vanguard: be careful at the steep stairs taking you to the basement room. Worth weighing alongside the overall 4.1/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "be careful at the steep stairs taking you to the basement room",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: the focus is truly on the music. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "the focus is truly on the music",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Village Vanguard: I sat behind a pole. A practical point to factor into the decision before the trip. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "I sat behind a pole",
+            "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
+        "rating": "4.1/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -143,12 +210,18 @@
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
       "This place definitely lives up to the reputation",
-      "the focus is truly on the music"
+      "be careful at the steep stairs taking you to the basement room",
+      "the focus is truly on the music",
+      "I sat behind a pole"
     ],
-    "watchOuts": [
-      "I sat behind a pole",
-      "be careful at the steep stairs taking you to the basement room"
-    ]
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Rooms",
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": []
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -156,5 +229,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Village Vanguard: the oldest operating jazz club in New York City; book the 8 pm set and soak up the history."
+  "itineraryNote": "Village Vanguard: the oldest operating jazz club in New York City; book the 8 pm set and soak up the history.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

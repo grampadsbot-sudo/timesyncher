@@ -132,7 +132,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 38
+        "words": 38,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+          "savedHtml": "r7/raw/st_45d99fce88.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Gluten-free friendly",
@@ -147,7 +153,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28
+        "words": 28,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+          "savedHtml": "r7/raw/st_45d99fce88.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Standout service",
@@ -166,7 +178,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30
+        "words": 30,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+          "savedHtml": "r7/raw/st_45d99fce88.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Wine by the glass",
@@ -181,7 +199,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28
+        "words": 28,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+          "savedHtml": "r7/raw/st_45d99fce88.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -191,22 +215,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "Piccola Cucina Uptown wins on freshness; a Restaurantji diner wrote Everything they make is delicious and very fresh, with timely service on top. For trip planning, weigh this first when deciding whether Piccola Cucina Uptown fits the day.",
-  "review1Source": "Restaurantji",
-  "review1Rating": "4.8",
-  "review1Theme": "Fresh, careful cooking",
-  "review2": "Diners with dietary needs do well at Piccola Cucina Uptown: They have gluten free bread, pasta and even their eggplant parmesan is gluten free, one Restaurantji reviewer reports.",
-  "review2Source": "Restaurantji",
-  "review2Rating": "4.8",
-  "review2Theme": "Gluten-free friendly",
-  "review3": "Service is a recurring high point at Piccola Cucina Uptown; one guest called it the Best service I've maybe ever had at a restaurant! and another said Service was exceptional.",
-  "review3Source": "Restaurantji",
-  "review3Rating": "4.8",
-  "review3Theme": "Standout service",
-  "review4": "The honest watch-out at Piccola Cucina Uptown: a Restaurantji reviewer said One element that could be improved is the variety (and quality) of the wines by the glass.",
-  "review4Source": "Restaurantji",
-  "review4Rating": "4.8",
-  "review4Theme": "Wine by the glass",
   "reviewThemes": {
     "representative": true,
     "source": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
@@ -230,5 +238,30 @@
     ],
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
   },
-  "itineraryNote": "Piccola Cucina Uptown: a warm Sicilian-Italian room by Central Park; book dinner and try the Cacio E Pepe Made at Table in a Wheel of Cheese."
+  "itineraryNote": "Piccola Cucina Uptown: a warm Sicilian-Italian room by Central Park; book dinner and try the Cacio E Pepe Made at Table in a Wheel of Cheese.",
+  "review1": "Piccola Cucina Uptown wins on freshness; a Restaurantji diner wrote Everything they make is delicious and very fresh, with timely service on top. For trip planning, weigh this first when deciding whether Piccola Cucina Uptown fits the day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8",
+  "review1Theme": "Fresh, careful cooking",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+  "review1Stars": 5,
+  "review2": "Diners with dietary needs do well at Piccola Cucina Uptown: They have gluten free bread, pasta and even their eggplant parmesan is gluten free, one Restaurantji reviewer reports.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8",
+  "review2Theme": "Gluten-free friendly",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+  "review2Stars": 5,
+  "review3": "Service is a recurring high point at Piccola Cucina Uptown; one guest called it the Best service I've maybe ever had at a restaurant! and another said Service was exceptional.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.8",
+  "review3Theme": "Standout service",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+  "review3Stars": 5,
+  "review4": "The honest watch-out at Piccola Cucina Uptown: a Restaurantji reviewer said One element that could be improved is the variety (and quality) of the wines by the glass.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.8",
+  "review4Theme": "Wine by the glass",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

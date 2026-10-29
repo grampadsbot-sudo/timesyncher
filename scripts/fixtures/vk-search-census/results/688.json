@@ -124,7 +124,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
         "rating": "4.2",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26
+        "words": 26,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+          "savedHtml": "r7/raw/st_1ae5df35d1.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Service",
@@ -139,7 +145,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
         "rating": "4.2",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 31
+        "words": 31,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+          "savedHtml": "r7/raw/st_1ae5df35d1.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Drinks",
@@ -158,7 +170,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
         "rating": "4.2",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34
+        "words": 34,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+          "savedHtml": "r7/raw/st_1ae5df35d1.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Take-home souvenirs",
@@ -173,7 +191,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
         "rating": "4.2",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29
+        "words": 29,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+          "savedHtml": "r7/raw/st_1ae5df35d1.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -203,21 +227,30 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
   "review1": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Soul food",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review1Stars": 5,
   "review2": "Hospitality comes through at Sylvia's Harlem, with Restaurantji diners reporting The food and service was amazing! Keep this in mind as the main reason to choose Sylvia's Harlem over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Service",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review2Stars": 5,
   "review3": "The bar side holds up at Sylvia's Harlem too; one Restaurantji reviewer said the meal was soooo delicious and the drinks were great. Travelers comparing spots should weigh this honestly when picking Sylvia's Harlem.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Drinks",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review3Stars": 5,
   "review4": "Sylvia's Harlem sells its pantry: one Restaurantji guest bought her seasoning and hot sauce, an easy edible souvenir. Factor this into timing and expectations before heading to Sylvia's Harlem.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Take-home souvenirs",
-  "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce."
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

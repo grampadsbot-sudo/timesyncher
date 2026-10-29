@@ -158,19 +158,69 @@
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Overall experience",
+        "value": "Exa place listing reviewer on Whole Foods Market Upper West Side: great fresh produce and good sales. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "great fresh produce and good sales",
+            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+        "rating": "3.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 32,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9t58jkr8sn4",
+          "savedHtml": "r7/raw/st_88bc8004d7.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      },
+      {
+        "theme": "Value",
+        "value": "Exa place listing reviewer on Whole Foods Market Upper West Side: slightly higher prices. Worth weighing alongside the overall 3.2/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "slightly higher prices",
+            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+        "rating": "3.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 26,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/9t58jkr8sn4",
+          "savedHtml": "r7/raw/st_88bc8004d7.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://exa.ai/library/place/9t58jkr8sn4",
-    "site": "aggregated guest reviews",
+    "site": "Exa place listing",
     "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
     "praise": [
-      "great fresh produce and good sales"
-    ],
-    "watchOuts": [
+      "great fresh produce and good sales",
       "slightly higher prices"
-    ]
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Value"
+    ],
+    "complaints": []
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -178,5 +228,19 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich."
+  "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "review1": "Exa place listing reviewer on Whole Foods Market Upper West Side: great fresh produce and good sales. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "3.2/5",
+  "review1Theme": "Overall experience",
+  "review1SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review1Stars": 5,
+  "review2": "Exa place listing reviewer on Whole Foods Market Upper West Side: slightly higher prices. Worth weighing alongside the overall 3.2/5 score before locking in the plan.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "3.2/5",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
+  "review2Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

@@ -105,7 +105,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 35
+        "words": 35,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+          "savedHtml": "r7/raw/st_e43efdc23e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Steak au poivre",
@@ -120,7 +126,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29
+        "words": 29,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+          "savedHtml": "r7/raw/st_e43efdc23e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Local institution",
@@ -135,8 +147,16 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 35
-      },
+        "words": 35,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+          "savedHtml": "r7/raw/st_e43efdc23e.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ],
+    "reviewsUnstarred": [
       {
         "theme": "Neighborhood staple",
         "value": "OpenTable diners describe Cafe Luxembourg as a Lovely dinner in a place filled with locals., dependable for a classic bistro meal. Factor this into timing and expectations before heading to Cafe Luxembourg.",
@@ -168,22 +188,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
-  "review1Source": "Restaurantji",
-  "review1Rating": "4.8",
-  "review1Theme": "Pre-show dinner",
-  "review2": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
-  "review2Source": "Restaurantji",
-  "review2Rating": "4.8",
-  "review2Theme": "Steak au poivre",
-  "review3": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
-  "review3Source": "Restaurantji",
-  "review3Rating": "4.8",
-  "review3Theme": "Local institution",
-  "review4": "OpenTable diners describe Cafe Luxembourg as a Lovely dinner in a place filled with locals., dependable for a classic bistro meal. Factor this into timing and expectations before heading to Cafe Luxembourg.",
-  "review4Source": "OpenTable",
-  "review4Rating": "4.8",
-  "review4Theme": "Neighborhood staple",
   "reviewThemes": {
     "representative": true,
     "source": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
@@ -205,5 +209,24 @@
     "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
   },
   "itineraryNote": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
-  "itineraryNoteCandidate": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre."
+  "itineraryNoteCandidate": "Cafe Luxembourg: a 1983 Upper West Side bistro institution; book after Lincoln Center and order the steak au poivre.",
+  "review1": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8",
+  "review1Theme": "Pre-show dinner",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+  "review1Stars": 5,
+  "review2": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8",
+  "review2Theme": "Steak au poivre",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+  "review2Stars": 5,
+  "review3": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.8",
+  "review3Theme": "Local institution",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
+  "review3Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

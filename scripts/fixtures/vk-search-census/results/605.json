@@ -141,7 +141,42 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Strand Book Store: Book lovers you have found your heaven. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Book lovers you have found your heaven.",
+            "sourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
+        "rating": "4.7/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Value",
+        "value": "Watch-out from a Tripadvisor reviewer at Strand Book Store: It does feel a bit disorganized. Worth weighing alongside the overall 4.7/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "It does feel a bit disorganized",
+            "sourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
+        "rating": "4.7/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -153,6 +188,13 @@
     ],
     "watchOuts": [
       "It does feel a bit disorganized"
+    ],
+    "themes": [
+      "Overall experience",
+      "Value"
+    ],
+    "complaints": [
+      "It does feel a bit disorganized"
     ]
   },
   "fieldsWritePass": {
@@ -161,5 +203,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front."
+  "itineraryNote": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

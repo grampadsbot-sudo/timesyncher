@@ -143,7 +143,58 @@
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d136347-Reviews-Bryant_Park-New_York_City_New_York.html"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Friend meetup at Bryant Park: Fantastic place to visit around the Holidays. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Fantastic place to visit around the Holidays.",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html",
+        "rating": "4.6/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 30
+      },
+      {
+        "theme": "Breakfast and dining",
+        "value": "Tripadvisor reviewer on Friend meetup at Bryant Park: the food here can be a bit overpriced. Worth weighing alongside the overall 4.6/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "the food here can be a bit overpriced",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html",
+        "rating": "4.6/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at Friend meetup at Bryant Park: Maybe the crowds, which are really heavy on the weekends. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Maybe the crowds, which are really heavy on the weekends.",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html",
+        "rating": "4.6/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 34
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -151,11 +202,19 @@
     "site": "Tripadvisor",
     "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
     "praise": [
-      "Fantastic place to visit around the Holidays."
+      "Fantastic place to visit around the Holidays.",
+      "the food here can be a bit overpriced"
     ],
     "watchOuts": [
-      "Maybe the crowds, which are really heavy on the weekends.",
-      "the food here can be a bit overpriced"
+      "Maybe the crowds, which are really heavy on the weekends."
+    ],
+    "themes": [
+      "Overall experience",
+      "Breakfast and dining",
+      "Overall experience"
+    ],
+    "complaints": [
+      "Maybe the crowds, which are really heavy on the weekends."
     ]
   },
   "fieldsWritePass": {
@@ -164,5 +223,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room."
+  "itineraryNote": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

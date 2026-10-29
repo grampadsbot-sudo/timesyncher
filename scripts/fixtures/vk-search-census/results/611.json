@@ -133,7 +133,42 @@
           "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Tripadvisor reviewer on Blue Note Jazz Club: The location is iconic, intimate and full of atmosphere. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The location is iconic, intimate and full of atmosphere",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Blue Note Jazz Club: They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room.",
+        "claims": [
+          {
+            "text": "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -141,11 +176,15 @@
     "site": "Tripadvisor",
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
-      "The location is iconic, intimate and full of atmosphere"
-    ],
-    "watchOuts": [
+      "The location is iconic, intimate and full of atmosphere",
       "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room"
-    ]
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Location",
+      "Rooms"
+    ],
+    "complaints": []
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -153,5 +192,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Blue Note Jazz Club: a Village jazz institution Since 1981; book a late set and sit close to the stage."
+  "itineraryNote": "Blue Note Jazz Club: a Village jazz institution Since 1981; book a late set and sit close to the stage.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

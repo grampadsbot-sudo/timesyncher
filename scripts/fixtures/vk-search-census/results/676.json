@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
       "title": "Motto by Hilton New York City Times Square: 728 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "iews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … Motto by Hilton New York City Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … Motto by Hilton New York City Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … ty Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews",
+      "text": "iews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … Motto by Hilton New York City Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … Motto by Hilton New York City Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … ty Times Square: 728 Reviews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews … The hotel's location is excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle.",
       "snippet": "iews | Trip.com | | Affordable and clean, you get what you pay for in New York. … The front desk staff were also very nice. … Rooms are super small … 8.6 / 10 Very good 729 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -144,18 +144,95 @@
           "sourceUrl": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Cleanliness",
+        "value": "Trip.com reviewer on Motto by Hilton New York City Times Square: Affordable and clean, you get what you pay for in New York. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Affordable and clean, you get what you pay for in New York",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 38
+      },
+      {
+        "theme": "Service",
+        "value": "Trip.com reviewer on Motto by Hilton New York City Times Square: The front desk staff were also very nice. Worth weighing alongside the overall 8.6/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The front desk staff were also very nice",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Motto by Hilton New York City Times Square: The hotel's location is excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle.",
+        "claims": [
+          {
+            "text": "The hotel's location is excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Motto by Hilton New York City Times Square: Rooms are super small. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "Rooms are super small",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
       "Affordable and clean, you get what you pay for in New York",
-      "The front desk staff were also very nice"
+      "The front desk staff were also very nice",
+      "The hotel's location is excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle."
     ],
     "watchOuts": [
+      "Rooms are super small"
+    ],
+    "themes": [
+      "Cleanliness",
+      "Service",
+      "Location",
+      "Rooms"
+    ],
+    "complaints": [
       "Rooms are super small"
     ]
   },
@@ -165,5 +242,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Motto by Hilton New York City Times Square: compact, efficient rooms by Broadway; spend the days out and budget accordingly."
+  "itineraryNote": "Motto by Hilton New York City Times Square: compact, efficient rooms by Broadway; spend the days out and budget accordingly.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

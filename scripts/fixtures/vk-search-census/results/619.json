@@ -19,15 +19,24 @@
       "text": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
       "snippet": "Reviews (New York City) | | HOTEL BEACON - Updated 2026 Prices & Reviews (New York City) Hotel Beacon Someone from this business manages the listing. 4.5 of 5 bubbles (5,535 reviews) 1 (212) 787-1100 Location 2130 Broadway, New York City, NY 10023-1724 Reviews 4.5 Very Good (5,535) Excellent 3,574",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+      "text": " | Guest Reviews 8.8/10 85 verified reviews … This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch! … The public transport access is great, and the quality of the accommodation is also excellent. … And the view from the room is absolutely fantastic! … Although the hotel is a bit old, the hygiene and service are excellent.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
     }
   ],
   "rating": {
     "primary": 4.5,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.5
+    "tripadvisor": 4.5,
+    "tripcom": 8.8,
+    "scale_tripcom": 10
   },
   "reviewCount": {
-    "tripadvisor": 5535
+    "tripadvisor": 5535,
+    "tripcom": 85
   },
   "priceHint": "4-star UWS; kitchenette studios",
   "hoursHint": null,
@@ -113,7 +122,74 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Hotel Beacon: This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch!",
+            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 38
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Trip.com reviewer on Hotel Beacon: The public transport access is great, and the quality of the accommodation is also excellent. Worth weighing alongside the overall 10.0/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The public transport access is great, and the quality of the accommodation is also excellent.",
+            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Hotel Beacon: And the view from the room is absolutely fantastic. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "And the view from the room is absolutely fantastic!",
+            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 27
+      },
+      {
+        "theme": "Service",
+        "value": "Watch-out from a Trip.com reviewer at Hotel Beacon: Although the hotel is a bit old, the hygiene and service are excellent. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "Although the hotel is a bit old, the hygiene and service are excellent.",
+            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 32
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -121,5 +197,30 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hotel Beacon: a 1928 Upper West Side landmark next to the Beacon Theatre; grab a show, then breakfast at Zabar's around the corner."
+  "itineraryNote": "Hotel Beacon: a 1928 Upper West Side landmark next to the Beacon Theatre; grab a show, then breakfast at Zabar's around the corner.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch!",
+      "The public transport access is great, and the quality of the accommodation is also excellent.",
+      "And the view from the room is absolutely fantastic!"
+    ],
+    "watchOuts": [
+      "Although the hotel is a bit old, the hygiene and service are excellent."
+    ],
+    "themes": [
+      "Location",
+      "Overall experience",
+      "Rooms",
+      "Service"
+    ],
+    "complaints": [
+      "Although the hotel is a bit old, the hygiene and service are excellent."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

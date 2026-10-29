@@ -30,10 +30,13 @@
     }
   ],
   "rating": {
-    "primary": null,
-    "primarySource": null
+    "primary": 4.5,
+    "primarySource": "thirdParty",
+    "thirdParty": 4.5
   },
-  "reviewCount": {},
+  "reviewCount": {
+    "thirdParty": 44396
+  },
   "priceHint": "Adult GA $26; seniors/military $23; kids 4–12 $17.30 (official FAQ)",
   "hoursHint": "Ferries daily except Thanksgiving & Christmas; ticket offices open 30 min before first ferry",
   "happyHourHint": null,
@@ -138,7 +141,42 @@
           "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Statue of Liberty / Ellis Island tour candidate: the boat ride was calm, and the views were amazing. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "the boat ride was calm, and the views were amazing",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      },
+      {
+        "theme": "Location",
+        "value": "Watch-out from a Tripadvisor reviewer at Statue of Liberty / Ellis Island tour candidate: had to wait in the heat for nearly an hour for a boat.",
+        "claims": [
+          {
+            "text": "had to wait in the heat for nearly an hour for a boat",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -150,6 +188,13 @@
     ],
     "watchOuts": [
       "had to wait in the heat for nearly an hour for a boat"
+    ],
+    "themes": [
+      "Rooms",
+      "Location"
+    ],
+    "complaints": [
+      "had to wait in the heat for nearly an hour for a boat"
     ]
   },
   "fieldsWritePass": {
@@ -158,5 +203,8 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Statue of Liberty / Ellis Island tour candidate: the official ferry from Battery Park; tickets include the Statue of Liberty Museum, so plan a full morning."
+  "itineraryNote": "Statue of Liberty / Ellis Island tour candidate: the official ferry from Battery Park; tickets include the Statue of Liberty Museum, so plan a full morning.",
+  "ratingNote": "Statue City Cruises listing rating shared with 604 (same operator review page)",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

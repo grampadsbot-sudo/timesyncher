@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
       "title": "The Wallace Hotel: 125 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
+      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The location was great, relatively quiet with many restaurants and Central Park within walking distance.",
       "snippet": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -25,11 +25,14 @@
     "primary": 4.8,
     "primarySource": "tripadvisor",
     "tripadvisor": 4.8,
-    "booking": 9.3
+    "booking": 9.3,
+    "tripcom": 8.9,
+    "scale_tripcom": 10
   },
   "reviewCount": {
     "tripadvisor": 1055,
-    "booking": 1769
+    "booking": 1769,
+    "tripcom": 125
   },
   "priceHint": "4-star boutique UWS",
   "hoursHint": "Hotel — 24h; lounge with live music",
@@ -125,18 +128,95 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on The Wallace Hotel: The room was very spacious, and the bed was super comfortable. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The room was very spacious, and the bed was super comfortable",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+        "rating": "8.9/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Cleanliness",
+        "value": "Trip.com reviewer on The Wallace Hotel: Clean, nice spot. Opened in 2020. Worth weighing alongside the overall 8.9/10 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Clean, nice spot. Opened in 2020",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+        "rating": "8.9/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 37
+      },
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on The Wallace Hotel: The location was great, relatively quiet with many restaurants and Central Park within walking distance. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The location was great, relatively quiet with many restaurants and Central Park within walking distance.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+        "rating": "8.9/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Noise",
+        "value": "Watch-out from a Trip.com reviewer at The Wallace Hotel: It was noisy continuously throughout the night. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "It was noisy continuously throughout the night",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+        "rating": "8.9/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
       "The room was very spacious, and the bed was super comfortable",
-      "Clean, nice spot. Opened in 2020"
+      "Clean, nice spot. Opened in 2020",
+      "The location was great, relatively quiet with many restaurants and Central Park within walking distance."
     ],
     "watchOuts": [
+      "It was noisy continuously throughout the night"
+    ],
+    "themes": [
+      "Rooms",
+      "Cleanliness",
+      "Location",
+      "Noise"
+    ],
+    "complaints": [
       "It was noisy continuously throughout the night"
     ]
   },
@@ -146,5 +226,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "The Wallace Hotel: a newer Upper West Side luxury stay; walk to Lincoln Center for an evening show."
+  "itineraryNote": "The Wallace Hotel: a newer Upper West Side luxury stay; walk to Lincoln Center for an evening show.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

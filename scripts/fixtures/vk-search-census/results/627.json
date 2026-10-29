@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
       "title": "Park Central: 185 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews",
+      "text": " hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews … American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations. … The room service was also great, very diligent and excellent!",
       "snippet": " hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … 8.0 / 10 Very good 185 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -144,19 +144,96 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Park Central Hotel New York: The hotel's biggest advantage is its incredibly convenient location. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The hotel's biggest advantage is its incredibly convenient location",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+        "rating": "8.0/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Value",
+        "value": "Trip.com reviewer on Park Central Hotel New York: American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations.",
+        "claims": [
+          {
+            "text": "American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+        "rating": "8.2/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Park Central Hotel New York: The room service was also great, very diligent and excellent. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The room service was also great, very diligent and excellent!",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Park Central Hotel New York: The room amenities are basic. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "The room amenities are basic",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+        "rating": "8.0/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
-      "The hotel's biggest advantage is its incredibly convenient location"
+      "The hotel's biggest advantage is its incredibly convenient location",
+      "American hotels generally tend to have older facilities, but this place offers great value for money and exceeded my expectations.",
+      "The room service was also great, very diligent and excellent!"
     ],
     "watchOuts": [
-      "The room amenities are basic",
-      "My room faced the street, which was a bit noisy"
+      "The room amenities are basic"
+    ],
+    "themes": [
+      "Location",
+      "Value",
+      "Rooms",
+      "Rooms"
+    ],
+    "complaints": [
+      "The room amenities are basic"
     ]
   },
   "fieldsWritePass": {
@@ -165,5 +242,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Park Central Hotel New York: a big Midtown base southwest of Carnegie Hall; walk to Central Park in the morning and Broadway at night."
+  "itineraryNote": "Park Central Hotel New York: a big Midtown base southwest of Carnegie Hall; walk to Central Park in the morning and Broadway at night.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

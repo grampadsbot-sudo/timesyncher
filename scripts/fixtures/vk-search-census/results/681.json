@@ -149,7 +149,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26
+        "words": 26,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+          "savedHtml": "r7/raw/st_039a08e1b3.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Service at its best",
@@ -164,8 +170,16 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
         "rating": "4.8",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 39
-      },
+        "words": 39,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+          "savedHtml": "r7/raw/st_039a08e1b3.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ],
+    "reviewsUnstarred": [
       {
         "theme": "Business and dates",
         "value": "Tripadvisor travelers (search snapshot) position Estiatorio Milos Hudson Yards as a Great place for a business lunch or a date, with a view of the Vessel.",
@@ -208,22 +222,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "Estiatorio Milos Hudson Yards pairs fish with scenery; a Restaurantji diner had an amazing view of Hudson River and Hudson Yards and Loved their grilled octopus.",
-  "review1Source": "Restaurantji",
-  "review1Rating": "4.8",
-  "review1Theme": "Views and octopus",
-  "review2": "Many guests at Estiatorio Milos Hudson Yards praise the floor team; one Restaurantji reviewer wrote We were blown away by the service! Keep this in mind as the main reason to choose Estiatorio Milos Hudson Yards over nearby options.",
-  "review2Source": "Restaurantji",
-  "review2Rating": "4.8",
-  "review2Theme": "Service at its best",
-  "review3": "Tripadvisor travelers (search snapshot) position Estiatorio Milos Hudson Yards as a Great place for a business lunch or a date, with a view of the Vessel.",
-  "review3Source": "Tripadvisor",
-  "review3Rating": "4.8",
-  "review3Theme": "Business and dates",
-  "review4": "Watch-outs at Estiatorio Milos Hudson Yards: one Tripadvisor reviewer found the service was somewhat slow and The prawns had a bad taste but were quite expensive.",
-  "review4Source": "Tripadvisor",
-  "review4Rating": "4.8",
-  "review4Theme": "Price and consistency",
   "reviewThemes": {
     "representative": true,
     "source": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
@@ -247,5 +245,18 @@
     ],
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch not attempted); not a live fetch"
   },
-  "itineraryNote": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus."
+  "itineraryNote": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
+  "review1": "Estiatorio Milos Hudson Yards pairs fish with scenery; a Restaurantji diner had an amazing view of Hudson River and Hudson Yards and Loved their grilled octopus.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8",
+  "review1Theme": "Views and octopus",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+  "review1Stars": 5,
+  "review2": "Many guests at Estiatorio Milos Hudson Yards praise the floor team; one Restaurantji reviewer wrote We were blown away by the service! Keep this in mind as the main reason to choose Estiatorio Milos Hudson Yards over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8",
+  "review2Theme": "Service at its best",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
+  "review2Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

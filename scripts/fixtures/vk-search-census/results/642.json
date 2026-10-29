@@ -185,7 +185,58 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Elevators",
+        "value": "Yelp reviewer on Apple Fifth Avenue: I love taking the glass elevator down into the store and just taking in the awesome architecture and design.",
+        "claims": [
+          {
+            "text": "I love taking the glass elevator down into the store and just taking in the awesome architecture and design.",
+            "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+          }
+        ],
+        "source": "Yelp",
+        "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
+        "rating": "3.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Service",
+        "value": "Yelp reviewer on Apple Fifth Avenue: Also, as I eavesdropped on other people being helped, I noticed all the Geniuses were super helpful and sweet.",
+        "claims": [
+          {
+            "text": "Also, as I eavesdropped on other people being helped, I noticed all the Geniuses were super helpful and sweet.",
+            "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+          }
+        ],
+        "source": "Yelp",
+        "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
+        "rating": "3.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Location",
+        "value": "Yelp reviewer on Apple Fifth Avenue: The store is located off the corner of central park, and the visible component consists of a clear, glass box.",
+        "claims": [
+          {
+            "text": "The store is located off the corner of central park, and the visible component consists of a clear, glass box.",
+            "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+          }
+        ],
+        "source": "Yelp",
+        "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
+        "rating": "3.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 26
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -193,5 +244,25 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Apple Fifth Avenue: the glass transparent 32 ft (9.8 m) cube by Central Park; pop in for photos at night when it glows."
+  "itineraryNote": "Apple Fifth Avenue: the glass transparent 32 ft (9.8 m) cube by Central Park; pop in for photos at night when it glows.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
+    "site": "Yelp",
+    "via": "Yelp page saved earlier pass; Review Highlights quotes verbatim",
+    "praise": [
+      "I love taking the glass elevator down into the store and just taking in the awesome architecture and design.",
+      "Also, as I eavesdropped on other people being helped, I noticed all the Geniuses were super helpful and sweet.",
+      "The store is located off the corner of central park, and the visible component consists of a clear, glass box."
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Elevators",
+      "Service",
+      "Location"
+    ],
+    "complaints": []
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

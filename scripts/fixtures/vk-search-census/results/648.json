@@ -126,7 +126,42 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Tripadvisor reviewer on Tiffany & Co. The Landmark: They have exclusive items for sale at this location which does make it special. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "They have exclusive items for sale at this location which does make it special",
+            "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 37
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at Tiffany & Co. The Landmark: I was a little disappointed in the quality of the workmanship of Tiffany’s pieces.",
+        "claims": [
+          {
+            "text": "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
+            "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 25
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -138,6 +173,13 @@
     ],
     "watchOuts": [
       "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces"
+    ],
+    "themes": [
+      "Location",
+      "Overall experience"
+    ],
+    "complaints": [
+      "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces"
     ]
   },
   "fieldsWritePass": {
@@ -146,5 +188,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside."
+  "itineraryNote": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
       "title": "Crowne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … t Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. …  reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … Crowne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room",
+      "text": "ne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … t Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. …  reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … Crowne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room … If this hotel is on a deal, it's worth it.",
       "snippet": "ne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's ",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -134,17 +134,95 @@
           "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on The Manhattan at Times Square Hotel: The location of the hotel is great and right in the middle of it all. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The location of the hotel is great and right in the middle of it all",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+        "rating": "6.4/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 39
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Trip.com reviewer on The Manhattan at Times Square Hotel: If this hotel is on a deal, it's worth it. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "If this hotel is on a deal, it's worth it.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Noise",
+        "value": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: There was constant, loud renovation noise from upstairs next door. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "There was constant, loud renovation noise from upstairs next door",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+        "rating": "6.4/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 35
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: The room's hygiene was terrible. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "The room's hygiene was terrible",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+        "rating": "6.4/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 28
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
-      "The location of the hotel is great and right in the middle of it all"
+      "The location of the hotel is great and right in the middle of it all",
+      "If this hotel is on a deal, it's worth it."
     ],
     "watchOuts": [
+      "There was constant, loud renovation noise from upstairs next door",
+      "The room's hygiene was terrible"
+    ],
+    "themes": [
+      "Location",
+      "Overall experience",
+      "Noise",
+      "Rooms"
+    ],
+    "complaints": [
       "There was constant, loud renovation noise from upstairs next door",
       "The room's hygiene was terrible"
     ]
@@ -155,5 +233,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking."
+  "itineraryNote": "The Manhattan at Times Square Hotel: now the Crowne Plaza; pick it for location and check recent reviews before booking.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

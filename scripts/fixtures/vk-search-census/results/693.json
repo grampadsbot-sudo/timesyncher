@@ -132,7 +132,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 38
+        "words": 38,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+          "savedHtml": "r7/raw/st_6044254a35.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Family treat",
@@ -147,7 +153,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 33
+        "words": 33,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+          "savedHtml": "r7/raw/st_6044254a35.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Consistency",
@@ -162,7 +174,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 24
+        "words": 24,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+          "savedHtml": "r7/raw/st_6044254a35.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Staff",
@@ -177,7 +195,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30
+        "words": 30,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+          "savedHtml": "r7/raw/st_6044254a35.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -207,21 +231,30 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
   "review1": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
   "review1Theme": "Banana pudding",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+  "review1Stars": 5,
   "review2": "Magnolia Bakery pleases kids and adults alike; one Restaurantji reviewer wrote Awesome place and flavor!! Daughter loved it. Keep this in mind as the main reason to choose Magnolia Bakery over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0",
   "review2Theme": "Family treat",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+  "review2Stars": 5,
   "review3": "Regulars find Magnolia Bakery dependable; a Restaurantji guest said Love magnolia. Always delicious. Travelers comparing spots should weigh this honestly when picking Magnolia Bakery.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Consistency",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+  "review3Stars": 5,
   "review4": "Service is friendly at Magnolia Bakery, with a Restaurantji diner adding Staff is always great alongside the pudding praise. Factor this into timing and expectations before heading to Magnolia Bakery.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Staff",
-  "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll."
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

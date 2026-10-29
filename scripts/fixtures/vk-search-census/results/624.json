@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
       "title": "New York Marriott Downtown: 342 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "2 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews",
+      "text": "2 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … If you buy an all-day pass for the sightseeing bus, you can get to pretty much anywhere in the city, which is very convenient.",
       "snippet": "2 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -149,17 +149,95 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on New York Marriott Downtown: Safe and good location. Loved the great river view and is very clean. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Safe and good location. Loved the great river view and is very clean",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 35
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on New York Marriott Downtown: Loved the great river view and is very clean. Worth weighing alongside the overall 8.6/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Loved the great river view and is very clean.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Trip.com reviewer on New York Marriott Downtown: If you buy an all-day pass for the sightseeing bus, you can get to pretty much anywhere in the city, which is very convenient.",
+        "claims": [
+          {
+            "text": "If you buy an all-day pass for the sightseeing bus, you can get to pretty much anywhere in the city, which is very convenient.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+        "rating": "8.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at New York Marriott Downtown: The room was tiny, and the bed was also very small. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "The room was tiny, and the bed was also very small",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+        "rating": "8.6/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 32
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
-      "Safe and good location. Loved the great river view and is very clean"
+      "Safe and good location. Loved the great river view and is very clean",
+      "Loved the great river view and is very clean.",
+      "If you buy an all-day pass for the sightseeing bus, you can get to pretty much anywhere in the city, which is very convenient."
     ],
     "watchOuts": [
+      "The room was tiny, and the bed was also very small"
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Overall experience",
+      "Rooms"
+    ],
+    "complaints": [
       "The room was tiny, and the bed was also very small"
     ]
   },
@@ -169,5 +247,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "New York Marriott Downtown: a Lower Manhattan base with river views; try a burger at Bill’s Bar & Burger downstairs."
+  "itineraryNote": "New York Marriott Downtown: a Lower Manhattan base with river views; try a burger at Bill’s Bar & Burger downstairs.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

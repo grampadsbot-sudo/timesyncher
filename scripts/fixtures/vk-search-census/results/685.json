@@ -85,7 +85,8 @@
         }
       ]
     },
-    "reviews": [
+    "reviews": [],
+    "reviewsUnstarred": [
       {
         "theme": "Big portions",
         "value": "Carmine's Times Square is built for sharing; an OpenTable diner reported Servers were really nice, portions were big., so order fewer plates than you think.",
@@ -154,22 +155,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "Carmine's Times Square is built for sharing; an OpenTable diner reported Servers were really nice, portions were big., so order fewer plates than you think.",
-  "review1Source": "OpenTable",
-  "review1Rating": "4.6",
-  "review1Theme": "Big portions",
-  "review2": "An OpenTable reviewer at Carmine's Times Square named favorites: I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
-  "review2Source": "OpenTable",
-  "review2Rating": "4.6",
-  "review2Theme": "Dishes to try",
-  "review3": "OpenTable breaks Carmine's Times Square down as 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value, so value scores a little behind the food. Travelers comparing spots should weigh this honestly when picking Carmine's Times Square.",
-  "review3Source": "OpenTable",
-  "review3Rating": "4.6",
-  "review3Theme": "Sub-scores",
-  "review4": "Expect a lively room at Carmine's Times Square; OpenTable lists Noise • Moderate, typical of a busy Theater District dining hall. Factor this into timing and expectations before heading to Carmine's Times Square.",
-  "review4Source": "OpenTable",
-  "review4Rating": "4.6",
-  "review4Theme": "Noise",
   "reviewThemes": {
     "representative": true,
     "source": "https://www.opentable.com/carmines-44th-street-nyc",
@@ -193,5 +178,6 @@
     ],
     "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
   },
-  "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share."
+  "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

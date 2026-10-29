@@ -105,7 +105,8 @@
         }
       ]
     },
-    "reviews": [
+    "reviews": [],
+    "reviewsUnstarred": [
       {
         "theme": "Coal-oven pies",
         "value": "The Original John's of Bleecker Street keeps its century-old method: Wikipedia notes the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie, the reason people make the trip.",
@@ -197,21 +198,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "The Original John's of Bleecker Street keeps its century-old method: Wikipedia notes the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie, the reason people make the trip.",
-  "review1Source": "Wikipedia",
-  "review1Rating": "4.4",
-  "review1Theme": "Coal-oven pies",
-  "review2": "Tripadvisor travelers (search snapshot) describe a welcoming room at The Original John's of Bleecker Street: Pizza was great, staff was friendly and welcoming. Keep this in mind as the main reason to choose The Original John's of Bleecker Street over nearby options.",
-  "review2Source": "Tripadvisor",
-  "review2Rating": "4.4",
-  "review2Theme": "Friendly staff",
-  "review3": "Expect to queue at The Original John's of Bleecker Street; one Tripadvisor reviewer reported About 40-45 mins of waiting line, but it was worth it.",
-  "review3Source": "Tripadvisor",
-  "review3Rating": "4.4",
-  "review3Theme": "The line",
-  "review4": "The Original John's of Bleecker Street was Founded in 1915, so a meal here doubles as a slice of Village history on a downtown walking day.",
-  "review4Source": "Wikipedia",
-  "review4Rating": "4.4",
-  "review4Theme": "History",
-  "itineraryNote": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line."
+  "itineraryNote": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

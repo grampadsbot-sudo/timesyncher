@@ -160,7 +160,8 @@
         }
       ]
     },
-    "reviews": [
+    "reviews": [],
+    "reviewsUnstarred": [
       {
         "theme": "Decor and staff",
         "value": "A Tripadvisor traveler (search snapshot) found Rosa Mexicano - Lincoln Center a handsome room with good people on the floor: The decor is gorgeous, the waitstaff attentive.",
@@ -253,21 +254,6 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
-  "review1": "A Tripadvisor traveler (search snapshot) found Rosa Mexicano - Lincoln Center a handsome room with good people on the floor: The decor is gorgeous, the waitstaff attentive.",
-  "review1Source": "Tripadvisor",
-  "review1Rating": "4.4",
-  "review1Theme": "Decor and staff",
-  "review2": "The dish to order at Rosa Mexicano - Lincoln Center is the guacamole; the Tripadvisor listing says Its signature dish is guacamole prepared by the table., which makes a good start before a show.",
-  "review2Source": "Tripadvisor",
-  "review2Rating": "4.4",
-  "review2Theme": "Table-side guacamole",
-  "review3": "Service experiences vary at Rosa Mexicano - Lincoln Center; one Tripadvisor reviewer (search snapshot) wrote that Service is indifferent at best., so allow extra time before curtain.",
-  "review3Source": "Tripadvisor",
-  "review3Rating": "4.4",
-  "review3Theme": "Uneven service",
-  "review4": "Some mains draw complaints at Rosa Mexicano - Lincoln Center: a Tripadvisor traveler said the pork and beef Enchiladas were disappointing, so lean on the guacamole and tacos.",
-  "review4Source": "Tripadvisor",
-  "review4Rating": "4.4",
-  "review4Theme": "Mains to skip",
-  "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm."
+  "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

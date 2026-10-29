@@ -24,7 +24,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
       "title": "Hotel Belleclaire Central Park: 128 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Hotel Belleclaire Central Park: 128 Reviews | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 peopl … ws | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 people … 3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 people … Hotel Belleclaire Central Park: 128 Reviews | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is ex",
+      "text": "Hotel Belleclaire Central Park: 128 Reviews | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 peopl … ws | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 people … 3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only able to accommodate a maximum of 4 people … Hotel Belleclaire Central Park: 128 Reviews | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is ex … The family suite is very practical, with a good environment and convenient surroundings. … Service: Very good, the front desk is very polite and friendly",
       "snippet": "Hotel Belleclaire Central Park: 128 Reviews | Trip.com | | Guest Reviews of Hotel Belleclaire Central Park 7.3 / 10 128 reviews … Beautiful hotel, very well located, tidy and good service. … the facilities are somewhat lacking, especially the soundproofing … The elevator is extremely small, only abl",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -178,19 +178,96 @@
           "sourceUrl": "https://www.hotelbelleclaire.com/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Hotel Belleclaire Central Park: Beautiful hotel, very well located, tidy and good service. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Beautiful hotel, very well located, tidy and good service",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+        "rating": "7.3/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Hotel Belleclaire Central Park: The family suite is very practical, with a good environment and convenient surroundings. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The family suite is very practical, with a good environment and convenient surroundings.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Service",
+        "value": "Trip.com reviewer on Hotel Belleclaire Central Park: Service: Very good, the front desk is very polite and friendly. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Service: Very good, the front desk is very polite and friendly",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+        "rating": "6.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Noise",
+        "value": "Watch-out from a Trip.com reviewer at Hotel Belleclaire Central Park: the facilities are somewhat lacking, especially the soundproofing. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "the facilities are somewhat lacking, especially the soundproofing",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+        "rating": "7.3/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
-      "Beautiful hotel, very well located, tidy and good service"
+      "Beautiful hotel, very well located, tidy and good service",
+      "The family suite is very practical, with a good environment and convenient surroundings.",
+      "Service: Very good, the front desk is very polite and friendly"
     ],
     "watchOuts": [
-      "the facilities are somewhat lacking, especially the soundproofing",
-      "The elevator is extremely small, only able to accommodate a maximum of 4 people"
+      "the facilities are somewhat lacking, especially the soundproofing"
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Service",
+      "Noise"
+    ],
+    "complaints": [
+      "the facilities are somewhat lacking, especially the soundproofing"
     ]
   },
   "fieldsWritePass": {
@@ -199,5 +276,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park."
+  "itineraryNote": "Hotel Belleclaire Central Park: check in at a storied NYC hotel on the Upper West Side, then try the hotel's wine hours and a morning walk to Central Park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

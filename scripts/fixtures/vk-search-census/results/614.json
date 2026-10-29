@@ -147,7 +147,58 @@
           "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on MoMA Design Store - 53rd Street: The MoMA Design Store is packed with beautifully designed products. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The MoMA Design Store is packed with beautifully designed products",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Value",
+        "value": "Tripadvisor reviewer on MoMA Design Store - 53rd Street: Prices are better on the internet than in the store. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Prices are better on the internet than in the store.",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at MoMA Design Store - 53rd Street: The store can get quite crowded around midday. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The store can get quite crowded around midday",
+            "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 33
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -155,11 +206,19 @@
     "site": "Tripadvisor",
     "via": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)",
     "praise": [
-      "The MoMA Design Store is packed with beautifully designed products"
+      "The MoMA Design Store is packed with beautifully designed products",
+      "Prices are better on the internet than in the store."
     ],
     "watchOuts": [
-      "The store can get quite crowded around midday",
-      "Prices are better on the internet than in the store."
+      "The store can get quite crowded around midday"
+    ],
+    "themes": [
+      "Overall experience",
+      "Value",
+      "Overall experience"
+    ],
+    "complaints": [
+      "The store can get quite crowded around midday"
     ]
   },
   "fieldsWritePass": {
@@ -168,5 +227,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit."
+  "itineraryNote": "MoMA Design Store - 53rd Street: a design-lover's gift stop Across from the Museum; browse both floors after a MoMA visit.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

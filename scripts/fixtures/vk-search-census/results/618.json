@@ -19,15 +19,24 @@
       "text": "w York City) | | THE HILTON CLUB - NEW YORK - 2026 Reviews (New York City) The Hilton Club - New York Someone from this business manages the listing. 4.3 of 5 bubbles (940 reviews) 1 (877) 214-9175",
       "snippet": "w York City) | | THE HILTON CLUB - NEW YORK - 2026 Reviews (New York City) The Hilton Club - New York Someone from this business manages the listing. 4.3 of 5 bubbles (940 reviews) 1 (877) 214-9175",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+      "text": " | Guest Reviews 8.9/10 101 verified reviews … Other than that, we enjoyed our stay very much … Rooms were clean and comfortable and as quiet as a NYC room can be. … Room service is missing and breakfast is very expensive, $50 when it was advertised at $18. … Our first room had a leaking A/C and wet carpet.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
     }
   ],
   "rating": {
     "primary": 4.3,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.3
+    "tripadvisor": 4.3,
+    "tripcom": 8.9,
+    "scale_tripcom": 10
   },
   "reviewCount": {
-    "tripadvisor": 940
+    "tripadvisor": 940,
+    "tripcom": 101
   },
   "priceHint": "Hilton Club floors 36–38",
   "hoursHint": null,
@@ -103,7 +112,74 @@
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Trip.com reviewer on Hilton Club New York: Other than that, we enjoyed our stay very much. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Other than that, we enjoyed our stay very much",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Hilton Club New York: Rooms were clean and comfortable and as quiet as a NYC room can be. Worth weighing alongside the overall 10.0/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Rooms were clean and comfortable and as quiet as a NYC room can be.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 33
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Hilton Club New York: Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+        "claims": [
+          {
+            "text": "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 26
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Hilton Club New York: Our first room had a leaking A/C and wet carpet. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "Our first room had a leaking A/C and wet carpet.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+        "rating": "8.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 31
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -111,5 +187,31 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs."
+  "itineraryNote": "Hilton Club New York: skyline-view suites in Midtown; walk to Rockefeller Center and Fifth Avenue, then retreat upstairs.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "Other than that, we enjoyed our stay very much",
+      "Rooms were clean and comfortable and as quiet as a NYC room can be."
+    ],
+    "watchOuts": [
+      "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+      "Our first room had a leaking A/C and wet carpet."
+    ],
+    "themes": [
+      "Overall experience",
+      "Rooms",
+      "Rooms",
+      "Rooms"
+    ],
+    "complaints": [
+      "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
+      "Our first room had a leaking A/C and wet carpet."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

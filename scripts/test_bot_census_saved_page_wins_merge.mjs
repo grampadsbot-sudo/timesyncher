@@ -83,10 +83,14 @@ assert.ok(botHomePage, 'bot-saved home page text must contain the summary claim 
 const summaryField = stored.fields?.summary;
 assert.ok(String(summaryField?.value || '').trim(), 'summary value must remain after merge');
 const supportedClaims = (summaryField?.claims || []).filter((claim) => claim.supported === true);
-assert.equal(supportedClaims.length, 1);
-const cited = stored.pages[Number(supportedClaims[0].pages[0].slice(1)) - 1];
-assert.equal(cited.url, HOME);
-assert.ok(claimTextSupportedByPage(supportedClaims[0].text, cited.text));
+assert.equal(supportedClaims.length, (summaryField?.claims || []).length, 'every merged summary claim stays supported');
+assert.ok(supportedClaims.length >= 1);
+for (const claim of supportedClaims) {
+  const page = stored.pages[Number(claim.pages[0].slice(1)) - 1];
+  assert.ok(page && claimTextSupportedByPage(claim.text, page.text), `claim cites a page that supports it: ${claim.text}`);
+}
+const homeClaim = supportedClaims.find((claim) => stored.pages[Number(claim.pages[0].slice(1)) - 1]?.url === HOME);
+assert.ok(homeClaim, 'at least one supported summary claim cites the bot-saved home page');
 assert.ok(
   String(stored.fields?.summary?.value || '').includes('2175 Broadway'),
   'merged summary keeps census essence text',

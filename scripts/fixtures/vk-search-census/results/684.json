@@ -119,7 +119,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 37
+        "words": 37,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+          "savedHtml": "r7/raw/st_50367ff369.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Fun atmosphere",
@@ -134,7 +140,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 40
+        "words": 40,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+          "savedHtml": "r7/raw/st_50367ff369.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Coffee and staff",
@@ -149,7 +161,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34
+        "words": 34,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+          "savedHtml": "r7/raw/st_50367ff369.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Waits",
@@ -164,7 +182,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30
+        "words": 30,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+          "savedHtml": "r7/raw/st_50367ff369.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -197,21 +221,30 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
   "review1": "Cheesecake is the reason to visit Junior's Times Square; Restaurantji diners rave about Great service, great food, big meals and the cheesecakes! For trip planning, weigh this first when deciding whether Junior's Times Square fits the day.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
   "review1Theme": "Cheesecake",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review1Stars": 5,
   "review2": "Junior's Times Square feels lively and family-friendly; one Restaurantji guest wrote We had an amazing lunch, desserts were delicious too. Such a fun atmosphere! Keep this in mind as the main reason to choose Junior's Times Square over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.3",
   "review2Theme": "Fun atmosphere",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review2Stars": 5,
   "review3": "Breakfast and coffee stops work too at Junior's Times Square, where a Restaurantji diner praised the Friendly staff and dang good coffee! Travelers comparing spots should weigh this honestly when picking Junior's Times Square.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.3",
   "review3Theme": "Coffee and staff",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review3Stars": 5,
   "review4": "Busy hours mean a queue at Junior's Times Square; a Restaurantji reviewer said The weight was a little long but it is absolutely worth it (sic), so build in time.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.3",
   "review4Theme": "Waits",
-  "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake."
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

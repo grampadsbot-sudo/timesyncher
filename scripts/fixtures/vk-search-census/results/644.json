@@ -113,7 +113,53 @@
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Service",
+        "value": "Restaurantji reviewer on Juice Generation Upper West Side: The customer service at the 72nd st Juice Generation is exceptional. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The customer service at the 72nd st Juice Generation is exceptional.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+        "rating": "3.9/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+          "savedHtml": "r7/raw/st_3274d93c9b.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      },
+      {
+        "theme": "Noise",
+        "value": "Watch-out from a Restaurantji reviewer at Juice Generation Upper West Side: The music in this branch is so loud. Worth weighing alongside the overall 3.9/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The music in this branch is so loud",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+        "rating": "3.9/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 31,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+          "savedHtml": "r7/raw/st_3274d93c9b.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 4
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -125,6 +171,13 @@
     ],
     "watchOuts": [
       "The music in this branch is so loud"
+    ],
+    "themes": [
+      "Service",
+      "Noise"
+    ],
+    "complaints": [
+      "The music in this branch is so loud"
     ]
   },
   "fieldsWritePass": {
@@ -133,5 +186,19 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park."
+  "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "review1": "Restaurantji reviewer on Juice Generation Upper West Side: The customer service at the 72nd st Juice Generation is exceptional. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "3.9/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+  "review1Stars": 5,
+  "review2": "Watch-out from a Restaurantji reviewer at Juice Generation Upper West Side: The music in this branch is so loud. Worth weighing alongside the overall 3.9/5 score before locking in the plan.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "3.9/5",
+  "review2Theme": "Noise",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+  "review2Stars": 4,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

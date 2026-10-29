@@ -131,7 +131,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
         "rating": "4.4",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26
+        "words": 26,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+          "savedHtml": "r7/raw/st_09e766bc85.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Repeat praise",
@@ -146,7 +152,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
         "rating": "4.4",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 40
+        "words": 40,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+          "savedHtml": "r7/raw/st_09e766bc85.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Atmosphere",
@@ -161,8 +173,16 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
         "rating": "4.4",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 32
-      },
+        "words": 32,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+          "savedHtml": "r7/raw/st_09e766bc85.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ],
+    "reviewsUnstarred": [
       {
         "theme": "Happy hour",
         "value": "For value, Nobody Told Me lists Happy Hour 3 pm - 6 pm daily on its menu page, with draft beers and house wines priced for an early start.",
@@ -206,21 +226,24 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
   "review1": "The burger is the headline at Nobody Told Me: Restaurantji diners write They have the best burgers on the UWS! and call it a household favorite.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.4",
   "review1Theme": "The burger",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review1Stars": 5,
   "review2": "A second Restaurantji reviewer independently backs the burger at Nobody Told Me, calling it the Best burger I have had in a long time! Keep this in mind as the main reason to choose Nobody Told Me over nearby options.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.4",
   "review2Theme": "Repeat praise",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review2Stars": 5,
   "review3": "Nobody Told Me works as a relaxed neighborhood hangout; one Restaurantji guest summed it up as Fantastic food great atmosphere. Travelers comparing spots should weigh this honestly when picking Nobody Told Me.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.4",
   "review3Theme": "Atmosphere",
-  "review4": "For value, Nobody Told Me lists Happy Hour 3 pm - 6 pm daily on its menu page, with draft beers and house wines priced for an early start.",
-  "review4Source": "official site",
-  "review4Rating": "4.4",
-  "review4Theme": "Happy hour",
-  "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger."
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review3Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

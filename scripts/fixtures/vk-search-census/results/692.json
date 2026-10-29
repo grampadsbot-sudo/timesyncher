@@ -99,7 +99,53 @@
           "sourceUrl": "https://www.mapquest.com/us/new-york/venchi-chocolate-bleecker-st-800849389"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Service",
+        "value": "Restaurantji reviewer on Venchi Bleecker Street: Easy to get gifts, and staff super friendly and helpful. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Easy to get gifts, and staff super friendly and helpful",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+        "rating": "4.8/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+          "savedHtml": "r7/raw/st_2384bd6dc3.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Restaurantji reviewer on Venchi Bleecker Street: Wonderful chocolate in nyc. Worth weighing alongside the overall 4.8/5 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "Wonderful chocolate in nyc!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+        "rating": "4.8/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 35,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+          "savedHtml": "r7/raw/st_2384bd6dc3.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -110,7 +156,12 @@
       "Easy to get gifts, and staff super friendly and helpful",
       "Wonderful chocolate in nyc!"
     ],
-    "watchOuts": []
+    "watchOuts": [],
+    "themes": [
+      "Service",
+      "Overall experience"
+    ],
+    "complaints": []
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -118,5 +169,19 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Venchi Bleecker Street: Italian chocolate Since 1878 at 233 Bleecker; try a gelato cone on a Village stroll."
+  "itineraryNote": "Venchi Bleecker Street: Italian chocolate Since 1878 at 233 Bleecker; try a gelato cone on a Village stroll.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "review1": "Restaurantji reviewer on Venchi Bleecker Street: Easy to get gifts, and staff super friendly and helpful. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.8/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+  "review1Stars": 5,
+  "review2": "Restaurantji reviewer on Venchi Bleecker Street: Wonderful chocolate in nyc. Worth weighing alongside the overall 4.8/5 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.8/5",
+  "review2Theme": "Overall experience",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+  "review2Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

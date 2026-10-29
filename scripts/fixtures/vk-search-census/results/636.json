@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
       "title": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities",
+      "text": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … The front desk staff were super friendly and even gave us free tickets! … It is a good location where you can just walk to the known tourist attractions like time square and central park. … The rooms are just so-so, and parking is extremely expensive.",
       "snippet": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -124,18 +124,96 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Sheraton_New_York_Times_Square_Hotel"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Sheraton New York Times Square Hotel: Room is great and clean. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Room is great and clean",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+        "rating": "7.8/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      },
+      {
+        "theme": "Service",
+        "value": "Trip.com reviewer on Sheraton New York Times Square Hotel: The front desk staff were super friendly and even gave us free tickets. Worth weighing alongside the overall 7.5/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The front desk staff were super friendly and even gave us free tickets!",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+        "rating": "7.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 34
+      },
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Sheraton New York Times Square Hotel: It is a good location where you can just walk to the known tourist attractions like time square and central park.",
+        "claims": [
+          {
+            "text": "It is a good location where you can just walk to the known tourist attractions like time square and central park.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+        "rating": "8.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 30
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Sheraton New York Times Square Hotel: The rooms are just so-so, and parking is extremely expensive. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "The rooms are just so-so, and parking is extremely expensive.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
+        "rating": "9.2/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 33
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
-      "Room is great and clean"
+      "Room is great and clean",
+      "The front desk staff were super friendly and even gave us free tickets!",
+      "It is a good location where you can just walk to the known tourist attractions like time square and central park."
     ],
     "watchOuts": [
-      "I expected a sauna/Spa as it is listed under amenities"
+      "The rooms are just so-so, and parking is extremely expensive."
+    ],
+    "themes": [
+      "Rooms",
+      "Service",
+      "Location",
+      "Rooms"
+    ],
+    "complaints": [
+      "The rooms are just so-so, and parking is extremely expensive."
     ]
   },
   "fieldsWritePass": {
@@ -144,5 +222,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Sheraton New York Times Square Hotel: a 51-story Midtown tower; walk to Broadway, Rockefeller Center and Central Park."
+  "itineraryNote": "Sheraton New York Times Square Hotel: a 51-story Midtown tower; walk to Broadway, Rockefeller Center and Central Park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

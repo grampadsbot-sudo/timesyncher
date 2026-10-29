@@ -40,7 +40,7 @@
       "url": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
       "title": "Romer Hell's Kitchen - Tripadvisor (CA) (search snapshot)",
       "fetchedAt": "2026-10-29T08:45:00-07:00",
-      "text": "The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers.",
+      "text": "The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers. … The bathroom was too cramped",
       "snippet": "The beds were super comfortable and the bathroom was modern. … Our room was quiet and well soundproofed … The bathrooms were fairly tiny though, including the showers.",
       "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
     },
@@ -240,7 +240,74 @@
           "sourceUrl": "https://www.romerhotels.com/hells-kitchen"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Romer Hell's Kitchen: The beds were super comfortable and the bathroom was modern. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The beds were super comfortable and the bathroom was modern",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Tripadvisor reviewer at Romer Hell's Kitchen: The bathrooms were fairly tiny. Worth weighing alongside the overall 4.5/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The bathrooms were fairly tiny",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 26
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Tripadvisor reviewer at Romer Hell's Kitchen: The bathroom was too cramped. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The bathroom was too cramped",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 27
+      },
+      {
+        "theme": "Rooms",
+        "value": "Tripadvisor reviewer on Romer Hell's Kitchen: Our room was quiet and well soundproofed. A practical point to factor into the decision before the trip. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Our room was quiet and well soundproofed",
+            "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 39
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -260,7 +327,19 @@
     "watchOuts": [
       "The bathrooms were fairly tiny",
       "The bathroom was too cramped"
+    ],
+    "themes": [
+      "Rooms",
+      "Rooms",
+      "Rooms",
+      "Rooms"
+    ],
+    "complaints": [
+      "The bathrooms were fairly tiny",
+      "The bathroom was too cramped"
     ]
   },
-  "itineraryNote": "Romer Hell's Kitchen: a neighborhood gathering place and a reprieve from Times Square; after a show, try So & So's plush piano bar and restaurant neatly tucked through the back entrance on 52nd street."
+  "itineraryNote": "Romer Hell's Kitchen: a neighborhood gathering place and a reprieve from Times Square; after a show, try So & So's plush piano bar and restaurant neatly tucked through the back entrance on 52nd street.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

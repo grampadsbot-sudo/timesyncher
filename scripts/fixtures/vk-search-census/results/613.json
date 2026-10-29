@@ -126,7 +126,42 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Macy's Herald Square: The store is huge and has the most beautiful Christmas displays in the windows. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The store is huge and has the most beautiful Christmas displays in the windows",
+            "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 35
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Macy's Herald Square: I tend to get lost in and have difficulties finding the things I am looking for. Worth weighing alongside the overall 4.0/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "I tend to get lost in and have difficulties finding the things I am looking for",
+            "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 34
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -134,11 +169,15 @@
     "site": "Tripadvisor",
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
-      "The store is huge and has the most beautiful Christmas displays in the windows"
-    ],
-    "watchOuts": [
+      "The store is huge and has the most beautiful Christmas displays in the windows",
       "I tend to get lost in and have difficulties finding the things I am looking for"
-    ]
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": []
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -146,5 +185,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays."
+  "itineraryNote": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

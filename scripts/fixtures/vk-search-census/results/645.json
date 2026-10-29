@@ -143,17 +143,70 @@
           "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Overall experience",
+        "value": "Exa place listing reviewer on Nordstrom NYC Flagship: The store has a beautiful, modern design. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The store has a beautiful, modern design",
+            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 30,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/ppdy06vf1wn",
+          "savedHtml": "r7/raw/st_78e2e07883.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      },
+      {
+        "theme": "Value",
+        "value": "Watch-out from a Exa place listing reviewer at Nordstrom NYC Flagship: Prices are generally on the high side. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Prices are generally on the high side",
+            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+        "rating": "4.4/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 30,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/ppdy06vf1wn",
+          "savedHtml": "r7/raw/st_78e2e07883.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 4
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://exa.ai/library/place/ppdy06vf1wn",
-    "site": "aggregated guest reviews",
+    "site": "Exa place listing",
     "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
     "praise": [
       "The store has a beautiful, modern design"
     ],
     "watchOuts": [
+      "Prices are generally on the high side"
+    ],
+    "themes": [
+      "Overall experience",
+      "Value"
+    ],
+    "complaints": [
       "Prices are generally on the high side"
     ]
   },
@@ -163,5 +216,19 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session."
+  "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "review1": "Exa place listing reviewer on Nordstrom NYC Flagship: The store has a beautiful, modern design. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4.4/5",
+  "review1Theme": "Overall experience",
+  "review1SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review1Stars": 5,
+  "review2": "Watch-out from a Exa place listing reviewer at Nordstrom NYC Flagship: Prices are generally on the high side. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4.4/5",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review2Stars": 4,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

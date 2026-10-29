@@ -144,17 +144,59 @@
           "sourceUrl": "https://www.libraryhotel.com/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Library Hotel by Library Hotel Collection: The hotel has a great location and good service. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The hotel has a great location and good service",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+        "rating": "9.3/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 33
+      },
+      {
+        "theme": "Facilities",
+        "value": "Watch-out from a Trip.com reviewer at Library Hotel by Library Hotel Collection: the facilities are old. Worth weighing alongside the overall 9.3/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "the facilities are old",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+        "rating": "9.3/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 28
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
       "The hotel has a great location and good service"
     ],
     "watchOuts": [
+      "the facilities are old"
+    ],
+    "themes": [
+      "Location",
+      "Facilities"
+    ],
+    "complaints": [
       "the facilities are old"
     ]
   },
@@ -164,5 +206,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day."
+  "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique; try the Reading Room's refreshments, available 24 hours a day.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

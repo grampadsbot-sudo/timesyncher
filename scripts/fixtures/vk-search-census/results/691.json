@@ -114,8 +114,37 @@
         "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 39
+        "words": 39,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/dl6s896ycgb",
+          "savedHtml": "r7/raw/st_91a69f3be4.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
+      {
+        "theme": "Lines",
+        "value": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
+        "claims": [
+          {
+            "text": "Lines can get long",
+            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
+          }
+        ],
+        "source": "aggregated guest reviews",
+        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+        "rating": "4.3",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 31,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/dl6s896ycgb",
+          "savedHtml": "r7/raw/st_91a69f3be4.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
+      }
+    ],
+    "reviewsUnstarred": [
       {
         "theme": "Bomboloni",
         "value": "The thing to order at Angelina Bakery Broadway is the filled doughnut; the bakery advertises Bomboloni Baked Daily. for breakfast. Keep this in mind as the main reason to choose Angelina Bakery Broadway over nearby options.",
@@ -145,21 +174,6 @@
         "rating": "4.3",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
         "words": 36
-      },
-      {
-        "theme": "Lines",
-        "value": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
-        "claims": [
-          {
-            "text": "Lines can get long",
-            "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb"
-          }
-        ],
-        "source": "aggregated guest reviews",
-        "sourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 31
       }
     ]
   },
@@ -192,21 +206,18 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni.",
   "review1": "Angelina Bakery Broadway is a pastry stop first; aggregated guest reviews say This beautiful Italian bakery on Broadway near 52nd Street has great pastries. For trip planning, weigh this first when deciding whether Angelina Bakery Broadway fits the day.",
   "review1Source": "aggregated guest reviews",
   "review1Rating": "4.3",
   "review1Theme": "Pastries",
-  "review2": "The thing to order at Angelina Bakery Broadway is the filled doughnut; the bakery advertises Bomboloni Baked Daily. for breakfast. Keep this in mind as the main reason to choose Angelina Bakery Broadway over nearby options.",
-  "review2Source": "official site",
+  "review1SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+  "review1Stars": 5,
+  "review2": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
+  "review2Source": "aggregated guest reviews",
   "review2Rating": "4.3",
-  "review2Theme": "Bomboloni",
-  "review3": "Angelina Bakery Broadway has a backstory: Tony Park grew up Sicilian, came to New York with Nonna Anna's recipes, which shapes its Sicilian lineup. Travelers comparing spots should weigh this honestly when picking Angelina Bakery Broadway.",
-  "review3Source": "official site",
-  "review3Rating": "4.3",
-  "review3Theme": "Family recipes",
-  "review4": "The watch-out at Angelina Bakery Broadway is the queue, since guests report Lines can get long near Times Square. Factor this into timing and expectations before heading to Angelina Bakery Broadway.",
-  "review4Source": "aggregated guest reviews",
-  "review4Rating": "4.3",
-  "review4Theme": "Lines",
-  "itineraryNote": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni."
+  "review2Theme": "Lines",
+  "review2SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
+  "review2Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

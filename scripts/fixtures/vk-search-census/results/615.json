@@ -131,7 +131,42 @@
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Tripadvisor reviewer on Bergdorf Goodman: Great views over Central Park. Great decor. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Great views over Central Park. Great decor.",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 27
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at Bergdorf Goodman: A 10 minute wait at the Jo Malone counter. Worth weighing alongside the overall 4.0/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "A 10 minute wait at the Jo Malone counter",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+        "rating": "4.0/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 29
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -143,6 +178,13 @@
     ],
     "watchOuts": [
       "A 10 minute wait at the Jo Malone counter"
+    ],
+    "themes": [
+      "Location",
+      "Overall experience"
+    ],
+    "complaints": [
+      "A 10 minute wait at the Jo Malone counter"
     ]
   },
   "fieldsWritePass": {
@@ -151,5 +193,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park."
+  "itineraryNote": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

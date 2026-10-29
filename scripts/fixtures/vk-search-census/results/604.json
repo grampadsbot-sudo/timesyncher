@@ -114,7 +114,42 @@
           "sourceUrl": "https://statuecitycruises.com/faq"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Statue of Liberty walking tour: The best part is access to the Statue of Liberty and Ellis Island. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The best part is access to the Statue of Liberty and Ellis Island",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at Statue of Liberty walking tour: the loading and unloading process is crowded and disorganized. Worth weighing alongside the overall 4.5/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "the loading and unloading process is crowded and disorganized",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 32
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -126,6 +161,13 @@
     ],
     "watchOuts": [
       "the loading and unloading process is crowded and disorganized"
+    ],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": [
+      "the loading and unloading process is crowded and disorganized"
     ]
   },
   "fieldsWritePass": {
@@ -134,5 +176,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds."
+  "itineraryNote": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

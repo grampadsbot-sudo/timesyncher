@@ -35,17 +35,26 @@
       "text": "l Reviews of Arthouse Hotel | Booking.com | | 2379 Verified Hotel Reviews of Arthouse Hotel | Booking.com #286 of 429 hotels in New York Review Score Based on 1601 hotel reviews 7.9 Score breakdown Cleanliness 8.4 Comfort 8.5 Location 9.2 Facilities 7.8 Staff 8.4 Value for money 7.5 Free Wifi 8.4 …  Arthouse Hotel | Booking.com #286 of 429 hotels in New York Review Score Based on 1601 hotel reviews 7.9 Score breakdown Cleanliness 8.4 Comfort 8.5 Location 9.2 Facilities 7.8 Staff 8.4 Value for money 7.5 Free Wifi 8.4",
       "snippet": "l Reviews of Arthouse Hotel | Booking.com | | 2379 Verified Hotel Reviews of Arthouse Hotel | Booking.com #286 of 429 hotels in New York Review Score Based on 1601 hotel reviews 7.9 Score breakdown Cleanliness 8.4 Comfort 8.5 Location 9.2 Facilities 7.8 Staff 8.4 Value for money 7.5 Free Wifi 8.4",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (Booking 403 direct)"
+    },
+    {
+      "url": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+      "text": " | Guest Reviews 8.1/10 129 verified reviews … This hotel is located in a great, safe area of Upper Manhattan. … The room is very big, the bed is also very comfortable, and it is clean. … The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey. … The lobby seems to have been recently renovated, but the guest rooms are clearly dated.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
     }
   ],
   "rating": {
     "primary": 4.2,
     "primarySource": "tripadvisor",
     "tripadvisor": 4.2,
-    "booking": 7.9
+    "booking": 7.9,
+    "tripcom": 8.1,
+    "scale_tripcom": 10
   },
   "reviewCount": {
     "tripadvisor": 8181,
-    "booking": 1601
+    "booking": 1601,
+    "tripcom": 129
   },
   "priceHint": "4-star boutique UWS",
   "hoursHint": "Hotel — 24h front desk; 3 on-site dining venues (official)",
@@ -206,7 +215,74 @@
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Arthouse Hotel: This hotel is located in a great, safe area of Upper Manhattan. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "This hotel is located in a great, safe area of Upper Manhattan.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Arthouse Hotel: The room is very big, the bed is also very comfortable, and it is clean. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The room is very big, the bed is also very comfortable, and it is clean.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+        "rating": "8.7/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 32
+      },
+      {
+        "theme": "Breakfast and dining",
+        "value": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 36
+      },
+      {
+        "theme": "Rooms",
+        "value": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The lobby seems to have been recently renovated, but the guest rooms are clearly dated. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "The lobby seems to have been recently renovated, but the guest rooms are clearly dated.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 34
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -214,5 +290,31 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine."
+  "itineraryNote": "Arthouse Hotel: a century-old Upper West Side boutique; try dinner downstairs at Serafina Restaurant and RedFarm, a greenmarket take on Chinese cuisine.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "This hotel is located in a great, safe area of Upper Manhattan.",
+      "The room is very big, the bed is also very comfortable, and it is clean."
+    ],
+    "watchOuts": [
+      "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey.",
+      "The lobby seems to have been recently renovated, but the guest rooms are clearly dated."
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Breakfast and dining",
+      "Rooms"
+    ],
+    "complaints": [
+      "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey.",
+      "The lobby seems to have been recently renovated, but the guest rooms are clearly dated."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

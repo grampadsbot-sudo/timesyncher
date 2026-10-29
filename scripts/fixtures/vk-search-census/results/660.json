@@ -136,7 +136,42 @@
           "sourceUrl": "https://www.bluenotejazz.com/nyc/faqs/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Service",
+        "value": "Tripadvisor reviewer on Blue Note Jazz Club: Door staff were very friendly and welcoming. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "Door staff were very friendly and welcoming",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 29
+      },
+      {
+        "theme": "Value",
+        "value": "Watch-out from a Tripadvisor reviewer at Blue Note Jazz Club: on top of the expensive ticket price, there is a mandatory minimum spend at the table.",
+        "claims": [
+          {
+            "text": "on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 26
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
@@ -148,6 +183,13 @@
     ],
     "watchOuts": [
       "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
+    ],
+    "themes": [
+      "Service",
+      "Value"
+    ],
+    "complaints": [
+      "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
     ]
   },
   "fieldsWritePass": {
@@ -156,5 +198,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve."
+  "itineraryNote": "Blue Note Jazz Club: a West 3rd Street jazz room; arrive early because Seating is always first come, first come serve.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

@@ -141,7 +141,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27
+        "words": 27,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+          "savedHtml": "r7/raw/st_196b70e9bc.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Pre-show timing",
@@ -160,7 +166,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 32
+        "words": 32,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+          "savedHtml": "r7/raw/st_196b70e9bc.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Brunch",
@@ -175,7 +187,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27
+        "words": 27,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+          "savedHtml": "r7/raw/st_196b70e9bc.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       },
       {
         "theme": "Busy and loud",
@@ -194,7 +212,13 @@
         "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
         "rating": "4.0",
         "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26
+        "words": 26,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+          "savedHtml": "r7/raw/st_196b70e9bc.html",
+          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
+        },
+        "stars": 5
       }
     ]
   },
@@ -227,21 +251,30 @@
     "at": "2026-10-29T09:05:00-07:00",
     "writer": "grok-bot"
   },
+  "itineraryNote": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
   "review1": "The splurge at The Smith - Lincoln Square is shellfish; a Restaurantji diner wrote The seafood tower is quite an experience, treat yourself! after a celebratory visit.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
   "review1Theme": "Seafood tower",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review1Stars": 5,
   "review2": "The Smith - Lincoln Square handles curtain times well: a Restaurantji reviewer with opera tickets says They sat us promptly at our reservation time and the wait staff excellent and timing impeccable.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0",
   "review2Theme": "Pre-show timing",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review2Stars": 5,
   "review3": "Weekend brunch is a strong use of The Smith - Lincoln Square; one Restaurantji guest reports Brunch at The Smith was an excellent experience, with delicious food.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Brunch",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review3Stars": 5,
   "review4": "Expect crowds at The Smith - Lincoln Square: diners mention their incredibly busy atmosphere, and one added It was very loud the day we were there.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Busy and loud",
-  "itineraryNote": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower."
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+  "review4Stars": 5,
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

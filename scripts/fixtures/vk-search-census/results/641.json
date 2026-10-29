@@ -16,7 +16,7 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
       "title": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "elsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews",
+      "text": "elsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … The location is convenient, whether you're taking the subway or walking to nearby attractions.",
       "snippet": "elsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
@@ -134,18 +134,95 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Breakfast and dining",
+        "value": "Trip.com reviewer on TownePlace Suites by Marriott New York Manhattan/Chelsea: The breakfast offers a good variety. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The breakfast offers a good variety",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
+        "rating": "8.7/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on TownePlace Suites by Marriott New York Manhattan/Chelsea: Nicely updated room. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Nicely updated room",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
+        "rating": "8.7/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      },
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on TownePlace Suites by Marriott New York Manhattan/Chelsea: The location is convenient, whether you're taking the subway or walking to nearby attractions. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "The location is convenient, whether you're taking the subway or walking to nearby attractions.",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
+        "rating": "7.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 37
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Trip.com reviewer at TownePlace Suites by Marriott New York Manhattan/Chelsea: it took a long time for the shower water to get hot.",
+        "claims": [
+          {
+            "text": "it took a long time for the shower water to get hot",
+            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
+        "rating": "8.7/10",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 25
+      }
+    ]
   },
   "reviewThemes": {
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
     "praise": [
       "The breakfast offers a good variety",
-      "Nicely updated room"
+      "Nicely updated room",
+      "The location is convenient, whether you're taking the subway or walking to nearby attractions."
     ],
     "watchOuts": [
+      "it took a long time for the shower water to get hot"
+    ],
+    "themes": [
+      "Breakfast and dining",
+      "Rooms",
+      "Location",
+      "Overall experience"
+    ],
+    "complaints": [
       "it took a long time for the shower water to get hot"
     ]
   },
@@ -155,5 +232,7 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "TownePlace Suites by Marriott New York Manhattan/Chelsea: suite space near Penn Station; start with the free breakfast before the High Line."
+  "itineraryNote": "TownePlace Suites by Marriott New York Manhattan/Chelsea: suite space near Penn Station; start with the free breakfast before the High Line.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }

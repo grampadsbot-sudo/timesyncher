@@ -19,15 +19,24 @@
       "text": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
       "snippet": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+      "text": " | Guest Reviews 8.9/10 70 verified reviews … This hotel is quite good for its New York City location. … The bed was clean, and the bathroom mirror was large. … It was the most comfortable hotel I stayed at during my trip to New York. … However, the decor is a bit dated, and while there are two elevators, they are old.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded"
     }
   ],
   "rating": {
     "primary": 4.4,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.4
+    "tripadvisor": 4.4,
+    "tripcom": 8.9,
+    "scale_tripcom": 10
   },
   "reviewCount": {
-    "tripadvisor": 3589
+    "tripadvisor": 3589,
+    "tripcom": 70
   },
   "priceHint": "4-star boutique UWS",
   "hoursHint": "Hotel — 24h; Nice Matin on site",
@@ -113,7 +122,74 @@
           "sourceUrl": "https://thelucernehotel.com/"
         }
       ]
-    }
+    },
+    "reviews": [],
+    "reviewsUnstarred": [
+      {
+        "theme": "Location",
+        "value": "Trip.com reviewer on Hotel Lucerne: This hotel is quite good for its New York City location. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "This hotel is quite good for its New York City location.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+        "rating": "8.7/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 31
+      },
+      {
+        "theme": "Rooms",
+        "value": "Trip.com reviewer on Hotel Lucerne: The bed was clean, and the bathroom mirror was large. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "The bed was clean, and the bathroom mirror was large.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+        "rating": "8.7/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 27
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Trip.com reviewer on Hotel Lucerne: It was the most comfortable hotel I stayed at during my trip to New York. Keep that in mind when choosing timing, a room, or an arrival plan.",
+        "claims": [
+          {
+            "text": "It was the most comfortable hotel I stayed at during my trip to New York.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+        "rating": "9.5/10",
+        "ratingBasis": "per-review score",
+        "polarity": "praise",
+        "words": 33
+      },
+      {
+        "theme": "Elevators",
+        "value": "Watch-out from a Trip.com reviewer at Hotel Lucerne: However, the decor is a bit dated, and while there are two elevators, they are old. A practical point to factor into the decision before the trip.",
+        "claims": [
+          {
+            "text": "However, the decor is a bit dated, and while there are two elevators, they are old.",
+            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
+          }
+        ],
+        "source": "Trip.com",
+        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+        "rating": "8.7/10",
+        "ratingBasis": "per-review score",
+        "polarity": "watchOut",
+        "words": 35
+      }
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -121,5 +197,30 @@
     "at": "2026-10-29T08:45:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Hotel Lucerne: a calm Upper West Side boutique at 79th and Amsterdam; try brunch when you Dine At Nice Matin downstairs."
+  "itineraryNote": "Hotel Lucerne: a calm Upper West Side boutique at 79th and Amsterdam; try brunch when you Dine At Nice Matin downstairs.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "This hotel is quite good for its New York City location.",
+      "The bed was clean, and the bathroom mirror was large.",
+      "It was the most comfortable hotel I stayed at during my trip to New York."
+    ],
+    "watchOuts": [
+      "However, the decor is a bit dated, and while there are two elevators, they are old."
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Overall experience",
+      "Elevators"
+    ],
+    "complaints": [
+      "However, the decor is a bit dated, and while there are two elevators, they are old."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
 }
