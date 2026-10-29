@@ -103,8 +103,11 @@ function ratingTupleMatchesQuote({ site, average, count, scale, quote }) {
   const normalized = quote.replace(/\s+/g, ' ').trim();
   const explicit = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:\/|(?:out )?of)\s*(5|10)\s*(?:bubbles|stars)?\s*(?:Very good|Good|Great|Excellent)?\s*\(?([\d,]+)\s+reviews?\)?$/i);
   const implicit = site === 'tripadvisor' && normalized.match(/^(\d+(?:\.\d+)?)\s+(?:Very good|Good|Great|Excellent)\s*\(([\d,]+)\)$/i);
+  const named = normalized.match(/^(yelp|tripadvisor|tripadvisor\.com|trip\.com) rating (\d+(?:\.\d+)?) from ([\d,]+) reviews?$/i);
+  const namedTuple = named && named[1].toLowerCase().replace('.com', '') === site.replace('.com', '')
+    ? [Number(named[2]), 5, Number(named[3].replace(/,/g, ''))] : null;
   const tuple = explicit ? [Number(explicit[1]), Number(explicit[2]), Number(explicit[3].replace(/,/g, ''))]
-    : implicit ? [Number(implicit[1]), 5, Number(implicit[2].replace(/,/g, ''))] : null;
+    : implicit ? [Number(implicit[1]), 5, Number(implicit[2].replace(/,/g, ''))] : namedTuple;
   return Boolean(tuple && tuple[0] === average && tuple[1] === scale && tuple[2] === count);
 }
 
