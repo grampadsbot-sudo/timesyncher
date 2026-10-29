@@ -8,6 +8,7 @@ import { patchLiveProductDetailBundle } from './trek-thing-detail-patches.mjs';
 import { patchBudgetUpstreamMiscBucket } from './trek-budget-upstream-misc-patch.mjs';
 import { patchThingLogoInkCenterInBundle } from './thing-logo-ink-center.mjs';
 import { patchTabIconVerticalCenter } from './trek-tab-icon-center-patches.mjs';
+import { forceSharedDayByDayUi } from './shared-day-by-day-ui.mjs';
 
 export const LIST_LOGO_PATCH = '_l=G=>{const Re=ha(G),raw=String(Re.logoUrl||Re.iconUrl||G.logoUrl||"").trim();if(raw&&!/^data:image\\/svg\\+xml/i.test(raw)&&!(/\\/ts-thing-media\\//i.test(raw)&&!/\\/ts-thing-logos\\//i.test(raw)))return raw;const pg=String(Re.url||Re.website||Re.sourceUrl||G.url||G.website||"").trim();if(pg){try{const u=new URL(pg);if(u.protocol==="http:"||u.protocol==="https:")return u.origin+"/favicon.ico"}catch(e){}}return ""}';
 
@@ -256,13 +257,8 @@ export function patchTripMapHarnessHook(source = '') {
   return js;
 }
 
-const DN_HOST_NEEDLE = 'dn=typeof window<"u"&&/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)';
-const DN_HOST_PATCH = 'dn=typeof window<"u"&&(/(^|\\.)timesyncher\\.com$/i.test(window.location.hostname)||/(^127\\.0\\.0\\.1$|^localhost$)/i.test(window.location.hostname))';
-
 export function patchSharedTripHostnameForLocalHarness(js = '') {
-  const source = String(js || '');
-  if (!source.includes(DN_HOST_NEEDLE)) return source;
-  return source.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  return forceSharedDayByDayUi(js);
 }
 
 export function applyLiveProductPatches(patched = '', options = {}) {
@@ -278,7 +274,7 @@ export function applyLiveProductPatches(patched = '', options = {}) {
   if (served && !js.includes('AI-assisted vacation itinerary planning')) {
     throw new Error('served shared footer missing AI-assisted vacation itinerary planning tagline');
   }
-  if (js.includes(DN_HOST_NEEDLE)) js = js.replace(DN_HOST_NEEDLE, DN_HOST_PATCH);
+  js = forceSharedDayByDayUi(js);
   js = js.replace(/\(Claude Web, Cursor, etc\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor usw\.\)/g, '(supported MCP clients)');
   js = js.replace(/\(Claude Web, Cursor, ecc\.\)/g, '(supported MCP clients)');
@@ -331,9 +327,9 @@ const TIMELINE_TITLE_PAD_NEEDLE = 'style:ua.isConflict?{marginLeft:26,borderLeft
 const TIMELINE_TITLE_PAD_PATCH = 'style:ua.isConflict?{marginLeft:26,borderLeft:"3px solid #60a5fa",paddingLeft:12,background:"#eff6ff",borderRadius:10,paddingTop:6,paddingBottom:6,paddingRight:10,display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,minWidth:0,width:"100%",boxSizing:"border-box"}:{paddingTop:1}';
 const CONFLICT_LABEL_NEEDLE = 'ua.isConflict&&n.jsxs("div",{style:{display:"flex",alignItems:"center",gap:8,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block"}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
 const CONFLICT_LABEL_PATCH = 'ua.isConflict&&n.jsxs("div",{"data-ts-conflict-label":"1",style:{display:"flex",alignItems:"center",gap:8,flexWrap:"nowrap",width:"100%",minWidth:0,color:"#b91c1c",fontSize:11,fontWeight:900,marginBottom:6,lineHeight:1.35,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},children:[n.jsx("span",{style:{width:34,height:2,background:"#ef4444",display:"inline-block",flexShrink:0}}),"Conflict with ",Bs(ua.conflictWith||"another timeline item")]}),n.jsx("button",{"data-ts-timeline-title":"1"';
-const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i';
+const ROW_TYPE_SKIP = '/^(travel|travel-to-thing|transport|hotel-wake|hotel-chec[k]out)$/i';
 const DAY_TITLE_NR_NEEDLE = 'children:Pn}),n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0})';
-const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&rr(ua.item)?n.jsx("div",{"data-row-summary":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(rr(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
+const DAY_TITLE_NR_PATCH = `children:Pn}),!${ROW_TYPE_SKIP}.test(String(ua.type||""))&&!/^Travel (to|from)\\b/i.test(String(ua.title||""))&&tsItinLine(ua.item)?n.jsx("div",{"data-row-summary":"1","data-itinerary-note":"1","data-summary-thing-only":"1","data-summary-src":"thing","data-summary-stored":"1",style:{display:"block",width:"100%",fontSize:12,fontWeight:400,marginTop:0,lineHeight:1.4,color:"#334155"},children:Bs(tsItinLine(ua.item))}):null,zr.length?n.jsx(Nr,{items:zr,scopeKey:Qt(ua.item),compact:!0}):null`;
 
 const OE_ROW_SUMMARY_NEEDLE = 'Rn=Bs(rr(G)||Co(G)||Fl(G))';
 const OE_ROW_SUMMARY_PATCH = 'Rn=Bs(rr(G))';
