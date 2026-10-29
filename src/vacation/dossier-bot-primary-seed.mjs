@@ -50,36 +50,26 @@ function recitClaim(claim, pages) {
   return { ...claim, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true };
 }
 
-function composeFromPages(claims, pages, minWords, maxWords, thing) {
+function composeFromClaims(claims, pages, thing) {
   const parts = [];
   const citations = [];
-  let wordsUsed = 0;
   const append = (claim) => {
     const body = String(claim.text || claim.claim || '').trim();
-    if (parts.includes(body)) return;
-    const words = body.split(/\s+/).filter(Boolean);
-    const text = words.slice(0, maxWords - wordsUsed).join(' ');
-    if (!text || recitClaim({ ...claim, text }, pages).supported !== true) return;
-    parts.push(text);
-    citations.push({ ...claim, text });
-    wordsUsed += wordCount(text);
+    if (!body || parts.includes(body)) return;
+    if (recitClaim({ ...claim, text: body }, pages).supported !== true) return;
+    parts.push(body);
+    citations.push({ ...claim, text: body });
   };
   for (const claim of claims || []) {
     const cited = recitClaim(claim, pages);
     if (cited.supported === true) append(cited);
-    if (wordsUsed >= maxWords) break;
-  }
-  for (const [index, page] of (pages || []).entries()) {
-    if (wordsUsed >= minWords) break;
-    if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
-    const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
-    if (!bit) continue;
-    if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-    append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
   }
   const body = parts.join(' ');
-  const value = thing && body && !descriptionNamesThing(body, thing) ? `${thing}: ${body}` : body;
-  return { value, claims: citations, bodyWords: wordsUsed };
+  if (!body || !citations.length) return { value: '', claims: [], bodyWords: 0 };
+  let value = body;
+  if (isFillerSummaryText(value, thing)) return { value: '', claims: [], bodyWords: 0 };
+  if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
+  return { value, claims: citations, bodyWords: wordCount(body) };
 }
 
 
@@ -122,8 +112,7 @@ export function recitBotPrimaryFields(dossier = {}) {
     if (!supported.length) value = '';
     else if (supported.length !== claims.length || contradictsValue) {
       const body = supported.map((claim) => claim.text || claim.claim).join(' ');
-      const minWords = key === 'summary' ? 12 : key === 'description' ? 40 : 0;
-      value = wordCount(body) >= minWords ? body : '';
+      value = body.trim() ? body : '';
       if (value && ['summary', 'description'].includes(key) && dossier.thing
         && !descriptionNamesThing(value, dossier.thing)) value = `${dossier.thing}: ${value}`;
     }
@@ -156,23 +145,28 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
   merged.thing = thing || merged.thing;
   const pages = merged.pages || [];
   const claimRows = Object.values(bot.fields || {}).flatMap((field) => field?.claims || []);
-  const ensure = (key, minWords, maxWords) => {
+  const summaryClaimRows = bot.fields?.summary?.claims?.length ? bot.fields.summary.claims : claimRows;
+  const ensure = (key, claimSource = claimRows) => {
     let existing = String(merged.fields?.[key]?.value || '').trim();
     if (thing && existing.startsWith(`${thing}: `)) existing = existing.slice(thing.length + 2);
-    if (wordCount(existing) >= minWords) {
+    if (existing && !claimSource.length) {
       if (thing && !descriptionNamesThing(existing, thing)) merged.fields[key] = { ...merged.fields[key], value: `${thing}: ${existing}` };
       return;
     }
     if (merged.fields?.[key]) merged.fields[key] = { ...merged.fields[key], value: '' };
-    const { bodyWords, ...composed } = composeFromPages(claimRows, pages, minWords, maxWords, thing);
-    if (bodyWords < minWords || !composed.claims.length || isFillerSummaryText(composed.value, thing)) return;
+    const { bodyWords, ...composed } = composeFromClaims(claimSource, pages, thing);
+    if (!bodyWords || !composed.claims.length || !String(composed.value || '').trim() || isFillerSummaryText(composed.value, thing)) return;
+    if (key === 'summary') {
+      const descriptionValue = String(merged.fields?.description?.value || '').trim();
+      if (descriptionValue && composed.value === descriptionValue && descriptionValue.length > 320) return;
+    }
     merged.fields = {
       ...(merged.fields || {}),
       [key]: composed,
     };
   };
-  ensure('summary', 12, 40);
-  ensure('description', 40, 120);
+  ensure('description');
+  ensure('summary', summaryClaimRows);
   if (bot.fields?.itineraryNote && !merged.fields?.itineraryNote) {
     merged.fields = { ...(merged.fields || {}), itineraryNote: bot.fields.itineraryNote };
     merged.itineraryNote = bot.fields.itineraryNote.value;

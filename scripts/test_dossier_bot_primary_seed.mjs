@@ -18,6 +18,7 @@ const place = {
 };
 
 const pageText = 'Hotel Belleclaire Central Park sits on the Upper West Side near Lincoln Center with Booking.com guests praising compact rooms included breakfast and an easy subway link to Central Park and Midtown theaters. The Belleclaire works well as a week-long base when you want a quieter residential block after long museum and show days.';
+const summaryClaim = 'Hotel Belleclaire Central Park works well as a quieter Upper West Side base near Lincoln Center and Central Park.';
 const bot = {
   thing: place.title,
   pages: [{
@@ -26,7 +27,10 @@ const bot = {
     fetchedAt: new Date().toISOString(),
     sha256: createHash('sha256').update(pageText).digest('hex'),
   }],
-  fields: {},
+  fields: {
+    summary: { value: '', claims: [{ text: summaryClaim, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
+    description: { value: '', claims: [{ text: pageText, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
+  },
   attempts: [{ provider: 'vk-search', status: 'ok' }],
 };
 

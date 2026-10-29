@@ -91,10 +91,15 @@ const sourcePages = [
 const mergeInput = {
   pages: sourcePages,
   fields: {
+    summary: { value: '', claims: [
+      { text: pool, sourceUrl: first.url, pages: ['p1'], supported: true },
+      { text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true },
+    ] },
     pool: { value: pool, claims: [{ text: pool, sourceUrl: first.url, pages: ['p1'], supported: true }] },
     breakfast: { value: breakfast, claims: [{ text: breakfast, pages: ['p2'], supported: true }] },
     bad: { value, claims: [unsupported, { text: 'FALSE CLAIM MUST NOT APPEAR', sourceUrl: first.url, supported: false }] },
     uncited: { value, claims: [{ text: 'UNCITED CLAIM MUST NOT APPEAR', supported: true }] },
+    detailField: { value: detail, claims: [{ text: detail, sourceUrl: sourcePages[2].url, pages: ['p3'], supported: true }] },
   },
 };
 const composed = mergeBotPrimaryPresentedFields({ pages: [unrelated, sourcePages[1]] }, mergeInput, { title });
@@ -125,12 +130,18 @@ assert.equal(undatedOnly.fields?.summary, undefined);
 assert.equal(undatedOnly.fields?.description, undefined);
 const truncated = mergeBotPrimaryPresentedFields({}, {
   pages: [sourcePages[2], sourcePages[1]],
-  fields: { details: { value: detail, claims: [
-    { text: detail, sourceUrl: sourcePages[2].url, supported: true },
-    { text: breakfast, sourceUrl: second.url, supported: true },
-  ] } },
+  fields: {
+    summary: { value: '', claims: [{ text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true }] },
+    description: { value: '', claims: [
+      { text: detail, sourceUrl: sourcePages[2].url, pages: ['p1'], supported: true },
+      { text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true },
+    ] },
+  },
 }, { title });
-assert.equal(truncated.fields.summary.value.split(/\s+/).length, 40);
-assert.equal(truncated.fields.summary.claims.length, 1, 'truncation must not cite unused sources');
-assert.ok(detail.startsWith(truncated.fields.summary.claims[0].text));
+assert.ok(truncated.fields.description.value.includes(detail));
+assert.ok(truncated.fields.description.value.split(/\s+/).length > 40);
+assert.ok(truncated.fields.summary.value.includes(breakfast));
+assert.notEqual(truncated.fields.summary.value, truncated.fields.description.value);
+assert.equal(truncated.fields.summary.claims.length, 1, 'summary keeps only its cited claims');
+assert.ok(!truncated.fields.summary.value.includes(detail.split(/\s+/).slice(0, 8).join(' ')));
 console.log(JSON.stringify({ ok: true, checked: 'bot-primary-recit-provenance', reorderedPages: ['p2', 'p1'], composedCitations: composed.fields.description.claims.length }));

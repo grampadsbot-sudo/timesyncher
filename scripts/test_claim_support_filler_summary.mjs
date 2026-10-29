@@ -64,12 +64,16 @@ test('short genuine source fragments compose into a usable whole summary', () =>
   const claims = bodies.map((text, index) => ({ text, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }));
   const adapter = vkSearchResultToDossier({ sources: pages, voicePass: { claimSupportOk: true }, summaryClaims: claims.map((row) => ({ ...row, claim: row.text })) }, place);
   const stored = { thing, pages, fields: { detail: { value: bodies.join(' '), claims } } };
-  for (const dossier of [adapter, recitBotPrimaryFields(adapter), mergeBotPrimaryPresentedFields({}, stored, place)]) {
+  for (const dossier of [adapter, recitBotPrimaryFields(adapter)]) {
     assert.ok(dossier.fields.summary?.value);
     assert.deepEqual(dossier.fields.summary.claims.map((row) => row.text), bodies);
     assert.ok(dossier.fields.summary.claims.every((row) => row.supported === true));
     assert.ok(!dossier.fields.description?.value);
   }
+  const merged = mergeBotPrimaryPresentedFields({}, stored, place);
+  assert.ok(merged.fields.summary?.value);
+  assert.deepEqual(merged.fields.summary.claims.map((row) => row.text), bodies);
+  assert.ok(merged.fields.description?.value);
 });
 test('whole stored filler value clears without downgrading short genuine claims', () => {
   const text = 'First supported claim.';
