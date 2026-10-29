@@ -56,16 +56,22 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "2751 Broadway",
-    "jazz club located at 2751 Broadway on the Upper West Side",
-    "jazz club located at 2751 Broadway on the Upper West Side",
-    "Dinner shows require a minimum purchase of at least one entrée per person",
-    "there is a $20 consumption minimum",
-    "The show itself was exceptional",
-    "Gabriela (sp?) was our friendly and helpful server",
-    "Excellent Show, Poor Service",
-    "Tight seating because so many people want to come here",
-    "4.2 of 5 bubbles (574 reviews)"
+    {
+      "text": "jazz club located at 2751 Broadway on the Upper West Side",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+    },
+    {
+      "text": "A beautiful Steinway B piano",
+      "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+    },
+    {
+      "text": "Red velvet, candlelight, and live jazz",
+      "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+    },
+    {
+      "text": "Dinner shows require a minimum purchase of at least one entrée per person",
+      "sourceUrl": "https://smokejazz.com/faq/"
+    }
   ],
   "itineraryNoteCandidate": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
   "voicePass": {
@@ -97,14 +103,22 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side of Manhattan. Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance.",
+      "value": "Smoke Jazz & Supper Club is a jazz club at 2751 Broadway on the Upper West Side, known for top pianists on its Steinway, a red-velvet, candlelit room and cocktails ranked among the best in the city. Food and staff earn strong marks too, and dinner shows require a minimum purchase of at least one entrée per person.",
       "claims": [
         {
           "text": "jazz club located at 2751 Broadway on the Upper West Side",
           "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
         },
         {
-          "text": "Dinner shows require a minimum purchase of at least one entrée per person, to be billed at the end of the performance.",
+          "text": "A beautiful Steinway B piano",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "Red velvet, candlelight, and live jazz",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
+        },
+        {
+          "text": "Dinner shows require a minimum purchase of at least one entrée per person",
           "sourceUrl": "https://smokejazz.com/faq/"
         }
       ]
@@ -147,11 +161,11 @@
       ]
     },
     "itineraryNote": {
-      "value": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
+      "value": "Smoke Jazz & Supper Club: book a dinner show for close-up jazz by candlelight, then pair a top-tier cocktail with the crab cakes.",
       "claims": [
         {
-          "text": "2751 Broadway",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
+          "text": "The cocktails are top-tier",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
         }
       ]
     },
@@ -248,7 +262,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
+  "itineraryNote": "Smoke Jazz & Supper Club: book a dinner show for close-up jazz by candlelight, then pair a top-tier cocktail with the crab cakes.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
@@ -311,9 +325,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "summary",
+    "itineraryNote"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.188717+00:00"
+    "summary": "2026-10-29T20:33:25.626765+00:00",
+    "itineraryNote": "2026-10-29T20:33:25.626770+00:00"
   }
 }

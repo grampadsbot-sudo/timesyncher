@@ -41,15 +41,18 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "979 Eighth Avenue btw 57th & 58th",
-    "979 Eighth Avenue btw 57th & 58th",
-    "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
-    "7:00 AM 9:00 PM",
-    "Smoothies Fresh Juices Hotties Bowls",
-    "Great selection of flavors, nice you can make your own mix and also creatine and protein options to add in, wheatgrass cocktails, immunity shots, salads and fruit bowls",
-    "the juices are labeled and put in the refrigerator for pick up as soon as they are made",
-    "4 231 ratings",
-    "This store is always busy, so there is a bit of a wait despite being larger than most"
+    {
+      "text": "979 Eighth Avenue btw 57th & 58th",
+      "sourceUrl": "https://www.juicegeneration.com/locations"
+    },
+    {
+      "text": "Great selection of flavors",
+      "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+    },
+    {
+      "text": "Slow service for online orders.",
+      "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
+    }
   ],
   "itineraryNoteCandidate": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
   "voicePass": {
@@ -81,15 +84,19 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Juice Generation Columbus Circle is a busy juice and smoothie bar at 979 Eighth Avenue, known for custom blends, protein add-ins and quick pickup. Juice comes labeled and is put in the refrigerator for pick up as soon as it is made, but expect a short wait because the shop is always busy.",
+      "value": "Juice Generation Columbus Circle is a busy juice and smoothie bar at 979 Eighth Avenue btw 57th & 58th, liked for its wide range of flavors and make-your-own mixes. Lines are common even in this larger branch, and app or online pickups can run late, so ordering at the counter is often the quicker route.",
       "claims": [
         {
           "text": "979 Eighth Avenue btw 57th & 58th",
           "sourceUrl": "https://www.juicegeneration.com/locations"
         },
         {
-          "text": "the juices are labeled and put in the refrigerator for pick up as soon as they are made",
+          "text": "Great selection of flavors",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "Slow service for online orders.",
+          "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
         }
       ]
     },
@@ -127,11 +134,11 @@
       ]
     },
     "itineraryNote": {
-      "value": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
+      "value": "Juice Generation Columbus Circle: build a custom smoothie from the long flavor list before a Central Park walk, and order in person when the shop is packed.",
       "claims": [
         {
-          "text": "979 Eighth Avenue btw 57th & 58th",
-          "sourceUrl": "https://www.juicegeneration.com/locations"
+          "text": "nice you can make your own mix",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
         }
       ]
     }
@@ -161,7 +168,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
+  "itineraryNote": "Juice Generation Columbus Circle: build a custom smoothie from the long flavor list before a Central Park walk, and order in person when the shop is packed.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Juice Generation Columbus Circle is liked for its wide range of smoothie and juice flavors, making it easy to find a favorite drink.",
@@ -212,9 +219,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "summary",
+    "itineraryNote"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.184451+00:00"
+    "summary": "2026-10-29T20:33:25.626109+00:00",
+    "itineraryNote": "2026-10-29T20:33:25.626144+00:00"
   }
 }
