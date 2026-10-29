@@ -19,7 +19,7 @@ import {
   summarizeImageHosts,
   tileRequestRecord,
 } from './passive-acquisition.mjs';
-import { collectBudgetEvidence } from './budget-rows.mjs';
+import { collectBudgetEvidence, mergeBudgetEvidence } from './budget-rows.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -251,25 +251,7 @@ async function recordRegions(page, shot, full) {
       return result;
     }, [ROW_SEL, ICON_SEL, full]);
     if (regions[shot] && regions[shot].ok) {
-      const budget = await page.evaluate(collectBudgetEvidence);
-      regions[shot].budget_row_count = budget.budget_row_count;
-      regions[shot].budget_membership = budget.budget_membership;
-      regions[shot].budget_text = budget.budget_text;
-      const items = Array.isArray(regions[shot].items) ? regions[shot].items : [];
-      for (const row of budget.budget_membership) {
-        items.push({
-          name: row.name,
-          price_text: row.amount_text,
-          box: row.box,
-          place_id: row.place_id,
-          cat: 'budget',
-          budget_row: true,
-          text: `${row.name} ${row.amount_text || ''}`.trim(),
-        });
-      }
-      regions[shot].items = items;
-      regions[shot].row_count = (regions[shot].row_count || 0) + budget.budget_row_count;
-      regions[shot].row_selector = `${ROW_SEL}, [data-ts-budget-row], div budget lines`;
+      mergeBudgetEvidence(regions[shot], await page.evaluate(collectBudgetEvidence), ROW_SEL);
     }
   } catch (e) { regions[shot] = { ok: false, error: String(e.message || e).split('\n')[0] }; }
 }

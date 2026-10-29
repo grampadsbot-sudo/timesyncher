@@ -1,5 +1,3 @@
-/** Budget lines are flex divs (`zl`), not `li[data-list-row]`. */
-
 export function isLegacyBudgetLine({ display, justifyContent, hasButton, priceText, insideListRow, marked }) {
   if (insideListRow) return false;
   if (marked) return true;
@@ -51,4 +49,25 @@ export function collectBudgetEvidence() {
     budget_membership: membership,
     budget_text: panel ? String(panel.innerText || '').slice(0, 20000) : membership.map((row) => `${row.name} ${row.amount_text || ''}`).join('\n'),
   };
+}
+
+export function mergeBudgetEvidence(region, budget, rowSelector) {
+  region.budget_row_count = budget.budget_row_count;
+  region.budget_membership = budget.budget_membership;
+  region.budget_text = budget.budget_text;
+  const items = Array.isArray(region.items) ? region.items : [];
+  for (const row of budget.budget_membership || []) {
+    items.push({
+      name: row.name,
+      price_text: row.amount_text,
+      box: row.box,
+      place_id: row.place_id,
+      cat: 'budget',
+      budget_row: true,
+      text: `${row.name} ${row.amount_text || ''}`.trim(),
+    });
+  }
+  region.items = items;
+  region.row_count = (region.row_count || 0) + budget.budget_row_count;
+  region.row_selector = `${rowSelector}, [data-ts-budget-row], div budget lines`;
 }

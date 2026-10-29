@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-/**
- * Local Gate B budget proof. Does not deploy.
- * Catalog page: every fixture place as a legacy flex budget div (base shape).
- * Head page: day-timeline assignments only, as data-ts-budget-row divs, plus stray list li.
- */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

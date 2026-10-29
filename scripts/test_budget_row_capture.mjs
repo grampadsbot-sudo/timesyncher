@@ -39,11 +39,12 @@ assert.equal(isLegacyBudgetLine({
 
 const capture = readFileSync(new URL('./ops/capture/capture.mjs', import.meta.url), 'utf8');
 assert.match(capture, /collectBudgetEvidence/);
-assert.match(capture, /budget_row_count/);
-assert.match(capture, /budget_membership/);
-assert.match(capture, /budget_text/);
-assert.match(capture, /row_count = \(regions\[shot\]\.row_count \|\| 0\) \+ budget\.budget_row_count/);
-assert.match(capture, /budget_row: true/);
+assert.match(capture, /mergeBudgetEvidence/);
 assert.match(capture, /CHROME_PATH/);
+const rows = readFileSync(new URL('./ops/capture/budget-rows.mjs', import.meta.url), 'utf8');
+assert.match(rows, /budget_row_count/);
+assert.match(rows, /budget_membership/);
+assert.match(rows, /budget_text/);
+assert.match(rows, /budget_row: true/);
 
 console.log('budget row capture counts flex div lines, not only list li');
