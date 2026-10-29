@@ -5,27 +5,58 @@
   "provider": "grok-bot",
   "sources": [
     {
+      "url": "https://www.apple.com/newsroom/2019/09/apple-fifth-avenue-the-cube-is-back/",
+      "title": "Apple Fifth Avenue: The cube is back - Apple",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ewly designed public plaza, Apple Fifth Avenue is ready to resume its place at the heart of one of the world’s most vibrant creative communities. Now nearly double the size of its original version with a higher ceiling and more natural light, Apple Fifth Avenue is a brighter, more expansive space, and the perfect stage f … ewly designed public plaza, Apple Fifth Avenue is ready to resume its place at the heart of one of the world’s most vibrant creative communities. Now nearly double the size of its original version with a higher ceiling and more natural light, Apple Fifth Avenue is a brighter, more expansive space, and the perfect stage f … light, Apple Fifth Avenue is a brighter, more expansive space, and the perfect stage for customers to discover and try Apple’s newest products. A new Forum will be home to free, daily Today at Apple programming, which kicks off Saturday with a special series that captures the creative spirit of New York. The area dedicated to Geniuses has also doubled, allow … tive spirit of New York. The area dedicated to Geniuses has also doubled, allowing the team to dramatically increase service capacity. It remains the only Apple retail location open 24 hours a day, 365 days a year. The new Apple Fifth Avenue is nearly double the size of the original, with a higher ceiling and more natural light, creating the perfect stage for c",
+      "snippet": "ewly designed public plaza, Apple Fifth Avenue is ready to resume its place at the heart of one of the world’s most vibrant creative communities. Now nearly double the size of its original version with a higher ceiling and more natural light, Apple Fifth Avenue is a brighter, more expansive space, a",
+      "fetchMethod": "curl live fetch 200"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue",
+      "title": "Apple Fifth Avenue - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "tore for Apple in New York City. The store is on and beneath a public plaza by the General Motors Building , built in 1968. Its exposed exterior is a transparent 32 ft (9.8 m) cube in the middle of the plaza. The plaza is partly lined with benches and trees. The substantive interior, below ground, features a reflective steel spi … , across from the Plaza Hotel . The store is located on and beneath a public plaza built for the General Motors Building , built in 1968. The site is adjacent to the southeast corner of Central Park , opposite Manhattan's Grand Army Plaza . The current design is a collaboration between Foster + Partners and Apple's chief design officer Jony Ive , … tore for Apple in New York City. The store is on and beneath a public plaza by the General Motors Building , built in 1968. Its exposed exterior is a transparent 32 ft (9.8 m) cube in the middle of the plaza. The plaza is partly lined with benches and trees. The substantive interior, below ground, features a reflective steel spi … , across from the Plaza Hotel . The store is located on and beneath a public plaza built for the General Motors Building , built in 1968. The site is adjacent to the southeast corner of Central Park , opposite Manhattan's Grand Army Plaza . The current design is a collaboration between Foster + Partners and Apple's chief design officer Jony Ive ,",
+      "snippet": "tore for Apple in New York City. The store is on and beneath a public plaza by the General Motors Building , built in 1968. Its exposed exterior is a transparent 32 ft (9.8 m) cube in the middle of the plaza. The plaza is partly lined with benches and trees. The substantive interior, below ground, f",
+      "fetchMethod": "curl live fetch 200"
+    },
+    {
       "url": "https://www.apple.com/retail/fifthavenue/",
       "title": "Fifth Avenue - Apple Store - Apple",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf … Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf … Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. | Fifth Avenue - Apple Store - Apple Apple Store Mac iPad ",
-      "snippet": "Fifth Avenue - Apple Store - Apple | Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events. Apple Store Fifth Avenue store hours, contact inf",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "text": "Apple Fifth Avenue Always Open Shop by drop-in available Experience Apple Vision Pro available Book a demo Order pickup in store available Learn more Genius Bar by appointment available Make a reservation Today at Apple in store available Find a session See all in-store and online services 1 2 3 4 5 6 Address 767 Fifth Aven",
+      "snippet": "Apple Fifth Avenue Always Open Shop by drop-in available Experience Apple Vision Pro available Book a demo Order pickup in store available Learn more Genius Bar by appointment available Make a reservation Today at Apple in store available Find a session See all in-store and online services 1 2 3 4 5",
+      "fetchMethod": "curl live fetch 200"
     },
     {
       "url": "https://www.yelp.com/biz/apple-fifth-avenue-new-york",
       "title": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp | | APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New Yo",
-      "snippet": "APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp | | APPLE FIFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New Yo",
-      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+      "text": "IFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp Apple Fifth Avenue 3.4 (1.2k reviews) Claimed $$$ Computers, Mobile Phones, IT Services & Computer Repair Open 24 hours Review Highlights “ I love taking the glass elevator down into the  … er - Yelp Apple Fifth Avenue 3.4 (1.2k reviews) Claimed $$$ Computers, Mobile Phones, IT Services & Computer Repair Open 24 hours Review Highlights “ I love taking the glass elevator down into the store and just taking in the awesome architecture and design.” in 31 reviews “ Also, as I eavesdropped on other people being helped, I noticed all the Geni … to the store and just taking in the awesome architecture and design.” in 31 reviews “ Also, as I eavesdropped on other people being helped, I noticed all the Geniuses were super helpful and sweet.” in 13 reviews “ The store is located off the corner of central park, and the visible component consists of a clear, glass box.” in 40 reviews",
+      "snippet": "IFTH AVENUE - Updated October 2026 - 1220 Reviews - 902 Photos - 767 5th Ave, New York, New York - Computers - Phone Number - Yelp Apple Fifth Avenue 3.4 (1.2k reviews) Claimed $$$ Computers, Mobile Phones, IT Services & Computer Repair Open 24 hours Review Highlights “ I love taking the glass eleva",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403); not a live fetch"
+    },
+    {
+      "url": "https://www.tripadvisor.in/ShowUserReviews-g60763-d110144-r713104864-Fifth_Avenue-New_York_City_New_York.html",
+      "title": "Apple Store 767 Fifth Avenue - Reviews, Photos - Fifth Avenue - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "m at 1pm. I get all the way downstairs only to be told I have to go upstairs and get in the reserved line for folks to pick up their confirmed order. In the line ½ hour when my appointment time was set to expire. No employee update to all of us waiting in line. Date of experience: September 2019",
+      "snippet": "m at 1pm. I get all the way downstairs only to be told I have to go upstairs and get in the reserved line for folks to pick up their confirmed order. In the line ½ hour when my appointment time was set to expire. No employee update to all of us waiting in line. Date of experience: September 2019",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (Tripadvisor blocks direct fetch); single 2019 review"
+    },
+    {
+      "url": "https://www.reddit.com/r/AskNYC/comments/1j1g1ej/most_empty_apple_store_in_nyc/",
+      "title": "Most empty Apple store in NYC? : r/AskNYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " if you go at odd hours. u/smorio_sem I like Grand Central the best but also have had good luck at 14th street. The 5th Ave one is open 24/7 but it’s often really crowded during normal hours",
+      "snippet": " if you go at odd hours. u/smorio_sem I like Grand Central the best but also have had good luck at 14th street. The 5th Ave one is open 24/7 but it’s often really crowded during normal hours",
+      "fetchMethod": "SERP-saved thread snapshot 2026-10-29 via WebSearch result text"
     }
   ],
   "rating": {
     "primary": 3.4,
     "primarySource": "yelp",
-    "yelp": 3.4,
-    "aggregator": 4.4
+    "yelp": 3.4
   },
   "reviewCount": {
     "yelp": 1220
@@ -35,10 +66,20 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "Fifth Avenue - Apple Store",
-    "Fifth Avenue - Apple Store",
-    "Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events",
-    "1220 Reviews - 902 Photos - 767 5th Ave"
+    "transparent 32 ft (9.8 m) cube",
+    "adjacent to the southeast corner of Central Park",
+    "nearly double the size",
+    "transparent 32 ft (9.8 m) cube",
+    "adjacent to the southeast corner of Central Park",
+    "nearly double the size",
+    "Forum will be home to free, daily Today at Apple programming",
+    "only Apple retail location open 24 hours a day, 365 days a year",
+    "Genius Bar by appointment",
+    "3.4 (1.2k reviews)",
+    "I love taking the glass elevator down into the store",
+    "all the Geniuses were super helpful and sweet",
+    "often really crowded during normal hours",
+    "In the line ½ hour"
   ],
   "itineraryNoteCandidate": "Drop into the always-open Fifth Avenue cube anytime—Genius Bar still needs a reservation.",
   "voicePass": {
@@ -70,34 +111,74 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Apple Fifth Avenue is the Apple Store on Fifth Avenue with its glass cube entrance by Central Park.",
+      "value": "Apple Fifth Avenue is Apple's 24-hour flagship under a transparent 32 ft (9.8 m) cube at the southeast corner of Central Park, rebuilt in 2019 at nearly double the size.",
       "claims": [
         {
-          "text": "Fifth Avenue - Apple Store",
-          "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
+          "text": "transparent 32 ft (9.8 m) cube",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue"
+        },
+        {
+          "text": "adjacent to the southeast corner of Central Park",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue"
+        },
+        {
+          "text": "nearly double the size",
+          "sourceUrl": "https://www.apple.com/newsroom/2019/09/apple-fifth-avenue-the-cube-is-back/"
         }
       ]
     },
     "description": {
-      "value": "Apple Fifth Avenue is the Apple Store under the glass cube on Fifth Avenue at 59th Street. Apple posts Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events online. It is a quick stop on a walk along Fifth Avenue and Central Park South. Its Yelp listing counts 1220 Reviews - 902 Photos - 767 5th Ave in Midtown.",
+      "value": "Apple Fifth Avenue sits on the General Motors Building plaza, where Wikipedia describes a transparent 32 ft (9.8 m) cube adjacent to the southeast corner of Central Park. Apple's 2019 press release says the rebuilt store is nearly double the size, with a Forum that hosts free, daily Today at Apple programming, and it remains the only Apple retail location open 24 hours a day, 365 days a year. Apple's store page lists Genius Bar by appointment for repairs. On Yelp it holds 3.4 (1.2k reviews); reviewers single out riding the glass elevator down into the store and note that the Geniuses were super helpful and sweet. The watch-outs are crowds and waits: one Reddit commenter says it is often really crowded during normal hours, and a 2019 Tripadvisor reviewer spent ½ hour in the pickup line.",
       "claims": [
         {
-          "text": "Fifth Avenue - Apple Store",
+          "text": "transparent 32 ft (9.8 m) cube",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue"
+        },
+        {
+          "text": "adjacent to the southeast corner of Central Park",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Apple_Fifth_Avenue"
+        },
+        {
+          "text": "nearly double the size",
+          "sourceUrl": "https://www.apple.com/newsroom/2019/09/apple-fifth-avenue-the-cube-is-back/"
+        },
+        {
+          "text": "Forum will be home to free, daily Today at Apple programming",
+          "sourceUrl": "https://www.apple.com/newsroom/2019/09/apple-fifth-avenue-the-cube-is-back/"
+        },
+        {
+          "text": "only Apple retail location open 24 hours a day, 365 days a year",
+          "sourceUrl": "https://www.apple.com/newsroom/2019/09/apple-fifth-avenue-the-cube-is-back/"
+        },
+        {
+          "text": "Genius Bar by appointment",
           "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
         },
         {
-          "text": "Apple Store Fifth Avenue store hours, contact information, and weekly calendar of events",
-          "sourceUrl": "https://www.apple.com/retail/fifthavenue/"
-        },
-        {
-          "text": "1220 Reviews - 902 Photos - 767 5th Ave",
+          "text": "3.4 (1.2k reviews)",
           "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+        },
+        {
+          "text": "I love taking the glass elevator down into the store",
+          "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+        },
+        {
+          "text": "all the Geniuses were super helpful and sweet",
+          "sourceUrl": "https://www.yelp.com/biz/apple-fifth-avenue-new-york"
+        },
+        {
+          "text": "often really crowded during normal hours",
+          "sourceUrl": "https://www.reddit.com/r/AskNYC/comments/1j1g1ej/most_empty_apple_store_in_nyc/"
+        },
+        {
+          "text": "In the line ½ hour",
+          "sourceUrl": "https://www.tripadvisor.in/ShowUserReviews-g60763-d110144-r713104864-Fifth_Avenue-New_York_City_New_York.html"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-claimfix-642-617-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
