@@ -70,4 +70,33 @@ export function mergeBudgetEvidence(region, budget, rowSelector) {
   region.items = items;
   region.row_count = (region.row_count || 0) + budget.budget_row_count;
   region.row_selector = `${rowSelector}, [data-ts-budget-row], div budget lines`;
+  if (region.struct && typeof region.struct === 'object') {
+    region.struct.budget_row_count = region.budget_row_count;
+    region.struct.budget_membership = region.budget_membership;
+    region.struct.budget_text = region.budget_text;
+  }
+}
+
+export function attachFixtureBudgetCounts(region, shared) {
+  const places = Array.isArray(shared && shared.places) ? shared.places.filter((place) => place && place.id != null) : [];
+  const ids = [];
+  const assignments = shared && shared.assignments && typeof shared.assignments === 'object' ? shared.assignments : {};
+  for (const rows of Object.values(assignments)) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const place = row && row.place && typeof row.place === 'object' ? row.place : {};
+      const id = Number((row && (row.place_id || place.id)) || 0);
+      if (id) ids.push(id);
+    }
+  }
+  const timeline = [...new Set(ids)].sort((a, b) => a - b);
+  region.budget_catalog_count = places.length;
+  region.budget_timeline_place_ids = timeline.map(String);
+  if (region.struct && typeof region.struct === 'object') {
+    region.struct.budget_catalog_count = region.budget_catalog_count;
+    region.struct.budget_timeline_place_ids = region.budget_timeline_place_ids;
+    region.struct.budget_row_count = region.budget_row_count;
+    region.struct.budget_membership = region.budget_membership;
+    region.struct.budget_text = region.budget_text;
+  }
 }
