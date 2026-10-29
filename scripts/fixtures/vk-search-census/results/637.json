@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
       "title": "The Empire Hotel New York: 111 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " them out. Original text Translated by Google Anonymo us User Standard Queen Room Stayed in Sep 2026 Couple 1 reviews 7.0 / 10 Posted on Oct 25, 2026 Staff was generally quite nice. However, definitely below my expectations. Not sure if we just got unlucky but the bathroom definitely did not look as new and clean as in the photo … price, and stayed for two nights. The standard room is around 200 square feet, which is a decent amount of space for two people. The downside is that the hotel is quite old, so there are limited power outlets, which is a bit inconvenient. The shower area in the bathroom is very spacious, but the sink and toilet area feel … oked the hotel because of the pool!!!! Was given a very tiny room couldn’t unpack suitcase Photos on website show beautiful pool and lavish foyer but rooms are tiny with old fashioned floor air conditioner which was very loud Unhappy experience never going back Annie Baobao Superior Room, 2 Double Beds Stayed in Jun 2026 Family 20 reviews 10 / 10 Outstanding Posted on Oct  … The Empire Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
-      "snippet": " them out. Original text Translated by Google Anonymo us User Standard Queen Room Stayed in Sep 2026 Couple 1 reviews 7.0 / 10 Posted on Oct 25, 2026 Staff was generally quite nice. However, definitely below my expectations. Not sure if we just got unlucky but the bathroom definitely did not look as",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "The Empire Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews … Staff was generally quite nice. … the hotel is quite old … rooms are tiny with old fashioned floor air conditioner which was very loud … e Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews … Staff was generally quite nice. … the hotel is quite old … rooms are tiny with old fashioned floor air conditioner which was very loud … iews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews … Staff was generally quite nice. … the hotel is quite old … rooms are tiny with old fashioned floor air conditioner which was very loud … The Empire Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews … Staff was generally quite nice. … the hotel is quite old … rooms are tiny with old fashioned floor air conditioner which was very loud",
+      "snippet": "The Empire Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews … Staff was generally quite nice. … the hotel is quite old … rooms are tiny with old fashioned floor air conditioner which was very loud",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -115,7 +115,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "Staff was generally quite nice"
     ],

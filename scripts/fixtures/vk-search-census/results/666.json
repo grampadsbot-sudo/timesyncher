@@ -24,8 +24,8 @@
       "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
       "title": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want  … SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … tan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … dvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … ?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews)",
-      "snippet": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want ",
+      "text": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of … SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … urant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … tional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews)",
+      "snippet": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
@@ -48,7 +48,7 @@
     "there is a $20 consumption minimum",
     "The show itself was exceptional",
     "Gabriela (sp?) was our friendly and helpful server",
-    "the service didn’t match the quality of the performance",
+    "Excellent Show, Poor Service",
     "Tight seating because so many people want to come here",
     "4.2 of 5 bubbles (574 reviews)"
   ],
@@ -91,7 +91,7 @@
       ]
     },
     "description": {
-      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there. Tripadvisor shows 4.2 of 5 bubbles (574 reviews). Representative Tripadvisor praise (search snapshot): “The show itself was exceptional”; “Gabriela (sp?) was our friendly and helpful server”. Representative watch-outs: “the service didn’t match the quality of the performance”; “Tight seating because so many people want to come here”.",
+      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there. Tripadvisor shows 4.2 of 5 bubbles (574 reviews). Representative Tripadvisor praise (search snapshot): “The show itself was exceptional”; “Gabriela (sp?) was our friendly and helpful server”. Representative watch-outs: “Excellent Show, Poor Service”; “Tight seating because so many people want to come here”.",
       "claims": [
         {
           "text": "jazz club located at 2751 Broadway on the Upper West Side",
@@ -114,7 +114,7 @@
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
         },
         {
-          "text": "the service didn’t match the quality of the performance",
+          "text": "Excellent Show, Poor Service",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
         },
         {
@@ -138,7 +138,7 @@
       "Gabriela (sp?) was our friendly and helpful server"
     ],
     "watchOuts": [
-      "the service didn’t match the quality of the performance",
+      "Excellent Show, Poor Service",
       "Tight seating because so many people want to come here"
     ]
   },

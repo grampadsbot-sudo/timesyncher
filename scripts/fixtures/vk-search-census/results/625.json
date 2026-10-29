@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
       "title": "New York Marriott Marquis: 656 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " text Translated by Google Guest User Renovated Deluxe Two Double Room Stayed in Sep 2026 Family 17 reviews 10 / 10 Outstanding Posted on Oct 9, 2026 The hotel has a fantastic location and the rooms are very clean. You can catch classic Broadway musicals like The Lion King and Hamilton right downstairs. Since it's in Times Square, it's quite lively, and things  … ews 9.5 / 10 Amazing Posted on Oct 18, 2026 Right next to Times Square, so getting around is super convenient, though you do sacrifice some quietness—it can get a bit noisy at night. You can't have it both ways, so I'm knocking off a point for that. There is a destination fee, but the hotel gives you a $40 USD/room/day dining cre …  with many Chinese restaurants within walking distance. The room hygiene is also very good. For such a prime location, the room size is decent. Since the hotel charges a mandatory $40 daily fee, it can be used to offset breakfast at the 8th-floor restaurant, and for around an additional $20, two people can get breakfast covered. Original tex",
-      "snippet": " text Translated by Google Guest User Renovated Deluxe Two Double Room Stayed in Sep 2026 Family 17 reviews 10 / 10 Outstanding Posted on Oct 9, 2026 The hotel has a fantastic location and the rooms are very clean. You can catch classic Broadway musicals like The Lion King and Hamilton right downsta",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … ork Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee",
+      "snippet": "New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -98,7 +98,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The hotel has a fantastic location and the rooms are very clean"
     ],

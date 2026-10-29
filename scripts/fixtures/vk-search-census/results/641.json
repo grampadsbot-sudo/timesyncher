@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
       "title": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "n 2026 Family 3 reviews 7.5 / 10 Posted on Aug 3, 2026 The location is convenient, whether you're taking the subway or walking to nearby attractions. The breakfast offers a good variety. The main issue is that with so many rooms, there are only four elevators, which often leads to long waits. Also, I encountered some problems this ti … by Google Guest User King Studio with Full Kitchenette Stayed in May 2026 Couple 1 reviews 10 / 10 Outstanding Posted on Jun 21, 2026 Great location. Nicely updated room. Small but definitely works for a couple on a short stay. Probably better for a single for a long stay. Thoughtfully designed for a small space. Xiao … t, whether you're taking the subway or walking to nearby attractions. The breakfast offers a good variety. The main issue is that with so many rooms, there are only four elevators, which often leads to long waits. Also, I encountered some problems this time and needed to contact the hotel, but received no response via Trip.com or email. Finally, it took a very",
-      "snippet": "n 2026 Family 3 reviews 7.5 / 10 Posted on Aug 3, 2026 The location is convenient, whether you're taking the subway or walking to nearby attractions. The breakfast offers a good variety. The main issue is that with so many rooms, there are only four elevators, which often leads to long waits. Also, ",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot",
+      "snippet": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -32,7 +32,7 @@
     "140 West 28th Street, New York, NY, USA, 10001",
     "The breakfast offers a good variety",
     "Nicely updated room",
-    "there are only four elevators, which often leads to long waits"
+    "it took a long time for the shower water to get hot"
   ],
   "itineraryNoteCandidate": "TownePlace Chelsea for suite + breakfast value after High Line days.",
   "voicePass": {
@@ -73,7 +73,7 @@
       ]
     },
     "description": {
-      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001. It sits between Chelsea and Midtown South near Penn Station. Suites with kitchens suit a longer stay or a family trip. Representative Trip.com praise (guest reviews): “The breakfast offers a good variety”; “Nicely updated room”. Representative watch-outs: “there are only four elevators, which often leads to long waits”.",
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001. It sits between Chelsea and Midtown South near Penn Station. Suites with kitchens suit a longer stay or a family trip. Representative Trip.com praise (guest reviews): “The breakfast offers a good variety”; “Nicely updated room”. Representative watch-outs: “it took a long time for the shower water to get hot”.",
       "claims": [
         {
           "text": "140 West 28th Street, New York, NY, USA, 10001",
@@ -88,7 +88,7 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         },
         {
-          "text": "there are only four elevators, which often leads to long waits",
+          "text": "it took a long time for the shower water to get hot",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         }
       ]
@@ -98,13 +98,13 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The breakfast offers a good variety",
       "Nicely updated room"
     ],
     "watchOuts": [
-      "there are only four elevators, which often leads to long waits"
+      "it took a long time for the shower water to get hot"
     ]
   },
   "fieldsWritePass": {

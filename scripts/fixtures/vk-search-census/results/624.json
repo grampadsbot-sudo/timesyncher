@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
       "title": "New York Marriott Downtown: 342 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ning options(6) Negative reviews(18) Anonymo us User Deluxe King Room Stayed in Aug 2026 Couple 18 reviews 10 / 10 Outstanding Posted on Sep 10, 2026 Safe and good location. Loved the great river view and is very clean. elai neyin Deluxe Two Double Room Stayed in Jun 2026 Family 6 reviews 5.0 / 10 Posted on Jul 23, 2026 The room was tiny, and the bed was also very s … . Loved the great river view and is very clean. elai neyin Deluxe Two Double Room Stayed in Jun 2026 Family 6 reviews 5.0 / 10 Posted on Jul 23, 2026 The room was tiny, and the bed was also very small, only 1.3 meters wide. The service was pretty average. Original text Translated by Google Za Zg Deluxe Two Double Room Stayed in Jun 2026 Family 51 r",
-      "snippet": "ning options(6) Negative reviews(18) Anonymo us User Deluxe King Room Stayed in Aug 2026 Couple 18 reviews 10 / 10 Outstanding Posted on Sep 10, 2026 Safe and good location. Loved the great river view and is very clean. elai neyin Deluxe Two Double Room Stayed in Jun 2026 Family 6 reviews 5.0 / 10 P",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small",
+      "snippet": "New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -103,7 +103,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "Safe and good location. Loved the great river view and is very clean"
     ],

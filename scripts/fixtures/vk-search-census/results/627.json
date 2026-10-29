@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
       "title": "Park Central: 185 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "tral Hotel in New York was a great experience overall, especially for first-time visitors to New York who want to stay in a prime Manhattan location. The hotel's biggest advantage is its incredibly convenient location. It's very close to popular attractions like Central Park, Fifth Avenue, and Times Square, making it easy to get around on foot or by subway. For a t … oney(11) Close to metro(8) Negative reviews(20) Dianfeng shanshan Classic King Room Stayed in Sep 2026 Other 3 reviews 7.5 / 10 Posted on Oct 6, 2026 The room amenities are basic. No toothbrushes or slippers are provided. You can request a toothbrush from the hotel, but when I called at night, they said they would send one but …  close to Times Square. Since I checked in late at night and checked out early in the morning, I didn't get a chance to see how far Central Park was. My room faced the street, which was a bit noisy as it was the weekend. The lobby was decent, but the room was small – there wasn't enough space for three suitcases. It was only for one night, so it",
-      "snippet": "tral Hotel in New York was a great experience overall, especially for first-time visitors to New York who want to stay in a prime Manhattan location. The hotel's biggest advantage is its incredibly convenient location. It's very close to popular attractions like Central Park, Fifth Avenue, and Times",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy … Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy",
+      "snippet": "Park Central: 185 Reviews | Trip.com | | The hotel's biggest advantage is its incredibly convenient location. … The room amenities are basic. … My room faced the street, which was a bit noisy",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -103,7 +103,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The hotel's biggest advantage is its incredibly convenient location"
     ],

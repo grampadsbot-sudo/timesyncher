@@ -11,17 +11,23 @@
       "text": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu fil … ecame Your Favorite Celebs' Favorite Restaurant The Wall Street Journal Mario Carbone Doesn't Care for Your Fancy Kitchen Gadgets HOURS & INFORMATION 181 Thompson Street (between Bleecker & Houston) New York, NY 10012 Lunch Tuesday - Sunday 11:30am - 2:00pm Dinner Monday - Sunday 5:00pm - 11:30pm We welcome guests to  … merica and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes of Julian Schnabel, and a menu filled with signatures inspired by the culinary history of Little Italy. CHEF MARIO CARBONE Gro",
       "snippet": "NEW YORK CITY THE ORIGINAL Carbone is one of the most celebrated Italian restaurants in America and a quintessential New York City dining experience. Located on historic Thompson Street, the original location features charismatic service, captains sporting tuxedos by Zac Posen, artworks by the likes",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/carbone-/",
+      "title": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
+      "snippet": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.0,
-    "primarySource": "yelp",
-    "yelp": 4.0,
-    "opentable": 4.5
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
   },
   "reviewCount": {
-    "yelp": 2129,
-    "opentable": 664
+    "restaurantji": 822
   },
   "priceHint": "$$$$ / OT $50+; Spicy Rigatoni Vodka $49 (Yelp menu)",
   "hoursHint": "Lunch Tue–Sun 11:30am–2pm; Dinner Mon–Sun 5–11:30pm (official)",
@@ -31,7 +37,10 @@
     "Located on historic Thompson Street",
     "Located on historic Thompson Street",
     "181 Thompson Street",
-    "captains sporting tuxedos by Zac Posen"
+    "captains sporting tuxedos by Zac Posen",
+    "The food was exceptional, the decor is so chic",
+    "Roberto was a sensational waiter",
+    "4.2 822 ratings"
   ],
   "itineraryNoteCandidate": "Book early, then order spicy rigatoni vodka and veal parm at this glam red-sauce temple.",
   "voicePass": {
@@ -79,7 +88,7 @@
       ]
     },
     "description": {
-      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead.",
+      "value": "Carbone is an Italian-American restaurant located on historic Thompson Street in Greenwich Village. Wikipedia places the original at 181 Thompson Street. Its official site describes captains sporting tuxedos by Zac Posen, and reservations are famously hard to get, so book well ahead. Restaurantji shows 4.2 822 ratings. Representative Restaurantji praise (diner reviews): “The food was exceptional, the decor is so chic”; “Roberto was a sensational waiter”.",
       "claims": [
         {
           "text": "Located on historic Thompson Street",
@@ -92,9 +101,32 @@
         {
           "text": "captains sporting tuxedos by Zac Posen",
           "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "The food was exceptional, the decor is so chic",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "Roberto was a sensational waiter",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
+        },
+        {
+          "text": "4.2 822 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/carbone-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The food was exceptional, the decor is so chic",
+      "Roberto was a sensational waiter"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

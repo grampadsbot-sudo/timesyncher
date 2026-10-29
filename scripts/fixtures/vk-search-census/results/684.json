@@ -11,17 +11,34 @@
       "text": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start  …  View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturday 7am – 1am Waitlist Start Earning Rewards Order Delivery Order Take Out Our Menus Restaurant Menu Bar ",
       "snippet": " GROUP GIFTING OUR HISTORY Account Log in Search Cart Item added to your cart View cart Check out Continue shopping See All Restaurants 45TH ST – NYC 1515 Broadway @ 45th Street New York, NY 10036 212-302-2000 Bakery | Takeout Sunday – Monday 7am - 11pm Tuesday - Thursday 7am - 12am Friday – Saturda",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+      "title": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … kery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it. … Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it.",
+      "snippet": "Junior's Restaurant & Bakery, New York - Menu, Reviews (1727), Photos (119) - Restaurantji | | 4.3 1727 ratings … Great service, great food, big meals and the cheesecakes! … The weight was a little long but it is absolutely worth it.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.3,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.3
+  },
+  "reviewCount": {
+    "restaurantji": 1727
+  },
   "priceHint": null,
   "hoursHint": "Sunday – Monday 7am - 11pm",
   "happyHourHint": null,
   "summaryClaims": [
     "1515 Broadway @ 45th Street",
     "1515 Broadway @ 45th Street",
-    "Sunday – Monday 7am - 11pm"
+    "Sunday – Monday 7am - 11pm",
+    "Great service, great food, big meals and the cheesecakes!",
+    "The weight was a little long but it is absolutely worth it",
+    "4.3 1727 ratings"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -44,7 +61,7 @@
       ]
     },
     "description": {
-      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show.",
+      "value": "Junior's Times Square is the Midtown branch of the Brooklyn cheesecake landmark. It is at 1515 Broadway @ 45th Street, in the middle of the Theater District. Posted hours include Sunday – Monday 7am - 11pm, so it works for a late slice after a show. Restaurantji shows 4.3 1727 ratings. Representative Restaurantji praise (diner reviews): “Great service, great food, big meals and the cheesecakes!”. Representative watch-outs: “The weight was a little long but it is absolutely worth it”.",
       "claims": [
         {
           "text": "1515 Broadway @ 45th Street",
@@ -53,9 +70,33 @@
         {
           "text": "Sunday – Monday 7am - 11pm",
           "sourceUrl": "https://www.juniorscheesecake.com/pages/45th-st-nyc"
+        },
+        {
+          "text": "Great service, great food, big meals and the cheesecakes!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "The weight was a little long but it is absolutely worth it",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
+        },
+        {
+          "text": "4.3 1727 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "Great service, great food, big meals and the cheesecakes!"
+    ],
+    "watchOuts": [
+      "The weight was a little long but it is absolutely worth it"
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

@@ -11,17 +11,36 @@
       "text": "utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square No items found. No items found. The Manhattan at Times Square Hotel prov … utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square No items found. No items found. The Manhattan at Times Square Hotel prov",
       "snippet": "utreach Services Elected Officials Media & Press Annual & Financial Reports Careers & Opportunities Support Us Contact Us 2027 Gala EN Explore Hotels Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Squ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+      "title": "Crowne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … t Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. …  reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's hygiene was terrible. … Crowne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room",
+      "snippet": "ne Plaza Manhattan Times Square by IHG: 246 Reviews | Trip.com | | Guest Reviews of Crowne Plaza Manhattan Times Square by IHG 6.4 / 10 245 reviews … The location of the hotel is great and right in the middle of it all … There was constant, loud renovation noise from upstairs next door … The room's ",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 6.4,
+    "primarySource": "trip.com",
+    "tripcom": 6.4,
+    "scale": 10
+  },
+  "reviewCount": {
+    "tripcom": 245
+  },
   "priceHint": "Times Square hotel (IHG/SPND)",
   "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
-    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square"
+    "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
+    "The location of the hotel is great and right in the middle of it all",
+    "There was constant, loud renovation noise from upstairs next door",
+    "The room's hygiene was terrible",
+    "6.4 / 10 245 reviews"
   ],
   "itineraryNoteCandidate": "Central but dated per recent reviews—only pick if the rate is sharply better than peers.",
   "voicePass": {
@@ -62,14 +81,43 @@
       ]
     },
     "description": {
-      "value": "The Manhattan at Times Square Hotel has been rebranded. Times Square Alliance lists it as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square. Book under the new Crowne Plaza name, and confirm room types and rates directly with IHG.",
+      "value": "The Manhattan at Times Square Hotel has been rebranded. Times Square Alliance lists it as Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square. Book under the new Crowne Plaza name, and confirm room types and rates directly with IHG. Trip.com shows 6.4 / 10 245 reviews. Representative Trip.com praise (guest reviews): “The location of the hotel is great and right in the middle of it all”. Representative watch-outs: “There was constant, loud renovation noise from upstairs next door”; “The room's hygiene was terrible”.",
       "claims": [
         {
           "text": "Crowne Plaza Manhattan Times Square - formerly The Manhattan at Times Square",
           "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
+        },
+        {
+          "text": "The location of the hotel is great and right in the middle of it all",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "There was constant, loud renovation noise from upstairs next door",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "The room's hygiene was terrible",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
+        },
+        {
+          "text": "6.4 / 10 245 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The location of the hotel is great and right in the middle of it all"
+    ],
+    "watchOuts": [
+      "There was constant, loud renovation noise from upstairs next door",
+      "The room's hygiene was terrible"
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

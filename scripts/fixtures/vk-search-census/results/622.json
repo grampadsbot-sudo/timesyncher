@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
       "title": "Hyatt Grand Central New York: 207 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "iews(30) Guest User Two Double Room Stayed in Jul 2026 Family 5 reviews 10 / 10 Outstanding Posted on Aug 25, 2026 The hotel's location is excellent, right next to Grand Central Station, making it super convenient for getting around. I was able to pop back to the hotel for a rest whenever I got tired from exploring New York these past few days. The room was also very spacious – r … e Room Stayed in Jul 2026 Business traveler 30 reviews 6.7 / 10 Posted on Aug 23, 2026 Everything else was fine, the service overall seemed okay, but the staff were very impatient when answering the phone. The faucet was too tight for me, an Asian person, to open, and I thought it was broken. When I called the front desk and housekeeping, they were bot … Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
-      "snippet": "iews(30) Guest User Two Double Room Stayed in Jul 2026 Family 5 reviews 10 / 10 Outstanding Posted on Aug 25, 2026 The hotel's location is excellent, right next to Grand Central Station, making it super convenient for getting around. I was able to pop back to the hotel for a rest whenever I got tire",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone … iews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone … Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone",
+      "snippet": "Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews … right next to Grand Central Station, making it super convenient for getting around … the staff were very impatient when answering the phone",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -110,7 +110,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "right next to Grand Central Station, making it super convenient for getting around"
     ],

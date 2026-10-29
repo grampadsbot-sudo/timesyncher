@@ -11,15 +11,23 @@
       "text": "p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini da … p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini da … rch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini daily oysters $ 2 ",
       "snippet": "p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonate",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+      "title": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS! … Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS!",
+      "snippet": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS!",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.5,
-    "primarySource": "google",
-    "google": 4.5
+    "primary": 4.4,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.4
   },
   "reviewCount": {
-    "google": 522
+    "restaurantji": 253
   },
   "priceHint": "HH drinks $7–12; oysters $2; snacks $5; baseline floor $24 cocktail",
   "hoursHint": "Mon–Fri 12pm–2am; Sat–Sun 11am–2am (official)",
@@ -27,7 +35,9 @@
   "summaryClaims": [
     "Happy Hour 3 pm - 6 pm daily",
     "Happy Hour 3 pm - 6 pm daily",
-    "Draft Beers $ 7"
+    "Draft Beers $ 7",
+    "They have the best burgers on the UWS!",
+    "4.4 253 ratings"
   ],
   "itineraryNoteCandidate": "Nobody Told Me for $2 oysters and $12 cocktails at the 3–6pm happy hour.",
   "voicePass": {
@@ -67,7 +77,7 @@
       ]
     },
     "description": {
-      "value": "Nobody Told Me is a neighborhood bar and restaurant on the Upper West Side. Its menu page lists Happy Hour 3 pm - 6 pm daily. Draft Beers $ 7 and wines by the glass at $10 make it a good early evening stop before dinner.",
+      "value": "Nobody Told Me is a neighborhood bar and restaurant on the Upper West Side. Its menu page lists Happy Hour 3 pm - 6 pm daily. Draft Beers $ 7 and wines by the glass at $10 make it a good early evening stop before dinner. Restaurantji shows 4.4 253 ratings. Representative Restaurantji praise (diner reviews): “They have the best burgers on the UWS!”.",
       "claims": [
         {
           "text": "Happy Hour 3 pm - 6 pm daily",
@@ -76,9 +86,27 @@
         {
           "text": "Draft Beers $ 7",
           "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        },
+        {
+          "text": "They have the best burgers on the UWS!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        },
+        {
+          "text": "4.4 253 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "They have the best burgers on the UWS!"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

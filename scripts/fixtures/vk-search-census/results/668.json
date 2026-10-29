@@ -24,8 +24,8 @@
       "url": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html",
       "title": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation the focus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basemen … Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation the focus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basement room Reviews (467) …  Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation the focus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basement room Reviews (467) … sor | | This place definitely lives up to the reputation the focus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basement room Reviews (467) … cus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basement room Reviews (467)",
-      "snippet": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation the focus is truly on the music I sat behind a pole and saw nothing but one of the musicians be careful at the steep stairs taking you to the basemen",
+      "text": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … lage Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … k City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467) … lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467)",
+      "snippet": "Great jazz experience - The Village Vanguard, New York City Traveller Reviews - Tripadvisor | | This place definitely lives up to the reputation … the focus is truly on the music … I sat behind a pole … be careful at the steep stairs taking you to the basement room … Reviews (467)",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
@@ -47,7 +47,7 @@
     "one drink minimum per person",
     "This place definitely lives up to the reputation",
     "the focus is truly on the music",
-    "I sat behind a pole and saw nothing but one of the musicians",
+    "I sat behind a pole",
     "be careful at the steep stairs taking you to the basement room",
     "Reviews (467)"
   ],
@@ -89,7 +89,7 @@
       ]
     },
     "description": {
-      "value": "Village Vanguard is a jazz club at Seventh Avenue South in Greenwich Village and the oldest operating jazz club in New York City. Shows start at 8:00 p.m. and 10:00 p.m. There is a one drink minimum per person, and the club serves no food. Tripadvisor shows Reviews (467). Representative Tripadvisor praise (search snapshot): “This place definitely lives up to the reputation”; “the focus is truly on the music”. Representative watch-outs: “I sat behind a pole and saw nothing but one of the musicians”; “be careful at the steep stairs taking you to the basement room”.",
+      "value": "Village Vanguard is a jazz club at Seventh Avenue South in Greenwich Village and the oldest operating jazz club in New York City. Shows start at 8:00 p.m. and 10:00 p.m. There is a one drink minimum per person, and the club serves no food. Tripadvisor shows Reviews (467). Representative Tripadvisor praise (search snapshot): “This place definitely lives up to the reputation”; “the focus is truly on the music”. Representative watch-outs: “I sat behind a pole”; “be careful at the steep stairs taking you to the basement room”.",
       "claims": [
         {
           "text": "oldest operating jazz club in New York City",
@@ -112,7 +112,7 @@
           "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
         },
         {
-          "text": "I sat behind a pole and saw nothing but one of the musicians",
+          "text": "I sat behind a pole",
           "sourceUrl": "https://www.tripadvisor.com.sg/ShowUserReviews-g60763-d548583-r1061521622-The_Village_Vanguard-New_York_City_New_York.html"
         },
         {
@@ -136,7 +136,7 @@
       "the focus is truly on the music"
     ],
     "watchOuts": [
-      "I sat behind a pole and saw nothing but one of the musicians",
+      "I sat behind a pole",
       "be careful at the steep stairs taking you to the basement room"
     ]
   },

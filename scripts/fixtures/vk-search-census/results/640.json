@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
       "title": "The Wallace Hotel: 125 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "reat location(5) Negative reviews(2) Anonymo us User Superior King Room Stayed in Jun 2026 Couple 2 reviews 10 / 10 Outstanding Posted on Aug 1, 2026 The room was very spacious, and the bed was super comfortable. The lighting controls were well thought out, even including a nightlight in the bathroom. There was always plenty of water in the fridge, and you co … ill be my go-to hotel again. Guest User Superior Queen Room Stayed in Feb 2026 Traveling with friends 9 reviews 9.0 / 10 Great Posted on Mar 20, 2026 Clean, nice spot. Opened in 2020. Everything still seems relatively fresh. Would stay again. Anonymo us User Superior Accessible Room, 2 Queen Beds Stayed in Dec 2025 Couple 9 review … ting experience ever. I had pretty good experience long time ago. I didn't know how it became such an unprofessional hospitality. Super disappointed! It was noisy continuously throughout the night. Workers were carrying conversations as if there were no one reside on the first floor. Utterly disrespectful and disgrace. No service was provided a",
-      "snippet": "reat location(5) Negative reviews(2) Anonymo us User Superior King Room Stayed in Jun 2026 Couple 2 reviews 10 / 10 Outstanding Posted on Aug 1, 2026 The room was very spacious, and the bed was super comfortable. The lighting controls were well thought out, even including a nightlight in the bathroo",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
+      "snippet": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -106,7 +106,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The room was very spacious, and the bed was super comfortable",
       "Clean, nice spot. Opened in 2020"

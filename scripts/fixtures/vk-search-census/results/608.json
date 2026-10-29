@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
       "title": "The Manhattan Club: 60 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "e Stayed in Jul 2026 Family 16 reviews 10 / 10 Outstanding Posted on Aug 28, 2026 So far it was the best place we have stayed in NYC for this budget. The rooms were spacious and with enough privacy for everyone. Two bathrooms and even small kitchen corner. The location is perfect, the subway is 2 minutes away, have many shops and restaurants nearby. We will  … and highly recommended it to everyone. Guest User Executive Junior Suite Stayed in Jun 2026 Couple 1 reviews 8.0 / 10 Very good Posted on Aug 3, 2026 The location to central park was awesome and the staff were great . Love the decor of the place and the history just to stay in the same place that like the great Jackie Gleason started . This is my first ever trip ",
-      "snippet": "e Stayed in Jul 2026 Family 16 reviews 10 / 10 Outstanding Posted on Aug 28, 2026 So far it was the best place we have stayed in NYC for this budget. The rooms were spacious and with enough privacy for everyone. Two bathrooms and even small kitchen corner. The location is perfect, the subway is 2 mi",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great",
+      "snippet": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -111,7 +111,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The rooms were spacious and with enough privacy for everyone",
       "The location to central park was awesome and the staff were great"

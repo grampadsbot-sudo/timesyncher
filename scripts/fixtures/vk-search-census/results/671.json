@@ -11,15 +11,23 @@
       "text": "r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to remember. Inquire catering Order onl … r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to remember. Inquire catering Order onl …  mind. Book Now a party About us Bodega 88 is the newest Upper West Side Sports Bar gem serving refreshing cocktails and delicious bites! Join us for Happy Hour Drinks from 11 am - 7 pm. Specials on beer, sangria, drinks & classic mojitos! Experience The Difference Our Menu Relax, It's Your Time Drinks To Taste Is To Enjoy Catering D",
       "snippet": "r page Facebook page Instagram page Yelp page Menu Drinks Specials Catering Parties Order Reserve Gift Cards the video sound on or off map marker pin 573 Columbus Ave, New York, NY 10024 Catering Having a party? Good food is an essential part of any event - let us do the catering and make it one to ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+      "title": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … ork - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go. … Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go.",
+      "snippet": "Bodega 88, New York - Menu, Reviews (262), Photos (37) - Restaurantji | | 4.3 262 ratings … The guacamole is fresh and served with both tortilla and plantain chips … Happy Hour is the time to go.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
     "primary": 4.3,
-    "primarySource": "yelp",
-    "yelp": 4.3
+    "primarySource": "restaurantji",
+    "restaurantji": 4.3
   },
   "reviewCount": {
-    "yelp": 277
+    "restaurantji": 262
   },
   "priceHint": "$$; HH beers ~$6, cocktails from ~$8 (third-party menu scrapes)",
   "hoursHint": "Daily ~11am–12am (official site lists all days 11:00 AM–12:00 AM)",
@@ -27,7 +35,10 @@
   "summaryClaims": [
     "573 Columbus Ave, New York, NY 10024",
     "573 Columbus Ave, New York, NY 10024",
-    "Happy Hour Drinks from 11 am - 7 pm"
+    "Happy Hour Drinks from 11 am - 7 pm",
+    "The guacamole is fresh and served with both tortilla and plantain chips",
+    "Happy Hour is the time to go",
+    "4.3 262 ratings"
   ],
   "itineraryNoteCandidate": "Catch the game at Bodega 88 with mojito happy hour from open until 7pm.",
   "voicePass": {
@@ -67,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave, New York, NY 10024. It invites guests to join us for Happy Hour Drinks from 11 am - 7 pm. Specials cover beer, sangria and classic mojitos, which makes it an easy casual stop.",
+      "value": "Bodega 88 is an Upper West Side sports bar at 573 Columbus Ave, New York, NY 10024. It invites guests to join us for Happy Hour Drinks from 11 am - 7 pm. Specials cover beer, sangria and classic mojitos, which makes it an easy casual stop. Restaurantji shows 4.3 262 ratings. Representative Restaurantji praise (diner reviews): “The guacamole is fresh and served with both tortilla and plantain chips”; “Happy Hour is the time to go”.",
       "claims": [
         {
           "text": "573 Columbus Ave, New York, NY 10024",
@@ -76,9 +87,32 @@
         {
           "text": "Happy Hour Drinks from 11 am - 7 pm",
           "sourceUrl": "https://bodega88nyc.com/"
+        },
+        {
+          "text": "The guacamole is fresh and served with both tortilla and plantain chips",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+        },
+        {
+          "text": "Happy Hour is the time to go",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
+        },
+        {
+          "text": "4.3 262 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The guacamole is fresh and served with both tortilla and plantain chips",
+      "Happy Hour is the time to go"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

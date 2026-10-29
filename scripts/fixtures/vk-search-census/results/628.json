@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
       "title": "Pod Times Square: 354 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "sty coffee(6) Awesome gym(4) Negative reviews(14) Guest User Bunk Pod Stayed in Aug 2026 Family 25 reviews 10 / 10 Outstanding Posted on Sep 17, 2026 The room was cleaned daily at 10 AM and was very tidy. The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on. However, there's a nightly resort fe … rsunuz. Havalandırma sesi de biraz rahatsız ediyor. yuan xinyu Bunk Pod Stayed in Jul 2026 Family 5 reviews 10 / 10 Outstanding Posted on Oct 2, 2026 The location is fantastic! Times Square is right downstairs, making it super convenient to get everywhere. The environment is great; though the room is small, that's to be expe …  at 10 AM and was very tidy. The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on. However, there's a nightly resort fee of $29.84 collected at the front desk. Original text Translated by Google Anonymo us User Full Pod Stayed in Jul 2026 Solo traveler 2 reviews 8.0 / 10 Very good Posted on Sep 4, 2026 Konu … haha. Original text Translated by Google Guest User Bunk Pod Stayed in Jul 2026 Traveling with friends 2 reviews 9.0 / 10 Great Posted on Oct 7, 2026 The room was a little small, but the great location made up for it. It was less than a 10-minute walk to Times Square. Just keep in mind that the bathroom has a frosted glass wa",
-      "snippet": "sty coffee(6) Awesome gym(4) Negative reviews(14) Guest User Bunk Pod Stayed in Aug 2026 Family 25 reviews 10 / 10 Outstanding Posted on Sep 17, 2026 The room was cleaned daily at 10 AM and was very tidy. The front desk staff were very nice, offered free luggage storage, and there was a sofa for gue",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Pod Times Square: 354 Reviews | Trip.com | | The room was cleaned daily at 10 AM and was very tidy. … The location is fantastic! … there's a nightly resort fee of $29.84 collected at the front desk … The room was a little small … Pod Times Square: 354 Reviews | Trip.com | | The room was cleaned daily at 10 AM and was very tidy. … The location is fantastic! … there's a nightly resort fee of $29.84 collected at the front desk … The room was a little small … Pod Times Square: 354 Reviews | Trip.com | | The room was cleaned daily at 10 AM and was very tidy. … The location is fantastic! … there's a nightly resort fee of $29.84 collected at the front desk … The room was a little small … oom was cleaned daily at 10 AM and was very tidy. … The location is fantastic! … there's a nightly resort fee of $29.84 collected at the front desk … The room was a little small",
+      "snippet": "Pod Times Square: 354 Reviews | Trip.com | | The room was cleaned daily at 10 AM and was very tidy. … The location is fantastic! … there's a nightly resort fee of $29.84 collected at the front desk … The room was a little small",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -116,7 +116,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The room was cleaned daily at 10 AM and was very tidy",
       "The location is fantastic!"

@@ -8,7 +8,7 @@
       "url": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
       "title": "TKTS by TDF | TDF",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se",
+      "text": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se … et the TKTS App Download the only app with a real-time display of what’s currently on sale at all TKTS Discount Booths. Available on TKTS eGift Cards Share the gift of live theatre with TKTS eGift Cards, which work like cash at our TKTS Discount Booths! Buy TKTS eGift Cards TKTS Accessibility Policy Our TKTS Patron Services Representatives and ticket … iladelphia, PA Closed View Details London, England Closed View Details Tokyo, Japan Closed View Details Get the TKTS App Download the only app with a real-time display of what’s currently on sale at all TKTS Discount Booths. Available on TKTS eGift Cards Share the gift of live theatre with TKTS eGift Cards, which work like cash at our TKTS Discount Booths! Buy TKTS eGift",
       "snippet": "TKTS by TDF | TDF | Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. | TKTS by TDF | TDF Skip to content About Us TDF Login Se",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -29,7 +29,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "same-day performances and next-day matinees up to 50% off",
-    "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off"
+    "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
+    "Share the gift of live theatre with TKTS eGift Cards",
+    "real-time display of what’s currently on sale at all TKTS Discount Booths"
   ],
   "itineraryNoteCandidate": "For a matinee, check TKTS Live first, then queue under the red steps—Lincoln Center booth is often shorter.",
   "voicePass": {
@@ -72,10 +74,18 @@
       ]
     },
     "description": {
-      "value": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says to visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. Arrive early in the day for the best choice of Broadway and Off-Broadway shows.",
+      "value": "Afternoon matinee show plan: pick up discounted seats at a TKTS booth. TDF says to visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off. For gifts, TDF suggests you Share the gift of live theatre with TKTS eGift Cards. TDF also points buyers to its TKTS app, which has a real-time display of what’s currently on sale at all TKTS Discount Booths.",
       "claims": [
         {
           "text": "Visit a TKTS Discount Booth for same-day performances and next-day matinees up to 50% off",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "Share the gift of live theatre with TKTS eGift Cards",
+          "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
+        },
+        {
+          "text": "real-time display of what’s currently on sale at all TKTS Discount Booths",
           "sourceUrl": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/"
         }
       ]

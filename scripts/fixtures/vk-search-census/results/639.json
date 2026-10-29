@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
       "title": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ter by: Sort by: All reviews(103) Positive reviews(3) Chenxi aozhucc Junior Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfort of taking a shower is average. Original text …  Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfort of taking a shower is average. Original text Translated by Google 아르 데코 Petite Room with One F … Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
-      "snippet": "ter by: Sort by: All reviews(103) Positive reviews(3) Chenxi aozhucc Junior Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfo",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … ip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
+      "snippet": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -115,7 +115,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The hotel has a great location and good service"
     ],

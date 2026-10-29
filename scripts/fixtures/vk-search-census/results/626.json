@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
       "title": "Night Hotel Broadway: 64 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": ", 2026 Due to current inflation, nightly rates are quite high everywhere, but compared to other options in New York, this hotel is reasonably priced. The location is outstanding, just 2-3 minutes from 96th Street, and there are shops right by the station—including Wendy's, McDonald's, and a pharmacy. The cross-town MTA buses (taking either the 96th or 106th st … sy once you get used to it, and a daytime stroll through the park is lovely. The hotel is quite classic, and you can't deny that it's aging. However, the staff cleans and makes the beds every day, and their attentiveness really shines through. My room came with a safety deposit box. The power outlet on the desk was a bit loose, but I managed t …  3 reviews 7.5 / 10 Posted on Sep 1, 2026 If you are staying in Upper West side, very convenient since subway station is right next to the hotel. But hotel is somewhat out dated and even with AC room felt little bit demp. Still because of location it makes up for other short falls. Guest User Gold Room With Two Double Beds St … Night Hotel Broadway: 64 Reviews | Trip.com | | Guest Reviews of Night Hotel Broadway 6.7 / 10 64 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
-      "snippet": ", 2026 Due to current inflation, nightly rates are quite high everywhere, but compared to other options in New York, this hotel is reasonably priced. The location is outstanding, just 2-3 minutes from 96th Street, and there are shops right by the station—including Wendy's, McDonald's, and a pharmacy",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Night Hotel Broadway: 64 Reviews | Trip.com | | Guest Reviews of Night Hotel Broadway 6.7 / 10 64 reviews … The location is outstanding, just 2-3 minutes from 96th Street … the staff cleans and makes the beds every day … hotel is somewhat out dated … 4 Reviews | Trip.com | | Guest Reviews of Night Hotel Broadway 6.7 / 10 64 reviews … The location is outstanding, just 2-3 minutes from 96th Street … the staff cleans and makes the beds every day … hotel is somewhat out dated … Hotel Broadway 6.7 / 10 64 reviews … The location is outstanding, just 2-3 minutes from 96th Street … the staff cleans and makes the beds every day … hotel is somewhat out dated … Night Hotel Broadway: 64 Reviews | Trip.com | | Guest Reviews of Night Hotel Broadway 6.7 / 10 64 reviews … The location is outstanding, just 2-3 minutes from 96th Street … the staff cleans and makes the beds every day … hotel is somewhat out dated",
+      "snippet": "Night Hotel Broadway: 64 Reviews | Trip.com | | Guest Reviews of Night Hotel Broadway 6.7 / 10 64 reviews … The location is outstanding, just 2-3 minutes from 96th Street … the staff cleans and makes the beds every day … hotel is somewhat out dated",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -110,7 +110,7 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "The location is outstanding, just 2-3 minutes from 96th Street",
       "the staff cleans and makes the beds every day"

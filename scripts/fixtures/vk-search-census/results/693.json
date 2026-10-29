@@ -19,6 +19,14 @@
       "text": "putes regarding rewards allocations or these program terms in its sole discretion and you agree to abide by any such adjudication. 1996 First Opening Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street. 2000 'Sex and the City' Feature Magnolia Bakery appears on the popular TV show, 'Sex and the City', kicking off the world’s “cupcake craze” with line",
       "snippet": "putes regarding rewards allocations or these program terms in its sole discretion and you agree to abide by any such adjudication. 1996 First Opening Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street. 2000 'Sex and the City' Feature Magnol",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+      "title": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great",
+      "snippet": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -30,7 +38,9 @@
     "The original 1996 Magnolia Bakery on Bleecker Street",
     "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
     "401 Bleecker St, New York, NY 10014",
-    "Come for a cupcake or the famous banana pudding"
+    "Come for a cupcake or the famous banana pudding",
+    "The banana pudding here is simply amazing",
+    "Staff is always great"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -53,7 +63,7 @@
       ]
     },
     "description": {
-      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening.",
+      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening. Representative Restaurantji praise (diner reviews): “The banana pudding here is simply amazing”; “Staff is always great”.",
       "claims": [
         {
           "text": "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
@@ -66,9 +76,28 @@
         {
           "text": "Come for a cupcake or the famous banana pudding",
           "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        },
+        {
+          "text": "The banana pudding here is simply amazing",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
+        },
+        {
+          "text": "Staff is always great",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The banana pudding here is simply amazing",
+      "Staff is always great"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

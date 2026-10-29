@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
       "title": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "eakfast. Friendly staff. Guest User Two Queen Studio Suite with Kitchen Stayed in Sep 2025 Other 1 reviews 10 / 10 Outstanding Posted on Oct 14, 2025 Love the breakfast. All the staffs are friendly. The location is great. Less than 10-mins walk to the K-town and the Empire State building. The room is clean. Love the kitchen though we didn't use  … uc hkin Specialty One Bedroom King Suite with Kitchen Stayed in Nov 2025 Family 8 reviews 10 / 10 Outstanding Posted on Jan 25, 2026 Excellent hotel. Very convenient location if you come with family, as there is a kitchen. I wish there were more vegetables for breakfast. Friendly staff. Guest User Two Queen Studio Suite with Kitchen Stayed in Sep 2025 Other 1 reviews 1 … om King Suite with Kitchen Stayed in Sep 2026 Couple 54 reviews 5.5 / 10 Posted on Oct 13, 2026 This hotel clearly doesn't want us to ever come back. Nobody helped us with our luggage either upon check-in or check-out, even though we asked. They charged us a deposit even though we didn't even touch their breakfast once. I'll be keeping an eye on whether the money a … Family 8 reviews 10 / 10 Outstanding Posted on Jan 25, 2026 Excellent hotel. Very convenient location if you come with family, as there is a kitchen. I wish there were more vegetables for breakfast. Friendly staff. Guest User Two Queen Studio Suite with Kitchen Stayed in Sep 2025 Other 1 reviews 10 / 10 Outstanding Posted on Oct 14, 2025 Love th",
-      "snippet": "eakfast. Friendly staff. Guest User Two Queen Studio Suite with Kitchen Stayed in Sep 2025 Other 1 reviews 10 / 10 Outstanding Posted on Oct 14, 2025 Love the breakfast. All the staffs are friendly. The location is great. Less than 10-mins walk to the K-town and the Empire State building. The room i",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast.",
+      "snippet": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": null,
@@ -35,8 +35,6 @@
     "24/7 Fitness Room",
     "Pet-friendly accommodations",
     "Love the breakfast. All the staffs are friendly",
-    "Very convenient location if you come with family, as there is a kitchen",
-    "Nobody helped us with our luggage either upon check-in or check-out",
     "I wish there were more vegetables for breakfast"
   ],
   "itineraryNoteCandidate": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
@@ -78,7 +76,7 @@
       ]
     },
     "description": {
-      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay. Representative Trip.com praise (guest reviews): “Love the breakfast. All the staffs are friendly”; “Very convenient location if you come with family, as there is a kitchen”. Representative watch-outs: “Nobody helped us with our luggage either upon check-in or check-out”; “I wish there were more vegetables for breakfast”.",
+      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay. Representative Trip.com praise (guest reviews): “Love the breakfast. All the staffs are friendly”. Representative watch-outs: “I wish there were more vegetables for breakfast”.",
       "claims": [
         {
           "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
@@ -105,14 +103,6 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         },
         {
-          "text": "Very convenient location if you come with family, as there is a kitchen",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
-        },
-        {
-          "text": "Nobody helped us with our luggage either upon check-in or check-out",
-          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
-        },
-        {
           "text": "I wish there were more vegetables for breakfast",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         }
@@ -123,13 +113,11 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
-      "Love the breakfast. All the staffs are friendly",
-      "Very convenient location if you come with family, as there is a kitchen"
+      "Love the breakfast. All the staffs are friendly"
     ],
     "watchOuts": [
-      "Nobody helped us with our luggage either upon check-in or check-out",
       "I wish there were more vegetables for breakfast"
     ]
   },

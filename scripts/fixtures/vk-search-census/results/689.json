@@ -11,10 +11,24 @@
       "text": "Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi … Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi … Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed and Thelonious Monk was a house pianist. Art Deco elegance meets the soulful energy of the City. Hours Monday - Wednesday 5 pm - 12 am Thursday 5 pm  … elonious Monk was a house pianist. Art Deco elegance meets the soulful energy of the City. Hours Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2 pm - 2 am Sunday 5 pm - 12 am",
       "snippet": "Zinc Bar | Historic Bar and Jazz Club in Greenwich Village | | Historic Bar and Jazz Club in Greenwich Village. Zinc Bar moved to the famous space at 82 W 3rd street once known as the Cinderella Club where Bi",
       "fetchMethod": "WebFetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+      "title": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for y … enu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … ji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … a Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Get there early for your choice of seat. … Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had differ",
+      "snippet": "Zinc Bar, New York - Menu, Reviews (300), Photos (67) - Restaurantji | | 4.1 300 ratings … We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe … Really friendly staff and good cocktails. … I wish they had different snacks for the folks who can't/don't want flat bread. … Ge",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.1
+  },
+  "reviewCount": {
+    "restaurantji": 300
+  },
   "priceHint": null,
   "hoursHint": "Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2 pm - 2 am Sunday 5 pm - 12 am",
   "happyHourHint": null,
@@ -22,7 +36,12 @@
     "Historic Bar and Jazz Club in Greenwich Village",
     "Historic Bar and Jazz Club in Greenwich Village",
     "famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed",
-    "Friday 5 pm - 2 am"
+    "Friday 5 pm - 2 am",
+    "We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
+    "Really friendly staff and good cocktails",
+    "I wish they had different snacks for the folks who can't/don't want flat bread",
+    "Get there early for your choice of seat",
+    "4.1 300 ratings"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -45,7 +64,7 @@
       ]
     },
     "description": {
-      "value": "Zinc Bar is a historic bar and jazz club in Greenwich Village. It occupies the famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed. Posted hours run late, with Friday 5 pm - 2 am, so it suits a late night.",
+      "value": "Zinc Bar is a historic bar and jazz club in Greenwich Village. It occupies the famous space at 82 W 3rd street once known as the Cinderella Club where Billie Holiday performed. Posted hours run late, with Friday 5 pm - 2 am, so it suits a late night. Restaurantji shows 4.1 300 ratings. Representative Restaurantji praise (diner reviews): “We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe”; “Really friendly staff and good cocktails”. Representative watch-outs: “I wish they had different snacks for the folks who can't/don't want flat bread”; “Get there early for your choice of seat”.",
       "claims": [
         {
           "text": "Historic Bar and Jazz Club in Greenwich Village",
@@ -58,9 +77,43 @@
         {
           "text": "Friday 5 pm - 2 am",
           "sourceUrl": "https://www.zincbar.com/"
+        },
+        {
+          "text": "We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+        },
+        {
+          "text": "Really friendly staff and good cocktails",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+        },
+        {
+          "text": "I wish they had different snacks for the folks who can't/don't want flat bread",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+        },
+        {
+          "text": "Get there early for your choice of seat",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+        },
+        {
+          "text": "4.1 300 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "We immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
+      "Really friendly staff and good cocktails"
+    ],
+    "watchOuts": [
+      "I wish they had different snacks for the folks who can't/don't want flat bread",
+      "Get there early for your choice of seat"
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

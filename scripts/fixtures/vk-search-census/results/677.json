@@ -11,12 +11,23 @@
       "text": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel … La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicelife.com | La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order Skip to main con",
       "snippet": "La Traviata Pizza - New York, NY - 101 West 68th Street - Hours, Menu, Order | View the menu, hours, address, and photos for La Traviata Pizza in New York, NY. Order online for delivery or pickup on Slicel",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+      "title": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside. … La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside. … La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside.",
+      "snippet": "La Traviata Pizzeria, New York - Menu, Reviews (168), Photos (62) - Restaurantji | | 4.2 168 ratings … The service was quick and the pizza good. … Only 4 small tables inside and a few standing tables outside.",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "summaryClaims": [
     "101 West 68th Street",
     "101 West 68th Street",
-    "the menu, hours, address, and photos for La Traviata Pizza in New York, NY"
+    "the menu, hours, address, and photos for La Traviata Pizza in New York, NY",
+    "The service was quick and the pizza good",
+    "Only 4 small tables inside and a few standing tables outside",
+    "4.2 168 ratings"
   ],
   "voicePass": {
     "claimSupportOk": true,
@@ -39,7 +50,7 @@
       ]
     },
     "description": {
-      "value": "La Traviata Pizzeria is a neighborhood pizza shop at 101 West 68th Street on the Upper West Side. Its site lists the menu, hours, address, and photos for La Traviata Pizza in New York, NY. It is a quick slice stop a block from Lincoln Center.",
+      "value": "La Traviata Pizzeria is a neighborhood pizza shop at 101 West 68th Street on the Upper West Side. Its site lists the menu, hours, address, and photos for La Traviata Pizza in New York, NY. It is a quick slice stop a block from Lincoln Center. Restaurantji shows 4.2 168 ratings. Representative Restaurantji praise (diner reviews): “The service was quick and the pizza good”. Representative watch-outs: “Only 4 small tables inside and a few standing tables outside”.",
       "claims": [
         {
           "text": "101 West 68th Street",
@@ -48,9 +59,41 @@
         {
           "text": "the menu, hours, address, and photos for La Traviata Pizza in New York, NY",
           "sourceUrl": "https://www.latraviatapizzany.com/"
+        },
+        {
+          "text": "The service was quick and the pizza good",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "Only 4 small tables inside and a few standing tables outside",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
+        },
+        {
+          "text": "4.2 168 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
         }
       ]
     }
+  },
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
+  },
+  "reviewCount": {
+    "restaurantji": 168
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The service was quick and the pizza good"
+    ],
+    "watchOuts": [
+      "Only 4 small tables inside and a few standing tables outside"
+    ]
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

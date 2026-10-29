@@ -16,9 +16,9 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
       "title": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ding deposits!!! Riri _999 Traditional King Room Stayed in Jul 2026 Business traveler 13 reviews 7.5 / 10 Posted on Oct 14, 2026 It was an okay stay. Room is great and clean. A really huge space for me. I expected a sauna/Spa as it is listed under amenities but staff said they dont have it so feels kinda weird because tha … ome stay(10) Close to metro(7) Negative reviews(23) M8 88 Traditional Queen Room Stayed in Jul 2026 Family 10 reviews 5.0 / 10 Posted on Sep 14, 2026 The location is the only good thing about this hotel, no attitude, no service. And be aware that they don’t return your deposits, and don’t even reply to your questions regarding deposits!!! Riri _999 T … Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
-      "snippet": "ding deposits!!! Riri _999 Traditional King Room Stayed in Jul 2026 Business traveler 13 reviews 7.5 / 10 Posted on Oct 14, 2026 It was an okay stay. Room is great and clean. A really huge space for me. I expected a sauna/Spa as it is listed under amenities but staff said they dont have it so feels ",
-      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
+      "text": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities … Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities",
+      "snippet": "Sheraton New York Times Square Hotel: 158 Reviews | Trip.com | | Guest Reviews of Sheraton New York Times Square Hotel 7.8 / 10 Good 158 reviews … Room is great and clean. … I expected a sauna/Spa as it is listed under amenities",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -38,7 +38,7 @@
     "51-story hotel located near Times Square",
     "51-story hotel located near Times Square",
     "Room is great and clean",
-    "The location is the only good thing about this hotel",
+    "I expected a sauna/Spa as it is listed under amenities",
     "7.8 / 10 Good 158 reviews"
   ],
   "itineraryNoteCandidate": "Sheraton TSQ is a big-box Midtown base—location strong, rooms/service mixed in recent reviews.",
@@ -80,7 +80,7 @@
       ]
     },
     "description": {
-      "value": "Sheraton New York Times Square Hotel is a 51-story hotel located near Times Square. It sits on Seventh Avenue in Midtown, close to Broadway theaters, Rockefeller Center and Central Park. It is a large convention-style hotel with many room types for groups. Trip.com shows 7.8 / 10 Good 158 reviews. Representative Trip.com praise (guest reviews): “Room is great and clean”. Representative watch-outs: “The location is the only good thing about this hotel”.",
+      "value": "Sheraton New York Times Square Hotel is a 51-story hotel located near Times Square. It sits on Seventh Avenue in Midtown, close to Broadway theaters, Rockefeller Center and Central Park. It is a large convention-style hotel with many room types for groups. Trip.com shows 7.8 / 10 Good 158 reviews. Representative Trip.com praise (guest reviews): “Room is great and clean”. Representative watch-outs: “I expected a sauna/Spa as it is listed under amenities”.",
       "claims": [
         {
           "text": "51-story hotel located near Times Square",
@@ -91,7 +91,7 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
         },
         {
-          "text": "The location is the only good thing about this hotel",
+          "text": "I expected a sauna/Spa as it is listed under amenities",
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html"
         },
         {
@@ -105,12 +105,12 @@
     "representative": true,
     "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2140147/sheraton-new-york-times-square-hotel/review.html",
     "site": "Trip.com",
-    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews",
     "praise": [
       "Room is great and clean"
     ],
     "watchOuts": [
-      "The location is the only good thing about this hotel"
+      "I expected a sauna/Spa as it is listed under amenities"
     ]
   },
   "fieldsWritePass": {

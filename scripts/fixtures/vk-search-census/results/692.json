@@ -8,9 +8,9 @@
       "url": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
       "title": "Venchi Chocolate Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "late Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji | Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecker Street in New York - view the menu, hours, phone number, address and map. Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecke … late Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji | Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecker Street in New York - view the menu, hours, phone number, address and map. Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecke",
+      "text": "late Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji | Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecker Street in New York - view the menu, hours, phone number, address and map. Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecke … late Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji | Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecker Street in New York - view the menu, hours, phone number, address and map. Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecke …  Chocolate Bleecker St Write a review This store is sooo cute and the chocolate is amazing. I like chocolate with nocciolo and it is very good there. Easy to get gifts, and staff super friendly and helpful. Naima was amazing!!! Wonderful chocolate in nyc! Maritza and Elliot are the best! Very friendly! Read All Reviews(612) Hours Monday 11AM - 12AM Tues … e is amazing. I like chocolate with nocciolo and it is very good there. Easy to get gifts, and staff super friendly and helpful. Naima was amazing!!! Wonderful chocolate in nyc! Maritza and Elliot are the best! Very friendly! Read All Reviews(612) Hours Monday 11AM - 12AM Tuesday 11AM - 12AM Wednesday 11AM - 12AM Thursday 11A … colate Chocolate Ice Cream Bins of Chocolates Crêpes & Gelato +7 more Show less Photos Add a Photo View All Photos View all photos --> Recent Reviews 4.8 612 ratings 5 93% 4 4% 3 1% 2 0% 1 2% Food Atmosphere Service Share your opinion about Venchi Chocolate Bleecker St Write a review This store is sooo cute and th",
       "snippet": "late Bleecker St, New York - Menu, Reviews (612), Photos (51) - Restaurantji | Latest reviews, photos and ratings for Venchi Chocolate Bleecker St at 233 Bleecker Street in New York - view the menu, hours, phone number, address and map. Latest reviews, photos and ratings for Venchi Chocolate Bleecke",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "fetchMethod": "live fetch; review excerpts re-fetched live 2026-10-29"
     },
     {
       "url": "https://www.mapquest.com/us/new-york/venchi-chocolate-bleecker-st-800849389",
@@ -21,8 +21,14 @@
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.8,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.8
+  },
+  "reviewCount": {
+    "restaurantji": 612
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
@@ -30,7 +36,10 @@
     "233 Bleecker Street",
     "233 Bleecker Street",
     "Italian chocolate excellence meets authentic italian gelato",
-    "Since 1878"
+    "Since 1878",
+    "Easy to get gifts, and staff super friendly and helpful",
+    "Wonderful chocolate in nyc!",
+    "4.8 612 ratings"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -53,7 +62,7 @@
       ]
     },
     "description": {
-      "value": "Venchi Bleecker Street is an Italian chocolate and gelato shop at 233 Bleecker Street in New York. Its listing describes Italian chocolate excellence meets authentic italian gelato. Since 1878, the brand has made chocolate in Italy, and the shop is a sweet stop on a Village walk.",
+      "value": "Venchi Bleecker Street is an Italian chocolate and gelato shop at 233 Bleecker Street in New York. Its listing describes Italian chocolate excellence meets authentic italian gelato. Since 1878, the brand has made chocolate in Italy, and the shop is a sweet stop on a Village walk. Restaurantji shows 4.8 612 ratings. Representative Restaurantji praise (diner reviews): “Easy to get gifts, and staff super friendly and helpful”; “Wonderful chocolate in nyc!”.",
       "claims": [
         {
           "text": "233 Bleecker Street",
@@ -66,9 +75,32 @@
         {
           "text": "Since 1878",
           "sourceUrl": "https://www.mapquest.com/us/new-york/venchi-chocolate-bleecker-st-800849389"
+        },
+        {
+          "text": "Easy to get gifts, and staff super friendly and helpful",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
+        },
+        {
+          "text": "Wonderful chocolate in nyc!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
+        },
+        {
+          "text": "4.8 612 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
+    "site": "Restaurantji",
+    "via": "live fetch; review excerpts re-fetched live 2026-10-29",
+    "praise": [
+      "Easy to get gifts, and staff super friendly and helpful",
+      "Wonderful chocolate in nyc!"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

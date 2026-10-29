@@ -11,17 +11,34 @@
       "text": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac … t WikiMiniAtlas]]</span>\"}}'/> Website sylviasrestaurant .com Sylvia's Restaurant of Harlem , often called Sylvia's Soul Food or just Sylvia's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared  … via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac",
       "snippet": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woo",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+      "title": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … lvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
+      "snippet": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
+  },
+  "reviewCount": {
+    "restaurantji": 925
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
     "Founded in 1962 by Sylvia Woods",
     "soul food restaurant located at 328 Malcolm X Boulevard",
-    "Founded in 1962 by Sylvia Woods"
+    "Founded in 1962 by Sylvia Woods",
+    "First time in Harlem, the best food hands down",
+    "the drinks were great",
+    "4.2 925 ratings"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -44,7 +61,7 @@
       ]
     },
     "description": {
-      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit.",
+      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit. Restaurantji shows 4.2 925 ratings. Representative Restaurantji praise (diner reviews): “First time in Harlem, the best food hands down”; “the drinks were great”.",
       "claims": [
         {
           "text": "soul food restaurant located at 328 Malcolm X Boulevard",
@@ -53,9 +70,32 @@
         {
           "text": "Founded in 1962 by Sylvia Woods",
           "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        },
+        {
+          "text": "First time in Harlem, the best food hands down",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "the drinks were great",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "4.2 925 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
         }
       ]
     }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "First time in Harlem, the best food hands down",
+      "the drinks were great"
+    ],
+    "watchOuts": []
   },
   "fieldsWritePass": {
     "pass": "vk728-overnight-drev-chase-20261029",

@@ -16,8 +16,8 @@
       "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
       "title": "Review of Statue City Cruises, New York City, NY - Tripadvisor",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly a … Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat …  York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat … e Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat",
-      "snippet": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly a",
+      "text": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for ne … k City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for nearly an hour for a boat",
+      "snippet": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for ne",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
@@ -37,9 +37,7 @@
     "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
     "Liberty Island and Ellis Island",
     "The best part is access to the Statue of Liberty and Ellis Island",
-    "the boat ride was calm, and the views were amazing",
-    "the loading and unloading process is crowded and disorganized",
-    "had to wait in the heat for nearly an hour for a boat"
+    "the loading and unloading process is crowded and disorganized"
   ],
   "itineraryNoteCandidate": "Buy Statue City Cruises tickets only, board at Battery Park, then see Liberty and Ellis museums on one ticket.",
   "voicePass": {
@@ -87,7 +85,7 @@
       ]
     },
     "description": {
-      "value": "The Statue of Liberty walking tour starts with the official ferry. Statue City Cruises offers round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City. The ferry stops at Liberty Island and Ellis Island, so plan most of a day. Representative Tripadvisor praise (search snapshot): “The best part is access to the Statue of Liberty and Ellis Island”; “the boat ride was calm, and the views were amazing”. Representative watch-outs: “the loading and unloading process is crowded and disorganized”; “had to wait in the heat for nearly an hour for a boat”.",
+      "value": "The Statue of Liberty walking tour starts with the official ferry. Statue City Cruises offers round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City. The ferry stops at Liberty Island and Ellis Island, so plan most of a day. Representative Tripadvisor praise (search snapshot): “The best part is access to the Statue of Liberty and Ellis Island”. Representative watch-outs: “the loading and unloading process is crowded and disorganized”.",
       "claims": [
         {
           "text": "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
@@ -102,15 +100,7 @@
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
         },
         {
-          "text": "the boat ride was calm, and the views were amazing",
-          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
-        },
-        {
           "text": "the loading and unloading process is crowded and disorganized",
-          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
-        },
-        {
-          "text": "had to wait in the heat for nearly an hour for a boat",
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
         }
       ]
@@ -122,12 +112,10 @@
     "site": "Tripadvisor",
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
-      "The best part is access to the Statue of Liberty and Ellis Island",
-      "the boat ride was calm, and the views were amazing"
+      "The best part is access to the Statue of Liberty and Ellis Island"
     ],
     "watchOuts": [
-      "the loading and unloading process is crowded and disorganized",
-      "had to wait in the heat for nearly an hour for a boat"
+      "the loading and unloading process is crowded and disorganized"
     ]
   },
   "fieldsWritePass": {

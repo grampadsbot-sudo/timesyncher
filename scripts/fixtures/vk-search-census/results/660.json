@@ -24,8 +24,8 @@
       "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
       "title": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people  … NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place wh … - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage … ar was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage",
-      "snippet": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the peo",
+      "text": "nu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy dur … ram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy during the seating process … on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+      "snippet": "nu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the pe",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
@@ -49,10 +49,8 @@
     "Tickets will be e-mailed to customers 48 hours prior to the event",
     "Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches)",
     "The World Famous Harlem Gospel Choir",
-    "The location is iconic, intimate and full of atmosphere",
-    "the real star was the Gospel Choir show",
-    "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
-    "We were seated in a place where we could hardly see the stage"
+    "Door staff were very friendly and welcoming",
+    "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -97,7 +95,7 @@
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir. Representative Tripadvisor praise (search snapshot): “The location is iconic, intimate and full of atmosphere”; “the real star was the Gospel Choir show”. Representative watch-outs: “They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room”; “We were seated in a place where we could hardly see the stage”.",
+      "value": "Blue Note Jazz Club is located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City. Everyone needs a ticket to enter the club. Tickets will be e-mailed to customers 48 hours prior to the event. Doors open at 6pm for 8pm shows and 10pm for 10:30pm shows (12:00pm for 1:30pm shown on Sunday Brunches). Upcoming brunch shows include The World Famous Harlem Gospel Choir. Representative Tripadvisor praise (search snapshot): “Door staff were very friendly and welcoming”. Representative watch-outs: “on top of the expensive ticket price, there is a mandatory minimum spend at the table”.",
       "claims": [
         {
           "text": "located at 131 West 3rd Street, between MacDougal Street and 6th Avenue, right in the heart of Manhattan’s Greenwich Village in New York City",
@@ -120,19 +118,11 @@
           "sourceUrl": "https://www.bluenotejazz.com/nyc/"
         },
         {
-          "text": "The location is iconic, intimate and full of atmosphere",
+          "text": "Door staff were very friendly and welcoming",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         },
         {
-          "text": "the real star was the Gospel Choir show",
-          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
-        },
-        {
-          "text": "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
-          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
-        },
-        {
-          "text": "We were seated in a place where we could hardly see the stage",
+          "text": "on top of the expensive ticket price, there is a mandatory minimum spend at the table",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         }
       ]
@@ -144,12 +134,10 @@
     "site": "Tripadvisor",
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
     "praise": [
-      "The location is iconic, intimate and full of atmosphere",
-      "the real star was the Gospel Choir show"
+      "Door staff were very friendly and welcoming"
     ],
     "watchOuts": [
-      "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
-      "We were seated in a place where we could hardly see the stage"
+      "on top of the expensive ticket price, there is a mandatory minimum spend at the table"
     ]
   },
   "fieldsWritePass": {
