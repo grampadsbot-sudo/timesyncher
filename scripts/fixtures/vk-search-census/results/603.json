@@ -8,7 +8,7 @@
       "url": "https://www.hotelbelleclaire.com/",
       "title": "Beaux-Arts Landmark Hotel on the Upper West Side | Hotel Belleclaire",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat … ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat",
+      "text": "ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat … ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credit to Mille-Feuille or Allure Lat … el on the Upper West Side | Hotel Belleclaire | Discover a storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center. Discover a storied NYC hotel on the Upper West Side, where timeless architecture meets modern comfort near Central Park and Lincoln Center. | Beaux-",
       "snippet": "ws Contact Us FAQs Quick Facts Blog Careers Sitemap Accessibility BEST RATE GUARANTEE Facebook Instagram TripAdvisor Rooms & Suites Dine & Drink FAQs Hotel Belleclaire, 2175 Broadway, New York New York Phone Book Direct Benefits Why Book Direct? Lowest rate guarantee Premium Wi-Fi Daily dining credi",
       "fetchMethod": "curl live fetch 2026-10-28"
     },
@@ -35,7 +35,8 @@
   "summaryClaims": [
     "Hotel Belleclaire, 2175 Broadway",
     "Hotel Belleclaire, 2175 Broadway",
-    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays"
+    "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
+    "near Central Park and Lincoln Center"
   ],
   "itineraryNoteCandidate": "Stay at Belleclaire, then walk three blocks to Central Park after the complimentary Wed–Fri wine hour.",
   "voicePass": {
@@ -74,7 +75,7 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Hotel Belleclaire is an Upper West Side hotel at 2175 Broadway near Central Park and Riverside Park.",
+      "value": "Hotel Belleclaire Central Park is an Upper West Side hotel at 2175 Broadway near Central Park and Lincoln Center.",
       "claims": [
         {
           "text": "Hotel Belleclaire, 2175 Broadway",
@@ -83,7 +84,7 @@
       ]
     },
     "description": {
-      "value": "Hotel Belleclaire sits at 2175 Broadway on the Upper West Side. The hotel lists a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays among its amenities. It puts guests close to the subway, Zabar's and the park for an easy uptown base.",
+      "value": "Hotel Belleclaire Central Park sits at 2175 Broadway on the Upper West Side. The hotel lists a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays among its amenities. Hotel Belleclaire Central Park puts guests near Central Park and Lincoln Center, with Zabar's and the subway close by.",
       "claims": [
         {
           "text": "Hotel Belleclaire, 2175 Broadway",
@@ -92,12 +93,16 @@
         {
           "text": "a 24-hour fitness center, walking tours, wine hours, and dog-friendly stays",
           "sourceUrl": "https://www.hotelbelleclaire.com/amenities"
+        },
+        {
+          "text": "near Central Park and Lincoln Center",
+          "sourceUrl": "https://www.hotelbelleclaire.com/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-redo-639-614-623-624-20261028",
+    "pass": "vk728-rewrite-603-710-715-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

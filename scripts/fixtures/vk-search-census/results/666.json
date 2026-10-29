@@ -98,7 +98,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-redo-639-614-623-624-20261028",
+    "pass": "vk728-rewrite-603-710-715-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

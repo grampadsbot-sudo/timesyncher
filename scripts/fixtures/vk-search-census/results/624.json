@@ -5,33 +5,25 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/",
-      "title": "New York Marriott Downtown | Lower Manhattan Hotel with Waterfront Views",
+      "url": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/",
+      "title": "Restaurants & Dining | New York Marriott Downtown",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New  … walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New  … oved burger joints, or step outside and explore dozens of nearby restaurants. As a welcoming hotel in Lower Manhattan, NY, the property places guests within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at N … , and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New York Marriott Downtown.",
-      "snippet": "walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and t",
-      "fetchMethod": "WebFetch 2026-10-28"
+      "text": ". Unlock your stay with the Marriott Bonvoy™ App NEW YORK MARRIOTT® DOWNTOWN Overview Accommodations Dining Experiences Meetings and Weddings Gallery 85 West Street at Albany Street, New York, New York, USA, 10006 Toll Free: +1-800-242-8685 Fax: +1 212-227-8136 Follow New York Marriott Downtown Facebook Instagram Marriott Bonvoy USA New York New York City New Y … . Unlock your stay with the Marriott Bonvoy™ App NEW YORK MARRIOTT® DOWNTOWN Overview Accommodations Dining Experiences Meetings and Weddings Gallery 85 West Street at Albany Street, New York, New York, USA, 10006 Toll Free: +1-800-242-8685 Fax: +1 212-227-8136 Follow New York Marriott Downtown Facebook Instagram Marriott Bonvoy USA New York New York City New Y … to Save and Earn Points Book a Package Award Winning Dining, Steps From Your Guest Room Dining Exceptional cuisine and award winning dining awaits at the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country. Named one of the “Top 10 Best Burgers in America” by CNN, the popular spot is known for dishing out signature hand-pressed griddled burgers, rich sh …  top attractions, unwind at West Side Bar - a local hideaway that offers a relaxing escape from the hustle and bustle of New York City, complete with live music, inventive cocktails and a selection of regional beers. A diverse culinary experience that captures New York City’s global essence is waiting to be discovered. CUPCAKE FROM BUDDY Featured on the TLC hit s",
+      "snippet": ". Unlock your stay with the Marriott Bonvoy™ App NEW YORK MARRIOTT® DOWNTOWN Overview Accommodations Dining Experiences Meetings and Weddings Gallery 85 West Street at Albany Street, New York, New York, USA, 10006 Toll Free: +1-800-242-8685 Fax: +1 212-227-8136 Follow New York Marriott Downtown Face",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": {
-    "primary": 4.1,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.1,
-    "usnews": 8.7
-  },
-  "reviewCount": {
-    "tripadvisor": 2284,
-    "usnews": 1386
-  },
+  "rating": null,
+  "reviewCount": null,
   "priceHint": "4-star Lower Manhattan waterfront",
-  "hoursHint": "Hotel — 24h",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     "85 West Street at Albany Street, New York, New York, USA, 10006",
     "85 West Street at Albany Street, New York, New York, USA, 10006",
-    "within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place",
-    "The check-in time at New York Marriott Downtown is 4:00 pm"
+    "the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country",
+    "live music, inventive cocktails and a selection of regional beers"
   ],
   "itineraryNoteCandidate": "Downtown Marriott for Battery Park / ferry mornings—expect elevator waits at peak.",
   "voicePass": {
@@ -63,34 +55,34 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "New York Marriott Downtown is a Lower Manhattan hotel at 85 West Street with Manhattan waterfront views.",
+      "value": "New York Marriott Downtown is a Financial District hotel at 85 West Street, home to Bill’s Bar & Burger.",
       "claims": [
         {
           "text": "85 West Street at Albany Street, New York, New York, USA, 10006",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/"
         }
       ]
     },
     "description": {
-      "value": "New York Marriott Downtown is a Financial District hotel at 85 West Street at Albany Street, New York, New York, USA, 10006. The property places guests within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. The check-in time at New York Marriott Downtown is 4:00 pm.",
+      "value": "New York Marriott Downtown is a Lower Manhattan hotel at 85 West Street at Albany Street, New York, New York, USA, 10006. Award winning dining awaits at the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country. Its West Side Bar adds live music, inventive cocktails and a selection of regional beers.",
       "claims": [
         {
           "text": "85 West Street at Albany Street, New York, New York, USA, 10006",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/"
         },
         {
-          "text": "within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+          "text": "the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/"
         },
         {
-          "text": "The check-in time at New York Marriott Downtown is 4:00 pm",
-          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+          "text": "live music, inventive cocktails and a selection of regional beers",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-redo-639-614-623-624-20261028",
+    "pass": "vk728-rewrite-603-710-715-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
