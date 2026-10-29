@@ -28,8 +28,8 @@ const bot = {
     sha256: createHash('sha256').update(pageText).digest('hex'),
   }],
   fields: {
-    summary: { value: '', claims: [{ text: summaryClaim, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
-    description: { value: '', claims: [{ text: pageText, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
+    summary: { value: summaryClaim, claims: [{ text: summaryClaim, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
+    description: { value: pageText, claims: [{ text: pageText, sourceUrl: 'https://www.hotelbelleclaire.com/', pages: ['p1'], supported: true }] },
   },
   attempts: [{ provider: 'vk-search', status: 'ok' }],
 };
@@ -61,7 +61,7 @@ const seeded = await runBotPrimarySeedTargets([{
   address: place.address,
   url: place.url,
 }], {
-  env: {},
+  env: { VK_SEARCH_CENSUS_DIR: '/missing' },
   storeImpl,
   gatherImpl: async () => bot,
 });

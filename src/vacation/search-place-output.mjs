@@ -10,7 +10,7 @@ const SEARCH_PRODUCT_CATEGORIES = new Set([
   'store',
 ]);
 
-export const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder|sample)\b/i;
+const BANNED_VALUE_RE = /\b(?:TBD|N\/A|Quote TBD|Add price|\$0|lorem|placeholder|sample)\b/i;
 
 export const TRIP_MIN_NON_EXEMPT_THINGS = 15;
 

@@ -5,6 +5,36 @@ import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacati
 import { mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
 import { applyStoredDossiersToSharedTripSync } from '../src/vacation/shared-trip-dossier-overlay.mjs';
 
+const text = (value) => (typeof value === 'string' ? value.trim() : '');
+const censusBotNarrative = (census) => {
+  const written = census?.fields && typeof census.fields === 'object' ? census.fields
+    : census?.dossierFields && typeof census.dossierFields === 'object' ? census.dossierFields : null;
+  return {
+    summary: text(written?.summary?.value),
+    description: text(written?.description?.value),
+  };
+};
+const inlineBotFieldsFromCensus = (census) => {
+  const claims = Array.isArray(census?.summaryClaims) ? census.summaryClaims : [];
+  const primary = claims.find((row) => row?.supported === true && text(row.claim)) || claims[0];
+  const secondary = claims.find((row) => row !== primary && text(row.claim || row.text)) || primary;
+  const summaryText = text(primary?.claim || primary?.text);
+  const descriptionText = text(secondary?.claim || secondary?.text) || summaryText;
+  const summaryUrl = text(primary?.sourceUrl);
+  const descriptionUrl = text(secondary?.sourceUrl) || summaryUrl;
+  if (!summaryText || !summaryUrl) return null;
+  return {
+    summary: {
+      value: summaryText,
+      claims: [{ text: summaryText, sourceUrl: summaryUrl, supported: true }],
+    },
+    description: {
+      value: descriptionText,
+      claims: [{ text: descriptionText, sourceUrl: descriptionUrl, supported: true }],
+    },
+  };
+};
+
 const rows = buildNycCraigKimDaybydayFixtureRows();
 assert.equal(rows.some((row) => row.id === 679), false, 'domain-sale-only venue stays off the data inventory');
 const cars = rows.filter((row) => row.cat === 'car');
@@ -26,9 +56,23 @@ for (const id of [614, 677, 678]) {
   const row = rows.find((row) => row.id === id);
   const place = { ...buildGateBSearchPlaceForRow(row), id };
   const census = loadVkSearchCensusResult(place, { env: {} });
-  const bot = vkSearchResultToDossier(census, place);
-  assert.ok(bot.fields.summary?.value);
-  assert.ok(bot.fields.description?.value);
+  const botFromCensus = vkSearchResultToDossier(census, place);
+  const narrative = censusBotNarrative(census);
+  if (narrative.summary) {
+    assert.equal(botFromCensus.fields.summary?.value, narrative.summary);
+  } else {
+    assert.equal(botFromCensus.fields.summary?.value, undefined);
+  }
+  if (narrative.description) {
+    assert.equal(botFromCensus.fields.description?.value, narrative.description);
+  } else {
+    assert.equal(botFromCensus.fields.description?.value, undefined);
+  }
+  const inlineFields = inlineBotFieldsFromCensus(census);
+  assert.ok(inlineFields, `row ${id} census must cite at least one saved page for inline bot narrative`);
+  const bot = vkSearchResultToDossier({ ...census, fields: inlineFields }, place);
+  assert.equal(bot.fields.summary?.value, inlineFields.summary.value);
+  assert.equal(bot.fields.description?.value, inlineFields.description.value);
   const badText = `${row.name}: How to Clean Window Screens and choose the right meat thermometer for your kitchen.`;
   const old = { thing: row.name, pages: [{ url: 'https://example.test/unrelated', fetchedAt: '2026-10-01T00:00:00Z', text: badText }], fields: {
     summary: { value: badText, claims: [{ text: badText, pages: ['p1'], sourceUrl: 'https://example.test/unrelated', supported: true }] },

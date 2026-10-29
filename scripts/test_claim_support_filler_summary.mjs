@@ -30,7 +30,12 @@ test('long subject label plus URL cannot satisfy summary or description minimum'
 });
 test('real sourced prose remains usable alongside filler claims', () => {
   const body = 'Guests enjoy a rooftop pool and free breakfast daily beside the sunny garden terrace.';
-  const dossier = vkSearchResultToDossier({ sources: [{ url, text: body, fetchedAt: '2026-10-28T12:00:00Z' }], voicePass: { claimSupportOk: true }, summaryClaims: [{ claim: 'Official website', sourceUrl: url, supported: true }, { claim: body, sourceUrl: url, supported: true }] }, place);
+  const dossier = vkSearchResultToDossier({
+    sources: [{ url, text: body, fetchedAt: '2026-10-28T12:00:00Z' }],
+    voicePass: { claimSupportOk: true },
+    summaryClaims: [{ claim: 'Official website', sourceUrl: url, supported: true }, { claim: body, sourceUrl: url, supported: true }],
+    fields: { summary: { value: body, claims: [{ text: body, sourceUrl: url, supported: true }] } },
+  }, place);
   assert.ok(dossier.fields.summary?.value.includes(body));
   assert.equal(dossier.fields.summary.claims.some((claim) => /Official website/i.test(claim.text)), false);
 });
@@ -48,7 +53,13 @@ test('census Hilton 618 has no presented filler summary after offline seed', asy
 });
 test('genuine descriptive summary stays supported with an official site link', () => {
   const body = `Guests enjoy a rooftop pool and free breakfast daily beside the sunny garden terrace. Official site ${url}`;
-  const dossier = vkSearchResultToDossier({ sources: [{ url, text: body, fetchedAt: '2026-10-28T12:00:00Z' }], voicePass: { claimSupportOk: true }, summaryClaims: [{ claim: body, sourceUrl: url, supported: true }] }, place);
+  const summaryText = 'Guests enjoy a rooftop pool and free breakfast daily beside the sunny garden terrace.';
+  const dossier = vkSearchResultToDossier({
+    sources: [{ url, text: body, fetchedAt: '2026-10-28T12:00:00Z' }],
+    voicePass: { claimSupportOk: true },
+    summaryClaims: [{ claim: body, sourceUrl: url, supported: true }],
+    fields: { summary: { value: summaryText, claims: [{ text: summaryText, sourceUrl: url, supported: true }] } },
+  }, place);
   for (const verified of [dossier, recitBotPrimaryFields(dossier), mergeBotPrimaryPresentedFields({}, dossier, place)]) {
     assert.ok(verified.fields.summary?.value.includes('Guests enjoy a rooftop pool'));
     assert.ok(verified.fields.summary.claims.some((claim) => claim.supported === true));
@@ -62,15 +73,26 @@ test('short genuine source fragments compose into a usable whole summary', () =>
   ];
   const pages = bodies.map((text, index) => ({ url: `${url}/${index}`, fetchedAt: '2026-10-28T12:00:00Z', text }));
   const claims = bodies.map((text, index) => ({ text, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }));
-  const adapter = vkSearchResultToDossier({ sources: pages, voicePass: { claimSupportOk: true }, summaryClaims: claims.map((row) => ({ ...row, claim: row.text })) }, place);
-  const stored = { thing, pages, fields: { detail: { value: bodies.join(' '), claims } } };
+  const adapter = vkSearchResultToDossier({
+    sources: pages,
+    voicePass: { claimSupportOk: true },
+    summaryClaims: claims.map((row) => ({ ...row, claim: row.text })),
+    fields: { summary: { value: bodies.join(' '), claims } },
+  }, place);
   for (const dossier of [adapter, recitBotPrimaryFields(adapter)]) {
     assert.ok(dossier.fields.summary?.value);
     assert.deepEqual(dossier.fields.summary.claims.map((row) => row.text), bodies);
     assert.ok(dossier.fields.summary.claims.every((row) => row.supported === true));
     assert.ok(!dossier.fields.description?.value);
   }
-  const merged = mergeBotPrimaryPresentedFields({}, stored, place);
+  const botWritten = {
+    summary: { value: bodies.join(' '), claims },
+    description: {
+      value: `${bodies.join(' ')} ${bodies.join(' ')}`,
+      claims: bodies.map((text, index) => ({ text, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true })),
+    },
+  };
+  const merged = mergeBotPrimaryPresentedFields({}, { thing, pages, fields: botWritten }, place);
   assert.ok(merged.fields.summary?.value);
   assert.deepEqual(merged.fields.summary.claims.map((row) => row.text), bodies);
   assert.ok(merged.fields.description?.value);

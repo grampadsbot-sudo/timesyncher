@@ -8,7 +8,16 @@ const body = 'Seasonal vegetables are served beside a quiet terrace with shaded 
 
 test('adapter: uncited subject label', () => {
   const page = { url: 'https://garden.test/info', text: body, fetchedAt: '2026-10-28T00:00:00Z' };
-  const dossier = vkSearchResultToDossier({ sources: [page] }, { title: thing });
+  const claims = [{ text: body, sourceUrl: page.url, supported: true }];
+  const labeled = `${thing}: ${body}`;
+  const dossier = vkSearchResultToDossier({
+    sources: [page],
+    voicePass: { claimSupportOk: true },
+    fields: {
+      summary: { value: labeled, claims },
+      description: { value: labeled, claims },
+    },
+  }, { title: thing });
   for (const key of ['summary', 'description']) {
     const field = dossier.fields[key];
     assert.ok(field?.value.startsWith(`${thing}: `));
@@ -30,14 +39,20 @@ test('adapter: label cannot meet word minimums', () => {
 
 test('adapter: an existing name needs no label', () => {
   const page = { url: 'https://garden.test/info', text: `Garden walks around ${thing} offer relaxing afternoons. ${body}`, fetchedAt: '2026-10-28T00:00:00Z' };
-  const dossier = vkSearchResultToDossier({ sources: [page] }, { title: thing });
+  const text = page.text;
+  const dossier = vkSearchResultToDossier({
+    sources: [page],
+    voicePass: { claimSupportOk: true },
+    fields: { summary: { value: text, claims: [{ text, sourceUrl: page.url, supported: true }] } },
+  }, { title: thing });
   assert.equal(dossier.fields.summary.value.startsWith(`${thing}: `), false);
 });
 
 test('seed: uncited subject label', () => {
   const page = { url: 'https://garden.test/info', text: body, fetchedAt: '2026-10-28T00:00:00Z' };
   const claims = [{ text: body, sourceUrl: page.url, pages: ['p1'], supported: true }];
-  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: '', claims }, description: { value: '', claims } } }, { title: thing });
+  const labeled = `${thing}: ${body}`;
+  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: labeled, claims }, description: { value: labeled, claims } } }, { title: thing });
   assert.ok(dossier.fields.description?.value.startsWith(`${thing}: `));
   for (const key of ['summary', 'description']) {
     const field = dossier.fields[key];
@@ -54,12 +69,12 @@ test('seed: short sourced prose presents without word minimums', () => {
   const shortText = 'Fresh seasonal vegetables served beside shaded garden paths.';
   const page = { url: 'https://garden.test/info', text: shortText, fetchedAt: '2026-10-28T00:00:00Z' };
   const claims = [{ text: shortText, sourceUrl: page.url, pages: ['p1'], supported: true }];
-  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: '', claims } } }, { title: thing });
+  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: shortText, claims } } }, { title: thing });
   assert.ok(dossier.fields.summary?.value);
   const short = body.split(/\s+/).slice(0, 39).join(' ');
   const page2 = { url: 'https://garden.test/info', text: short, fetchedAt: '2026-10-28T00:00:00Z' };
   const claims2 = [{ text: short, sourceUrl: page2.url, pages: ['p1'], supported: true }];
-  const dossier2 = mergeBotPrimaryPresentedFields({}, { pages: [page2], fields: { description: { value: '', claims: claims2 } } }, { title: thing });
+  const dossier2 = mergeBotPrimaryPresentedFields({}, { pages: [page2], fields: { description: { value: short, claims: claims2 } } }, { title: thing });
   assert.ok(dossier2.fields.description?.value);
 });
 
@@ -67,7 +82,7 @@ test('seed: an existing name needs no label', () => {
   const text = `Garden walks around ${thing} offer relaxing afternoons. ${body}`;
   const page = { url: 'https://garden.test/info', text, fetchedAt: '2026-10-28T00:00:00Z' };
   const claims = [{ text, sourceUrl: page.url, pages: ['p1'], supported: true }];
-  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: '', claims } } }, { title: thing });
+  const dossier = mergeBotPrimaryPresentedFields({}, { pages: [page], fields: { summary: { value: text, claims } } }, { title: thing });
   const field = dossier.fields.summary || dossier.fields.description;
   assert.equal(field.value.startsWith(`${thing}: `), false);
 });

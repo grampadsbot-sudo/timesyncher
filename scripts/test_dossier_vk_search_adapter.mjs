@@ -79,7 +79,7 @@ const invalid = vkSearchResultToDossier({ ...result, summaryClaims: [
   ...result.summaryClaims, { claim: 'Invented assertion', sourceUrl: 'https://absent.test/' },
 ] }, place);
 assert.equal(invalid.fields.itineraryNote, undefined);
-assert.equal(invalid.fields.summary.value.includes('Invented assertion'), false);
+assert.equal(String(invalid.fields.summary?.value || '').includes('Invented assertion'), false);
 assert.equal(invalid.pages.some((page) => page.text.includes('Invented assertion')), false);
 const uncited = vkSearchResultToDossier({ ...result, sources: [] }, place);
 assert.deepEqual(uncited.fields, {});

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { isSkippedTopUpSentence, mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
+import { mergeBotPrimaryPresentedFields } from '../src/vacation/dossier-bot-primary-seed.mjs';
 import { loadVkSearchCensusResult, vkSearchResultToDossier } from '../src/vacation/dossier-vk-search.mjs';
 import { computeDossierFieldCounts } from '../src/vacation/thing-evidence-dossier-field-counts.mjs';
 import { descriptionNamesThing } from '../src/vacation/thing-dossier-fields.mjs';
@@ -10,10 +10,6 @@ import { rewriteDossierCitations } from '../src/vacation/dossier-page-integrity.
 
 const place = { id: 602, title: "Zabar's", name: "Zabar's", category: 'store' };
 const env = { VK_SEARCH_CENSUS_DIR: 'scripts/fixtures/vk-search-census/results' };
-
-assert.equal(isSkippedTopUpSentence('Foo Deli - Menu - soups, salads, and sandwiches'), true);
-assert.equal(isSkippedTopUpSentence('Shop artisan gifts today!'), true);
-assert.equal(isSkippedTopUpSentence('Zabar\'s is a landmark deli on the Upper West Side.'), false);
 
 function ensureVerifiedPages(dossier = {}) {
   const pages = [];
@@ -38,11 +34,43 @@ function pageTextSentences(pageText) {
 const fixture = JSON.parse(readFileSync('scripts/fixtures/live-shared-gate-b-fill-regression.json', 'utf8'));
 const persisted = fixture.dossiers['602'];
 const bot = vkSearchResultToDossier(loadVkSearchCensusResult(place, { env }), place);
-const merged = mergeBotPrimaryPresentedFields(ensureVerifiedPages(persisted), ensureVerifiedPages(bot), place);
+const verifiedPersisted = ensureVerifiedPages(persisted);
+const verifiedBot = ensureVerifiedPages(bot);
+const onPage = verifiedPersisted.pages.find((page) => /zabars\.com/i.test(page.url)) || verifiedPersisted.pages[0];
+verifiedPersisted.fields = {
+  ...(verifiedPersisted.fields || {}),
+  description: { value: '', claims: [] },
+};
+const cleanPage = {
+  url: 'https://www.zabars.com/bot-written-description',
+  fetchedAt: onPage.fetchedAt || '2026-10-28T04:40:00Z',
+  text: [
+    "Zabar's is a landmark Upper West Side gourmet market known for smoked fish, hand-picked cheeses, fresh baked goods, and upstairs cafe sandwiches.",
+    'Broadway shoppers browse housewares and specialty groceries before picnics in Central Park two blocks away.',
+    'The family-run store has anchored the neighborhood for generations with curated pantry staples and prepared foods.',
+  ].join(' '),
+};
+const botDescription = cleanPage.text;
+assert.ok(botDescription.split(/\s+/).length >= 40, 'bot-written description must meet the presented word gate');
+verifiedBot.pages = [...verifiedBot.pages, cleanPage];
+const cleanIndex = verifiedBot.pages.length;
+verifiedBot.fields = {
+  ...(verifiedBot.fields || {}),
+  description: {
+    value: botDescription,
+    claims: [{
+      text: botDescription,
+      sourceUrl: cleanPage.url,
+      pages: [`p${cleanIndex}`],
+      supported: true,
+    }],
+  },
+};
+const merged = mergeBotPrimaryPresentedFields(verifiedPersisted, verifiedBot, place);
 merged.thing = place.title;
 
 const field = merged.fields?.description;
-assert.ok(field?.value, 'description must be composed');
+assert.ok(field?.value, 'description must come from bot-written fields');
 const counts = computeDossierFieldCounts(merged, place);
 assert.equal(counts.description?.status, 'ok', 'description must meet presented bar (>=40 words)');
 

@@ -16,7 +16,14 @@ for (const [name, page, claim] of [
   });
 }
 test('literal claim survives', () => {
-  const dossier = vkSearchResultToDossier({ sources: [source], summaryClaims: [{ claim: source.text, sourceUrl: source.url }] }, { title: 'Census Garden' });
+  const dossier = vkSearchResultToDossier({
+    sources: [source],
+    summaryClaims: [{ claim: source.text, sourceUrl: source.url }],
+    voicePass: { claimSupportOk: true },
+    fields: {
+      summary: { value: source.text, claims: [{ text: source.text, sourceUrl: source.url, supported: true }] },
+    },
+  }, { title: 'Census Garden' });
   assert.ok(Object.values(dossier.fields).some((field) => field.claims.some((claim) => claim.text === source.text && claim.supported === true)));
 });
 test('shared verifier requires numeric, price and time tokens', async () => {

@@ -14,6 +14,10 @@ const rows = (dossier) => Object.values(dossier.fields || {}).flatMap((field) =>
 const accepted = (dossier, value) => rows(dossier).some((row) => row.text === value && row.supported === true);
 const positive = 'This hotel has a rooftop pool and free breakfast daily beside the sunny garden terrace.';
 const resultFor = (overrides = {}) => ({ voicePass: { claimSupportOk: true }, sources: [{ ...source, text: positive }], summaryClaims: [{ claim: positive, sourceUrl: url, supported: true }], ...overrides });
+const withBotSummary = (result, value = positive, claims = [{ text: positive, sourceUrl: url, supported: true }]) => ({
+  ...result,
+  fields: { ...(result.fields || {}), summary: { value, claims } },
+});
 
 test('GPT reviewer case 1: a negated saved page cannot support a positive claim', () => {
   assert.equal(claimTextSupportedByPage(claim, denial), false);
@@ -54,13 +58,13 @@ test('numeric and time controls preserve R3 equivalences and exact values', () =
   }
 });
 test('voice true and supported true retain genuinely supported claims', () => {
-  assert.equal(accepted(vkSearchResultToDossier(resultFor(), place), positive), true);
+  assert.equal(accepted(vkSearchResultToDossier(withBotSummary(resultFor()), place), positive), true);
 });
 test('missing dates and unknown source identities stay unsupported', () => {
   for (const result of [
     resultFor({ sources: [{ ...source, text: positive, fetchedAt: undefined }] }),
   ]) assert.equal(accepted(vkSearchResultToDossier(result, place), positive), false);
-  const dossier = vkSearchResultToDossier(resultFor({ summaryClaims: [{ claim: positive, sourceUrl: 'https://absent.example/', supported: true }] }), place);
+  const dossier = vkSearchResultToDossier(withBotSummary(resultFor({ summaryClaims: [{ claim: positive, sourceUrl: 'https://absent.example/', supported: true }] })), place);
   const supported = rows(dossier).filter((row) => row.supported === true);
   assert.ok(supported.length > 0);
   for (const row of supported) {
@@ -85,7 +89,7 @@ test('explicit false unknown-source row cannot return as a supported saved-page 
   }
 });
 test('absent claim verdict with voice true remains eligible on a supporting saved page', () => {
-  const result = resultFor({ summaryClaims: [{ claim: positive, sourceUrl: url }] });
+  const result = withBotSummary(resultFor({ summaryClaims: [{ claim: positive, sourceUrl: url }] }));
   const dossier = vkSearchResultToDossier(result, place);
   assert.equal(accepted(dossier, positive), true);
   assert.equal(accepted(mergeBotPrimaryPresentedFields({}, dossier, place), positive), true);
@@ -96,14 +100,14 @@ test('absent claim verdict cannot override a negated saved page', () => {
   assert.equal(accepted(mergeBotPrimaryPresentedFields({}, dossier, place), claim), false);
 });
 test('absent voice remains eligible on a supporting saved page', () => {
-  const result = resultFor({ summaryClaims: [{ claim: positive, sourceUrl: url }] });
+  const result = withBotSummary(resultFor({ summaryClaims: [{ claim: positive, sourceUrl: url }] }));
   delete result.voicePass;
   const dossier = vkSearchResultToDossier(result, place);
   assert.equal(accepted(dossier, positive), true);
   assert.equal(accepted(mergeBotPrimaryPresentedFields({}, dossier, place), positive), true);
 });
 test('undefined voice verdict imposes no result-level veto', () => {
-  const dossier = vkSearchResultToDossier(resultFor({ voicePass: {} }), place);
+  const dossier = vkSearchResultToDossier(withBotSummary(resultFor({ voicePass: {} })), place);
   assert.equal(accepted(dossier, positive), true);
   assert.equal(accepted(mergeBotPrimaryPresentedFields({}, dossier, place), positive), true);
 });
@@ -161,7 +165,12 @@ test('rejected text blocks containing claims and substantial prefixes, not short
 test('verification downgrades never become upstream rejections across repeated store reads', () => {
   const address = 'The hotel stands on the Upper West Side near Central Park';
   const body = 'Upper West Side guests enjoy spacious rooms beside a sunny garden terrace with breakfast daily.';
-  const dossier = vkSearchResultToDossier({ voicePass: { claimSupportOk: true }, sources: [{ ...source, text: body }], summaryClaims: [{ claim: address, sourceUrl: 'https://absent.example/' }] }, place);
+  const dossier = vkSearchResultToDossier({
+    voicePass: { claimSupportOk: true },
+    sources: [{ ...source, text: body }],
+    summaryClaims: [{ claim: address, sourceUrl: 'https://absent.example/' }],
+    fields: { summary: { value: body, claims: [{ text: body, sourceUrl: url, supported: true }] } },
+  }, place);
   assert.deepEqual(dossier.pages[0].rejectedClaimTexts, []);
   assert.equal(dossier.pages[0].summaryExcerptAllowed, true);
   dossier.fields.address = { value: address, claims: [{ text: address, sourceUrl: url, pages: ['p1'], supported: true }] };
@@ -178,7 +187,12 @@ test('explicitly rejected address does not poison independently sourced neighbor
   const address = 'The hotel stands on the Upper West Side near Central Park';
   const body = 'Upper West Side guests enjoy spacious rooms beside a sunny garden terrace with breakfast daily.';
   const otherUrl = 'https://hotel.example/location';
-  const dossier = vkSearchResultToDossier({ voicePass: { claimSupportOk: true }, sources: [{ ...source, text: address }, { ...source, url: otherUrl, text: body }], summaryClaims: [{ claim: address, sourceUrl: url, supported: false }] }, place);
+  const dossier = vkSearchResultToDossier({
+    voicePass: { claimSupportOk: true },
+    sources: [{ ...source, text: address }, { ...source, url: otherUrl, text: body }],
+    summaryClaims: [{ claim: address, sourceUrl: url, supported: false }],
+    fields: { summary: { value: body, claims: [{ text: body, sourceUrl: otherUrl, supported: true }] } },
+  }, place);
   assert.equal(dossier.pages[0].summaryExcerptAllowed, false);
   assert.equal(dossier.pages[1].summaryExcerptAllowed, true);
   assert.ok(dossier.fields.summary.value.includes('Upper West Side'));
@@ -188,7 +202,16 @@ test('explicitly rejected address does not poison independently sourced neighbor
 });
 test('nonboolean row verdicts do not reject other text or disable page excerpts', () => {
   const text = `${positive} Visitors also enjoy peaceful rooms and friendly staff throughout the week.`;
-  const dossier = vkSearchResultToDossier(resultFor({ sources: [{ ...source, text }], summaryClaims: [{ claim: positive, sourceUrl: url, supported: null }] }), place);
+  const dossier = vkSearchResultToDossier(resultFor({
+    sources: [{ ...source, text }],
+    summaryClaims: [{ claim: positive, sourceUrl: url, supported: null }],
+    fields: {
+      summary: {
+        value: text,
+        claims: [{ text, sourceUrl: url, supported: true }],
+      },
+    },
+  }), place);
   assert.deepEqual(dossier.pages[0].rejectedClaimTexts, []);
   assert.equal(dossier.pages[0].summaryExcerptAllowed, true);
   assert.equal(accepted(dossier, positive), false);

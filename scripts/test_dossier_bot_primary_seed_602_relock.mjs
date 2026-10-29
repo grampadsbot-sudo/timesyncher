@@ -28,16 +28,17 @@ const persisted = {
   },
 };
 
+const botDescription = excerpt.trim();
 const bot = {
   thing: place.title,
   pages: [page],
   fields: {
     description: {
-      value: '',
+      value: botDescription,
       claims: [{
-        text: 'Bot claim with no matching saved page citation.',
-        sourceUrl: 'https://bot-unverifiable.example/nope',
-        pages: ['p99'],
+        text: botDescription,
+        sourceUrl: page.url,
+        pages: ['p1'],
         supported: true,
       }],
     },
@@ -87,16 +88,17 @@ const mixedPersisted = {
     },
   },
 };
+const mixedBotDescription = "Zabar's is a gourmet food store on the Upper West Side known for smoked fish, coffee and bagels.";
 const mixedBot = {
   thing: place.title,
   pages: mixedPages,
   fields: {
     description: {
-      value: '',
+      value: mixedBotDescription,
       claims: [{
-        text: 'Bot claim with no matching saved page citation.',
-        sourceUrl: 'https://bot-unverifiable.example/nope',
-        pages: ['p99'],
+        text: mixedBotDescription,
+        sourceUrl: onTopicPage.url,
+        pages: ['p1'],
         supported: true,
       }],
     },

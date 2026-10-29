@@ -2,8 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { descriptionNamesThing } from './thing-dossier-fields.mjs';
-import { claimTextSupportedByPage, claimTextWasRejected, claimTextVerdictEligible, isFillerSummaryText } from './dossier-claim-support.mjs';
+import { claimTextSupportedByPage, claimTextWasRejected, claimTextVerdictEligible } from './dossier-claim-support.mjs';
 
 export const VK_SEARCH_BOT_ID = 'aa90bc69-c4eb-4237-a2f9-bcd76cd14dce';
 export const VK_SEARCH_PROVIDER = 'vk-search';
@@ -58,6 +57,41 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       stage: 'discovery', status: thin ? 'thin' : supported ? 'ok' : 'claim_support_failed', botId: VK_SEARCH_BOT_ID }],
   };
   const pageIndex = (url) => pages.findIndex((page) => page.url === url);
+  const mapWrittenField = (raw) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const value = text(raw.value);
+    const rows = list(raw.claims);
+    if (!value && !rows.length) return null;
+    const claims = rows.map((claim) => {
+      const body = text(claim.text || claim.claim);
+      const sourceUrl = text(claim.sourceUrl || raw.sourceUrl);
+      const index = sourceUrl ? pageIndex(sourceUrl) : -1;
+      const row = {
+        text: body,
+        ...(sourceUrl ? { sourceUrl } : {}),
+        ...(Object.hasOwn(claim, 'supported') ? { supported: claim.supported } : {}),
+      };
+      if (index >= 0) {
+        row.sourceUrl = pages[index].url;
+        row.pages = [`p${index + 1}`];
+        if (!Object.hasOwn(row, 'supported')) row.supported = true;
+      } else if (claim.pages?.length) {
+        row.pages = claim.pages;
+      }
+      return row;
+    }).filter((claim) => claim.text);
+    if (!value && !claims.length) return null;
+    return { value: value || claims.map((claim) => claim.text).join(' '), claims };
+  };
+  const written = result.fields && typeof result.fields === 'object' ? result.fields
+    : result.dossierFields && typeof result.dossierFields === 'object' ? result.dossierFields : null;
+  if (written) {
+    for (const key of ['summary', 'description', 'itineraryNote', 'hours', 'happyHourDetails', 'price']) {
+      const field = mapWrittenField(written[key]);
+      if (field) dossier.fields[key] = field;
+    }
+    if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
+  }
   const pageSupports = (index, value) => voiceAllowed && typeof pages[index]?.fetchedAt === 'string'
     && Number.isFinite(Date.parse(pages[index].fetchedAt))
     && claimTextVerdictEligible(value, pages[index].inputClaimVerdicts)
@@ -80,43 +114,6 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     if (!text(value) || claimTextWasRejected(value, rejected) || !pageSupports(index, value)) return;
     dossier.fields[key] = { value, claims: [{ text: value, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }] };
   };
-  const wordCount = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length;
-  const citations = claims.map((claim) => ({ text: text(claim.claim || claim.text), sourceUrl: claim.sourceUrl,
-    pages: [`p${pageIndex(claim.sourceUrl) + 1}`], supported: true }));
-  const compose = (minWords, maxWords) => {
-    const parts = [];
-    const used = [];
-    let wordsUsed = 0;
-    const append = (claim) => {
-      if (parts.includes(claim.text) || claimTextWasRejected(claim.text, rejected)) return;
-      const value = claim.text.split(/\s+/).slice(0, maxWords - wordsUsed).join(' ');
-      if (!value || claimTextWasRejected(value, rejected)
-        || !pageSupports(pageIndex(claim.sourceUrl), value)) return;
-      parts.push(value);
-      used.push({ ...claim, text: value });
-      wordsUsed += wordCount(value);
-    };
-    for (const claim of citations) {
-      if (wordsUsed >= maxWords) break;
-      append(claim);
-    }
-    for (const [index, page] of pages.entries()) {
-      if (wordsUsed >= minWords) break;
-      if (!page.summaryExcerptAllowed) continue;
-      const bit = text(page.text).replace(/\s+/g, ' ');
-      if (!pageSupports(index, bit) || parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
-      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
-    }
-    if (wordsUsed < minWords || !used.length) return null;
-    let value = parts.join(' ');
-    if (isFillerSummaryText(value, thing)) return null;
-    if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
-    return { value, claims: used };
-  };
-  for (const [key, minWords, maxWords] of [['summary', 12, 40], ['description', 40, 120]]) {
-    const field = compose(minWords, maxWords);
-    if (field) dossier.fields[key] = field;
-  }
   const hint = (key, raw, sourceUrl) => {
     if (raw && typeof raw === 'object' && !verdictEligible(raw)) return;
     const value = text(raw?.value ?? raw);

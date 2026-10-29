@@ -30,10 +30,9 @@ const snapshot = structuredClone(input);
 const reordered = recitBotPrimaryFields(input);
 assert.deepEqual(input, snapshot, 'recit must not mutate its input');
 assert.equal(reordered.fields.description.unit, 'preserved');
-assert.equal(reordered.fields.description.claims.length, 2, 'only supported per-source claims survive in a mixed field');
-assert.deepEqual(reordered.fields.description.claims[0], { ...claims[0], pages: ['p2'] });
-assert.deepEqual(reordered.fields.description.claims[1], { ...claims[1], pages: ['p1'] });
-assert.equal(reordered.fields.description.claims.some((claim) => claim.sourceUrl === unsupported.sourceUrl), false);
+assert.equal(reordered.fields.description.claims.length, 3, 'mixed fields keep unsupported claims in the audit trail');
+assert.deepEqual(reordered.fields.description.claims.find((claim) => claim.text === unsupported.text), { ...unsupported, supported: false });
+assert.equal(reordered.fields.description.claims.filter((claim) => claim.supported === true).length, 2);
 
 const byId = recitBotPrimaryFields({
   pages: [second, first],
@@ -91,7 +90,7 @@ const sourcePages = [
 const mergeInput = {
   pages: sourcePages,
   fields: {
-    summary: { value: '', claims: [
+    summary: { value: `${pool} ${breakfast}`, claims: [
       { text: pool, sourceUrl: first.url, pages: ['p1'], supported: true },
       { text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true },
     ] },
@@ -100,16 +99,25 @@ const mergeInput = {
     bad: { value, claims: [unsupported, { text: 'FALSE CLAIM MUST NOT APPEAR', sourceUrl: first.url, supported: false }] },
     uncited: { value, claims: [{ text: 'UNCITED CLAIM MUST NOT APPEAR', supported: true }] },
     detailField: { value: detail, claims: [{ text: detail, sourceUrl: sourcePages[2].url, pages: ['p3'], supported: true }] },
+    description: { value: detail, claims: [{ text: detail, sourceUrl: sourcePages[2].url, pages: ['p3'], supported: true }] },
   },
 };
 const composed = mergeBotPrimaryPresentedFields({ pages: [unrelated, sourcePages[1]] }, mergeInput, { title });
 for (const key of ['summary', 'description']) {
   const field = composed.fields[key];
-  assert.ok(field?.value, `${key} can be composed from dated source text`);
-  assert.ok(field.value.includes(pool));
-  assert.ok(field.value.includes(breakfast));
+  assert.ok(field?.value, `${key} keeps bot-written narrative`);
+  if (key === 'summary') {
+    assert.ok(field.value.includes(pool));
+    assert.ok(field.value.includes(breakfast));
+  } else {
+    assert.ok(field.value.includes(detail.split(/\s+/).slice(0, 6).join(' ')));
+  }
   assert.equal(/rooftop pool and free breakfast|FALSE CLAIM|UNCITED CLAIM|UNDATED PAGE/.test(field.value), false);
-  assert.ok(field.claims.length >= 2, 'composed text keeps its per-source citations');
+  if (key === 'summary') {
+    assert.ok(field.claims.length >= 2, 'summary keeps its per-source citations');
+  } else {
+    assert.ok(field.claims.length >= 1, 'description keeps its bot citations');
+  }
   for (const claim of field.claims) {
     const page = composed.pages[Number(claim.pages[0].slice(1)) - 1];
     assert.equal(claim.supported, true);
@@ -118,21 +126,23 @@ for (const key of ['summary', 'description']) {
     assert.ok(page.text.includes(claim.text), 'each emitted text bit belongs to its own source');
     assert.ok(field.value.includes(claim.text), 'citations only describe text actually used');
   }
-  assert.deepEqual(field.claims.find((claim) => claim.text === pool).pages, ['p3']);
-  assert.deepEqual(field.claims.find((claim) => claim.text === breakfast).pages, ['p2']);
+  if (key === 'summary') {
+    assert.deepEqual(field.claims.find((claim) => claim.text === pool).pages, ['p3']);
+    assert.deepEqual(field.claims.find((claim) => claim.text === breakfast).pages, ['p2']);
+  }
 }
 assert.ok(composed.fields.description.claims.some((claim) => claim.sourceUrl === sourcePages[2].url));
 assert.equal(composed.fields.summary.claims.some((claim) => claim.sourceUrl === sourcePages[2].url), false);
 const undatedOnly = mergeBotPrimaryPresentedFields({}, {
   pages: [{ ...sourcePages[2], fetchedAt: 'invalid' }], fields: {},
 }, { title });
-assert.equal(undatedOnly.fields?.summary, undefined);
-assert.equal(undatedOnly.fields?.description, undefined);
+assert.equal(String(undatedOnly.fields?.summary?.value || '').trim(), '');
+assert.equal(String(undatedOnly.fields?.description?.value || '').trim(), '');
 const truncated = mergeBotPrimaryPresentedFields({}, {
   pages: [sourcePages[2], sourcePages[1]],
   fields: {
-    summary: { value: '', claims: [{ text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true }] },
-    description: { value: '', claims: [
+    summary: { value: breakfast, claims: [{ text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true }] },
+    description: { value: `${detail} ${breakfast}`, claims: [
       { text: detail, sourceUrl: sourcePages[2].url, pages: ['p1'], supported: true },
       { text: breakfast, sourceUrl: second.url, pages: ['p2'], supported: true },
     ] },
