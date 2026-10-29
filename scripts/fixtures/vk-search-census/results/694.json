@@ -64,7 +64,7 @@
       ]
     },
     "description": {
-      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street; since 1921 it has stood there, and it was formerly the first home of the Museum of Modern Art.",
+      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the hotel. Aman says Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club and a collection of alfresco dining terraces. The hotel occupies the Crown Building on the corner of Fifth Avenue and 57th Street; since 1921 it has stood there, and it was formerly the first home of the Museum of Modern Art. Reviews describe a speakeasy-style room with live music and dancing, cocktails ranked among the best in the city at top-tier prices, and exceptional service that helps guests find a better table.",
       "claims": [
         {
           "text": "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
@@ -148,25 +148,25 @@
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, though at very high prices. Several separate reviews echo this point.",
+  "review1": "The Jazz Club at Aman serves some of the best cocktails in the city, though at very high prices.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
   "review1Theme": "Breakfast and dining",
   "review1SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review1Stars": 4,
-  "review2": "Service is consistently described as exceptional, matching the club's luxury positioning. It comes up often enough to plan around. This pattern shows up across many of the saved reviews.",
+  "review2": "Service is consistently described as exceptional, matching the club's luxury positioning.",
   "review2Source": "Exa place listing",
   "review2Rating": "4.4/5",
   "review2Theme": "Service",
   "review2SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review2Stars": 5,
-  "review3": "Staff respond well when tables are not ideal, letting guests move to better spots. This pattern shows up across many of the saved reviews.",
+  "review3": "Staff respond well when tables are not ideal, letting guests move to better spots.",
   "review3Source": "Exa place listing",
   "review3Rating": "4.4/5",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
   "review3Stars": 4,
-  "review4": "The speakeasy-style club offers lively live music and dancing in a sophisticated members-style setting. It is a consistent thread in recent feedback.",
+  "review4": "The speakeasy-style club offers lively live music and dancing in a sophisticated members-style setting.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Music",
@@ -194,12 +194,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "summary": "2026-10-29T12:54:05-07:00"
+    "reviews": "2026-10-29T20:08:57.973546+00:00",
+    "description": "2026-10-29T20:08:57.973551+00:00"
   },
   "writtenOrder": [
     "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "description"
   ]
 }

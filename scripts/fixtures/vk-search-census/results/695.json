@@ -159,7 +159,7 @@
   "review2Theme": "Steak au poivre",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
   "review2Stars": 5,
-  "review3": "Diners describe it as a neighborhood institution that draws locals and well-dressed regulars, adding to its classic bistro feel. It is a consistent thread in recent feedback.",
+  "review3": "Diners describe it as a neighborhood institution that draws locals and well-dressed regulars, adding to its classic bistro feel.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.8",
   "review3Theme": "Local institution",
@@ -195,13 +195,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "description": "2026-10-29T12:54:01-07:00",
-    "summary": "2026-10-29T12:54:02-07:00"
+    "reviews": "2026-10-29T20:08:57.973918+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "reviews"
   ]
 }

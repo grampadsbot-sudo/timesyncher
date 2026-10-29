@@ -122,7 +122,7 @@
   "review1Theme": "Indie shops",
   "review1SourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
   "review1Stars": 5,
-  "review2": "The food halls are the main reason many visit, offering a wide variety of tasty dishes in a lively, welcoming atmosphere.",
+  "review2": "The food stalls are a main reason to come, with a broad mix of vendors, good vegetarian and vegan choices, and enough variety to anchor a relaxed family dinner.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Food stalls",
@@ -145,7 +145,7 @@
     "Lots of little indie shops with really interesting items and few other gift types shops."
   ],
   "review2Claims": [
-    "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes."
+    "Awesome place to visit, kids loved it, nice food and veggie/vegan options, about 3 hours with a solid break for some dinner."
   ],
   "review3Claims": [
     "First of all the building is beautiful, then all the restaurant and shops are just amazing."
@@ -159,5 +159,11 @@
     "representative": true
   },
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.957389+00:00"
+  }
 }

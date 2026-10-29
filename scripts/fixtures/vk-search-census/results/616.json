@@ -239,7 +239,7 @@
   "review2Rating": "5/5",
   "review2Theme": "Food and drinks",
   "review2SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
-  "review3": "Seasonal displays and activities can make visits fun for families with children, adding something extra beyond the grocery shopping. This pattern shows up across many of the saved reviews.",
+  "review3": "Seasonal displays and activities can make visits fun for families with children, adding something extra beyond the grocery shopping.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Atmosphere",
@@ -274,5 +274,11 @@
   "reviewsLabel": "Representative reviews written from 17 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.958872+00:00"
+  }
 }

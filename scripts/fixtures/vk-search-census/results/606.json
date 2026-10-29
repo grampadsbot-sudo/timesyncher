@@ -125,7 +125,7 @@
   "review1Rating": "5/5",
   "review1Theme": "Crowds",
   "review1SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review2": "Buying tickets is described as smooth, with clear pricing and quick checkout making the process stress-free. It is a consistent thread in recent feedback.",
+  "review2": "Buying tickets is described as smooth, with clear pricing and quick checkout making the process stress-free.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Value",
@@ -135,7 +135,7 @@
   "review3Rating": "5/5",
   "review3Theme": "Selection",
   "review3SourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-  "review4": "Lines can be long, but most visitors still get tickets to the show they want, making the wait worthwhile. This is worth keeping in mind when planning the visit.",
+  "review4": "Lines can be long, but most visitors still get tickets to the show they want, making the wait worthwhile.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Crowds",
@@ -168,5 +168,11 @@
     "representative": true
   },
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.955705+00:00"
+  }
 }

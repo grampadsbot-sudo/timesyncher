@@ -236,7 +236,7 @@
   "itineraryNote": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Bryant Park is lively in every season, with events, performances and activities making a walk through it memorable. It is a consistent thread in recent feedback.",
+  "review1": "Bryant Park is lively in every season, with events, performances and activities making a walk through it memorable.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Atmosphere",
@@ -254,7 +254,7 @@
   "review3Theme": "Selection",
   "review3SourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
   "review3Stars": 5,
-  "review4": "The ice rink is free if you bring skates, with rentals extra, and weekend crowds can be heavy. Several separate reviews echo this point.",
+  "review4": "The ice rink is free if you bring skates, with rentals extra, and weekend crowds can be heavy.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
@@ -290,5 +290,11 @@
   "reviewsLabel": "Representative reviews written from 25 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.956267+00:00"
+  }
 }

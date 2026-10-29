@@ -281,7 +281,7 @@
   "review1Rating": "5/5",
   "review1Theme": "Building and design",
   "review1SourceUrl": "https://exa.ai/library/place/mpnqznp38pt",
-  "review2": "Many buyers report a smooth, well-managed purchase despite crowds, describing staff as helpful and the experience as pleasant. It is a consistent thread in recent feedback.",
+  "review2": "Many buyers report a smooth, well-managed purchase despite crowds, describing staff as helpful and the experience as pleasant.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Service",
@@ -329,5 +329,11 @@
   "reviewsLabel": "Representative reviews written from 28 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.959763+00:00"
+  }
 }

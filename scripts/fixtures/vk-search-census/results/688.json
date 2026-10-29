@@ -135,22 +135,22 @@
   },
   "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Sylvia's delivers classic soul food that first-time Harlem visitors describe as outstanding, often clearing their plates. Several separate reviews echo this point.",
+  "review1": "Sylvia's delivers classic soul food that first-time Harlem visitors describe as outstanding, often clearing their plates.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
   "review1Theme": "Soul food",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review2": "Diners consistently praise both food and service, describing a warm, welcoming dining room. It comes up often enough to plan around.",
+  "review2": "Diners consistently praise both food and service, describing a warm, welcoming dining room.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Service",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review3": "Drinks hold up as well, with guests describing very tasty meals paired with good cocktails. This pattern shows up across many of the saved reviews.",
+  "review3": "Drinks hold up as well, with guests describing very tasty meals paired with good cocktails.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Drinks",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review4": "The house seasoning and hot sauce are sold on site and make an easy edible souvenir to take home. It is a consistent thread in recent feedback.",
+  "review4": "The house seasoning and hot sauce are sold on site and make an easy edible souvenir to take home.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.2",
   "review4Theme": "Take-home souvenirs",
@@ -172,5 +172,11 @@
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.971488+00:00"
+  }
 }

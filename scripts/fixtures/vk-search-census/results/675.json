@@ -169,12 +169,12 @@
   "review2Rating": "4.0",
   "review2Theme": "Pre-show timing",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review3": "Weekend brunch gets strong reviews, with diners calling it an excellent, satisfying experience that works well for groups. It comes up often enough to plan around.",
+  "review3": "Weekend brunch gets strong reviews, with diners calling it an excellent, satisfying experience that works well for groups.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Brunch",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review4": "Expect a busy, loud room, the most common watch-out, so it suits lively meals better than quiet conversation. This pattern shows up across many of the saved reviews.",
+  "review4": "Expect a busy, loud room, the most common watch-out, so it suits lively meals better than quiet conversation.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Busy and loud",
@@ -195,5 +195,11 @@
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.967974+00:00"
+  }
 }

@@ -159,17 +159,17 @@
   "review1Rating": "3.9/5",
   "review1Theme": "Service",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review2": "Loud music in the shop is a recurring complaint, so it is better for a grab-and-go visit than lingering. This is worth keeping in mind when planning the visit.",
+  "review2": "Loud music in the shop is a recurring complaint, so it is better for a grab-and-go visit than lingering.",
   "review2Source": "Restaurantji",
   "review2Rating": "3.9/5",
   "review2Theme": "Noise",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review3": "Customers describe drinks as fresh, clean-tasting and well blended without being overly sweet, made with high-quality ingredients. Several separate reviews echo this point.",
+  "review3": "Customers describe drinks as fresh, clean-tasting and well blended without being overly sweet, made with high-quality ingredients.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/4gf42trfy0r",
-  "review4": "Freshly made cold-pressed green juices are a highlight, described as refreshing and well balanced. It comes up often enough to plan around.",
+  "review4": "Freshly made cold-pressed green juices are a highlight, described as refreshing and well balanced.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
@@ -199,5 +199,11 @@
   "reviewsLabel": "Representative reviews written from 17 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.960390+00:00"
+  }
 }

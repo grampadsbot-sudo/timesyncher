@@ -143,19 +143,19 @@
   },
   "itineraryNote": "Zinc Bar: a candlelit Greenwich Village jazz cellar with a Billie Holiday past; arrive early for a good seat and stay for a late set.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Zinc Bar wins guests over with a romantic, Art Deco Paris-style jazz bar atmosphere that some couples find unforgettable. It comes up often enough to plan around.",
+  "review1": "Zinc Bar wins guests over with a romantic, Art Deco Paris-style jazz bar atmosphere that some couples find unforgettable.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.1",
   "review1Theme": "Romantic vibe",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
   "review1Stars": 5,
-  "review2": "Friendly bar staff and good cocktails are recurring praise and a big part of the enjoyable evenings guests describe. This pattern shows up across many of the saved reviews.",
+  "review2": "Friendly bar staff and good cocktails are recurring praise and a big part of the enjoyable evenings guests describe.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.1",
   "review2Theme": "Staff and cocktails",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
   "review2Stars": 5,
-  "review3": "Music and atmosphere are strong, but seating fills up, so guests recommend arriving early for a good spot. It is a consistent thread in recent feedback.",
+  "review3": "Music and atmosphere are strong, but seating fills up, so guests recommend arriving early for a good spot.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.1",
   "review3Theme": "Seating",
@@ -185,5 +185,11 @@
   "reviewsLabel": "Representative reviews written from 11 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.971820+00:00"
+  }
 }

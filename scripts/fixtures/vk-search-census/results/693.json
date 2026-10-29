@@ -147,22 +147,22 @@
   },
   "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Magnolia's banana pudding is the hero, with diners calling it one of the best desserts in the city. This is worth keeping in mind when planning the visit.",
+  "review1": "Magnolia's banana pudding is the hero, with diners calling it one of the best desserts in the city.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
   "review1Theme": "Banana pudding",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review2": "It is a hit with families, with parents reporting that children loved both the flavors and the shop. Several separate reviews echo this point.",
+  "review2": "It is a hit with families, with parents reporting that children loved both the flavors and the shop.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.0",
   "review2Theme": "Family treat",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review3": "Regulars describe it as reliably delicious, a dependable treat whenever they pass by. It comes up often enough to plan around.",
+  "review3": "Regulars describe it as reliably delicious, a dependable treat whenever they pass by.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.0",
   "review3Theme": "Consistency",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review4": "Friendly staff round out the experience, with diners noting the team is consistently pleasant. This pattern shows up across many of the saved reviews.",
+  "review4": "Friendly staff round out the experience, with diners noting the team is consistently pleasant.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.0",
   "review4Theme": "Staff",
@@ -185,5 +185,11 @@
   "reviewsLabel": "Representative reviews written from 10 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.973178+00:00"
+  }
 }

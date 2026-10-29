@@ -168,7 +168,7 @@
   "review3Theme": "Standout service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
   "review3Stars": 5,
-  "review4": "The one recurring nitpick is the wine-by-the-glass list, which diners would like to see broader and stronger. It comes up often enough to plan around.",
+  "review4": "The one recurring nitpick is the wine-by-the-glass list, which diners would like to see broader and stronger.",
   "review4Source": "Restaurantji",
   "review4Rating": "4.8",
   "review4Theme": "Wine by the glass",
@@ -189,5 +189,11 @@
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.968817+00:00"
+  }
 }

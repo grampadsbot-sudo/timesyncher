@@ -213,7 +213,7 @@
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "review2": "The atmosphere and sound are excellent, with friendly door staff and efficient servers, though seating is tight. It is a consistent thread in recent feedback.",
+  "review2": "The atmosphere and sound are excellent, with friendly door staff and efficient servers, though seating is tight.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
@@ -225,7 +225,7 @@
   "review3Theme": "Seating",
   "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
   "review3Stars": 4,
-  "review4": "Arriving well before showtime is recommended to eat and secure good seats in the crowded room. This is worth keeping in mind when planning the visit.",
+  "review4": "Arriving well before showtime is recommended to eat and secure good seats in the crowded room.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Seating",
@@ -266,12 +266,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "summary": "2026-10-29T12:54:04-07:00"
+    "reviews": "2026-10-29T20:08:57.963759+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "reviews"
   ]
 }

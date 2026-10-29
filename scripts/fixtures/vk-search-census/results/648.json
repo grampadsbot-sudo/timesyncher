@@ -202,12 +202,12 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
-  "review1": "Tiffany's Landmark store makes milestone purchases feel special, with shoppers praising caring, attentive staff. This pattern shows up across many of the saved reviews.",
+  "review1": "Tiffany's Landmark store makes milestone purchases feel special, with shoppers praising caring, attentive staff.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Atmosphere",
   "review1SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
-  "review2": "The Blue Box Cafe and upper-floor experience are highlights, turning a jewelry visit into a memorable outing. It is a consistent thread in recent feedback.",
+  "review2": "The Blue Box Cafe and upper-floor experience are highlights, turning a jewelry visit into a memorable outing.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Food and drinks",
@@ -255,5 +255,11 @@
   "reviewsLabel": "Representative reviews written from 27 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.962086+00:00"
+  }
 }

@@ -74,7 +74,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor. Large windows put Central Park behind the band, and every set carries a food and beverage minimum of $25 per person.",
+      "value": "Dizzy’s Club / Jazz at Lincoln Center is the jazz club on Broadway at 60th Street, 5th Floor, where reviews keep returning to world-class musicians in an intimate room with Central Park behind the band. Food draws mixed verdicts, so many treat it as a drinks-and-music night, and there is a food and beverage minimum of $25 per person, per set.",
       "claims": [
         {
           "text": "Broadway at 60th Street, 5th Floor",
@@ -224,13 +224,13 @@
   "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Dizzy's Club combines excellent jazz with a beautiful setting overlooking Central Park, and some visitors enjoy the food too. This is worth keeping in mind when planning the visit.",
+  "review1": "Dizzy's Club combines excellent jazz with a beautiful setting overlooking Central Park, and some visitors enjoy the food too.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Food and drinks",
   "review1SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review1Stars": 5,
-  "review2": "The club regularly features world-class musicians, creating memorable performances in an intimate room. Several separate reviews echo this point. It comes up often enough to plan around.",
+  "review2": "The club regularly features world-class musicians, creating memorable performances in an intimate room.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Music",
@@ -242,7 +242,7 @@
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
   "review3Stars": 5,
-  "review4": "Food is inconsistent, with some dishes criticized, so many recommend going mainly for drinks and the music. This pattern shows up across many of the saved reviews.",
+  "review4": "Food is inconsistent, with some dishes criticized, so many recommend going mainly for drinks and the music.",
   "review4Source": "Exa place listing",
   "review4Rating": "3/5",
   "review4Theme": "Music",
@@ -277,12 +277,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "itineraryNote": "2026-10-29T12:54:06-07:00"
+    "reviews": "2026-10-29T20:08:57.964651+00:00",
+    "summary": "2026-10-29T20:08:57.964658+00:00"
   },
   "writtenOrder": [
     "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "summary"
   ]
 }

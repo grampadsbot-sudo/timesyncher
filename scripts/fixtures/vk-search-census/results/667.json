@@ -229,13 +229,13 @@
   "review2Theme": "Atmosphere",
   "review2SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review2Stars": 5,
-  "review3": "Starting early is a common tip to avoid crowds, and the trip from Battery Park is short. This is worth keeping in mind when planning the visit.",
+  "review3": "Starting early is a common tip to avoid crowds, and the trip from Battery Park is short.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Building and design",
   "review3SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
   "review3Stars": 5,
-  "review4": "Extra security for pedestal access is expected, but rangers are friendly and the overall experience is rated highly. Several separate reviews echo this point.",
+  "review4": "Extra security for pedestal access is expected, but rangers are friendly and the overall experience is rated highly.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Atmosphere",
@@ -269,5 +269,11 @@
   "reviewsLabel": "Representative reviews written from 22 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.966119+00:00"
+  }
 }

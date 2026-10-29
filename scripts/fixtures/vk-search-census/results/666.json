@@ -252,13 +252,13 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
-  "review1": "Smoke Jazz & Supper Club is praised for excellent pianists and performers, though larger groups should arrange seating ahead. This pattern shows up across many of the saved reviews.",
+  "review1": "Smoke Jazz & Supper Club is praised for excellent pianists and performers, though larger groups should arrange seating ahead.",
   "review1Source": "Restaurantji",
   "review1Rating": "5/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
   "review1Stars": 5,
-  "review2": "Visitors highlight outstanding performances, good food and attentive service from start to finish. It is a consistent thread in recent feedback.",
+  "review2": "Visitors highlight outstanding performances, good food and attentive service from start to finish.",
   "review2Source": "Restaurantji",
   "review2Rating": "5/5",
   "review2Theme": "Food and drinks",
@@ -270,7 +270,7 @@
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
   "review3Stars": 3,
-  "review4": "The larger new venue is seen as an upgrade, with excellent cocktails and food alongside top-quality jazz. This is worth keeping in mind when planning the visit.",
+  "review4": "The larger new venue is seen as an upgrade, with excellent cocktails and food alongside top-quality jazz.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Music",
@@ -309,5 +309,11 @@
   "reviewsLabel": "Representative reviews written from 30 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.965605+00:00"
+  }
 }

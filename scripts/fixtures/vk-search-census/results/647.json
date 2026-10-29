@@ -197,7 +197,7 @@
   "itineraryNote": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Saks Fifth Avenue's sales associates, especially at fragrance counters, are praised for being helpful and generous with samples. It comes up often enough to plan around.",
+  "review1": "Saks Fifth Avenue's sales associates, especially at fragrance counters, are praised for being helpful and generous with samples.",
   "review1Source": "Exa place listing",
   "review1Rating": "5/5",
   "review1Theme": "Service",
@@ -244,5 +244,11 @@
   "reviewsLabel": "Representative reviews written from 20 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.961634+00:00"
+  }
 }

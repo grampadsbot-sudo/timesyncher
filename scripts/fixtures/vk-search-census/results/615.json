@@ -49,7 +49,10 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan ."
+    {
+      "text": "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+    }
   ],
   "itineraryNoteCandidate": "Bergdorf Goodman: Fifth Avenue elegance since it was founded in 1899 by Herman Bergdorf; go up for the Great views over Central Park and carry purchases home yourself.",
   "voicePass": {
@@ -81,7 +84,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Bergdorf Goodman is a grand Fifth Avenue destination worth a visit for window-gazing alone, prized for elegant interiors, holiday windows and park views from the upper floors. In-store service is generally gracious, while home-delivery problems are the main source of frustration; It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
+      "value": "Bergdorf Goodman is the Fifth Avenue luxury department store best enjoyed in person: elegant decor and park views upstairs, busy beauty counters below, and a record of delivery mix-ups that argues for carrying purchases home. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
       "claims": [
         {
           "text": "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
@@ -90,16 +93,8 @@
       ]
     },
     "description": {
-      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf; it moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. In person it rewards a slow look: Great views over Central Park. Great decor. sums up the upper floors, and Tripadvisor shows 4 of 5 bubbles (379 reviews). Busy beauty floors can mean A 10 minute wait at the Jo Malone counter. The sharper complaints concern home deliveries, with reports like Sent the wrong item to me. and that customer support hasn't helped at all, so carrying purchases home is the safer plan.",
+      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf; it moved to its present location at Fifth Avenue and 58th Street in 1928. In person the draw is the setting: the upper floors are prized for their decor and their Central Park views, so even a browse-only visit feels worthwhile. Popular beauty and fragrance counters can run short queues at busy times. The clearest complaint pattern concerns home deliveries, with reports of the wrong product arriving and little help afterward, so purchases are best carried home after a check at the register.",
       "claims": [
-        {
-          "text": "founded in 1899 by Herman Bergdorf",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
-        },
-        {
-          "text": "Great views over Central Park",
-          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
-        },
         {
           "text": "luxury department store founded in 1899 by Herman Bergdorf",
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
@@ -109,20 +104,12 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
         },
         {
-          "text": "building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
-        },
-        {
-          "text": "Great views over Central Park. Great decor.",
+          "text": "Great views over Central Park",
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
         },
         {
           "text": "A 10 minute wait at the Jo Malone counter",
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
-        },
-        {
-          "text": "4 of 5 bubbles (379 reviews)",
-          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208851-Reviews-Bergdorf_Goodman-New_York_City_New_York.html"
         },
         {
           "text": "Sent the wrong item to me.",
@@ -135,14 +122,10 @@
       ]
     },
     "itineraryNote": {
-      "value": "Bergdorf Goodman: Fifth Avenue elegance since it was founded in 1899 by Herman Bergdorf; go up for the Great views over Central Park and carry purchases home yourself.",
+      "value": "Bergdorf Goodman: browse the upper floors for the decor and park views, allow a few minutes at the beauty counters, and take purchases home in hand.",
       "claims": [
         {
-          "text": "founded in 1899 by Herman Bergdorf",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
-        },
-        {
-          "text": "Great views over Central Park",
+          "text": "Great decor.",
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
         }
       ]
@@ -244,13 +227,11 @@
   "review4Source": "Bergdorf Goodman - Exa place listing",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T12:52:46-07:00",
-    "description": "2026-10-29T12:55:28-07:00",
-    "summary": "2026-10-29T12:55:29-07:00",
-    "itineraryNote": "2026-10-29T12:55:30-07:00"
+    "description": "2026-10-29T20:09:49.743444+00:00",
+    "summary": "2026-10-29T20:09:49.743447+00:00",
+    "itineraryNote": "2026-10-29T20:09:49.743449+00:00"
   },
   "writtenOrder": [
-    "reviews",
     "description",
     "summary",
     "itineraryNote"

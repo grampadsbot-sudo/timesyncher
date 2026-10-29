@@ -124,7 +124,7 @@
   "review1Theme": "Service",
   "review1SourceUrl": "https://exa.ai/library/place/0kx49hqyqgw",
   "review1Stars": 5,
-  "review2": "The night views of Manhattan and the Statue of Liberty are impressive, though boarding times and seating can matter. This is worth keeping in mind when planning the visit.",
+  "review2": "The night views of Manhattan and the Statue of Liberty are impressive, though boarding times and seating can matter.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
@@ -136,7 +136,7 @@
   "review3Theme": "Seating",
   "review3SourceUrl": "https://exa.ai/library/place/0kx49hqyqgw",
   "review3Stars": 5,
-  "review4": "Visitors consider the cruise a must-do that is reasonably priced and offers a unique river perspective on the city. It comes up often enough to plan around.",
+  "review4": "Visitors consider the cruise a must-do that is reasonably priced and offers a unique river perspective on the city.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Value",
@@ -177,5 +177,11 @@
     "representative": true
   },
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.964266+00:00"
+  }
 }

@@ -213,7 +213,7 @@
   "review1Theme": "Views and octopus",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
   "review1Stars": 5,
-  "review2": "The service team is the most praised element, with diners describing staff who are attentive, polished and memorable. Several separate reviews echo this point.",
+  "review2": "The service team is the most praised element, with diners describing staff who are attentive, polished and memorable.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.8",
   "review2Theme": "Service at its best",
@@ -225,7 +225,7 @@
   "review3Theme": "Food and drinks",
   "review3SourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
   "review3Stars": 5,
-  "review4": "Guests describe an elegant yet welcoming room with top-notch, beautifully prepared food, with outstanding service completing the experience. This pattern shows up across many of the saved reviews.",
+  "review4": "Guests describe an elegant yet welcoming room with top-notch, beautifully prepared food, with outstanding service completing the experience.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
@@ -256,5 +256,11 @@
   "reviewsLabel": "Representative reviews written from 20 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.969241+00:00"
+  }
 }

@@ -177,17 +177,17 @@
   "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Nordstrom's 57th Street flagship impresses with a beautiful, modern design and a calm, elegant shopping atmosphere. This is worth keeping in mind when planning the visit.",
+  "review1": "Nordstrom's 57th Street flagship impresses with a beautiful, modern design and a calm, elegant shopping atmosphere.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
   "review1Theme": "Overall experience",
   "review1SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review2": "Prices sit on the higher side, which shoppers expect from the flagship but should factor into a shopping budget. Several separate reviews echo this point.",
+  "review2": "Prices sit on the higher side, which shoppers expect from the flagship but should factor into a shopping budget.",
   "review2Source": "Exa place listing",
   "review2Rating": "4.4/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review3": "Checkout and service problems appear in some reviews, including frustrating pricing or stock mix-ups at counters. It comes up often enough to plan around.",
+  "review3": "Checkout and service problems appear in some reviews, including frustrating pricing or stock mix-ups at counters.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Service",
@@ -224,5 +224,11 @@
   "reviewsLabel": "Representative reviews written from 18 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.960759+00:00"
+  }
 }

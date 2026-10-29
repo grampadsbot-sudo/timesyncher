@@ -157,7 +157,7 @@
   "review2Theme": "Owners",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
   "review2Stars": 5,
-  "review3": "Prices stay low for the neighborhood, with diners reporting a slice and a drink for only a few dollars. It is a consistent thread in recent feedback.",
+  "review3": "Prices stay low for the neighborhood, with diners reporting a slice and a drink for only a few dollars.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.2",
   "review3Theme": "Value",
@@ -184,5 +184,11 @@
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.968345+00:00"
+  }
 }

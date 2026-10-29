@@ -250,7 +250,7 @@
   "review2Rating": "5/5",
   "review2Theme": "Atmosphere",
   "review2SourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-  "review3": "The collection is described as carefully curated, mixing classic and contemporary design, including small versions of museum pieces. Several separate reviews echo this point.",
+  "review3": "The collection is described as carefully curated, mixing classic and contemporary design, including small versions of museum pieces.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Selection",
@@ -288,5 +288,11 @@
   "reviewsLabel": "Representative reviews written from 22 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.957896+00:00"
+  }
 }

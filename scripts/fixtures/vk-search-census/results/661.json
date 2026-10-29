@@ -111,5 +111,14 @@
   "itineraryNote": "Blue Note Jazz Festival New York 2026: a citywide jazz festival Celebrating 15 Years; pick one headline night to fit the trip.",
   "missingFields": [
     "reviews"
-  ]
+  ],
+  "missingNotes": {
+    "reviews": "Upcoming festival event; no allowlisted review pages (Yelp/Google/Tripadvisor/Trip.com/Restaurantji/Exa) with reviews were saved, so no review lines were written."
+  },
+  "writtenOrder": [
+    "missingFields"
+  ],
+  "writtenAt": {
+    "missingFields": "2026-10-29T20:09:05.881446+00:00"
+  }
 }

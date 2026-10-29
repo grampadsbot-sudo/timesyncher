@@ -199,13 +199,13 @@
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
-  "review1": "Blue Note shows are widely praised, though some visitors are frustrated by delayed entry and mandatory minimum spending. It comes up often enough to plan around.",
+  "review1": "Blue Note shows are widely praised, though some visitors are frustrated by delayed entry and mandatory minimum spending.",
   "review1Source": "Restaurantji",
   "review1Rating": "3/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
   "review1Stars": 3,
-  "review2": "The intimate table seating, great sound and efficient service are highlights, even if the room feels crowded. This pattern shows up across many of the saved reviews.",
+  "review2": "The intimate table seating, great sound and efficient service are highlights, even if the room feels crowded.",
   "review2Source": "Exa place listing",
   "review2Rating": "4/5",
   "review2Theme": "Seating",
@@ -258,12 +258,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "summary": "2026-10-29T12:54:03-07:00"
+    "reviews": "2026-10-29T20:08:57.963286+00:00"
   },
   "writtenOrder": [
-    "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "reviews"
   ]
 }

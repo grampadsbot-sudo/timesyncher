@@ -189,7 +189,7 @@
   "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Whole Foods Upper West Side is praised for fresh produce and good sales, especially for Prime members. It is a consistent thread in recent feedback.",
+  "review1": "Whole Foods Upper West Side is praised for fresh produce and good sales, especially for Prime members.",
   "review1Source": "Exa place listing",
   "review1Rating": "3.2/5",
   "review1Theme": "Overall experience",
@@ -199,12 +199,12 @@
   "review2Rating": "3.2/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review3": "Service has slipped for some regular customers, who describe dismissive or unhelpful interactions recently. This is worth keeping in mind when planning the visit.",
+  "review3": "Service has slipped for some regular customers, who describe dismissive or unhelpful interactions recently.",
   "review3Source": "Exa place listing",
   "review3Rating": "1/5",
   "review3Theme": "Service",
   "review3SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review4": "Many shoppers still find friendly cashiers, a pleasant atmosphere and a tempting bakery and health section. Several separate reviews echo this point.",
+  "review4": "Many shoppers still find friendly cashiers, a pleasant atmosphere and a tempting bakery and health section.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Food and drinks",
@@ -231,5 +231,11 @@
   "reviewsLabel": "Representative reviews written from 13 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.962533+00:00"
+  }
 }

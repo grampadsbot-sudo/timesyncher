@@ -74,7 +74,7 @@
       ]
     },
     "description": {
-      "value": "Pure Green UWS is a neighborhood juice bar at 2041 Broadway New York, NY 10023, with listed hours of Monday 7 AM–9 PM and the same every day. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY, and the shop's selected Google reviews add up to a consistent picture: Great smoothies and acai bowls!, a team that handles groups well (Staff was so accommodating), and a space where The location is clean and has a great outdoor seating option! Regulars also note that they have a rewards program and full nutrition information online. With only a few reviews published, expect a small, friendly counter rather than a destination café.",
+      "value": "Pure Green UWS is a neighborhood juice bar at 2041 Broadway New York, NY 10023, with listed hours of Monday 7 AM–9 PM and the same every day. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY, and the shop's selected Google reviews add up to a consistent picture: The freshly prepared smoothies are delicious!, a team that handles groups well (Staff was so accommodating), and a space where The location is clean and has a great outdoor seating option! Regulars also note that they have a rewards program and full nutrition information online. With only a few reviews published, expect a small, friendly counter rather than a destination café.",
       "claims": [
         {
           "text": "2041 Broadway New York, NY 10023",
@@ -93,7 +93,7 @@
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
         },
         {
-          "text": "Great smoothies and acai bowls!",
+          "text": "The freshly prepared smoothies are delicious!",
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/#google-reviews-20261029"
         },
         {
@@ -130,7 +130,7 @@
   "missingFields": [],
   "review1": "Smoothies and acai bowls are the core draw, with fresh, colorful options that suit a quick breakfast or a refuel after a run in Central Park.",
   "review1Claims": [
-    "Great smoothies and acai bowls!"
+    "The freshly prepared smoothies are delicious!"
   ],
   "review1Theme": "Smoothies and bowls",
   "review1SourceUrl": "https://www.puregreenfranchise.com/new-york/uws/#google-reviews-20261029",
@@ -165,15 +165,11 @@
     "representative": true
   },
   "writtenAt": {
-    "reviews": "2026-10-29T12:52:46-07:00",
-    "description": "2026-10-29T12:53:55-07:00",
-    "summary": "2026-10-29T12:53:56-07:00",
-    "itineraryNote": "2026-10-29T12:53:57-07:00"
+    "reviews": "2026-10-29T20:08:57.961165+00:00",
+    "description": "2026-10-29T20:09:16.932196+00:00"
   },
   "writtenOrder": [
     "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "description"
   ]
 }

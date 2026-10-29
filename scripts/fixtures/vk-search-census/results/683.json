@@ -152,7 +152,7 @@
   "review1Rating": "4.2",
   "review1Theme": "Classic slice",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review2": "Locals routinely send visitors to this specific Joe's location, which reinforces its reputation as the original and best branch. This pattern shows up across many of the saved reviews.",
+  "review2": "Locals routinely send visitors to this specific Joe's location, which reinforces its reputation as the original and best branch.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.2",
   "review2Theme": "Local pick",
@@ -183,5 +183,11 @@
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.969822+00:00"
+  }
 }

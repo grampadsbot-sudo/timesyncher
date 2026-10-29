@@ -65,7 +65,7 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery jazz plan, anchored by Birdland at 315 West 44th St. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well, so it is easy before or after a Midtown show.",
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery jazz plan, anchored by Birdland at 315 West 44th St. Reviews favor booking ahead and arriving early for good seats, and they single out tight trio musicianship and friendly, attentive service. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well.",
       "claims": [
         {
           "text": "315 West 44th St",
@@ -124,22 +124,22 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
-  "review1": "Booking jazz club tickets in advance and arriving early is recommended to secure good seats. This is worth keeping in mind when planning the visit.",
+  "review1": "Booking jazz club tickets in advance and arriving early is recommended to secure good seats.",
   "review1Source": "Exa place listing",
   "review1Rating": "4/5",
   "review1Theme": "Seating",
   "review1SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review2": "Live trio performances are praised for their energy and musicianship, making for memorable shows. Several separate reviews echo this point.",
+  "review2": "Live trio performances are praised for their energy and musicianship, making for memorable shows.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Live performance",
   "review2SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review3": "Visitors describe musicians who keep audiences engaged from the first song to the last. It comes up often enough to plan around.",
+  "review3": "Visitors describe musicians who keep audiences engaged from the first song to the last.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-  "review4": "Service is described as friendly and attentive, helping the evening run smoothly. This pattern shows up across many of the saved reviews.",
+  "review4": "Service is described as friendly and attentive, helping the evening run smoothly.",
   "review4Source": "Exa place listing",
   "review4Rating": "5/5",
   "review4Theme": "Service",
@@ -167,12 +167,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "itineraryNote": "2026-10-29T12:54:12-07:00"
+    "reviews": "2026-10-29T20:08:57.966988+00:00",
+    "summary": "2026-10-29T20:08:57.966994+00:00"
   },
   "writtenOrder": [
     "reviews",
-    "description",
-    "summary",
-    "itineraryNote"
+    "summary"
   ]
 }

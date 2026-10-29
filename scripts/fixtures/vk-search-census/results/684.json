@@ -142,7 +142,7 @@
   "review1Rating": "4.3",
   "review1Theme": "Cheesecake",
   "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review2": "The atmosphere is lively and family-friendly, with diners enjoying lunch, desserts and a fun, busy room. It is a consistent thread in recent feedback.",
+  "review2": "The atmosphere is lively and family-friendly, with diners enjoying lunch, desserts and a fun, busy room.",
   "review2Source": "Restaurantji",
   "review2Rating": "4.3",
   "review2Theme": "Fun atmosphere",
@@ -174,5 +174,11 @@
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.970202+00:00"
+  }
 }

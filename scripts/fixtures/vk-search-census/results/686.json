@@ -178,7 +178,7 @@
   "review2Theme": "Sunday supper",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
   "review2Stars": 5,
-  "review3": "Individual servers are praised by name, and warm, attentive service is a recurring reason guests return. Several separate reviews echo this point.",
+  "review3": "Individual servers are praised by name, and warm, attentive service is a recurring reason guests return.",
   "review3Source": "Restaurantji",
   "review3Rating": "4.5",
   "review3Theme": "Service",
@@ -208,5 +208,11 @@
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.971031+00:00"
+  }
 }

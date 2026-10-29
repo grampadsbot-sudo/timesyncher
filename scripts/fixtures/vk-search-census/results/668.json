@@ -251,17 +251,17 @@
   "review1Rating": "5/5",
   "review1Theme": "Music",
   "review1SourceUrl": "https://exa.ai/library/place/5063cy89qms",
-  "review2": "Many visitors call it the center of the jazz universe, a historic basement room where top musicians perform. This is worth keeping in mind when planning the visit.",
+  "review2": "Many visitors call it the center of the jazz universe, a historic basement room where top musicians perform.",
   "review2Source": "Exa place listing",
   "review2Rating": "5/5",
   "review2Theme": "Music",
   "review2SourceUrl": "https://exa.ai/library/place/5063cy89qms",
-  "review3": "Guests say it lives up to its reputation with classic music and atmosphere, but the steep stairs need care. Several separate reviews echo this point.",
+  "review3": "Guests say it lives up to its reputation with classic music and atmosphere, but the steep stairs need care.",
   "review3Source": "Exa place listing",
   "review3Rating": "5/5",
   "review3Theme": "Music",
   "review3SourceUrl": "https://exa.ai/library/place/5063cy89qms",
-  "review4": "Expect a cramped room, a drink minimum and some seats behind pillars, but serious jazz fans consider it essential. It comes up often enough to plan around.",
+  "review4": "Expect a cramped room, a drink minimum and some seats behind pillars, but serious jazz fans consider it essential.",
   "review4Source": "Exa place listing",
   "review4Rating": "4/5",
   "review4Theme": "Music",
@@ -306,5 +306,11 @@
   "reviewsLabel": "Representative reviews written from 35 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:08:57.966575+00:00"
+  }
 }
