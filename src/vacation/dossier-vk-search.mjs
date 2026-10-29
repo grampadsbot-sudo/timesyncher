@@ -59,6 +59,15 @@ export function vkSearchClaimSupportOk(result) {
   });
 }
 
+function squash(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function verbatimOnPage(row, pageText) {
+  const needle = squash(row);
+  return Boolean(needle) && squash(pageText).includes(needle);
+}
+
 export function personFramedReview(body) {
   return /\b(reviewers?|guests?|customers?|diners?|travell?ers?|shoppers?|visitors?|patrons?)\s+(on|at|says|said|writes|wrote|notes|noted|praises|praised|calls|called|adds|added)\b/i.test(body)
     || /^[^.:]{0,80}\b(reviewer|guest|customer|diner|traveller|traveler|shopper|visitor)\b[^.:]{0,40}:/i.test(body)
@@ -187,7 +196,7 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     if (!body || claimTextWasRejected(body, rejected) || personFramedReview(body)) return [];
     const pasted = [body, ...body.split(/(?<=[.!?])\s+/)]
       .filter((row) => row.split(/\s+/).length >= 8)
-      .some((row) => pages.some((_, index) => pageSupports(index, row)));
+      .some((row) => pages.some((page) => verbatimOnPage(row, page?.text)));
     if (pasted) return [];
     const lineUrl = text(result[`review${n}SourceUrl`]);
     const supportClaims = list(result[`review${n}Claims`]).flatMap((raw) => {
