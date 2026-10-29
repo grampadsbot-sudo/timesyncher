@@ -366,3 +366,4 @@ scripts/test_claim_support_verbatim_self_negation.mjs
 scripts/test_claim_support_filler_summary.mjs
 scripts/test_728_budget_data.mjs
 scripts/test_728_data_fixtures.mjs
+scripts/test_dossier_representative_reviews_written.mjs
