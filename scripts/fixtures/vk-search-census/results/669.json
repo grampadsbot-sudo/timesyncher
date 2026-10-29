@@ -11,6 +11,13 @@
       "text": " Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well. What … Shop Follow Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well. What is the difference between  … d dinner. Simply arrive early to be seated and dine. We serve dinner and drinks before and during shows. Do you require a minimum spend at the table? There is a $20 minimum on food or drinks (per person.) Can I bring a birthday cake? Yes, there is a $5 per person plating fee. Is there a corkage fee to bring wine into the club? $40 Still have questions?",
       "snippet": " Follow Follow Follow Frequently Asked Questions Venue Seating Ticketing Dining Venue Where is Birdland and how should I get there? We are located at 315 West 44th St, between 8th and 9th Ave’s. The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this stre",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/mxkhk1g69s8",
+      "title": "Village Vanguard / Smoke / Birdland / Jazz Gallery reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_mxkhk1g69s8.html",
+      "text": "Amazing experience - strong drinks, friendly service and great music. We didn’t have any food because vegan options were not exciting at all but still had a lovely evening with great cocktails. Would definitely recommend booking this experience in advance and also coming early if you want nice seats! Sat at the bar for Afro Latin Jazz Orchestra. Wonderful and awesome. Had amaretto coffee drinks and cheesecake bc we had already eaten dinner. Dessert chef is amazing, best cheesecake ive ever had. Very fluffy and delicious. Barkeep said desserts were the shining stars of menu. Such a wonderful place with great vibes and tasty food. The live performance by the drummer, pianist, and double bassist was fantastic! I left my clothes there by mistake, and even though they were busy, a kind lady took the time during the performance break to find them for me. I really appreciated her kindness. I’d love to come back again someday. We had an amazing evening at this jazz club! The atmosphere was vibrant yet cozy, with incredible live music that set the perfect tone for the night. The musicians were extremely talented and kept the crowd entertained from start to finish. Dinner was just pretty tasty—we had lasagna and Cajun jambalaya. The service was excellent too: friendly, attentive, and made the whole experience seamless. It’s not easy to find a place that combines great food, top-notch live music, and a welcoming vibe, but this spot does it all. Highly recommend for anyone looking for a fun and memorable night out!"
     }
   ],
   "rating": {
@@ -88,7 +95,98 @@
           "sourceUrl": "https://www.birdlandjazz.com/faq/"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Music",
+        "value": "Amazing experience - strong drinks, friendly service and great music. We didn’t have any food because vegan options were not exciting at all but still had a lovely evening with great cocktails. Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
+        "claims": [
+          {
+            "text": "Amazing experience - strong drinks, friendly service and great music. We didn’t have any food because vegan options were not exciting at all but still had a lovely evening with great cocktails. Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
+            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 49,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mxkhk1g69s8",
+          "savedHtml": "r8/exa_mxkhk1g69s8.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Sat at the bar for Afro Latin Jazz Orchestra. Wonderful and awesome. Had amaretto coffee drinks and cheesecake bc we had already eaten dinner. Dessert chef is amazing, best cheesecake ive ever had. Very fluffy and delicious. Barkeep said desserts were the shining stars of menu.",
+        "claims": [
+          {
+            "text": "Sat at the bar for Afro Latin Jazz Orchestra. Wonderful and awesome. Had amaretto coffee drinks and cheesecake bc we had already eaten dinner. Dessert chef is amazing, best cheesecake ive ever had. Very fluffy and delicious. Barkeep said desserts were the shining stars of menu.",
+            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 46,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mxkhk1g69s8",
+          "savedHtml": "r8/exa_mxkhk1g69s8.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Such a wonderful place with great vibes and tasty food. The live performance by the drummer, pianist, and double bassist was fantastic! I left my clothes there by mistake, and even though they were busy, a kind lady took the time during the performance break to find them for me. I really appreciated her kindness. I’d love to come back again someday.",
+        "claims": [
+          {
+            "text": "Such a wonderful place with great vibes and tasty food. The live performance by the drummer, pianist, and double bassist was fantastic! I left my clothes there by mistake, and even though they were busy, a kind lady took the time during the performance break to find them for me. I really appreciated her kindness. I’d love to come back again someday.",
+            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 62,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mxkhk1g69s8",
+          "savedHtml": "r8/exa_mxkhk1g69s8.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Music",
+        "value": "We had an amazing evening at this jazz club! The atmosphere was vibrant yet cozy, with incredible live music that set the perfect tone for the night. The musicians were extremely talented and kept the crowd entertained from start to finish. Dinner was just pretty tasty—we had lasagna and Cajun jambalaya. The service was excellent too: friendly, attentive, and made the whole experience seamless. It’s not easy to find a place that combines great food, top-notch live music, and a welcoming vibe, but this spot does it all. Highly recommend for anyone looking for a fun and memorable night out!",
+        "claims": [
+          {
+            "text": "We had an amazing evening at this jazz club! The atmosphere was vibrant yet cozy, with incredible live music that set the perfect tone for the night. The musicians were extremely talented and kept the crowd entertained from start to finish. Dinner was just pretty tasty—we had lasagna and Cajun jambalaya. The service was excellent too: friendly, attentive, and made the whole experience seamless. It’s not easy to find a place that combines great food, top-notch live music, and a welcoming vibe, but this spot does it all. Highly recommend for anyone looking for a fun and memorable night out!",
+            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 100,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mxkhk1g69s8",
+          "savedHtml": "r8/exa_mxkhk1g69s8.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
+    "reviewsScope": "Reviews are for Birdland Jazz Club, 315 W 44th St (anchor named in summary), not every candidate in this row"
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -96,5 +194,30 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show."
+  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
+  "review1": "Amazing experience - strong drinks, friendly service and great music. We didn’t have any food because vegan options were not exciting at all but still had a lovely evening with great cocktails. Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review1Stars": 4,
+  "review2": "Sat at the bar for Afro Latin Jazz Orchestra. Wonderful and awesome. Had amaretto coffee drinks and cheesecake bc we had already eaten dinner. Dessert chef is amazing, best cheesecake ive ever had. Very fluffy and delicious. Barkeep said desserts were the shining stars of menu.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review2Stars": 5,
+  "review3": "Such a wonderful place with great vibes and tasty food. The live performance by the drummer, pianist, and double bassist was fantastic! I left my clothes there by mistake, and even though they were busy, a kind lady took the time during the performance break to find them for me. I really appreciated her kindness. I’d love to come back again someday.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review3Stars": 5,
+  "review4": "We had an amazing evening at this jazz club! The atmosphere was vibrant yet cozy, with incredible live music that set the perfect tone for the night. The musicians were extremely talented and kept the crowd entertained from start to finish. Dinner was just pretty tasty—we had lasagna and Cajun jambalaya. The service was excellent too: friendly, attentive, and made the whole experience seamless. It’s not easy to find a place that combines great food, top-notch live music, and a welcoming vibe, but this spot does it all. Highly recommend for anyone looking for a fun and memorable night out!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Music",
+  "review4SourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

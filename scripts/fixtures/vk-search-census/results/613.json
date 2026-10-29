@@ -27,6 +27,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/04qc8w8hrwx",
+      "title": "Macy's Herald Square reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_04qc8w8hrwx.html",
+      "text": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge. We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun. If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!! I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!"
     }
   ],
   "rating": {
@@ -127,7 +134,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Selection",
+        "value": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge.",
+        "claims": [
+          {
+            "text": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge.",
+            "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 82,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/04qc8w8hrwx",
+          "savedHtml": "r8/exa_04qc8w8hrwx.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun.",
+        "claims": [
+          {
+            "text": "We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun.",
+            "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 72,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/04qc8w8hrwx",
+          "savedHtml": "r8/exa_04qc8w8hrwx.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!!",
+        "claims": [
+          {
+            "text": "If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!!",
+            "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 62,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/04qc8w8hrwx",
+          "savedHtml": "r8/exa_04qc8w8hrwx.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Selection",
+        "value": "I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!",
+        "claims": [
+          {
+            "text": "I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!",
+            "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 86,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/04qc8w8hrwx",
+          "savedHtml": "r8/exa_04qc8w8hrwx.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -187,5 +283,30 @@
   },
   "itineraryNote": "Macy's Herald Square: a giant on 34th Street; ride several wooden escalators still in operation and see the window displays.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "This review is from the view of a tourist. If you are visiting NYC and have never been to the 34 st store you should definitely go. The store is very large and contains a mix of history like wooden escalators and the piano from the movie big, to great shopping with an almost endless variety. The staff is friendly, and will help you navigate the store. There are 8 resturants in the store for you to take a rest and recharge.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Selection",
+  "review1SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review1Stars": 5,
+  "review2": "We stopped in to check out the historic Macy’s as well as buy some sheets. The person in the bedding department was super helpful, but ended up recommending that we order online when they went on sale the next day. I loved seeing the historic wooden escalators. And would’ve loved to have more time to shop. I did buy some shoes in the UGG shop within the store, and that was fun.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review2Stars": 5,
+  "review3": "If you go to Macy’s you have to go to the back of the store and check out the Wooden Escalator ! Only one in operation in the country. Also this store is soo amazing. The energy is real. And they had a DJ for the weekend around Christmas. The NBA section of the store was neat to see. What a place!!!",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review3Stars": 5,
+  "review4": "I had a great shopping experience at Macy’s Herald Square. The store is huge, well-organized, and has an incredible selection of clothing, accessories, and brands all in one place. The staff was friendly, helpful, and professional, making the whole experience smooth and enjoyable. The location is iconic, clean, and easy to navigate despite how large it is. Whether you’re shopping for everyday items, gifts, or something special, this Macy’s truly has it all. I always enjoy coming here and will definitely be back again. Highly recommend!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Selection",
+  "review4SourceUrl": "https://exa.ai/library/place/04qc8w8hrwx",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

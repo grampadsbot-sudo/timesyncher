@@ -11,10 +11,23 @@
       "text": "ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operati … ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operati …  Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cities of 18 countries with 444 buses operating around the world. [ 4 ] Most of the cities it serves are in the United States . Typically, Big Bus Tours use open top double-decker buses i … ies of 18 countries with 444 buses operating around the world. [ 4 ] Most of the cities it serves are in the United States . Typically, Big Bus Tours use open top double-decker buses in burgundy and cream-coloured livery. History [ edit ] Big Bus company kiosk and bus queue at Speakers' Corner , London \"Les Cars Rouges\" was founded in 1990 by Abdallah El Azm in Paris  …  United States [ edit ] A Big Bus driving past the US Capitol in Washington, D.C. Big Bus Chicago Big Bus Las Vegas Big Bus Los Angeles Big Bus Miami Big Bus New York Big Bus Philadelphia Big Bus San Francisco Big Bus Washington, D.C. Gallery [ edit ] The Big Bus Company shield on the side of a vehicle East Lancs L",
       "snippet": "ent Private Equity (85%) Merlin Entertainments (15%) Website bigbustours.com Big Bus Tours (formerly Les Cars Rouges and The Big Bus Company ), is an operator of open top bus sightseeing tours formed in May 2011 after \"Les Cars Rouges\" and the \"Big Bus Company\" merged. The company operates in 28 cit",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/vt9hb9kt6bh",
+      "title": "Open-air bus tour candidates reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_vt9hb9kt6bh.html",
+      "text": "JR and Maria are the best!! I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up! The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun. The driver was also excellent — smooth, safe, and professional. I really enjoyed every minute of it. Thank you for making my last day in New York such a memorable one! Great guided tour from Midtown Manhattan to Dumbo and back. Shelley and Manny took great care of us. Great photo opportunities and Shelly help you with all your photos. Also excellent insight about the city history and fun facts. Highly recommended! 4.7 out of 5 · 19,429 reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.7,
+    "primarySource": "exa",
+    "exa": 4.7
+  },
+  "reviewCount": {
+    "exa": 19429
+  },
   "priceHint": "From ~$62/24h Downtown; ~$83/48h both routes",
   "hoursHint": null,
   "happyHourHint": null,
@@ -94,7 +107,54 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Big_Bus_Tours"
         }
       ]
-    }
+    },
+    "reviews": [
+      {
+        "theme": "Atmosphere",
+        "value": "JR and Maria are the best!! I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up! The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun. The driver was also excellent — smooth, safe, and professional. I really enjoyed every minute of it. Thank you for making my last day in New York such a memorable one!",
+        "claims": [
+          {
+            "text": "JR and Maria are the best!! I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up! The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun. The driver was also excellent — smooth, safe, and professional. I really enjoyed every minute of it. Thank you for making my last day in New York such a memorable one!",
+            "sourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 84,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vt9hb9kt6bh",
+          "savedHtml": "r8/exa_vt9hb9kt6bh.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "Great guided tour from Midtown Manhattan to Dumbo and back. Shelley and Manny took great care of us. Great photo opportunities and Shelly help you with all your photos. Also excellent insight about the city history and fun facts. Highly recommended!",
+        "claims": [
+          {
+            "text": "Great guided tour from Midtown Manhattan to Dumbo and back. Shelley and Manny took great care of us. Great photo opportunities and Shelly help you with all your photos. Also excellent insight about the city history and fun facts. Highly recommended!",
+            "sourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 41,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vt9hb9kt6bh",
+          "savedHtml": "r8/exa_vt9hb9kt6bh.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
+    "reviewsScope": "Reviews are for Big Bus Tours New York (operator named in summary), not every candidate in this row"
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -102,5 +162,19 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast."
+  "itineraryNote": "Open-air bus tour candidates: a first-day orientation ride; hop on open top double-decker buses to see the city fast.",
+  "review1": "JR and Maria are the best!! I ended my 6-day trip to New York with the Big Bus Tour, and it was honestly the perfect way to wrap things up! The guide was amazing — super friendly, gave clear and interesting explanations about every spot, and made the whole ride so much fun. The driver was also excellent — smooth, safe, and professional. I really enjoyed every minute of it. Thank you for making my last day in New York such a memorable one!",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Atmosphere",
+  "review1SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review1Stars": 5,
+  "review2": "Great guided tour from Midtown Manhattan to Dumbo and back. Shelley and Manny took great care of us. Great photo opportunities and Shelly help you with all your photos. Also excellent insight about the city history and fun facts. Highly recommended!",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Atmosphere",
+  "review2SourceUrl": "https://exa.ai/library/place/vt9hb9kt6bh",
+  "review2Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "ratingNote": "Exa place listing for Big Bus Tours New York (723 7th Ave): \"4.7 out of 5 · 19,429 reviews\"; saved r8/exa_vt9hb9kt6bh.html"
 }

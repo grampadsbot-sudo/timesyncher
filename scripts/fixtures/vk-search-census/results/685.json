@@ -19,6 +19,13 @@
       "text": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC  … th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Street in NYC offers an authentic Italian dining experience with enormous portions perfect for sharing. Guests rave about the \"scrumptious Italian cuisine\" and \"exceptional service.\" The lively atmosphere and \"amazing\" staff add to the memorable experi … Servers were really nice, portions were big. … I loved the stuffed mushrooms the most, the spicy vodka pasta and peach spritz were great too.",
       "snippet": "the 1, 2, 3, 7, N, R subways. Reviews OpenTable reviews from verified diners Reviews from people who have dined at Carmine's - 44th Street - NYC. 4.6 4.6 (33242) 4.6 Food 4.6 Service 4.5 Ambience 4.4 Value Noise • Moderate Review summary AI-generated from verified diner reviews Carmine's on 44th Str",
       "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://exa.ai/library/place/p6w36cmf6x5",
+      "title": "Carmine's Times Square reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_p6w36cmf6x5.html",
+      "text": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond. I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you."
     }
   ],
   "rating": {
@@ -85,7 +92,52 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Service",
+        "value": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond.",
+        "claims": [
+          {
+            "text": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond.",
+            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 67,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/p6w36cmf6x5",
+          "savedHtml": "r8/exa_p6w36cmf6x5.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you.",
+        "claims": [
+          {
+            "text": "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you.",
+            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 95,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/p6w36cmf6x5",
+          "savedHtml": "r8/exa_p6w36cmf6x5.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Big portions",
@@ -179,5 +231,18 @@
     "via": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
   },
   "itineraryNote": "Carmine's Times Square: a loud, generous family-style Italian hall by Broadway; bring a group and order platters to share.",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review1Stars": 5,
+  "review2": "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
+  "review2Stars": 4,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

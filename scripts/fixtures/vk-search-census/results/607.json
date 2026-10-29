@@ -27,6 +27,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends. … Yes the food here can be a bit overpriced but honestly it is really fantastic. … ia WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends. … Yes the food here can be a bit overpriced but honestly it is really fantastic. … dvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends. … Yes the food here can be a bit overpriced but honestly it is really fantastic.",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends. … Yes the food here can be a bit overpriced ",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/lb1lwzx35s1",
+      "title": "Friend meetup at Bryant Park reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_lb1lwzx35s1.html",
+      "text": "I had so much fun walking through Bryant Park on my way to see the NYC Public Library. There was a Lunar New Year celebration taking place. I watched an adorable group of kids perform an ice skating routine, then watched the New York Chinese Cultural Center Lions perform (watch the video I posted, it was awesome). Next trip back to NYC I'll have to see what adventure Bryant Park holds in store for me. Midtown's backyard. Grab a coffee, snag one of those green chairs, and just exist. Ice skating in winter, movies in summer, ping pong tables, chess, random pop-ups. Bathrooms are clean which is a miracle. Gets busy but never feels chaotic. Right behind the library. Solid spot. I just love Bryant Park at Christmas. The winter village is really nice, with lots of options for seasonal food, drinks and activities (including gift shopping, ice skating, and a carousel). The decorations are always tasteful and the fact that the park sits between the majestic National Library building at one end and a lovely French restaurant at the other gives it a very charming feel. Visited in February. Great place to relax. Ice rink is a free admission but with a catch, if you bring your own skates. Otherwise it’s about $20 to rent skates. Great park overall"
     }
   ],
   "rating": {
@@ -144,7 +151,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Atmosphere",
+        "value": "I had so much fun walking through Bryant Park on my way to see the NYC Public Library. There was a Lunar New Year celebration taking place. I watched an adorable group of kids perform an ice skating routine, then watched the New York Chinese Cultural Center Lions perform (watch the video I posted, it was awesome). Next trip back to NYC I'll have to see what adventure Bryant Park holds in store for me.",
+        "claims": [
+          {
+            "text": "I had so much fun walking through Bryant Park on my way to see the NYC Public Library. There was a Lunar New Year celebration taking place. I watched an adorable group of kids perform an ice skating routine, then watched the New York Chinese Cultural Center Lions perform (watch the video I posted, it was awesome). Next trip back to NYC I'll have to see what adventure Bryant Park holds in store for me.",
+            "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 75,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/lb1lwzx35s1",
+          "savedHtml": "r8/exa_lb1lwzx35s1.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Midtown's backyard. Grab a coffee, snag one of those green chairs, and just exist. Ice skating in winter, movies in summer, ping pong tables, chess, random pop-ups. Bathrooms are clean which is a miracle. Gets busy but never feels chaotic. Right behind the library. Solid spot.",
+        "claims": [
+          {
+            "text": "Midtown's backyard. Grab a coffee, snag one of those green chairs, and just exist. Ice skating in winter, movies in summer, ping pong tables, chess, random pop-ups. Bathrooms are clean which is a miracle. Gets busy but never feels chaotic. Right behind the library. Solid spot.",
+            "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 46,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/lb1lwzx35s1",
+          "savedHtml": "r8/exa_lb1lwzx35s1.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Selection",
+        "value": "I just love Bryant Park at Christmas. The winter village is really nice, with lots of options for seasonal food, drinks and activities (including gift shopping, ice skating, and a carousel). The decorations are always tasteful and the fact that the park sits between the majestic National Library building at one end and a lovely French restaurant at the other gives it a very charming feel.",
+        "claims": [
+          {
+            "text": "I just love Bryant Park at Christmas. The winter village is really nice, with lots of options for seasonal food, drinks and activities (including gift shopping, ice skating, and a carousel). The decorations are always tasteful and the fact that the park sits between the majestic National Library building at one end and a lovely French restaurant at the other gives it a very charming feel.",
+            "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 66,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/lb1lwzx35s1",
+          "savedHtml": "r8/exa_lb1lwzx35s1.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "Visited in February. Great place to relax. Ice rink is a free admission but with a catch, if you bring your own skates. Otherwise it’s about $20 to rent skates. Great park overall",
+        "claims": [
+          {
+            "text": "Visited in February. Great place to relax. Ice rink is a free admission but with a catch, if you bring your own skates. Otherwise it’s about $20 to rent skates. Great park overall",
+            "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 33,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/lb1lwzx35s1",
+          "savedHtml": "r8/exa_lb1lwzx35s1.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -225,5 +321,30 @@
   },
   "itineraryNote": "Friend meetup at Bryant Park: a leafy Midtown meeting spot; ride the French-style merry-go-round or sit in the outdoor Reading Room.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "I had so much fun walking through Bryant Park on my way to see the NYC Public Library. There was a Lunar New Year celebration taking place. I watched an adorable group of kids perform an ice skating routine, then watched the New York Chinese Cultural Center Lions perform (watch the video I posted, it was awesome). Next trip back to NYC I'll have to see what adventure Bryant Park holds in store for me.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Atmosphere",
+  "review1SourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+  "review1Stars": 5,
+  "review2": "Midtown's backyard. Grab a coffee, snag one of those green chairs, and just exist. Ice skating in winter, movies in summer, ping pong tables, chess, random pop-ups. Bathrooms are clean which is a miracle. Gets busy but never feels chaotic. Right behind the library. Solid spot.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+  "review2Stars": 5,
+  "review3": "I just love Bryant Park at Christmas. The winter village is really nice, with lots of options for seasonal food, drinks and activities (including gift shopping, ice skating, and a carousel). The decorations are always tasteful and the fact that the park sits between the majestic National Library building at one end and a lovely French restaurant at the other gives it a very charming feel.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Selection",
+  "review3SourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+  "review3Stars": 5,
+  "review4": "Visited in February. Great place to relax. Ice rink is a free admission but with a catch, if you bring your own skates. Otherwise it’s about $20 to rent skates. Great park overall",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Atmosphere",
+  "review4SourceUrl": "https://exa.ai/library/place/lb1lwzx35s1",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

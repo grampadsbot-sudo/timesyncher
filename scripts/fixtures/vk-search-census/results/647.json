@@ -19,6 +19,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store. …  WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/qh4zp9t6vdv",
+      "title": "Saks Fifth Avenue reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_qh4zp9t6vdv.html",
+      "text": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co. Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see. Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent. Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!"
     }
   ],
   "rating": {
@@ -126,7 +133,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Service",
+        "value": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co.",
+        "claims": [
+          {
+            "text": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co.",
+            "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 112,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/qh4zp9t6vdv",
+          "savedHtml": "r8/exa_qh4zp9t6vdv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Building and design",
+        "value": "Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see.",
+        "claims": [
+          {
+            "text": "Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see.",
+            "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 39,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/qh4zp9t6vdv",
+          "savedHtml": "r8/exa_qh4zp9t6vdv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Music",
+        "value": "Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent.",
+        "claims": [
+          {
+            "text": "Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent.",
+            "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 35,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/qh4zp9t6vdv",
+          "savedHtml": "r8/exa_qh4zp9t6vdv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!",
+        "claims": [
+          {
+            "text": "Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!",
+            "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 38,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/qh4zp9t6vdv",
+          "savedHtml": "r8/exa_qh4zp9t6vdv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -186,5 +282,30 @@
   },
   "itineraryNote": "Saks Fifth Avenue: the classic Fifth Avenue department store at 611 Fifth Avenue New York, NY 10022; pause for a meal at L'Avenue at Saks.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Visited Saks 5th Ave to put my nose on a few new scents. Michael & another sales associate were super helpful at the Creed counter. I only travel with my 1 carry on and personal item when I fly, so I couldn’t buy a big bottle; though I was able to get a small flask and they were kind enough to not only fill my atomizer with the scent I really enjoyed but they have me a few samples as well. If you have a budget on splurge on fragrance and want top tier service, don’t hesitate to stop by the Creed counter. You’ll be in good hands. Unika B. & Co.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review1Stars": 5,
+  "review2": "Going during the holidays is really the experience. The interior design of the store is incredible. I particularly love the interior wooden design of the elevators, very classic look. During Christmas, the window displays are a sight to see.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Building and design",
+  "review2SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review2Stars": 5,
+  "review3": "Saks puts on one of, if not the, best Christmas light displays on Fifth Avenue, as they use their block-long facade to coordinate lights and music to turn it into a whole show. Truly excellent.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Music",
+  "review3SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review3Stars": 5,
+  "review4": "Juxtaposed beside the great Rockefeller Center, Saks fifth avenue is absolutely a stop you should take. Very high quality customer service and shops impossible to find in smaller cities. Champagne from Dior was a positive, thank you Louis!",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Service",
+  "review4SourceUrl": "https://exa.ai/library/place/qh4zp9t6vdv",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

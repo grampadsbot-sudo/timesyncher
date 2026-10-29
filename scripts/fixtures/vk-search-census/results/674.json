@@ -35,6 +35,13 @@
       "text": " by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023",
       "snippet": " by Lincoln Center (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | Rosa Mexicano by Lincoln Center 4.4 (9790) … 61 Columbus Ave, New York, NY 10023",
       "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://exa.ai/library/place/45vl1yn2y18",
+      "title": "Rosa Mexicano - Lincoln Center reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_45vl1yn2y18.html",
+      "text": "Wonderful restaurant. The food is spectacular. The drinks are wonderful. It’s a very noisy place, but that lets us know that it’s a very popular place. I highly recommend getting the guacamole which is made fresh at your table. We didn’t have to wait for a table because we arrive quite early that evening. We had a great experience at Rose Mexican Restaurant. I ordered the chicken mullet and it was delicious. My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold. That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service. The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious. Overall, the service was beyond exceptional. Special shout-out to Danny, his customer service truly stood out. We’ll definitely be coming back. This restaurant has one of the best locations in New York city! Across the street from The iconic Lincoln Center. This place is surrounded by elegance. My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait! The food was awesome and the drinks kept us happy. Our usual spot is the bar . I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers. Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street. Very charming inside with large bar seating area, great ambiance and relaxing atmosphere. Sat at the bar and mario our server was fantastic. I had the spicy cucumber margarita which was so good and well balanced. Order some apps..honestly best chicken quesadillas i can remember having. The oaxacan eggs roll were also delicious. Will for sure be back very soon. The bottomless brunch im looking forward to trying."
     }
   ],
   "rating": {
@@ -160,7 +167,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Food and drinks",
+        "value": "Wonderful restaurant. The food is spectacular. The drinks are wonderful. It’s a very noisy place, but that lets us know that it’s a very popular place. I highly recommend getting the guacamole which is made fresh at your table. We didn’t have to wait for a table because we arrive quite early that evening.",
+        "claims": [
+          {
+            "text": "Wonderful restaurant. The food is spectacular. The drinks are wonderful. It’s a very noisy place, but that lets us know that it’s a very popular place. I highly recommend getting the guacamole which is made fresh at your table. We didn’t have to wait for a table because we arrive quite early that evening.",
+            "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 54,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/45vl1yn2y18",
+          "savedHtml": "r8/exa_45vl1yn2y18.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Service",
+        "value": "We had a great experience at Rose Mexican Restaurant. I ordered the chicken mullet and it was delicious. My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold. That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service. The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious. Overall, the service was beyond exceptional. Special shout-out to Danny, his customer service truly stood out. We’ll definitely be coming back.",
+        "claims": [
+          {
+            "text": "We had a great experience at Rose Mexican Restaurant. I ordered the chicken mullet and it was delicious. My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold. That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service. The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious. Overall, the service was beyond exceptional. Special shout-out to Danny, his customer service truly stood out. We’ll definitely be coming back.",
+            "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 98,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/45vl1yn2y18",
+          "savedHtml": "r8/exa_45vl1yn2y18.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Crowds",
+        "value": "This restaurant has one of the best locations in New York city! Across the street from The iconic Lincoln Center. This place is surrounded by elegance. My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait! The food was awesome and the drinks kept us happy. Our usual spot is the bar . I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers.",
+        "claims": [
+          {
+            "text": "This restaurant has one of the best locations in New York city! Across the street from The iconic Lincoln Center. This place is surrounded by elegance. My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait! The food was awesome and the drinks kept us happy. Our usual spot is the bar . I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers.",
+            "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 113,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/45vl1yn2y18",
+          "savedHtml": "r8/exa_45vl1yn2y18.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street. Very charming inside with large bar seating area, great ambiance and relaxing atmosphere. Sat at the bar and mario our server was fantastic. I had the spicy cucumber margarita which was so good and well balanced. Order some apps..honestly best chicken quesadillas i can remember having. The oaxacan eggs roll were also delicious. Will for sure be back very soon. The bottomless brunch im looking forward to trying.",
+        "claims": [
+          {
+            "text": "Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street. Very charming inside with large bar seating area, great ambiance and relaxing atmosphere. Sat at the bar and mario our server was fantastic. I had the spicy cucumber margarita which was so good and well balanced. Order some apps..honestly best chicken quesadillas i can remember having. The oaxacan eggs roll were also delicious. Will for sure be back very soon. The bottomless brunch im looking forward to trying.",
+            "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 88,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/45vl1yn2y18",
+          "savedHtml": "r8/exa_45vl1yn2y18.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Decor and staff",
@@ -255,5 +351,30 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Rosa Mexicano - Lincoln Center: a festive pre-show Mexican spot across from Lincoln Center; order the table-side guacamole and come for Fiesta Hour runs Monday to Friday, 4–7pm.",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Wonderful restaurant. The food is spectacular. The drinks are wonderful. It’s a very noisy place, but that lets us know that it’s a very popular place. I highly recommend getting the guacamole which is made fresh at your table. We didn’t have to wait for a table because we arrive quite early that evening.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review1Stars": 5,
+  "review2": "We had a great experience at Rose Mexican Restaurant. I ordered the chicken mullet and it was delicious. My daughter had the mignon — she enjoyed it, though the mashed potatoes were a little cold. That said, the way the staff handled it was outstanding; they more than made it up to us, which says everything about their commitment to great customer service. The calamari was excellent, the flan was absolutely amazing, and the margaritas were delicious. Overall, the service was beyond exceptional. Special shout-out to Danny, his customer service truly stood out. We’ll definitely be coming back.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review2Stars": 4,
+  "review3": "This restaurant has one of the best locations in New York city! Across the street from The iconic Lincoln Center. This place is surrounded by elegance. My wife and I ate upstairs here and it took a while for the waitress to serve our table but it was worth the wait! The food was awesome and the drinks kept us happy. Our usual spot is the bar . I remember on one occasion after the ballet we walked In and it was busy the bar seemed full but one of the amazing bartenders look over ar us and called us over to the bar .we sat down and enjoyed our drinks and appetizers.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Crowds",
+  "review3SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review3Stars": 5,
+  "review4": "Came here for dinner and drinks before seeing the nutcracker at the lincoln center which is literally across the street. Very charming inside with large bar seating area, great ambiance and relaxing atmosphere. Sat at the bar and mario our server was fantastic. I had the spicy cucumber margarita which was so good and well balanced. Order some apps..honestly best chicken quesadillas i can remember having. The oaxacan eggs roll were also delicious. Will for sure be back very soon. The bottomless brunch im looking forward to trying.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/45vl1yn2y18",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

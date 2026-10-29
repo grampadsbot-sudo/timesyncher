@@ -27,6 +27,13 @@
       "text": "h) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle … search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle … t, 10 Columbus Cir (search snapshot) | SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located i",
       "snippet": "h) | 3.3 (913 reviews) … If you are planning on having a little picnic in Central Park, this is the place to go to get the best equipment for that. … conveniently located in the lower level of 10 Columbus Circle",
       "fetchMethod": "SERP-saved search snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; not a live fetch)"
+    },
+    {
+      "url": "https://exa.ai/library/place/vnffv79vcj0",
+      "title": "Whole Foods Market Columbus Circle reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_vnffv79vcj0.html",
+      "text": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals! We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us. It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home. This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic."
     }
   ],
   "rating": {
@@ -158,7 +165,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Service",
+        "value": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals!",
+        "claims": [
+          {
+            "text": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals!",
+            "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 89,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vnffv79vcj0",
+          "savedHtml": "r8/exa_vnffv79vcj0.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us.",
+        "claims": [
+          {
+            "text": "We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us.",
+            "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 25,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vnffv79vcj0",
+          "savedHtml": "r8/exa_vnffv79vcj0.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Atmosphere",
+        "value": "It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home.",
+        "claims": [
+          {
+            "text": "It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home.",
+            "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 36,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vnffv79vcj0",
+          "savedHtml": "r8/exa_vnffv79vcj0.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Crowds",
+        "value": "This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic.",
+        "claims": [
+          {
+            "text": "This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic.",
+            "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 80,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/vnffv79vcj0",
+          "savedHtml": "r8/exa_vnffv79vcj0.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Rooms",
@@ -218,5 +314,30 @@
   },
   "itineraryNote": "Whole Foods Market Columbus Circle: an underground grocery at 10 Columbus Circle; build a picnic at the Hot & Salad Bar for Central Park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "• This Whole Foods store is spacious and carries a wide variety of essentials. • Aisles are well-organized, and the staff are kind and helpful. • I like the brands they carry, though a few protein bars I was looking for (Built and Barebells) weren’t available. • Picked up all my fresh produce for my stay and made toast with it—great seasoning, fresh fruits, and a perfectly cooked egg. • The sourdough bread was also really good. • Will definitely be back to try their pastries and prepared meals!",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review1Stars": 5,
+  "review2": "We've been visiting this place at Columbus circle for more than 10 years now and is a life saver for fresh food people like us.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review2Stars": 5,
+  "review3": "It was a great experience, there was tons of photo ups and activities to keep the kiddos entertained. They raved about what they enjoyed most (the toy soldier and testing their strength) all the way home.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review3Stars": 5,
+  "review4": "This Whole Foods Market is always one of the busiest spots—especially the elevator, which is constantly packed with people coming and going. The in-store restaurant is equipped with restrooms, and the entire market is always buzzing with activity, so expect to wait in line no matter when you go. That said, one of the best things to do in the summer is grab some fresh sushi and a cold soda here, then head to Central Park for the perfect picnic.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Crowds",
+  "review4SourceUrl": "https://exa.ai/library/place/vnffv79vcj0",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

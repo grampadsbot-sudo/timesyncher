@@ -27,6 +27,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.4 Very Good",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.4 Very Good",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/mycb4xpm3kv",
+      "title": "Tiffany & Co. The Landmark reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_mycb4xpm3kv.html",
+      "text": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list. What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time ! An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment."
     }
   ],
   "rating": {
@@ -127,7 +134,74 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Atmosphere",
+        "value": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
+        "claims": [
+          {
+            "text": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
+            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 62,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mycb4xpm3kv",
+          "savedHtml": "r8/exa_mycb4xpm3kv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time !",
+        "claims": [
+          {
+            "text": "What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time !",
+            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 62,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mycb4xpm3kv",
+          "savedHtml": "r8/exa_mycb4xpm3kv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Selection",
+        "value": "An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment.",
+        "claims": [
+          {
+            "text": "An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment.",
+            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 80,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/mycb4xpm3kv",
+          "savedHtml": "r8/exa_mycb4xpm3kv.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Location",
@@ -190,5 +264,24 @@
   },
   "itineraryNote": "Tiffany & Co. The Landmark: the flagship at 727 Fifth Avenue; look for the location's exclusive pieces and the artworks inside.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Atmosphere",
+  "review1SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+  "review1Stars": 5,
+  "review2": "What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time !",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+  "review2Stars": 5,
+  "review3": "An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Selection",
+  "review3SourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
+  "review3Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }

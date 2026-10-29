@@ -19,6 +19,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews) … bSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews) … padvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews)",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews)",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/8f8w8gbzjjr",
+      "title": "The Original John's of Bleecker Street reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:30:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_8f8w8gbzjjr.html",
+      "text": "Very friendly staffs and the store vibe feels very cool for tourist like me! I had so much fun looking at photos on the wall, it was like seeing history! Pizza did not disappoint! I normally prefer simple cheese pizza but here, pepperoni was superior! The hint of spice in the pepperoni paired so well with the simple base. Definitely worth the visit if u like pizza. Loved this place! The service was great! That coal fired oven and years of experience add up to some incredible pizza! Loved the whole place. We got the john's original on half and added kalamata olives to the other side. There was a line to get in, but it moved quickly and was worth the short wait! After 30 minutes shivering outside in the cold, I got seated in. Ordered the Johns Original. The pizza was ok. Not the best I have had but I would love to try the Sasso next time or maybe a pizza with some toppings. They refused to reheat the pizza even though I told them it was ok to microwave the remaining slices if they don't want to put them back in oven but I had no option but to eat it like that. Atmosphere was awesome and it was super crowded. Didn't have to wait inside much for my order. Overall experience was ok. Really good garlic bread, some of the best! The cheese sticks are ok, average but the dip is delicious and the pizza is sol good. I think my favourite in new york. Their reputation is well deserved."
     }
   ],
   "rating": {
@@ -105,7 +112,96 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Food and drinks",
+        "value": "Very friendly staffs and the store vibe feels very cool for tourist like me! I had so much fun looking at photos on the wall, it was like seeing history! Pizza did not disappoint! I normally prefer simple cheese pizza but here, pepperoni was superior! The hint of spice in the pepperoni paired so well with the simple base. Definitely worth the visit if u like pizza.",
+        "claims": [
+          {
+            "text": "Very friendly staffs and the store vibe feels very cool for tourist like me! I had so much fun looking at photos on the wall, it was like seeing history! Pizza did not disappoint! I normally prefer simple cheese pizza but here, pepperoni was superior! The hint of spice in the pepperoni paired so well with the simple base. Definitely worth the visit if u like pizza.",
+            "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 67,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8f8w8gbzjjr",
+          "savedHtml": "r8/exa_8f8w8gbzjjr.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Crowds",
+        "value": "Loved this place! The service was great! That coal fired oven and years of experience add up to some incredible pizza! Loved the whole place. We got the john's original on half and added kalamata olives to the other side. There was a line to get in, but it moved quickly and was worth the short wait!",
+        "claims": [
+          {
+            "text": "Loved this place! The service was great! That coal fired oven and years of experience add up to some incredible pizza! Loved the whole place. We got the john's original on half and added kalamata olives to the other side. There was a line to get in, but it moved quickly and was worth the short wait!",
+            "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 57,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8f8w8gbzjjr",
+          "savedHtml": "r8/exa_8f8w8gbzjjr.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "After 30 minutes shivering outside in the cold, I got seated in. Ordered the Johns Original. The pizza was ok. Not the best I have had but I would love to try the Sasso next time or maybe a pizza with some toppings. They refused to reheat the pizza even though I told them it was ok to microwave the remaining slices if they don't want to put them back in oven but I had no option but to eat it like that. Atmosphere was awesome and it was super crowded. Didn't have to wait inside much for my order. Overall experience was ok.",
+        "claims": [
+          {
+            "text": "After 30 minutes shivering outside in the cold, I got seated in. Ordered the Johns Original. The pizza was ok. Not the best I have had but I would love to try the Sasso next time or maybe a pizza with some toppings. They refused to reheat the pizza even though I told them it was ok to microwave the remaining slices if they don't want to put them back in oven but I had no option but to eat it like that. Atmosphere was awesome and it was super crowded. Didn't have to wait inside much for my order. Overall experience was ok.",
+            "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+        "rating": "4/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 104,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8f8w8gbzjjr",
+          "savedHtml": "r8/exa_8f8w8gbzjjr.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Really good garlic bread, some of the best! The cheese sticks are ok, average but the dip is delicious and the pizza is sol good. I think my favourite in new york. Their reputation is well deserved.",
+        "claims": [
+          {
+            "text": "Really good garlic bread, some of the best! The cheese sticks are ok, average but the dip is delicious and the pizza is sol good. I think my favourite in new york. Their reputation is well deserved.",
+            "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr"
+          }
+        ],
+        "source": "Exa place listing",
+        "sourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 37,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://exa.ai/library/place/8f8w8gbzjjr",
+          "savedHtml": "r8/exa_8f8w8gbzjjr.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Coal-oven pies",
@@ -199,5 +295,30 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "The Original John's of Bleecker Street: a 1915 coal-oven pizzeria in the Village; come hungry for a whole pie and expect a line.",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Very friendly staffs and the store vibe feels very cool for tourist like me! I had so much fun looking at photos on the wall, it was like seeing history! Pizza did not disappoint! I normally prefer simple cheese pizza but here, pepperoni was superior! The hint of spice in the pepperoni paired so well with the simple base. Definitely worth the visit if u like pizza.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4/5",
+  "review1Theme": "Food and drinks",
+  "review1SourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+  "review1Stars": 4,
+  "review2": "Loved this place! The service was great! That coal fired oven and years of experience add up to some incredible pizza! Loved the whole place. We got the john's original on half and added kalamata olives to the other side. There was a line to get in, but it moved quickly and was worth the short wait!",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Crowds",
+  "review2SourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+  "review2Stars": 5,
+  "review3": "After 30 minutes shivering outside in the cold, I got seated in. Ordered the Johns Original. The pizza was ok. Not the best I have had but I would love to try the Sasso next time or maybe a pizza with some toppings. They refused to reheat the pizza even though I told them it was ok to microwave the remaining slices if they don't want to put them back in oven but I had no option but to eat it like that. Atmosphere was awesome and it was super crowded. Didn't have to wait inside much for my order. Overall experience was ok.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4/5",
+  "review3Theme": "Food and drinks",
+  "review3SourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+  "review3Stars": 4,
+  "review4": "Really good garlic bread, some of the best! The cheese sticks are ok, average but the dip is delicious and the pizza is sol good. I think my favourite in new york. Their reputation is well deserved.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/8f8w8gbzjjr",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029"
 }
