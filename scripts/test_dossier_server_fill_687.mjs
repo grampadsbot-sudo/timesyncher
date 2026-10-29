@@ -204,7 +204,7 @@ assert.equal(workerBatchTwo.json.results.length, 2);
 
 const operatorResolved = await resolvePassBOperatorTargets({ offset: 0, limit: 4 }, { authMode: 'operator' });
 assert.equal(operatorResolved.source, 'passb-trip');
-assert.equal(operatorResolved.batch.total, 100);
+assert.equal(operatorResolved.batch.total, 94);
 assert.equal(operatorResolved.targets.length, 1);
 
 const fillRun = await runThingEvidenceDossierStagingTargets([shared[6]], {

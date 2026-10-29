@@ -388,6 +388,8 @@ export function appendNycStagingListTabRows(rows, options = {}) {
     const identity = `${listRow.ccabKey}\0${listRow.name}`;
     if (seenRowIdentities.has(identity)) continue;
     seenRowIdentities.add(identity);
+    const duplicateFlight = listRow.cat === 'flight'
+      && rows.some((row) => row.cat === 'flight' && row.ccabKey === listRow.ccabKey);
     let id = listRow.id;
     if (listRow.id == null || seenIds.has(id)) {
       id = nextFreeId;
@@ -397,6 +399,7 @@ export function appendNycStagingListTabRows(rows, options = {}) {
     } else {
       seenIds.add(id);
     }
+    if (duplicateFlight) continue;
     rows.push({
       day: 1,
       time: '11:00',
