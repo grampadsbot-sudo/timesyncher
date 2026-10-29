@@ -150,96 +150,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Music",
-        "value": "The oldest jazz club in NYC—basement venue, photos of legends covering walls, no photos allowed during shows . Acoustics are flawless, sound stays rich everywhere in the room . Tickets $45+, worth every penny. Crowd is older, focused, here to actually listen . Spiritual experience for jazz lovers . Reserve in advance, arrives early .",
-        "claims": [
-          {
-            "text": "The oldest jazz club in NYC—basement venue, photos of legends covering walls, no photos allowed during shows . Acoustics are flawless, sound stays rich everywhere in the room . Tickets $45+, worth every penny. Crowd is older, focused, here to actually listen . Spiritual experience for jazz lovers . Reserve in advance, arrives early .",
-            "sourceUrl": "https://exa.ai/library/place/5063cy89qms"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/5063cy89qms",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 55,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/5063cy89qms",
-          "savedHtml": "r7/raw/st_85504581fa.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "The Village Vanguard may be the center of the jazz universe. You can feel and sense it as you descend from the sidewalk into this amazing space. The acoustics are awesome. Only the best play there. I saw Christian McBride there twice in December. A place for legends and those destined to be legends. The musicians and the music are marvelous. And so are the staff. Wonderful cocktails and whiskeys.",
-        "claims": [
-          {
-            "text": "The Village Vanguard may be the center of the jazz universe. You can feel and sense it as you descend from the sidewalk into this amazing space. The acoustics are awesome. Only the best play there. I saw Christian McBride there twice in December. A place for legends and those destined to be legends. The musicians and the music are marvelous. And so are the staff. Wonderful cocktails and whiskeys.",
-            "sourceUrl": "https://exa.ai/library/place/5063cy89qms"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/5063cy89qms",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 70,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/5063cy89qms",
-          "savedHtml": "r7/raw/st_85504581fa.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "So excited to come and experience this famous NYC jazz club. It is everything it advertises itself to be: classic music, classic atmosphere, iconic history, and a can’t miss jazz club if you are trying to find the best NYC has to offer. There are 4-5 others I would put up there with Village Vanguard, but then again, there are ZERO jazz clubs in the world that I know of that come close to NYC’s top 5. Kind of mind-blowing that there is such a concentration of the best jazz in the world. But that’s why I come.",
-        "claims": [
-          {
-            "text": "So excited to come and experience this famous NYC jazz club. It is everything it advertises itself to be: classic music, classic atmosphere, iconic history, and a can’t miss jazz club if you are trying to find the best NYC has to offer. There are 4-5 others I would put up there with Village Vanguard, but then again, there are ZERO jazz clubs in the world that I know of that come close to NYC’s top 5. Kind of mind-blowing that there is such a concentration of the best jazz in the world. But that’s why I come.",
-            "sourceUrl": "https://exa.ai/library/place/5063cy89qms"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/5063cy89qms",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 98,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/5063cy89qms",
-          "savedHtml": "r7/raw/st_85504581fa.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "We had tickets to the 10 PM Monday show and were able to get inside around 9:30-9:45. You are required to buy one drink per ticket. Overall, the show was enjoyable but very crammed inside. For true lovers of jazz, this is a great place to come. If you are looking for a less formal/sociable atmosphere, this may not be the place to come. The musicians were phenomenal and we are glad we came but I likely wouldn’t go back.",
-        "claims": [
-          {
-            "text": "We had tickets to the 10 PM Monday show and were able to get inside around 9:30-9:45. You are required to buy one drink per ticket. Overall, the show was enjoyable but very crammed inside. For true lovers of jazz, this is a great place to come. If you are looking for a less formal/sociable atmosphere, this may not be the place to come. The musicians were phenomenal and we are glad we came but I likely wouldn’t go back.",
-            "sourceUrl": "https://exa.ai/library/place/5063cy89qms"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/5063cy89qms",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 80,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/5063cy89qms",
-          "savedHtml": "r7/raw/st_85504581fa.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -395,5 +305,6 @@
   "reviewStarsDropped": "mean 4.75 vs venue 4.10 >0.5",
   "reviewsLabel": "Representative reviews written from 35 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -111,96 +111,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Crowds",
-        "value": "I pity the people that don't know about this place. This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees. Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little. Forget the people that are offering you discounts on the street. Go here!!",
-        "claims": [
-          {
-            "text": "I pity the people that don't know about this place. This is THE spot to get discounted tickets to current Broadway and off Broadway shows, both evenings and matinees. Sure, you wait in line outside, but to save 50% off box office prices, you can suffer a little. Forget the people that are offering you discounts on the street. Go here!!",
-            "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 61,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/rs4jvjhrng1",
-          "savedHtml": "r8/exa_rs4jvjhrng1.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Value",
-        "value": "Really smooth experience buying tickets. The website was easy to use, prices were clear, and checkout was quick with no issues. Tickets arrived promptly and everything worked perfectly on the day.",
-        "claims": [
-          {
-            "text": "Really smooth experience buying tickets. The website was easy to use, prices were clear, and checkout was quick with no issues. Tickets arrived promptly and everything worked perfectly on the day.",
-            "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/rs4jvjhrng1",
-          "savedHtml": "r8/exa_rs4jvjhrng1.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Selection",
-        "value": "Great ticket price and great follow up show (the Great Gatsby). Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other.",
-        "claims": [
-          {
-            "text": "Great ticket price and great follow up show (the Great Gatsby). Apox 1 hour in line, but great options were still available and we got amazing seats for 4 next to each other.",
-            "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 33,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/rs4jvjhrng1",
-          "savedHtml": "r8/exa_rs4jvjhrng1.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Crowds",
-        "value": "TKTS is a great place to buy tickets to Broadway shows. It's been in this location in Times Square for as long as I can remember. On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre.",
-        "claims": [
-          {
-            "text": "TKTS is a great place to buy tickets to Broadway shows. It's been in this location in Times Square for as long as I can remember. On this visit, the line was long, but I was still able to get a ticket to the show that I wanted to see, and it was in a small theatre.",
-            "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/rs4jvjhrng1",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 57,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/rs4jvjhrng1",
-          "savedHtml": "r8/exa_rs4jvjhrng1.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsScope": "Reviews are for TKTS Times Square booth (anchor named in summary), not every candidate in this row"
   },
   "fieldsWritePass": {
@@ -257,5 +167,6 @@
   "reviewThemes": {
     "representative": true
   },
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

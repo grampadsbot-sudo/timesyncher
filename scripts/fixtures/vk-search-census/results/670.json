@@ -165,97 +165,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Happy hour value",
-        "value": "Amelie Bistro & Wine Bar shines early: a Restaurantji regular says Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, which makes it an easy pre-dinner stop.",
-        "claims": [
-          {
-            "text": "Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-          "savedHtml": "r7/raw/st_57998d6783.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Bistro classics",
-        "value": "Restaurantji diners point to the French staples at Amelie, listing beef tartare, salade nicoise, moules-frites, burger as favorites and adding that The mussels were excellent.",
-        "claims": [
-          {
-            "text": "beef tartare, salade nicoise, moules-frites, burger",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
-          },
-          {
-            "text": "The mussels were excellent.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-          "savedHtml": "r7/raw/st_57998d6783.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Warm service",
-        "value": "Staff warmth is a steady theme at Amelie Bistro & Wine Bar; one Restaurantji reviewer writes that Everyone who works there is so warm and friendly and that guests feel at home right away.",
-        "claims": [
-          {
-            "text": "Everyone who works there is so warm and friendly",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-          "savedHtml": "r7/raw/st_57998d6783.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
-        "claims": [
-          {
-            "text": "+ Get $25 off using the link on my profile! Was surprised to see so many people here during happy hour! If you want a table, make sure to get a reservation no matter how early. The wine flight was nice and the finger food went very well with it.",
-            "sourceUrl": "https://exa.ai/library/place/8gzhdlplw0b"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/8gzhdlplw0b",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 50,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/8gzhdlplw0b",
-          "savedHtml": "r8/exa_8gzhdlplw0b.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Noise level",
@@ -346,5 +255,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -126,101 +126,7 @@
           "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Seafood tower",
-        "value": "The splurge at The Smith - Lincoln Square is shellfish; a Restaurantji diner wrote The seafood tower is quite an experience, treat yourself! after a celebratory visit.",
-        "claims": [
-          {
-            "text": "The seafood tower is quite an experience, treat yourself!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-          "savedHtml": "r7/raw/st_196b70e9bc.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Pre-show timing",
-        "value": "The Smith - Lincoln Square handles curtain times well: a Restaurantji reviewer with opera tickets says They sat us promptly at our reservation time and the wait staff excellent and timing impeccable.",
-        "claims": [
-          {
-            "text": "They sat us promptly at our reservation time",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          },
-          {
-            "text": "wait staff excellent and timing impeccable",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 32,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-          "savedHtml": "r7/raw/st_196b70e9bc.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Brunch",
-        "value": "Weekend brunch is a strong use of The Smith - Lincoln Square; one Restaurantji guest reports Brunch at The Smith was an excellent experience, with delicious food.",
-        "claims": [
-          {
-            "text": "Brunch at The Smith was an excellent experience",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-          "savedHtml": "r7/raw/st_196b70e9bc.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Busy and loud",
-        "value": "Expect crowds at The Smith - Lincoln Square: diners mention their incredibly busy atmosphere, and one added It was very loud the day we were there.",
-        "claims": [
-          {
-            "text": "their incredibly busy atmosphere",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          },
-          {
-            "text": "It was very loud the day we were there",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-          "savedHtml": "r7/raw/st_196b70e9bc.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -288,5 +194,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -121,93 +121,7 @@
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Happy hour",
-        "value": "Timing matters at Bodega 88: a Restaurantji reviewer says Happy Hour is the time to go, and the bar's own deals run through the afternoon into early evening.",
-        "claims": [
-          {
-            "text": "Happy Hour is the time to go",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Guacamole and snacks",
-        "value": "The bar food gets specific praise from Restaurantji guests at Bodega 88, who report that The guacamole is fresh and served with both tortilla and plantain chips.",
-        "claims": [
-          {
-            "text": "The guacamole is fresh and served with both tortilla and plantain chips",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "Bodega 88 earns its keep on mood as much as menu; one Restaurantji diner wrote Delicious food! Great drinks! Awesome atmosphere! and recommended stopping by.",
-        "claims": [
-          {
-            "text": "Delicious food! Great drinks! Awesome atmosphere!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "Guests describe friendly, reliable service at Bodega 88: a Restaurantji reviewer who came with family said The service, food and drinks was excellent and called it a wonderful evening.",
-        "claims": [
-          {
-            "text": "The service, food and drinks was excellent",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-        "rating": "4.3",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-          "savedHtml": "r7/raw/st_c7f1dcc5ca.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -276,5 +190,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.30 >0.5",
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

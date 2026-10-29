@@ -178,7 +178,6 @@
         }
       ]
     },
-    "reviews": [],
     "reviewsUnstarred": [
       {
         "theme": "Rooms",
@@ -307,5 +306,6 @@
   "review4SourceUrl": "https://www.tripadvisor.ca/Hotel_Review-g60763-d26345642-Reviews-Romer_Hell_s_Kitchen-New_York_City_New_York.html",
   "reviewsLabel": "Representative reviews written from 7 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

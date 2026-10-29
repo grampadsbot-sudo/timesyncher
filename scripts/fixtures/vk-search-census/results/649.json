@@ -162,97 +162,7 @@
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Overall experience",
-        "value": "Exa place listing reviewer on Whole Foods Market Upper West Side: great fresh produce and good sales. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "great fresh produce and good sales",
-            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-        "rating": "3.2/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 32,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9t58jkr8sn4",
-          "savedHtml": "r7/raw/st_88bc8004d7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Value",
-        "value": "Exa place listing reviewer on Whole Foods Market Upper West Side: slightly higher prices. Worth weighing alongside the overall 3.2/5 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "slightly higher prices",
-            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-        "rating": "3.2/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9t58jkr8sn4",
-          "savedHtml": "r7/raw/st_88bc8004d7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism.",
-        "claims": [
-          {
-            "text": "I’m a regular Whole Foods customer and I’ve honestly been surprised by some of the customer service and overall store experience lately. Over the past couple of weeks, I’ve had a few interactions that felt dismissive and unhelpful. At the deli counter, there’s a young woman working there who comes across as consistently uninterested and short with customers. It’s confusing to me how this level of service is being allowed to continue, especially at a store that usually prides itself on friendliness and professionalism.",
-            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 84,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9t58jkr8sn4",
-          "savedHtml": "r8/exa_9t58jkr8sn4.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
-        "claims": [
-          {
-            "text": "Friendly staff, cashiers always nice, patient, a pleasant atmosphere overall with great fresh produce and good sales— especially for Amazon Prime members. A too tempting array of bakery products, a section for vitamins and health products, a hot food bar and a cafe area where you can eat it or just stop to eat the yogurt you just bought. A Prime pick-up station, and a great, reliable delivery service!!",
-            "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 69,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9t58jkr8sn4",
-          "savedHtml": "r8/exa_9t58jkr8sn4.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -320,5 +230,6 @@
   "reviewStarsDropped": "mean 4.00 vs venue 3.20 >0.5",
   "reviewsLabel": "Representative reviews written from 13 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

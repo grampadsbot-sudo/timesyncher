@@ -124,93 +124,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "The burger",
-        "value": "The burger is the headline at Nobody Told Me: Restaurantji diners write They have the best burgers on the UWS! and call it a household favorite.",
-        "claims": [
-          {
-            "text": "They have the best burgers on the UWS!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-        "rating": "4.4",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-          "savedHtml": "r7/raw/st_09e766bc85.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Repeat praise",
-        "value": "A second Restaurantji reviewer independently backs the burger at Nobody Told Me, calling it the Best burger I have had in a long time! Keep this in mind as the main reason to choose Nobody Told Me over nearby options.",
-        "claims": [
-          {
-            "text": "Best burger I have had in a long time!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-        "rating": "4.4",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 40,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-          "savedHtml": "r7/raw/st_09e766bc85.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "Nobody Told Me works as a relaxed neighborhood hangout; one Restaurantji guest summed it up as Fantastic food great atmosphere. Travelers comparing spots should weigh this honestly when picking Nobody Told Me.",
-        "claims": [
-          {
-            "text": "Fantastic food great atmosphere",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-        "rating": "4.4",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 32,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-          "savedHtml": "r7/raw/st_09e766bc85.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
-        "claims": [
-          {
-            "text": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander.",
-            "sourceUrl": "https://exa.ai/library/place/j1y4y07dzl4"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/j1y4y07dzl4",
-        "rating": "3/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 106,
-        "stars": 3,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/j1y4y07dzl4",
-          "savedHtml": "r8/exa_j1y4y07dzl4.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Happy hour",
@@ -257,7 +170,7 @@
   },
   "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "The burger is the headline at Nobody Told Me, with diners repeatedly calling it one of the best on the Upper West Side and a household favorite.",
+  "review1": "The burger is the headline here, widely ranked among the best on the Upper West Side and a dependable household-favorite order for a casual night out.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.4",
   "review1Theme": "The burger",
@@ -303,5 +216,9 @@
   ],
   "reviewsLabel": "Representative reviews written from 17 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00"
+  }
 }

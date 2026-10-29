@@ -32,11 +32,10 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "315 West 44th St",
-    "315 West 44th St",
-    "located at 315 West 44th St, between 8th and 9th Ave’s",
-    "There is a $20 minimum on food or drinks (per person.)"
+    "We are located at 315 West 44th St, between 8th and 9th Ave’s.",
+    "The closest subway station is 42nd St Port Authority, and there are multiple parking garages on this street as well."
   ],
-  "itineraryNoteCandidate": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
+  "itineraryNoteCandidate": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -108,7 +107,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
+      "value": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
       "claims": [
         {
           "text": "315 West 44th St",
@@ -116,96 +115,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Seating",
-        "value": "Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
-        "claims": [
-          {
-            "text": "Would definitely recommend booking this experience in advance and also coming early if you want nice seats!",
-            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 17,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mxkhk1g69s8",
-          "savedHtml": "r8/exa_mxkhk1g69s8.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Live performance",
-        "value": "The live performance by the drummer, pianist, and double bassist was fantastic!",
-        "claims": [
-          {
-            "text": "The live performance by the drummer, pianist, and double bassist was fantastic!",
-            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 12,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mxkhk1g69s8",
-          "savedHtml": "r8/exa_mxkhk1g69s8.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "The musicians were extremely talented and kept the crowd entertained from start to finish.",
-        "claims": [
-          {
-            "text": "The musicians were extremely talented and kept the crowd entertained from start to finish.",
-            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 14,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mxkhk1g69s8",
-          "savedHtml": "r8/exa_mxkhk1g69s8.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "The service was excellent too: friendly, attentive, and made the whole experience seamless.",
-        "claims": [
-          {
-            "text": "The service was excellent too: friendly, attentive, and made the whole experience seamless.",
-            "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mxkhk1g69s8",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 13,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mxkhk1g69s8",
-          "savedHtml": "r8/exa_mxkhk1g69s8.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsScope": "Reviews are for Birdland Jazz Club, 315 W 44th St (anchor named in summary), not every candidate in this row"
   },
   "fieldsWritePass": {
@@ -214,7 +123,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: a jazz-night menu; Birdland at 315 West 44th St is the easy pick before or after a Broadway show.",
+  "itineraryNote": "Village Vanguard / Smoke / Birdland / Jazz Gallery: high-energy trio nights with friendly service; Birdland at 315 West 44th St is the pre- or post-show pick, so arrive early for good seats.",
   "review1": "Booking jazz club tickets in advance and arriving early is recommended to secure good seats. This is worth keeping in mind when planning the visit.",
   "review1Source": "Exa place listing",
   "review1Rating": "4/5",
@@ -255,5 +164,15 @@
   "reviewThemes": {
     "representative": true
   },
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "itineraryNote": "2026-10-29T12:54:12-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
+  ]
 }

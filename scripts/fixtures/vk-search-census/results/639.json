@@ -19,6 +19,13 @@
       "text": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … ip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old … Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
       "snippet": "Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews … The hotel has a great location and good service. … the facilities are old",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+      "title": "Library Hotel - Trip.com guest reviews (refetch)",
+      "fetchMethod": "live curl fetch 2026-10-29 12:56 PT; saved r10/t639.html; English review excerpts",
+      "text": "Because of renovations nearby, one of the doors was not open, making it difficult to find. The hygiene is quite good, but the pillows smell. The bathroom is quite clean. The front desk staff are very warm and thoughtful, chatting and laughing. The hotel is quite literary and artistic, but the books in the room are too political. I thought that if you like Jane Austen, the boss would have more books about her, but he didn't. … Very good, beyond expectations, except for the loud air conditioner, everything else is very good, the location is super convenient, and the service attitude is also very good, recommended",
+      "fetchedAt": "2026-10-29T12:55:00-07:00"
     }
   ],
   "rating": {
@@ -123,55 +130,7 @@
           "sourceUrl": "https://www.libraryhotel.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Library Hotel by Library Hotel Collection: The hotel has a great location and good service. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The hotel has a great location and good service",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-        "rating": "7.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 33,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-          "savedRaw": "drev/raw/639.json",
-          "exactScore": "7.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Facilities",
-        "value": "Watch-out from a Trip.com reviewer at Library Hotel by Library Hotel Collection: the facilities are old. Worth weighing alongside the overall 9.3/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "the facilities are old",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-        "rating": "7.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 28,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-          "savedRaw": "drev/raw/639.json",
-          "exactScore": "7.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -201,29 +160,44 @@
   "itineraryNote": "Library Hotel by Library Hotel Collection: a bookish Madison Avenue boutique with great service; refreshments are available 24 hours a day in our Reading Room.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Guests consistently praise the Library Hotel's location together with attentive, good-quality service. This is worth keeping in mind when planning the visit.",
-  "review1Source": "Trip.com",
-  "review1Rating": "7.5/10",
-  "review1Theme": "Location",
-  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
-  "review2": "The main caveat in the saved reviews is that some facilities feel old, though it does not seem to dent the hotel's very high overall score.",
-  "review2Source": "Trip.com",
-  "review2Rating": "7.5/10",
-  "review2Theme": "Facilities",
-  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
   "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "reviewStarsDropped": "mean 4.00 vs venue 4.65 >0.5",
+  "reviewsLabel": "Representative reviews written from 7 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [],
+  "review1": "Guests consistently praise the Library Hotel's location together with attentive, good-quality service. This is worth keeping in mind when planning the visit.",
   "review1Claims": [
     "The hotel has a great location and good service.",
     "The hotel has a great location and good service"
   ],
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+  "review1Source": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+  "review2": "The main caveat in the saved reviews is that some facilities feel old, though it does not seem to dent the hotel's very high overall score.",
   "review2Claims": [
     "the facilities are old"
   ],
-  "reviewStarsDropped": "mean 4.00 vs venue 4.65 >0.5",
-  "reviewsLabel": "Representative reviews written from 5 reviews",
-  "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "missingFields": [
-    "reviews"
-  ]
+  "review2Theme": "Facilities",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+  "review2Source": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+  "review3": "The front desk team stands out for warmth and thoughtfulness, and the literary, artistic character of the hotel suits readers looking for a calmer Midtown stay.",
+  "review3Claims": [
+    "The front desk staff are very warm and thoughtful"
+  ],
+  "review3Theme": "Front desk",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+  "review3Source": "Library Hotel - Trip.com guest reviews (refetch)",
+  "review4": "Small comfort complaints include a loud air conditioner and tired pillows, set against a clean bathroom and a location that is consistently called super convenient.",
+  "review4Claims": [
+    "except for the loud air conditioner",
+    "the location is super convenient"
+  ],
+  "review4Theme": "Comfort",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html#reviews-20261029",
+  "review4Source": "Library Hotel - Trip.com guest reviews (refetch)",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00"
+  }
 }

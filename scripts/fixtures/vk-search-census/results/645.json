@@ -147,97 +147,7 @@
           "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Overall experience",
-        "value": "Exa place listing reviewer on Nordstrom NYC Flagship: The store has a beautiful, modern design. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The store has a beautiful, modern design",
-            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-        "rating": "4.4/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/ppdy06vf1wn",
-          "savedHtml": "r7/raw/st_78e2e07883.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Value",
-        "value": "Watch-out from a Exa place listing reviewer at Nordstrom NYC Flagship: Prices are generally on the high side. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "Prices are generally on the high side",
-            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-        "rating": "4.4/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "watchOut",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/ppdy06vf1wn",
-          "savedHtml": "r7/raw/st_78e2e07883.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Service",
-        "value": "I went to Nordstrom this evening and saw a display with lipstick. There was only one lipstick left of two of the colors. Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist. When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color. I explained to her that the display had all of the colors priced at $25. She explained that sometimes different colors are more money. So I said why are they all printed on the display at $25?",
-        "claims": [
-          {
-            "text": "I went to Nordstrom this evening and saw a display with lipstick. There was only one lipstick left of two of the colors. Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist. When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color. I explained to her that the display had all of the colors priced at $25. She explained that sometimes different colors are more money. So I said why are they all printed on the display at $25?",
-            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 103,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/ppdy06vf1wn",
-          "savedHtml": "r8/exa_ppdy06vf1wn.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Selection",
-        "value": "I really enjoy shopping at the Nordstrom on 57th Street. The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together. The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste. I often find the pieces to be truly exquisite. Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
-        "claims": [
-          {
-            "text": "I really enjoy shopping at the Nordstrom on 57th Street. The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together. The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste. I often find the pieces to be truly exquisite. Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
-            "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 83,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/ppdy06vf1wn",
-          "savedHtml": "r8/exa_ppdy06vf1wn.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -313,5 +223,6 @@
   "reviewStarsDropped": "mean 3.75 vs venue 4.40 >0.5",
   "reviewsLabel": "Representative reviews written from 18 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

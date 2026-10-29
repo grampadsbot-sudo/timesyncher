@@ -146,97 +146,7 @@
           "sourceUrl": "https://carbonenewyork.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Over-the-top hospitality",
-        "value": "Restaurantji diners keep returning to the hospitality at Carbone: one wrote that your hosts go above and beyond for that true over the top experience, which is the reason people chase a table here.",
-        "claims": [
-          {
-            "text": "your hosts go above and beyond for that true over the top experience",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/carbone-/",
-          "savedHtml": "r7/raw/st_43f4882d4f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Celebration dinners",
-        "value": "A Restaurantji reviewer marking a birthday and a new job said the staff made the night special, a good sign for anyone booking Carbone around an anniversary or milestone.",
-        "claims": [
-          {
-            "text": "a birthday and a new job",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/carbone-/",
-          "savedHtml": "r7/raw/st_43f4882d4f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Food and decor",
-        "value": "The cooking and the room earn equal praise from Restaurantji guests at Carbone: The food was exceptional, the decor is so chic, with the whole experience was just wonderful summing up the visit.",
-        "claims": [
-          {
-            "text": "The food was exceptional, the decor is so chic",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
-          },
-          {
-            "text": "the whole experience was just wonderful",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 33,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/carbone-/",
-          "savedHtml": "r7/raw/st_43f4882d4f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Booking strategy",
-        "value": "The practical watch-out at Carbone is access, since one Restaurantji diner says It’s worth securing a reservation when they go live; plan around the release time before the trip.",
-        "claims": [
-          {
-            "text": "It’s worth securing a reservation when they go live",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/carbone-/",
-          "savedHtml": "r7/raw/st_43f4882d4f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -301,5 +211,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

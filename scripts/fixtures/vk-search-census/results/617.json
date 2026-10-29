@@ -171,101 +171,7 @@
           "sourceUrl": "https://www.arthousehotelnyc.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Arthouse Hotel: This hotel is located in a great, safe area of Upper Manhattan. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "This hotel is located in a great, safe area of Upper Manhattan.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-          "savedRaw": "drev/raw/617.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on Arthouse Hotel: The room is very big, the bed is also very comfortable, and it is clean. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "The room is very big, the bed is also very comfortable, and it is clean.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-        "rating": "8.7/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 32,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-          "savedRaw": "drev/raw/617.json",
-          "exactScore": "8.7/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Breakfast and dining",
-        "value": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "The Italian and Chinese restaurants next to the hotel are excellent, though a bit pricey.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 36,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-          "savedRaw": "drev/raw/617.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Watch-out from a Trip.com reviewer at Arthouse Hotel: The lobby seems to have been recently renovated, but the guest rooms are clearly dated. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "The lobby seems to have been recently renovated, but the guest rooms are clearly dated.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 34,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2193523/arthouse-hotel/",
-          "savedRaw": "drev/raw/617.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -343,5 +249,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

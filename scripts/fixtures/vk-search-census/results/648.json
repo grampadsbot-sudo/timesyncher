@@ -138,96 +138,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Atmosphere",
-        "value": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
-        "claims": [
-          {
-            "text": "This was one of my best days in NYC! Besides the delightful Tiffany’s diamonds, what made my experience special was the care and attentiveness of the people who worked there. Maria was the one who helped me get my first and unique piece. I am so grateful for her amazing energy. Definitely is a place to add in your NYC bucket list.",
-            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 62,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mycb4xpm3kv",
-          "savedHtml": "r8/exa_mycb4xpm3kv.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time !",
-        "claims": [
-          {
-            "text": "What an amazing once in a life experience! I got two charms I feel so blessed my sales person was so nice ! I got to eat at the blue box cafe wonderful time ! So happy. Angel on the 7th floor so nice with the water ! So happy I got to experience more in the store my second time !",
-            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 62,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mycb4xpm3kv",
-          "savedHtml": "r8/exa_mycb4xpm3kv.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Selection",
-        "value": "An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment.",
-        "claims": [
-          {
-            "text": "An iconic and elegant destination that truly lives up to its reputation. The renovated space is stunning — refined, modern, and full of timeless charm. The craftsmanship of the jewelry and the attention to detail are exceptional, and the atmosphere feels both luxurious and welcoming. Even if you’re not planning to buy anything, it’s absolutely worth visiting for the experience. And don’t miss the Blue Box Café — it’s a must-visit for a truly memorable and unique New York moment.",
-            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 80,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mycb4xpm3kv",
-          "savedHtml": "r8/exa_mycb4xpm3kv.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable..",
-        "claims": [
-          {
-            "text": "Well, it was a little tough to find a place.My google kept leading me other places.But we finally made it to tiffany's, in new york.. And believe me, it is what you think.It is a beautiful place with many floors.But everyone seems to be helpful.. Are business was to buy a watch from my girlfriend?And that was accomplished with the help of a salesman named jamie.. One member of our party asked for water, and they brought us all champagne.And some chocolates, very first class service.. Something that i'm not used to.. What made the buying that much more pleasurable..",
-            "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mycb4xpm3kv",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 100,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mycb4xpm3kv",
-          "savedHtml": "r8/exa_mycb4xpm3kv.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Location",
@@ -344,5 +254,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.40 >0.5",
   "reviewsLabel": "Representative reviews written from 27 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

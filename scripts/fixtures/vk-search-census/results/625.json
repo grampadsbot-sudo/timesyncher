@@ -119,101 +119,7 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on New York Marriott Marquis: The hotel has a fantastic location and the rooms are very clean. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The hotel has a fantastic location and the rooms are very clean",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 34,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-          "savedRaw": "drev/raw/625.json",
-          "exactScore": "10/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Breakfast and dining",
-        "value": "Trip.com reviewer on New York Marriott Marquis: With an extra $10 to $20 for two people, you can have a really great breakfast. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "With an extra $10 to $20 for two people, you can have a really great breakfast.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 35,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-          "savedRaw": "drev/raw/625.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on New York Marriott Marquis: I highly recommend the cheesecake – it's super delicious – and the avocado salad. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "I highly recommend the cheesecake – it's super delicious – and the avocado salad.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-        "rating": "9.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 34,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-          "savedRaw": "drev/raw/625.json",
-          "exactScore": "9.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Noise",
-        "value": "Watch-out from a Trip.com reviewer at New York Marriott Marquis: it can get a bit noisy at night. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "it can get a bit noisy at night",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-        "rating": "9.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 29,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
-          "savedRaw": "drev/raw/625.json",
-          "exactScore": "9.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -289,5 +195,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 11 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

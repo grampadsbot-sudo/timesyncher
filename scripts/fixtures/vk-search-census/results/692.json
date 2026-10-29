@@ -110,97 +110,7 @@
           "sourceUrl": "https://www.mapquest.com/us/new-york/venchi-chocolate-bleecker-st-800849389"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Service",
-        "value": "Restaurantji reviewer on Venchi Bleecker Street: Easy to get gifts, and staff super friendly and helpful. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "Easy to get gifts, and staff super friendly and helpful",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-        "rating": "4.8/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 31,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-          "savedHtml": "r7/raw/st_2384bd6dc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Restaurantji reviewer on Venchi Bleecker Street: Wonderful chocolate in nyc. Worth weighing alongside the overall 4.8/5 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "Wonderful chocolate in nyc!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-        "rating": "4.8/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 35,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/venchi-chocolate-bleecker-st-/",
-          "savedHtml": "r7/raw/st_2384bd6dc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
-        "claims": [
-          {
-            "text": "They forced me to buy the gelato first before letting me try out the flavours without asking if we have any allergies. We bought a regular cup but they didn’t let us choose 2 different flavours. We were only given option to choose one flavour. They normally put a piece of chocolate on top but that day they didn’t put anything at all. Some flavours were also empty. Attaching the photo as evidence.",
-            "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 73,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/nf1thr7pn4k",
-          "savedHtml": "r8/exa_nf1thr7pn4k.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Building and design",
-        "value": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
-        "claims": [
-          {
-            "text": "Venchi is a celebration of Italian craftsmanship, indulgence, and consistency. From the moment you step inside, the experience feels polished yet inviting, with beautifully presented chocolates and gelato that reflect a deep respect for quality ingredients and tradition. The chocolate is rich without being heavy, balanced in sweetness, and layered in flavor—clearly made for people who appreciate nuance, not just indulgence. The gelato stands out for its texture and intensity, particularly the chocolate-based flavors, which feel authentic and unapologetically Italian.",
-            "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/nf1thr7pn4k",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 80,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/nf1thr7pn4k",
-          "savedHtml": "r8/exa_nf1thr7pn4k.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -271,5 +181,6 @@
   "reviewStarsDropped": "mean 4.00 vs venue 4.80 >0.5",
   "reviewsLabel": "Representative reviews written from 18 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

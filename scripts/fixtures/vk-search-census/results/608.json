@@ -133,101 +133,7 @@
           "sourceUrl": "https://www.manhattanclub.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on The Manhattan Club: The rooms were spacious and with enough privacy for everyone. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The rooms were spacious and with enough privacy for everyone",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-          "savedRaw": "drev/raw/608.json",
-          "exactScore": "10/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on The Manhattan Club: The location to central park was awesome and the staff were great. Worth weighing alongside the overall 8.6/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "The location to central park was awesome and the staff were great",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-        "rating": "8.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 30,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-          "savedRaw": "drev/raw/608.json",
-          "exactScore": "8.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on The Manhattan Club: So far it was the best place we have stayed in NYC for this budget. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "So far it was the best place we have stayed in NYC for this budget.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 34,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-          "savedRaw": "drev/raw/608.json",
-          "exactScore": "10/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Watch-out from a Trip.com reviewer at The Manhattan Club: Although the in-room facilities are a bit dated, the hygiene is good. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "Although the in-room facilities are a bit dated, the hygiene is good.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-        "rating": "9.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
-          "savedRaw": "drev/raw/608.json",
-          "exactScore": "9.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -302,5 +208,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 10 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

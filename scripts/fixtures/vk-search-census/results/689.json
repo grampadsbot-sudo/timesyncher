@@ -109,93 +109,7 @@
           "sourceUrl": "https://www.zincbar.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Romantic vibe",
-        "value": "Zinc Bar wins hearts on atmosphere; a Restaurantji couple immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe and came back to get engaged.",
-        "claims": [
-          {
-            "text": "immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-          "savedHtml": "r7/raw/st_fab41a8eb7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Staff and cocktails",
-        "value": "Restaurantji guests at Zinc Bar praise the people behind the bar: Really friendly staff and good cocktails. Keep this in mind as the main reason to choose Zinc Bar over nearby options.",
-        "claims": [
-          {
-            "text": "Really friendly staff and good cocktails.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 32,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-          "savedHtml": "r7/raw/st_fab41a8eb7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Seating",
-        "value": "Arrive early at Zinc Bar; a Restaurantji reviewer said The atmosphere and music were great. Get there early for your choice of seat. Travelers comparing spots should weigh this honestly when picking Zinc Bar.",
-        "claims": [
-          {
-            "text": "The atmosphere and music were great. Get there early for your choice of seat.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-          "savedHtml": "r7/raw/st_fab41a8eb7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Snack menu",
-        "value": "Food is limited at Zinc Bar, and one Restaurantji reviewer wished for snacks beyond flat bread, so eat dinner before the set. Factor this into timing and expectations before heading to Zinc Bar.",
-        "claims": [
-          {
-            "text": "flat bread",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 33,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-          "savedHtml": "r7/raw/st_fab41a8eb7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -270,5 +184,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 11 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

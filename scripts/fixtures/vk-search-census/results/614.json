@@ -159,96 +159,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Building and design",
-        "value": "The MoMA design store is a wonderful place to gift shop. They have a lot of very unique decorations and practical house items. This is a great stop before or after visiting the museum. It is also nice to go to as an independent endeavor. Every piece there looks perfectly curated. It's good for tourists and New Yorkers alike.",
-        "claims": [
-          {
-            "text": "The MoMA design store is a wonderful place to gift shop. They have a lot of very unique decorations and practical house items. This is a great stop before or after visiting the museum. It is also nice to go to as an independent endeavor. Every piece there looks perfectly curated. It's good for tourists and New Yorkers alike.",
-            "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 59,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/jwz8k9zhbtm",
-          "savedHtml": "r8/exa_jwz8k9zhbtm.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "They displayed many different items and you really can spend some time browsing through these items sections by sections. This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts!",
-        "claims": [
-          {
-            "text": "They displayed many different items and you really can spend some time browsing through these items sections by sections. This is also a place to get some unique souvenir if you're tired of the regular I love New York t shirts!",
-            "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 41,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/jwz8k9zhbtm",
-          "savedHtml": "r8/exa_jwz8k9zhbtm.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Selection",
-        "value": "An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment. Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits. Great shop, unique products.",
-        "claims": [
-          {
-            "text": "An well curated collection of classic and contemporary design elements covering home, technology, textiles and even entertainment. Many of the selections are mini replicas of larger exhibit items from the museum, some are inspired by their exhibits. Great shop, unique products.",
-            "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 41,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/jwz8k9zhbtm",
-          "savedHtml": "r8/exa_jwz8k9zhbtm.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Building and design",
-        "value": "MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York. The store offers a variety of products that incorporate contemporary art into lifestyle design. Products range from fashion accessories, household items, interior decoration, and design stationery. The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers.",
-        "claims": [
-          {
-            "text": "MoMA Design Store is a design boutique located next to the Museum of Modern Art (MoMA), a leading modern art museum in New York. The store offers a variety of products that incorporate contemporary art into lifestyle design. Products range from fashion accessories, household items, interior decoration, and design stationery. The unique and practical items make them popular gifts and souvenirs, making it a popular destination for travelers.",
-            "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/jwz8k9zhbtm",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 68,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/jwz8k9zhbtm",
-          "savedHtml": "r8/exa_jwz8k9zhbtm.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -377,5 +287,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.40 >0.5",
   "reviewsLabel": "Representative reviews written from 22 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

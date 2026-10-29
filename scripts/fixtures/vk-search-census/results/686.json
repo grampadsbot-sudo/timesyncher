@@ -120,97 +120,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Design and food",
-        "value": "The Consulate UWS impresses on looks and plates; a Restaurantji diner was Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks!",
-        "claims": [
-          {
-            "text": "Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-        "rating": "4.5",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-          "savedHtml": "r7/raw/st_a1a8abaefa.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Sunday supper",
-        "value": "The Consulate UWS strikes a middle register; one Restaurantji reviewer called it a nice casual/not too casual joint and great for Sunday supper. Keep this in mind as the main reason to choose The Consulate UWS over nearby options.",
-        "claims": [
-          {
-            "text": "nice casual/not too casual joint",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
-          },
-          {
-            "text": "great for Sunday supper",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-        "rating": "4.5",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 39,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-          "savedHtml": "r7/raw/st_a1a8abaefa.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "Staff are named in reviews of The Consulate UWS: The food was amazing. Bibi is an amazing waitress., one Restaurantji guest wrote. Travelers comparing spots should weigh this honestly when picking The Consulate UWS.",
-        "claims": [
-          {
-            "text": "The food was amazing. Bibi is an amazing waitress.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-        "rating": "4.5",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
-          "savedHtml": "r7/raw/st_a1a8abaefa.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!",
-        "claims": [
-          {
-            "text": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!",
-            "sourceUrl": "https://exa.ai/library/place/jv3tf57qdxs"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/jv3tf57qdxs",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 47,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/jv3tf57qdxs",
-          "savedHtml": "r8/exa_jv3tf57qdxs.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Happy hour",
@@ -298,5 +207,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

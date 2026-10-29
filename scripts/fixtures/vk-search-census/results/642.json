@@ -197,96 +197,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Building and design",
-        "value": "Disclaimer: I didn’t make a purchase or interact with any Apple employees, as I stopped in purely for the vibes. The building itself is beautiful, with a really impressive layout that showcases the products well. If you’re even a little bit of a tech enthusiast, this is a fun stop to make while visiting NYC. Just keep in mind that it does get very crowded, and yes, there is a bathroom available.",
-        "claims": [
-          {
-            "text": "Disclaimer: I didn’t make a purchase or interact with any Apple employees, as I stopped in purely for the vibes. The building itself is beautiful, with a really impressive layout that showcases the products well. If you’re even a little bit of a tech enthusiast, this is a fun stop to make while visiting NYC. Just keep in mind that it does get very crowded, and yes, there is a bathroom available.",
-            "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 72,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mpnqznp38pt",
-          "savedHtml": "r8/exa_mpnqznp38pt.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "This Apple Store is truly one of the most iconic flagship locations. We visited it during our New York trip to buy the iPhone 17 Pro, and the experience was really pleasant. Even though the store was busy, everything felt well managed and organized. The staff was friendly, helpful, and quick to assist us. They explained things clearly and made the whole buying process easy and stress free. Overall, it was a great experience and a place worth visiting when you’re in New York.",
-        "claims": [
-          {
-            "text": "This Apple Store is truly one of the most iconic flagship locations. We visited it during our New York trip to buy the iPhone 17 Pro, and the experience was really pleasant. Even though the store was busy, everything felt well managed and organized. The staff was friendly, helpful, and quick to assist us. They explained things clearly and made the whole buying process easy and stress free. Overall, it was a great experience and a place worth visiting when you’re in New York.",
-            "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 84,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mpnqznp38pt",
-          "savedHtml": "r8/exa_mpnqznp38pt.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Selection",
-        "value": "Magnificent store. Just like the product the store is also world class. Located in the most iconic place in NY city. The all glass architecture is an excellent work item. Array of products are also great. The sales team is awesome. And always willing to help.",
-        "claims": [
-          {
-            "text": "Magnificent store. Just like the product the store is also world class. Located in the most iconic place in NY city. The all glass architecture is an excellent work item. Array of products are also great. The sales team is awesome. And always willing to help.",
-            "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 46,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mpnqznp38pt",
-          "savedHtml": "r8/exa_mpnqznp38pt.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "The best example of the Worst Customer service in the world!! Apple, get ur employees trained properly, i have never experienced this attitude from Apple staff anywhere around the world.. & this is your famous Apple 5th avenue store?!? 😳 Behaviour of staff, i am picking up my new phone i get just get -“Here u go!” !??",
-        "claims": [
-          {
-            "text": "The best example of the Worst Customer service in the world!! Apple, get ur employees trained properly, i have never experienced this attitude from Apple staff anywhere around the world.. & this is your famous Apple 5th avenue store?!? 😳 Behaviour of staff, i am picking up my new phone i get just get -“Here u go!” !??",
-            "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/mpnqznp38pt",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 58,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/mpnqznp38pt",
-          "savedHtml": "r8/exa_mpnqznp38pt.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Elevators",
@@ -418,5 +328,6 @@
   "reviewStarsDropped": "mean 4.00 vs venue 3.40 >0.5",
   "reviewsLabel": "Representative reviews written from 28 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

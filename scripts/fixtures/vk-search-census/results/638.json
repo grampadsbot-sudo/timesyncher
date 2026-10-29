@@ -120,101 +120,7 @@
           "sourceUrl": "https://www.timessquarenyc.org/hotels/the-manhattan-at-times-square-hotel"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on The Manhattan at Times Square Hotel: The location of the hotel is great and right in the middle of it all. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The location of the hotel is great and right in the middle of it all",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 39,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-          "savedRaw": "drev/raw/638.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on The Manhattan at Times Square Hotel: If this hotel is on a deal, it's worth it. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "If this hotel is on a deal, it's worth it.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-          "savedRaw": "drev/raw/638.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Noise",
-        "value": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: There was constant, loud renovation noise from upstairs next door. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "There was constant, loud renovation noise from upstairs next door",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-        "rating": "4.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 35,
-        "stars": 2,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-          "savedRaw": "drev/raw/638.json",
-          "exactScore": "4.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Watch-out from a Trip.com reviewer at The Manhattan at Times Square Hotel: The room's hygiene was terrible. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "The room's hygiene was terrible",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-        "rating": "4.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 28,
-        "stars": 2,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-1703526/the-manhattan-at-times-square-hotel-new-york/review.html",
-          "savedRaw": "drev/raw/638.json",
-          "exactScore": "4.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -290,5 +196,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 10 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

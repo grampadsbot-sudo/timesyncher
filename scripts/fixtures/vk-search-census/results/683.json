@@ -114,97 +114,7 @@
           "sourceUrl": "https://www.joespizzanyc.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Classic slice",
-        "value": "Joe's Pizza Carmine Street earns its reputation on the basics; a Restaurantji reviewer calls it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese.",
-        "claims": [
-          {
-            "text": "Top five classic New York slice",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
-          },
-          {
-            "text": "a crisp thin crust, light doughy center, and delish cheese",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 33,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-          "savedHtml": "r7/raw/st_44c7d9235f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Local pick",
-        "value": "Locals send visitors to Joe's Pizza Carmine Street; one Restaurantji guest wrote that all of the locals I met told me I HAD to come to this Joe's location specifically.",
-        "claims": [
-          {
-            "text": "all of the locals I met told me I HAD to come to this Joe's location specifically",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-          "savedHtml": "r7/raw/st_44c7d9235f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Lighter sauce",
-        "value": "The honest nitpick at Joe's Pizza Carmine Street is the sauce: Sauce is great, but on the lighter side, so the same Restaurantji reviewer suggests pepperoni for more flavor.",
-        "claims": [
-          {
-            "text": "Sauce is great, but on the lighter side",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-          "savedHtml": "r7/raw/st_44c7d9235f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Cheap and quick",
-        "value": "Joe's Pizza Carmine Street is easy on the wallet; a diner paid $4.50 in cash and returned for a second slice after a few bites.",
-        "claims": [
-          {
-            "text": "$4.50 in cash",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-          "savedHtml": "r7/raw/st_44c7d9235f.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -272,5 +182,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

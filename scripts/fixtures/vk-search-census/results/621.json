@@ -121,101 +121,7 @@
           "sourceUrl": "https://thelucernehotel.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Hotel Lucerne: This hotel is quite good for its New York City location. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "This hotel is quite good for its New York City location.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-        "rating": "8.7/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-          "savedRaw": "drev/raw/621.json",
-          "exactScore": "8.7/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on Hotel Lucerne: The bed was clean, and the bathroom mirror was large. Worth weighing alongside the overall 8.7/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "The bed was clean, and the bathroom mirror was large.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-        "rating": "8.7/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 27,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-          "savedRaw": "drev/raw/621.json",
-          "exactScore": "8.7/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on Hotel Lucerne: It was the most comfortable hotel I stayed at during my trip to New York. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "It was the most comfortable hotel I stayed at during my trip to New York.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-        "rating": "9.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 33,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-          "savedRaw": "drev/raw/621.json",
-          "exactScore": "9.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Elevators",
-        "value": "Watch-out from a Trip.com reviewer at Hotel Lucerne: However, the decor is a bit dated, and while there are two elevators, they are old. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "However, the decor is a bit dated, and while there are two elevators, they are old.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-        "rating": "8.7/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 35,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
-          "savedRaw": "drev/raw/621.json",
-          "exactScore": "8.7/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -292,5 +198,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

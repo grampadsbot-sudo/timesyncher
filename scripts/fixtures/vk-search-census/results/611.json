@@ -57,14 +57,7 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Since 1981",
-    "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
-    "131 West 3rd Street New York, NY 10012",
-    "131 West 3rd Street New York, NY 10012",
-    "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
-    "Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting",
-    "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines",
-    "The location is iconic, intimate and full of atmosphere",
-    "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room"
+    "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world"
   ],
   "itineraryNoteCandidate": "Blue Note Jazz Club: a Village jazz institution Since 1981; book a late set and sit close to the stage.",
   "voicePass": {
@@ -98,18 +91,14 @@
   "winner": "tie-brave-deeper-pages",
   "fields": {
     "summary": {
-      "value": "Blue Note Jazz Club has been a Greenwich Village cultural institution since 1981, at 131 West 3rd Street, one of the premiere jazz clubs in the world. What makes Blue Note so special is that on a given night, anything can happen.",
+      "value": "Blue Note Jazz Club is the classic Greenwich Village room where world-class players work at arm's length, and on a given night, anything can happen. Reviews love the intimate tables and strong sound, but tight seating, late doors and a table minimum are part of the deal, so arrive early to eat and settle; Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world.",
       "claims": [
         {
-          "text": "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
+          "text": "Since 1981",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
         },
         {
-          "text": "131 West 3rd Street New York, NY 10012",
-          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
-        },
-        {
-          "text": "What makes Blue Note so special is that on a given night, anything can happen.",
+          "text": "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
         }
       ]
@@ -152,96 +141,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Music",
-        "value": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
-        "claims": [
-          {
-            "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
-        "rating": "3/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 58,
-        "stars": 3,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/blue-note-/",
-          "savedHtml": "r7/raw/st_124430a340.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Seating",
-        "value": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾",
-        "claims": [
-          {
-            "text": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾",
-            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 68,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/3yp348r72jp",
-          "savedHtml": "r8/exa_3yp348r72jp.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Seating",
-        "value": "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!",
-        "claims": [
-          {
-            "text": "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!",
-            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 84,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/3yp348r72jp",
-          "savedHtml": "r8/exa_3yp348r72jp.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Seating",
-        "value": "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves.",
-        "claims": [
-          {
-            "text": "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves.",
-            "sourceUrl": "https://exa.ai/library/place/3yp348r72jp"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/3yp348r72jp",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 86,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/3yp348r72jp",
-          "savedHtml": "r8/exa_3yp348r72jp.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Location",
@@ -359,5 +258,15 @@
   ],
   "reviewsLabel": "Representative reviews written from 28 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "summary": "2026-10-29T12:53:50-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
+  ]
 }

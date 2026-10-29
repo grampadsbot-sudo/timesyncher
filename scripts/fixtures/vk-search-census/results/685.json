@@ -92,96 +92,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Service",
-        "value": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond.",
-        "claims": [
-          {
-            "text": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond.",
-            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 67,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/p6w36cmf6x5",
-          "savedHtml": "r8/exa_p6w36cmf6x5.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you.",
-        "claims": [
-          {
-            "text": "I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you.",
-            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 95,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/p6w36cmf6x5",
-          "savedHtml": "r8/exa_p6w36cmf6x5.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "In Times Square I ate on the restaurant a some years ago and we had a great experience. The review below represents what we typically order everytime we go to Carmines. I have been to Carmine's in NYC, Washington, DC and Las Vegas and each and every time it is on point!!! I am not sure why i have never left a review but I will be fixing that today. I took photos and a copy of the receipt from Las Vegas so yall can see everything we ordered to go.. the only difference is the bread doesn't transport well with cheese i will remove the cheese next time.",
-        "claims": [
-          {
-            "text": "In Times Square I ate on the restaurant a some years ago and we had a great experience. The review below represents what we typically order everytime we go to Carmines. I have been to Carmine's in NYC, Washington, DC and Las Vegas and each and every time it is on point!!! I am not sure why i have never left a review but I will be fixing that today. I took photos and a copy of the receipt from Las Vegas so yall can see everything we ordered to go.. the only difference is the bread doesn't transport well with cheese i will remove the cheese next time.",
-            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 109,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/p6w36cmf6x5",
-          "savedHtml": "r8/exa_p6w36cmf6x5.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "The show is amazing and the actors and actresses are so great. It was very entertaining. My only issue was the food. They give a great amount of food but not enough time to eat it. You are sharing plates with 10 different people. you serve yourself a little at first so everyone can eat. They then would send you to do a task and when u came back they would clear the entire table. We had full plates of food left and you think you are going to go back to finish it but it’s gone. They don’t mention that they are going to take everything away.",
-        "claims": [
-          {
-            "text": "The show is amazing and the actors and actresses are so great. It was very entertaining. My only issue was the food. They give a great amount of food but not enough time to eat it. You are sharing plates with 10 different people. you serve yourself a little at first so everyone can eat. They then would send you to do a task and when u came back they would clear the entire table. We had full plates of food left and you think you are going to go back to finish it but it’s gone. They don’t mention that they are going to take everything away.",
-            "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/p6w36cmf6x5",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 108,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/p6w36cmf6x5",
-          "savedHtml": "r8/exa_p6w36cmf6x5.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Big portions",
@@ -338,5 +248,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 35 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

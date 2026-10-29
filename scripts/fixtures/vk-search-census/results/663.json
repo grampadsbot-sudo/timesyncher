@@ -42,16 +42,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Broadway at 60th Street, 5th Floor",
-    "Broadway at 60th Street, 5th Floor",
-    "Broadway at 60th Street, 5th Floor",
-    "there is a food and beverage minimum of $25 per person, per set",
-    "Dizzys Jazz Club is a fantastic beautiful venue, overlooking Central Park",
-    "The Dizzy Gillespie tribute was wonderful",
-    "great music, evening spoiled by management",
-    "Good music, garbage food",
-    "4.5 Very Good"
+    "there is a food and beverage minimum of $25 per person, per set"
   ],
-  "itineraryNoteCandidate": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
+  "itineraryNoteCandidate": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -127,7 +120,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
+      "value": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
       "claims": [
         {
           "text": "Broadway at 60th Street, 5th Floor",
@@ -135,96 +128,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Food and drinks",
-        "value": "The best time! We love jazz so we enjoyed the show very much with a bottle of wine! We were pleasantly surprised by the food. It was delicious. I recommend the branzino!",
-        "claims": [
-          {
-            "text": "The best time! We love jazz so we enjoyed the show very much with a bottle of wine! We were pleasantly surprised by the food. It was delicious. I recommend the branzino!",
-            "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/2c9y5y3vgly",
-          "savedHtml": "r8/exa_2c9y5y3vgly.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together. This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year. Definitely recommend it for a legendary vibe.",
-        "claims": [
-          {
-            "text": "Have been here a couple times as a tourist in my own city to see world-class jazz musicians take the stage and remind us that everything is better with 9 artists vibing and improv’ing the standards together. This time it was the incredible bassist Carlos Enriquez and his nonet plaiting Nuyorican jazz and it was the perfect way to close out the year. Definitely recommend it for a legendary vibe.",
-            "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 70,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/2c9y5y3vgly",
-          "savedHtml": "r8/exa_2c9y5y3vgly.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "Owens' performance, I would say she is now a full-blown jazz enthusiast. It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance. She could not get enough of the incredible live music, solos, improvising, etc. What an experience for us both. I loved the music just as much, but had never been to Dizzy's. The backdrop view of Central Park, Columbus Circle, and the NYC skyline",
-        "claims": [
-          {
-            "text": "Owens' performance, I would say she is now a full-blown jazz enthusiast. It was worth it to come here just to see her eyes glued on the band for the entire hour+ performance. She could not get enough of the incredible live music, solos, improvising, etc. What an experience for us both. I loved the music just as much, but had never been to Dizzy's. The backdrop view of Central Park, Columbus Circle, and the NYC skyline",
-            "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 77,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/2c9y5y3vgly",
-          "savedHtml": "r8/exa_2c9y5y3vgly.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "Pasta tasted as if it was blanched in tomato water and crab cakes were too salty. Great jazz band though, Recommend you only come for drinks and music",
-        "claims": [
-          {
-            "text": "Pasta tasted as if it was blanched in tomato water and crab cakes were too salty. Great jazz band though, Recommend you only come for drinks and music",
-            "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/2c9y5y3vgly",
-        "rating": "3/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 28,
-        "stars": 3,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/2c9y5y3vgly",
-          "savedHtml": "r8/exa_2c9y5y3vgly.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Location",
@@ -318,7 +221,7 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: jazz with a skyline at Broadway at 60th Street, 5th Floor; ask for a window-side table.",
+  "itineraryNote": "Dizzy’s Club / Jazz at Lincoln Center: world-class sets with Central Park behind the band at Broadway at 60th Street, 5th Floor; come for music and drinks, go light on food.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Dizzy's Club combines excellent jazz with a beautiful setting overlooking Central Park, and some visitors enjoy the food too. This is worth keeping in mind when planning the visit.",
@@ -371,5 +274,15 @@
   ],
   "reviewsLabel": "Representative reviews written from 23 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "itineraryNote": "2026-10-29T12:54:06-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
+  ]
 }

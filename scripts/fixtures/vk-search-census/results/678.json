@@ -73,96 +73,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Food and drinks",
-        "value": "Big pizza place that likes to overcharge and has deceitful pricing. First of all they hide the regular plain pizza under the counter so you think that it’s not an option and that you have to order the slices with the overpriced toppings. I know better so we got three plain slices and one bottled seltzer. When it was rung up the cashier said it was $19.30. I pushed back and she said the slices were $4 each without tax. I told her that the bottled seltzer would then have to be $6!! Then she did a few clicks on her screen and said $16.33.",
-        "claims": [
-          {
-            "text": "Big pizza place that likes to overcharge and has deceitful pricing. First of all they hide the regular plain pizza under the counter so you think that it’s not an option and that you have to order the slices with the overpriced toppings. I know better so we got three plain slices and one bottled seltzer. When it was rung up the cashier said it was $19.30. I pushed back and she said the slices were $4 each without tax. I told her that the bottled seltzer would then have to be $6!! Then she did a few clicks on her screen and said $16.33.",
-            "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 105,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/wf26hjkh6mk",
-          "savedHtml": "r8/exa_wf26hjkh6mk.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "Loaded up supreme slice at a reasonable price. Finding a slice of pizza in NY is pretty easy. Finding a good slice of pizza gets a little more tricky. Ray’s is worth the trip uptown to get a slice. The hand-tossed crust was done to perfection and the toppings were generous. And all for a price that won’t break the bank.",
-        "claims": [
-          {
-            "text": "Loaded up supreme slice at a reasonable price. Finding a slice of pizza in NY is pretty easy. Finding a good slice of pizza gets a little more tricky. Ray’s is worth the trip uptown to get a slice. The hand-tossed crust was done to perfection and the toppings were generous. And all for a price that won’t break the bank.",
-            "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 61,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/wf26hjkh6mk",
-          "savedHtml": "r8/exa_wf26hjkh6mk.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "Ray’s Pizza is a fantastic spot and one of our go-to places. The staff is always incredibly friendly, sweet, and welcoming, which makes every visit feel special. We go often and genuinely love the food, especially the options from the food bar. Everything is consistently fresh and delicious, and the chicken wings are especially great. The atmosphere is warm, the service is delightful, and it’s just an all-around enjoyable place to visit. We always leave happy and looking forward to coming back.",
-        "claims": [
-          {
-            "text": "Ray’s Pizza is a fantastic spot and one of our go-to places. The staff is always incredibly friendly, sweet, and welcoming, which makes every visit feel special. We go often and genuinely love the food, especially the options from the food bar. Everything is consistently fresh and delicious, and the chicken wings are especially great. The atmosphere is warm, the service is delightful, and it’s just an all-around enjoyable place to visit. We always leave happy and looking forward to coming back.",
-            "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 82,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/wf26hjkh6mk",
-          "savedHtml": "r8/exa_wf26hjkh6mk.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "There was a wide selection of vegetation and meat pizzas. The pizza was delicious and the vibe of the restaurant was great. Plenty of seating friendly atmosphere.",
-        "claims": [
-          {
-            "text": "There was a wide selection of vegetation and meat pizzas. The pizza was delicious and the vibe of the restaurant was great. Plenty of seating friendly atmosphere.",
-            "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/wf26hjkh6mk",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 27,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/wf26hjkh6mk",
-          "savedHtml": "r8/exa_wf26hjkh6mk.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsScope": "Reviews are for the Famous Original Ray's Pizza branch at 462 Columbus Ave (Upper West Side), not every branch"
   },
   "fieldsWritePass": {
@@ -232,5 +142,6 @@
   "reviewThemes": {
     "representative": true
   },
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -129,101 +129,7 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on The Wallace Hotel: The room was very spacious, and the bed was super comfortable. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The room was very spacious, and the bed was super comfortable",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-          "savedRaw": "drev/raw/640.json",
-          "exactScore": "10/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Cleanliness",
-        "value": "Trip.com reviewer on The Wallace Hotel: Clean, nice spot. Opened in 2020. Worth weighing alongside the overall 8.9/10 score before locking in the plan. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "Clean, nice spot. Opened in 2020",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-        "rating": "9.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 37,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-          "savedRaw": "drev/raw/640.json",
-          "exactScore": "9.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on The Wallace Hotel: The location was great, relatively quiet with many restaurants and Central Park within walking distance. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "The location was great, relatively quiet with many restaurants and Central Park within walking distance.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 34,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-          "savedRaw": "drev/raw/640.json",
-          "exactScore": "10/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Noise",
-        "value": "Watch-out from a Trip.com reviewer at The Wallace Hotel: It was noisy continuously throughout the night. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "It was noisy continuously throughout the night",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-        "rating": "1.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 27,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
-          "savedRaw": "drev/raw/640.json",
-          "exactScore": "1.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -301,5 +207,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 13 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

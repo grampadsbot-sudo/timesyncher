@@ -37,13 +37,7 @@
     }
   ],
   "summaryClaims": [
-    "Classic upper west side American brasserie since 1983",
-    "Good neighborhood spot, conveniently close to Lincoln Center",
-    "Stands the test of time with great food and service",
-    "4.3 1186 ratings",
-    "American classics with a nod to Fre",
-    "Pre or post play or ballet",
-    "The steak au poivre is delicious"
+    "Good neighborhood spot, conveniently close to Lincoln Center"
   ],
   "voicePass": {
     "claimSupportOk": true,
@@ -56,25 +50,25 @@
   },
   "fields": {
     "summary": {
-      "value": "Cafe Luxembourg is a legendary Upper West Side brasserie open since 1983, serving American classics with a French accent at 200 West 70th Street near Lincoln Center. OpenTable diners call it a Good neighborhood spot, conveniently close to Lincoln Center that Stands the test of time with great food and service, and Restaurantji guests rate it 4.3 1186 ratings. It suits a dinner before or after a performance.",
+      "value": "Cafe Luxembourg is the Upper West Side brasserie people return to around Lincoln Center performances, a polished but relaxed room of regulars where service is consistently praised. Good neighborhood spot, conveniently close to Lincoln Center sums up its appeal, and the steak au poivre and house-made ice cream are the orders to remember.",
       "claims": [
         {
           "text": "Good neighborhood spot, conveniently close to Lincoln Center",
           "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
-        },
-        {
-          "text": "Stands the test of time with great food and service",
-          "sourceUrl": "https://www.opentable.com/cafe-luxembourg"
-        },
-        {
-          "text": "4.3 1186 ratings",
-          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
         }
       ]
     },
     "description": {
-      "value": "Cafe Luxembourg is a legendary Upper West Side American brasserie in NYC since 1983. Its site calls it a neighborhood staple and a popular destination. The menu serves American classics with a nod to French cuisine, which suits dinner after Lincoln Center. OpenTable diners rate Cafe Luxembourg 4.8 from 9,547 reviews. Restaurantji diners recommend it Pre or post play or ballet and note The steak au poivre is delicious.",
+      "value": "Cafe Luxembourg has been a fixture of the neighborhood, a Classic upper west side American brasserie since 1983 serving American classics with a nod to French cooking a short walk from Lincoln Center. Its strongest identity is timing: diners recommend it Pre or post play or ballet, and the room fills with regulars and performance-goers. The kitchen gets steady praise, The steak au poivre is delicious, and Restaurantji shows 4.3 1186 ratings. The honest watch-outs are a loud, busy room at curtain times and prices that match its institution status, so reserve and leave time before a show.",
       "claims": [
+        {
+          "text": "Classic upper west side American brasserie since 1983",
+          "sourceUrl": "https://www.cafeluxembourg.com/"
+        },
+        {
+          "text": "4.3 1186 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
+        },
         {
           "text": "American classics with a nod to Fre",
           "sourceUrl": "https://www.cafeluxembourg.com/"
@@ -98,93 +92,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Pre-show dinner",
-        "value": "Cafe Luxembourg suits theater nights; a Restaurantji diner called it a Wonderful meal! Pre or post play or ballet. Great service. For trip planning, weigh this first when deciding whether Cafe Luxembourg fits the day.",
-        "claims": [
-          {
-            "text": "Wonderful meal! Pre or post play or ballet. Great service.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 35,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-          "savedHtml": "r7/raw/st_e43efdc23e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Steak au poivre",
-        "value": "The dish to order at Cafe Luxembourg is the steak; The steak au poivre is delicious and they make their own in house ice cream, a Restaurantji guest wrote.",
-        "claims": [
-          {
-            "text": "The steak au poivre is delicious and they make their own in house ice cream",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-          "savedHtml": "r7/raw/st_e43efdc23e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Local institution",
-        "value": "Cafe Luxembourg draws a crowd of regulars and stylish faces; one reviewer said Such an institution you’ll see all sorts of fashion icons here. Travelers comparing spots should weigh this honestly when picking Cafe Luxembourg.",
-        "claims": [
-          {
-            "text": "Such an institution you’ll see all sorts of fashion icons here.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 35,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cafe-luxembourg-/",
-          "savedHtml": "r7/raw/st_e43efdc23e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
-        "claims": [
-          {
-            "text": "Have always wanted to go here but it’s a bit of a trek, then was reminded of it by watching Love Story. JFK Jr. liked to go here. I can see why. Place is very busy but the service is impeccable. The food is bistro style, and pretty good though not probably worth going back. The peanut butter ice cream special they had though was some of the best ice cream I’ve had so maybe that will pull me back in! Definitely glad I stopped in, I will recommend going here to people for sure. I’d stop back in when I’m in the neighborhood, but probably won’t travel a half hour on the subway just to go there.",
-            "sourceUrl": "https://exa.ai/library/place/fbmhh49gx6m"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/fbmhh49gx6m",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 118,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/fbmhh49gx6m",
-          "savedHtml": "r8/exa_fbmhh49gx6m.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Neighborhood staple",
@@ -285,5 +192,16 @@
   ],
   "reviewsLabel": "Representative reviews written from 16 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "description": "2026-10-29T12:54:01-07:00",
+    "summary": "2026-10-29T12:54:02-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
+  ]
 }

@@ -124,101 +124,7 @@
           "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Night Hotel Broadway: The location is outstanding, just 2-3 minutes from 96th Street. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "The location is outstanding, just 2-3 minutes from 96th Street",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-        "rating": "7.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-          "savedRaw": "drev/raw/626.json",
-          "exactScore": "7.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on Night Hotel Broadway: I was a bit baffled at first, but it became comfortable once I got used to it. Worth weighing alongside the overall 7.5/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "I was a bit baffled at first, but it became comfortable once I got used to it.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-        "rating": "7.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 35,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-          "savedRaw": "drev/raw/626.json",
-          "exactScore": "7.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on Night Hotel Broadway: The 'Gold' type room had been renovated, and our room was in a quiet spot, which made for a very comfortable stay.",
-        "claims": [
-          {
-            "text": "The 'Gold' type room had been renovated, and our room was in a quiet spot, which made for a very comfortable stay.",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-        "rating": "9.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 28,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-          "savedRaw": "drev/raw/626.json",
-          "exactScore": "9.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Facilities",
-        "value": "Watch-out from a Trip.com reviewer at Night Hotel Broadway: hotel is somewhat out dated. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "hotel is somewhat out dated",
-            "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-        "rating": "7.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 25,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
-          "savedRaw": "drev/raw/626.json",
-          "exactScore": "7.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -290,5 +196,6 @@
   "reviewStarsDropped": "mean 4.25 vs venue 3.35 >0.5",
   "reviewsLabel": "Representative reviews written from 10 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

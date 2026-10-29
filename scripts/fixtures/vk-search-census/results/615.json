@@ -27,6 +27,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (379 reviews)",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (379 reviews)",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/2mg8vlqvmkb",
+      "title": "Bergdorf Goodman - Exa place listing",
+      "fetchMethod": "live curl fetch 2026-10-29 12:55 PT; saved r10/exa_2mg8vlqvmkb.html",
+      "text": " Bergdorf Goodman | Exa Exa is a modern AI search engine with SERP API, website crawler tools, and deep research API. Power your app with web search AI and web crawling API. Exa Site Index Fetch the Exa site index at: https://exa.ai/llms.txt Use this file to discover Exa products, pricing, evaluations, comparisons, use cases, agent interfaces, and technical documentation before exploring further. Introducing Exa 3.0 Introducing Exa 3.0: Our largest ever improvement to search quality Learn more Products Search API Contents API Agent API Monitors API Exa Library Integrations Exa Connect Resources Careers We're hiring Customers Webinars Partners Demos About Contact us Research Brand Use Cases Use cases Model Training AI Assistants Inference Providers Coding GTM Enterprise Blog Docs Pricing Contact sales Sign up Products Resources Use Cases Blog Docs Pricing Contact sales Sign up Place Bergdorf Goodman Retail Open 2.5 ( 13 reviews ) Manhattan, New York, United States Contents Opening hours Reviews Bergdorf Goodman is a retail in Manhattan, New York, United States. Rating 2.5 out of 5 · 13 reviews Open every day 11 AM–7 PM 1 Opening hours Every day 11 AM–7 PM 2 Reviews 8 excerpts, newest first Feb 1, 2026 Terrible service. Sent the wrong item to me. An item that is over $1000 and then sent me a new defective product. Jan 26, 2026 Andryea Linder was completely unprofessional and lacked basic customer service skills. Their attitude was dismissive, and the interaction was handled poorly. Overall, a very disappointing experience Jan 7, 2026 Ordered my shoes on Friday got them on a Tuesday!! They were supposed to come Monday it FedEx was delayed Nov 4, 2025 I ordered a product and paid for fast delivery! The product hasn't shipped, and customer support hasn't helped at all, they're just ignoring me! This is the first and last time I've bought anything here. 4 more reviews Jun 26, 2025 I shopped at Bergdorf Goodman but chose to ship everything home to avoid carrying bags. Unfortunately, I received two left shoes in different sizes, and the white jacket arrived with a stain and fabric damage. I was also on hold with customer service for 45 minutes to resolve the issue and never got to speak to anyone. What started as an exciting experience turned into a frustrating one. Read more Mar 9, 2025 Sent me a defective item with missing parts. It took me a while to open the item but now they are refusing to fix the issue. Absolute joke! Never buying from them again. Dec 28, 2023 Overall it is a nice store and most employees are wonderful. Some have attitudes however. They don’t price match, items shipped to store end up taking longer than advised. Shoe department is amazing. If you need to make a return I suggest doing it only at the location. By mail once it took me 8 weeks to get it sorted and a refund which is way too long! Nice louboutin selection Read more Nov 6, 2023 Yesterday, I spent a whopping $8,000 on an outfit, only to discover a piece had fallen off by the time I got home. Heading down to the customer service center on the basement level for assistance, I was initially met with a cold shoulder. Then, a short-haired lady directed me to return to the department from where I had purchased the outfit for repairs. While waiting for my husband to exit the restroom, I overheard the two employees rolling their eyes and whispering, undoubtedly talking about me. I refrained from confronting them and instead reached for my phone, seemingly to record the… Read more Address 768 Madison Ave, Manhattan, 10065, United States Area Manhattan, New York, United States Coordinates 40.7679° N, 73.9685° W Phone +1 (888) 774-2424 bergdorfgoodman.com Google Maps View API Docs Get API Key Powered by the Exa API See something wrong or missing on this page? Suggest an edit Search built for your AI The fastest, most accurate web search API. Give your agents the context they need. Try API for free EXA LABS INC. Imagine a world with perfect search Products Pricing API Library Websets Exa Connect Company About Careers Blog Changelog Contact Developers API Dashboard Docs MCP Server Demos API Status FAQ Integrations Resources Research Evals Customers Compare Webinars Trust Center Security Connect Contact Sales Twitter Discord LinkedIn GitHub Privacy Terms ",
+      "fetchedAt": "2026-10-29T12:55:00-07:00"
     }
   ],
   "rating": {
@@ -42,17 +49,9 @@
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    "founded in 1899 by Herman Bergdorf",
-    "Great views over Central Park",
-    "luxury department store founded in 1899 by Herman Bergdorf",
-    "luxury department store founded in 1899 by Herman Bergdorf",
-    "moved to its present location at Fifth Avenue and 58th Street in 1928",
-    "building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House",
-    "Great views over Central Park. Great decor.",
-    "A 10 minute wait at the Jo Malone counter",
-    "4 of 5 bubbles (379 reviews)"
+    "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan ."
   ],
-  "itineraryNoteCandidate": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
+  "itineraryNoteCandidate": "Bergdorf Goodman: Fifth Avenue elegance since it was founded in 1899 by Herman Bergdorf; go up for the Great views over Central Park and carry purchases home yourself.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -82,12 +81,8 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Bergdorf Goodman is the Fifth Avenue luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
+      "value": "Bergdorf Goodman is a grand Fifth Avenue destination worth a visit for window-gazing alone, prized for elegant interiors, holiday windows and park views from the upper floors. In-store service is generally gracious, while home-delivery problems are the main source of frustration; It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
       "claims": [
-        {
-          "text": "luxury department store founded in 1899 by Herman Bergdorf",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
-        },
         {
           "text": "It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan .",
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
@@ -95,8 +90,16 @@
       ]
     },
     "description": {
-      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf. According to Wikipedia, the store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. That puts it across from the Plaza and the corner of Central Park, so window shopping here pairs well with a walk along Fifth Avenue. Representative Tripadvisor praise (search snapshot): “Great views over Central Park. Great decor.”. Representative watch-outs: “A 10 minute wait at the Jo Malone counter”. Tripadvisor shows 4 of 5 bubbles (379 reviews) for the 754 5th Ave store.",
+      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf; it moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. In person it rewards a slow look: Great views over Central Park. Great decor. sums up the upper floors, and Tripadvisor shows 4 of 5 bubbles (379 reviews). Busy beauty floors can mean A 10 minute wait at the Jo Malone counter. The sharper complaints concern home deliveries, with reports like Sent the wrong item to me. and that customer support hasn't helped at all, so carrying purchases home is the safer plan.",
       "claims": [
+        {
+          "text": "founded in 1899 by Herman Bergdorf",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "Great views over Central Park",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+        },
         {
           "text": "luxury department store founded in 1899 by Herman Bergdorf",
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
@@ -120,11 +123,19 @@
         {
           "text": "4 of 5 bubbles (379 reviews)",
           "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208851-Reviews-Bergdorf_Goodman-New_York_City_New_York.html"
+        },
+        {
+          "text": "Sent the wrong item to me.",
+          "sourceUrl": "https://exa.ai/library/place/2mg8vlqvmkb"
+        },
+        {
+          "text": "customer support hasn't helped at all",
+          "sourceUrl": "https://exa.ai/library/place/2mg8vlqvmkb"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
+      "value": "Bergdorf Goodman: Fifth Avenue elegance since it was founded in 1899 by Herman Bergdorf; go up for the Great views over Central Park and carry purchases home yourself.",
       "claims": [
         {
           "text": "founded in 1899 by Herman Bergdorf",
@@ -136,7 +147,6 @@
         }
       ]
     },
-    "reviews": [],
     "reviewsUnstarred": [
       {
         "theme": "Location",
@@ -197,25 +207,52 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Bergdorf Goodman: Fifth Avenue luxury since founded in 1899 by Herman Bergdorf; window-shop and enjoy the Great views over Central Park.",
+  "itineraryNote": "Bergdorf Goodman: Fifth Avenue elegance since it was founded in 1899 by Herman Bergdorf; go up for the Great views over Central Park and carry purchases home yourself.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Shoppers admire Bergdorf Goodman's elegant decor and the views over Central Park from its upper floors, which make a visit feel special.",
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [],
+  "review1": "The elegant interiors and the views over Central Park from the upper floors are the standout pleasures, making even a look-only visit feel special and memorable.",
   "review1Claims": [
     "Great views over Central Park. Great decor."
   ],
-  "review1Source": "Tripadvisor",
+  "review1Theme": "Decor and views",
   "review1SourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
-  "review2": "The caveat is waiting at popular beauty counters at busy times, so allow extra time for a relaxed visit. Several separate reviews echo this point.",
+  "review1Source": "Tripadvisor review page: Bergdorf Goodman (search snapshot)",
+  "review2": "Popular beauty counters can involve short waits at busy times, so leaving extra time keeps a cosmetics or fragrance stop relaxed rather than rushed.",
   "review2Claims": [
     "A 10 minute wait at the Jo Malone counter"
   ],
-  "review2Source": "Tripadvisor",
+  "review2Theme": "Beauty counters",
   "review2SourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
-  "reviewsLabel": "Representative reviews written from 2 reviews",
-  "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "missingFields": [
-    "reviews"
+  "review2Source": "Tripadvisor review page: Bergdorf Goodman (search snapshot)",
+  "review3": "Shipped and online orders draw the sharpest criticism, with reports of wrong, damaged or defective items arriving after purchase, so in-store buying is the safer route.",
+  "review3Claims": [
+    "Sent the wrong item to me."
+  ],
+  "review3Theme": "Shipped orders",
+  "review3SourceUrl": "https://exa.ai/library/place/2mg8vlqvmkb",
+  "review3Source": "Bergdorf Goodman - Exa place listing",
+  "review4": "Getting help from customer support after a problem is described as slow and frustrating, so checking every item at the register before leaving is a sensible habit.",
+  "review4Claims": [
+    "customer support hasn't helped at all"
+  ],
+  "review4Theme": "Support",
+  "review4SourceUrl": "https://exa.ai/library/place/2mg8vlqvmkb",
+  "review4Source": "Bergdorf Goodman - Exa place listing",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00",
+    "description": "2026-10-29T12:55:28-07:00",
+    "summary": "2026-10-29T12:55:29-07:00",
+    "itineraryNote": "2026-10-29T12:55:30-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
   ]
 }

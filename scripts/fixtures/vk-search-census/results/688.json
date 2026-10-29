@@ -105,97 +105,7 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Soul food",
-        "value": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
-        "claims": [
-          {
-            "text": "First time in Harlem, the best food hands down.. we ate everything on our plates!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-          "savedHtml": "r7/raw/st_1ae5df35d1.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "Hospitality comes through at Sylvia's Harlem, with Restaurantji diners reporting The food and service was amazing! Keep this in mind as the main reason to choose Sylvia's Harlem over nearby options.",
-        "claims": [
-          {
-            "text": "The food and service was amazing!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 31,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-          "savedHtml": "r7/raw/st_1ae5df35d1.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Drinks",
-        "value": "The bar side holds up at Sylvia's Harlem too; one Restaurantji reviewer said the meal was soooo delicious and the drinks were great. Travelers comparing spots should weigh this honestly when picking Sylvia's Harlem.",
-        "claims": [
-          {
-            "text": "soooo delicious",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
-          },
-          {
-            "text": "the drinks were great",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-          "savedHtml": "r7/raw/st_1ae5df35d1.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Take-home souvenirs",
-        "value": "Sylvia's Harlem sells its pantry: one Restaurantji guest bought her seasoning and hot sauce, an easy edible souvenir. Factor this into timing and expectations before heading to Sylvia's Harlem.",
-        "claims": [
-          {
-            "text": "bought her seasoning and hot sauce",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 29,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-          "savedHtml": "r7/raw/st_1ae5df35d1.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -261,5 +171,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

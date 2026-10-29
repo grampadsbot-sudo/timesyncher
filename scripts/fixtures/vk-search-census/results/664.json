@@ -11,6 +11,13 @@
       "text": "onal tour guide or walking tour? You’ll be shown around the city just the way a good friend would do it. You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places. How to use our public transportation. Best of all, it’s your visit. Your interests. Your personal enjoyment that the Greeter wants most to provide.  … on the Greeter’s personal knowledge gained through living, working, and experiencing the city. REQUEST A GREETER How will I be paired with a Greeter? By language and by the neighborhoods the visitor requests. Visitors’ personal interests are also considered and fulfilled if possible. Am I guaranteed to be matched with a Greeter? Unfortunately, no. Big App … onal tour guide or walking tour? You’ll be shown around the city just the way a good friend would do it. You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places. How to use our public transportation. Best of all, it’s your visit. Your interests. Your personal enjoyment that the Greeter wants most to provide. ",
       "snippet": "onal tour guide or walking tour? You’ll be shown around the city just the way a good friend would do it. You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places. How to use our public transportation. Best of all, it’s your visit.",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bigapplegreeter.org/",
+      "title": "Big Apple Greeter - home (visitor testimonials from TripAdvisor)",
+      "fetchMethod": "live curl fetch 2026-10-29 12:55 PT; saved r10/bag.html",
+      "text": " Big Apple Greeter - A Free Welcome-Visitor Service from NYC Volunteers 0 Skip to Content Home Visitors Request a Greeter FAQs NYC Tips Blog Volunteers Become a Greeter FAQs About Us Mission & History Board of Directors International Greeter Association Support Us Why Give Ways to Give Monthly Giving Donate Open Menu Close Menu Home Visitors Request a Greeter FAQs NYC Tips Blog Volunteers Become a Greeter FAQs About Us Mission & History Board of Directors International Greeter Association Support Us Why Give Ways to Give Monthly Giving Donate Open Menu Close Menu Home Folder: Visitors Back Request a Greeter FAQs NYC Tips Blog Folder: Volunteers Back Become a Greeter FAQs Folder: About Us Back Mission & History Board of Directors International Greeter Association Folder: Support Us Back Why Give Ways to Give Monthly Giving Donate Meet the real New York City. See the hidden sides of the city. Hear the real New York stories. Experience it for free. Request a Greeter Find the little places for big memories. Stroll above Manhattan streets on the High Line. Poke into the happening shops of Brooklyn. Savor the ethnic murals and delicious foods of the Bronx or Queens. Ferry your way past Lady Liberty to a neighborhood in Staten Island. Spend two to four hours getting the insider scoop from volunteers who actually live here. We’re not professional tour guides. We’re the people of New York. Proudly representing our city. And sharing its joys. Learn More Take a minute. Meet one of our Greeters. “Exceeded expectations by 1,000%.” —S. Gunthe, Hamburg, Germany “He has real passion and knowledge of his home town.” – DRDin, Brisbane, Australia “Like meeting your best friend’s uncle who was willing to share his time with you.” – Deana K, Petaluma, California “Gave us info and input only a New Yorker could give.” – Zazouette01, Saint-Genis-Pouilly, France “One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat.” – HSW1226, Spartenberg, South Carolina “I was sooo happy!” – Michiko S, Chiba Prefecture, Japan TripAdvisor Request a Greeter Visitor FAQs About NYC Become a Greeter Volunteer FAQs Our Mission & History Board of Directors Contact Us International Greeter Association Blog Why Give Ways to Give GREETER LOG-IN VISITOR LOG-IN Subscribe To Our Newsletter * indicates required Email Address * First Name Last Name State Country Marketing Permissions Please select all the ways you would like to hear from : Email You can unsubscribe at any time by clicking the link in the footer of our emails. For information about our privacy practices, please visit our website. We use Mailchimp as our marketing platform. By clicking below to subscribe, you acknowledge that your information will be transferred to Mailchimp for processing. Learn more about Mailchimp's privacy practices here. ",
+      "fetchedAt": "2026-10-29T12:55:00-07:00"
     }
   ],
   "rating": {
@@ -24,11 +31,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "favorite neighborhoods, restaurants, shops, and hidden places",
-    "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
-    "By language and by the neighborhoods the visitor requests",
     "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places"
   ],
-  "itineraryNoteCandidate": "Guided walking/audio history tours: a local's-eye walk; let a Greeter show you their favorite neighborhoods, restaurants, shops, and hidden places.",
+  "itineraryNoteCandidate": "Guided walking/audio history tours: a friend-style Big Apple Greeter walk; Like meeting your best friend’s uncle who was willing to share his time with you.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -58,41 +63,49 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": "Guided walking/audio history tours option: a Big Apple Greeter volunteer neighborhood visit. You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
+      "value": "Guided walking/audio history tours here mean an unhurried walk with a volunteer New Yorker who chooses streets around your interests. It feels like time with a generous friend, it is accessible for mixed-ability groups, and you get to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
       "claims": [
         {
-          "text": "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
+          "text": "favorite neighborhoods, restaurants, shops, and hidden places",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         },
         {
-          "text": "You’ll learn what it’s like to live here, to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places.",
+          "text": "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         }
       ]
     },
     "description": {
-      "value": "Guided walking/audio history tours can start with Big Apple Greeter. Visitors are paired by language and by the neighborhoods the visitor requests, and visitors’ personal interests are also considered and fulfilled if possible. On the visit you get to enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places, which suits a slower history walk.",
+      "value": "Guided walking/audio history tours can start with Big Apple Greeter, a free volunteer program that matches visitors with a resident. Visitors are paired By language and by the neighborhoods the visitor requests, and Visitors’ personal interests are also considered and fulfilled if possible. Testimonials stress the people more than the route: He has real passion and knowledge of his home town., Gave us info and input only a New Yorker could give., and One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat. The trade-off is that a Greeter is a volunteer rather than a scripted guide, so plan it as a relaxed, personal walk rather than a landmark checklist.",
       "claims": [
         {
           "text": "By language and by the neighborhoods the visitor requests",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         },
         {
-          "text": "enjoy the Greeter’s favorite neighborhoods, restaurants, shops, and hidden places",
+          "text": "Visitors’ personal interests are also considered and fulfilled if possible",
           "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
         },
         {
-          "text": "Visitors’ personal interests are also considered and fulfilled if possible",
-          "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
+          "text": "He has real passion and knowledge of his home town.",
+          "sourceUrl": "https://www.bigapplegreeter.org/"
+        },
+        {
+          "text": "Gave us info and input only a New Yorker could give.",
+          "sourceUrl": "https://www.bigapplegreeter.org/"
+        },
+        {
+          "text": "One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat.",
+          "sourceUrl": "https://www.bigapplegreeter.org/"
         }
       ]
     },
     "itineraryNote": {
-      "value": "Guided walking/audio history tours: a local's-eye walk; let a Greeter show you their favorite neighborhoods, restaurants, shops, and hidden places.",
+      "value": "Guided walking/audio history tours: a friend-style Big Apple Greeter walk; Like meeting your best friend’s uncle who was willing to share his time with you.",
       "claims": [
         {
-          "text": "favorite neighborhoods, restaurants, shops, and hidden places",
-          "sourceUrl": "https://www.bigapplegreeter.org/visitor-faqs"
+          "text": "Like meeting your best friend’s uncle who was willing to share his time with you.",
+          "sourceUrl": "https://www.bigapplegreeter.org/"
         }
       ]
     }
@@ -103,8 +116,52 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Guided walking/audio history tours: a local's-eye walk; let a Greeter show you their favorite neighborhoods, restaurants, shops, and hidden places.",
-  "missingFields": [
-    "reviews"
+  "itineraryNote": "Guided walking/audio history tours: a friend-style Big Apple Greeter walk; Like meeting your best friend’s uncle who was willing to share his time with you.",
+  "missingFields": [],
+  "review1": "Volunteer greeters bring real passion and deep local knowledge to each outing, turning a neighborhood walk into a personal introduction to their own New York.",
+  "review1Claims": [
+    "He has real passion and knowledge of his home town."
+  ],
+  "review1Theme": "Local knowledge",
+  "review1SourceUrl": "https://www.bigapplegreeter.org/",
+  "review1Source": "Big Apple Greeter - home (visitor testimonials from TripAdvisor)",
+  "review2": "The visit feels less like a formal tour and more like time with a generous family friend who is happy to share an afternoon and the city.",
+  "review2Claims": [
+    "Like meeting your best friend’s uncle who was willing to share his time with you."
+  ],
+  "review2Theme": "Friendly feel",
+  "review2SourceUrl": "https://www.bigapplegreeter.org/",
+  "review2Source": "Big Apple Greeter - home (visitor testimonials from TripAdvisor)",
+  "review3": "The insider perspective is the payoff, with practical tips and context that only a resident could offer, well beyond what guidebooks and bus tours cover.",
+  "review3Claims": [
+    "Gave us info and input only a New Yorker could give."
+  ],
+  "review3Theme": "Insider view",
+  "review3SourceUrl": "https://www.bigapplegreeter.org/",
+  "review3Source": "Big Apple Greeter - home (visitor testimonials from TripAdvisor)",
+  "review4": "Greeters adapt routes thoughtfully for visitors with mobility needs, including wheelchair users, so mixed-ability groups can still enjoy a full and relaxed outing.",
+  "review4Claims": [
+    "One of our group was in a wheelchair. Bob was mindful of the challenge and didn’t miss a beat."
+  ],
+  "review4Theme": "Accessibility",
+  "review4SourceUrl": "https://www.bigapplegreeter.org/",
+  "review4Source": "Big Apple Greeter - home (visitor testimonials from TripAdvisor)",
+  "reviewsLabel": "Representative reviews written from 6 reviews",
+  "reviewsRepresentative": true,
+  "representative": true,
+  "reviewThemes": {
+    "representative": true
+  },
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00",
+    "description": "2026-10-29T12:54:07-07:00",
+    "summary": "2026-10-29T12:54:08-07:00",
+    "itineraryNote": "2026-10-29T12:54:09-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
   ]
 }

@@ -134,97 +134,7 @@
           "sourceUrl": "https://www.juicegeneration.com/locations"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Overall experience",
-        "value": "Restaurantji reviewer on Juice Generation Columbus Circle: Great selection of flavors. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "Great selection of flavors",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-        "rating": "4.0/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-          "savedHtml": "r7/raw/st_97224d2ee7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Watch-out from a Restaurantji reviewer at Juice Generation Columbus Circle: This store is always busy, so there is a bit of a wait despite being larger than most.",
-        "claims": [
-          {
-            "text": "This store is always busy, so there is a bit of a wait despite being larger than most",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-        "rating": "4.0/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "watchOut",
-        "words": 28,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-          "savedHtml": "r7/raw/st_97224d2ee7.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service",
-        "value": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
-        "claims": [
-          {
-            "text": "The service at this location is bad. I usually order ahead on the app with no issue to save time but the last 2 times I’ve been including today, I had to wait an extra 10 minutes to be handed my order. Today the short guy with square glasses at the register was laughing and talking with a friend (which is fine) and I was the only other customer inside so I figured it wouldn’t take too long because I could see my order sitting there ready. When their conversation ended the guy at the register proceeded to ignore me, move a couple things around and then disappeared into the back.",
-            "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
-        "rating": "1/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 111,
-        "stars": 1,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/4dx7w0476ks",
-          "savedHtml": "r8/exa_4dx7w0476ks.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
-        "claims": [
-          {
-            "text": "Slow service for online orders. I ordered on the app which predicted the smoothie would be ready in 15 minutes. I arrive a couple minutes early and stood there and watched as people who walked in ordered and got their drink within minutes, yet I had yet to get mine. When I asked about my drink after the time I was supposed pick it up at 12:06, i see the staff grabbing the receipt to go make it. There must have been 6 walk-ins that got their drinks before I did.",
-            "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/4dx7w0476ks",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 91,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/4dx7w0476ks",
-          "savedHtml": "r8/exa_4dx7w0476ks.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -299,5 +209,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 15 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

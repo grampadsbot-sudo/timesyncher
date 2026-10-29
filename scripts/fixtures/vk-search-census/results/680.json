@@ -117,97 +117,7 @@
           "sourceUrl": "https://www.piccolacucinagroup.com/en/piccola-cucina-uptown/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Fresh, careful cooking",
-        "value": "Piccola Cucina Uptown wins on freshness; a Restaurantji diner wrote Everything they make is delicious and very fresh, with timely service on top. For trip planning, weigh this first when deciding whether Piccola Cucina Uptown fits the day.",
-        "claims": [
-          {
-            "text": "Everything they make is delicious and very fresh",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 38,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-          "savedHtml": "r7/raw/st_45d99fce88.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Gluten-free friendly",
-        "value": "Diners with dietary needs do well at Piccola Cucina Uptown: They have gluten free bread, pasta and even their eggplant parmesan is gluten free, one Restaurantji reviewer reports.",
-        "claims": [
-          {
-            "text": "They have gluten free bread, pasta and even their eggplant parmesan is gluten free",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-          "savedHtml": "r7/raw/st_45d99fce88.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Standout service",
-        "value": "Service is a recurring high point at Piccola Cucina Uptown; one guest called it the Best service I've maybe ever had at a restaurant! and another said Service was exceptional.",
-        "claims": [
-          {
-            "text": "Best service I've maybe ever had at a restaurant!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/"
-          },
-          {
-            "text": "Service was exceptional",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-          "savedHtml": "r7/raw/st_45d99fce88.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Wine by the glass",
-        "value": "The honest watch-out at Piccola Cucina Uptown: a Restaurantji reviewer said One element that could be improved is the variety (and quality) of the wines by the glass.",
-        "claims": [
-          {
-            "text": "One element that could be improved is the variety (and quality) of the wines by the glass",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 28,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-          "savedHtml": "r7/raw/st_45d99fce88.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -278,5 +188,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

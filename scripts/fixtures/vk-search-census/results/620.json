@@ -129,101 +129,7 @@
           "sourceUrl": "https://www.edisonhotelnyc.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Hotel Edison: It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
-        "claims": [
-          {
-            "text": "It's a historic hotel, but the room is quite large for the price range in Times Square, and it was also very clean.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-        "rating": "8.7/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 28,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-          "savedRaw": "drev/raw/620.json",
-          "exactScore": "8.7/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "Trip.com reviewer on Hotel Edison: The service was usually friendly though sometimes only perfunctory. Worth weighing alongside the overall 8.5/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "The service was usually friendly though sometimes only perfunctory.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 26,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-          "savedRaw": "drev/raw/620.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on Hotel Edison: I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "I recommend Carve at the intersection of 47th Street and 8th Avenue for more choices.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-        "rating": "8.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 33,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-          "savedRaw": "drev/raw/620.json",
-          "exactScore": "8.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Watch-out from a Trip.com reviewer at Hotel Edison: My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
-        "claims": [
-          {
-            "text": "My girlfriend is a light sleeper so she basically had 5 nights of awful sleep which really negatively impacted our trip.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 29,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2199817/hotel-edison/",
-          "savedRaw": "drev/raw/620.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -300,5 +206,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

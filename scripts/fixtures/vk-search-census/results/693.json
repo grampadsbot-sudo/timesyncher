@@ -117,93 +117,7 @@
           "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Banana pudding",
-        "value": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
-        "claims": [
-          {
-            "text": "one of the best desserts in the city hands down",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 38,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-          "savedHtml": "r7/raw/st_6044254a35.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Family treat",
-        "value": "Magnolia Bakery pleases kids and adults alike; one Restaurantji reviewer wrote Awesome place and flavor!! Daughter loved it. Keep this in mind as the main reason to choose Magnolia Bakery over nearby options.",
-        "claims": [
-          {
-            "text": "Awesome place and flavor!! Daughter loved it",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 33,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-          "savedHtml": "r7/raw/st_6044254a35.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Consistency",
-        "value": "Regulars find Magnolia Bakery dependable; a Restaurantji guest said Love magnolia. Always delicious. Travelers comparing spots should weigh this honestly when picking Magnolia Bakery.",
-        "claims": [
-          {
-            "text": "Love magnolia. Always delicious",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 24,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-          "savedHtml": "r7/raw/st_6044254a35.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Staff",
-        "value": "Service is friendly at Magnolia Bakery, with a Restaurantji diner adding Staff is always great alongside the pudding praise. Factor this into timing and expectations before heading to Magnolia Bakery.",
-        "claims": [
-          {
-            "text": "Staff is always great",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-        "rating": "4.0",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-          "savedHtml": "r7/raw/st_6044254a35.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      }
-    ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -270,5 +184,6 @@
   "reviewStarsDropped": "mean 5.00 vs venue 4.00 >0.5",
   "reviewsLabel": "Representative reviews written from 10 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

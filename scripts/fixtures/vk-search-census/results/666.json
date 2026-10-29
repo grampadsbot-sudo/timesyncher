@@ -155,96 +155,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Music",
-        "value": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
-        "claims": [
-          {
-            "text": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 92,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
-          "savedHtml": "r7/raw/st_e191b0b5ec.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!",
-        "claims": [
-          {
-            "text": "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 35,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
-          "savedHtml": "r7/raw/st_e191b0b5ec.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten.",
-        "claims": [
-          {
-            "text": "Let’s start with the good part: the atmosphere is incredible. Red velvet, candlelight, and live jazz so close you can feel the bass through your glass. The cocktails are top-tier, and the food easily outperforms what most music venues even attempt. My crab cakes were crisp perfection, the salad was fresh, and the service stayed calm even with a packed house. Now for the part that ruined the vibe. The mandatory entrée rule. I came for drinks and small plates, happily spent several times the cost of an entrée, and was still told I had to order one or leave it uneaten.",
-            "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
-        "rating": "3/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 102,
-        "stars": 3,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9pfhjt1b9gq",
-          "savedHtml": "r8/exa_9pfhjt1b9gq.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Music",
-        "value": "The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless.",
-        "claims": [
-          {
-            "text": "The new Smoke is a massive upgrade. The venue is much larger now, which means the bar has leveled up—the cocktails are easily some of the best in the city. The kitchen is still undefeated; the food is as awesome as ever. ​We saw Theo Croker, and while it was a modern, stripped-back set, the band was incredibly sharp. ​The Music: A very cool, modern jazz feel. ​The Twist: Even without a DJ or heavy electronics, Theo and the band held it down. ​The Talent: Theo’s trumpet work was top-tier, and the ensemble playing was seamless.",
-            "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 96,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/9pfhjt1b9gq",
-          "savedHtml": "r8/exa_9pfhjt1b9gq.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -398,5 +308,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 30 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

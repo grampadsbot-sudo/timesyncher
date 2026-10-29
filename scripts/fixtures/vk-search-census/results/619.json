@@ -121,101 +121,7 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Hotel_Beacon"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Location",
-        "value": "Trip.com reviewer on Hotel Beacon: This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "This hotel is fantastic – the location, surroundings, and the staff's service attitude and professionalism are all top-notch!",
-            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 38,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-          "savedRaw": "drev/raw/619.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on Hotel Beacon: The public transport access is great, and the quality of the accommodation is also excellent. Worth weighing alongside the overall 10.0/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "The public transport access is great, and the quality of the accommodation is also excellent.",
-            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-          "savedRaw": "drev/raw/619.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on Hotel Beacon: And the view from the room is absolutely fantastic. Keep that in mind when choosing timing, a room, or an arrival plan.",
-        "claims": [
-          {
-            "text": "And the view from the room is absolutely fantastic!",
-            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 27,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-          "savedRaw": "drev/raw/619.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "Watch-out from a Trip.com reviewer at Hotel Beacon: Although the hotel is a bit old, the hygiene and service are excellent. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "Although the hotel is a bit old, the hygiene and service are excellent.",
-            "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 32,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://www.trip.com/hotels/new-york-hotel-detail-2193522/hotel-beacon-new-york/",
-          "savedRaw": "drev/raw/619.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -290,5 +196,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

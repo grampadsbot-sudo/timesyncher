@@ -138,98 +138,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Views and octopus",
-        "value": "Estiatorio Milos Hudson Yards pairs fish with scenery; a Restaurantji diner had an amazing view of Hudson River and Hudson Yards and Loved their grilled octopus.",
-        "claims": [
-          {
-            "text": "an amazing view of Hudson River and Hudson Yards",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/"
-          },
-          {
-            "text": "Loved their grilled octopus.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
-          "savedHtml": "r7/raw/st_039a08e1b3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service at its best",
-        "value": "Many guests at Estiatorio Milos Hudson Yards praise the floor team; one Restaurantji reviewer wrote We were blown away by the service! Keep this in mind as the main reason to choose Estiatorio Milos Hudson Yards over nearby options.",
-        "claims": [
-          {
-            "text": "We were blown away by the service!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
-        "rating": "4.8",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 39,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
-          "savedHtml": "r7/raw/st_039a08e1b3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Food and drinks",
-        "value": "Lovely view of the Vessel landmarks and city. Great spot for business or elegant evening. Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had! 2 thumbs up for the fried octopus! Stairs and elevators so would say it's accessible as well.",
-        "claims": [
-          {
-            "text": "Lovely view of the Vessel landmarks and city. Great spot for business or elegant evening. Loved the food and I think the fried calamari was the softest fluffiest delicious fried thing I've ever had! 2 thumbs up for the fried octopus! Stairs and elevators so would say it's accessible as well.",
-            "sourceUrl": "https://exa.ai/library/place/csnvq52n3q9"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 51,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/csnvq52n3q9",
-          "savedHtml": "r8/exa_csnvq52n3q9.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      },
-      {
-        "theme": "Service",
-        "value": "Had an incredible experience at Milos in Hudson Yards! The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared. But what truly made the night special was the outstanding service from Mario at the bar. He was beyond attentive, knowledgeable about the menu, and made the best recommendations. His passion for hospitality really stood out, and he created such a warm and engaging experience. Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience. Will definitely be back!",
-        "claims": [
-          {
-            "text": "Had an incredible experience at Milos in Hudson Yards! The atmosphere was elegant yet welcoming, and the food was absolutely top-notch—fresh, flavorful, and beautifully prepared. But what truly made the night special was the outstanding service from Mario at the bar. He was beyond attentive, knowledgeable about the menu, and made the best recommendations. His passion for hospitality really stood out, and he created such a warm and engaging experience. Whether you’re stopping by for a drink or dining in, Mario’s service elevates the whole experience. Will definitely be back!",
-            "sourceUrl": "https://exa.ai/library/place/csnvq52n3q9"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/csnvq52n3q9",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 90,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/csnvq52n3q9",
-          "savedHtml": "r8/exa_csnvq52n3q9.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Business and dates",
@@ -347,5 +255,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 20 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -120,93 +120,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Relaxed meal",
-        "value": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
-        "claims": [
-          {
-            "text": "Always good and you call relax and have a conversation",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-        "rating": "4.6",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 25,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-          "savedHtml": "r7/raw/st_0e1b39db0e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Dish to try",
-        "value": "Westville Hell's Kitchen has a cult favorite; one Restaurantji reviewer wrote simply Chicken Salad Fritters!!!!! Keep this in mind as the main reason to choose Westville Hell's Kitchen over nearby options.",
-        "claims": [
-          {
-            "text": "Chicken Salad Fritters!!!!!",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-        "rating": "4.6",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 31,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-          "savedHtml": "r7/raw/st_0e1b39db0e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Bar team",
-        "value": "The bar at Westville Hell's Kitchen gets shout-outs: Jess is the best bartender in the biz! She makes us feel so at home, a Restaurantji guest wrote.",
-        "claims": [
-          {
-            "text": "Jess is the best bartender in the biz! She makes us feel so at home",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-        "rating": "4.6",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-          "savedHtml": "r7/raw/st_0e1b39db0e.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
-        "claims": [
-          {
-            "text": "So disappointing! Ordered a lemon drop martini to start, it came warm and it didn't have any natural lemon zest. OK, I moved on. Ordered the salmon with Greek lemon potatoes and asparagus with parmesan cheese. All sounded so good. The salmon piece was the size of my index finger and cooked well but very bland. The potatoes tasted like they had been sitting on a deli grill for hours, they just had this charcoal-like funky aftertaste, they were inedible.",
-            "sourceUrl": "https://exa.ai/library/place/xjgkwjzrsty"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/xjgkwjzrsty",
-        "rating": "2/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "watch-out",
-        "words": 80,
-        "stars": 2,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/xjgkwjzrsty",
-          "savedHtml": "r8/exa_xjgkwjzrsty.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Vegetables",
@@ -298,5 +211,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 16 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

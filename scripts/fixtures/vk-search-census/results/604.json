@@ -126,96 +126,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Crowds",
-        "value": "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat. Enjoyable day trip. Needed more time to explore Ellis Island properly but that was the fault of our planning",
-        "claims": [
-          {
-            "text": "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat. Enjoyable day trip. Needed more time to explore Ellis Island properly but that was the fault of our planning",
-            "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 36,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/qstwz1dv09v",
-          "savedHtml": "r8/exa_qstwz1dv09v.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "The official ferry to get you to the Statue of Liberty in Ellis Island. The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice. Plenty of stating for people who may need it, and efficient at loading and unloading everyone.",
-        "claims": [
-          {
-            "text": "The official ferry to get you to the Statue of Liberty in Ellis Island. The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice. Plenty of stating for people who may need it, and efficient at loading and unloading everyone.",
-            "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 54,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/qstwz1dv09v",
-          "savedHtml": "r8/exa_qstwz1dv09v.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Building and design",
-        "value": "This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands. We started around 9:00 AM, which I highly recommend to avoid the rush. The ferry from Battery Park is only about 20–25 minutes. We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum. Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours. A must-do if you want to see both islands properly without feeling rushed!",
-        "claims": [
-          {
-            "text": "This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands. We started around 9:00 AM, which I highly recommend to avoid the rush. The ferry from Battery Park is only about 20–25 minutes. We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum. Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours. A must-do if you want to see both islands properly without feeling rushed!",
-            "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 95,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/qstwz1dv09v",
-          "savedHtml": "r8/exa_qstwz1dv09v.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Atmosphere",
-        "value": "Great experience overall! Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience! The National Park officers were very pleasant. We definitely need to come back here during the warmer months cause the weather dampened our day a bit",
-        "claims": [
-          {
-            "text": "Great experience overall! Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience! The National Park officers were very pleasant. We definitely need to come back here during the warmer months cause the weather dampened our day a bit",
-            "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 52,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/qstwz1dv09v",
-          "savedHtml": "r8/exa_qstwz1dv09v.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -330,5 +240,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 22 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

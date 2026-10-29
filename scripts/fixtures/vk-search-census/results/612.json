@@ -107,97 +107,7 @@
           "sourceUrl": "https://www.chelseamarket.com/visit"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Indie shops",
-        "value": "Lots of little indie shops with really interesting items and few other gift types shops.",
-        "claims": [
-          {
-            "text": "Lots of little indie shops with really interesting items and few other gift types shops.",
-            "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 15,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/l2vthp9k49x",
-          "savedHtml": "r8/exa_l2vthp9k49x.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Food stalls",
-        "value": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
-        "claims": [
-          {
-            "text": "It's a great place with a wonderful atmosphere where you can find a wide variety of delicious dishes.",
-            "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 18,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/l2vthp9k49x",
-          "savedHtml": "r8/exa_l2vthp9k49x.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Building and design",
-        "value": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
-        "claims": [
-          {
-            "text": "First of all the building is beautiful, then all the restaurant and shops are just amazing.",
-            "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 16,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/l2vthp9k49x",
-          "savedHtml": "r8/exa_l2vthp9k49x.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      },
-      {
-        "theme": "Artist market",
-        "value": "We also loved the artist flea market area—so many amazing finds!",
-        "claims": [
-          {
-            "text": "We also loved the artist flea market area—so many amazing finds!",
-            "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/l2vthp9k49x",
-        "rating": "5/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 11,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/l2vthp9k49x",
-          "savedHtml": "r8/exa_l2vthp9k49x.html",
-          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -248,5 +158,6 @@
   "reviewThemes": {
     "representative": true
   },
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

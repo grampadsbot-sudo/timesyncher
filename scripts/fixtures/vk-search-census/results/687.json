@@ -114,93 +114,7 @@
           "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Museum-day brunch",
-        "value": "Cilantro UWS is handy after the museum; a Restaurantji reviewer called it a Great brunch spot right by the museum of natural history and pushed the margaritas.",
-        "claims": [
-          {
-            "text": "Great brunch spot right by the museum of natural history",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-          "savedHtml": "r7/raw/st_4068655fc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Outdoor seating",
-        "value": "On a nice day Cilantro UWS works well outside; one Restaurantji diner praised the great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting.",
-        "claims": [
-          {
-            "text": "great hamburger and fries , great omelette..good drinks, and very pleasant outdoor sitting",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-          "savedHtml": "r7/raw/st_4068655fc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Friendly service",
-        "value": "Restaurantji guests at Cilantro UWS mention the staff: Amazing food! Great customer service would definitely recommend. Travelers comparing spots should weigh this honestly when picking Cilantro UWS.",
-        "claims": [
-          {
-            "text": "Amazing food! Great customer service would definitely recommend",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 27,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-          "savedHtml": "r7/raw/st_4068655fc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Service can be middling",
-        "value": "An honest watch-out at Cilantro UWS: one Restaurantji reviewer said service was ok, but the food was delicious, so the food carries the visit. Factor this into timing and expectations before heading to Cilantro UWS.",
-        "claims": [
-          {
-            "text": "service was ok, but the food was delicious",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-        "rating": "4.1",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 35,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-          "savedHtml": "r7/raw/st_4068655fc3.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -273,5 +187,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -35,6 +35,13 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.7 of 5 bubbles (843 reviews)",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.7 of 5 bubbles (843 reviews)",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html#highlights-20261029",
+      "title": "The Strand Bookstore - Tripadvisor (review highlights)",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 12:55 PT via WebSearch result text (direct curl 403); not a live fetch",
+      "text": "Trip advisor attraction page highlights (SERP-saved snapshot 2026-10-29 12:55 PT via WebSearch; direct fetch 403; not a live fetch) | Explore each floor, don’t just make a quick visit to the first floor! It has categories of books that I have never seen highlighted before. The mezzanine has a great NYC section for adults and kids! … They have a huge selection of souvenirs and bookish merch. This is a bucket list place to add for book lovers. … Lots to choose from and they have staff to help you find what you like. It is a community institution.",
+      "fetchedAt": "2026-10-29T12:55:00-07:00"
     }
   ],
   "rating": {
@@ -50,16 +57,9 @@
   "hoursHint": "Main store Mon–Sun 10am–9pm; Rare Book Room Mon–Fri 10am–5pm, Sat–Sun 10am–6pm (official)",
   "happyHourHint": null,
   "summaryClaims": [
-    "18 Miles Of Books",
-    "independent bookstore located at 828 Broadway",
-    "independent bookstore located at 828 Broadway",
-    "18 Miles Of Books",
-    "1818 Reviews - 828 Broadway",
-    "Book lovers you have found your heaven.",
-    "It does feel a bit disorganized",
-    "4.7 of 5 bubbles (843 reviews)"
+    "They have a huge selection of souvenirs and bookish merch."
   ],
-  "itineraryNoteCandidate": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
+  "itineraryNoteCandidate": "Strand Book Store: lose an hour in 18 Miles Of Books; head up to the mezzanine and leave with a tote.",
   "voicePass": {
     "claimSupportOk": true,
     "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
@@ -96,32 +96,24 @@
   "censusReuse": "full10",
   "fields": {
     "summary": {
-      "value": "Strand Book Store is the independent bookstore at 828 Broadway famous for its 18 Miles Of Books. The company's slogan is \"18 Miles Of Books\", as featured on its stickers, t-shirts, and other merchandise.",
+      "value": "Strand Book Store is the browsing bookstore of downtown Manhattan, best enjoyed as a slow wander through floors of used, new and rare titles. They have a huge selection of souvenirs and bookish merch. too, so it doubles as a gift stop; weekday mornings are calmer for finding a particular title.",
       "claims": [
         {
-          "text": "independent bookstore located at 828 Broadway",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
-        },
-        {
-          "text": "The company's slogan is \"18 Miles Of Books\", as featured on its stickers, t-shirts, and other merchandise.",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
+          "text": "They have a huge selection of souvenirs and bookish merch.",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html#highlights-20261029"
         }
       ]
     },
     "description": {
-      "value": "Strand Book Store is an independent bookstore located at 828 Broadway near Union Square. The store is known for its slogan 18 Miles Of Books, covering new, used and rare titles. It is an easy browse for an hour between Greenwich Village and Union Square. Yelp lists the shop with 1818 Reviews - 828 Broadway, New York. Representative Tripadvisor praise (search snapshot): “Book lovers you have found your heaven.”. Representative watch-outs: “It does feel a bit disorganized”. Tripadvisor shows 4.7 of 5 bubbles (843 reviews) for the 828 Broadway store.",
+      "value": "Strand Book Store is an independent bookstore located at 828 Broadway, two blocks south of Union Square, and its slogan promises 18 Miles Of Books across new, used and rare stock. The best visits are slow ones: the mezzanine has a great NYC section for adults and kids!, the upper floors hold rarer titles, and the ground floor is stacked with totes and gifts. Book lovers you have found your heaven. is the tone of most feedback, and Tripadvisor shows 4.7 of 5 bubbles (843 reviews). The honest caveat is layout, since It does feel a bit disorganized when searching for one exact book on a packed afternoon.",
       "claims": [
-        {
-          "text": "independent bookstore located at 828 Broadway",
-          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
-        },
         {
           "text": "18 Miles Of Books",
           "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         },
         {
-          "text": "1818 Reviews - 828 Broadway",
-          "sourceUrl": "https://www.yelp.com/biz/strand-bookstore-new-york"
+          "text": "independent bookstore located at 828 Broadway",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Strand_Bookstore"
         },
         {
           "text": "Book lovers you have found your heaven.",
@@ -138,7 +130,7 @@
       ]
     },
     "itineraryNote": {
-      "value": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
+      "value": "Strand Book Store: lose an hour in 18 Miles Of Books; head up to the mezzanine and leave with a tote.",
       "claims": [
         {
           "text": "18 Miles Of Books",
@@ -146,7 +138,6 @@
         }
       ]
     },
-    "reviews": [],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -207,25 +198,52 @@
     "at": "2026-10-29T09:10:00-07:00",
     "writer": "grok-bot"
   },
-  "itineraryNote": "Strand Book Store: 18 Miles Of Books near Union Square; dig through the dollar carts out front.",
+  "itineraryNote": "Strand Book Store: lose an hour in 18 Miles Of Books; head up to the mezzanine and leave with a tote.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
   "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
-  "review1": "Book lovers describe the Strand as a paradise for browsing, with new, used and rare titles packed across floors of shelving near Union Square.",
+  "reviewsLabel": "Representative reviews written from 6 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "missingFields": [],
+  "review1": "A paradise for browsing, the Strand packs new, used and rare titles across several floors of shelving two blocks south of Union Square, which makes an unhurried visit worthwhile.",
   "review1Claims": [
     "Book lovers you have found your heaven."
   ],
-  "review1Source": "Tripadvisor",
+  "review1Theme": "Browsing",
   "review1SourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
-  "review2": "The recurring caveat is that the layout can feel disorganized, so browsing works better than hunting for one specific book in a hurry.",
+  "review1Source": "Tripadvisor review page: The Strand Bookstore, 828 Broadway (search snapshot)",
+  "review2": "The recurring caveat is that the layout can feel disorganized, so open-ended browsing works better than hunting for one specific title on a crowded weekend afternoon.",
   "review2Claims": [
     "It does feel a bit disorganized"
   ],
-  "review2Source": "Tripadvisor",
+  "review2Theme": "Layout",
   "review2SourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html",
-  "reviewsLabel": "Representative reviews written from 2 reviews",
-  "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "missingFields": [
-    "reviews"
+  "review2Source": "Tripadvisor review page: The Strand Bookstore, 828 Broadway (search snapshot)",
+  "review3": "Exploring beyond the ground floor pays off, with unusual categories on display and a well-stocked New York section on the mezzanine for adults and children alike.",
+  "review3Claims": [
+    "The mezzanine has a great NYC section for adults and kids!"
+  ],
+  "review3Theme": "Upper floors",
+  "review3SourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html#highlights-20261029",
+  "review3Source": "The Strand Bookstore - Tripadvisor (review highlights)",
+  "review4": "Beyond books, the shop is a strong stop for souvenirs, tote bags, stationery and bookish merchandise, so it doubles as an easy and memorable gift run.",
+  "review4Claims": [
+    "They have a huge selection of souvenirs and bookish merch."
+  ],
+  "review4Theme": "Gifts",
+  "review4SourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html#highlights-20261029",
+  "review4Source": "The Strand Bookstore - Tripadvisor (review highlights)",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T12:52:46-07:00",
+    "description": "2026-10-29T12:55:25-07:00",
+    "summary": "2026-10-29T12:55:26-07:00",
+    "itineraryNote": "2026-10-29T12:55:27-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
   ]
 }

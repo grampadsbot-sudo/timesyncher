@@ -103,97 +103,7 @@
           "sourceUrl": "https://www.latraviatapizzany.com/"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Quick slice",
-        "value": "La Traviata Pizzeria is a speed stop; a Restaurantji diner said The service was quick and the pizza good and recommended it for a quick bite.",
-        "claims": [
-          {
-            "text": "The service was quick and the pizza good",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
-          },
-          {
-            "text": "for a quick bite",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-          "savedHtml": "r7/raw/st_4edb1c3290.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Owners",
-        "value": "Regulars like the people behind the counter at La Traviata Pizzeria, with one Restaurantji reviewer praising the Lovely owners and good pizza. Keep this in mind as the main reason to choose La Traviata Pizzeria over nearby options.",
-        "claims": [
-          {
-            "text": "Lovely owners and good pizza.",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 38,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-          "savedHtml": "r7/raw/st_4edb1c3290.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Value",
-        "value": "Prices stay friendly at La Traviata Pizzeria: one Restaurantji guest grabbed a slice and soda for about $5.50, cheap for the Lincoln Center area. Travelers comparing spots should weigh this honestly when picking La Traviata Pizzeria.",
-        "claims": [
-          {
-            "text": "about $5.50",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 36,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-          "savedHtml": "r7/raw/st_4edb1c3290.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Limited seating",
-        "value": "Plan to eat on the move at La Traviata Pizzeria, since a Restaurantji reviewer notes Only 4 small tables inside and a few standing tables outside.",
-        "claims": [
-          {
-            "text": "Only 4 small tables inside and a few standing tables outside",
-            "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/"
-          }
-        ],
-        "source": "Restaurantji",
-        "sourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-        "rating": "4.2",
-        "ratingBasis": "listing aggregate (per-review stars not saved)",
-        "words": 26,
-        "starsEvidence": {
-          "page": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-          "savedHtml": "r7/raw/st_4edb1c3290.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      }
-    ]
+    }
   },
   "rating": {
     "primary": 4.2,
@@ -273,5 +183,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }

@@ -41,11 +41,7 @@
   "hoursHint": null,
   "happyHourHint": null,
   "summaryClaims": [
-    "the corner of Fifth Avenue and 57th Street",
-    "subterranean Jazz Club",
-    "subterranean Jazz Club",
-    "Arva and Akari sit alongside the Lounge Bar, subterranean Jazz Club",
-    "the corner of Fifth Avenue and 57th Street"
+    "subterranean Jazz Club"
   ],
   "itineraryNoteCandidate": "The Jazz Club at Aman New York: a hushed luxury hideaway at the corner of Fifth Avenue and 57th Street; book a late cocktail in the subterranean Jazz Club.",
   "voicePass": {
@@ -59,15 +55,11 @@
   "wallClockMs": null,
   "fields": {
     "summary": {
-      "value": "The Jazz Club at Aman New York is a subterranean jazz venue inside the Crown Building on Fifth Avenue. It shares the hotel with the Lounge Bar and the Arva and Akari restaurants, so it suits a late drink and live music after dinner in Midtown.",
+      "value": "The Jazz Club at Aman New York is a hushed, speakeasy-style hideaway under the Crown Building where excellent cocktails, gracious service and live music come at a luxury price. Staff move guests to better tables when asked, and the subterranean Jazz Club suits a special late evening rather than a casual drop-in.",
       "claims": [
         {
           "text": "subterranean Jazz Club",
           "sourceUrl": "https://www.aman.com/hotels/aman-new-york/dining"
-        },
-        {
-          "text": "the corner of Fifth Avenue and 57th Street",
-          "sourceUrl": "https://www.aman.com/hotels/aman-new-york"
         }
       ]
     },
@@ -105,96 +97,6 @@
         }
       ]
     },
-    "reviews": [
-      {
-        "theme": "Breakfast and dining",
-        "value": "Exa place listing reviewer on The Jazz Club at Aman New York: The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
-        "claims": [
-          {
-            "text": "The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
-            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-        "rating": "4.4/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 30,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/8t7j7x9qnkg",
-          "savedHtml": "r7/raw/st_70467ff658.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Service",
-        "value": "Exa place listing reviewer on The Jazz Club at Aman New York: Price Point $$$$$ Staff was very good, service was exceptional. Worth weighing alongside the overall 4.4/5 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "Price Point $$$$$ Staff was very good, service was exceptional.",
-            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-        "rating": "4.4/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "praise",
-        "words": 34,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/8t7j7x9qnkg",
-          "savedHtml": "r7/raw/st_70467ff658.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 5
-      },
-      {
-        "theme": "Overall experience",
-        "value": "Watch-out from a Exa place listing reviewer at The Jazz Club at Aman New York: We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
-        "claims": [
-          {
-            "text": "We had issues with our table, and they were accommodating and let us table hop to find the perfect spot.",
-            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-        "rating": "4.4/5",
-        "ratingBasis": "listing aggregate",
-        "polarity": "watchOut",
-        "words": 35,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/8t7j7x9qnkg",
-          "savedHtml": "r7/raw/st_70467ff658.html",
-          "basis": "per-review star label on page (aria-label \"N out of 5 stars\" / JSON stars)"
-        },
-        "stars": 4
-      },
-      {
-        "theme": "Music",
-        "value": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
-        "claims": [
-          {
-            "text": "This exclusive jazz club with a speakeasy vibe in the heart of Manhattan offers live music and attracts a more mature crowd, yet the vibe stays lively and fun with plenty of people dancing. The drinks are unique, complex, and beautifully crafted, but perhaps a little too complex for me personally. They also check names and reservations before you can even enter the building.",
-            "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg"
-          }
-        ],
-        "source": "Exa place listing",
-        "sourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-        "rating": "4/5",
-        "ratingBasis": "per-review stars",
-        "polarity": "praise",
-        "words": 64,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://exa.ai/library/place/8t7j7x9qnkg",
-          "savedHtml": "r8/exa_8t7j7x9qnkg.html",
-          "basis": "per-review star value in Exa page JSON"
-        }
-      }
-    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -289,5 +191,15 @@
   ],
   "reviewsLabel": "Representative reviews written from 14 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "summary": "2026-10-29T12:54:05-07:00"
+  },
+  "writtenOrder": [
+    "reviews",
+    "description",
+    "summary",
+    "itineraryNote"
+  ]
 }

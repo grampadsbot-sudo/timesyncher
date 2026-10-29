@@ -121,101 +121,7 @@
           "sourceUrl": "https://www.hiltongrandvacations.com/en/resorts-and-destinations/new-york/the-hilton-club-new-york"
         }
       ]
-    },
-    "reviews": [
-      {
-        "theme": "Overall experience",
-        "value": "Trip.com reviewer on Hilton Club New York: Other than that, we enjoyed our stay very much. That is the clearest takeaway from this guest review for planning the visit around it.",
-        "claims": [
-          {
-            "text": "Other than that, we enjoyed our stay very much",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 31,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-          "savedRaw": "drev/raw/618.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Trip.com reviewer on Hilton Club New York: Rooms were clean and comfortable and as quiet as a NYC room can be. Worth weighing alongside the overall 10.0/10 score before locking in the plan.",
-        "claims": [
-          {
-            "text": "Rooms were clean and comfortable and as quiet as a NYC room can be.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-        "rating": "10.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "praise",
-        "words": 33,
-        "stars": 5,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-          "savedRaw": "drev/raw/618.json",
-          "exactScore": "10.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Watch-out from a Trip.com reviewer at Hilton Club New York: Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
-        "claims": [
-          {
-            "text": "Room service is missing and breakfast is very expensive, $50 when it was advertised at $18.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-        "rating": "8.5/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 26,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-          "savedRaw": "drev/raw/618.json",
-          "exactScore": "8.5/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      },
-      {
-        "theme": "Rooms",
-        "value": "Watch-out from a Trip.com reviewer at Hilton Club New York: Our first room had a leaking A/C and wet carpet. A practical point to factor into the decision before the trip.",
-        "claims": [
-          {
-            "text": "Our first room had a leaking A/C and wet carpet.",
-            "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/"
-          }
-        ],
-        "source": "Trip.com",
-        "sourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-        "rating": "8.0/10",
-        "ratingBasis": "per-review score",
-        "polarity": "watchOut",
-        "words": 31,
-        "stars": 4,
-        "starsEvidence": {
-          "page": "https://us.trip.com/hotels/new-york-hotel-detail-2644133/hilton-club-new-york/",
-          "savedRaw": "drev/raw/618.json",
-          "exactScore": "8.0/10",
-          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
-        }
-      }
-    ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-hotel-essence-itinerary-note-20261029",
@@ -292,5 +198,6 @@
   ],
   "reviewsLabel": "Representative reviews written from 11 reviews",
   "reviewsRepresentative": true,
-  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029"
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
 }
