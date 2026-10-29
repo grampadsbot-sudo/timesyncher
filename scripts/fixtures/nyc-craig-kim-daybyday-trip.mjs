@@ -521,7 +521,7 @@ function buildPayload() {
       override.logoUrl = 'https://www.macys.com/favicon.ico';
     }
     if (row.id === 614) {
-      override.logoUrl = 'https://store.moma.org/favicon.ico';
+      override.logoUrl = 'https://icons.duckduckgo.com/ip3/store.moma.org.ico';
     }
     if (row.id === 615) {
       override.logoUrl = 'https://www.bergdorfgoodman.com/favicon.ico';

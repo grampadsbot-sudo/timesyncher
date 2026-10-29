@@ -582,7 +582,7 @@
     "summary": "Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Best if the itinerary reaches Union Square/Village rather than as a special uptown trip.",
     "price": 18,
     "website": "https://www.strandbooks.com/",
-    "logoUrl": "https://www.strandbooks.com/favicon.ico",
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png",
     "lat": 40.7333,
     "lng": -73.9909,
     "address": "828 Broadway, New York, NY 10003"
@@ -835,7 +835,7 @@
     "summary": "Lincoln Center jazz room; Price: $50 cover floor.",
     "price": 50,
     "website": "https://www.jazz.org/dizzys",
-    "logoUrl": "https://www.jazz.org/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/jazz.org.ico",
     "lat": 40.7686,
     "lng": -73.983,
     "address": "10 Columbus Cir, New York, NY 10023"
@@ -901,7 +901,7 @@
     "summary": "Four-room jazz shortlist; Price: $40 blended cover floor.",
     "price": 40,
     "website": "https://birdlandjazz.com/",
-    "logoUrl": "https://birdlandjazz.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
     "lat": 40.759,
     "lng": -73.989,
     "address": "Midtown / Village jazz rooms"
@@ -956,7 +956,7 @@
     "summary": "Lincoln Center Mexican; Price: $42 entree floor.",
     "price": 42,
     "website": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
-    "logoUrl": "https://www.rosamexicano.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
     "lat": 40.772,
     "lng": -73.982,
     "address": "61 Columbus Ave, New York, NY 10023"
@@ -967,7 +967,7 @@
     "summary": "Lincoln Square brasserie; Price: $35 brunch entree floor.",
     "price": 35,
     "website": "https://thesmithrestaurant.com/location/lincoln-square/",
-    "logoUrl": "https://thesmithrestaurant.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/thesmithrestaurant.com.ico",
     "lat": 40.773,
     "lng": -73.982,
     "address": "1900 Broadway, New York, NY 10023"
@@ -1033,7 +1033,7 @@
     "summary": "John's of Bleecker Street pizza; trek shortlist.",
     "price": 24,
     "website": "https://www.johnsofbleeckerstreet.com/",
-    "logoUrl": "https://www.johnsofbleeckerstreet.com/favicon.ico",
+    "logoUrl": "https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico",
     "lat": 40.731,
     "lng": -74.003,
     "address": "278 Bleecker St, New York, NY 10014"
@@ -1077,7 +1077,7 @@
     "summary": "The Consulate UWS brasserie; trek shortlist.",
     "price": 38,
     "website": "https://www.theconsulatenyc.com/",
-    "logoUrl": "https://www.theconsulatenyc.com/favicon.ico",
+    "logoUrl": "https://static.spotapps.co/website_images/ab_websites/91524_website_v2/favicons/favicon-96x96.png",
     "lat": 40.784,
     "lng": -73.978,
     "address": "Upper West Side, New York, NY"

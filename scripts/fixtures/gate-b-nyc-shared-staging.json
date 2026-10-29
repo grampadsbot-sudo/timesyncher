@@ -193,7 +193,7 @@
      "website": "https://carbonenewyork.com/",
      "notes": "",
      "source": "fixture-nyc",
-     "logoUrl": "https://carbonenewyork.com/favicon.ico"
+     "logoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png"
     },
     "place_id": 610
    },
@@ -315,7 +315,7 @@
      "website": "https://www.strandbooks.com/",
      "notes": "",
      "source": "fixture-nyc",
-     "logoUrl": "https://www.strandbooks.com/favicon.ico"
+     "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png"
     },
     "place_id": 605
    },
@@ -377,7 +377,7 @@
      "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
      "notes": "",
      "source": "fixture-nyc",
-     "logoUrl": "https://www.tdf.org/favicon.ico"
+     "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png"
     },
     "place_id": 606
    },
@@ -468,7 +468,7 @@
      "website": "https://www.tdf.org/discount-ticket-programs/tkts-by-tdf/",
      "notes": "",
      "source": "fixture-nyc",
-     "logoUrl": "https://www.tdf.org/favicon.ico"
+     "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png"
     }
    },
    {
@@ -653,7 +653,7 @@
      "website": "https://store.moma.org/",
      "notes": "",
      "source": "fixture-nyc",
-     "logoUrl": "https://store.moma.org/favicon.ico"
+     "logoUrl": "https://icons.duckduckgo.com/ip3/store.moma.org.ico"
     },
     "place_id": 614
    },
@@ -1264,7 +1264,7 @@
    "website": "https://www.strandbooks.com/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://www.strandbooks.com/favicon.ico",
+   "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png",
    "price": 22
   },
   {
@@ -2636,7 +2636,7 @@
    "website": "https://www.jazz.org/dizzys",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://www.jazz.org/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/jazz.org.ico",
    "price": 50
   },
   {
@@ -2780,7 +2780,7 @@
    "website": "https://birdlandjazz.com/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://birdlandjazz.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
    "price": 40
   },
   {
@@ -2900,7 +2900,7 @@
    "website": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://www.rosamexicano.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
    "price": 42
   },
   {
@@ -2924,7 +2924,7 @@
    "website": "https://thesmithrestaurant.com/location/lincoln-square/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://thesmithrestaurant.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/thesmithrestaurant.com.ico",
    "price": 35
   }
  ],
@@ -4801,7 +4801,7 @@
    "thirdPartyReviewCount": "531",
    "price": 48,
    "timeline": true,
-   "logoUrl": "https://carbonenewyork.com/favicon.ico",
+   "logoUrl": "https://carbonenewyork.com/assets/favicons/carbone.png",
    "otherRatingSites": [
     {
      "rating": "4",
@@ -4994,7 +4994,7 @@
    "thirdPartyReviewCount": "842",
    "price": 22,
    "timeline": true,
-   "logoUrl": "https://www.strandbooks.com/favicon.ico",
+   "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png",
    "otherRatingSites": [
     {
      "rating": "4.7",
@@ -5063,7 +5063,7 @@
    "thirdPartyReviewCount": "17",
    "price": 78,
    "timeline": true,
-   "logoUrl": "https://www.tdf.org/favicon.ico",
+   "logoUrl": "https://www.tdf.org/wp-content/uploads/2025/11/tdf-favicon-1.png",
    "thirdPartySource": "Tripadvisor",
    "otherRatingSites": [
     {
@@ -5230,7 +5230,7 @@
    "lng": -73.9776,
    "price": 35,
    "timeline": true,
-   "logoUrl": "https://store.moma.org/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/store.moma.org.ico",
    "source": "fixture-nyc",
    "url": "https://store.moma.org/",
    "details": "Good for curated design gifts, art books, stationery, home objects, toys, and museum-quality souvenirs. Easy add-on around MoMA/Fifth Avenue/Midtown. Price: $35 typical spend floor from ccab card (not a fixed menu price)."
@@ -5460,7 +5460,7 @@
    "thirdPartyReviewCount": "2366",
    "price": 508,
    "timeline": false,
-   "logoUrl": "https://www.arthousehotelnyc.com/favicon.ico",
+   "logoUrl": "https://image-tc.galaxy.tf/wipng-diqogu9xx9dzdynxlmw6rahjm/favicon.png",
    "thirdPartySource": "Booking.com",
    "source": "fixture-nyc",
    "url": "https://www.arthousehotelnyc.com/",
@@ -5480,7 +5480,7 @@
    "lng": -73.982,
    "price": 375,
    "timeline": false,
-   "logoUrl": "https://www.hilton.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/hilton.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.hilton.com/en/hotels/nycgvhg-hilton-club-new-york/",
    "details": "Hilton Club New York delivers timeshare-style suites in Midtown with full kitchens and living rooms, suited to families comparing week-long rates on Booking.com. Hilton Club reviewers highlight washer-dryer units in some layouts, strong transit access, and the need to confirm exact tower entrance before arrival."
@@ -5600,7 +5600,7 @@
    "thirdPartyReviewCount": "293",
    "price": 188,
    "timeline": false,
-   "logoUrl": "https://www.hilton.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/hilton.com.ico",
    "thirdPartySource": "Booking.com",
    "otherRatingSites": [
     {
@@ -5704,7 +5704,7 @@
    "lng": -73.982,
    "price": 266,
    "timeline": false,
-   "logoUrl": "https://www.nighthotelbroadway.com/favicon.ico",
+   "logoUrl": "https://assets.simplotel.com/simplotel/image/upload/x_0,y_2,w_562,h_563,c_crop/w_32,h_32,c_scale/night-hotel-broadway/Logo_e46ec698",
    "source": "fixture-nyc",
    "url": "https://www.nighthotelbroadway.com/",
    "details": "Night Hotel Broadway sits on the Upper West Side near the 96th Street subway, offering budget-friendly rooms for travelers who prioritize Lincoln Center access over luxury finishes. Booking.com reviews for Night Hotel Broadway mention simple layouts, a lively neighborhood, and the need to read recent cleanliness notes before confirming."
@@ -5764,7 +5764,7 @@
    "lng": -73.982,
    "price": 425,
    "timeline": false,
-   "logoUrl": "https://www.romerhotels.com/favicon.ico",
+   "logoUrl": "https://www.romerhotels.com/skins/skin-romerhotelsprod/hell-favicon.ico",
    "source": "fixture-nyc",
    "url": "https://www.romerhotels.com/hells-kitchen/",
    "details": "Romer Hell's Kitchen is a boutique hotel on West 46th Street with a lobby bar and modern rooms aimed at theater-goers. Booking.com guests describe Romer Hell's Kitchen as a calmer alternative to giant Times Square towers while keeping Restaurant Row and the N/Q/R/W lines within a few blocks."
@@ -5804,7 +5804,7 @@
    "thirdPartyReviewCount": "3898",
    "price": 509,
    "timeline": false,
-   "logoUrl": "https://www.empirehotelnyc.com/favicon.ico",
+   "logoUrl": "https://image-tc.galaxy.tf/wipng-ay7dnvukh2y1egwneghxy6ip6/favicon.png",
    "thirdPartySource": "Booking.com",
    "source": "fixture-nyc",
    "url": "https://www.empirehotelnyc.com/",
@@ -5824,7 +5824,7 @@
    "lng": -73.982,
    "price": 210,
    "timeline": false,
-   "logoUrl": "https://www.manhattanhoteltimessquare.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/manhattanhoteltimessquare.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.manhattanhoteltimessquare.com/",
    "details": "The Manhattan at Times Square Hotel places you on West 51st Street amid Broadway theaters and restaurant rows, with compact rooms typical of older Midtown towers. Reviewers on Google and booking sites stress unbeatable foot traffic to shows while warning that hallways and elevators can feel dated during peak tourist weeks."
@@ -5913,7 +5913,7 @@
    "lng": -73.982,
    "price": 12,
    "timeline": false,
-   "logoUrl": "https://juicegeneration.com/favicon.ico",
+   "logoUrl": "https://www.juicegeneration.com/static/version1792535308/frontend/JGNew/JGTheme/en_US/Magento_Theme/favicon.ico",
    "source": "fixture-nyc",
    "url": "https://juicegeneration.com/",
    "details": "address: 979 8th Ave; fit: high for Lincoln Center/Columbus Circle; notes: Juice option near Columbus Circle; verify celery-specific menu. Price: $12 typical spend floor from ccab card (not a fixed menu price)."
@@ -5929,7 +5929,7 @@
    "lng": -73.982,
    "price": 12,
    "timeline": false,
-   "logoUrl": "https://juicegeneration.com/favicon.ico",
+   "logoUrl": "https://www.juicegeneration.com/static/version1792535308/frontend/JGNew/JGTheme/en_US/Magento_Theme/favicon.ico",
    "source": "fixture-nyc",
    "url": "https://juicegeneration.com/",
    "details": "address: 117 W 72nd St; fit: high; notes: Fresh juice bar on UWS; verify celery-specific menu. Price: $12 typical spend floor from ccab card (not a fixed menu price)."
@@ -6187,7 +6187,7 @@
    "lng": -74.001,
    "price": 40,
    "timeline": false,
-   "logoUrl": "https://www.bluenote.net/favicon.ico",
+   "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png",
    "source": "fixture-nyc",
    "url": "https://www.bluenote.net/",
    "details": "Greenwich Village jazz room; cover often around $40 at the door for late sets; reserve or arrive early on weekends. Price: $40 cover floor from venue calendar snippets; Status: candidate only."
@@ -6203,7 +6203,7 @@
    "lng": -74.001,
    "price": 55,
    "timeline": false,
-   "logoUrl": "https://www.bluenote.net/favicon.ico",
+   "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png",
    "source": "fixture-nyc",
    "url": "https://www.bluenote.net/jazz-club-new-york/",
    "details": "Primary Blue Note room listing for NYC jazz nights; table service and cover vary by show. Price: $55 typical table minimum snippet; Status: candidate only."
@@ -6219,7 +6219,7 @@
    "lng": -73.9855,
    "price": 120,
    "timeline": false,
-   "logoUrl": "https://www.bluenotejazzfestival.com/favicon.ico",
+   "logoUrl": "https://www.bluenotejazz.com/festivals/wp-content/uploads/sites/11/2023/01/cropped-fav-32x32.png",
    "source": "fixture-nyc",
    "url": "https://www.bluenotejazzfestival.com/",
    "details": "Festival pass option spanning multiple NYC jazz venues in June 2026 window; compare single-club tickets before buying. Price: $120 multi-show pass floor from festival marketing; Status: candidate only."
@@ -6251,7 +6251,7 @@
    "lng": -73.983,
    "price": 50,
    "timeline": false,
-   "logoUrl": "https://www.jazz.org/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/jazz.org.ico",
    "source": "fixture-nyc",
    "url": "https://www.jazz.org/dizzys",
    "details": "Lincoln Center jazz room with Hudson views; tables and bar seating with cover plus minimums on busy nights. Price: $50 cover floor; Status: candidate only."
@@ -6283,7 +6283,7 @@
    "lng": -73.9855,
    "price": 55,
    "timeline": false,
-   "logoUrl": "https://www.bigbustours.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/bigbustours.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.bigbustours.com/en/new-york",
    "details": "Hop-on hop-off bus loops for first-time skyline orientation; traffic can stretch timing. Price: $55 24-hour pass floor; Status: candidate only."
@@ -6315,7 +6315,7 @@
    "lng": -74.0445,
    "price": 35,
    "timeline": false,
-   "logoUrl": "https://www.statuecruises.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/statuecruises.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.statuecruises.com/",
    "details": "Ferry-based Statue/Ellis visit; security and timed ticket windows required. Price: $35 reserve ticket floor; Status: candidate only."
@@ -6347,7 +6347,7 @@
    "lng": -73.989,
    "price": 40,
    "timeline": false,
-   "logoUrl": "https://birdlandjazz.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
    "source": "fixture-nyc",
    "url": "https://birdlandjazz.com/",
    "details": "Shortlist bundle comparing four NYC jazz rooms for the same weekend window. Price: $40 blended cover floor; Status: candidate only."
@@ -6379,7 +6379,7 @@
    "lng": -73.986,
    "price": 28,
    "timeline": false,
-   "logoUrl": "https://www.bodega88nyc.com/favicon.ico",
+   "logoUrl": "https://static.spotapps.co/website_images/ab_websites/48639_website/favicons/apple-touch-icon.png",
    "source": "fixture-nyc",
    "url": "https://www.bodega88nyc.com/",
    "details": "Casual Asian-fusion spot good for late-night bites near theater district. Price: $28 entree floor; Status: candidate only."
@@ -6411,7 +6411,7 @@
    "lng": -73.979,
    "price": 24,
    "timeline": false,
-   "logoUrl": "https://www.nobodytoldme.nyc/favicon.ico",
+   "logoUrl": "https://media-cdn.getbento.com/accounts/9a6404f78cf78bec158eda77b36a73ad/media/images/70429NobodyToldMe_Character-05.png",
    "source": "fixture-nyc",
    "url": "https://www.nobodytoldme.nyc/",
    "details": "Upper West Side cocktail bar with small plates; good pre-show stop. Price: $24 cocktail floor; Status: candidate only."
@@ -6427,7 +6427,7 @@
    "lng": -73.982,
    "price": 42,
    "timeline": false,
-   "logoUrl": "https://www.rosamexicano.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
    "source": "fixture-nyc",
    "url": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
    "details": "Lincoln Center-area Mexican with tableside guacamole; reliable group dinners. Price: $42 entree floor; Status: candidate only."
@@ -6443,7 +6443,7 @@
    "lng": -73.982,
    "price": 35,
    "timeline": false,
-   "logoUrl": "https://thesmithrestaurant.com/favicon.ico",
+   "logoUrl": "https://icons.duckduckgo.com/ip3/thesmithrestaurant.com.ico",
    "source": "fixture-nyc",
    "url": "https://thesmithrestaurant.com/location/lincoln-square/",
    "details": "American brasserie near Lincoln Center; brunch and pre-theater crowds. Price: $35 brunch entree floor; Status: candidate only."

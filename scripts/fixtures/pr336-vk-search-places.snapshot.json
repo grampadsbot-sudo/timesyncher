@@ -264,7 +264,7 @@
       "summary": "Google lists Strand Book Store at 4.",
       "price": 22,
       "website": "https://www.strandbooks.com/",
-      "logoUrl": "https://www.strandbooks.com/favicon.ico",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png",
       "lat": 40.7333,
       "lng": -73.9909,
       "address": "828 Broadway, New York, NY 10003",
@@ -325,7 +325,7 @@
     "description": "Google lists Strand Book Store at 4.8/5 with more than 14,000 reviews. Classic NYC bookstore with new/used books, gifts, totes, stationery, and local character. Price: $22 per person book-and-gift planning estimate.",
     "summary": "Google lists Strand Book Store at 4.",
     "price": 22,
-    "logoUrl": "https://www.strandbooks.com/favicon.ico"
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/en/4/47/Strand_Bookstore_logo.png"
   },
   "606": {
     "source": "brave",
@@ -731,11 +731,11 @@
         "https://www.bluenotejazz.com/nyc/"
       ],
       "url": "https://www.bluenotejazz.com/nyc/",
-      "logoUrl": "https://www.bluenotejazz.com/favicon.ico",
+      "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png",
       "logoSearchEvidence": {
         "query": "Blue Note Jazz Club New York official website",
         "website": "https://www.bluenotejazz.com/nyc/",
-        "logoUrl": "https://www.bluenotejazz.com/favicon.ico",
+        "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png",
         "provider": "tavily"
       }
     },
@@ -743,7 +743,7 @@
     "summary": "Blue Note room listing; Price: $55 typical table minimum snippet.",
     "price": 55,
     "url": "https://www.bluenotejazz.com/nyc/",
-    "logoUrl": "https://www.bluenotejazz.com/favicon.ico"
+    "logoUrl": "https://www.bluenotejazz.com/wp-content/uploads/2022/05/cropped-fav-32x32.png"
   },
   "612": {
     "source": "brave",
@@ -2302,7 +2302,7 @@
       "summary": "Lincoln Center jazz room; Price: $50 cover floor.",
       "price": 50,
       "website": "https://www.jazz.org/dizzys",
-      "logoUrl": "https://www.jazz.org/favicon.ico",
+      "logoUrl": "https://icons.duckduckgo.com/ip3/jazz.org.ico",
       "lat": 40.7686,
       "lng": -73.983,
       "address": "10 Columbus Cir, New York, NY 10023",
@@ -2313,7 +2313,7 @@
     "description": "Lincoln Center jazz room with Hudson views; tables and bar seating with cover plus minimums on busy nights. Price: $50 cover floor; Status: candidate only.",
     "summary": "Lincoln Center jazz room; Price: $50 cover floor.",
     "price": 50,
-    "logoUrl": "https://www.jazz.org/favicon.ico"
+    "logoUrl": "https://icons.duckduckgo.com/ip3/jazz.org.ico"
   },
   "664": {
     "source": "brave",
@@ -2470,7 +2470,7 @@
       "summary": "Four-room jazz shortlist; Price: $40 blended cover floor.",
       "price": 40,
       "website": "https://birdlandjazz.com/",
-      "logoUrl": "https://birdlandjazz.com/favicon.ico",
+      "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico",
       "lat": 40.759,
       "lng": -73.989,
       "address": "Midtown / Village jazz rooms",
@@ -2481,7 +2481,7 @@
     "description": "Shortlist bundle comparing four NYC jazz rooms for the same weekend window. Price: $40 blended cover floor; Status: candidate only.",
     "summary": "Four-room jazz shortlist; Price: $40 blended cover floor.",
     "price": 40,
-    "logoUrl": "https://birdlandjazz.com/favicon.ico"
+    "logoUrl": "https://icons.duckduckgo.com/ip3/birdlandjazz.com.ico"
   },
   "670": {
     "source": "brave",
@@ -2610,7 +2610,7 @@
       "summary": "Lincoln Center Mexican; Price: $42 entree floor.",
       "price": 42,
       "website": "https://www.rosamexicano.com/location/rosa-mexicano-lincoln-center/",
-      "logoUrl": "https://www.rosamexicano.com/favicon.ico",
+      "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico",
       "lat": 40.772,
       "lng": -73.982,
       "address": "61 Columbus Ave, New York, NY 10023",
@@ -2621,7 +2621,7 @@
     "description": "Lincoln Center-area Mexican with tableside guacamole; reliable group dinners. Price: $42 entree floor; Status: candidate only.",
     "summary": "Lincoln Center Mexican; Price: $42 entree floor.",
     "price": 42,
-    "logoUrl": "https://www.rosamexicano.com/favicon.ico"
+    "logoUrl": "https://icons.duckduckgo.com/ip3/rosamexicano.com.ico"
   },
   "675": {
     "source": "brave",
@@ -2638,7 +2638,7 @@
       "summary": "Lincoln Square brasserie; Price: $35 brunch entree floor.",
       "price": 35,
       "website": "https://thesmithrestaurant.com/location/lincoln-square/",
-      "logoUrl": "https://thesmithrestaurant.com/favicon.ico",
+      "logoUrl": "https://icons.duckduckgo.com/ip3/thesmithrestaurant.com.ico",
       "lat": 40.773,
       "lng": -73.982,
       "address": "1900 Broadway, New York, NY 10023",
@@ -2649,7 +2649,7 @@
     "description": "American brasserie near Lincoln Center; brunch and pre-theater crowds. Price: $35 brunch entree floor; Status: candidate only.",
     "summary": "Lincoln Square brasserie; Price: $35 brunch entree floor.",
     "price": 35,
-    "logoUrl": "https://thesmithrestaurant.com/favicon.ico"
+    "logoUrl": "https://icons.duckduckgo.com/ip3/thesmithrestaurant.com.ico"
   },
   "676": {
     "source": "brave",
@@ -2862,7 +2862,7 @@
       "summary": "John's of Bleecker Street pizza; trek shortlist.",
       "price": 24,
       "website": "https://www.johnsofbleeckerstreet.com/",
-      "logoUrl": "https://www.johnsofbleeckerstreet.com/favicon.ico",
+      "logoUrl": "https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico",
       "lat": 40.731,
       "lng": -74.003,
       "address": "278 Bleecker St, New York, NY 10014",
@@ -2873,7 +2873,7 @@
     "description": "Greenwich Village coal-oven pizza classic on the Craig/Kim trek shortlist near Joe's Pizza. Price: $24 slice floor; Status: candidate only.",
     "summary": "John's of Bleecker Street pizza; trek shortlist.",
     "price": 24,
-    "logoUrl": "https://www.johnsofbleeckerstreet.com/favicon.ico"
+    "logoUrl": "https://icons.duckduckgo.com/ip3/johnsofbleecker.com.ico"
   },
   "683": {
     "source": "brave",
@@ -2974,7 +2974,7 @@
       "summary": "The Consulate UWS brasserie; trek shortlist.",
       "price": 38,
       "website": "https://www.theconsulatenyc.com/",
-      "logoUrl": "https://www.theconsulatenyc.com/favicon.ico",
+      "logoUrl": "https://static.spotapps.co/website_images/ab_websites/91524_website_v2/favicons/favicon-96x96.png",
       "lat": 40.784,
       "lng": -73.978,
       "address": "Upper West Side, New York, NY",
@@ -2985,7 +2985,7 @@
     "description": "Upper West Side brasserie on the Craig/Kim trek list near Lincoln Center hotel cluster. Price: $38 entree floor; Status: candidate only.",
     "summary": "The Consulate UWS brasserie; trek shortlist.",
     "price": 38,
-    "logoUrl": "https://www.theconsulatenyc.com/favicon.ico"
+    "logoUrl": "https://static.spotapps.co/website_images/ab_websites/91524_website_v2/favicons/favicon-96x96.png"
   },
   "687": {
     "source": "brave",
