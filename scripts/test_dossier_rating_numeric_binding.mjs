@@ -6,7 +6,6 @@ let positive = 0, rejected = 0;
 for (const file of readdirSync(root).filter(name => name.endsWith('.json'))) {
   const result = JSON.parse(readFileSync(new URL(file, root), 'utf8'));
   if (!result.rating?.ratingEvidence) continue;
-  // Exercise the evidence fallback even when a separately supported primary exists.
   delete result.rating.primary;
   const expected = result.rating.ratingEvidence;
   const dossier = vkSearchResultToDossier(result);

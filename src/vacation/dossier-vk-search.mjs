@@ -99,7 +99,6 @@ export function loadVkSearchCensusResult(place, { env = process.env, censusDir }
   }
 }
 
-// Parse the aggregate quote itself; page support alone cannot bind its numeric tuple.
 function ratingTupleMatchesQuote({ site, average, count, scale, quote }) {
   const normalized = quote.replace(/\s+/g, ' ').trim();
   const explicit = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:\/|(?:out )?of)\s*(5|10)\s*(?:bubbles|stars)?\s*(?:Very good|Good|Great|Excellent)?\s*\(?([\d,]+)\s+reviews?\)?$/i);
