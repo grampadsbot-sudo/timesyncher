@@ -2852,7 +2852,7 @@
    "website": "https://e-barnyc.com/",
    "notes": "",
    "source": "fixture-nyc",
-   "logoUrl": "https://www.esbarnyc.com/favicon.ico",
+   "logoUrl": "https://e-barnyc.com/favicon.ico",
    "price": 22
   },
   {
@@ -6395,7 +6395,7 @@
    "lng": -73.975,
    "price": 22,
    "timeline": false,
-   "logoUrl": "https://www.esbarnyc.com/favicon.ico",
+   "logoUrl": "https://e-barnyc.com/favicon.ico",
    "source": "fixture-nyc",
    "url": "https://e-barnyc.com/",
    "details": "Upper West Side bar crawl shortlist with cocktail/wine focus near Lincoln Center. Price: $22 cocktail floor; Status: candidate only."

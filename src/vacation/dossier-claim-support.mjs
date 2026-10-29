@@ -26,14 +26,22 @@ function tokenPolarities(value) {
 }
 
 function polarityMapsConflict(claimMap, pageMap) {
+  return polarityConflictTokens(claimMap, pageMap).length > 0;
+}
+
+function polarityConflictTokens(claimMap, pageMap) {
+  const conflicting = [];
   for (const [token, polarities] of claimMap) {
     const matched = pageMap.get(token);
     if (!matched) continue;
-    if (polarities.size > 1) return true;
+    if (polarities.size > 1) {
+      conflicting.push(token);
+      continue;
+    }
     if (matched.size > 1) continue;
-    if ([...polarities][0] !== [...matched][0]) return true;
+    if ([...polarities][0] !== [...matched][0]) conflicting.push(token);
   }
-  return false;
+  return conflicting;
 }
 
 function sharedContentTokenList(claimText, clauseText) {
@@ -55,7 +63,8 @@ function clauseOutsideClaim(claimNorm, clauseText) {
   return clause.split(claimNorm).join(' ');
 }
 
-function verbatimClaimContradictsPage(claimText, pageText) {
+function verbatimConflictTokens(claimText, pageText) {
+  const conflicting = [];
   const claimNorm = normalize(claimText);
   const claimMap = tokenPolarities(claimText);
   for (const clause of normalize(pageText).split(clauseSplit)) {
@@ -75,10 +84,14 @@ function verbatimClaimContradictsPage(claimText, pageText) {
       const claimPol = claimMap.get(token);
       const clausePol = clauseMap.get(token);
       if (!claimPol || !clausePol || claimPol.size > 1 || clausePol.size > 1) continue;
-      if ([...claimPol][0] !== [...clausePol][0]) return true;
+      if ([...claimPol][0] !== [...clausePol][0]) conflicting.push(token);
     }
   }
-  return false;
+  return [...new Set(conflicting)];
+}
+
+function verbatimClaimContradictsPage(claimText, pageText) {
+  return verbatimConflictTokens(claimText, pageText).length > 0;
 }
 
 export function claimTextContradictsPage(claimText, pageText) {
@@ -88,6 +101,16 @@ export function claimTextContradictsPage(claimText, pageText) {
     return verbatimClaimContradictsPage(claimText, pageText);
   }
   return polarityMapsConflict(tokenPolarities(claimText), tokenPolarities(pageText));
+}
+
+export function claimTextPageConflictTokens(claimText, pageText) {
+  if (!claimTextContradictsPage(claimText, pageText)) return [];
+  const claimNorm = normalize(claimText);
+  const pageNorm = normalize(pageText);
+  if (claimNorm && pageNorm.includes(claimNorm)) {
+    return verbatimConflictTokens(claimText, pageText);
+  }
+  return polarityConflictTokens(tokenPolarities(claimText), tokenPolarities(pageText));
 }
 
 export function claimTextWasRejected(value, rejected = []) {

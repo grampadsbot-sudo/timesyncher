@@ -18,7 +18,7 @@ import {
 import { placeFromTarget } from './thing-evidence-dossier-execution.mjs';
 import { dossierPresented } from './passb-dossier-presented.mjs';
 import { descriptionNamesThing } from './thing-dossier-fields.mjs';
-import { claimTextSupportedByPage, claimTextContradictsPage, claimTextWasRejected, claimTextVerdictEligible, isFillerSummaryText } from './dossier-claim-support.mjs';
+import { claimTextSupportedByPage, claimTextContradictsPage, claimTextPageConflictTokens, claimTextWasRejected, claimTextVerdictEligible, isFillerSummaryText } from './dossier-claim-support.mjs';
 import { rewriteDossierCitations } from './dossier-page-integrity.mjs';
 function savedDatedPage(page) {
   try {
@@ -93,7 +93,22 @@ export function recitBotPrimaryFields(dossier = {}) {
     let value = field.value;
     const contradictsValue = supported.some((claim) => {
       const page = pages[Number(claim.pages[0].slice(1)) - 1];
-      return claimTextContradictsPage(value, page.text);
+      if (!page?.text) return false;
+      if (!claimTextContradictsPage(value, page.text)) return false;
+      const conflictTokens = claimTextPageConflictTokens(value, page.text);
+      if (!conflictTokens.length) return true;
+      const supportedClaimTexts = supported
+        .map((row) => row.text || row.claim)
+        .filter((text) => text && claimTextSupportedByPage(text, page.text));
+      const tokenExcusedBySupportedClaim = (token) => supportedClaimTexts.some((text) => {
+        const claimNorm = String(text || '').toLowerCase().replace(/['']/g, "'").replace(/\s+/g, ' ').trim();
+        const words = claimNorm.match(/[a-z0-9]+(?:'[a-z]+)?/g) || [];
+        if (!words.includes(token)) return false;
+        if (claimTextContradictsPage(text, page.text)) return false;
+        if (claimTextContradictsPage(text, value)) return false;
+        return true;
+      });
+      return !conflictTokens.every(tokenExcusedBySupportedClaim);
     });
     if (!supported.length) value = '';
     else if (supported.length !== claims.length || contradictsValue) {
