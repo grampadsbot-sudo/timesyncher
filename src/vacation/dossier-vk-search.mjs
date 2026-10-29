@@ -178,15 +178,23 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
   const reviewPage = text(themes.source) ? pageIndex(text(themes.source)) : -1;
   const reviews = [1, 2, 3, 4].flatMap((n) => {
     const body = text(result[`review${n}`]);
-    const quote = excerpts.find((row) => body.includes(row));
-    if (!body || !quote || claimTextWasRejected(body, rejected) || !pageSupports(reviewPage, quote)) return [];
+    if (!body || claimTextWasRejected(body, rejected)) return [];
+    const themeQuote = excerpts.find((row) => body.includes(row));
+    const linePage = text(result[`review${n}SourceUrl`]) ? pageIndex(text(result[`review${n}SourceUrl`])) : -1;
+    const lineQuote = linePage < 0 ? '' : [body, ...body.split(/(?<=[.!?])\s+/)]
+      .filter((row) => row.length >= 25)
+      .sort((a, b) => b.length - a.length)
+      .find((row) => pageSupports(linePage, row)) || '';
+    const [quote, page] = themeQuote && pageSupports(reviewPage, themeQuote) ? [themeQuote, reviewPage]
+      : lineQuote ? [lineQuote, linePage] : [];
+    if (!quote) return [];
     const stars = reviewStars(result, n);
     return [{
       text: body,
       ...(stars ? { rating: stars.rating, starsEvidence: stars.evidence } : {}),
       ...(text(result[`review${n}Theme`]) ? { theme: text(result[`review${n}Theme`]) } : {}),
       ...(text(result[`review${n}Source`]) ? { source: text(result[`review${n}Source`]) } : {}),
-      claims: [{ text: quote, sourceUrl: pages[reviewPage].url, pages: [`p${reviewPage + 1}`], supported: true }],
+      claims: [{ text: quote, sourceUrl: pages[page].url, pages: [`p${page + 1}`], supported: true }],
     }];
   });
   if (reviews.length === 4) dossier.reviews = reviews;
