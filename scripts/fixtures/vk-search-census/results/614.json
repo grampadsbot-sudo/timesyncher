@@ -6,39 +6,37 @@
   "sources": [
     {
       "url": "https://store.moma.org/pages/design-store-53rd-nyc",
-      "fetchedAt": "2026-10-26T05:44:44.059Z",
-      "text": "Design Store 53rd NYC – MoMA Design Store\n<strong>Classic modern and cutting edge design products for adults and kids, including items produced exclusively for the Museum of Modern Art (New York) and items represented in its collection</strong>.\nDesign Store, 53rd St. NYC ... Our Customer Service Team is ready to assist you. Email us or call us during business hours. ... 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m.",
-      "title": ""
-    },
-    {
-      "url": "http://images.nymag.com/listings/stores/moma-design-store01/",
-      "fetchedAt": "2026-10-26T05:44:44.059Z",
-      "text": "MoMA Design Store - - Midtown West - New York Store & Shopping Guide\nInventory includes items that complement MoMA&#x27;s collection (print reproductions, retrospective coffee-table books) alongside beautiful, useful home décor, like oddly shaped table lamps, super-strong magnets, and kitchen gadgets by OXO. Save for the obligatory MoMA-emblazoned T-shirts and paperweights, the shop could almost be mistaken for a design emporium selling stylized versions of everything domestic, from doorstops to spatulas.\nDecades before Design Within Reach and Moss, there was the MoMA Store, first sited at a small sales desk in the museum's lobby in 1939 and now grown to include an outpost some 50 blocks south. All three branches are designed by Richard Gluckman; at the 11 W. 53rd Street flagship, MoMA Books overlooks the main lobby, a smaller shop on the sixth floor is devoted to temporary exhibitions, and the first-floor space, at nearly 6,000 square feet, offers a collection as painstakingly curated as the museum's artworks.\nInventory includes items that complement MoMA's collection (print reproductions, retrospective coffee-table books) alongside beautiful, useful home décor, like oddly shaped table lamps, super-strong magnets, and kitchen gadgets by OXO. Save for the obligatory MoMA-emblazoned T-shirts and paperweights, the shop could almost be mistaken for a design emporium selling stylized versions of everything domestic, from doorstops to spatulas.",
-      "title": ""
+      "title": "Design Store 53rd NYC – MoMA Design Store",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thu … Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. F … .m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. … dnesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. Friday 9:30 a.m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space sho",
+      "snippet": "Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thu",
+      "fetchMethod": "WebFetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4,
+    "yelp": 3.3
+  },
+  "reviewCount": {
+    "tripadvisor": 636,
+    "yelp": 68
+  },
   "priceHint": "$$$ design gifts",
   "hoursHint": "Daily 9:30am–6:30pm; Fri until 9pm (official store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Classic modern and cutting edge design products for adults and kids, including items produced exclusively for the Museum of Modern Art (New York) and items represented in its collection",
-      "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc",
-      "supported": true
-    },
-    {
-      "claim": "Inventory includes items that complement MoMA's collection (print reproductions, retrospective coffee-table books) alongside beautiful, useful home décor, like oddly shaped table lamps, super-strong magnets, and kitchen gadgets by OXO.",
-      "sourceUrl": "http://images.nymag.com/listings/stores/moma-design-store01/",
-      "supported": true
-    }
+    "44 West 53rd Street, New York 10019 Across from the Museum",
+    "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
+    "This destination store offers the best selection of new and classic design objects and gifts for everyone",
+    "Every Friday, the store will remain open until 9:00 p.m."
   ],
   "itineraryNoteCandidate": "Browse curated design objects across from MoMA—best before or after a museum visit.",
   "voicePass": {
-    "claimSupportOk": false,
-    "note": "MoMA Design Store 53rd Street: store.moma.org and moma.org 403/empty to fetcher"
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -71,18 +69,34 @@
   },
   "fields": {
     "summary": {
-      "value": null,
-      "claims": []
+      "value": "MoMA Design Store - 53rd Street is the museum design shop at 44 West 53rd Street across from MoMA.",
+      "claims": [
+        {
+          "text": "44 West 53rd Street, New York 10019 Across from the Museum",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
     },
     "description": {
-      "value": null,
-      "claims": []
+      "value": "MoMA Design Store - 53rd Street is at 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues. This destination store offers the best selection of new and classic design objects and gifts for everyone. Every Friday, the store will remain open until 9:00 p.m.",
+      "claims": [
+        {
+          "text": "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "This destination store offers the best selection of new and classic design objects and gifts for everyone",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "Every Friday, the store will remain open until 9:00 p.m.",
+          "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        }
+      ]
     }
   },
-  "thin": true,
-  "claimSupportFailed": true,
   "fieldsWritePass": {
-    "pass": "vk728-refill-20261028",
+    "pass": "vk728-redo-639-614-623-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

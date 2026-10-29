@@ -5,36 +5,32 @@
   "provider": "grok-bot",
   "sources": [
     {
-      "url": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
-      "title": "Hyatt House suites in Chelsea.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "TA 4.2 / Booking 8.6"
+      "url": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf",
+      "title": "Hyatt House New York Chelsea Facility Guide (Hyatt, PDF)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " free nights with no blackout dates with World of Hyatt • Pet-friendly accommodations W 30t hS W 29t hS 28t W 27t Av e New York Chelsea hS 6th W t t \u0003Hyatt House New York/Chelsea 815 Avenue of the Americas New York, NY 10001 T 212 513 0001 F 212 513 0005 hyatthousenewyorkchelsea.com t hS t Hyatt House and related marks are trademarks of Hyatt Corporatio …  free nights with no blackout dates with World of Hyatt • Pet-friendly accommodations W 30t hS W 29t hS 28t W 27t Av e New York Chelsea hS 6th W t t \u0003Hyatt House New York/Chelsea 815 Avenue of the Americas New York, NY 10001 T 212 513 0001 F 212 513 0005 hyatthousenewyorkchelsea.com t hS t Hyatt House and related marks are trademarks of Hyatt Corporatio …  House hotels, you’re more than just a guest. Kitchen suites On the menu Life around the house • Contemporary, apartment-style studio and one-bedroom Kitchen Suites with separate living room, bedroom, and work area • Wake up to the smell of complimentary, home-cooked breakfast featuring your choice of the classic … p, small appliances, dishes + utensils • Plush bed featuring a Hyatt Luxury Pillowtop Mattress, ultra-plush pillows, and triple sheeting • Convenient 24/7 H Market is perfect for grab-and-go options without the hassle • Complimentary Wi-Fi everywhere • 55” Smart TV • A flexible and spacious work area • Complimen … hout the hassle • Complimentary Wi-Fi everywhere • 55” Smart TV • A flexible and spacious work area • Complimentary remote printing Spaces & places • 24/7 Fitness Room • Public Computers with remote printing Hyatt House and related marks are trademarks of Hyatt Corporation or its affiliates. • For visits of 21 days  … ows Menu offers must-have items you forgot or didn’t have room to pack • Earn points towards free nights with no blackout dates with World of Hyatt • Pet-friendly accommodations W 30t hS W 29t hS 28t W 27t Av e New York Chelsea hS 6th W t t \u0003Hyatt House New York/Chelsea 815 Avenue of the Americas New York, NY 10001 T 212 513 ",
+      "snippet": " free nights with no blackout dates with World of Hyatt • Pet-friendly accommodations W 30t hS W 29t hS 28t W 27t Av e New York Chelsea hS 6th W t t \u0003Hyatt House New York/Chelsea 815 Avenue of the Americas New York, NY 10001 T 212 513 0001 F 212 513 0005 hyatthousenewyorkchelsea.com t hS t Hyatt Hou",
+      "fetchMethod": "curl + pdftotext 2026-10-28"
     }
   ],
   "rating": null,
   "reviewCount": null,
   "priceHint": "Suite hotel Chelsea",
-  "hoursHint": "Hotel — 24h; breakfast",
+  "hoursHint": null,
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 815 Avenue of the Americas",
-      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-    },
-    {
-      "claim": "Official site https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea",
-      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-    },
-    {
-      "claim": "Guest rating primary 4.2 via tripadvisor",
-      "sourceUrl": "https://www.hyatt.com/hyatt-house/en-US/nycxc-hyatt-house-new-york-chelsea"
-    }
+    "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+    "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+    "Kitchen Suites",
+    "24/7 H Market",
+    "24/7 Fitness Room",
+    "Pet-friendly accommodations"
   ],
   "itineraryNoteCandidate": "Pick Hyatt House Chelsea for suite space and breakfast after Museum Mile or High Line days.",
   "voicePass": {
-    "claimSupportOk": false,
-    "note": "Hyatt House New York/Chelsea: hyatt.com 403 to fetcher; no fetchable official or reference page"
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -61,18 +57,42 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": null,
-      "claims": []
+      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas with kitchen suites.",
+      "claims": [
+        {
+          "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        }
+      ]
     },
     "description": {
-      "value": null,
-      "claims": []
+      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay.",
+      "claims": [
+        {
+          "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "Kitchen Suites",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "24/7 H Market",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "24/7 Fitness Room",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "Pet-friendly accommodations",
+          "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        }
+      ]
     }
   },
-  "thin": true,
-  "claimSupportFailed": true,
   "fieldsWritePass": {
-    "pass": "vk728-refill-20261028",
+    "pass": "vk728-redo-639-614-623-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

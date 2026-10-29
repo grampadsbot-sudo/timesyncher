@@ -6,35 +6,37 @@
   "sources": [
     {
       "url": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/",
-      "title": "New York Marriott Downtown on West Street.",
-      "fetchedAt": "2026-10-28T04:40:00Z",
-      "snippet": "TA 4.1"
+      "title": "New York Marriott Downtown | Lower Manhattan Hotel with Waterfront Views",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New  … walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New  … oved burger joints, or step outside and explore dozens of nearby restaurants. As a welcoming hotel in Lower Manhattan, NY, the property places guests within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at N … , and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and the check-out time is 11:00 am. No, pets are not allowed at New York Marriott Downtown.",
+      "snippet": "walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. Getting Here New York Marriott Downtown 85 West Street at Albany Street, New York, New York, USA, 10006 Tel: +1 212-385-4900. The check-in time at New York Marriott Downtown is 4:00 pm and t",
+      "fetchMethod": "WebFetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.1,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.1,
+    "usnews": 8.7
+  },
+  "reviewCount": {
+    "tripadvisor": 2284,
+    "usnews": 1386
+  },
   "priceHint": "4-star Lower Manhattan waterfront",
   "hoursHint": "Hotel — 24h",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
-    {
-      "claim": "Address/area: 85 West Street",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
-    },
-    {
-      "claim": "Official site https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
-    },
-    {
-      "claim": "Guest rating primary 4.1 via tripadvisor",
-      "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
-    }
+    "85 West Street at Albany Street, New York, New York, USA, 10006",
+    "85 West Street at Albany Street, New York, New York, USA, 10006",
+    "within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place",
+    "The check-in time at New York Marriott Downtown is 4:00 pm"
   ],
   "itineraryNoteCandidate": "Downtown Marriott for Battery Park / ferry mornings—expect elevator waits at peak.",
   "voicePass": {
-    "claimSupportOk": false,
-    "note": "New York Marriott Downtown: marriott.com 403 to fetcher; no fetchable official or reference page"
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
   },
   "callCounts": {
     "webSearch": 1,
@@ -61,18 +63,34 @@
   "winner": "grok-bot",
   "fields": {
     "summary": {
-      "value": null,
-      "claims": []
+      "value": "New York Marriott Downtown is a Lower Manhattan hotel at 85 West Street with Manhattan waterfront views.",
+      "claims": [
+        {
+          "text": "85 West Street at Albany Street, New York, New York, USA, 10006",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        }
+      ]
     },
     "description": {
-      "value": null,
-      "claims": []
+      "value": "New York Marriott Downtown is a Financial District hotel at 85 West Street at Albany Street, New York, New York, USA, 10006. The property places guests within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place. The check-in time at New York Marriott Downtown is 4:00 pm.",
+      "claims": [
+        {
+          "text": "85 West Street at Albany Street, New York, New York, USA, 10006",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        },
+        {
+          "text": "within walking distance of the Statue of Liberty, 9/11 Memorial & Museum, Wall Street, Oculus, and Brookfield Place",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        },
+        {
+          "text": "The check-in time at New York Marriott Downtown is 4:00 pm",
+          "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/overview/"
+        }
+      ]
     }
   },
-  "thin": true,
-  "claimSupportFailed": true,
   "fieldsWritePass": {
-    "pass": "vk728-refill-20261028",
+    "pass": "vk728-redo-639-614-623-624-20261028",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

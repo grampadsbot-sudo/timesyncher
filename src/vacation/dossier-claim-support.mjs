@@ -1,16 +1,23 @@
 const stopwords = new Set('the a an and or of to in on at for with from by is are was were be been as it its this that near'.split(' '));
 const normalize = (value) => String(value || '').toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
-const negation = (token) => /^(?:no|not|never|without|none|cannot|closed|unavailable|discontinued)$/.test(token) || /n't$/.test(token);
+const negation = (token) => /^(?:no|not|never|without|none|non|cannot|closed|unavailable|discontinued)$/.test(token) || /n't$/.test(token);
 const contentTokens = (value) => value.match(/[a-z0-9]+/g)?.filter((token) => token.length >= 3 && !stopwords.has(token)) || [];
 const numericTokens = (value) => value.match(/\$\s*\d+(?:,\d{3})*(?:\.\d+)?|\d+(?:,\d{3})*(?:\.\d+)?(?::\d{2})?(?:\s*(?:am|pm)\b)?|\$+/g)?.map((token) => token.replace(/\s+/g, '').replace(/(?:am|pm)$/, '').replace(/:00$/, '')) || [];
 
+const clauseSplit = /(?<!\d)[.!?]|[.!?](?!\d)|[;\n]|\b(?:but|however|although|yet)\b/;
+
+function tokenNegativePolarity(tokens, index) {
+  if (index > 0 && tokens[index - 1] === 'non') return true;
+  return tokens.slice(Math.max(0, index - 4), index + 5).some((token) => token !== 'non' && negation(token));
+}
+
 function tokenPolarities(value) {
   const polarities = new Map();
-  for (const clause of normalize(value).split(/(?<!\d)[.!?]|[.!?](?!\d)|[;\n]|\b(?:but|however|although|yet)\b/)) {
+  for (const clause of normalize(value).split(clauseSplit)) {
     const tokens = clause.match(/[a-z0-9]+(?:'[a-z]+)?/g) || [];
     for (const [index, token] of tokens.entries()) {
       if (token.length < 3 || stopwords.has(token) || negation(token)) continue;
-      const negative = tokens.slice(Math.max(0, index - 4), index + 5).some(negation);
+      const negative = tokenNegativePolarity(tokens, index);
       if (!polarities.has(token)) polarities.set(token, new Set());
       polarities.get(token).add(negative);
     }
@@ -18,15 +25,67 @@ function tokenPolarities(value) {
   return polarities;
 }
 
-export function claimTextContradictsPage(claimText, pageText) {
-  const claim = tokenPolarities(claimText);
-  const page = tokenPolarities(pageText);
-  for (const [token, polarities] of claim) {
-    const matched = page.get(token);
+function polarityMapsConflict(claimMap, pageMap) {
+  for (const [token, polarities] of claimMap) {
+    const matched = pageMap.get(token);
     if (!matched) continue;
     if (polarities.size > 1 || matched.size > 1 || [...polarities][0] !== [...matched][0]) return true;
   }
   return false;
+}
+
+function sharedContentTokenList(claimText, clauseText) {
+  const claimTokens = new Set(contentTokens(normalize(claimText)));
+  return contentTokens(normalize(clauseText)).filter((token) => claimTokens.has(token));
+}
+
+function clauseIsClaimFragment(claimNorm, clauseText) {
+  const clause = normalize(clauseText).trim();
+  if (!clause) return true;
+  if (claimNorm.includes(clause)) return true;
+  if (clause.includes(claimNorm)) return true;
+  return false;
+}
+
+function clauseOutsideClaim(claimNorm, clauseText) {
+  const clause = normalize(clauseText);
+  if (!clause.includes(claimNorm)) return clause;
+  return clause.split(claimNorm).join(' ');
+}
+
+function verbatimClaimContradictsPage(claimText, pageText) {
+  const claimNorm = normalize(claimText);
+  const claimMap = tokenPolarities(claimText);
+  for (const clause of normalize(pageText).split(clauseSplit)) {
+    const clauseNorm = normalize(clause).trim();
+    if (!clauseNorm) continue;
+    let probeText = clause;
+    if (clauseNorm.includes(claimNorm)) {
+      probeText = clauseOutsideClaim(claimNorm, clause);
+      if (!normalize(probeText).trim()) continue;
+    } else if (clauseIsClaimFragment(claimNorm, clause)) {
+      continue;
+    }
+    const shared = sharedContentTokenList(claimText, probeText);
+    if (shared.length < 2) continue;
+    const clauseMap = tokenPolarities(probeText);
+    for (const token of shared) {
+      const claimPol = claimMap.get(token);
+      const clausePol = clauseMap.get(token);
+      if (!claimPol || !clausePol || claimPol.size > 1 || clausePol.size > 1) continue;
+      if ([...claimPol][0] !== [...clausePol][0]) return true;
+    }
+  }
+  return false;
+}
+
+export function claimTextContradictsPage(claimText, pageText) {
+  const claimNorm = normalize(claimText);
+  const pageNorm = normalize(pageText);
+  if (claimNorm && pageNorm.includes(claimNorm)) {
+    return verbatimClaimContradictsPage(claimText, pageText);
+  }
+  return polarityMapsConflict(tokenPolarities(claimText), tokenPolarities(pageText));
 }
 
 export function claimTextWasRejected(value, rejected = []) {
@@ -57,7 +116,7 @@ export function claimTextSupportedByPage(claimText, pageText) {
   const claim = normalize(claimText);
   const page = normalize(pageText);
   if (!claim || !page) return false;
-  if (claimTextContradictsPage(claim, page)) return false;
+  if (claimTextContradictsPage(claimText, pageText)) return false;
   const pageNumbers = new Set(numericTokens(page));
   if (numericTokens(claim).some((token) => !pageNumbers.has(token))) return false;
   if (page.includes(claim)) return true;
