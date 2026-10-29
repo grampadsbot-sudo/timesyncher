@@ -150,8 +150,7 @@
         }
       ]
     },
-    "reviews": [],
-    "reviewsUnstarred": [
+    "reviews": [
       {
         "theme": "Service",
         "value": "Trip.com reviewer on The Empire Hotel New York: Staff was generally quite nice. That is the clearest takeaway from this guest review for planning the visit around it.",
@@ -163,10 +162,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
-        "rating": "7.8/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "7.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 28
+        "words": 28,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+          "savedRaw": "drev/raw/637.json",
+          "exactScore": "7.0/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Rooms",
@@ -179,10 +185,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
-        "rating": "5.0/10",
+        "rating": "10.0/10",
         "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 35
+        "words": 35,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+          "savedRaw": "drev/raw/637.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Location",
@@ -198,7 +211,14 @@
         "rating": "9.0/10",
         "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 36
+        "words": 36,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+          "savedRaw": "drev/raw/637.json",
+          "exactScore": "9.0/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Facilities",
@@ -211,10 +231,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
-        "rating": "7.8/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "9.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "watchOut",
-        "words": 27
+        "words": 27,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+          "savedRaw": "drev/raw/637.json",
+          "exactScore": "9.0/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       }
     ]
   },
@@ -249,5 +276,30 @@
   },
   "itineraryNote": "The Empire Hotel New York: steps from Lincoln Center & Central Park; try the vibrant rooftop bar before the opera.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Trip.com reviewer on The Empire Hotel New York: Staff was generally quite nice. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Trip.com",
+  "review1Rating": "7.0/10",
+  "review1Theme": "Service",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+  "review1Stars": 4,
+  "review2": "Trip.com reviewer on The Empire Hotel New York: The room is generally clean, and the front desk provided fast and friendly check-in service. Worth weighing alongside the overall 5.0/10 score before locking in the plan.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Rooms",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+  "review2Stars": 5,
+  "review3": "Trip.com reviewer on The Empire Hotel New York: The location of the hotel right near the Lincoln Center and Central Park is great. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3Source": "Trip.com",
+  "review3Rating": "9.0/10",
+  "review3Theme": "Location",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+  "review3Stars": 5,
+  "review4": "Watch-out from a Trip.com reviewer at The Empire Hotel New York: the hotel is quite old. A practical point to factor into the decision before the trip.",
+  "review4Source": "Trip.com",
+  "review4Rating": "9.0/10",
+  "review4Theme": "Facilities",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
 }

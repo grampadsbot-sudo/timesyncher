@@ -145,8 +145,7 @@
         }
       ]
     },
-    "reviews": [],
-    "reviewsUnstarred": [
+    "reviews": [
       {
         "theme": "Cleanliness",
         "value": "Trip.com reviewer on Motto by Hilton New York City Times Square: Affordable and clean, you get what you pay for in New York. That is the clearest takeaway from this guest review for planning the visit around it.",
@@ -158,10 +157,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
-        "rating": "8.6/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "9.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 38
+        "words": 38,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+          "savedRaw": "drev/raw/676.json",
+          "exactScore": "9.0/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Service",
@@ -174,10 +180,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
-        "rating": "8.6/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 31
+        "words": 31,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+          "savedRaw": "drev/raw/676.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Location",
@@ -190,10 +203,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
-        "rating": "8.5/10",
+        "rating": "10.0/10",
         "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 34
+        "words": 34,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+          "savedRaw": "drev/raw/676.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Rooms",
@@ -206,10 +226,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
-        "rating": "8.6/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "8.5/10",
+        "ratingBasis": "per-review score",
         "polarity": "watchOut",
-        "words": 29
+        "words": 29,
+        "stars": 4,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+          "savedRaw": "drev/raw/676.json",
+          "exactScore": "8.5/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       }
     ]
   },
@@ -244,5 +271,30 @@
   },
   "itineraryNote": "Motto by Hilton New York City Times Square: compact, efficient rooms by Broadway; spend the days out and budget accordingly.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Trip.com reviewer on Motto by Hilton New York City Times Square: Affordable and clean, you get what you pay for in New York. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Trip.com",
+  "review1Rating": "9.0/10",
+  "review1Theme": "Cleanliness",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+  "review1Stars": 5,
+  "review2": "Trip.com reviewer on Motto by Hilton New York City Times Square: The front desk staff were also very nice. Worth weighing alongside the overall 8.6/10 score before locking in the plan.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+  "review2Stars": 5,
+  "review3": "Trip.com reviewer on Motto by Hilton New York City Times Square: The hotel's location is excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Location",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+  "review3Stars": 5,
+  "review4": "Watch-out from a Trip.com reviewer at Motto by Hilton New York City Times Square: Rooms are super small. A practical point to factor into the decision before the trip.",
+  "review4Source": "Trip.com",
+  "review4Rating": "8.5/10",
+  "review4Theme": "Rooms",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+  "review4Stars": 4,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
 }

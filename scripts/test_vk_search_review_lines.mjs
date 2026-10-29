@@ -30,4 +30,7 @@ assert.deepEqual(tripDossier.reviews.map((r) => r.rating), [5, 4, 2, 5], 'Trip.c
 assert.equal(tripDossier.reviews[0].starsEvidence, '9.2/10', 'exact /10 score is kept');
 const notTrip = vkSearchResultToDossier({ ...base, ...lines, review1Source: 'Yelp', review1Score10: '9' }, {});
 assert.equal(notTrip.reviews[0].rating, undefined, 'a /10 score only maps for Trip.com');
+const tripRated = vkSearchResultToDossier({ ...base, ...lines, review1Source: 'Trip.com', review1Rating: '9.0/10', review1Stars: '5', review2Source: 'Trip.com', review2Rating: '5.4/10' }, {});
+assert.equal(tripRated.reviews[0].starsEvidence, '9.0/10');
+assert.equal(tripRated.reviews[1].rating, 3, 'Trip.com x/10 rating maps when stars are absent');
 console.log('ok vk search review lines');

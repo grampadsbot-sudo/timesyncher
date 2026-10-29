@@ -207,6 +207,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Angelina Bakery Broadway: a Sicilian bakery by Times Square; stop for breakfast and try the bomboloni.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Angelina Bakery Broadway is a pastry stop first; aggregated guest reviews say This beautiful Italian bakery on Broadway near 52nd Street has great pastries. For trip planning, weigh this first when deciding whether Angelina Bakery Broadway fits the day.",
   "review1Source": "aggregated guest reviews",
   "review1Rating": "4.3",
@@ -218,6 +219,5 @@
   "review2Rating": "4.3",
   "review2Theme": "Lines",
   "review2SourceUrl": "https://exa.ai/library/place/dl6s896ycgb",
-  "review2Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 5
 }

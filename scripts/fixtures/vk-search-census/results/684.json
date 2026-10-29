@@ -222,6 +222,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Junior's Times Square: a big, cheerful Theater District diner; finish a show night with a slice of cheesecake.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Cheesecake is the reason to visit Junior's Times Square; Restaurantji diners rave about Great service, great food, big meals and the cheesecakes! For trip planning, weigh this first when deciding whether Junior's Times Square fits the day.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
@@ -245,6 +246,5 @@
   "review4Rating": "4.3",
   "review4Theme": "Waits",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/juniors-restaurant-and-bakery-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

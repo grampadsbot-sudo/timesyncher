@@ -228,6 +228,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Sylvia's Harlem delivers on its legend; a first-time Restaurantji visitor wrote First time in Harlem, the best food hands down.. we ate everything on our plates!",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
@@ -251,6 +252,5 @@
   "review4Rating": "4.2",
   "review4Theme": "Take-home souvenirs",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

@@ -27,6 +27,13 @@
       "text": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of … SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … urant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews) … tional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of 5 bubbles (574 reviews)",
       "snippet": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional … Gabriela (sp?) was our friendly and helpful server … Excellent Show, Poor Service … Tight seating because so many people want to come here … 4.2 of",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+      "title": "Smoke Jazz & Supper Club reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:20:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_e191b0b5ec.html",
+      "text": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get. Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!"
     }
   ],
   "rating": {
@@ -137,7 +144,52 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Music",
+        "value": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
+        "claims": [
+          {
+            "text": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 92,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+          "savedHtml": "r7/raw/st_e191b0b5ec.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      },
+      {
+        "theme": "Food and drinks",
+        "value": "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!",
+        "claims": [
+          {
+            "text": "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+        "rating": "5/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "praise",
+        "words": 35,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+          "savedHtml": "r7/raw/st_e191b0b5ec.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -233,5 +285,18 @@
   },
   "itineraryNote": "Smoke Jazz & Supper Club: an intimate Upper West Side jazz supper room at 2751 Broadway; book a dinner show.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Lovely food. A beautiful Steinway B piano (and stunning pianist Lex Korten on Oct.8, 2023) Make sure if you are a party of 4 or 6 that you can get 2 or 3 tables together in the 3 main long lines of tables, No good option for party of 5. No refunds for persons who cannot make the show, for any reason only a future credit. Even with ear plugs I found the amplification disheartening for such an intimate space, and we were as far from the stage as we could get.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "5/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+  "review1Stars": 5,
+  "review2": "Got to see the Al Foster Quintet earlier this evening - absolutely phenomenal. SMOKE is an incredible venue! The service was unparalleled, the food phenomenal, and the staff wonderful! I wholeheartedly recommend checking them out!",
+  "review2Source": "Restaurantji",
+  "review2Rating": "5/5",
+  "review2Theme": "Food and drinks",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/",
+  "review2Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
 }

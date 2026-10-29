@@ -188,6 +188,7 @@
   },
   "itineraryNote": "Juice Generation Upper West Side: a neighborhood juice bar at 117 W 72nd Street btw Columbus & Broadway; order a bowl to go before the park.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Restaurantji reviewer on Juice Generation Upper West Side: The customer service at the 72nd st Juice Generation is exceptional. That is the clearest takeaway from this guest review for planning the visit around it.",
   "review1Source": "Restaurantji",
   "review1Rating": "3.9/5",
@@ -199,6 +200,5 @@
   "review2Rating": "3.9/5",
   "review2Theme": "Noise",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
-  "review2Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 4
 }

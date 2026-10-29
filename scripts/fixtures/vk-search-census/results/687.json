@@ -233,6 +233,7 @@
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
   },
   "itineraryNote": "Cilantro UWS: a lively Mexican spot by the Natural History Museum; grab weekend brunch and a margarita on the patio.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Cilantro UWS is handy after the museum; a Restaurantji reviewer called it a Great brunch spot right by the museum of natural history and pushed the margaritas.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.1",
@@ -256,6 +257,5 @@
   "review4Rating": "4.1",
   "review4Theme": "Service can be middling",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/cilantro-/",
-  "review4Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 4
 }

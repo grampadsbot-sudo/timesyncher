@@ -236,6 +236,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Joe's Pizza Carmine Street: the classic Village slice since 1975; grab a plain or pepperoni slice and eat it on the sidewalk.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Joe's Pizza Carmine Street earns its reputation on the basics; a Restaurantji reviewer calls it a Top five classic New York slice with a crisp thin crust, light doughy center, and delish cheese.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
@@ -259,6 +260,5 @@
   "review4Rating": "4.2",
   "review4Theme": "Cheap and quick",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/joes-pizza-4/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

@@ -239,6 +239,7 @@
     "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
   },
   "itineraryNote": "Piccola Cucina Uptown: a warm Sicilian-Italian room by Central Park; book dinner and try the Cacio E Pepe Made at Table in a Wheel of Cheese.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Piccola Cucina Uptown wins on freshness; a Restaurantji diner wrote Everything they make is delicious and very fresh, with timely service on top. For trip planning, weigh this first when deciding whether Piccola Cucina Uptown fits the day.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8",
@@ -262,6 +263,5 @@
   "review4Rating": "4.8",
   "review4Theme": "Wine by the glass",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/piccola-cucina-uptown-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

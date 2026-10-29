@@ -234,6 +234,7 @@
   },
   "itineraryNote": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
   "itineraryNoteCandidate": "La Traviata Pizzeria: a tiny slice shop a block from Lincoln Center; grab a quick NY slice before a show.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "La Traviata Pizzeria is a speed stop; a Restaurantji diner said The service was quick and the pizza good and recommended it for a quick bite.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
@@ -257,6 +258,5 @@
   "review4Rating": "4.2",
   "review4Theme": "Limited seating",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/la-traviata-pizzeria-/",
-  "review4Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 4
 }

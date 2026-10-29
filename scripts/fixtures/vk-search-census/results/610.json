@@ -269,6 +269,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Carbone: dress-up red-sauce theater on Thompson Street; book the moment tables open and go for the charismatic service, captains sporting tuxedos by Zac Posen and a big Italian-American feast.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Restaurantji diners keep returning to the hospitality at Carbone: one wrote that your hosts go above and beyond for that true over the top experience, which is the reason people chase a table here.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.2",
@@ -292,6 +293,5 @@
   "review4Rating": "4.2",
   "review4Theme": "Booking strategy",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/carbone-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

@@ -149,8 +149,7 @@
         }
       ]
     },
-    "reviews": [],
-    "reviewsUnstarred": [
+    "reviews": [
       {
         "theme": "Location",
         "value": "Trip.com reviewer on Pod Times Square: The location is fantastic. That is the clearest takeaway from this guest review for planning the visit around it.",
@@ -162,10 +161,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-        "rating": "8.7/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 25
+        "words": 25,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+          "savedRaw": "drev/raw/628.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Service",
@@ -178,10 +184,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-        "rating": "8.7/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "praise",
-        "words": 27
+        "words": 27,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+          "savedRaw": "drev/raw/628.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Service",
@@ -194,10 +207,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-        "rating": "8.7/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "10.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "watchOut",
-        "words": 34
+        "words": 34,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+          "savedRaw": "drev/raw/628.json",
+          "exactScore": "10/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       },
       {
         "theme": "Rooms",
@@ -210,10 +230,17 @@
         ],
         "source": "Trip.com",
         "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
-        "rating": "8.7/10",
-        "ratingBasis": "listing aggregate",
+        "rating": "9.0/10",
+        "ratingBasis": "per-review score",
         "polarity": "watchOut",
-        "words": 26
+        "words": 26,
+        "stars": 5,
+        "starsEvidence": {
+          "page": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+          "savedRaw": "drev/raw/628.json",
+          "exactScore": "9.0/10",
+          "basis": "Trip.com per-review /10 score on page; stars=round(score/2) clamp 1-5 per eng-lead 09:13"
+        }
       }
     ]
   },
@@ -249,5 +276,30 @@
   },
   "itineraryNote": "Pod Times Square: smart, small rooms at 400 W 42nd St; save on the room and spend on Broadway.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Trip.com reviewer on Pod Times Square: The location is fantastic. That is the clearest takeaway from this guest review for planning the visit around it.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+  "review1Stars": 5,
+  "review2": "Trip.com reviewer on Pod Times Square: The front desk staff were very nice, offered free luggage storage, and there was a sofa for guests to relax on.",
+  "review2Source": "Trip.com",
+  "review2Rating": "10.0/10",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+  "review2Stars": 5,
+  "review3": "Watch-out from a Trip.com reviewer at Pod Times Square: there's a nightly resort fee of $29.84 collected at the front desk. Keep that in mind when choosing timing, a room, or an arrival plan.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+  "review3Stars": 5,
+  "review4": "Watch-out from a Trip.com reviewer at Pod Times Square: The room was a little small. A practical point to factor into the decision before the trip.",
+  "review4Source": "Trip.com",
+  "review4Rating": "9.0/10",
+  "review4Theme": "Rooms",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-10577434/pod-times-square/review.html",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
 }

@@ -227,6 +227,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "The burger is the headline at Nobody Told Me: Restaurantji diners write They have the best burgers on the UWS! and call it a household favorite.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.4",
@@ -244,6 +245,5 @@
   "review3Rating": "4.4",
   "review3Theme": "Atmosphere",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
-  "review3Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review3Stars": 5
 }

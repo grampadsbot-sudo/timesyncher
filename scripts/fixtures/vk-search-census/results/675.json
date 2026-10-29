@@ -252,6 +252,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "The Smith - Lincoln Square: a buzzy brasserie at 1900 BROADWAY (AT 63RD STREET) facing Lincoln Center; book before a show and treat yourself to the seafood tower.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "The splurge at The Smith - Lincoln Square is shellfish; a Restaurantji diner wrote The seafood tower is quite an experience, treat yourself! after a celebratory visit.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
@@ -275,6 +276,5 @@
   "review4Rating": "4.0",
   "review4Theme": "Busy and loud",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

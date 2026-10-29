@@ -246,6 +246,7 @@
     "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch not attempted); not a live fetch"
   },
   "itineraryNote": "Estiatorio Milos Hudson Yards: a glassy Greek seafood room above the Hudson; book a sunset table and try the grilled octopus.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Estiatorio Milos Hudson Yards pairs fish with scenery; a Restaurantji diner had an amazing view of Hudson River and Hudson Yards and Loved their grilled octopus.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.8",
@@ -257,6 +258,5 @@
   "review2Rating": "4.8",
   "review2Theme": "Service at its best",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/estiatorio-milos-2/",
-  "review2Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 5
 }

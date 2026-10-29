@@ -275,6 +275,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Amelie Bistro & Wine Bar: a cozy French wine bar on Amsterdam Avenue; come for happy hour and try the $1.5 oysters with a $14 wine flights pour.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Amelie Bistro & Wine Bar shines early: a Restaurantji regular says Happy hour 4-6pm with $1.5 oysters and other delicious options and $14 wine flights is incredible, which makes it an easy pre-dinner stop.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
@@ -292,6 +293,5 @@
   "review3Rating": "4.3",
   "review3Theme": "Warm service",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
-  "review3Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review3Stars": 5
 }

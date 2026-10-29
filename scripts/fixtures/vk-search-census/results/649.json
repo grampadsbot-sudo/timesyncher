@@ -230,6 +230,7 @@
   },
   "itineraryNote": "Whole Foods Market Upper West Side: a big neighborhood grocery at 808 Columbus Ave, New York, NY 10025-5139; grab sushi or a made-to-order sandwich.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Exa place listing reviewer on Whole Foods Market Upper West Side: great fresh produce and good sales. That is the clearest takeaway from this guest review for planning the visit around it.",
   "review1Source": "Exa place listing",
   "review1Rating": "3.2/5",
@@ -241,6 +242,5 @@
   "review2Rating": "3.2/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/9t58jkr8sn4",
-  "review2Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 5
 }

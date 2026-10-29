@@ -27,6 +27,13 @@
       "text": "TE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the … y friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy during the seating process … on top of the expensive ticket price, there is a mandatory minimum spend at the table",
       "snippet": "TE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only com",
       "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+      "title": "Blue Note reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:20:00-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_124430a340.html",
+      "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
     }
   ],
   "rating": {
@@ -132,7 +139,30 @@
         }
       ]
     },
-    "reviews": [],
+    "reviews": [
+      {
+        "theme": "Music",
+        "value": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
+        "claims": [
+          {
+            "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
+            "sourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/"
+          }
+        ],
+        "source": "Restaurantji",
+        "sourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+        "rating": "3/5",
+        "ratingBasis": "per-review stars",
+        "polarity": "watch-out",
+        "words": 58,
+        "stars": 3,
+        "starsEvidence": {
+          "page": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+          "savedHtml": "r7/raw/st_124430a340.html",
+          "basis": "per-review star label on page (Restaurantji aria-label / Exa JSON stars)"
+        }
+      }
+    ],
     "reviewsUnstarred": [
       {
         "theme": "Overall experience",
@@ -192,5 +222,12 @@
   },
   "itineraryNote": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "3/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+  "review1Stars": 3,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029"
 }

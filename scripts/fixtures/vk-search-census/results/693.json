@@ -232,6 +232,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Magnolia Bakery: the original pink-and-white West Village bakery; grab banana pudding and a cupcake for a Bleecker Street stroll.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "The banana pudding is the hero at Magnolia Bakery; a Restaurantji diner calls it one of the best desserts in the city hands down. For trip planning, weigh this first when deciding whether Magnolia Bakery fits the day.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0",
@@ -255,6 +256,5 @@
   "review4Rating": "4.0",
   "review4Theme": "Staff",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

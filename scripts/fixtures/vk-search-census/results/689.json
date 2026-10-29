@@ -228,6 +228,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Zinc Bar: a candlelit Greenwich Village jazz cellar with a Billie Holiday past; arrive early for a good seat and stay for a late set.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Zinc Bar wins hearts on atmosphere; a Restaurantji couple immediately fell in love with the romantic Art-Deco-era Paris jazz bar vibe and came back to get engaged.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.1",
@@ -251,6 +252,5 @@
   "review4Rating": "4.1",
   "review4Theme": "Snack menu",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/zinc-bar-/",
-  "review4Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 4
 }

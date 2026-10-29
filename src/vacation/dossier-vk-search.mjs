@@ -60,9 +60,11 @@ export function vkSearchClaimSupportOk(result) {
 }
 
 function reviewStars(result, n) {
+  const tripCom = /trip\.com/i.test(text(result[`review${n}Source`]));
+  const tenMatch = text(result[`review${n}Rating`]).match(/^(\d+(?:\.\d+)?)\s*\/\s*10$/);
   const stars = Number(result[`review${n}Stars`]);
-  if (Number.isInteger(stars) && stars >= 1 && stars <= 5) return { rating: stars, evidence: `${stars}/5` };
-  const raw = text(result[`review${n}Score10`]);
+  if (Number.isInteger(stars) && stars >= 1 && stars <= 5) return { rating: stars, evidence: tripCom && tenMatch ? `${tenMatch[1]}/10` : `${stars}/5` };
+  const raw = text(result[`review${n}Score10`]) || (tripCom && tenMatch ? tenMatch[1] : '');
   const score = Number(raw);
   if (!raw || !/trip\.com/i.test(text(result[`review${n}Source`])) || !Number.isFinite(score) || score <= 0 || score > 10) return null;
   return { rating: Math.min(5, Math.max(1, Math.round(score / 2))), evidence: `${raw}/10` };

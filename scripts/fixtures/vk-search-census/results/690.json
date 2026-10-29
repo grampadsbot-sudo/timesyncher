@@ -223,6 +223,7 @@
     "via": "curl live fetch 2026-10-28"
   },
   "itineraryNote": "Westville Hell's Kitchen: a cheerful market-vegetable cafe on Ninth Avenue; order a Market Plate before the theater.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Westville Hell's Kitchen is easy to linger in; a Restaurantji diner said it is Always good and you call relax and have a conversation (sic).",
   "review1Source": "Restaurantji",
   "review1Rating": "4.6",
@@ -240,6 +241,5 @@
   "review3Rating": "4.6",
   "review3Theme": "Bar team",
   "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/westville-hells-kitchen-/",
-  "review3Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review3Stars": 5
 }

@@ -239,6 +239,7 @@
     "writer": "grok-bot"
   },
   "itineraryNote": "Bodega 88: an easygoing Upper West Side sports bar; hit Happy Hour is the time to go and order the guacamole with plantain chips.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Timing matters at Bodega 88: a Restaurantji reviewer says Happy Hour is the time to go, and the bar's own deals run through the afternoon into early evening.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.3",
@@ -262,6 +263,5 @@
   "review4Rating": "4.3",
   "review4Theme": "Service",
   "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/bodega-88-/",
-  "review4Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review4Stars": 5
 }

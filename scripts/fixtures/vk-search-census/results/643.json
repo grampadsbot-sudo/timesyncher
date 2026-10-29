@@ -198,6 +198,7 @@
   },
   "itineraryNote": "Juice Generation Columbus Circle: a quick smoothie stop at 979 Eighth Avenue btw 57th & 58th; grab one before a Central Park walk.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Restaurantji reviewer on Juice Generation Columbus Circle: Great selection of flavors. That is the clearest takeaway from this guest review for planning the visit around it.",
   "review1Source": "Restaurantji",
   "review1Rating": "4.0/5",
@@ -209,6 +210,5 @@
   "review2Rating": "4.0/5",
   "review2Theme": "Overall experience",
   "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
-  "review2Stars": 5,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 5
 }

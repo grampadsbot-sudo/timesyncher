@@ -209,6 +209,7 @@
     ]
   },
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Exa place listing reviewer on The Jazz Club at Aman New York: The drinks were the best I've had in NYC and for over $30 a drink, they better be.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
@@ -226,6 +227,5 @@
   "review3Rating": "4.4/5",
   "review3Theme": "Overall experience",
   "review3SourceUrl": "https://exa.ai/library/place/8t7j7x9qnkg",
-  "review3Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review3Stars": 4
 }

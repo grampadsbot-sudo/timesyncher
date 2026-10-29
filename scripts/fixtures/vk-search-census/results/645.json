@@ -218,6 +218,7 @@
   },
   "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
   "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
   "review1": "Exa place listing reviewer on Nordstrom NYC Flagship: The store has a beautiful, modern design. That is the clearest takeaway from this guest review for planning the visit around it.",
   "review1Source": "Exa place listing",
   "review1Rating": "4.4/5",
@@ -229,6 +230,5 @@
   "review2Rating": "4.4/5",
   "review2Theme": "Value",
   "review2SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
-  "review2Stars": 4,
-  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029"
+  "review2Stars": 4
 }
