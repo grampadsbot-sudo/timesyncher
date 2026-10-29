@@ -8,7 +8,7 @@
       "url": "https://en.wikipedia.org/wiki/Central_Park_Tower",
       "title": "Central Park Tower - Wikipedia",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m … ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m",
+      "text": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m … ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m … ade contractor Permasteelisa Group. [ 1 ] According to Gill and Smith, the glass cladding was intended to help the tower fit into the skyline. [ 34 ] The entrance for Nordstrom is on 57th Street, as is the main residential entrance. A secondary residents' entrance is on 58th Street. [ 35 ] [ 36 ] The upper stories are set back from the base.  … [ 49 ] [ 105 ] Due to the high ceiling heights of the Nordstrom store, the first seven physical stories are collectively 280 feet (85 m) tall. [ 62 ] The Nordstrom location has an open plan for its floors. [ 48 ] [ 106 ] Each level has 19-foot (5.8 m) ceilings. The store's interiors are lit by the wavy glass facades of the base at 57th and 58th Streets … the first seven physical stories are collectively 280 feet (85 m) tall. [ 62 ] The Nordstrom location has an open plan for its floors. [ 48 ] [ 106 ] Each level has 19-foot (5.8 m) ceilings. The store's interiors are lit by the wavy glass facades of the base at 57th and 58th Streets. [ 48 ] Other design features include halo reveals arou",
       "snippet": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New Yor",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -21,7 +21,10 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "contain a large Nordstrom store, which opened in 2019",
-    "contain a large Nordstrom store, which opened in 2019"
+    "contain a large Nordstrom store, which opened in 2019",
+    "The entrance for Nordstrom is on 57th Street",
+    "The Nordstrom location has an open plan for its floors",
+    "Each level has 19-foot (5.8 m) ceilings"
   ],
   "itineraryNoteCandidate": "Browse the Central Park Tower flagship for luxury floors without Midtown Fifth Avenue crush.",
   "voicePass": {
@@ -62,17 +65,29 @@
       ]
     },
     "description": {
-      "value": "Nordstrom NYC Flagship sits in Central Park Tower on West 57th Street. Wikipedia notes that the basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. It sits near Carnegie Hall and Columbus Circle for a combined shopping walk.",
+      "value": "Nordstrom NYC Flagship sits in Central Park Tower on West 57th Street. Wikipedia notes that the basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019, and that The entrance for Nordstrom is on 57th Street. It adds that The Nordstrom location has an open plan for its floors, and Each level has 19-foot (5.8 m) ceilings. The store is near Carnegie Hall and Columbus Circle for a combined shopping walk.",
       "claims": [
         {
           "text": "contain a large Nordstrom store, which opened in 2019",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        },
+        {
+          "text": "The entrance for Nordstrom is on 57th Street",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        },
+        {
+          "text": "The Nordstrom location has an open plan for its floors",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        },
+        {
+          "text": "Each level has 19-foot (5.8 m) ceilings",
           "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

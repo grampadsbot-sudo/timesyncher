@@ -8,7 +8,7 @@
       "url": "https://www.wholefoodsmarket.com/stores/columbuscircle/",
       "title": "Columbus Circle | Grocery Store in New York 10019-1232",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Columbus Circle | Grocery Store in New York 10019-1232 | Whole Foods Market Columbus Circle is your organic grocery store. Shop weekly sales and Amazon Prime member deals. Get delivery. Visit our eateries. Whole Foods Market Store | Columbus Circle | Grocery Store in New … Columbus Circle | Grocery Store in New York 10019-1232 | Whole Foods Market Columbus Circle is your organic grocery store. Shop weekly sales and Amazon Prime member deals. Get delivery. Visit our eateries. Whole Foods Market Store | Columbus Circle | Grocery Store in New",
+      "text": "Columbus Circle | Grocery Store in New York 10019-1232 | Whole Foods Market Columbus Circle is your organic grocery store. Shop weekly sales and Amazon Prime member deals. Get delivery. Visit our eateries. Whole Foods Market Store | Columbus Circle | Grocery Store in New … Columbus Circle | Grocery Store in New York 10019-1232 | Whole Foods Market Columbus Circle is your organic grocery store. Shop weekly sales and Amazon Prime member deals. Get delivery. Visit our eateries. Whole Foods Market Store | Columbus Circle | Grocery Store in New … e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … es?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery  … 1002393\"> Recipes Columbus Circle Store Address 10 Columbus Circle Ste SC101, New York, NY 10019-1232 Get directions Phone (212) 823-9600 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery & Pickup Order what you need on Amazon.com",
       "snippet": "Columbus Circle | Grocery Store in New York 10019-1232 | Whole Foods Market Columbus Circle is your organic grocery store. Shop weekly sales and Amazon Prime member deals. Get delivery. Visit our eateries. Whole Foods Market Store | Columbus Circle | Grocery Store in New",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -29,7 +29,10 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Whole Foods Market Columbus Circle is your organic grocery store",
-    "Whole Foods Market Columbus Circle is your organic grocery store"
+    "Whole Foods Market Columbus Circle is your organic grocery store",
+    "10 Columbus Circle Ste SC101, New York, NY 10019-1232",
+    "Phone (212) 823-9600",
+    "Monday - Friday: 7 am - 10 pm"
   ],
   "itineraryNoteCandidate": "Stock picnic supplies under the Time Warner Center before a Central Park stroll.",
   "voicePass": {
@@ -70,17 +73,29 @@
       ]
     },
     "description": {
-      "value": "Whole Foods Market Columbus Circle is your organic grocery store at the southwest corner of Central Park. The store has a large prepared foods area that works well for a quick lunch. It is a handy stop before a picnic in the park or a show at Lincoln Center.",
+      "value": "Whole Foods Market Columbus Circle is your organic grocery store at the southwest corner of Central Park. The store page gives its address as 10 Columbus Circle Ste SC101, New York, NY 10019-1232, with Phone (212) 823-9600. Posted hours are Monday - Friday: 7 am - 10 pm, and weekends run the same, which makes it a handy stop before a picnic in the park or a show at Lincoln Center.",
       "claims": [
         {
           "text": "Whole Foods Market Columbus Circle is your organic grocery store",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "10 Columbus Circle Ste SC101, New York, NY 10019-1232",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Phone (212) 823-9600",
+          "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
+        },
+        {
+          "text": "Monday - Friday: 7 am - 10 pm",
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/columbuscircle/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

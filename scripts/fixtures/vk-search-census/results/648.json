@@ -8,8 +8,16 @@
       "url": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store",
       "title": "Tiffany & Co. flagship store - Wikipedia",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": " York City, see Lists of New York City landmarks . Tiffany & Co. flagship store The Tiffany flagship in 2024 General information Type Retail Location 727 Fifth Avenue , Manhattan, New York City Coordinates 40°45′45″N 73°58′26″W ﻿ / ﻿ 40.7626°N 73.9738°W ﻿ / 40.7626; -73.9738 [[Geographic coordinate system|Coordinat …  a ten-story retail building in Midtown Manhattan , New York City, within the luxury shopping district on Fifth Avenue between 49th and 60th Streets. The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. [ 2 ] It was designed by New York City architects Cross & Cross in a \"conservative modern\" style. [ 3 ] The building's facade is made of granite and",
+      "text": " York City, see Lists of New York City landmarks . Tiffany & Co. flagship store The Tiffany flagship in 2024 General information Type Retail Location 727 Fifth Avenue , Manhattan, New York City Coordinates 40°45′45″N 73°58′26″W ﻿ / ﻿ 40.7626°N 73.9738°W ﻿ / 40.7626; -73.9738 [[Geographic coordinate system|Coordinat …  a ten-story retail building in Midtown Manhattan , New York City, within the luxury shopping district on Fifth Avenue between 49th and 60th Streets. The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. [ 2 ] It was designed by New York City architects Cross & Cross in a \"conservative modern\" style. [ 3 ] The building's facade is made of granite and … n crane onto the structure. [ 61 ] The project's interior designer, Peter Marino, added distinct design details within each room of the store. [ 27 ] The main store reopened on April 27, 2023. [ 14 ] [ 62 ] Tiffany & Co. hosted a two-day party to celebrate the reopening. [ 63 ] Upon the store's reopening, it was known officially as \"The La …  became into an exhibit and event space. [ 4 ] [ 15 ] Next to this space is an outdoor terrace with seats and a bar. [ 30 ] When it reopened in 2023, the store had forty artworks [ 27 ] [ 29 ] [ 31 ] by artists including Damien Hirst , Jenny Holzer , Rashid Johnson , and Richard Prince . [ 32 ] By 2024, the building had 58 wor",
       "snippet": " York City, see Lists of New York City landmarks . Tiffany & Co. flagship store The Tiffany flagship in 2024 General information Type Retail Location 727 Fifth Avenue , Manhattan, New York City Coordinates 40°45′45″N 73°58′26″W ﻿ / ﻿ 40.7626°N 73.9738°W ﻿ / 40.7626; -73.9738 [[Geographic coordinate ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html",
+      "title": "Tripadvisor review page: Tiffany & Co., 727 Fifth Avenue (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiff",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -21,7 +29,11 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "727 Fifth Avenue",
-    "The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940"
+    "The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940",
+    "The main store reopened on April 27, 2023",
+    "the store had forty artworks",
+    "They have exclusive items for sale at this location which does make it special",
+    "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces"
   ],
   "itineraryNoteCandidate": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe—expect waits at peak hours.",
   "voicePass": {
@@ -62,17 +74,45 @@
       ]
     },
     "description": {
-      "value": "Tiffany & Co. The Landmark is the brand's flagship store on Fifth Avenue. Wikipedia notes that the building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. It reopened after a renovation and sits beside Trump Tower at 57th Street.",
+      "value": "Tiffany & Co. The Landmark is the brand's flagship store on Fifth Avenue. Wikipedia notes that the building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. The main store reopened on April 27, 2023, and at that point the store had forty artworks by artists including Damien Hirst and others. It sits on Fifth Avenue at 57th Street in Midtown's luxury shopping district. Representative Tripadvisor praise (search snapshot): “They have exclusive items for sale at this location which does make it special”. Representative watch-outs: “I was a little disappointed in the quality of the workmanship of Tiffany’s pieces”.",
       "claims": [
         {
           "text": "The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940",
           "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
+        },
+        {
+          "text": "The main store reopened on April 27, 2023",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
+        },
+        {
+          "text": "the store had forty artworks",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Tiffany_%26_Co._flagship_store"
+        },
+        {
+          "text": "They have exclusive items for sale at this location which does make it special",
+          "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html"
+        },
+        {
+          "text": "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
+          "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "They have exclusive items for sale at this location which does make it special"
+    ],
+    "watchOuts": [
+      "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

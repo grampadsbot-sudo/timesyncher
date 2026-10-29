@@ -11,6 +11,14 @@
       "text": "Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato … Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato … n's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie . [ 2 ] [ 3 ] In 2015, it was ranked the 10th best pizzeria in the United States by TripAdvisor . [ 4 ] [ 5 ] John's is known for its graffiti-carved",
       "snippet": "Atlas]]</span>\"}}'/> Website www .johnsofbleecker .com The \"John's Original\" pizza John's of Bleecker Street , simply known as John's Pizzeria , is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood of Manhattan in New York City . Founded in 1915, [ 1 ] the pizzeria serves ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
+      "title": "Tripadvisor: John's of Bleecker Street, 278 Bleecker St (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … bSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it.",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": null,
@@ -21,7 +29,9 @@
   "summaryClaims": [
     "historic pizzeria on Bleecker Street in the Greenwich Village",
     "historic pizzeria on Bleecker Street in the Greenwich Village",
-    "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie"
+    "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie",
+    "Pizza was great, staff was friendly and welcoming.",
+    "About 40-45 mins of waiting line, but it was worth it."
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -44,7 +54,7 @@
       ]
     },
     "description": {
-      "value": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend.",
+      "value": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend. Representative Tripadvisor praise (search snapshot): “Pizza was great, staff was friendly and welcoming.”. Representative watch-outs: “About 40-45 mins of waiting line, but it was worth it.”.",
       "claims": [
         {
           "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
@@ -53,12 +63,32 @@
         {
           "text": "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie",
           "sourceUrl": "https://en.wikipedia.org/wiki/John%27s_of_Bleecker_Street"
+        },
+        {
+          "text": "Pizza was great, staff was friendly and welcoming.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
+        },
+        {
+          "text": "About 40-45 mins of waiting line, but it was worth it.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Pizza was great, staff was friendly and welcoming."
+    ],
+    "watchOuts": [
+      "About 40-45 mins of waiting line, but it was worth it."
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -8,8 +8,16 @@
       "url": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square",
       "title": "Macy's Herald Square - Wikipedia",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902;  … esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902; ",
+      "text": "esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902;  … esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodore de Lemos for Isidor and Nathan Straus , and opened in 1902;  … store chain, and the headquarters of its holding company Macy's, Inc. The building has a floor area of about 2.2 million square feet (200,000 m 2 ) , making it the largest department store in the United States and one of the largest in the world. It was added to the National Register of Historic Places and was made a National Historic Landmark in 1978. [ 2 ] [ 3 ] [ 5 ] History [ edit ] Previ … eventh Avenue building in 1931, all designed by architect Robert D. Kohn , the newer buildings becoming increasingly Art Deco in style. [ 13 ] [ 16 ] The store boasts several wooden escalators still in operation. Renovations [ edit ] The building in 2018 By the 21st century, the building spanned 2.2 million square feet (200,000 m 2 ) . [ 17 ] [ 18 ] The New Y",
       "snippet": "esignated NHL June 2, 1978 [ 3 ] Designated NYSRHP June 23, 1980 [ 4 ] Macy's Herald Square (originally named the R. H. Macy and Company Store ) is a department store building on West 34th Street at Herald Square in New York City , New York, United States. It was designed by A. W. Cordes and Theodor",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+      "title": "Tripadvisor review page: Macy's Herald Square (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am l",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -21,7 +29,11 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "department store building on West 34th Street at Herald Square",
-    "department store building on West 34th Street at Herald Square"
+    "department store building on West 34th Street at Herald Square",
+    "making it the largest department store in the United States and one of the largest in the world",
+    "The store boasts several wooden escalators still in operation",
+    "The store is huge and has the most beautiful Christmas displays in the windows",
+    "I tend to get lost in and have difficulties finding the things I am looking for"
   ],
   "itineraryNoteCandidate": "Ride the wooden escalators through America's largest store, then duck out before late-day crowds hit Herald Square.",
   "voicePass": {
@@ -62,17 +74,45 @@
       ]
     },
     "description": {
-      "value": "Macy's Herald Square is the flagship department store building on West 34th Street at Herald Square. It fills a full block in Midtown near Penn Station and Koreatown. Allow at least an hour, since the store spans many floors of fashion, home and beauty.",
+      "value": "Macy's Herald Square is the flagship department store building on West 34th Street at Herald Square. Wikipedia says the building has a floor area of about 2.2 million square feet, making it the largest department store in the United States and one of the largest in the world. It also notes that the store boasts several wooden escalators still in operation, a detail worth seeking out between floors. Allow at least an hour to cover fashion, home and beauty. Representative Tripadvisor praise (search snapshot): “The store is huge and has the most beautiful Christmas displays in the windows”. Representative watch-outs: “I tend to get lost in and have difficulties finding the things I am looking for”.",
       "claims": [
         {
           "text": "department store building on West 34th Street at Herald Square",
           "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "making it the largest department store in the United States and one of the largest in the world",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store boasts several wooden escalators still in operation",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Macy%27s_Herald_Square"
+        },
+        {
+          "text": "The store is huge and has the most beautiful Christmas displays in the windows",
+          "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+        },
+        {
+          "text": "I tend to get lost in and have difficulties finding the things I am looking for",
+          "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The store is huge and has the most beautiful Christmas displays in the windows"
+    ],
+    "watchOuts": [
+      "I tend to get lost in and have difficulties finding the things I am looking for"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

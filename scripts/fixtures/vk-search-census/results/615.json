@@ -8,8 +8,16 @@
       "url": "https://en.wikipedia.org/wiki/Bergdorf_Goodman",
       "title": "Bergdorf Goodman - Wikipedia",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "7) Neiman Marcus Group (1987–2024) Exemplar Luxury Group [ a ] (2024–Present) Website bergdorfgoodman .com Footnotes [ 1 ] Bergdorf Goodman Inc. is a luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan . Its pare … 7) Neiman Marcus Group (1987–2024) Exemplar Luxury Group [ a ] (2024–Present) Website bergdorfgoodman .com Footnotes [ 1 ] Bergdorf Goodman Inc. is a luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan . Its pare",
+      "text": "7) Neiman Marcus Group (1987–2024) Exemplar Luxury Group [ a ] (2024–Present) Website bergdorfgoodman .com Footnotes [ 1 ] Bergdorf Goodman Inc. is a luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan . Its pare … 7) Neiman Marcus Group (1987–2024) Exemplar Luxury Group [ a ] (2024–Present) Website bergdorfgoodman .com Footnotes [ 1 ] Bergdorf Goodman Inc. is a luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the street at 745 Fifth Avenue in Midtown Manhattan . Its pare …  In 1914, he became the first couturier to introduce ready-to-wear , making Bergdorf Goodman a destination for American and French fashion. The store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House . Goodman was unsure of the success of the  … king Bergdorf Goodman a destination for American and French fashion. The store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House . Goodman was unsure of the success of the new store's location, as he was uncertain whether customers would follow the store uptown and so designed ",
       "snippet": "7) Neiman Marcus Group (1987–2024) Exemplar Luxury Group [ a ] (2024–Present) Website bergdorfgoodman .com Footnotes [ 1 ] Bergdorf Goodman Inc. is a luxury department store founded in 1899 by Herman Bergdorf. It operates a women's store in the Bergdorf Goodman Building and a men's store across the ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+      "title": "Tripadvisor review page: Bergdorf Goodman (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter …  via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
@@ -21,7 +29,11 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "luxury department store founded in 1899 by Herman Bergdorf",
-    "luxury department store founded in 1899 by Herman Bergdorf"
+    "luxury department store founded in 1899 by Herman Bergdorf",
+    "moved to its present location at Fifth Avenue and 58th Street in 1928",
+    "building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House",
+    "Great views over Central Park. Great decor.",
+    "A 10 minute wait at the Jo Malone counter"
   ],
   "itineraryNoteCandidate": "Window-shop Fifth Avenue luxury, then cross to Central Park if the floors feel overwhelming.",
   "voicePass": {
@@ -62,17 +74,45 @@
       ]
     },
     "description": {
-      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf. It sits on Fifth Avenue at 58th Street across from the Plaza and Central Park. Window shopping here pairs well with a walk along Fifth Avenue and the park.",
+      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf. According to Wikipedia, the store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. That puts it across from the Plaza and the corner of Central Park, so window shopping here pairs well with a walk along Fifth Avenue. Representative Tripadvisor praise (search snapshot): “Great views over Central Park. Great decor.”. Representative watch-outs: “A 10 minute wait at the Jo Malone counter”.",
       "claims": [
         {
           "text": "luxury department store founded in 1899 by Herman Bergdorf",
           "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "moved to its present location at Fifth Avenue and 58th Street in 1928",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Bergdorf_Goodman"
+        },
+        {
+          "text": "Great views over Central Park. Great decor.",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+        },
+        {
+          "text": "A 10 minute wait at the Jo Malone counter",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Great views over Central Park. Great decor."
+    ],
+    "watchOuts": [
+      "A 10 minute wait at the Jo Malone counter"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

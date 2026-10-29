@@ -8,7 +8,7 @@
       "url": "https://www.puregreenfranchise.com/new-york/uws/",
       "title": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-press … Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West ",
+      "text": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-press … Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West  … ce bar for handcrafted smoothies, colorful acai bowls, and cold-pressed juice. Find us on Broadway on the Upper West Side, open from 7 every morning. 2041 Broadway New York, NY 10023 See store hours Order UWS ↗ Get directions ↗ ★ 4.8 78 Google reviews (646) 454-1650 Pure Green UWS · Broadway Find your favorite ↘ Full menu ↘ Visit  … ter, or order ahead and pick up on your way. We’ll see you here. ↗ Pure Green UWS 2041 Broadway New York, NY 10023 (646) 454-1650 Regular store hours Monday 7 AM–9 PM Tuesday 7 AM–9 PM Wednesday 7 AM–9 PM Thursday 7 AM–9 PM Friday 7 AM–9 PM Saturday 7 AM–9 PM Sunday 7 AM–9 PM Hours shown in Eastern time. Holiday ho",
       "snippet": "Upper West Side Juice Bar | Acai & Smoothies – Pure Green | Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. Order online or visit our juice bar today. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-press",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
@@ -27,7 +27,9 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice",
-    "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY"
+    "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY",
+    "2041 Broadway New York, NY 10023",
+    "Monday 7 AM–9 PM"
   ],
   "itineraryNoteCandidate": "Quick cold-pressed juice stop on Broadway before a Lincoln Center evening.",
   "voicePass": {
@@ -68,17 +70,25 @@
       ]
     },
     "description": {
-      "value": "Pure Green UWS is a neighborhood juice bar on the Upper West Side. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. It is a light breakfast or snack stop before heading into Central Park or Riverside Park.",
+      "value": "Pure Green UWS is a neighborhood juice bar on the Upper West Side. Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY. The shop is at 2041 Broadway New York, NY 10023, and its listed hours are Monday 7 AM–9 PM, with the same hours every day of the week. It makes a light breakfast or snack stop before heading into Central Park or Riverside Park.",
       "claims": [
         {
           "text": "Pure Green UWS on Broadway serves acai bowls, superfood smoothies & cold-pressed juice on the Upper West Side, NY",
+          "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+        },
+        {
+          "text": "2041 Broadway New York, NY 10023",
+          "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
+        },
+        {
+          "text": "Monday 7 AM–9 PM",
           "sourceUrl": "https://www.puregreenfranchise.com/new-york/uws/"
         }
       ]
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
