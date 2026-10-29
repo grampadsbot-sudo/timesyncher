@@ -4,7 +4,7 @@ const negation = (token) => /^(?:no|not|never|without|none|non|cannot|closed|una
 const contentTokens = (value) => value.match(/[a-z0-9]+/g)?.filter((token) => token.length >= 3 && !stopwords.has(token)) || [];
 const numericTokens = (value) => value.match(/\$\s*\d+(?:,\d{3})*(?:\.\d+)?|\d+(?:,\d{3})*(?:\.\d+)?(?::\d{2})?(?:\s*(?:am|pm)\b)?|\$+/g)?.map((token) => token.replace(/\s+/g, '').replace(/(?:am|pm)$/, '').replace(/:00$/, '')) || [];
 
-const clauseSplit = /(?<!\d)[.!?]|[.!?](?!\d)|[;\n]|\b(?:but|however|although|yet)\b/;
+const clauseSplit = /(?<!\d)[.!?]|[.!?](?!\d)|[;\n|]|\u2026|\b(?:but|however|although|yet)\b/;
 
 function tokenNegativePolarity(tokens, index) {
   if (index > 0 && tokens[index - 1] === 'non') return true;
@@ -29,7 +29,9 @@ function polarityMapsConflict(claimMap, pageMap) {
   for (const [token, polarities] of claimMap) {
     const matched = pageMap.get(token);
     if (!matched) continue;
-    if (polarities.size > 1 || matched.size > 1 || [...polarities][0] !== [...matched][0]) return true;
+    if (polarities.size > 1) return true;
+    if (matched.size > 1) continue;
+    if ([...polarities][0] !== [...matched][0]) return true;
   }
   return false;
 }
