@@ -59,6 +59,15 @@ export function vkSearchClaimSupportOk(result) {
   });
 }
 
+export function personFramedReview(body) {
+  return /\b(reviewers?|guests?|customers?|diners?|travell?ers?|shoppers?|visitors?|patrons?)\s+(on|at|says|said|writes|wrote|notes|noted|praises|praised|calls|called|adds|added)\b/i.test(body)
+    || /^[^.:]{0,80}\b(reviewer|guest|customer|diner|traveller|traveler|shopper|visitor)\b[^.:]{0,40}:/i.test(body)
+    || /\b(one|another|a)\s+(\w+\s+)?(reviewer|guest|customer|diner|traveller|traveler|shopper|visitor)\b/i.test(body)
+    || /["“”]/.test(body)
+    || /\b(my|me|we|our|us)\b/i.test(body)
+    || /\bI\b|\bI['’]/.test(body);
+}
+
 function reviewStars(result, n) {
   const tripCom = /trip\.com/i.test(text(result[`review${n}Source`]));
   const tenMatch = text(result[`review${n}Rating`]).match(/^(\d+(?:\.\d+)?)\s*\/\s*10$/);
@@ -173,31 +182,36 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     hint('itineraryNote', result.itineraryNoteCandidate, result.itineraryNoteSourceUrl);
     if (dossier.fields.itineraryNote) dossier.itineraryNote = dossier.fields.itineraryNote.value;
   }
-  const themes = result.reviewThemes && typeof result.reviewThemes === 'object' ? result.reviewThemes : {};
-  const excerpts = [...list(themes.praise), ...list(themes.watchOuts), ...list(themes.complaints)].map(text).filter(Boolean);
-  const reviewPage = text(themes.source) ? pageIndex(text(themes.source)) : -1;
   const reviews = [1, 2, 3, 4].flatMap((n) => {
     const body = text(result[`review${n}`]);
-    if (!body || claimTextWasRejected(body, rejected)) return [];
-    const themeQuote = excerpts.find((row) => body.includes(row));
-    const linePage = text(result[`review${n}SourceUrl`]) ? pageIndex(text(result[`review${n}SourceUrl`])) : -1;
-    const lineQuote = linePage < 0 ? '' : [body, ...body.split(/(?<=[.!?])\s+/)]
-      .filter((row) => row.length >= 25)
-      .sort((a, b) => b.length - a.length)
-      .find((row) => pageSupports(linePage, row)) || '';
-    const [quote, page] = themeQuote && pageSupports(reviewPage, themeQuote) ? [themeQuote, reviewPage]
-      : lineQuote ? [lineQuote, linePage] : [];
-    if (!quote) return [];
+    if (!body || claimTextWasRejected(body, rejected) || personFramedReview(body)) return [];
+    const pasted = [body, ...body.split(/(?<=[.!?])\s+/)]
+      .filter((row) => row.split(/\s+/).length >= 8)
+      .some((row) => pages.some((_, index) => pageSupports(index, row)));
+    if (pasted) return [];
+    const lineUrl = text(result[`review${n}SourceUrl`]);
+    const supportClaims = list(result[`review${n}Claims`]).flatMap((raw) => {
+      const quote = text(typeof raw === 'string' ? raw : raw?.text);
+      const index = pageIndex(text(raw?.sourceUrl) || lineUrl);
+      if (!quote || index < 0 || claimTextWasRejected(quote, rejected) || !pageSupports(index, quote)) return [];
+      return [{ text: quote, sourceUrl: pages[index].url, pages: [`p${index + 1}`], supported: true }];
+    });
+    if (!supportClaims.length) return [];
     const stars = reviewStars(result, n);
     return [{
       text: body,
+      representative: true,
       ...(stars ? { rating: stars.rating, starsEvidence: stars.evidence } : {}),
       ...(text(result[`review${n}Theme`]) ? { theme: text(result[`review${n}Theme`]) } : {}),
       ...(text(result[`review${n}Source`]) ? { source: text(result[`review${n}Source`]) } : {}),
-      claims: [{ text: quote, sourceUrl: pages[page].url, pages: [`p${page + 1}`], supported: true }],
+      claims: supportClaims,
     }];
   });
-  if (reviews.length === 4) dossier.reviews = reviews;
+  if (reviews.length === 4) {
+    dossier.reviews = reviews;
+    const label = text(result.reviewsLabel);
+    if (/^Representative reviews written from \d+ reviews$/.test(label)) dossier.reviewsLabel = label;
+  }
   const source = text(result.rating?.primarySource).toLowerCase();
   const average = Number(result.rating?.primary);
   if (voiceAllowed && verdictEligible(result.rating)
@@ -241,6 +255,10 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       dossier.reviewsAvailable = count;
       dossier.ratingEvidence = { ...rating, pages: [`p${index + 1}`] };
     }
+  }
+  if (dossier.reviews && dossier.rating > 0 && dossier.reviews.every((row) => row.rating)) {
+    const mean = dossier.reviews.reduce((sum, row) => sum + row.rating, 0) / 4;
+    if (Math.abs(mean - dossier.rating) > 0.5) for (const row of dossier.reviews) { delete row.rating; delete row.starsEvidence; }
   }
   for (const page of pages) page.sha256 = createHash('sha256').update(page.text).digest('hex');
   return dossier;
