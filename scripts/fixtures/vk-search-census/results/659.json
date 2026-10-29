@@ -19,6 +19,14 @@
       "text": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question?  … e hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to ",
       "snippet": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+      "title": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people  … NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place wh … - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage … ar was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage",
+      "snippet": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the peo",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
   "rating": {
@@ -39,7 +47,11 @@
     "Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club",
     "Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club",
     "Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club",
-    "Box Office Phone Number: 212-475-8592"
+    "Box Office Phone Number: 212-475-8592",
+    "The location is iconic, intimate and full of atmosphere",
+    "the real star was the Gospel Choir show",
+    "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+    "We were seated in a place where we could hardly see the stage"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -80,7 +92,7 @@
       ]
     },
     "description": {
-      "value": "Blue Note runs two sets a night, and its contact page lists Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. The October 2026 calendar includes Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club on the 14th. Other October bookings include Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club and Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club. The Box Office Phone Number: 212-475-8592 handles ticket questions.",
+      "value": "Blue Note runs two sets a night, and its contact page lists Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. The October 2026 calendar includes Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club on the 14th. Other October bookings include Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club and Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club. The Box Office Phone Number: 212-475-8592 handles ticket questions. Representative Tripadvisor praise (search snapshot): “The location is iconic, intimate and full of atmosphere”; “the real star was the Gospel Choir show”. Representative watch-outs: “They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room”; “We were seated in a place where we could hardly see the stage”.",
       "claims": [
         {
           "text": "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
@@ -101,12 +113,42 @@
         {
           "text": "Box Office Phone Number: 212-475-8592",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        },
+        {
+          "text": "The location is iconic, intimate and full of atmosphere",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "the real star was the Gospel Choir show",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "We were seated in a place where we could hardly see the stage",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The location is iconic, intimate and full of atmosphere",
+      "the real star was the Gospel Choir show"
+    ],
+    "watchOuts": [
+      "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+      "We were seated in a place where we could hardly see the stage"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

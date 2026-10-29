@@ -71,7 +71,8 @@ const seeded = await runBotPrimarySeedTargets([{
 }], { env: {}, storeImpl });
 
 assert.equal(seeded.results[0].fillPath, 'bot-census');
-assert.equal(seeded.results[0].pageCount, 3, 'archived stale home kept; amenities + bot home appended');
+assert.ok(bot.pages.some((page) => page.url === HOME), 'census fixture 603 must include a bot-saved home page');
+assert.equal(seeded.results[0].pageCount, 1 + bot.pages.length, 'archived stale home kept; every bot-saved page (incl. bot home) appended');
 
 const stored = mem.get('trip:1:place:603');
 const homePages = stored.pages.filter((page) => page.url === HOME);

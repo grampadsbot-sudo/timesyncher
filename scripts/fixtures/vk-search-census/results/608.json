@@ -11,6 +11,14 @@
       "text": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … r, 15 minute walk The Bites & Sips SUGARFISH , 1 minute walk PATSY'S , 2 minute walk Serafina , 3 minute walk Brooklyn Diner , 3 minute walk The Arts Carnegie Hall, 2 minute walk Broadway Theater, 5 minute walk Gershwin Theater , 10 minute walk MUSEUM OF MODERN ART, 10 minute walk The Shops NORDSTROM, 4 minute walk SHOPS AT CO … htfully arranged. Take advantage of exclusive access to member amenities throughout the length of your stay—including our gym, valet parking, and our member-only Club Lounge and Terraces. Suites One Bedroom Suite with Two Bathrooms Comfort & Privacy Experience exceptional comfort in our functionally designed suites, each offering the ",
       "snippet": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESER",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+      "title": "The Manhattan Club: 60 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "e Stayed in Jul 2026 Family 16 reviews 10 / 10 Outstanding Posted on Aug 28, 2026 So far it was the best place we have stayed in NYC for this budget. The rooms were spacious and with enough privacy for everyone. Two bathrooms and even small kitchen corner. The location is perfect, the subway is 2 minutes away, have many shops and restaurants nearby. We will  … and highly recommended it to everyone. Guest User Executive Junior Suite Stayed in Jun 2026 Couple 1 reviews 8.0 / 10 Very good Posted on Aug 3, 2026 The location to central park was awesome and the staff were great . Love the decor of the place and the history just to stay in the same place that like the great Jackie Gleason started . This is my first ever trip ",
+      "snippet": "e Stayed in Jul 2026 Family 16 reviews 10 / 10 Outstanding Posted on Aug 28, 2026 So far it was the best place we have stayed in NYC for this budget. The rooms were spacious and with enough privacy for everyone. Two bathrooms and even small kitchen corner. The location is perfect, the subway is 2 mi",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
   "rating": {
@@ -31,7 +39,9 @@
     "200 W 56th St. New York, NY 10019",
     "200 W 56th St. New York, NY 10019",
     "Carnegie Hall, 2 minute walk",
-    "member-only Club Lounge and Terraces"
+    "member-only Club Lounge and Terraces",
+    "The rooms were spacious and with enough privacy for everyone",
+    "The location to central park was awesome and the staff were great"
   ],
   "itineraryNoteCandidate": "Suite kitchenettes near Midtown West—good for longer stays if the rate clears fees.",
   "voicePass": {
@@ -72,7 +82,7 @@
       ]
     },
     "description": {
-      "value": "The Manhattan Club is an all-suite hotel in Midtown Manhattan at 200 W 56th St. Its official site says Carnegie Hall is a two minute walk away. Guests also get a member-only Club Lounge and Terraces, which makes it a calm base between Central Park and the Theater District.",
+      "value": "The Manhattan Club is an all-suite hotel in Midtown Manhattan at 200 W 56th St. Its official site says Carnegie Hall is a two minute walk away. Guests also get a member-only Club Lounge and Terraces, which makes it a calm base between Central Park and the Theater District. Representative Trip.com praise (guest reviews): “The rooms were spacious and with enough privacy for everyone”; “The location to central park was awesome and the staff were great”.",
       "claims": [
         {
           "text": "200 W 56th St. New York, NY 10019",
@@ -85,12 +95,31 @@
         {
           "text": "member-only Club Lounge and Terraces",
           "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "The rooms were spacious and with enough privacy for everyone",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
+        },
+        {
+          "text": "The location to central park was awesome and the staff were great",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "The rooms were spacious and with enough privacy for everyone",
+      "The location to central park was awesome and the staff were great"
+    ],
+    "watchOuts": []
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -85,7 +85,7 @@
     }
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

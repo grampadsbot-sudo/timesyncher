@@ -19,6 +19,14 @@
       "text": " to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access requ … Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one …  to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access requ … Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one …  up to the top of the pedestal observation balcony. These are purchased online only through Statue City Cruises . Crown Ticket : Tickets are limited. Crown tickets allow visitors to access the crown of the statue, which includes a walk up 162 steps from the feet of the statue to the crown. There is no elevator access to the crown. Tickets are purchased online only through Statue City Cruises . The time listed on the ferry ticket is the … tional Museum of Immigration. Pedestal and crown access require advance purchase as these tickets are limited based on safety and security standards. To visit both islands in one day, the National Park Service recommends an early ferry departure. What Are My Ticket Options? General Admission: This ticket is our most widely available ticket. Visitors will have access to both islands, including … d on the ferry ticket is the time you need to join the queue for the security screening facility. It is not a reservation time for a ferry departure. Wait time can be an hour or more during peak times, including summer, weekends, and holidays. Statue City Cruises Statue City Cruises is our official source for tickets to the island. Click this link for more information. National Museum of I",
       "snippet": " to avoid long lines and secure your access inside the Statue. Where Do I Purchase Tickets? Tickets should be purchased through Statue City Cruises , the ONLY ferry service that brings visitors to Liberty and Ellis Islands. All ferry tickets include access to the Statue of Liberty Museum and the Ell",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+      "title": "Review of Statue City Cruises, New York City, NY - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly a … Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat …  York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat … e Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly an hour for a boat",
+      "snippet": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island the boat ride was calm, and the views were amazing the loading and unloading process is crowded and disorganized had to wait in the heat for nearly a",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
   "rating": {
@@ -38,7 +46,11 @@
     "All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration",
     "Crown tickets allow visitors to access the crown of the statue, which includes a walk up 162 steps from the feet of the statue to the crown",
     "To visit both islands in one day, the National Park Service recommends an early ferry departure",
-    "Wait time can be an hour or more during peak times, including summer, weekends, and holidays"
+    "Wait time can be an hour or more during peak times, including summer, weekends, and holidays",
+    "The best part is access to the Statue of Liberty and Ellis Island",
+    "the boat ride was calm, and the views were amazing",
+    "the loading and unloading process is crowded and disorganized",
+    "had to wait in the heat for nearly an hour for a boat"
   ],
   "itineraryNoteCandidate": "Book statuecitycruises.com early for pedestal/crown; GA covers Liberty + Ellis ferry.",
   "voicePass": {
@@ -83,7 +95,7 @@
       ]
     },
     "description": {
-      "value": "Statue of Liberty / Ellis Island tour candidate uses Statue City Cruises, the ONLY ferry service that brings visitors to Liberty and Ellis Islands, with departures from Castle Clinton in Battery Park. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Crown tickets allow visitors to access the crown of the statue, which includes a walk up 162 steps from the feet of the statue to the crown. To visit both islands in one day, the National Park Service recommends an early ferry departure. Wait time can be an hour or more during peak times, including summer, weekends, and holidays.",
+      "value": "Statue of Liberty / Ellis Island tour candidate uses Statue City Cruises, the ONLY ferry service that brings visitors to Liberty and Ellis Islands, with departures from Castle Clinton in Battery Park. All ferry tickets include access to the Statue of Liberty Museum and the Ellis Island National Museum of Immigration. Crown tickets allow visitors to access the crown of the statue, which includes a walk up 162 steps from the feet of the statue to the crown. To visit both islands in one day, the National Park Service recommends an early ferry departure. Wait time can be an hour or more during peak times, including summer, weekends, and holidays. Representative Tripadvisor praise (search snapshot): “The best part is access to the Statue of Liberty and Ellis Island”; “the boat ride was calm, and the views were amazing”. Representative watch-outs: “the loading and unloading process is crowded and disorganized”; “had to wait in the heat for nearly an hour for a boat”.",
       "claims": [
         {
           "text": "the ONLY ferry service that brings visitors to Liberty and Ellis Islands",
@@ -108,12 +120,42 @@
         {
           "text": "Wait time can be an hour or more during peak times, including summer, weekends, and holidays",
           "sourceUrl": "https://www.nps.gov/stli/planyourvisit/index.htm"
+        },
+        {
+          "text": "The best part is access to the Statue of Liberty and Ellis Island",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+        },
+        {
+          "text": "the boat ride was calm, and the views were amazing",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+        },
+        {
+          "text": "the loading and unloading process is crowded and disorganized",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+        },
+        {
+          "text": "had to wait in the heat for nearly an hour for a boat",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The best part is access to the Statue of Liberty and Ellis Island",
+      "the boat ride was calm, and the views were amazing"
+    ],
+    "watchOuts": [
+      "the loading and unloading process is crowded and disorganized",
+      "had to wait in the heat for nearly an hour for a boat"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

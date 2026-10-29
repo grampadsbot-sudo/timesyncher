@@ -11,10 +11,25 @@
       "text": "ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1 … ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1 … formation Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the 2,000-room Commodore Hotel between 1919 and 1976, before hotel chain Hy",
       "snippet": "ng team Architect Gruzen Samton Other information Number of rooms 1306 Website https://newyork.grand.hyatt.com/ The Hyatt Grand Central New York is a hotel located at 109 East 42nd Street , adjoining Grand Central Terminal , in the Midtown Manhattan neighborhood of New York City . It operated as the",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+      "title": "Hyatt Grand Central New York: 207 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "iews(30) Guest User Two Double Room Stayed in Jul 2026 Family 5 reviews 10 / 10 Outstanding Posted on Aug 25, 2026 The hotel's location is excellent, right next to Grand Central Station, making it super convenient for getting around. I was able to pop back to the hotel for a rest whenever I got tired from exploring New York these past few days. The room was also very spacious – r … e Room Stayed in Jul 2026 Business traveler 30 reviews 6.7 / 10 Posted on Aug 23, 2026 Everything else was fine, the service overall seemed okay, but the staff were very impatient when answering the phone. The faucet was too tight for me, an Asian person, to open, and I thought it was broken. When I called the front desk and housekeeping, they were bot … Hyatt Grand Central New York: 207 Reviews | Trip.com | | Guest Reviews of Hyatt Grand Central New York 7.9 / 10 Good 207 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
+      "snippet": "iews(30) Guest User Two Double Room Stayed in Jul 2026 Family 5 reviews 10 / 10 Outstanding Posted on Aug 25, 2026 The hotel's location is excellent, right next to Grand Central Station, making it super convenient for getting around. I was able to pop back to the hotel for a rest whenever I got tire",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 7.9,
+    "primarySource": "trip.com",
+    "tripcom": 7.9,
+    "scale": 10
+  },
+  "reviewCount": {
+    "tripcom": 207
+  },
   "priceHint": "Hyatt near Grand Central",
   "hoursHint": null,
   "happyHourHint": null,
@@ -22,7 +37,10 @@
   "summaryClaims": [
     "hotel located at 109 East 42nd Street",
     "hotel located at 109 East 42nd Street",
-    "adjoining Grand Central Terminal"
+    "adjoining Grand Central Terminal",
+    "right next to Grand Central Station, making it super convenient for getting around",
+    "the staff were very impatient when answering the phone",
+    "7.9 / 10 Good 207 reviews"
   ],
   "itineraryNoteCandidate": "Use as a Grand Central hub for Midtown East days—confirm current renovation status before booking.",
   "voicePass": {
@@ -63,7 +81,7 @@
       ]
     },
     "description": {
-      "value": "Hyatt Grand Central New York is a hotel located at 109 East 42nd Street in Midtown Manhattan. The building stands adjoining Grand Central Terminal, so trains and subways are steps away. It suits a trip that mixes Midtown sightseeing with day trips by rail.",
+      "value": "Hyatt Grand Central New York is a hotel located at 109 East 42nd Street in Midtown Manhattan. The building stands adjoining Grand Central Terminal, so trains and subways are steps away. It suits a trip that mixes Midtown sightseeing with day trips by rail. Trip.com shows 7.9 / 10 Good 207 reviews. Representative Trip.com praise (guest reviews): “right next to Grand Central Station, making it super convenient for getting around”. Representative watch-outs: “the staff were very impatient when answering the phone”.",
       "claims": [
         {
           "text": "hotel located at 109 East 42nd Street",
@@ -72,12 +90,36 @@
         {
           "text": "adjoining Grand Central Terminal",
           "sourceUrl": "https://en.wikipedia.org/wiki/Grand_Hyatt_New_York"
+        },
+        {
+          "text": "right next to Grand Central Station, making it super convenient for getting around",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
+        },
+        {
+          "text": "the staff were very impatient when answering the phone",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
+        },
+        {
+          "text": "7.9 / 10 Good 207 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "right next to Grand Central Station, making it super convenient for getting around"
+    ],
+    "watchOuts": [
+      "the staff were very impatient when answering the phone"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

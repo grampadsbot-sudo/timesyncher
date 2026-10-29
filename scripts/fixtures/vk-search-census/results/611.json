@@ -19,6 +19,14 @@
       "text": "00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" indicates required fields Instagram This … 00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" indicates required fields Instagram This",
       "snippet": "00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to check out our FAQs . \" * \" in",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+      "title": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people  … NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place wh … - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage … ar was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room We were seated in a place where we could hardly see the stage",
+      "snippet": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere the real star was the Gospel Choir show They really do try to cram everyone into a space that only comfortably accommodates two thirds of the peo",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
   "rating": {
@@ -39,7 +47,11 @@
     "131 West 3rd Street New York, NY 10012",
     "Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world",
     "Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting",
-    "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines"
+    "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines",
+    "The location is iconic, intimate and full of atmosphere",
+    "the real star was the Gospel Choir show",
+    "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+    "We were seated in a place where we could hardly see the stage"
   ],
   "itineraryNoteCandidate": "Buy tickets on bluenotejazz.com, arrive early for first-come seating, and budget the $20 food/drink minimum.",
   "voicePass": {
@@ -86,7 +98,7 @@
       ]
     },
     "description": {
-      "value": "Blue Note Jazz Club sits at 131 West 3rd Street in New York's Greenwich Village. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting. The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines.",
+      "value": "Blue Note Jazz Club sits at 131 West 3rd Street in New York's Greenwich Village. Since 1981, Blue Note has been a cultural institution in New York City and one of the premiere jazz clubs in the world. Owner and founder Danny Bensusan had a vision to create a jazz club in Greenwich Village that would treat deserving artists with respect, while allowing patrons to see the world’s finest jazz musicians in a close, comfortable setting. The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines. Representative Tripadvisor praise (search snapshot): “The location is iconic, intimate and full of atmosphere”; “the real star was the Gospel Choir show”. Representative watch-outs: “They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room”; “We were seated in a place where we could hardly see the stage”.",
       "claims": [
         {
           "text": "131 West 3rd Street New York, NY 10012",
@@ -103,12 +115,42 @@
         {
           "text": "The club receives rave reviews on a weekly basis in New York’s daily newspapers such as The New York Times and in international travel guides and magazines",
           "sourceUrl": "https://www.bluenotejazz.com/nyc/about/"
+        },
+        {
+          "text": "The location is iconic, intimate and full of atmosphere",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "the real star was the Gospel Choir show",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "We were seated in a place where we could hardly see the stage",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The location is iconic, intimate and full of atmosphere",
+      "the real star was the Gospel Choir show"
+    ],
+    "watchOuts": [
+      "They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room",
+      "We were seated in a place where we could hardly see the stage"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

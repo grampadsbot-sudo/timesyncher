@@ -11,6 +11,14 @@
       "text": "Motto by Hilton New York City Times Square Opens | Hilton News | Motto by Hilton is taking Midtown with a second New York City hotel as part of a nearly 2,000‑room addition across multiple Hil … ct on the cityscape, moments from the best of Broadway, museums, dining and culture.” Reimagining the large-scale footprint of a New York City hotel, Motto New York City Times Square will entice guests looking for connection and efficiency . Guest rooms designed with an intentional footprint feature soft neutral textures offering a cozy escape, while dynamic storage and technology featu … ining the large-scale footprint of a New York City hotel, Motto New York City Times Square will entice guests looking for connection and efficiency . Guest rooms designed with an intentional footprint feature soft neutral textures offering a cozy escape, while dynamic storage and technology features synthesize their stay. The property's signature r",
       "snippet": "Motto by Hilton New York City Times Square Opens | Hilton News | Motto by Hilton is taking Midtown with a second New York City hotel as part of a nearly 2,000‑room addition across multiple Hil",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+      "title": "Motto by Hilton New York City Times Square: 728 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Negative reviews(41) Caliec alister Flex Room With Wall Bed Stayed in Jul 2026 Traveling with friends 5 reviews 9.0 / 10 Great Posted on Sep 26, 2026 Affordable and clean, you get what you pay for in New York. Great location and other amenities and 2 mins walk to the subway. William Moreira Bunk Beds 1 Twin Bed over 1 Queen Bed Stayed in Jul 2026 Family 15 … excellent, very close to Times Square, yet on 48th Street, offering a quiet escape from the hustle and bustle. It's super convenient to get anywhere. The front desk staff were also very nice. I hope to have the chance to experience it again! Original text Translated by Google Guest User Compact 1 Queen City View Stayed in Jul 2026 Solo tr … ver 1 Queen Bed Stayed in Jul 2026 Family 15 reviews 8.5 / 10 Very good Posted on Aug 20, 2026 The location is right in the heart of the Time Square. Rooms are super small, but for one night was okay! 6/ 10 Amonwit Deeying Flex Room With Wall Bed Stayed in Sep 2026 Couple 82 reviews 10 / 10 Outstanding Posted on Oct 3, ",
+      "snippet": "Negative reviews(41) Caliec alister Flex Room With Wall Bed Stayed in Jul 2026 Traveling with friends 5 reviews 9.0 / 10 Great Posted on Sep 26, 2026 Affordable and clean, you get what you pay for in New York. Great location and other amenities and 2 mins walk to the subway. William Moreira Bunk Bed",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
   "rating": null,
@@ -22,7 +30,10 @@
   "summaryClaims": [
     "Motto by Hilton New York City Times Square",
     "Motto New York City Times Square will entice guests looking for connection and efficiency",
-    "Guest rooms designed with an intentional footprint"
+    "Guest rooms designed with an intentional footprint",
+    "Affordable and clean, you get what you pay for in New York",
+    "The front desk staff were also very nice",
+    "Rooms are super small"
   ],
   "itineraryNoteCandidate": "Compact Motto rooms put you on 48th—budget the destination fee into the nightly rate.",
   "voicePass": {
@@ -63,7 +74,7 @@
       ]
     },
     "description": {
-      "value": "Motto by Hilton New York City Times Square is a Hilton lifestyle hotel in Midtown. Hilton says Motto will entice guests looking for connection and efficiency. Its guest rooms are designed with an intentional footprint, so expect compact rooms and a central location near Broadway.",
+      "value": "Motto by Hilton New York City Times Square is a Hilton lifestyle hotel in Midtown. Hilton says Motto will entice guests looking for connection and efficiency. Its guest rooms are designed with an intentional footprint, so expect compact rooms and a central location near Broadway. Representative Trip.com praise (guest reviews): “Affordable and clean, you get what you pay for in New York”; “The front desk staff were also very nice”. Representative watch-outs: “Rooms are super small”.",
       "claims": [
         {
           "text": "Motto New York City Times Square will entice guests looking for connection and efficiency",
@@ -72,12 +83,37 @@
         {
           "text": "Guest rooms designed with an intentional footprint",
           "sourceUrl": "https://stories.hilton.com/releases/motto-by-hilton-new-york-city-times-square-opens"
+        },
+        {
+          "text": "Affordable and clean, you get what you pay for in New York",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+        },
+        {
+          "text": "The front desk staff were also very nice",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
+        },
+        {
+          "text": "Rooms are super small",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-105237897/motto-by-hilton-new-york-city-times-square/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "Affordable and clean, you get what you pay for in New York",
+      "The front desk staff were also very nice"
+    ],
+    "watchOuts": [
+      "Rooms are super small"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

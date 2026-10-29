@@ -11,17 +11,24 @@
       "text": "Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Poo … Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Poo …  Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and Outdoor Swimming Pool. Book direct and save on your stay in New York C",
       "snippet": "Empire Hotel New York Upper West Side 4-Star Hotel - Official Site | Uncover classic Manhattan charm at the iconic Empire Hotel, steps from Lincoln Center & Central Park. Stylish Art Deco rooms and a vibrant rooftop bar await. Explore the Empire Hotel, an iconic NYC landmark with a Rooftop Bar and O",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+      "title": "The Empire Hotel New York: 111 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " them out. Original text Translated by Google Anonymo us User Standard Queen Room Stayed in Sep 2026 Couple 1 reviews 7.0 / 10 Posted on Oct 25, 2026 Staff was generally quite nice. However, definitely below my expectations. Not sure if we just got unlucky but the bathroom definitely did not look as new and clean as in the photo … price, and stayed for two nights. The standard room is around 200 square feet, which is a decent amount of space for two people. The downside is that the hotel is quite old, so there are limited power outlets, which is a bit inconvenient. The shower area in the bathroom is very spacious, but the sink and toilet area feel … oked the hotel because of the pool!!!! Was given a very tiny room couldn’t unpack suitcase Photos on website show beautiful pool and lavish foyer but rooms are tiny with old fashioned floor air conditioner which was very loud Unhappy experience never going back Annie Baobao Superior Room, 2 Double Beds Stayed in Jun 2026 Family 20 reviews 10 / 10 Outstanding Posted on Oct  … The Empire Hotel New York: 111 Reviews | Trip.com | | Guest Reviews of The Empire Hotel New York 7.8 / 10 Good 112 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
+      "snippet": " them out. Original text Translated by Google Anonymo us User Standard Queen Room Stayed in Sep 2026 Couple 1 reviews 7.0 / 10 Posted on Oct 25, 2026 Staff was generally quite nice. However, definitely below my expectations. Not sure if we just got unlucky but the bathroom definitely did not look as",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
   "rating": {
-    "primary": 3.7,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 3.7,
-    "hotels": 7.6
+    "primary": 7.8,
+    "primarySource": "trip.com",
+    "tripcom": 7.8,
+    "scale": 10
   },
   "reviewCount": {
-    "tripadvisor": 10007,
-    "hotels": 7222
+    "tripcom": 112
   },
   "priceHint": "4-star near Columbus Circle; rooftop",
   "hoursHint": "Hotel — 24h; rooftop bar/seasonal pool",
@@ -30,7 +37,11 @@
   "summaryClaims": [
     "steps from Lincoln Center & Central Park",
     "steps from Lincoln Center & Central Park",
-    "Stylish Art Deco rooms and a vibrant rooftop bar"
+    "Stylish Art Deco rooms and a vibrant rooftop bar",
+    "Staff was generally quite nice",
+    "the hotel is quite old",
+    "rooms are tiny with old fashioned floor air conditioner which was very loud",
+    "7.8 / 10 Good 112 reviews"
   ],
   "itineraryNoteCandidate": "Empire for Columbus Circle nights—rooftop is the scene; rooms get mixed scores.",
   "voicePass": {
@@ -71,7 +82,7 @@
       ]
     },
     "description": {
-      "value": "The Empire Hotel New York is steps from Lincoln Center & Central Park on the Upper West Side. The hotel offers stylish Art Deco rooms and a vibrant rooftop bar. It works well for a trip built around concerts, the opera or the ballet at Lincoln Center.",
+      "value": "The Empire Hotel New York is steps from Lincoln Center & Central Park on the Upper West Side. The hotel offers stylish Art Deco rooms and a vibrant rooftop bar. It works well for a trip built around concerts, the opera or the ballet at Lincoln Center. Trip.com shows 7.8 / 10 Good 112 reviews. Representative Trip.com praise (guest reviews): “Staff was generally quite nice”. Representative watch-outs: “the hotel is quite old”; “rooms are tiny with old fashioned floor air conditioner which was very loud”.",
       "claims": [
         {
           "text": "steps from Lincoln Center & Central Park",
@@ -80,12 +91,41 @@
         {
           "text": "Stylish Art Deco rooms and a vibrant rooftop bar",
           "sourceUrl": "https://www.empirehotelnyc.com/"
+        },
+        {
+          "text": "Staff was generally quite nice",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "the hotel is quite old",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "rooms are tiny with old fashioned floor air conditioner which was very loud",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
+        },
+        {
+          "text": "7.8 / 10 Good 112 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "Staff was generally quite nice"
+    ],
+    "watchOuts": [
+      "the hotel is quite old",
+      "rooms are tiny with old fashioned floor air conditioner which was very loud"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

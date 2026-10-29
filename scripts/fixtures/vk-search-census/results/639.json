@@ -11,10 +11,25 @@
       "text": "otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe Queen Accessible with Roll In Shower Deluxe Room wit … otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe Queen Accessible with Roll In Shower Deluxe Room wit … m Access to PureGym In-room bottled water High-Speed Wireless Internet Access Digital access to The New York Times Daily Housekeeping Luggage Storage Access to our collection of over 6,000 books View All Services I have always imagined that paradise will be a kind of Library - JORGE LUIS BORGES - Festive Reads HarperCollins is partnering with … tries, yogurt, fresh fruit, coffee, and juice served daily 7:00 - 10:30 Refreshments such as coffee, tea, soft drinks, carbonated water, and more are available 24 hours a day in our Reading Room Fresh fruit, health bars, snacks, and more are available 24 hours in the Reading Room Access to PureGym In-room bottled water High-Speed Wireless Int",
       "snippet": "otel Meetings & Events Meeting Rooms Weddings & Elopements Request a Proposal Gallery Location Map Parking & Transportation Contact Us (212) 983-4500 299 Madison Ave, at E.41st Street New York City 10017 Menu BOOK YOUR STAY Overview Petite Room with One Full Bed Deluxe Room with One Queen Bed Deluxe",
       "fetchMethod": "curl --compressed live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+      "title": "Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ter by: Sort by: All reviews(103) Positive reviews(3) Chenxi aozhucc Junior Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfort of taking a shower is average. Original text …  Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfort of taking a shower is average. Original text Translated by Google 아르 데코 Petite Room with One F … Library Hotel by Library Hotel Collection: 103 Reviews | Trip.com | | Guest Reviews of Library Hotel by Library Hotel Collection 9.3 / 10 Great 103 reviews To ensure the authenticity of the displayed ratings, we do not simply calculate an average. Instead, we take into account the review credibility and ",
+      "snippet": "ter by: Sort by: All reviews(103) Positive reviews(3) Chenxi aozhucc Junior Suite Stayed in Jun 2024 Family 4 reviews 7.5 / 10 Posted on Jul 30, 2024 The hotel has a great location and good service. The only drawback is that the facilities are old, the water from the shower is not big, and the comfo",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 9.3,
+    "primarySource": "trip.com",
+    "tripcom": 9.3,
+    "scale": 10
+  },
+  "reviewCount": {
+    "tripcom": 103
+  },
   "priceHint": null,
   "hoursHint": "Hotel — 24h; Reading Room refreshments",
   "happyHourHint": null,
@@ -23,7 +38,10 @@
     "299 Madison Ave, at E.41st Street New York City 10017",
     "299 Madison Ave, at E.41st Street New York City 10017",
     "Access to our collection of over 6,000 books",
-    "available 24 hours a day in our Reading Room"
+    "available 24 hours a day in our Reading Room",
+    "The hotel has a great location and good service",
+    "the facilities are old",
+    "9.3 / 10 Great 103 reviews"
   ],
   "itineraryNoteCandidate": "Library Hotel for bookish Midtown East quiet—budget the daily resort fee that includes breakfast.",
   "voicePass": {
@@ -64,7 +82,7 @@
       ]
     },
     "description": {
-      "value": "Library Hotel by Library Hotel Collection is a boutique hotel at 299 Madison Ave, at E.41st Street New York City 10017. Guests get access to our collection of over 6,000 books, and refreshments are available 24 hours a day in our Reading Room. The hotel sits a block from the New York Public Library and Grand Central.",
+      "value": "Library Hotel by Library Hotel Collection is a boutique hotel at 299 Madison Ave, at E.41st Street New York City 10017. Guests get access to our collection of over 6,000 books, and refreshments are available 24 hours a day in our Reading Room. The hotel sits a block from the New York Public Library and Grand Central. Trip.com shows 9.3 / 10 Great 103 reviews. Representative Trip.com praise (guest reviews): “The hotel has a great location and good service”. Representative watch-outs: “the facilities are old”.",
       "claims": [
         {
           "text": "299 Madison Ave, at E.41st Street New York City 10017",
@@ -77,12 +95,36 @@
         {
           "text": "available 24 hours a day in our Reading Room",
           "sourceUrl": "https://www.libraryhotel.com/"
+        },
+        {
+          "text": "The hotel has a great location and good service",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "the facilities are old",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
+        },
+        {
+          "text": "9.3 / 10 Great 103 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "The hotel has a great location and good service"
+    ],
+    "watchOuts": [
+      "the facilities are old"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

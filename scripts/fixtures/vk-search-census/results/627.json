@@ -11,6 +11,14 @@
       "text": "details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1 … details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1 … onenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed in the Renaissance Revival style and opened on June 12, 1927. The Park Central is an independ",
       "snippet": "details Floor count 25 Design and construction Architects Gronenberg & Leuchtag References [ 1 ] The Park Central Hotel is a 25-story, 761-room [ 2 ] hotel located southwest of Carnegie Hall at 870 7th Avenue (between West 55th and 56th streets) in Midtown Manhattan , New York City . It was designed",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+      "title": "Park Central: 185 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "tral Hotel in New York was a great experience overall, especially for first-time visitors to New York who want to stay in a prime Manhattan location. The hotel's biggest advantage is its incredibly convenient location. It's very close to popular attractions like Central Park, Fifth Avenue, and Times Square, making it easy to get around on foot or by subway. For a t … oney(11) Close to metro(8) Negative reviews(20) Dianfeng shanshan Classic King Room Stayed in Sep 2026 Other 3 reviews 7.5 / 10 Posted on Oct 6, 2026 The room amenities are basic. No toothbrushes or slippers are provided. You can request a toothbrush from the hotel, but when I called at night, they said they would send one but …  close to Times Square. Since I checked in late at night and checked out early in the morning, I didn't get a chance to see how far Central Park was. My room faced the street, which was a bit noisy as it was the weekend. The lobby was decent, but the room was small – there wasn't enough space for three suitcases. It was only for one night, so it",
+      "snippet": "tral Hotel in New York was a great experience overall, especially for first-time visitors to New York who want to stay in a prime Manhattan location. The hotel's biggest advantage is its incredibly convenient location. It's very close to popular attractions like Central Park, Fifth Avenue, and Times",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
   "rating": null,
@@ -22,7 +30,10 @@
   "summaryClaims": [
     "hotel located southwest of Carnegie Hall at 870 7th Avenue",
     "hotel located southwest of Carnegie Hall at 870 7th Avenue",
-    "between West 55th and 56th streets"
+    "between West 55th and 56th streets",
+    "The hotel's biggest advantage is its incredibly convenient location",
+    "The room amenities are basic",
+    "My room faced the street, which was a bit noisy"
   ],
   "itineraryNoteCandidate": "Park Central puts you on Seventh Avenue near the park—factor elevator waits into morning plans.",
   "voicePass": {
@@ -63,7 +74,7 @@
       ]
     },
     "description": {
-      "value": "Park Central Hotel New York is a 25-story hotel located southwest of Carnegie Hall at 870 7th Avenue. Wikipedia places it between West 55th and 56th streets, which puts Central Park and the Theater District within walking distance. It is a large, practical Midtown base for a first trip to the city.",
+      "value": "Park Central Hotel New York is a 25-story hotel located southwest of Carnegie Hall at 870 7th Avenue. Wikipedia places it between West 55th and 56th streets, which puts Central Park and the Theater District within walking distance. It is a large, practical Midtown base for a first trip to the city. Representative Trip.com praise (guest reviews): “The hotel's biggest advantage is its incredibly convenient location”. Representative watch-outs: “The room amenities are basic”; “My room faced the street, which was a bit noisy”.",
       "claims": [
         {
           "text": "hotel located southwest of Carnegie Hall at 870 7th Avenue",
@@ -72,12 +83,37 @@
         {
           "text": "between West 55th and 56th streets",
           "sourceUrl": "https://en.wikipedia.org/wiki/Park_Central_Hotel"
+        },
+        {
+          "text": "The hotel's biggest advantage is its incredibly convenient location",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "The room amenities are basic",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
+        },
+        {
+          "text": "My room faced the street, which was a bit noisy",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "The hotel's biggest advantage is its incredibly convenient location"
+    ],
+    "watchOuts": [
+      "The room amenities are basic",
+      "My room faced the street, which was a bit noisy"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

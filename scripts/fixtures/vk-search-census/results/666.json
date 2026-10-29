@@ -19,17 +19,23 @@
       "text": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach …  Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Stache and Frank Christopher and is currently owned by Stach",
       "snippet": " Owners Paul Stache Molly Sparrow Johnson Location 2751 Broadway, Manhattan , New York City Website www .smokejazz .com Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan in New York City . The club was opened on April 9, 1999 by co-founders Paul Sta",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+      "title": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want  … SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … tan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … dvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews) … ?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want to come here 4.2 of 5 bubbles (574 reviews)",
+      "snippet": "SMOKE JAZZ CLUB, New York City - Upper Manhattan (Uptown) - Menu, Prices & Restaurant Reviews - Tripadvisor | | The show itself was exceptional Gabriela (sp?) was our friendly and helpful server the service didn’t match the quality of the performance Tight seating because so many people want ",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
     }
   ],
   "rating": {
     "primary": 4.2,
     "primarySource": "tripadvisor",
-    "tripadvisor": 4.2,
-    "yelp": 3.8
+    "tripadvisor": 4.2
   },
   "reviewCount": {
-    "tripadvisor": 573,
-    "yelp": 475
+    "tripadvisor": 574
   },
   "priceHint": "Tickets ~$25–$65; dinner entrée min on early sets; $20 min on 10pm",
   "hoursHint": "Lounge & listening room Wed–Sun 4pm–close (official FAQ)",
@@ -39,7 +45,12 @@
     "jazz club located at 2751 Broadway on the Upper West Side",
     "jazz club located at 2751 Broadway on the Upper West Side",
     "Dinner shows require a minimum purchase of at least one entrée per person",
-    "there is a $20 consumption minimum"
+    "there is a $20 consumption minimum",
+    "The show itself was exceptional",
+    "Gabriela (sp?) was our friendly and helpful server",
+    "the service didn’t match the quality of the performance",
+    "Tight seating because so many people want to come here",
+    "4.2 of 5 bubbles (574 reviews)"
   ],
   "itineraryNoteCandidate": "Arrive for happy hour, then catch a listening-room set—buy tickets ahead for dinner shows.",
   "voicePass": {
@@ -80,7 +91,7 @@
       ]
     },
     "description": {
-      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there.",
+      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there. Tripadvisor shows 4.2 of 5 bubbles (574 reviews). Representative Tripadvisor praise (search snapshot): “The show itself was exceptional”; “Gabriela (sp?) was our friendly and helpful server”. Representative watch-outs: “the service didn’t match the quality of the performance”; “Tight seating because so many people want to come here”.",
       "claims": [
         {
           "text": "jazz club located at 2751 Broadway on the Upper West Side",
@@ -93,12 +104,46 @@
         {
           "text": "there is a $20 consumption minimum",
           "sourceUrl": "https://smokejazz.com/faq/"
+        },
+        {
+          "text": "The show itself was exceptional",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "Gabriela (sp?) was our friendly and helpful server",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "the service didn’t match the quality of the performance",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "Tight seating because so many people want to come here",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.2 of 5 bubbles (574 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The show itself was exceptional",
+      "Gabriela (sp?) was our friendly and helpful server"
+    ],
+    "watchOuts": [
+      "the service didn’t match the quality of the performance",
+      "Tight seating because so many people want to come here"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -11,6 +11,14 @@
       "text": " \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman Jr. , the hotel is at 1535 Bro …  \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman Jr. , the hotel is at 1535 Bro",
       "snippet": " \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+      "title": "New York Marriott Marquis: 656 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " text Translated by Google Guest User Renovated Deluxe Two Double Room Stayed in Sep 2026 Family 17 reviews 10 / 10 Outstanding Posted on Oct 9, 2026 The hotel has a fantastic location and the rooms are very clean. You can catch classic Broadway musicals like The Lion King and Hamilton right downstairs. Since it's in Times Square, it's quite lively, and things  … ews 9.5 / 10 Amazing Posted on Oct 18, 2026 Right next to Times Square, so getting around is super convenient, though you do sacrifice some quietness—it can get a bit noisy at night. You can't have it both ways, so I'm knocking off a point for that. There is a destination fee, but the hotel gives you a $40 USD/room/day dining cre …  with many Chinese restaurants within walking distance. The room hygiene is also very good. For such a prime location, the room size is decent. Since the hotel charges a mandatory $40 daily fee, it can be used to offset breakfast at the 8th-floor restaurant, and for around an additional $20, two people can get breakfast covered. Original tex",
+      "snippet": " text Translated by Google Guest User Renovated Deluxe Two Double Room Stayed in Sep 2026 Family 17 reviews 10 / 10 Outstanding Posted on Oct 9, 2026 The hotel has a fantastic location and the rooms are very clean. You can catch classic Broadway musicals like The Lion King and Hamilton right downsta",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page)"
     }
   ],
   "rating": null,
@@ -21,7 +29,10 @@
   "happyHourRejectReason": null,
   "summaryClaims": [
     "Marriott hotel on Times Square",
-    "Marriott hotel on Times Square"
+    "Marriott hotel on Times Square",
+    "The hotel has a fantastic location and the rooms are very clean",
+    "it can get a bit noisy at night",
+    "the hotel charges a mandatory $40 daily fee"
   ],
   "itineraryNoteCandidate": "Stay in the Marquis atrium for Broadway nights—elevators and crowds come with the address.",
   "voicePass": {
@@ -62,17 +73,42 @@
       ]
     },
     "description": {
-      "value": "New York Marriott Marquis is a Marriott hotel on Times Square in the Theater District. It is one of the largest hotels in the city, with the Marquis Theatre inside the building. Broadway theaters, the TKTS booth and Bryant Park are all within a short walk.",
+      "value": "New York Marriott Marquis is a Marriott hotel on Times Square in the Theater District. It is one of the largest hotels in the city, with the Marquis Theatre inside the building. Broadway theaters, the TKTS booth and Bryant Park are all within a short walk. Representative Trip.com praise (guest reviews): “The hotel has a fantastic location and the rooms are very clean”. Representative watch-outs: “it can get a bit noisy at night”; “the hotel charges a mandatory $40 daily fee”.",
       "claims": [
         {
           "text": "Marriott hotel on Times Square",
           "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        },
+        {
+          "text": "The hotel has a fantastic location and the rooms are very clean",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "it can get a bit noisy at night",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "the hotel charges a mandatory $40 daily fee",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com review page)",
+    "praise": [
+      "The hotel has a fantastic location and the rooms are very clean"
+    ],
+    "watchOuts": [
+      "it can get a bit noisy at night",
+      "the hotel charges a mandatory $40 daily fee"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-minor-sw-flights-hotel-store-reviews-20261029",
+    "pass": "vk728-overnight-drev-chase-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
