@@ -19,6 +19,7 @@ import {
   summarizeImageHosts,
   tileRequestRecord,
 } from './passive-acquisition.mjs';
+import { collectBudgetEvidence } from './budget-rows.mjs';
 const [,, outdir] = process.argv;
 const BASE = process.env.TSV_CAPTURE_BASE || 'https://vacation-staging.timesyncher.com';
 const TOKEN = 'gateb-fixture-replay';
@@ -249,6 +250,14 @@ async function recordRegions(page, shot, full) {
       result.passive_logo_events = window.__tsLogoPassiveEvents ? window.__tsLogoPassiveEvents.splice(0) : [];
       return result;
     }, [ROW_SEL, ICON_SEL, full]);
+    if (regions[shot] && regions[shot].ok) {
+      const budget = await page.evaluate(collectBudgetEvidence);
+      regions[shot].budget_row_count = budget.budget_row_count;
+      regions[shot].budget_membership = budget.budget_membership;
+      regions[shot].budget_text = budget.budget_text;
+      regions[shot].row_count = (regions[shot].row_count || 0) + budget.budget_row_count;
+      regions[shot].row_selector = `${ROW_SEL}, [data-ts-budget-row], div budget lines`;
+    }
   } catch (e) { regions[shot] = { ok: false, error: String(e.message || e).split('\n')[0] }; }
 }
 
