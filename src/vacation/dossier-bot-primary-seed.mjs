@@ -163,6 +163,7 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
       return;
     }
     const priorField = merged.fields?.[key];
+    if (priorField?.claims?.length && !priorField.claims.some((claim) => claim.supported === true)) return;
     const { bodyWords, ...composed } = composeFromClaims(claimSource, pages, thing);
     const compositionFailed = !bodyWords || !composed.claims.length || !String(composed.value || '').trim()
       || isFillerSummaryText(composed.value, thing);
