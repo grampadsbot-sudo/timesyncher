@@ -16,18 +16,18 @@
       "url": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
       "title": "Restaurantji: Juice Generation, 117 West 72nd Street",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … age); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud",
-      "snippet": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "text": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … 3.9 187 ratings … age); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … 3.9 187 ratings …  of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … 3.9 187 ratings",
+      "snippet": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … 3.9 187 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.3,
-    "primarySource": "aggregator",
-    "aggregator": 4.3
+    "primary": 3.9,
+    "primarySource": "restaurantji",
+    "restaurantji": 3.9
   },
   "reviewCount": {
-    "aggregator": 200
+    "restaurantji": 187
   },
   "priceHint": "$$ juice / bowls",
   "hoursHint": "See juicegeneration.com/locations for UWS shop hours",
@@ -38,12 +38,13 @@
     "117 W 72nd Street btw Columbus & Broadway",
     "7:00 AM 9:00 PM",
     "The customer service at the 72nd st Juice Generation is exceptional.",
-    "The music in this branch is so loud"
+    "The music in this branch is so loud",
+    "3.9 187 ratings"
   ],
   "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
   },
   "callCounts": {
     "webSearch": 1,
@@ -79,7 +80,7 @@
       ]
     },
     "description": {
-      "value": "Juice Generation Upper West Side is a juice and smoothie bar at 117 W 72nd Street btw Columbus & Broadway. Its location listing shows hours of 7:00 AM 9:00 PM. It is near the 72nd Street subway and an easy walk to Central Park. Representative Restaurantji praise (guest reviews): “The customer service at the 72nd st Juice Generation is exceptional.”. Representative watch-outs: “The music in this branch is so loud”.",
+      "value": "Juice Generation Upper West Side is a juice and smoothie bar at 117 W 72nd Street btw Columbus & Broadway. Its location listing shows hours of 7:00 AM 9:00 PM. It is near the 72nd Street subway and an easy walk to Central Park. Representative Restaurantji praise (guest reviews): “The customer service at the 72nd st Juice Generation is exceptional.”. Representative watch-outs: “The music in this branch is so loud”. Restaurantji shows 3.9 187 ratings for this 72nd Street branch.",
       "claims": [
         {
           "text": "117 W 72nd Street btw Columbus & Broadway",
@@ -95,6 +96,10 @@
         },
         {
           "text": "The music in this branch is so loud",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
+        },
+        {
+          "text": "3.9 187 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
         }
       ]
@@ -113,7 +118,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
+    "pass": "vk728-quality-r4-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

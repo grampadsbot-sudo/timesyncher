@@ -16,20 +16,18 @@
       "url": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
       "title": "Restaurantji: The Smith, 1900 Broadway",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … i listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere",
-      "snippet": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "text": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings … i listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings … batim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings",
+      "snippet": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … 4 2017 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.5,
-    "primarySource": "opentable",
-    "opentable": 4.5,
-    "yelp": 3.9
+    "primary": 4.0,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.0
   },
   "reviewCount": {
-    "opentable": 13404,
-    "yelp": 2430
+    "restaurantji": 2017
   },
   "priceHint": "Brunch/entrees ~mid $$; OT mid-range; martini HH $12 if third-party accurate",
   "hoursHint": "Mon–Thu 8am–11pm; Fri 8am–midnight; Sat 9am–midnight; Sun 9am–11pm (official)",
@@ -39,12 +37,13 @@
     "1900 BROADWAY (AT 63RD STREET)",
     "Mon - Thurs: 8AM - 11PM",
     "The seafood tower is quite an experience, treat yourself!",
-    "their incredibly busy atmosphere"
+    "their incredibly busy atmosphere",
+    "4 2017 ratings"
   ],
   "itineraryNoteCandidate": "Pre-theater brunch or dinner at The Smith Lincoln Square, steps from curtain.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
   },
   "callCounts": {
     "webSearch": 2,
@@ -79,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "The Smith - Lincoln Square is an American brasserie at 1900 BROADWAY (AT 63RD STREET). Its posted hours are Mon - Thurs: 8AM - 11PM and later on weekends. It sits right across from Lincoln Center, so it is a handy choice before or after a show. Representative Restaurantji praise (guest reviews): “The seafood tower is quite an experience, treat yourself!”. Representative watch-outs: “their incredibly busy atmosphere”.",
+      "value": "The Smith - Lincoln Square is an American brasserie at 1900 BROADWAY (AT 63RD STREET). Its posted hours are Mon - Thurs: 8AM - 11PM and later on weekends. It sits right across from Lincoln Center, so it is a handy choice before or after a show. Representative Restaurantji praise (guest reviews): “The seafood tower is quite an experience, treat yourself!”. Representative watch-outs: “their incredibly busy atmosphere”. Restaurantji shows 4 2017 ratings for the 1900 Broadway location.",
       "claims": [
         {
           "text": "1900 BROADWAY (AT 63RD STREET)",
@@ -95,6 +94,10 @@
         },
         {
           "text": "their incredibly busy atmosphere",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "4 2017 ratings",
           "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
         }
       ]
@@ -113,7 +116,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
+    "pass": "vk728-quality-r4-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -18,7 +18,7 @@
       "fetchedAt": "2026-10-29T06:30:00Z",
       "text": ", 7 Carmine Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side … ed as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side",
       "snippet": ", 7 Carmine Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.2 1076 ratings … Let me tell you, the classic NY style pizza is just *chefs kiss* … Sauce is great, but on the lighter side",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
@@ -44,7 +44,7 @@
   "itineraryNoteCandidate": null,
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
   },
   "callCounts": {
     "webSearch": 0,
@@ -62,7 +62,7 @@
       ]
     },
     "description": {
-      "value": "Joe's Pizza Carmine Street is a classic New York slice shop. It was established in 1975 by Joe Pozzuoli and is a \"Greenwich Village institution\". The shop is now three doors down at 7 Carmine Street, and the line moves fast for a quick slice. Restaurantji lists the 7 Carmine Street shop at 4.2 from 1076 ratings. Representative Restaurantji praise (guest reviews): “Let me tell you, the classic NY style pizza is just *chefs kiss*”. Representative watch-outs: “Sauce is great, but on the lighter side”.",
+      "value": "Joe's Pizza Carmine Street is a classic New York slice shop. It was established in 1975 by Joe Pozzuoli and is a \"Greenwich Village institution\". The shop is now three doors down at 7 Carmine Street. Restaurantji lists the 7 Carmine Street shop at 4.2 from 1076 ratings. Representative Restaurantji praise (guest reviews): “Let me tell you, the classic NY style pizza is just *chefs kiss*”. Representative watch-outs: “Sauce is great, but on the lighter side”.",
       "claims": [
         {
           "text": "Established in 1975 by Joe Pozzuoli",
@@ -104,7 +104,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
+    "pass": "vk728-quality-r4-20261029",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

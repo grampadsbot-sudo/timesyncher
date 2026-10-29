@@ -26,18 +26,24 @@
       "fetchedAt": "2026-10-29T06:30:00Z",
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation … ights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
-      "fetchMethod": "curl live fetch 2026-10-28"
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/",
+      "title": "Restaurantji listing",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings",
+      "snippet": "staurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.3 263 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.5,
-    "primarySource": "google",
-    "google": 4.5,
-    "opentable": 4.7
+    "primary": 4.3,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.3
   },
   "reviewCount": {
-    "google": 619,
-    "opentable": 49
+    "restaurantji": 263
   },
   "priceHint": "OT $31–50; HH wine flight $14 / wine of day $10",
   "hoursHint": "Dinner Mon–Thu & Sun 4–9:30pm, Fri–Sat 4–10:30pm; Lunch Tue–Fri 12–3pm; Brunch Sat–Sun 11am–3pm (official)",
@@ -48,12 +54,13 @@
     "Happy hour every day, 4 to 6 pm",
     "$14 wine flights, $10 wine of the day",
     "Amazing selection of reasonably priced wines, knowledgeable waitstaff.",
-    "the place is so noisy that it is hard to have a conversation"
+    "the place is so noisy that it is hard to have a conversation",
+    "4.3 263 ratings"
   ],
   "itineraryNoteCandidate": "Hit Amélie UWS at 4pm for $14 wine flights before a Central Park stroll.",
   "voicePass": {
     "claimSupportOk": true,
-    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+    "note": "every claim is a verbatim substring of sources[].text; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
   },
   "callCounts": {
     "webSearch": 1,
@@ -88,7 +95,7 @@
       ]
     },
     "description": {
-      "value": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”.",
+      "value": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”. Restaurantji shows 4.3 263 ratings for the 566 Amsterdam Avenue bistro.",
       "claims": [
         {
           "text": "French wine bar and bistro on Amsterdam Avenue",
@@ -109,6 +116,10 @@
         {
           "text": "the place is so noisy that it is hard to have a conversation",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.3 263 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/amelie-wine-bar-/"
         }
       ]
     }
@@ -126,7 +137,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-gaps-round2-20261029",
+    "pass": "vk728-quality-r4-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
