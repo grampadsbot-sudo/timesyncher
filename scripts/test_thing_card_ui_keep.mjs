@@ -20,11 +20,10 @@ assert.match(stars, /flex-direction:row/);
 assert.match(stars, /flex-wrap:nowrap/);
 assert.match(rendered, /style="display:inline-flex;flex-direction:row;flex-wrap:nowrap;align-items:center/);
 
-const oe = rendered.slice(rendered.indexOf('Oe=(G,Re,zt=!1)=>'), rendered.indexOf('Oe=(G,Re,zt=!1)=>') + 2500);
-const starsAt = oe.indexOf('data-ts-list-row-rating');
-const nameAt = oe.indexOf('data-ts-list-row-name');
-assert.ok(starsAt >= 0 && nameAt > starsAt, 'thing card stars sit above the name');
-assert.match(oe, /alignItems:"start"/);
+assert.match(rendered, /data-ts-thing-header":"1",style:\{display:"grid",gridTemplateColumns:"minmax\(0,1fr\) auto minmax\(0,1fr\)",alignItems:"center"/);
+assert.match(rendered, /data-ts-logo-name-pair":"1",style:\{display:"inline-flex",alignItems:"center",justifyContent:"center"/);
+assert.match(rendered, /data-ts-list-row-rating":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap",alignItems:"center",justifyContent:"flex-end"/);
+assert.doesNotMatch(rendered, /data-ts-list-row-rating":"1"[\s\S]{0,80}flexDirection:"column"/);
 assert.match(rendered, /data-ts-detail-header-stars":"1"/);
 assert.match(rendered, /data-ts-thing-review-line":"1"/);
 assert.match(rendered, /tsThingReviewLines=G=>/);
