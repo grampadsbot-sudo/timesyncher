@@ -126,7 +126,7 @@ const logoPng = solidPng(128, [180, 40, 40]);
 const app = await startServer({ html, js, css, tripPayload, logoPng });
 const puppeteer = loadPuppeteer();
 const browser = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
+  executablePath: process.env.CHROME_PATH || process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
   args: ['--no-sandbox', '--disable-setuid-sandbox'],
 });
 
