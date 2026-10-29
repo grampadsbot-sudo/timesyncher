@@ -19,12 +19,26 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am looking for",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The store is huge and has the most beautiful Christmas displays in the windows … I tend to get lost in and have difficulties finding the things I am l",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html",
+      "title": "Tripadvisor: Macy's Herald Square (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (4,988 reviews)",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.0
+  },
+  "reviewCount": {
+    "tripadvisor": 4988
+  },
   "priceHint": "$$$ department store",
-  "hoursHint": null,
+  "hoursHint": "Mon–Thu 10am–9pm; Fri–Sat 10am–10pm; Sun 11am–9pm (store page)",
   "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
@@ -33,7 +47,8 @@
     "making it the largest department store in the United States and one of the largest in the world",
     "The store boasts several wooden escalators still in operation",
     "The store is huge and has the most beautiful Christmas displays in the windows",
-    "I tend to get lost in and have difficulties finding the things I am looking for"
+    "I tend to get lost in and have difficulties finding the things I am looking for",
+    "4 of 5 bubbles (4,988 reviews)"
   ],
   "itineraryNoteCandidate": "Ride the wooden escalators through America's largest store, then duck out before late-day crowds hit Herald Square.",
   "voicePass": {
@@ -74,7 +89,7 @@
       ]
     },
     "description": {
-      "value": "Macy's Herald Square is the flagship department store building on West 34th Street at Herald Square. Wikipedia says the building has a floor area of about 2.2 million square feet, making it the largest department store in the United States and one of the largest in the world. It also notes that the store boasts several wooden escalators still in operation, a detail worth seeking out between floors. Allow at least an hour to cover fashion, home and beauty. Representative Tripadvisor praise (search snapshot): “The store is huge and has the most beautiful Christmas displays in the windows”. Representative watch-outs: “I tend to get lost in and have difficulties finding the things I am looking for”.",
+      "value": "Macy's Herald Square is the flagship department store building on West 34th Street at Herald Square. Wikipedia says the building has a floor area of about 2.2 million square feet, making it the largest department store in the United States and one of the largest in the world. It also notes that the store boasts several wooden escalators still in operation, a detail worth seeking out between floors. Allow at least an hour to cover fashion, home and beauty. Representative Tripadvisor praise (search snapshot): “The store is huge and has the most beautiful Christmas displays in the windows”. Representative watch-outs: “I tend to get lost in and have difficulties finding the things I am looking for”. Tripadvisor shows 4 of 5 bubbles (4,988 reviews) for the 151 West 34th Street store.",
       "claims": [
         {
           "text": "department store building on West 34th Street at Herald Square",
@@ -95,6 +110,10 @@
         {
           "text": "I tend to get lost in and have difficulties finding the things I am looking for",
           "sourceUrl": "https://www.tripadvisor.com.au/ShowUserReviews-g60763-d208847-r949129567-Macy_s_Herald_Square-New_York_City_New_York.html"
+        },
+        {
+          "text": "4 of 5 bubbles (4,988 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208847-Reviews-Macy_s_Herald_Square-New_York_City_New_York.html"
         }
       ]
     }
@@ -112,7 +131,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

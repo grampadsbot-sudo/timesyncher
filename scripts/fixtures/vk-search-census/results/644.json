@@ -11,6 +11,14 @@
       "text": "13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM … 13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM … dway btw 85th & 86th TODAY’S HOURS: 7:00 AM 8:00 PM JUICING SINCE 2013 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View ",
       "snippet": "13 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 5",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+      "title": "Restaurantji: Juice Generation, 117 West 72nd Street",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud … age); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud",
+      "snippet": "7 West 72nd Street | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The customer service at the 72nd st Juice Generation is exceptional. … The music in this branch is so loud",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -28,7 +36,9 @@
   "summaryClaims": [
     "117 W 72nd Street btw Columbus & Broadway",
     "117 W 72nd Street btw Columbus & Broadway",
-    "7:00 AM 9:00 PM"
+    "7:00 AM 9:00 PM",
+    "The customer service at the 72nd st Juice Generation is exceptional.",
+    "The music in this branch is so loud"
   ],
   "itineraryNoteCandidate": "Hit the UWS Juice Generation for a post-park smoothie—confirm exact shop hours on the locations page.",
   "voicePass": {
@@ -69,7 +79,7 @@
       ]
     },
     "description": {
-      "value": "Juice Generation Upper West Side is a juice and smoothie bar at 117 W 72nd Street btw Columbus & Broadway. Its location listing shows hours of 7:00 AM 9:00 PM. It is near the 72nd Street subway and an easy walk to Central Park.",
+      "value": "Juice Generation Upper West Side is a juice and smoothie bar at 117 W 72nd Street btw Columbus & Broadway. Its location listing shows hours of 7:00 AM 9:00 PM. It is near the 72nd Street subway and an easy walk to Central Park. Representative Restaurantji praise (guest reviews): “The customer service at the 72nd st Juice Generation is exceptional.”. Representative watch-outs: “The music in this branch is so loud”.",
       "claims": [
         {
           "text": "117 W 72nd Street btw Columbus & Broadway",
@@ -78,12 +88,32 @@
         {
           "text": "7:00 AM 9:00 PM",
           "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "The customer service at the 72nd st Juice Generation is exceptional.",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
+        },
+        {
+          "text": "The music in this branch is so loud",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-5/"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/juice-generation-5/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The customer service at the 72nd st Juice Generation is exceptional."
+    ],
+    "watchOuts": [
+      "The music in this branch is so loud"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

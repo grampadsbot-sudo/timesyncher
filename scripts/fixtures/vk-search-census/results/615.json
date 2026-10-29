@@ -19,10 +19,24 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter …  via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Great views over Central Park. Great decor. … A 10 minute wait at the Jo Malone counter",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208851-Reviews-Bergdorf_Goodman-New_York_City_New_York.html",
+      "title": "Tripadvisor: Bergdorf Goodman store listing (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (379 reviews)",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4 of 5 bubbles (379 reviews)",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.0
+  },
+  "reviewCount": {
+    "tripadvisor": 379
+  },
   "priceHint": "$$$$ luxury department store",
   "hoursHint": null,
   "happyHourHint": null,
@@ -33,7 +47,8 @@
     "moved to its present location at Fifth Avenue and 58th Street in 1928",
     "building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House",
     "Great views over Central Park. Great decor.",
-    "A 10 minute wait at the Jo Malone counter"
+    "A 10 minute wait at the Jo Malone counter",
+    "4 of 5 bubbles (379 reviews)"
   ],
   "itineraryNoteCandidate": "Window-shop Fifth Avenue luxury, then cross to Central Park if the floors feel overwhelming.",
   "voicePass": {
@@ -74,7 +89,7 @@
       ]
     },
     "description": {
-      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf. According to Wikipedia, the store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. That puts it across from the Plaza and the corner of Central Park, so window shopping here pairs well with a walk along Fifth Avenue. Representative Tripadvisor praise (search snapshot): “Great views over Central Park. Great decor.”. Representative watch-outs: “A 10 minute wait at the Jo Malone counter”.",
+      "value": "Bergdorf Goodman is a luxury department store founded in 1899 by Herman Bergdorf. According to Wikipedia, the store moved to its present location at Fifth Avenue and 58th Street in 1928, building its Beaux-Arts style Bergdorf Goodman Building on the site of the Cornelius Vanderbilt II House. That puts it across from the Plaza and the corner of Central Park, so window shopping here pairs well with a walk along Fifth Avenue. Representative Tripadvisor praise (search snapshot): “Great views over Central Park. Great decor.”. Representative watch-outs: “A 10 minute wait at the Jo Malone counter”. Tripadvisor shows 4 of 5 bubbles (379 reviews) for the 754 5th Ave store.",
       "claims": [
         {
           "text": "luxury department store founded in 1899 by Herman Bergdorf",
@@ -95,6 +110,10 @@
         {
           "text": "A 10 minute wait at the Jo Malone counter",
           "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d208851-r888841137-Bergdorf_Goodman-New_York_City_New_York.html"
+        },
+        {
+          "text": "4 of 5 bubbles (379 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208851-Reviews-Bergdorf_Goodman-New_York_City_New_York.html"
         }
       ]
     }
@@ -112,7 +131,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

@@ -11,6 +11,14 @@
       "text": "re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Direc … re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Direc … ider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO COLUMBUS CIRCLE Get Map & Directions Directions Reservations Previous Slid",
       "snippet": "re cowbell milk stout NY / 6% 12 Eden Peak Bloom Cider VT / 6.2% 14 Wölffer Dry Rosé Cider NY / 6.9% 15 Download Drinks Menu (PDF) Directions & hours 1900 BROADWAY (AT 63RD STREET) 212.496.5700 Hours Mon - Thurs: 8AM - 11PM Fri: 8AM - midnight Sat: 9AM - midnight Sun: 9AM -11PM Subway 1/A/B/C/D TO C",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+      "title": "Restaurantji: The Smith, 1900 Broadway",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere … i listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere",
+      "snippet": "ith, 1900 Broadway | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | The seafood tower is quite an experience, treat yourself! … their incredibly busy atmosphere",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -29,7 +37,9 @@
   "summaryClaims": [
     "1900 BROADWAY (AT 63RD STREET)",
     "1900 BROADWAY (AT 63RD STREET)",
-    "Mon - Thurs: 8AM - 11PM"
+    "Mon - Thurs: 8AM - 11PM",
+    "The seafood tower is quite an experience, treat yourself!",
+    "their incredibly busy atmosphere"
   ],
   "itineraryNoteCandidate": "Pre-theater brunch or dinner at The Smith Lincoln Square, steps from curtain.",
   "voicePass": {
@@ -69,7 +79,7 @@
       ]
     },
     "description": {
-      "value": "The Smith - Lincoln Square is an American brasserie at 1900 BROADWAY (AT 63RD STREET). Its posted hours are Mon - Thurs: 8AM - 11PM and later on weekends. It sits right across from Lincoln Center, so it is a handy choice before or after a show.",
+      "value": "The Smith - Lincoln Square is an American brasserie at 1900 BROADWAY (AT 63RD STREET). Its posted hours are Mon - Thurs: 8AM - 11PM and later on weekends. It sits right across from Lincoln Center, so it is a handy choice before or after a show. Representative Restaurantji praise (guest reviews): “The seafood tower is quite an experience, treat yourself!”. Representative watch-outs: “their incredibly busy atmosphere”.",
       "claims": [
         {
           "text": "1900 BROADWAY (AT 63RD STREET)",
@@ -78,12 +88,32 @@
         {
           "text": "Mon - Thurs: 8AM - 11PM",
           "sourceUrl": "https://thesmithrestaurant.com/location/lincoln-square/"
+        },
+        {
+          "text": "The seafood tower is quite an experience, treat yourself!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
+        },
+        {
+          "text": "their incredibly busy atmosphere",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-smith-3/"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/the-smith-3/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "The seafood tower is quite an experience, treat yourself!"
+    ],
+    "watchOuts": [
+      "their incredibly busy atmosphere"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-restaurantji-drev-gaps-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
