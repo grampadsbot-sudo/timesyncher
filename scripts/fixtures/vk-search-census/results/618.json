@@ -34,7 +34,18 @@
     "primarySource": "tripadvisor",
     "tripadvisor": 4.3,
     "tripcom": 8.9,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d1379306-Reviews-The_Hilton_Club_New_York-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.3 of 5 bubbles (940 reviews)",
+      "average": 4.3,
+      "count": 940,
+      "scale": 5
+    },
+    "reviewCount": 940
   },
   "reviewCount": {
     "tripadvisor": 940,

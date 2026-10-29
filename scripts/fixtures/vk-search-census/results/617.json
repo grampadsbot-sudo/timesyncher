@@ -51,7 +51,18 @@
     "tripadvisor": 4.2,
     "booking": 7.9,
     "tripcom": 8.1,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99288-Reviews-Arthouse_Hotel_New_York_City-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.2 Good (8,181)",
+      "average": 4.2,
+      "count": 8181,
+      "scale": 5
+    },
+    "reviewCount": 8181
   },
   "reviewCount": {
     "tripadvisor": 8181,

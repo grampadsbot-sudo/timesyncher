@@ -25,7 +25,18 @@
     "primary": 7.9,
     "primarySource": "trip.com",
     "tripcom": 7.9,
-    "scale": 10
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1643571/grand-hyatt-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "7.9 / 10 Good 207 reviews",
+      "average": 7.9,
+      "count": 207,
+      "scale": 10
+    },
+    "reviewCount": 207
   },
   "reviewCount": {
     "tripcom": 207

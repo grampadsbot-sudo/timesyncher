@@ -42,7 +42,18 @@
     "primarySource": "tripadvisor",
     "tripadvisor": 3.9,
     "tripcom": 8.4,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93437-Reviews-Hotel_Edison_Times_Square-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "3.9 Good (18,818)",
+      "average": 3.9,
+      "count": 18818,
+      "scale": 5
+    },
+    "reviewCount": 18818
   },
   "reviewCount": {
     "tripadvisor": 18818,

@@ -25,7 +25,18 @@
     "primary": 9.3,
     "primarySource": "trip.com",
     "tripcom": 9.3,
-    "scale": 10
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-732237/new-york-the-library-hotel/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "9.3 / 10 Great 103 reviews",
+      "average": 9.3,
+      "count": 103,
+      "scale": 10
+    },
+    "reviewCount": 103
   },
   "reviewCount": {
     "tripcom": 103

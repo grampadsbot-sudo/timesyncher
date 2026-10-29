@@ -25,7 +25,18 @@
     "primary": 8.6,
     "primarySource": "tripcom",
     "tripcom": 8.6,
-    "scale": "10"
+    "scale": "10",
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.6 / 10 Very good 342 reviews",
+      "average": 8.6,
+      "count": 342,
+      "scale": 10
+    },
+    "reviewCount": 342
   },
   "reviewCount": {
     "tripcom": 342

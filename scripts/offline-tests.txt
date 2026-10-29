@@ -197,6 +197,7 @@ scripts/test_dossier_bot_primary_seed_602_relock.mjs
 scripts/test_dossier_bot_primary_seed_602_topup.mjs
 scripts/test_bot_census_saved_page_wins_merge.mjs
 scripts/test_vk_search_review_lines.mjs
+scripts/test_vk_search_rating_evidence.mjs
 scripts/test_bot_census_617_live_merge.mjs
 scripts/test_bot_census_687_recit_supported_tokens.mjs
 scripts/test_vk_search_census_claim_not_auto_supported.mjs

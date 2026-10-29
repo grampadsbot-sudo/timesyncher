@@ -34,7 +34,18 @@
     "primarySource": "tripadvisor",
     "tripadvisor": 4.5,
     "tripcom": 8.8,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d93338-Reviews-Hotel_Beacon-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.5 of 5 bubbles (5,535 reviews)",
+      "average": 4.5,
+      "count": 5535,
+      "scale": 5
+    },
+    "reviewCount": 5535
   },
   "reviewCount": {
     "tripadvisor": 5535,

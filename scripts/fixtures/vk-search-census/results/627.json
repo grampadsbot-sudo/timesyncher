@@ -25,7 +25,18 @@
     "primary": 8.0,
     "primarySource": "tripcom",
     "tripcom": 8.0,
-    "scale": "10"
+    "scale": "10",
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2193521/park-central/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.0 / 10 Very good 185 reviews",
+      "average": 8.0,
+      "count": 185,
+      "scale": 10
+    },
+    "reviewCount": 185
   },
   "reviewCount": {
     "tripcom": 185

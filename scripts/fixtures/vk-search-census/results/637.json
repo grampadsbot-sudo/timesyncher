@@ -25,7 +25,18 @@
     "primary": 7.8,
     "primarySource": "trip.com",
     "tripcom": 7.8,
-    "scale": 10
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-718200/the-empire-hotel-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "7.8 / 10 Good 112 reviews",
+      "average": 7.8,
+      "count": 112,
+      "scale": 10
+    },
+    "reviewCount": 112
   },
   "reviewCount": {
     "tripcom": 112

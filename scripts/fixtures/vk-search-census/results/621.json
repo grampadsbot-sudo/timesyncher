@@ -34,7 +34,18 @@
     "primarySource": "tripadvisor",
     "tripadvisor": 4.4,
     "tripcom": 8.9,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.4 of 5 bubbles (3,589 reviews)",
+      "average": 4.4,
+      "count": 3589,
+      "scale": 5
+    },
+    "reviewCount": 3589
   },
   "reviewCount": {
     "tripadvisor": 3589,

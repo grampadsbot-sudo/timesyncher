@@ -62,10 +62,14 @@
     }
   ],
   "rating": {
-    "primary": 4.5,
-    "primarySource": "tripadvisor",
-    "tripadvisor": 4.5,
-    "booking": 8.6
+    "primary": null,
+    "primarySource": null,
+    "booking": 8.6,
+    "primaryPrevious": {
+      "value": 4.5,
+      "source": "tripadvisor",
+      "note": "unknown per eggbot 2026-10-29 11:50 PT: TA search-index snapshot rejected; no saved page shows avg+count"
+    }
   },
   "reviewCount": {
     "tripadvisor": 615,

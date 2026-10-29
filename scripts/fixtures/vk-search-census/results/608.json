@@ -16,18 +16,35 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
       "title": "The Manhattan Club: 60 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … So far it was the best place we have stayed in NYC for this budget. … Although the in-room facilities are a bit dated, the hygiene is good.",
+      "text": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … So far it was the best place we have stayed in NYC for this budget. … Although the in-room facilities are a bit dated, the hygiene is good. 8.6 / 10 Very good 59 reviews",
       "snippet": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 8.3,
-    "primarySource": "booking",
+    "primary": 8.6,
+    "primarySource": "trip.com",
     "booking": 8.3,
     "hotels": 9.0,
     "tripcom": 8.6,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "primaryPrevious": {
+      "value": 8.3,
+      "source": "booking",
+      "note": "no saved page shows this average with a count; card uses the Trip.com page quote"
+    },
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.6 / 10 Very good 59 reviews",
+      "average": 8.6,
+      "count": 59,
+      "scale": 10
+    },
+    "reviewCount": 59
   },
   "reviewCount": {
     "booking": 2215,

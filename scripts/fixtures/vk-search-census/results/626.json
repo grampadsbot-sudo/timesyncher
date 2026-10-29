@@ -25,7 +25,19 @@
     "primary": 6.7,
     "primarySource": "trip.com",
     "tripcom": 6.7,
-    "scale": 10
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-717714/days-hotel-broadway-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "6.7 / 10 64 reviews",
+      "average": 6.7,
+      "count": 64,
+      "scale": 10,
+      "identityNote": "Trip.com URL slug says days-hotel-broadway but page text names Night Hotel Broadway"
+    },
+    "reviewCount": 64
   },
   "reviewCount": {
     "tripcom": 64

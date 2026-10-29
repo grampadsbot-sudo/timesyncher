@@ -25,7 +25,18 @@
     "primary": 8.9,
     "primarySource": "tripcom",
     "tripcom": 8.9,
-    "scale": "10"
+    "scale": "10",
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.9 / 10 Very good 655 reviews",
+      "average": 8.9,
+      "count": 655,
+      "scale": 10
+    },
+    "reviewCount": 655
   },
   "reviewCount": {
     "tripcom": 655

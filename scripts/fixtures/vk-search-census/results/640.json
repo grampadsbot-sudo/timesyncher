@@ -16,18 +16,35 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
       "title": "The Wallace Hotel: 125 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The location was great, relatively quiet with many restaurants and Central Park within walking distance.",
+      "text": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night. … The location was great, relatively quiet with many restaurants and Central Park within walking distance. 8.9 / 10 Very good 125 reviews",
       "snippet": "The Wallace Hotel: 125 Reviews | Trip.com | | The room was very spacious, and the bed was super comfortable. … Clean, nice spot. Opened in 2020. … It was noisy continuously throughout the night.",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
   "rating": {
-    "primary": 4.8,
-    "primarySource": "tripadvisor",
+    "primary": 8.9,
+    "primarySource": "trip.com",
     "tripadvisor": 4.8,
     "booking": 9.3,
     "tripcom": 8.9,
-    "scale_tripcom": 10
+    "scale_tripcom": 10,
+    "primaryPrevious": {
+      "value": 4.8,
+      "source": "tripadvisor",
+      "note": "no saved page shows this average with a count; card uses the Trip.com page quote"
+    },
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-88640292/the-wallace/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.9 / 10 Very good 125 reviews",
+      "average": 8.9,
+      "count": 125,
+      "scale": 10
+    },
+    "reviewCount": 125
   },
   "reviewCount": {
     "tripadvisor": 1055,

@@ -33,7 +33,18 @@
     "primary": 7.3,
     "primarySource": "trip.com",
     "tripcom": 7.3,
-    "scale": 10
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-730284/hotel-belleclaire-central-park/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "7.3 / 10 128 reviews",
+      "average": 7.3,
+      "count": 128,
+      "scale": 10
+    },
+    "reviewCount": 128
   },
   "reviewCount": {
     "tripcom": 128

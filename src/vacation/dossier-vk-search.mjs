@@ -224,6 +224,24 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
       }
     }
   }
+  const evidence = result.rating?.ratingEvidence;
+  if (!dossier.ratingEvidence && voiceAllowed && evidence && typeof evidence === 'object') {
+    const site = text(evidence.site).toLowerCase().replace(/\s+/g, '');
+    const average = Number(evidence.average);
+    const count = Number(evidence.count);
+    const scale = Number(evidence.scale);
+    const quote = text(evidence.quote);
+    const index = text(evidence.sourceUrl) ? pageIndex(text(evidence.sourceUrl)) : -1;
+    if (['yelp', 'google', 'tripadvisor', 'trip.com', 'restaurantji', 'exa'].includes(site)
+      && [5, 10].includes(scale) && average > 0 && average <= scale && Number.isInteger(count) && count > 0
+      && quote && !claimTextWasRejected(quote, rejected) && pageSupports(index, quote)) {
+      const rating = { average, count, scaleMax: scale, quote, url: pages[index].url, source: site };
+      pages[index].braveRating = rating;
+      dossier.rating = Math.round((average * 50) / scale) / 10;
+      dossier.reviewsAvailable = count;
+      dossier.ratingEvidence = { ...rating, pages: [`p${index + 1}`] };
+    }
+  }
   for (const page of pages) page.sha256 = createHash('sha256').update(page.text).digest('hex');
   return dossier;
 }
