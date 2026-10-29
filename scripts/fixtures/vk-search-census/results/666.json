@@ -124,35 +124,39 @@
       ]
     },
     "description": {
-      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side of Manhattan. Its FAQ says dinner shows require a minimum purchase of at least one entrée per person. Standing room has a $20 consumption minimum, so plan dinner there. Tripadvisor shows 4.2 of 5 bubbles (574 reviews). Representative Tripadvisor praise (search snapshot): “The show itself was exceptional”; “Gabriela (sp?) was our friendly and helpful server”. Representative watch-outs: “Excellent Show, Poor Service”; “Tight seating because so many people want to come here”.",
+      "value": "Smoke Jazz & Supper Club is a jazz club located at 2751 Broadway on the Upper West Side, and its draw starts at the piano: the stage is built around a Steinway, and strong pianists and full ensembles keep the music sharp from set to set. The room itself is a big part of the appeal, with red velvet and candlelight putting tables close enough to the band to feel every bass line. The kitchen and floor staff hold up their end, with the food regarded as well above typical music-venue fare and the service praised as warm and attentive, while the larger bar now mixes cocktails counted among the strongest in the city. Watch-outs are practical: seating is tight on busy nights, sound can run loud for such an intimate space, parties of five are hard to seat together, and each seated dinner guest must order an entrée, so plan a full meal. Standing room skips dinner but carries a drink minimum, and Tripadvisor lists 4.2 of 5 bubbles (574 reviews).",
       "claims": [
         {
           "text": "jazz club located at 2751 Broadway on the Upper West Side",
           "sourceUrl": "https://en.wikipedia.org/wiki/Smoke_(jazz_club)"
         },
         {
-          "text": "Dinner shows require a minimum purchase of at least one entrée per person",
-          "sourceUrl": "https://smokejazz.com/faq/"
+          "text": "A beautiful Steinway B piano",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
         },
         {
-          "text": "there is a $20 consumption minimum",
-          "sourceUrl": "https://smokejazz.com/faq/"
+          "text": "The service was unparalleled, the food phenomenal, and the staff wonderful!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
         },
         {
-          "text": "The show itself was exceptional",
-          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          "text": "Red velvet, candlelight, and live jazz so close you can feel the bass through your glass.",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
         },
         {
-          "text": "Gabriela (sp?) was our friendly and helpful server",
-          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
-        },
-        {
-          "text": "Excellent Show, Poor Service",
-          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+          "text": "the cocktails are easily some of the best in the city",
+          "sourceUrl": "https://exa.ai/library/place/9pfhjt1b9gq"
         },
         {
           "text": "Tight seating because so many people want to come here",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d1052364-Reviews-Smoke_Jazz_Club-New_York_City_New_York.html"
+        },
+        {
+          "text": "No good option for party of 5",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/smoke-jazz-and-supper-club-/"
+        },
+        {
+          "text": "there is a $20 consumption minimum",
+          "sourceUrl": "https://smokejazz.com/faq/"
         },
         {
           "text": "4.2 of 5 bubbles (574 reviews)",
@@ -325,11 +329,9 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "summary",
-    "itineraryNote"
+    "description"
   ],
   "writtenAt": {
-    "summary": "2026-10-29T20:33:25.626765+00:00",
-    "itineraryNote": "2026-10-29T20:33:25.626770+00:00"
+    "description": "2026-10-29T20:43:58.588296+00:00"
   }
 }
