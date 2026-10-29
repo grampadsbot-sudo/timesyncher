@@ -11,6 +11,14 @@
       "text": "y Specials | Rosa Mexicano | Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper West Side. Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper … y Specials | Rosa Mexicano | Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper West Side. Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper … Happy Hour NYC & Weekly Specials | Rosa Mexicano | Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper West Side. Fiesta Hour runs Monday to Fr … Happy Hour NYC & Weekly Specials | Rosa Mexicano | Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper West Side. Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Tac",
       "snippet": "y Specials | Rosa Mexicano | Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, including Lincoln Center on the Upper West Side. Fiesta Hour runs Monday to Friday 4-7pm, plus Margarita Mondays and half-price Taco Tuesdays at Rosa Mexicano, ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+      "title": "Tripadvisor: Rosa Mexicano, 61 Columbus Ave (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best. … a WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The decor is gorgeous, the waitstaff attentive … Service is indifferent at best.",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -28,7 +36,9 @@
     "Lincoln Center on the Upper West Side",
     "Lincoln Center on the Upper West Side",
     "Fiesta Hour runs Monday to Friday 4-7pm",
-    "Margarita Mondays and half-price Taco Tuesdays"
+    "Margarita Mondays and half-price Taco Tuesdays",
+    "The decor is gorgeous, the waitstaff attentive",
+    "Service is indifferent at best."
   ],
   "itineraryNoteCandidate": "Tableside guacamole and a Fiesta Hour margarita before curtain at Lincoln Center.",
   "voicePass": {
@@ -68,7 +78,7 @@
       ]
     },
     "description": {
-      "value": "Rosa Mexicano - Lincoln Center is the Mexican restaurant near Lincoln Center on the Upper West Side. Its Fiesta Hour runs Monday to Friday 4-7pm. Specials also include Margarita Mondays and half-price Taco Tuesdays, which suits a pre-show meal at Rosa Mexicano before Lincoln Center.",
+      "value": "Rosa Mexicano - Lincoln Center is the Mexican restaurant near Lincoln Center on the Upper West Side. Its Fiesta Hour runs Monday to Friday 4-7pm. Specials also include Margarita Mondays and half-price Taco Tuesdays, which suits a pre-show meal at Rosa Mexicano before Lincoln Center. Representative Tripadvisor praise (search snapshot): “The decor is gorgeous, the waitstaff attentive”. Representative watch-outs: “Service is indifferent at best.”.",
       "claims": [
         {
           "text": "Lincoln Center on the Upper West Side",
@@ -81,12 +91,32 @@
         {
           "text": "Margarita Mondays and half-price Taco Tuesdays",
           "sourceUrl": "https://rosamexicano.com/happy-hour/"
+        },
+        {
+          "text": "The decor is gorgeous, the waitstaff attentive",
+          "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
+        },
+        {
+          "text": "Service is indifferent at best.",
+          "sourceUrl": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com.au/Restaurant_Review-g60763-d477523-Reviews-Rosa_Mexicano-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The decor is gorgeous, the waitstaff attentive"
+    ],
+    "watchOuts": [
+      "Service is indifferent at best."
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

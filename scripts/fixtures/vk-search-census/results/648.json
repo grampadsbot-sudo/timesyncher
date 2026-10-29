@@ -16,13 +16,27 @@
       "url": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html",
       "title": "Tripadvisor review page: Tiffany & Co., 727 Fifth Avenue (search snapshot)",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces … 1,354 Reviews … erbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiffany’s pieces … 1,354 Reviews",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | They have exclusive items for sale at this location which does make it special … I was a little disappointed in the quality of the workmanship of Tiff",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208849-Reviews-Tiffany_Co-New_York_City_New_York.html",
+      "title": "Tripadvisor: Tiffany & Co., 727 Fifth Avenue (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.4 Very Good",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.4 Very Good",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "tripadvisor": 1354
+  },
   "priceHint": "$$$$ jewelry flagship",
   "hoursHint": null,
   "happyHourHint": null,
@@ -33,7 +47,8 @@
     "The main store reopened on April 27, 2023",
     "the store had forty artworks",
     "They have exclusive items for sale at this location which does make it special",
-    "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces"
+    "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
+    "4.4 Very Good"
   ],
   "itineraryNoteCandidate": "Visit the rebuilt Landmark flagship for the Blue Box Cafe vibe—expect waits at peak hours.",
   "voicePass": {
@@ -74,7 +89,7 @@
       ]
     },
     "description": {
-      "value": "Tiffany & Co. The Landmark is the brand's flagship store on Fifth Avenue. Wikipedia notes that the building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. The main store reopened on April 27, 2023, and at that point the store had forty artworks by artists including Damien Hirst and others. It sits on Fifth Avenue at 57th Street in Midtown's luxury shopping district. Representative Tripadvisor praise (search snapshot): “They have exclusive items for sale at this location which does make it special”. Representative watch-outs: “I was a little disappointed in the quality of the workmanship of Tiffany’s pieces”.",
+      "value": "Tiffany & Co. The Landmark is the brand's flagship store on Fifth Avenue. Wikipedia notes that the building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940. The main store reopened on April 27, 2023, and at that point the store had forty artworks by artists including Damien Hirst and others. It sits on Fifth Avenue at 57th Street in Midtown's luxury shopping district. Representative Tripadvisor praise (search snapshot): “They have exclusive items for sale at this location which does make it special”. Representative watch-outs: “I was a little disappointed in the quality of the workmanship of Tiffany’s pieces”. On Tripadvisor the 727 Fifth Avenue store rates 4.4 Very Good, across 1,354 Reviews.",
       "claims": [
         {
           "text": "The building, at 727 Fifth Avenue, has served as Tiffany & Co. 's sixth flagship store since its completion in 1940",
@@ -95,6 +110,10 @@
         {
           "text": "I was a little disappointed in the quality of the workmanship of Tiffany’s pieces",
           "sourceUrl": "https://www.tripadvisor.co.nz/ShowUserReviews-g60763-d208849-r627356407-Tiffany_Co-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.4 Very Good",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208849-Reviews-Tiffany_Co-New_York_City_New_York.html"
         }
       ]
     }
@@ -112,7 +131,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

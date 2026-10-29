@@ -16,13 +16,20 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html",
       "title": "New York Marriott Downtown: 342 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small",
-      "snippet": "New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small",
+      "text": "2 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews … New York Marriott Downtown: 342 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews",
+      "snippet": "2 Reviews | Trip.com | | Safe and good location. Loved the great river view and is very clean. … The room was tiny, and the bed was also very small … 8.6 / 10 Very good 342 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 8.6,
+    "primarySource": "tripcom",
+    "tripcom": 8.6,
+    "scale": "10"
+  },
+  "reviewCount": {
+    "tripcom": 342
+  },
   "priceHint": "4-star Lower Manhattan waterfront",
   "hoursHint": null,
   "happyHourHint": null,
@@ -32,6 +39,7 @@
     "85 West Street at Albany Street, New York, New York, USA, 10006",
     "the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country",
     "live music, inventive cocktails and a selection of regional beers",
+    "8.6 / 10 Very good 342 reviews",
     "Safe and good location. Loved the great river view and is very clean",
     "The room was tiny, and the bed was also very small"
   ],
@@ -74,7 +82,7 @@
       ]
     },
     "description": {
-      "value": "New York Marriott Downtown is a Lower Manhattan hotel at 85 West Street at Albany Street, New York, New York, USA, 10006. Award winning dining awaits at the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country. Its West Side Bar adds live music, inventive cocktails and a selection of regional beers. Representative Trip.com praise (guest reviews): “Safe and good location. Loved the great river view and is very clean”. Representative watch-outs: “The room was tiny, and the bed was also very small”.",
+      "value": "New York Marriott Downtown is a Lower Manhattan hotel at 85 West Street at Albany Street, New York, New York, USA, 10006. Award winning dining awaits at the New York Marriott Downtown – home to Bill’s Bar & Burger, renowned for serving some of the best burgers in the country. Its West Side Bar adds live music, inventive cocktails and a selection of regional beers. Trip.com shows 8.6 / 10 Very good 342 reviews. Representative Trip.com praise (guest reviews): “Safe and good location. Loved the great river view and is very clean”. Representative watch-outs: “The room was tiny, and the bed was also very small”.",
       "claims": [
         {
           "text": "85 West Street at Albany Street, New York, New York, USA, 10006",
@@ -87,6 +95,10 @@
         {
           "text": "live music, inventive cocktails and a selection of regional beers",
           "sourceUrl": "https://www.marriott.com/en-us/hotels/nycws-new-york-marriott-downtown/dining/"
+        },
+        {
+          "text": "8.6 / 10 Very good 342 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-1565913/new-york-marriott-downtown/review.html"
         },
         {
           "text": "Safe and good location. Loved the great river view and is very clean",
@@ -112,7 +124,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

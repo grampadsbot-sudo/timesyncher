@@ -16,13 +16,20 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html",
       "title": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot",
-      "snippet": "TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot",
+      "text": "elsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews … TownePlace Suites New York Manhattan/Chelsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews",
+      "snippet": "elsea: 138 Reviews | Trip.com | | The breakfast offers a good variety. … Nicely updated room. … it took a long time for the shower water to get hot … 8.7 / 10 Very good 138 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 8.7,
+    "primarySource": "tripcom",
+    "tripcom": 8.7,
+    "scale": "10"
+  },
+  "reviewCount": {
+    "tripcom": 138
+  },
   "priceHint": "3.5-star suite hotel; breakfast",
   "hoursHint": null,
   "happyHourHint": null,
@@ -30,6 +37,7 @@
   "summaryClaims": [
     "140 West 28th Street",
     "140 West 28th Street, New York, NY, USA, 10001",
+    "8.7 / 10 Very good 138 reviews",
     "The breakfast offers a good variety",
     "Nicely updated room",
     "it took a long time for the shower water to get hot"
@@ -73,11 +81,15 @@
       ]
     },
     "description": {
-      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001. It sits between Chelsea and Midtown South near Penn Station. Suites with kitchens suit a longer stay or a family trip. Representative Trip.com praise (guest reviews): “The breakfast offers a good variety”; “Nicely updated room”. Representative watch-outs: “it took a long time for the shower water to get hot”.",
+      "value": "TownePlace Suites by Marriott New York Manhattan/Chelsea is an extended-stay hotel at 140 West 28th Street, New York, NY, USA, 10001. It sits between Chelsea and Midtown South near Penn Station. Suites with kitchens suit a longer stay or a family trip. Trip.com shows 8.7 / 10 Very good 138 reviews. Representative Trip.com praise (guest reviews): “The breakfast offers a good variety”; “Nicely updated room”. Representative watch-outs: “it took a long time for the shower water to get hot”.",
       "claims": [
         {
           "text": "140 West 28th Street, New York, NY, USA, 10001",
           "sourceUrl": "https://www.cvent.com/venues/new-york/hotel/towneplace-suites-by-marriott-new-york-manhattan-chelsea/venue-d0629f95-6dea-4430-9118-7b5f9a0681e3"
+        },
+        {
+          "text": "8.7 / 10 Very good 138 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-77230870/towneplace-suites-new-york-manhattan-chelsea/review.html"
         },
         {
           "text": "The breakfast offers a good variety",
@@ -108,7 +120,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

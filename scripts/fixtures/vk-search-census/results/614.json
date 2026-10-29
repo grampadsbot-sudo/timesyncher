@@ -11,6 +11,14 @@
       "text": "Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thu … Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. F … .m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space showcases an array of lighting, tech innovations, tabletop, home decor, jewelry, accessories and more. … dnesday 9:30 a.m. - 6:30 p.m. Thursday 9:30 a.m. - 6:30 p.m. Friday 9:30 a.m. - 9:00 p.m. Saturday 9:30 a.m. - 6:30 p.m. Sunday 9:30 a.m. - 6:30 p.m. Every Friday, the store will remain open until 9:00 p.m. About This Store This destination store offers the best selection of new and classic design objects and gifts for everyone. The light, airy space sho",
       "snippet": "Design Store 53rd NYC – MoMA Design Store | | MoMA Design Store 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues (212) 767-1050 Open daily Monday 9:30 a.m. - 6:30 p.m. Tuesday 9:30 a.m. - 6:30 p.m. Wednesday 9:30 a.m. - 6:30 p.m. Thu",
       "fetchMethod": "WebFetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+      "title": "Tripadvisor: MoMA Design Store, 44 W 53rd St (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday … ighlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | The MoMA Design Store is packed with beautifully designed products … The store can get quite crowded around midday",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -31,7 +39,9 @@
     "44 West 53rd Street, New York 10019 Across from the Museum",
     "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
     "This destination store offers the best selection of new and classic design objects and gifts for everyone",
-    "Every Friday, the store will remain open until 9:00 p.m."
+    "Every Friday, the store will remain open until 9:00 p.m.",
+    "The MoMA Design Store is packed with beautifully designed products",
+    "The store can get quite crowded around midday"
   ],
   "itineraryNoteCandidate": "Browse curated design objects across from MoMA—best before or after a museum visit.",
   "voicePass": {
@@ -78,7 +88,7 @@
       ]
     },
     "description": {
-      "value": "MoMA Design Store - 53rd Street is at 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues. This destination store offers the best selection of new and classic design objects and gifts for everyone. Every Friday, the store will remain open until 9:00 p.m.",
+      "value": "MoMA Design Store - 53rd Street is at 44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues. This destination store offers the best selection of new and classic design objects and gifts for everyone. Every Friday, the store will remain open until 9:00 p.m. Representative Tripadvisor praise (search snapshot): “The MoMA Design Store is packed with beautifully designed products”. Representative watch-outs: “The store can get quite crowded around midday”.",
       "claims": [
         {
           "text": "44 West 53rd Street, New York 10019 Across from the Museum, between 5th and 6th Avenues",
@@ -91,12 +101,32 @@
         {
           "text": "Every Friday, the store will remain open until 9:00 p.m.",
           "sourceUrl": "https://store.moma.org/pages/design-store-53rd-nyc"
+        },
+        {
+          "text": "The MoMA Design Store is packed with beautifully designed products",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
+        },
+        {
+          "text": "The store can get quite crowded around midday",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Attraction_Review-g60763-d565447-Reviews-MoMA_Design_Store-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The MoMA Design Store is packed with beautifully designed products"
+    ],
+    "watchOuts": [
+      "The store can get quite crowded around midday"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

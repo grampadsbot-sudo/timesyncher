@@ -16,13 +16,20 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html",
       "title": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast.",
-      "snippet": "Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast.",
+      "text": "se New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … 8.4 / 10 Very good 121 reviews … Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … 8.4 / 10 Very good 121 reviews … Hyatt House New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … 8.4 / 10 Very good 121 reviews",
+      "snippet": "se New York/Chelsea: 121 Reviews | Trip.com | | Love the breakfast. All the staffs are friendly. … I wish there were more vegetables for breakfast. … 8.4 / 10 Very good 121 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 8.4,
+    "primarySource": "tripcom",
+    "tripcom": 8.4,
+    "scale": "10"
+  },
+  "reviewCount": {
+    "tripcom": 121
+  },
   "priceHint": "Suite hotel Chelsea",
   "hoursHint": null,
   "happyHourHint": null,
@@ -34,6 +41,7 @@
     "24/7 H Market",
     "24/7 Fitness Room",
     "Pet-friendly accommodations",
+    "8.4 / 10 Very good 121 reviews",
     "Love the breakfast. All the staffs are friendly",
     "I wish there were more vegetables for breakfast"
   ],
@@ -76,7 +84,7 @@
       ]
     },
     "description": {
-      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay. Representative Trip.com praise (guest reviews): “Love the breakfast. All the staffs are friendly”. Representative watch-outs: “I wish there were more vegetables for breakfast”.",
+      "value": "Hyatt House New York/Chelsea is an extended-stay hotel at 815 Avenue of the Americas in Chelsea. Hyatt's facility guide lists apartment-style Kitchen Suites, a Convenient 24/7 H Market and a 24/7 Fitness Room. It also offers Pet-friendly accommodations, which helps on a longer family stay. Trip.com shows 8.4 / 10 Very good 121 reviews. Representative Trip.com praise (guest reviews): “Love the breakfast. All the staffs are friendly”. Representative watch-outs: “I wish there were more vegetables for breakfast”.",
       "claims": [
         {
           "text": "Hyatt House New York/Chelsea 815 Avenue of the Americas",
@@ -97,6 +105,10 @@
         {
           "text": "Pet-friendly accommodations",
           "sourceUrl": "https://assets.hyatt.com/content/dam/hyatt/hyattdam/documents/2023/03/07/1822/Hyatt-House-New-York-Chelsea-Facility-Guide-English.pdf"
+        },
+        {
+          "text": "8.4 / 10 Very good 121 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-7619014/hyatt-house-new-york-chelsea/review.html"
         },
         {
           "text": "Love the breakfast. All the staffs are friendly",
@@ -122,7 +134,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

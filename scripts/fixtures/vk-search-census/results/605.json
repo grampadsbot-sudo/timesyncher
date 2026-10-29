@@ -27,14 +27,27 @@
       "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Book lovers you have found your heaven. … It does feel a bit disorganized … 0-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Book lovers you have found your heaven. … It does feel a bit disorganized",
       "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Book lovers you have found your heaven. … It does feel a bit disorganized",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html",
+      "title": "Tripadvisor: The Strand Bookstore (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.7 of 5 bubbles (843 reviews)",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | 4.7 of 5 bubbles (843 reviews)",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
+  "rating": {
+    "primary": 4.7,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.7
+  },
   "reviewCount": {
-    "yelp": 1818
+    "yelp": 1818,
+    "tripadvisor": 843
   },
   "priceHint": "Free entry; books/totes vary; baseline souvenir floor $22",
-  "hoursHint": null,
+  "hoursHint": "Main store Mon–Sun 10am–9pm; Rare Book Room Mon–Fri 10am–5pm, Sat–Sun 10am–6pm (official)",
   "happyHourHint": null,
   "summaryClaims": [
     "independent bookstore located at 828 Broadway",
@@ -42,7 +55,8 @@
     "18 Miles Of Books",
     "1818 Reviews - 828 Broadway",
     "Book lovers you have found your heaven.",
-    "It does feel a bit disorganized"
+    "It does feel a bit disorganized",
+    "4.7 of 5 bubbles (843 reviews)"
   ],
   "itineraryNoteCandidate": "Browse multiple floors at Strand for new and used books, then grab a signature tote.",
   "voicePass": {
@@ -90,7 +104,7 @@
       ]
     },
     "description": {
-      "value": "Strand Book Store is an independent bookstore located at 828 Broadway near Union Square. The store is known for its slogan 18 Miles Of Books, covering new, used and rare titles. It is an easy browse for an hour between Greenwich Village and Union Square. Yelp lists the shop with 1818 Reviews - 828 Broadway, New York. Representative Tripadvisor praise (search snapshot): “Book lovers you have found your heaven.”. Representative watch-outs: “It does feel a bit disorganized”.",
+      "value": "Strand Book Store is an independent bookstore located at 828 Broadway near Union Square. The store is known for its slogan 18 Miles Of Books, covering new, used and rare titles. It is an easy browse for an hour between Greenwich Village and Union Square. Yelp lists the shop with 1818 Reviews - 828 Broadway, New York. Representative Tripadvisor praise (search snapshot): “Book lovers you have found your heaven.”. Representative watch-outs: “It does feel a bit disorganized”. Tripadvisor shows 4.7 of 5 bubbles (843 reviews) for the 828 Broadway store.",
       "claims": [
         {
           "text": "independent bookstore located at 828 Broadway",
@@ -111,6 +125,10 @@
         {
           "text": "It does feel a bit disorganized",
           "sourceUrl": "https://www.tripadvisor.co.uk/ShowUserReviews-g60763-d208901-r959871457-The_Strand_Bookstore-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.7 of 5 bubbles (843 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Attraction_Review-g60763-d208901-Reviews-The_Strand_Bookstore-New_York_City_New_York.html"
         }
       ]
     }
@@ -128,7 +146,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

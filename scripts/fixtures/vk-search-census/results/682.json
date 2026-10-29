@@ -16,13 +16,19 @@
       "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html",
       "title": "Tripadvisor: John's of Bleecker Street, 278 Bleecker St (search snapshot)",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … bSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it.",
-      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it.",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews) … bSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews) … padvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews)",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Pizza was great, staff was friendly and welcoming. … About 40-45 mins of waiting line, but it was worth it. … 4.4 of 5 bubbles (1,975 reviews)",
       "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4
+  },
+  "reviewCount": {
+    "tripadvisor": 1975
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
@@ -31,7 +37,8 @@
     "historic pizzeria on Bleecker Street in the Greenwich Village",
     "the pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie",
     "Pizza was great, staff was friendly and welcoming.",
-    "About 40-45 mins of waiting line, but it was worth it."
+    "About 40-45 mins of waiting line, but it was worth it.",
+    "4.4 of 5 bubbles (1,975 reviews)"
   ],
   "itineraryNoteCandidate": null,
   "voicePass": {
@@ -54,7 +61,7 @@
       ]
     },
     "description": {
-      "value": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend. Representative Tripadvisor praise (search snapshot): “Pizza was great, staff was friendly and welcoming.”. Representative watch-outs: “About 40-45 mins of waiting line, but it was worth it.”.",
+      "value": "The Original John's of Bleecker Street is a historic pizzeria on Bleecker Street in the Greenwich Village neighborhood. The pizzeria serves coal fired brick oven pizza prepared in the style of a tomato pie. It sells whole pies only, so come hungry or bring a friend. Representative Tripadvisor praise (search snapshot): “Pizza was great, staff was friendly and welcoming.”. Representative watch-outs: “About 40-45 mins of waiting line, but it was worth it.”. Tripadvisor shows 4.4 of 5 bubbles (1,975 reviews) for the 278 Bleecker St pizzeria.",
       "claims": [
         {
           "text": "historic pizzeria on Bleecker Street in the Greenwich Village",
@@ -70,6 +77,10 @@
         },
         {
           "text": "About 40-45 mins of waiting line, but it was worth it.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
+        },
+        {
+          "text": "4.4 of 5 bubbles (1,975 reviews)",
           "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d492818-Reviews-John_s_of_Bleecker_Street-New_York_City_New_York.html"
         }
       ]
@@ -88,7 +99,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

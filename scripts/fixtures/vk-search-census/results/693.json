@@ -24,13 +24,19 @@
       "url": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/",
       "title": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great",
-      "snippet": "Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great",
+      "text": " Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings … Magnolia Bakery - Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings",
+      "snippet": " Bleecker Street, New York - Menu, Reviews (774), Photos (123) - Restaurantji | | The banana pudding here is simply amazing … Staff is always great … 4 774 ratings",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.0,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.0
+  },
+  "reviewCount": {
+    "restaurantji": 774
+  },
   "priceHint": null,
   "hoursHint": null,
   "happyHourHint": null,
@@ -39,6 +45,7 @@
     "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
     "401 Bleecker St, New York, NY 10014",
     "Come for a cupcake or the famous banana pudding",
+    "4 774 ratings",
     "The banana pudding here is simply amazing",
     "Staff is always great"
   ],
@@ -63,7 +70,7 @@
       ]
     },
     "description": {
-      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening. Representative Restaurantji praise (diner reviews): “The banana pudding here is simply amazing”; “Staff is always great”.",
+      "value": "Magnolia Bakery opened its first store in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street in 1996. The original shop is at 401 Bleecker St, New York, NY 10014. Come for a cupcake or the famous banana pudding, and expect a line in the evening. Restaurantji lists the 401 Bleecker Street bakery at 4 from 774 ratings. Representative Restaurantji praise (diner reviews): “The banana pudding here is simply amazing”; “Staff is always great”.",
       "claims": [
         {
           "text": "Our first store opens in NYC’s West Village neighborhood on the corner of Bleecker Street and West 11th Street.",
@@ -76,6 +83,10 @@
         {
           "text": "Come for a cupcake or the famous banana pudding",
           "sourceUrl": "https://lovelynyc.com/eat-drink/magnolia-bakery-bleecker/"
+        },
+        {
+          "text": "4 774 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/magnolia-bakery-/"
         },
         {
           "text": "The banana pudding here is simply amazing",
@@ -100,7 +111,7 @@
     "watchOuts": []
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": true,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

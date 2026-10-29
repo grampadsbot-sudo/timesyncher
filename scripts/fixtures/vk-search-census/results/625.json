@@ -16,13 +16,20 @@
       "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
       "title": "New York Marriott Marquis: 656 Reviews | Trip.com",
       "fetchedAt": "2026-10-29T06:30:00Z",
-      "text": "New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … ork Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee",
-      "snippet": "New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee",
+      "text": " | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … ork Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews",
+      "snippet": " | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews",
       "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 8.9,
+    "primarySource": "tripcom",
+    "tripcom": 8.9,
+    "scale": "10"
+  },
+  "reviewCount": {
+    "tripcom": 655
+  },
   "priceHint": "Times Square flagship Marriott",
   "hoursHint": null,
   "happyHourHint": null,
@@ -30,6 +37,7 @@
   "summaryClaims": [
     "Marriott hotel on Times Square",
     "Marriott hotel on Times Square",
+    "8.9 / 10 Very good 655 reviews",
     "The hotel has a fantastic location and the rooms are very clean",
     "it can get a bit noisy at night",
     "the hotel charges a mandatory $40 daily fee"
@@ -73,11 +81,15 @@
       ]
     },
     "description": {
-      "value": "New York Marriott Marquis is a Marriott hotel on Times Square in the Theater District. It is one of the largest hotels in the city, with the Marquis Theatre inside the building. Broadway theaters, the TKTS booth and Bryant Park are all within a short walk. Representative Trip.com praise (guest reviews): “The hotel has a fantastic location and the rooms are very clean”. Representative watch-outs: “it can get a bit noisy at night”; “the hotel charges a mandatory $40 daily fee”.",
+      "value": "New York Marriott Marquis is a Marriott hotel on Times Square in the Theater District. It is one of the largest hotels in the city, with the Marquis Theatre inside the building. Broadway theaters, the TKTS booth and Bryant Park are all within a short walk. Trip.com shows 8.9 / 10 Very good 655 reviews. Representative Trip.com praise (guest reviews): “The hotel has a fantastic location and the rooms are very clean”. Representative watch-outs: “it can get a bit noisy at night”; “the hotel charges a mandatory $40 daily fee”.",
       "claims": [
         {
           "text": "Marriott hotel on Times Square",
           "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        },
+        {
+          "text": "8.9 / 10 Very good 655 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
         },
         {
           "text": "The hotel has a fantastic location and the rooms are very clean",
@@ -108,7 +120,7 @@
     ]
   },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

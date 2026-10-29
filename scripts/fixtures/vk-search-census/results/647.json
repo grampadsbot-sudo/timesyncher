@@ -11,6 +11,14 @@
       "text": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de … Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top de … re. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun Get Directions Amenities Fois gras, caviar, dover sole, filet mignon--it's haute French cuisine here at L'Avenue, tastefully designed by interior des … s Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, features curated arrivals from top designers in women's an … 's and men's fashion, beauty, handbags, shoes, fine jewelry and more. Plus, enjoy refreshments and light bites at Honeybrains or the Café at Saks, or drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun Get Directions Amenities Fois gras, caviar, dover sole, filet mignon--it's haute Fre",
       "snippet": "Sale Designers New Clothing Shoes Accessories Grooming Kids Home Gifts Sale Sign In Create an Account Wishlist Back to store locator Saks NYC Address 611 Fifth Avenue New York, NY 10022 Contact 212-753-4000 conciergenyc@s5a.com About this Store This location, on Fifth Avenue in Midtown Manhattan, fe",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+      "title": "Tripadvisor: Saks Fifth Avenue, 611 5th Avenue (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store. …  WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | It is a real treat to see this flag ship store. … Their employees were very snobby in the store.",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -32,7 +40,9 @@
     "611 Fifth Avenue New York, NY 10022",
     "Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun",
     "212-753-4000",
-    "drinks and a decadent Parisian-inspired meal at L'Avenue at Saks"
+    "drinks and a decadent Parisian-inspired meal at L'Avenue at Saks",
+    "It is a real treat to see this flag ship store.",
+    "Their employees were very snobby in the store."
   ],
   "itineraryNoteCandidate": "Tour the Fifth Avenue flagship for holiday windows and luxury floors—service can be uneven, so keep plans flexible.",
   "voicePass": {
@@ -73,7 +83,7 @@
       ]
     },
     "description": {
-      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue New York, NY 10022. Its store page lists Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun, and the concierge line is 212-753-4000. For a break, shoppers can stop for drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. The store faces Rockefeller Center and St. Patrick's Cathedral in Midtown.",
+      "value": "Saks Fifth Avenue is the flagship department store at 611 Fifth Avenue New York, NY 10022. Its store page lists Store Hours 11:00 AM - 7:00 PM Mon - Sat 12:00 PM - 6:00 PM Sun, and the concierge line is 212-753-4000. For a break, shoppers can stop for drinks and a decadent Parisian-inspired meal at L'Avenue at Saks. The store faces Rockefeller Center and St. Patrick's Cathedral in Midtown. Representative Tripadvisor praise (search snapshot): “It is a real treat to see this flag ship store.”. Representative watch-outs: “Their employees were very snobby in the store.”.",
       "claims": [
         {
           "text": "611 Fifth Avenue New York, NY 10022",
@@ -90,12 +100,32 @@
         {
           "text": "drinks and a decadent Parisian-inspired meal at L'Avenue at Saks",
           "sourceUrl": "https://www.saksfifthavenue.com/locations/newyork/"
+        },
+        {
+          "text": "It is a real treat to see this flag ship store.",
+          "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
+        },
+        {
+          "text": "Their employees were very snobby in the store.",
+          "sourceUrl": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.ie/ShowUserReviews-g60763-d208852-r613314920-Saks_Fifth_Avenue-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "It is a real treat to see this flag ship store."
+    ],
+    "watchOuts": [
+      "Their employees were very snobby in the store."
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

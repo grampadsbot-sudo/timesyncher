@@ -11,6 +11,14 @@
       "text": "Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze site traffic, and deli … Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze site traffic, and deli … esult of weather or necessary maintenance. Angelito Jusay Photography Monthly hours ❮ January – April Daily, 7am-10pm May – September Daily, 7am-11pm October Daily, 7am-10pm November - December* Monday - Wednesday: 7am-10pm Thursday - Sunday: 7am-midnight *On New Year’s Eve the park closes early, usually before 8pm. Park ",
       "snippet": "Hours and Directions | Bryant Park is located between 40th and 42nd Streets and Fifth and Sixth Avenues behind the New York Public Library's Stephen A. Schwarzman building. | Hours and Directions Skip to main content We use cookies, pixels, and other trackers to improve website experience, analyze s",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html",
+      "title": "Tripadvisor: Bryant Park (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends. … ia WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends.",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Fantastic place to visit around the Holidays. … Maybe the crowds, which are really heavy on the weekends.",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -28,7 +36,9 @@
   "summaryClaims": [
     "behind the New York Public Library's Stephen A. Schwarzman building",
     "behind the New York Public Library's Stephen A. Schwarzman building",
-    "October Daily, 7am-10pm"
+    "October Daily, 7am-10pm",
+    "Fantastic place to visit around the Holidays.",
+    "Maybe the crowds, which are really heavy on the weekends."
   ],
   "itineraryNoteCandidate": "Meet at the lawn or carousel—check bryantpark.org calendar for games and events that day.",
   "voicePass": {
@@ -71,7 +81,7 @@
       ]
     },
     "description": {
-      "value": "Friend meetup at Bryant Park is an easy Midtown plan. The park sits behind the New York Public Library's Stephen A. Schwarzman building between Fifth and Sixth Avenues. Its posted hours for October are daily, 7am-10pm, so an afternoon or early evening meetup fits well.",
+      "value": "Friend meetup at Bryant Park is an easy Midtown plan. The park sits behind the New York Public Library's Stephen A. Schwarzman building between Fifth and Sixth Avenues. Its posted hours for October are daily, 7am-10pm, so an afternoon or early evening meetup fits well. Representative Tripadvisor praise (search snapshot): “Fantastic place to visit around the Holidays.”. Representative watch-outs: “Maybe the crowds, which are really heavy on the weekends.”.",
       "claims": [
         {
           "text": "behind the New York Public Library's Stephen A. Schwarzman building",
@@ -80,12 +90,32 @@
         {
           "text": "October Daily, 7am-10pm",
           "sourceUrl": "https://bryantpark.org/the-park/hours-and-directions"
+        },
+        {
+          "text": "Fantastic place to visit around the Holidays.",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
+        },
+        {
+          "text": "Maybe the crowds, which are really heavy on the weekends.",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/ShowUserReviews-g60763-d136347-r985738572-Bryant_Park-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Fantastic place to visit around the Holidays."
+    ],
+    "watchOuts": [
+      "Maybe the crowds, which are really heavy on the weekends."
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-rating-theme-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
