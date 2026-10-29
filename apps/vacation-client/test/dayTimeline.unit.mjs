@@ -100,7 +100,8 @@ assert.ok(day1Rows.some((row) => row.fare));
 const hotelCheckIn = day1Rows.find((row) => row.kind === 'hotel-event' && row.place?.id === 2);
 assert.ok(hotelCheckIn, 'hotel check-in row');
 assert.equal(hotelCheckIn?.itineraryNote, 'Drop bags early');
-assert.ok(day1Rows.some((row) => row.kind === 'hotel-sleep' && row.place?.id === 2));
+const hotelSleep = day1Rows.find((row) => row.kind === 'hotel-sleep' && row.place?.id === 2);
+assert.equal(hotelSleep?.itineraryNote, 'Drop bags early');
 
 const day5 = trip.days[1];
 const day5Rows = buildDayTimeline(trip, day5);
@@ -243,5 +244,68 @@ assert.equal(
   true,
   'PR336 onDay wrongly matched day_number 2 to dayIds [2]',
 );
+
+const dossierTrip = {
+  days: [{ id: 1, day_number: 1, title: 'Day 1' }],
+  places: [
+    { id: 8, name: 'Zabars', category_name: 'Store' },
+    { id: 9, name: 'Hotel Belleclaire', category_name: 'Hotel' },
+    { id: 11, name: 'Delta LAS to JFK', category_name: 'Flight' },
+  ],
+  assignments: {
+    1: [
+      { place_id: 11, place: { id: 11, name: 'Delta LAS to JFK' } },
+      { place_id: 8, place: { id: 8, name: 'Zabars' } },
+      { place_id: 9, place: { id: 9, name: 'Hotel Belleclaire' } },
+    ],
+  },
+  thingOverrides: {
+    'place:8': {
+      timeline: true,
+      category: 'store',
+      summary: 'Zabars is the Upper West Side food store at 2245 Broadway, open every day.',
+      evidenceDossier: {
+        fields: {
+          itineraryNote: {
+            value: '',
+            claims: [{ text: 'Grab the nova and a coffee.', supported: false }],
+          },
+        },
+      },
+    },
+    'place:9': {
+      timeline: true,
+      category: 'hotel',
+      stayDays: 1,
+      summary: 'Hotel Belleclaire is an Upper West Side hotel near the park.',
+      evidenceDossier: {
+        fields: {
+          itineraryNote: {
+            value: '',
+            claims: [{ text: 'Stay here, then walk to the park.', supported: false }],
+          },
+        },
+      },
+    },
+    'place:11': {
+      timeline: true,
+      category: 'flight',
+      dayIds: [1],
+      summary: 'Airline: Delta; Route: LAS-JFK; Stops: nonstop; Outbound: 2026-06-23; Price: $257.',
+      itineraryNote: 'Take the morning Delta nonstop and keep the aisle.',
+    },
+  },
+};
+const dossierRows = buildDayTimeline(dossierTrip, dossierTrip.days[0]);
+const storeRow = dossierRows.find((row) => row.kind === 'thing' && row.place?.id === 8);
+assert.equal(storeRow?.itineraryNote, 'Grab the nova and a coffee.');
+assert.notEqual(storeRow?.itineraryNote, dossierTrip.thingOverrides['place:8'].summary);
+const checkIn = dossierRows.find((row) => row.kind === 'hotel-event');
+const sleepRow = dossierRows.find((row) => row.kind === 'hotel-sleep');
+assert.equal(checkIn?.itineraryNote, 'Stay here, then walk to the park.');
+assert.equal(sleepRow?.itineraryNote, 'Stay here, then walk to the park.');
+const flightRow = dossierRows.find((row) => row.kind === 'flight');
+assert.equal(flightRow?.itineraryNote, 'Take the morning Delta nonstop and keep the aisle.');
+assert.notEqual(flightRow?.itineraryNote, dossierTrip.thingOverrides['place:11'].summary);
 
 console.log('vacation-client day timeline unit checks passed');

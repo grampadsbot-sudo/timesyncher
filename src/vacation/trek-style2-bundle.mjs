@@ -19,6 +19,7 @@ import { patchThingDetailCapture, patchThingDetailPanel } from './trek-thing-det
 import { patchStarRatings } from './trek-star-rating-patch.mjs';
 import { patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
+import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
 const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
@@ -63,10 +64,10 @@ const W_LIST_PATCH_PRIOR = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data
 const W_LIST_PATCH = 'w=G=>{const Re=_l(G),zt=rr(G)||Co(G);return`<li data-list-row="1" data-has-logo="${Re?"1":"0"}" data-logo-src="${an(Re||"")}" data-summary-src="thing" style="display:flex;align-items:center;gap:8px">${Re?`<span data-ts-logo-chip="1" aria-hidden="true" style="width:22px;height:22px;min-width:22px;display:inline-grid;place-items:center;box-sizing:border-box;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb"><img class="tiny-logo" src="${an(Re)}" alt="" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:center center;display:block" /></span>`:`<span class="thing-emoji" style="width:22px;height:22px;font-size:13px;display:inline-grid;place-items:center">${an(Pc(G))}</span>`}<span><strong>${an(Bs(mr(G)))}</strong>${zt?`<div data-list-summary="1" data-summary-src="thing" style="font-size:12px;font-weight:400;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(zt))}</div>`:""}</span></li>`}';
 
 const OP_TITLE_NEEDLE = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}</div>`';
-const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&rr(_i.item)?`<div data-row-summary="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(_i.item)))}</div>`:""}</div>`';
+const OP_TITLE_PATCH = 'const di=`<div class="timeline-title">${an(Bs(_i.title))}${!/^(travel|travel-to-thing|transport|hotel-wake|hotel-checkout)$/i.test(String(_i.type||""))&&!/^Travel (to|from)\\b/i.test(String(_i.title||""))&&tsItinLine(_i.item)?`<div data-row-summary="1" data-itinerary-note="1" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(tsItinLine(_i.item)))}</div>`:""}</div>`';
 
 const SU_TITLE_NEEDLE = '<div class="timeline-title">${an(Bs(Zn.title))}</div>';
-const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&rr(Zn.item)?`<div data-row-summary="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(rr(Zn.item)))}</div>`:""}</div>';
+const SU_TITLE_PATCH = '<div class="timeline-title">${an(Bs(Zn.title))}${!/^(travel|travel-to-thing|transport|hotel-wake|hotel-checkout)$/i.test(String(Zn.type||""))&&!/^Travel (to|from)\\b/i.test(String(Zn.title||""))&&tsItinLine(Zn.item)?`<div data-row-summary="1" data-itinerary-note="1" data-summary-src="thing" data-summary-thing-only="1" style="font-weight:400;font-size:12px;margin-top:3px;line-height:1.4;color:#334155">${an(Bs(tsItinLine(Zn.item)))}</div>`:""}</div>';
 
 const DAY_CARD_OVERFLOW_NEEDLE = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"hidden",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
 const DAY_CARD_OVERFLOW_PATCH = 'Ki&&(()=>{const G=Ki,Re=Ci(G),zt=li(G);return n.jsxs("div",{"data-ts-day-timeline":"1",style:{background:"var(--bg-card, white)",borderRadius:14,overflow:"visible",border:"1px solid var(--border-faint, #e5e7eb)"},children:[';
@@ -507,7 +508,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js)));
+  return patchTimelineItineraryNote(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))));
 }
 
 function endOfCall(text, callStart) {
@@ -616,10 +617,10 @@ export function assertPatchedStyleTwo(source = '') {
     throw new Error('Style two list-row summary patch did not apply.');
   }
   if (!js.includes(OP_TITLE_PATCH) || !js.includes(SU_TITLE_PATCH) || !js.includes('data-row-summary="1"') || !js.includes('data-summary-thing-only="1"')) {
-    throw new Error('Style two itinerary-row summary must use stored rr() on Thing titles only.');
+    throw new Error('Style two itinerary rows must print tsItinLine() on the timeline title.');
   }
-  if (!js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(_i.type||""))') || !js.includes('!/^(travel|travel-to-thing|flight|transport|hotel-wake|hotel-event|hotel-sleep|hotel-checkout)$/i.test(String(Zn.type||""))')) {
-    throw new Error('Itinerary Thing summary must skip travel-to / travel-from / hotel chrome rows.');
+  if (!js.includes('!/^(travel|travel-to-thing|transport|hotel-wake|hotel-checkout)$/i.test(String(_i.type||""))') || !js.includes('!/^(travel|travel-to-thing|transport|hotel-wake|hotel-checkout)$/i.test(String(Zn.type||""))')) {
+    throw new Error('Itinerary rows must print itineraryNote and skip travel and hotel wake/checkout chrome.');
   }
   if (!js.includes(DAY_CARD_OVERFLOW_PATCH) || js.includes(DAY_CARD_OVERFLOW_NEEDLE) || !js.includes('"data-ts-pic-popup-tip":"1"') || !js.includes(NR_POPUP_PATCH) || js.includes(NR_POPUP_NEEDLE)) {
     throw new Error('Day timeline photo popup tip must stay unclipped (overflow visible + caret).');
