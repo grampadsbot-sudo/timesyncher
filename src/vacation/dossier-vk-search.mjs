@@ -99,6 +99,16 @@ export function loadVkSearchCensusResult(place, { env = process.env, censusDir }
   }
 }
 
+// Parse the aggregate quote itself; page support alone cannot bind its numeric tuple.
+function ratingTupleMatchesQuote({ site, average, count, scale, quote }) {
+  const normalized = quote.replace(/\s+/g, ' ').trim();
+  const explicit = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:\/|(?:out )?of)\s*(5|10)\s*(?:bubbles|stars)?\s*(?:Very good|Good|Great|Excellent)?\s*\(?([\d,]+)\s+reviews?\)?$/i);
+  const implicit = site === 'tripadvisor' && normalized.match(/^(\d+(?:\.\d+)?)\s+(?:Very good|Good|Great|Excellent)\s*\(([\d,]+)\)$/i);
+  const tuple = explicit ? [Number(explicit[1]), Number(explicit[2]), Number(explicit[3].replace(/,/g, ''))]
+    : implicit ? [Number(implicit[1]), 5, Number(implicit[2].replace(/,/g, ''))] : null;
+  return Boolean(tuple && tuple[0] === average && tuple[1] === scale && tuple[2] === count);
+}
+
 export function vkSearchResultToDossier(result = {}, place = {}) {
   const thin = isThinVkSearchResult(result);
   const supported = vkSearchClaimSupportOk(result);
@@ -257,6 +267,7 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const index = text(evidence.sourceUrl) ? pageIndex(text(evidence.sourceUrl)) : -1;
     if (['yelp', 'google', 'tripadvisor', 'trip.com', 'restaurantji', 'exa'].includes(site)
       && [5, 10].includes(scale) && average > 0 && average <= scale && Number.isInteger(count) && count > 0
+      && ratingTupleMatchesQuote({ site, average, count, scale, quote })
       && quote && !claimTextWasRejected(quote, rejected) && pageSupports(index, quote)) {
       const rating = { average, count, scaleMax: scale, quote, url: pages[index].url, source: site };
       pages[index].braveRating = rating;
