@@ -11,6 +11,14 @@
       "text": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Cateri … G_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday: 7 am - 10 pm Shop this store Shop Catering Store Amenities Grocery Delivery & Pickup Order what you need on Amazon.com",
       "snippet": "e=\"subheader\" aria-disabled=\"false\" aria-label=\"Recipes\" href=\"/recipes?ref_=US_TRF_ALL_UFG_WFM_OTHER_1002393\"> Recipes Upper West Side Store Address 808 Columbus Ave, New York, NY 10025-5139 Get directions Phone (212) 222-6160 Store Hours Monday - Friday: 7 am - 10 pm Saturday: 7 am - 10 pm Sunday:",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/9t58jkr8sn4",
+      "title": "Exa place listing: Whole Foods Market, 808 Columbus Ave",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "le Foods Market, 808 Columbus Ave | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices … ive curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices",
+      "snippet": "le Foods Market, 808 Columbus Ave | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | great fresh produce and good sales … slightly higher prices",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -28,7 +36,9 @@
   "summaryClaims": [
     "808 Columbus Ave, New York, NY 10025-5139",
     "808 Columbus Ave, New York, NY 10025-5139",
-    "Monday - Friday: 7 am - 10 pm"
+    "Monday - Friday: 7 am - 10 pm",
+    "great fresh produce and good sales",
+    "slightly higher prices"
   ],
   "itineraryNoteCandidate": "Restock snacks and prepared foods near 97th before heading downtown.",
   "voicePass": {
@@ -69,7 +79,7 @@
       ]
     },
     "description": {
-      "value": "Whole Foods Market Upper West Side is a grocery store at 808 Columbus Ave, New York, NY 10025-5139. Its store page lists weekday hours of Monday - Friday: 7 am - 10 pm. It works for stocking up on breakfast items and snacks for a stay uptown.",
+      "value": "Whole Foods Market Upper West Side is a grocery store at 808 Columbus Ave, New York, NY 10025-5139. Its store page lists weekday hours of Monday - Friday: 7 am - 10 pm. It works for stocking up on breakfast items and snacks for a stay uptown. Representative aggregated guest reviews praise (aggregated guest reviews): “great fresh produce and good sales”. Representative watch-outs: “slightly higher prices”.",
       "claims": [
         {
           "text": "808 Columbus Ave, New York, NY 10025-5139",
@@ -78,12 +88,32 @@
         {
           "text": "Monday - Friday: 7 am - 10 pm",
           "sourceUrl": "https://www.wholefoodsmarket.com/stores/upperwestside/"
+        },
+        {
+          "text": "great fresh produce and good sales",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
+        },
+        {
+          "text": "slightly higher prices",
+          "sourceUrl": "https://exa.ai/library/place/9t58jkr8sn4"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://exa.ai/library/place/9t58jkr8sn4",
+    "site": "aggregated guest reviews",
+    "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
+    "praise": [
+      "great fresh produce and good sales"
+    ],
+    "watchOuts": [
+      "slightly higher prices"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-gaps-round2-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

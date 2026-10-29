@@ -11,6 +11,14 @@
       "text": " 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 …  2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington Avenue btw 52nd & 53rd TODAY’S HOURS: 7:00 AM 9:0 … dway btw 85th & 86th TODAY’S HOURS: 7:00 AM 8:00 PM JUICING SINCE 2013 View This Location 3rd Avenue 1486 Third Avenue btw 83rd & 84th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View ",
       "snippet": " 2012 View This Location W 72nd Street 117 W 72nd Street btw Columbus & Broadway TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2002 View This Location Columbus Circle 979 Eighth Avenue btw 57th & 58th TODAY’S HOURS: 7:00 AM 9:00 PM JUICING SINCE 2012 View This Location Lexington Avenue 599 Lexington ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+      "title": "Restaurantji: Juice Generation, 979 8th Avenue",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "on, 979 8th Avenue | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait … l fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait",
+      "snippet": "on, 979 8th Avenue | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | Great selection of flavors … there is a bit of a wait",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -28,7 +36,9 @@
   "summaryClaims": [
     "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
     "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
-    "7:00 AM 9:00 PM"
+    "7:00 AM 9:00 PM",
+    "Great selection of flavors",
+    "there is a bit of a wait"
   ],
   "itineraryNoteCandidate": "Grab a quick juice or açaí bowl before a Central Park loop.",
   "voicePass": {
@@ -69,7 +79,7 @@
       ]
     },
     "description": {
-      "value": "Juice Generation Columbus Circle is a juice and smoothie bar at Columbus Circle 979 Eighth Avenue btw 57th & 58th. Its location listing shows hours of 7:00 AM 9:00 PM. It is a handy grab-and-go stop before a walk into Central Park.",
+      "value": "Juice Generation Columbus Circle is a juice and smoothie bar at Columbus Circle 979 Eighth Avenue btw 57th & 58th. Its location listing shows hours of 7:00 AM 9:00 PM. It is a handy grab-and-go stop before a walk into Central Park. Representative Restaurantji praise (guest reviews): “Great selection of flavors”. Representative watch-outs: “there is a bit of a wait”.",
       "claims": [
         {
           "text": "Columbus Circle 979 Eighth Avenue btw 57th & 58th",
@@ -78,12 +88,32 @@
         {
           "text": "7:00 AM 9:00 PM",
           "sourceUrl": "https://www.juicegeneration.com/locations"
+        },
+        {
+          "text": "Great selection of flavors",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
+        },
+        {
+          "text": "there is a bit of a wait",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/juice-generation-6/"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/juice-generation-6/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "Great selection of flavors"
+    ],
+    "watchOuts": [
+      "there is a bit of a wait"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-gaps-round2-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

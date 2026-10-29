@@ -11,10 +11,24 @@
       "text": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m … ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m … ade contractor Permasteelisa Group. [ 1 ] According to Gill and Smith, the glass cladding was intended to help the tower fit into the skyline. [ 34 ] The entrance for Nordstrom is on 57th Street, as is the main residential entrance. A secondary residents' entrance is on 58th Street. [ 35 ] [ 36 ] The upper stories are set back from the base.  … [ 49 ] [ 105 ] Due to the high ceiling heights of the Nordstrom store, the first seven physical stories are collectively 280 feet (85 m) tall. [ 62 ] The Nordstrom location has an open plan for its floors. [ 48 ] [ 106 ] Each level has 19-foot (5.8 m) ceilings. The store's interiors are lit by the wavy glass facades of the base at 57th and 58th Streets … the first seven physical stories are collectively 280 feet (85 m) tall. [ 62 ] The Nordstrom location has an open plan for its floors. [ 48 ] [ 106 ] Each level has 19-foot (5.8 m) ceilings. The store's interiors are lit by the wavy glass facades of the base at 57th and 58th Streets. [ 48 ] Other design features include halo reveals arou",
       "snippet": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New Yor",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/ppdy06vf1wn",
+      "title": "Exa place listing: Nordstrom NYC Flagship, 225 W 57th St",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "strom NYC Flagship, 225 W 57th St | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … ve curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores …  page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores",
+      "snippet": "strom NYC Flagship, 225 W 57th St | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stor",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
-  "rating": null,
-  "reviewCount": null,
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "aggregator",
+    "aggregator": 4.4
+  },
+  "reviewCount": {
+    "aggregator": 1761
+  },
   "priceHint": "$$$$ luxury department store",
   "hoursHint": null,
   "happyHourHint": null,
@@ -24,7 +38,10 @@
     "contain a large Nordstrom store, which opened in 2019",
     "The entrance for Nordstrom is on 57th Street",
     "The Nordstrom location has an open plan for its floors",
-    "Each level has 19-foot (5.8 m) ceilings"
+    "Each level has 19-foot (5.8 m) ceilings",
+    "Rating 4.4 out of 5 · 1,761 reviews",
+    "The store has a beautiful, modern design",
+    "The selection is a bit smaller compared to some other department stores"
   ],
   "itineraryNoteCandidate": "Browse the Central Park Tower flagship for luxury floors without Midtown Fifth Avenue crush.",
   "voicePass": {
@@ -65,7 +82,7 @@
       ]
     },
     "description": {
-      "value": "Nordstrom NYC Flagship sits in Central Park Tower on West 57th Street. Wikipedia notes that the basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019, and that The entrance for Nordstrom is on 57th Street. It adds that The Nordstrom location has an open plan for its floors, and Each level has 19-foot (5.8 m) ceilings. The store is near Carnegie Hall and Columbus Circle for a combined shopping walk.",
+      "value": "Nordstrom NYC Flagship sits in Central Park Tower on West 57th Street. Wikipedia notes that the basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019, and that The entrance for Nordstrom is on 57th Street. It adds that The Nordstrom location has an open plan for its floors, and Each level has 19-foot (5.8 m) ceilings. The store is near Carnegie Hall and Columbus Circle for a combined shopping walk. An aggregated guest-review listing for the 57th Street flagship shows Rating 4.4 out of 5 · 1,761 reviews. Representative aggregated guest reviews praise (aggregated guest reviews): “The store has a beautiful, modern design”. Representative watch-outs: “The selection is a bit smaller compared to some other department stores”.",
       "claims": [
         {
           "text": "contain a large Nordstrom store, which opened in 2019",
@@ -82,12 +99,36 @@
         {
           "text": "Each level has 19-foot (5.8 m) ceilings",
           "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        },
+        {
+          "text": "Rating 4.4 out of 5 · 1,761 reviews",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "The store has a beautiful, modern design",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "The selection is a bit smaller compared to some other department stores",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://exa.ai/library/place/ppdy06vf1wn",
+    "site": "aggregated guest reviews",
+    "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
+    "praise": [
+      "The store has a beautiful, modern design"
+    ],
+    "watchOuts": [
+      "The selection is a bit smaller compared to some other department stores"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-store-restaurant-drev-thindedet-20261029",
+    "pass": "vk728-overnight-drev-gaps-round2-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"

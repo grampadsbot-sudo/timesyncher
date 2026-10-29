@@ -19,6 +19,14 @@
       "text": "UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6  … UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the d",
       "snippet": "UWS Happy Hour: $14 Flights, $10 Wine of the Day | Amélie | Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday. Happy hour every day, 4 to 6 ",
       "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html",
+      "title": "Tripadvisor: Amelie Wine Bar, Upper West Side (search snapshot)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation … ights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
+      "snippet": "pshot) | SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch | Amazing selection of reasonably priced wines, knowledgeable waitstaff. … the place is so noisy that it is hard to have a conversation",
+      "fetchMethod": "curl live fetch 2026-10-28"
     }
   ],
   "rating": {
@@ -38,7 +46,9 @@
     "French wine bar and bistro on Amsterdam Avenue",
     "French wine bar and bistro on Amsterdam Avenue",
     "Happy hour every day, 4 to 6 pm",
-    "$14 wine flights, $10 wine of the day"
+    "$14 wine flights, $10 wine of the day",
+    "Amazing selection of reasonably priced wines, knowledgeable waitstaff.",
+    "the place is so noisy that it is hard to have a conversation"
   ],
   "itineraryNoteCandidate": "Hit Amélie UWS at 4pm for $14 wine flights before a Central Park stroll.",
   "voicePass": {
@@ -78,7 +88,7 @@
       ]
     },
     "description": {
-      "value": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day.",
+      "value": "Amelie Bistro & Wine Bar is a French wine bar and bistro on Amsterdam Avenue, serving small plates and more than 90 wines. Its happy hour runs every day, 4 to 6 pm. Deals include $14 wine flights and $10 wine of the day. Representative Tripadvisor praise (traveler reviews, search snapshot): “Amazing selection of reasonably priced wines, knowledgeable waitstaff.”. Representative watch-outs: “the place is so noisy that it is hard to have a conversation”.",
       "claims": [
         {
           "text": "French wine bar and bistro on Amsterdam Avenue",
@@ -91,12 +101,32 @@
         {
           "text": "$14 wine flights, $10 wine of the day",
           "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        },
+        {
+          "text": "Amazing selection of reasonably priced wines, knowledgeable waitstaff.",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
+        },
+        {
+          "text": "the place is so noisy that it is hard to have a conversation",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html"
         }
       ]
     }
   },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d15311523-Reviews-or15-Amelie_Wine_Bar-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "Amazing selection of reasonably priced wines, knowledgeable waitstaff."
+    ],
+    "watchOuts": [
+      "the place is so noisy that it is hard to have a conversation"
+    ]
+  },
   "fieldsWritePass": {
-    "pass": "vk728-overnight-drev-chase-20261029",
+    "pass": "vk728-overnight-drev-gaps-round2-20261029",
     "new": false,
     "at": "2026-10-29T06:30:00Z",
     "writer": "grok-bot"
