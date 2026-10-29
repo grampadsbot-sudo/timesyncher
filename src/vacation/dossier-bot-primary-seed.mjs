@@ -29,6 +29,98 @@ function pageTextSentences(pageText) {
   return String(pageText || '').replace(/\s+/g, ' ').match(/[^.!?\n]{1,600}(?:[.!?]+|$)/g) || [];
 }
 
+function decodeHtmlEntities(text) {
+  return String(text || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function substantiveDescriptionSentences(value, thing) {
+  return pageTextSentences(value).filter((sentence) => {
+    const bit = decodeHtmlEntities(sentence).trim();
+    if (!bit) return false;
+    if (thing && !descriptionNamesThing(bit, thing)) return false;
+    return !isFillerSummaryText(bit, thing);
+  });
+}
+
+function descriptionLacksSubstance(value, thing) {
+  const words = wordCount(value);
+  const sentences = substantiveDescriptionSentences(value, thing);
+  if (words >= 40 && sentences.length >= 3) return false;
+  if (words >= 40 && sentences.length >= 2 && !isFillerSummaryText(value, thing)) return false;
+  return sentences.length < 3 || words < 40;
+}
+
+function descriptionTopUpComplete(value, thing) {
+  const sentences = substantiveDescriptionSentences(value, thing);
+  return wordCount(value) >= 40 && sentences.length >= 3;
+}
+
+function isSkippedTopUpSentence(sentence) {
+  const s = String(sentence || '').trim();
+  const lower = s.toLowerCase();
+  if (!s || s.length > 480) return true;
+  if (/\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b/.test(s)) return true;
+  if (/\bfax\s*:/i.test(s)) return true;
+  if (/@[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return true;
+  if (/replacement window screens|spline tool|how to install replacement/i.test(s)) return true;
+  if (/^online menus, items, descriptions and prices/i.test(s)) return true;
+  if (/^menus for .+ - singleplatform/i.test(lower)) return true;
+  if (/^zabar's - menu -/i.test(s)) return true;
+  if (/order your lunch or dinner from zabars\.com/i.test(lower)) return true;
+  if (/call us:|email us:|directions & parking|main store hours/i.test(lower)) return true;
+  if (/^(?:nav|home|cart|sign in)\b/i.test(s)) return true;
+  if ((s.match(/,/g) || []).length >= 4 && (/\$|\d+\.\d{2}/.test(s) || /nova scotia salmon/i.test(lower))) return true;
+  if (/shop for gifts, coffee, smoked fish & more today!/i.test(s)) return true;
+  return false;
+}
+
+function pickSavedPageSentence(page, index, pages, thing, usedBodies) {
+  if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) return null;
+  for (const raw of pageTextSentences(page.text)) {
+    const bit = decodeHtmlEntities(raw).trim();
+    if (!bit || isSkippedTopUpSentence(bit)) continue;
+    if (thing && !descriptionNamesThing(bit, thing)) continue;
+    if (isFillerSummaryText(bit, thing)) continue;
+    if (usedBodies.has(bit) || [...usedBodies].some((part) => part.includes(bit.slice(0, 40)) || bit.includes(part.slice(0, 40)))) continue;
+    const cited = recitClaim({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true }, pages);
+    if (cited.supported !== true) continue;
+    return cited;
+  }
+  return null;
+}
+
+function topUpDescriptionFromSavedPages(composed, pages, thing) {
+  let value = String(composed.value || '').trim();
+  const claims = [...(composed.claims || [])];
+  if (!value || isFillerSummaryText(value, thing) || !descriptionLacksSubstance(value, thing)) {
+    return composed;
+  }
+  const parts = claims.map((claim) => String(claim.text || claim.claim || '').trim()).filter(Boolean);
+  const usedBodies = new Set(parts);
+  for (const [index, page] of (pages || []).entries()) {
+    if (descriptionTopUpComplete(parts.join(' '), thing)) break;
+    const cited = pickSavedPageSentence(page, index, pages, thing, usedBodies);
+    if (!cited) continue;
+    const body = String(cited.text || '').trim();
+    usedBodies.add(body);
+    parts.push(body);
+    claims.push(cited);
+  }
+  value = parts.join(' ');
+  if (!value || isFillerSummaryText(value, thing)) return composed;
+  if (thing && !descriptionNamesThing(value, thing)) value = `${thing}: ${value}`;
+  return { value, claims, bodyWords: wordCount(value) };
+}
+
 function savedDatedPage(page) {
   try {
     const url = new URL(page?.url);
@@ -197,9 +289,13 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
         return;
       }
     }
+    let fieldComposed = composed;
+    if (key === 'description') {
+      fieldComposed = topUpDescriptionFromSavedPages(composed, pages, thing);
+    }
     merged.fields = {
       ...(merged.fields || {}),
-      [key]: composed,
+      [key]: fieldComposed,
     };
   };
   ensure('description');
