@@ -1462,7 +1462,7 @@
   {
    "id": 608,
    "trip_id": 99,
-   "name": "Midtown sample hotel",
+   "name": "The Manhattan Club",
    "description": "",
    "lat": 40.7549,
    "lng": -73.984,
@@ -3184,7 +3184,7 @@
    "trip_id": 99,
    "day_id": 501,
    "place_id": 608,
-   "title": "Midtown sample hotel",
+   "title": "The Manhattan Club",
    "status": "candidate",
    "type": "hotel",
    "start_time": "11:00"
@@ -3905,7 +3905,7 @@
    "id": 530353391,
    "trip_id": 99,
    "category": "Hotel",
-   "name": "Midtown sample hotel",
+   "name": "The Manhattan Club",
    "total_price": 2702,
    "note": "",
    "sort_order": 12
@@ -5285,14 +5285,14 @@
   },
   "place:608": {
    "category": "hotel",
-   "title": "Midtown sample hotel",
+   "title": "The Manhattan Club",
    "address": "200 West 56th Street, New York, NY 10019",
    "website": "https://www.manhattanclub.com/",
-   "summary": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-sty",
+   "summary": "The Manhattan Club on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-sty",
    "summarySourceUrls": [
     "https://www.manhattanclub.com/"
    ],
-   "longDetails": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.",
+   "longDetails": "The Manhattan Club on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in.",
    "lat": 40.7549,
    "lng": -73.984,
    "thirdPartyRating": "8.3",
@@ -5311,7 +5311,7 @@
    "review4Source": "Booking.com",
    "source": "fixture-nyc",
    "url": "https://www.manhattanclub.com/",
-   "details": "Midtown sample hotel on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in."
+   "details": "The Manhattan Club on this itinerary maps to The Manhattan Club residence at 200 West 56th Street, where apartment-style suites add kitchenettes, living areas, and a fitness center between Seventh Avenue and Broadway. Booking.com reviewers commonly highlight roomy layouts for longer stays near Carnegie Hall, Columbus Circle, and Central Park South, with some complaints about busy elevators at peak check-in."
   },
   "place:609": {
    "category": "car",

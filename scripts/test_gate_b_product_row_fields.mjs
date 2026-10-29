@@ -109,7 +109,7 @@ assert.equal(carOverride.price, 172);
 assert.match(String(carOverride.summary || ''), /JFK AirTrain/i);
 assert.equal(carOverride.rentalCompany, 'Priceline opaque');
 
-const hotel = (payload.places || []).find((place) => /midtown sample hotel/i.test(place.name || ''));
+const hotel = (payload.places || []).find((place) => /the manhattan club/i.test(place.name || ''));
 assert.ok(hotel, 'hotel place');
 const hotelOverride = payload.thingOverrides[`place:${hotel.id}`] || {};
 assert.match(String(hotelOverride.summary || ''), /transit access/i);

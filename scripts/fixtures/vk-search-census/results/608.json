@@ -1,12 +1,12 @@
 {
   "thingId": 608,
-  "thingName": "Midtown sample hotel",
+  "thingName": "The Manhattan Club",
   "type": "hotel",
   "provider": "grok-bot",
   "sources": [
     {
       "url": "https://www.manhattanclub.com/",
-      "title": "Midtown sample / The Manhattan Club all-suite stay.",
+      "title": "The Manhattan Club all-suite stay.",
       "fetchedAt": "2026-10-28T04:40:00Z",
       "snippet": "Booking 8.3 for Manhattan Club"
     }
@@ -42,9 +42,9 @@
   "itineraryNoteCandidate": "Suite kitchenettes near Midtown West\u2014good for longer stays if the rate clears fees.",
   "voicePass": {
     "itineraryNote": "Suite kitchenettes near Midtown West\u2014good for longer stays if the rate clears fees.",
-    "shortDescription": "Midtown sample / The Manhattan Club all-suite stay.",
+    "shortDescription": "The Manhattan Club all-suite stay.",
     "unsupportedFlags": [
-      "Inventory labeled Midtown sample hotel; website manhattanclub.com"
+      "Inventory labeled The Manhattan Club; website manhattanclub.com"
     ],
     "claimSupportOk": true
   },

@@ -54,7 +54,7 @@ const SYNTHETIC_BY_PLACE_ID = {
   },
   608: {
     summary:
-      'Midtown sample hotel remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
+      'The Manhattan Club remains a list-only Hotels tab row while the PR336 VK snapshot keeps identity, logo, coordinates, and sourced nightly rate blocked because no ccab capture matches this title. Gate B positive capture still uses synthetic $389 nightly math here for offline budget screenshots only; that price is not VK source evidence and must not be treated as a booked or Manhattan Club reservation.',
     price: 389,
   },
   635: {
