@@ -14,7 +14,9 @@ assert.equal(rendered, committed);
 assert.match(committed, /data-summary-thing-only":"1","data-summary-src":"thing"/);
 assert.match(committed, /data-summary-stored":"1"/);
 assert.match(committed, /data-ts-list-row-name":"1"/);
-assert.match(committed, /gridTemplateColumns:"28px minmax\(0, 1fr\)"/);
+assert.match(committed, /data-ts-thing-header":"1",style:\{display:"grid",gridTemplateColumns:"minmax\(0,1fr\) auto minmax\(0,1fr\)",alignItems:"center"/);
+assert.match(committed, /data-ts-logo-name-pair":"1"/);
+assert.match(committed, /data-ts-list-row-rating":"1",style:\{display:"flex",flexDirection:"row",flexWrap:"nowrap"/);
 assert.doesNotMatch(committed, /minHeight:28},children:Zn}\)\]\}\),Xr=fo/);
 assert.match(
   committed,
