@@ -64,6 +64,15 @@ function composeFromClaims(claims, pages, thing) {
     const cited = recitClaim(claim, pages);
     if (cited.supported === true) append(cited);
   }
+  if (!(claims || []).length) {
+    for (const [index, page] of (pages || []).entries()) {
+      if (!savedDatedPage(page) || page.summaryExcerptAllowed === false) continue;
+      const bit = String(page?.text || '').replace(/\s+/g, ' ').trim();
+      if (!bit) continue;
+      if (parts.some((part) => part.includes(bit.slice(0, 40)))) continue;
+      append({ text: bit, sourceUrl: page.url, pages: [`p${index + 1}`], supported: true });
+    }
+  }
   const body = parts.join(' ');
   if (!body || !citations.length) return { value: '', claims: [], bodyWords: 0 };
   let value = body;
@@ -153,12 +162,28 @@ export function mergeBotPrimaryPresentedFields(persisted = {}, bot = {}, place =
       if (thing && !descriptionNamesThing(existing, thing)) merged.fields[key] = { ...merged.fields[key], value: `${thing}: ${existing}` };
       return;
     }
-    if (merged.fields?.[key]) merged.fields[key] = { ...merged.fields[key], value: '' };
+    const priorField = merged.fields?.[key];
     const { bodyWords, ...composed } = composeFromClaims(claimSource, pages, thing);
-    if (!bodyWords || !composed.claims.length || !String(composed.value || '').trim() || isFillerSummaryText(composed.value, thing)) return;
+    const compositionFailed = !bodyWords || !composed.claims.length || !String(composed.value || '').trim()
+      || isFillerSummaryText(composed.value, thing);
+    if (compositionFailed) {
+      if (priorField && String(priorField.value || '').trim()) {
+        let keep = String(priorField.value || '').trim();
+        if (thing && !descriptionNamesThing(keep, thing)) keep = `${thing}: ${keep}`;
+        merged.fields[key] = { ...priorField, value: keep };
+      }
+      return;
+    }
     if (key === 'summary') {
       const descriptionValue = String(merged.fields?.description?.value || '').trim();
-      if (descriptionValue && composed.value === descriptionValue && descriptionValue.length > 320) return;
+      if (descriptionValue && composed.value === descriptionValue && descriptionValue.length > 320) {
+        if (priorField && String(priorField.value || '').trim()) {
+          let keep = String(priorField.value || '').trim();
+          if (thing && !descriptionNamesThing(keep, thing)) keep = `${thing}: ${keep}`;
+          merged.fields[key] = { ...priorField, value: keep };
+        }
+        return;
+      }
     }
     merged.fields = {
       ...(merged.fields || {}),
