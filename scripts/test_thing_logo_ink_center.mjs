@@ -85,7 +85,7 @@ assert.match(snippet, /data-ts-list-row-name/);
 assert.match(snippet, /createTreeWalker/);
 assert.match(snippet, /function tsCenterThingLogoInk\(/);
 assert.doesNotMatch(snippet, /function tsCenterThingLogoFallback\(/);
-assert.doesNotMatch(snippet, /function tsCenterListLogoFallbackDom\(/);
+assert.match(snippet, /function tsCenterThingLogoFallbackEl\(/);
 assert.doesNotMatch(
   snippet.match(/function tsCenterThingLogoInk\([^)]*\)\{[\s\S]*?\} function tsCenterThingLogoFallback/)?.[0] || '',
   /getImageData/,

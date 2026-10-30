@@ -1,38 +1,57 @@
-# PR #731 lane vkfill-731 — source-ready (HOST PUBLICATION ONLY)
+# #734 UI keep-PR 2 round 1 — lane receipt (HOST PUBLICATION ONLY)
 
-**Starting HEAD:** `51c7e320b3d6e6f35e5df2bd26b6984266be87b2` (unchanged; no commit/push in this lane).
+**Start HEAD:** `1c7aead767036fef1c7b96c0d5f7685b5434b0c5` (unchanged; patch uncommitted on branch `vkfill/734-20261030101909`).
 
-**Authorization:** Chief dr brief 2026-10-30 08:35 PT (Craig t2836u) — TARGET 1 hotel itinerary notes on check-in only; TARGET 2 conditional.
+**Outcome:** `source-ready` — round-1 punch-list (B1–B6) + Gate B row logo/name fix (cars + flights); rebaked served bundle sha256 `d85925ee1ff5c321550b3d2e19e2ab0fd7cf90fdbf4a61905918659a5eefdf6c` on `public/assets/index-BKun7ofk.js`.
 
-## TARGET 1 — hotel itineraryNote only on check-in
+## Gate B row fix (host rowcheck reject → fix-3 PASS)
 
-Day-by-Day and Style one/two print timeline `itineraryNote` via `tsItinLine()` only when the row type is not in the skip set. Added **`hotel-sleep`** alongside existing `hotel-wake` and `hotel-checkout` skips (live `ROW_TYPE_SKIP` in `trek-live-product-patches.mjs`; print `OP_TITLE_PATCH` / `SU_TITLE_PATCH` in `trek-style2-bundle.mjs`). Check-in rows use type **`hotel-event`** and remain eligible for the note.
+**Root cause:** Several car/flight favicons fail load in capture (`natural: [0,0]` in `rowcheck-0/cap/logo-log.json`); type-icon fallback used fixed `translateY(-2.5px)` instead of first name line. Live Hertz/Thrifty use vulcan 16×16 / 196×196 URLs missing from ink table.
 
-Rebaked `public/assets/index-BKun7ofk.js` via `node scripts/rebake_served_trek_bundle.mjs` (sha256 `8ab937c211f48689bfc875df31aee09dfe17c35f4a28c692a4aac05099918cde`).
+**Fix:** `tsCenterThingLogoFallbackEl` aligns car/flight fallback emoji to `tsListRowFirstNameLineCenterY` (+3px car bias); other categories keep `-2.5px`. Ink table rows for Hertz/Thrifty/Dollar vulcan URLs; `listRowFirstNameLineCenterY` uses topmost client rect.
 
-## TARGET 2 — Belleclaire budget place_id 603 → 26
+**Evidence:** `/home/ubishere9995/tsv-dispatch/bin/vk-live-row-check.sh` worktree → `rowcheck-fix-3/rowcheck.json` **PASS** (all 24 tab screens, empty `failing`).
 
-**Skipped.** NYC seed on this branch (`scripts/fixtures/gate-b-nyc-shared-staging.json`) uses catalog/timeline **place_id 603** for Hotel Belleclaire; no assignment **id 26** exists in that fixture. Rewriting budget membership without a same-id timeline binding would be name-matching or a #728 data change — out of this UI lane scope. Host harness / DATA #728 still owns U1 same-id binding per dr eggbot 2026-10-29 18:30 PT.
+## Changes (uncommitted)
 
-## Local checks (starting HEAD + uncommitted PATCH)
-
-| Command | Result |
+| Row | What |
 | --- | --- |
-| `node scripts/test_hotel_itinerary_note_timeline_731.mjs` | pass |
-| `node scripts/test_itinerary_fresh_daybyday_bundle.mjs` | pass |
-| `node scripts/test_keepsake_style2.mjs` | pass |
-| `node scripts/check-no-comments.mjs` | pass (972 files) |
-| `node scripts/test_offline_manifest.mjs` | pass (347 offline / 17 online) |
-| `BASE=d3689e79 node scripts/check-code-ratchet.mjs` | **fail** — `fatal: invalid object name 'origin/d3689e79'` (worktree has no `origin/d3689e79`; host must rerun ratchet with PR base ref present) |
+| B4 | View-only hides Edit caption (`Ce&&`); Play video uses `tsBoundMediaPlayUrl(gr)` not `gr.url`; `boundMediaPlayUrl` + bind handler normalize example.com/placeholder to `/api/bind-thing-media?…&raw=1` when `id` + `shareToken` present |
+| B2 | `Pc()` never returns `"?"`; logo chip stacks fallback + img; car/flight fallback + ink rows align logo glyph to first name line (Gate B row) |
+| B6 | Day-by-Day rows without time render `TBD` instead of empty string |
+| B5 | Removed duplicate top `data-ts-detail-reviews` block from readonly detail patch |
+| B1 | Bottom reviews keep `data-ts-review-stars` + star renderer; no `[x.r,"★"]` glyph block |
 
-## Uncommitted files (host commit/push)
+**Files:** `src/vacation/trek-ui-734-round1-patch.mjs` (new), `src/vacation/thing-media-bind.mjs`, `src/vacation/bind-thing-media-handler.mjs`, `src/vacation/trek-thing-detail-readonly-patch.mjs`, `src/vacation/thing-logo-ink-center.mjs`, `src/vacation/thing-logo-ink-offsets.json`, `src/vacation/trek-style2-bundle.mjs`, `public/assets/index-BKun7ofk.js`, `scripts/test_ui_734_round1_punchlist.mjs` (new), `scripts/offline-tests.txt`, `scripts/test_shared_logo_chip_center_bundle.mjs`, `scripts/test_thing_logo_ink_center.mjs`.
 
-- `src/vacation/trek-style2-bundle.mjs`
-- `src/vacation/trek-live-product-patches.mjs`
-- `public/assets/index-BKun7ofk.js`
-- `scripts/test_keepsake_style2.mjs`
-- `scripts/test_hotel_itinerary_note_timeline_731.mjs` (new)
-- `scripts/offline-tests.txt`
-- `J/RECEIPT.md`
+Rebake: `node scripts/rebake_served_trek_bundle.mjs`.
 
-Not done: pushed PR head, CI on new SHA, Gate B capture, merge.
+## Per-row evidence (unit / bundle @ rebake sha256 above)
+
+| Row | Command | Result |
+| --- | --- | --- |
+| B4–B6, B5, B1 | `node scripts/test_ui_734_round1_punchlist.mjs` | **PASS** |
+| B4 bind URL | `node scripts/test_bind_thing_media.mjs` | **PASS** |
+| B2 logo chip | `node scripts/test_shared_logo_chip_center_bundle.mjs` + `node scripts/test_thing_logo_ink_center.mjs` | **PASS** |
+| Gate B rows (cars/flights) | `vk-live-row-check.sh` → `rowcheck-fix-3/rowcheck.json` | **PASS** |
+
+## Headless slug `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y`
+
+Not run in lane (no Chrome/preview harness wired for #734 round 1 in this job). Host: serve rebaked `dist` + run existing shared-trip chrome tests / Gate B on staging after push.
+
+## Pre-DONE gates
+
+| Gate | Result |
+| --- | --- |
+| `node scripts/test_offline_manifest.mjs` | **PASS** (373 offline / 17 online; `test_ui_734_round1_punchlist.mjs` registered) |
+| `node scripts/check-no-comments.mjs` | **PASS** |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** |
+| `node scripts/test_keepsake_style2.mjs` | **FAIL** — missing npm package `qrcode` (env; host `npm ci`) |
+
+## Host publish
+
+1. `npm ci`; rerun pre-DONE trio + keepsake test.
+2. Commit listed files; push once; PR into `vk` with `Closes #734`.
+3. CI + Gate B + shared slug headless on staging.
+
+Not done: pushed PR head, CI green, Gate B PASS, merge.
