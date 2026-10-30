@@ -56,3 +56,5 @@ export function patchUi734Round1(source = '') {
   }
   return js;
 }
+
+export { patchUi734Round2 } from './trek-ui-734-round2-patch.mjs';
