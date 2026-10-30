@@ -1,0 +1,200 @@
+{
+  "thingId": 625,
+  "thingName": "New York Marriott Marquis",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis",
+      "title": "New York Marriott Marquis - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman Jr. , the hotel is at 1535 Bro …  \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman Jr. , the hotel is at 1535 Bro",
+      "snippet": " \"New York Marriott Marquis\" . Council on Vertical Urbanism</span>\"}]]}'>CVU Skyscraper Center . [ 1 ] [ 2 ] [ 3 ] The New York Marriott Marquis is a Marriott hotel on Times Square , in the Theater District of Midtown Manhattan in New York City , New York, U.S. Designed by architect John C. Portman ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+      "title": "New York Marriott Marquis: 656 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … New York Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … ork Marriott Marquis: 656 Reviews | Trip.com | | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews … With an extra $10 to $20 for two people, you can have a really great breakfast. … I highly recommend the cheesecake – it's super delicious – and the avocado salad.",
+      "snippet": " | The hotel has a fantastic location and the rooms are very clean. … it can get a bit noisy at night … the hotel charges a mandatory $40 daily fee … 8.9 / 10 Very good 655 reviews",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 8.9,
+    "primarySource": "tripcom",
+    "tripcom": 8.9,
+    "scale": "10",
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.9 / 10 Very good 655 reviews",
+      "average": 8.9,
+      "count": 655,
+      "scale": 10
+    },
+    "reviewCount": 655
+  },
+  "reviewCount": {
+    "tripcom": 655
+  },
+  "priceHint": "Times Square flagship Marriott",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Marriott hotel on Times Square"
+  ],
+  "itineraryNoteCandidate": "New York Marriott Marquis: a Marriott hotel on Times Square with clean rooms; try the cheesecake, then walk straight out to Broadway shows.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 345,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "New York Marriott Marquis, a Marriott hotel on Times Square, puts guests in the middle of the action, and reviews consistently praise its location, clean rooms and good-value breakfast. The trade-offs are nighttime street noise and an added daily fee.",
+      "claims": [
+        {
+          "text": "Marriott hotel on Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        }
+      ]
+    },
+    "description": {
+      "value": "New York Marriott Marquis is the giant Marriott hotel on Times Square, with the Marquis Theatre built into the property and Broadway on every side. Trip.com guests rate it 8.9 / 10 Very good 655 reviews and say The hotel has a fantastic location and the rooms are very clean. Breakfast is called a bargain add-on, and the cheesecake and avocado salad get recommended. Honest watch-outs: it can get a bit noisy at night, and the hotel charges a mandatory $40 daily fee.",
+      "claims": [
+        {
+          "text": "Marriott hotel on Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        },
+        {
+          "text": "8.9 / 10 Very good 655 reviews",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "The hotel has a fantastic location and the rooms are very clean",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "it can get a bit noisy at night",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        },
+        {
+          "text": "the hotel charges a mandatory $40 daily fee",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "New York Marriott Marquis: a Marriott hotel on Times Square with clean rooms; try the cheesecake, then walk straight out to Broadway shows.",
+      "claims": [
+        {
+          "text": "Marriott hotel on Times Square",
+          "sourceUrl": "https://en.wikipedia.org/wiki/New_York_Marriott_Marquis"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "The hotel has a fantastic location and the rooms are very clean",
+      "With an extra $10 to $20 for two people, you can have a really great breakfast.",
+      "I highly recommend the cheesecake – it's super delicious – and the avocado salad."
+    ],
+    "watchOuts": [
+      "it can get a bit noisy at night"
+    ],
+    "themes": [
+      "Location",
+      "Breakfast and dining",
+      "Overall experience",
+      "Noise"
+    ],
+    "complaints": [
+      "it can get a bit noisy at night"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "New York Marriott Marquis: a Marriott hotel on Times Square with clean rooms; try the cheesecake, then walk straight out to Broadway shows.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Marriott Marquis earns consistent praise for its Times Square location and clean rooms, which guests see as the core reasons to book it.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+  "review1Stars": 5,
+  "review2": "Breakfast is considered good value for a modest add-on price, and guests recommend it as an easy start before a full day of sightseeing.",
+  "review2Source": "Trip.com",
+  "review2Rating": "8.5/10",
+  "review2Theme": "Breakfast and dining",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+  "review2Stars": 4,
+  "review3": "Food recommendations recur, with guests singling out the cheesecake and the avocado salad as dishes worth ordering during a stay.",
+  "review3Source": "Trip.com",
+  "review3Rating": "9.5/10",
+  "review3Theme": "Overall experience",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+  "review3Stars": 5,
+  "review4": "The trade-off for being in the middle of Times Square is street noise at night, so light sleepers should request a room on a higher floor.",
+  "review4Source": "Trip.com",
+  "review4Rating": "9.5/10",
+  "review4Theme": "Noise",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2156864/new-york-marriott-marquis/review.html",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The hotel has a fantastic location and the rooms are very clean.",
+    "The hotel has a fantastic location and the rooms are very clean"
+  ],
+  "review2Claims": [
+    "With an extra $10 to $20 for two people, you can have a really great breakfast.",
+    "With an extra $10 to $20 for two people, you can have a really great breakfast"
+  ],
+  "review3Claims": [
+    "I highly recommend the cheesecake – it's super delicious – and the avocado salad.",
+    "I highly recommend the cheesecake – it's super delicious – and the avocado salad"
+  ],
+  "review4Claims": [
+    "it can get a bit noisy at night"
+  ],
+  "reviewsLabel": "Representative reviews written from 11 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

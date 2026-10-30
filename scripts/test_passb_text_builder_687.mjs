@@ -32,7 +32,7 @@ test('page-rich saved dossier receives exact rejection feedback and rebuilds pre
   } });
   assert.equal(options.length, 2);
   assert.ok(options[1].textProblems.includes('summary:missing'));
-  assert.match(options[1].prompt, /12-28 words.*exact name from the thing field/);
+  assert.match(options[1].prompt, /distinct from description; no word or character limit/);
   assert.equal(result.failed, undefined);
   const counts = computeDossierFieldCounts(saved, place);
   assert.equal(counts.summary.status, 'ok');

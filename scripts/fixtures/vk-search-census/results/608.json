@@ -1,0 +1,213 @@
+{
+  "thingId": 608,
+  "thingName": "The Manhattan Club",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.manhattanclub.com/",
+      "title": "The Manhattan Club | Luxury Hotel in New York City",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESERVATION Careers … r, 15 minute walk The Bites & Sips SUGARFISH , 1 minute walk PATSY'S , 2 minute walk Serafina , 3 minute walk Brooklyn Diner , 3 minute walk The Arts Carnegie Hall, 2 minute walk Broadway Theater, 5 minute walk Gershwin Theater , 10 minute walk MUSEUM OF MODERN ART, 10 minute walk The Shops NORDSTROM, 4 minute walk SHOPS AT CO … htfully arranged. Take advantage of exclusive access to member amenities throughout the length of your stay—including our gym, valet parking, and our member-only Club Lounge and Terraces. Suites One Bedroom Suite with Two Bathrooms Comfort & Privacy Experience exceptional comfort in our functionally designed suites, each offering the ",
+      "snippet": "lable Rate Learn More Your Autumn Suite Awaits Stay Longer to Save Bed and Breakfast Best Available Rate Your Autumn Suite Awaits Stay Longer to Save 200 W 56th St. New York, NY 10019 888 692 2121 212 707 5000 Contact Faq REWARDS Privacy Policy Accessibility Statement Pre-Arrival Form MODIFY A RESER",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+      "title": "The Manhattan Club: 60 Reviews | Trip.com",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great … So far it was the best place we have stayed in NYC for this budget. … Although the in-room facilities are a bit dated, the hygiene is good. 8.6 / 10 Very good 59 reviews",
+      "snippet": "The Manhattan Club: 60 Reviews | Trip.com | | The rooms were spacious and with enough privacy for everyone … The location to central park was awesome and the staff were great",
+      "fetchMethod": "live curl fetch 2026-10-29 (Trip.com review page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    }
+  ],
+  "rating": {
+    "primary": 8.6,
+    "primarySource": "trip.com",
+    "booking": 8.3,
+    "hotels": 9.0,
+    "tripcom": 8.6,
+    "scale_tripcom": 10,
+    "primaryPrevious": {
+      "value": 8.3,
+      "source": "booking",
+      "note": "no saved page shows this average with a count; card uses the Trip.com page quote"
+    },
+    "scale": 10,
+    "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+    "ratingEvidence": {
+      "site": "Trip.com",
+      "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "8.6 / 10 Very good 59 reviews",
+      "average": 8.6,
+      "count": 59,
+      "scale": 10
+    },
+    "reviewCount": 59
+  },
+  "reviewCount": {
+    "booking": 2215,
+    "hotels": 2061,
+    "tripcom": 59
+  },
+  "priceHint": "All-suite Midtown hotel",
+  "hoursHint": "Hotel — 24h",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "200 W 56th St. New York, NY 10019"
+  ],
+  "itineraryNoteCandidate": "The Manhattan Club: roomy suites two blocks below the park, Carnegie Hall, 2 minute walk; try the member-only Club Lounge and Terraces before a concert.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 386,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 4,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "The Manhattan Club, at 200 W 56th St. New York, NY 10019, is an all-suite Midtown stay that guests value mostly for space and privacy, with Central Park and Carnegie Hall close enough to walk. Reviews describe it as strong value for New York and staff as helpful, while some in-room fittings feel older than the lobby suggests.",
+      "claims": [
+        {
+          "text": "200 W 56th St. New York, NY 10019",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Set at 200 W 56th St. New York, NY 10019, The Manhattan Club keeps a club feel with the member-only Club Lounge and Terraces upstairs. Concertgoers like that Carnegie Hall, 2 minute walk from the door is literally true. Trip.com guests report The rooms were spacious and with enough privacy for everyone and that The location to central park was awesome and the staff were great. The watch-out is dated in-room furnishings, though cleanliness stays good, so treat it as a comfortable, roomy base rather than a design hotel.",
+      "claims": [
+        {
+          "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "200 W 56th St. New York, NY 10019",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "The rooms were spacious and with enough privacy for everyone",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
+        },
+        {
+          "text": "The location to central park was awesome and the staff were great",
+          "sourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "The Manhattan Club: roomy suites two blocks below the park, Carnegie Hall, 2 minute walk; try the member-only Club Lounge and Terraces before a concert.",
+      "claims": [
+        {
+          "text": "Carnegie Hall, 2 minute walk",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        },
+        {
+          "text": "member-only Club Lounge and Terraces",
+          "sourceUrl": "https://www.manhattanclub.com/"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "The rooms were spacious and with enough privacy for everyone",
+      "The location to central park was awesome and the staff were great",
+      "So far it was the best place we have stayed in NYC for this budget."
+    ],
+    "watchOuts": [
+      "Although the in-room facilities are a bit dated, the hygiene is good."
+    ],
+    "themes": [
+      "Rooms",
+      "Location",
+      "Overall experience",
+      "Rooms"
+    ],
+    "complaints": [
+      "Although the in-room facilities are a bit dated, the hygiene is good."
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "The Manhattan Club: roomy suites two blocks below the park, Carnegie Hall, 2 minute walk; try the member-only Club Lounge and Terraces before a concert.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Space is the headline for The Manhattan Club, with guests describing rooms large enough for a group or family to spread out and still have some privacy.",
+  "review1Source": "Trip.com",
+  "review1Rating": "10.0/10",
+  "review1Theme": "Rooms",
+  "review1SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+  "review1Stars": 5,
+  "review2": "The Midtown address near Central Park and helpful staff come up again and again, making it an easy base for walking to Central Park and around Midtown.",
+  "review2Source": "Trip.com",
+  "review2Rating": "8.0/10",
+  "review2Theme": "Location",
+  "review2SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+  "review2Stars": 4,
+  "review3": "Value is a strong theme, with guests saying it compares well with other New York hotels they have tried at a similar budget and would book again.",
+  "review3Source": "Trip.com",
+  "review3Rating": "10.0/10",
+  "review3Theme": "Overall experience",
+  "review3SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+  "review3Stars": 5,
+  "review4": "The honest caveat is that in-room fittings feel dated in places, although guests add that housekeeping and overall cleanliness stay at a good standard.",
+  "review4Source": "Trip.com",
+  "review4Rating": "9.0/10",
+  "review4Theme": "Rooms",
+  "review4SourceUrl": "https://ca.trip.com/hotels/new-york-hotel-detail-2542185/the-manhattan-club-new-york/review.html",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "The rooms were spacious and with enough privacy for everyone"
+  ],
+  "review2Claims": [
+    "The location to central park was awesome and the staff were great"
+  ],
+  "review3Claims": [
+    "So far it was the best place we have stayed in NYC for this budget.",
+    "So far it was the best place we have stayed in NYC for this budget"
+  ],
+  "review4Claims": [
+    "Although the in-room facilities are a bit dated, the hygiene is good.",
+    "Although the in-room facilities are a bit dated, the hygiene is good"
+  ],
+  "reviewsLabel": "Representative reviews written from 10 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

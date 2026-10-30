@@ -103,7 +103,7 @@ assert.equal(operatorHugeLimit.batch.offset, 3);
 assert.equal(operatorHugeLimit.batch.nextOffset, 4);
 assert.equal(operatorHugeLimit.targets[0].placeId, shared[3].placeId);
 
-const operatorExhausted = await resolvePassBOperatorTargets({ offset: 94 }, { authMode: 'operator' });
+const operatorExhausted = await resolvePassBOperatorTargets({ offset: 100 }, { authMode: 'operator' });
 assert.equal(operatorExhausted.targets.length, 0);
 assert.equal(operatorExhausted.batch.nextOffset, null);
 
@@ -218,7 +218,7 @@ for (const row of fillRun.results) {
   assert.ok(saved?.attempts?.length);
 }
 
-const operatorExhaustedPost = await post({ offset: 94 });
+const operatorExhaustedPost = await post({ offset: 100 });
 assert.equal(operatorExhaustedPost.status, 200);
 assert.equal(operatorExhaustedPost.json.ok, true);
 assert.deepEqual(operatorExhaustedPost.json.results, []);

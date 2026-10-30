@@ -1,0 +1,203 @@
+{
+  "thingId": 621,
+  "thingName": "Hotel Lucerne",
+  "type": "hotel",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://thelucernehotel.com/",
+      "title": "Boutique Hotel Upper West Side | The Lucerne NYC",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet Marketing … de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet Marketing … ort or explore the nearby attractions. | Boutique Hotel Upper West Side | The Lucerne NYC Skip to content Check Availability MENU Home Rooms & Suites Dine At Nice Matin Offers Take A Tour Meeting & Events Home Rooms & Suites Dine At Nice Matin Offers Take A Tour Meeting & Events Check Availability Contact us Blog Loc",
+      "snippet": "de Club Menu Home Rooms & Suites Dine At Nice Matin Take A Tour Offers Check Availability MORE Meetings & Events Location Contact Us Blog FAQ Contact 201 WEST 79TH STREET, NEW YORK, NY 10024 Reservations: 800.492.8122 General Inquiries: 212.875.1000 Check Availability Hotel Website Design by Gourmet",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+      "title": "THE LUCERNE HOTEL - Updated 2026 Reviews (New York City)",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
+      "snippet": "eviews (New York City) | | THE LUCERNE HOTEL - Updated 2026 Reviews (New York City) The Lucerne Hotel Someone from this business manages the listing. 4.4 of 5 bubbles (3,589 reviews) 1 (212) 875-1000 Reviews 4.4 Very Good (3,589) Excellent 2,044",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result text (direct curl 403 / WebFetch timeout); not a live fetch"
+    },
+    {
+      "url": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+      "text": " | Guest Reviews 8.9/10 70 verified reviews … This hotel is quite good for its New York City location. … The bed was clean, and the bathroom mirror was large. … It was the most comfortable hotel I stayed at during my trip to New York. … However, the decor is a bit dated, and while there are two elevators, they are old.",
+      "title": "Trip.com reviews",
+      "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+      "fetchedAt": "2026-10-29T09:06:19-07:00",
+      "fetchMethod": "live curl 2026-10-29 (drev/tripfetch.py); saved drev/raw/621.json"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "tripadvisor",
+    "tripadvisor": 4.4,
+    "tripcom": 8.9,
+    "scale_tripcom": 10,
+    "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+    "ratingEvidence": {
+      "site": "Tripadvisor",
+      "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "quote": "4.4 of 5 bubbles (3,589 reviews)",
+      "average": 4.4,
+      "count": 3589,
+      "scale": 5
+    },
+    "reviewCount": 3589
+  },
+  "reviewCount": {
+    "tripadvisor": 3589,
+    "tripcom": 70
+  },
+  "priceHint": "4-star boutique UWS",
+  "hoursHint": "Hotel — 24h; Nice Matin on site",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "201 WEST 79TH STREET, NEW YORK, NY 10024"
+  ],
+  "itineraryNoteCandidate": "Hotel Lucerne: a comfortable Upper West Side boutique with clean rooms; try brunch when you Dine At Nice Matin downstairs.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description each carry their own claims; sources include labelled SERP search snapshots (not live fetches) — see each source's fetchMethod"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 0 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 530,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Hotel Lucerne, at 201 WEST 79TH STREET, NEW YORK, NY 10024, is a calm Upper West Side boutique that guests call one of the most comfortable places they stayed in New York, with clean rooms close to the museum and the park. Its age shows in decor and slow, old elevators.",
+      "claims": [
+        {
+          "text": "201 WEST 79TH STREET, NEW YORK, NY 10024",
+          "sourceUrl": "https://thelucernehotel.com/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Hotel Lucerne stands at 201 WEST 79TH STREET, NEW YORK, NY 10024, a short walk from the American Museum of Natural History and Central Park. Its ground-floor French bistro invites guests to Dine At Nice Matin, a neighborhood brunch favorite. Tripadvisor travelers give it 4.4 of 5 bubbles (3,589 reviews). Guests praise clean beds, practical bathrooms and a restful stay; the watch-outs are dated decor and two older elevators that can mean a wait at busy times.",
+      "claims": [
+        {
+          "text": "Dine At Nice Matin",
+          "sourceUrl": "https://thelucernehotel.com/"
+        },
+        {
+          "text": "201 WEST 79TH STREET, NEW YORK, NY 10024",
+          "sourceUrl": "https://thelucernehotel.com/"
+        },
+        {
+          "text": "4.4 of 5 bubbles (3,589 reviews)",
+          "sourceUrl": "https://www.tripadvisor.com/Hotel_Review-g60763-d99281-Reviews-The_Lucerne_Hotel-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Hotel Lucerne: a comfortable Upper West Side boutique with clean rooms; try brunch when you Dine At Nice Matin downstairs.",
+      "claims": [
+        {
+          "text": "Dine At Nice Matin",
+          "sourceUrl": "https://thelucernehotel.com/"
+        }
+      ]
+    }
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-hotel-essence-itinerary-note-20261029",
+    "new": false,
+    "at": "2026-10-29T08:45:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Hotel Lucerne: a comfortable Upper West Side boutique with clean rooms; try brunch when you Dine At Nice Matin downstairs.",
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+    "site": "Trip.com",
+    "via": "live curl fetch 2026-10-29 (Trip.com hotel page, guest reviews section); verbatim review sentences; AI review summary excluded",
+    "praise": [
+      "This hotel is quite good for its New York City location.",
+      "The bed was clean, and the bathroom mirror was large.",
+      "It was the most comfortable hotel I stayed at during my trip to New York."
+    ],
+    "watchOuts": [
+      "However, the decor is a bit dated, and while there are two elevators, they are old."
+    ],
+    "themes": [
+      "Location",
+      "Rooms",
+      "Overall experience",
+      "Elevators"
+    ],
+    "complaints": [
+      "However, the decor is a bit dated, and while there are two elevators, they are old."
+    ]
+  },
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Lucerne is repeatedly described as a solid choice for its Upper West Side location, giving easy access to the park, museums and the subway.",
+  "review1Source": "Trip.com",
+  "review1Rating": "8.7/10",
+  "review1Theme": "Location",
+  "review1SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+  "review1Stars": 4,
+  "review2": "Room basics are praised, with guests noting clean beds and practical bathrooms that make day-to-day routines easy during a multi-night stay.",
+  "review2Source": "Trip.com",
+  "review2Rating": "8.7/10",
+  "review2Theme": "Rooms",
+  "review2SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+  "review2Stars": 4,
+  "review3": "Comfort is a strong theme, with several guests calling it among the most comfortable hotels they used during a trip around New York.",
+  "review3Source": "Trip.com",
+  "review3Rating": "9.5/10",
+  "review3Theme": "Overall experience",
+  "review3SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+  "review3Stars": 5,
+  "review4": "The watch-out is the older building: decor feels dated and the elevators are old, so expect some waiting at busy times of the morning.",
+  "review4Source": "Trip.com",
+  "review4Rating": "8.7/10",
+  "review4Theme": "Elevators",
+  "review4SourceUrl": "https://us.trip.com/hotels/new-york-hotel-detail-731326/the-lucerne-hotel/",
+  "review4Stars": 4,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1Claims": [
+    "This hotel is quite good for its New York City location.",
+    "This hotel is quite good for its New York City location"
+  ],
+  "review2Claims": [
+    "The bed was clean, and the bathroom mirror was large.",
+    "The bed was clean, and the bathroom mirror was large"
+  ],
+  "review3Claims": [
+    "It was the most comfortable hotel I stayed at during my trip to New York.",
+    "It was the most comfortable hotel I stayed at during my trip to New York"
+  ],
+  "review4Claims": [
+    "However, the decor is a bit dated, and while there are two elevators, they are old.",
+    "However, the decor is a bit dated, and while there are two elevators, they are old"
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

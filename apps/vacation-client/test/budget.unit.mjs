@@ -18,8 +18,8 @@ import { extractUpstreamMiscBucketLabel } from '../../../src/vacation/trek-budge
 const hotelTrip = {
   trip: { currency: 'USD' },
   days: [{ id: 50, day_number: 1 }],
-  places: [{ id: 1, name: 'Midtown sample hotel', category_name: 'Hotel' }],
-  assignments: { 50: [{ place_id: 1, place: { id: 1, name: 'Midtown sample hotel' } }] },
+  places: [{ id: 1, name: 'The Manhattan Club', category_name: 'Hotel' }],
+  assignments: { 50: [{ place_id: 1, place: { id: 1, name: 'The Manhattan Club' } }] },
   thingOverrides: {
     'place:1': { price: 389, stayDays: 4, category: 'hotel' },
   },

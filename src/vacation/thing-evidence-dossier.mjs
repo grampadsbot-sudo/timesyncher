@@ -1,4 +1,5 @@
 import { dossierPageFailure } from './dossier-page-integrity.mjs';
+import { gatherVkSearchEvidence, VK_SEARCH_PROVIDER } from './dossier-vk-search.mjs';
 import { flightRecordEvidence } from './dossier-flight-record.mjs';
 import { createHash } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
@@ -194,7 +195,7 @@ export function mergeDossierForPersistence(persisted = {}, incoming = {}) {
   for (const [key, value] of Object.entries(incomingFields)) {
     if (value === undefined) continue;
     fields[key] = value;
-    if (!['summary', 'description'].includes(key) || !Array.isArray(value?.claims)) continue;
+    if (!Array.isArray(value?.claims)) continue;
     fields[key] = {
       ...value,
       claims: value.claims.map((claim) => ({
@@ -423,6 +424,7 @@ export async function gatherThingEvidence(place = {}, {
   destination = '', center = null, env = process.env, fetchImpl = globalThis.fetch,
   resolveImpl = lookup, extractImpl = extractTavily, braveImpl = braveLocalEvidence,
   deadline = 0, onProgress, bravePace = { nextAt: 0 }, sleepImpl,
+  botPrimary = env.VK_SEARCH_BOT_PRIMARY !== '0', vkSearchImpl,
 } = {}) {
   const name = String(place.title || place.name || '').trim();
   if (!name) throw new Error('evidence_thing_name_required');
@@ -430,14 +432,20 @@ export async function gatherThingEvidence(place = {}, {
     env, fetchImpl: dossierDeadlineFetch(fetchImpl, deadline), resolveImpl, extractImpl, deadline, place, bravePace, sleepImpl,
     onProgress: onProgress ? (dossier) => onProgress({ ...dossier, thing: name }) : undefined,
   };
-  const queries = stageQueries(place, destination);
-  let dossier = await gatherBraveEvidenceForQueries(queries, place, options);
+  const bot = botPrimary && !outOfTime(options)
+    ? await gatherVkSearchEvidence(place, { env, fetchImpl: options.fetchImpl, vkSearchImpl }) : null;
+  const botDiscovery = Boolean(bot?.pages.length);
+  let dossier = botDiscovery ? bot : await gatherBraveEvidenceForQueries(stageQueries(place, destination), place, options);
+  if (bot && !botDiscovery) dossier.attempts.unshift(...bot.attempts, {
+    provider: VK_SEARCH_PROVIDER, kind: VK_SEARCH_PROVIDER, status: 'fallback_brave',
+    reason: ['thin', 'claim_support_failed'].includes(bot.attempts[0]?.status) ? bot.attempts[0].status : 'empty',
+  });
   dossier.thing = name;
   dossier.knownFor = dossier.knownFor || [];
   dossier.reviewsRead = 0;
 
   const official = place.website || place.url || place.sourceRecord?.website || place.sourceRecord?.url;
-  if (official && dossier.pages.length < DOSSIER_MAX_PAGES && !outOfTime(options)) {
+  if (!botDiscovery && official && dossier.pages.length < DOSSIER_MAX_PAGES && !outOfTime(options)) {
     const pages = await fetchEvidencePages(String(official), {
       ...options, attempts: dossier.attempts, existingUrls: new Set(dossier.pages.map((p) => p.url)),
     });
@@ -448,7 +456,7 @@ export async function gatherThingEvidence(place = {}, {
   }
 
   if (onProgress) await onProgress(dossier);
-  if (braveImpl && placeSupportsDossierReviews(place) && !outOfTime(options)) {
+  if (!botDiscovery && braveImpl && placeSupportsDossierReviews(place) && !outOfTime(options)) {
     try {
       const brave = await braveImpl(place, { destination, center, env, fetchImpl: options.fetchImpl, deadline, bravePace, sleepImpl });
       dossier.attempts.push(...(brave.attempts || []));

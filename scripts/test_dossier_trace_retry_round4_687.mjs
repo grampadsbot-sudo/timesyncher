@@ -72,7 +72,7 @@ test('operator R0 retries current-version exhaustion on the next offset/limit/sk
     gatherImpl: async (place, opts) => {
       gathers += 1;
       return gatherThingEvidence(place, { ...opts, sleepImpl: noSleep, braveImpl: null,
-        env: { BRAVE_SEARCH_API_KEY: 'offline-fixture' },
+        env: { BRAVE_SEARCH_API_KEY: 'offline-fixture', VK_SEARCH_BOT_PRIMARY: '0' },
         resolveImpl: async () => [{ address: '93.184.216.34' }],
         extractImpl: async () => { throw new Error('Tavily extract failed with HTTP 432.'); },
         fetchImpl: async (url) => {

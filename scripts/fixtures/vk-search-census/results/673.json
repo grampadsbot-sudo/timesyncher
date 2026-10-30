@@ -1,0 +1,238 @@
+{
+  "thingId": 673,
+  "thingName": "Nobody Told Me",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
+      "title": "Happy Hour | Nobody Told Me | Cocktail Bar in New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini da … p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini da … rch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonated cosmo, espresso martini daily oysters $ 2 ",
+      "snippet": "p sub-menu Shop Gift Cards Merch Contact Online Ordering Email Signup Instagram powered by BentoBox Main content starts here, tab to start navigating Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12 Aperol spritz, white Negroni, carbonate",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+      "title": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS! … Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS! … Best burger I have had in a long time! … Fantastic food great atmosphere",
+      "snippet": "Nobody Told Me, New York - Menu, Reviews (253), Photos (72) - Restaurantji | | 4.4 253 ratings … They have the best burgers on the UWS!",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/j1y4y07dzl4",
+      "title": "Nobody Told Me reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:33-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_j1y4y07dzl4.html",
+      "text": "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars. The food is always good, and prices reasonable . Their cocktails are interesting and delicious. The service depends on whose on that day, but it's usually ok. And I love the design of the place. Today, however, a customer bought a dog and a cat inside the restaurant. Who the hell brings a cat INSIDE of a restaurant?? Aren't there sanitary rules about this? The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander."
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.4
+  },
+  "reviewCount": {
+    "restaurantji": 253
+  },
+  "priceHint": "HH drinks $7–12; oysters $2; snacks $5; baseline floor $24 cocktail",
+  "hoursHint": "Mon–Fri 12pm–2am; Sat–Sun 11am–2am (official)",
+  "happyHourHint": "Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12",
+  "summaryClaims": [
+    "Happy Hour 3 pm - 6 pm daily",
+    "They have the best burgers on the UWS!",
+    "Best burger I have had in a long time!",
+    "Happy Hour 3 pm - 6 pm daily",
+    "Draft Beers $ 7",
+    "They have the best burgers on the UWS!",
+    "4.4 253 ratings",
+    "Fantastic food great atmosphere"
+  ],
+  "itineraryNoteCandidate": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (hours + HH menu).",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 24,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "officialUrls": []
+  },
+  "botFieldScore": 7,
+  "baseFieldScore": 1,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Nobody Told Me is a neighborhood bar and restaurant on the Upper West Side with a daily 3 to 6 pm happy hour, draft beers and wines by the glass. Its reputation rests on the burger: Restaurantji diners say They have the best burgers on the UWS! and Best burger I have had in a long time!. It suits a casual early evening or a relaxed bite after the park.",
+      "claims": [
+        {
+          "text": "They have the best burgers on the UWS!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        },
+        {
+          "text": "Best burger I have had in a long time!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Nobody Told Me is a neighborhood bar and restaurant on the Upper West Side. Its menu page lists Happy Hour 3 pm - 6 pm daily. Draft Beers $ 7 and wines by the glass at $10 make it a good early evening stop before dinner. Restaurantji shows 4.4 253 ratings. Representative Restaurantji praise (diner reviews): “They have the best burgers on the UWS!”. Another Restaurantji reviewer kept it short: Fantastic food great atmosphere.",
+      "claims": [
+        {
+          "text": "Happy Hour 3 pm - 6 pm daily",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        },
+        {
+          "text": "Draft Beers $ 7",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        },
+        {
+          "text": "They have the best burgers on the UWS!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        },
+        {
+          "text": "4.4 253 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        },
+        {
+          "text": "Fantastic food great atmosphere",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
+      "claims": [
+        {
+          "text": "Happy Hour 3 pm - 6 pm daily",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Happy hour",
+        "value": "For value, Nobody Told Me lists Happy Hour 3 pm - 6 pm daily on its menu page, with draft beers and house wines priced for an early start.",
+        "claims": [
+          {
+            "text": "Happy Hour 3 pm - 6 pm daily",
+            "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+          }
+        ],
+        "source": "official site",
+        "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
+        "rating": "4.4",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 29
+      }
+    ],
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "They have the best burgers on the UWS!",
+      "Best burger I have had in a long time!",
+      "Fantastic food great atmosphere",
+      "Happy Hour 3 pm - 6 pm daily"
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "The burger",
+      "Repeat praise",
+      "Atmosphere",
+      "Happy hour"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Nobody Told Me: a laid-back Upper West Side bar and kitchen; drop in for 3–6 pm happy hour and try the burger.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The burger is the headline here, widely ranked among the best on the Upper West Side and a dependable household-favorite order for a casual night out.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.4",
+  "review1Theme": "The burger",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review1Stars": 5,
+  "review2": "The burger draws the most consistent praise, singled out as one of the best in a long time, which makes it the clearest reason to choose this spot over nearby options.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.4",
+  "review2Theme": "Repeat praise",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review2Stars": 5,
+  "review3": "Guests describe a relaxed, friendly neighborhood atmosphere with good food that suits a casual dinner or drinks without much planning.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.4",
+  "review3Theme": "Atmosphere",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/nobody-told-me-/",
+  "review3Stars": 5,
+  "review4": "Service is the variable point, with regulars noting that it depends on who is working, even though food, prices and cocktails stay reliably good.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "3/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/j1y4y07dzl4",
+  "review4Stars": 3,
+  "review1Claims": [
+    "They have the best burgers on the UWS!"
+  ],
+  "review2Claims": [
+    "Best burger I have had in a long time!"
+  ],
+  "review3Claims": [
+    "Fantastic food great atmosphere"
+  ],
+  "review4Claims": [
+    "So, I really do like this cute spot on the UWS, and would customarily give it 5 stars.",
+    "The food is always good, and prices reasonable .",
+    "Their cocktails are interesting and delicious.",
+    "The service depends on whose on that day, but it's usually ok.",
+    "And I love the design of the place.",
+    "Today, however, a customer bought a dog and a cat inside the restaurant.",
+    "Who the hell brings a cat INSIDE of a restaurant??",
+    "Aren't there sanitary rules about this?",
+    "The creature was adorable, so much so, that the waitress cuddled it before going back to the bar, surely covering herself with cat dander."
+  ],
+  "reviewsLabel": "Representative reviews written from 17 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "happyHourSourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
+  "happyHour": true
+}

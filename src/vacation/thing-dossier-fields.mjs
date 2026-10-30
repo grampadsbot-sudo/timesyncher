@@ -223,6 +223,13 @@ export function dossierReviewBreadthOk(dossier = {}) {
   return (dossier.reviewsRead || 0) >= MIN_REVIEWS_READ && (dossier.reviewSources || []).length >= MIN_REVIEW_SOURCES;
 }
 
+export function dossierRepresentativeReviews(dossier = {}) {
+  return /^Representative reviews written from \d+ reviews$/.test(String(dossier.reviewsLabel || ''))
+    && dossierPagesVerified(dossier) && dossier.reviews?.length === 4
+    && dossier.reviews.every((review) => review?.representative === true && String(review.text || '').trim()
+      && review.claims?.length > 0 && claimsSupported(dossier, review));
+}
+
 function dossierReviewsWritable(dossier = {}) {
   return dossierPagesVerified(dossier) && dossier.reviews?.length === 4
     && dossier.reviews.every((review) => Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
@@ -275,7 +282,20 @@ export function writeDossierReviews(record = {}, dossier = {}, { useShortcomingM
     : new Set(Array.isArray(record.missingFields) ? record.missingFields : []);
   if (!useShortcomingMissing) missing.add('reviews');
   const valid = dossierReviewsValid(dossier);
-  if (valid || dossierReviewsWritable(dossier)) {
+  if (dossierRepresentativeReviews(dossier)) {
+    record.reviewsLabel = dossier.reviewsLabel;
+    dossier.reviews.forEach((review, index) => {
+      const key = `review${index + 1}`;
+      record[key] = review.text;
+      if (Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5) record[`${key}Rating`] = String(review.rating);
+      if (review.source) record[`${key}Source`] = review.source;
+      record[`${key}Cites`] = [...new Set(review.claims.flatMap((claim) => claim.pages))];
+      record[`${key}Claims`] = review.claims.map((claim) => ({ text: claim.text, pages: [...claim.pages], supported: claim.supported === true }));
+      record[`${key}Label`] = record.reviewsLabel;
+      record[`${key}CompositeLabel`] = record.reviewsLabel;
+    });
+    missing.delete('reviews');
+  } else if (valid || dossierReviewsWritable(dossier)) {
     const readCount = Number(dossier.fieldCounts?.reviews?.count ?? dossier.reviewsRead ?? 0);
     record.reviewsLabel = valid && dossierReviewBreadthOk(dossier)
       ? `Representative review written from ${readCount} reviews`
@@ -357,7 +377,11 @@ export function applyDossierFields(record = {}, dossier = {}) {
         continue;
       }
       if (!claimsSupported(dossier, claim)) continue;
-      if (key === 'price') next[key] = Number(claim.value);
+      if (key === 'price') {
+        const value = Number(claim.value);
+        if (!Number.isFinite(value)) continue;
+        next[key] = value;
+      }
       else if (['lat', 'lng'].includes(key)) next[key] = Number(claim.value);
       else {
         const scalar = scalarFieldValue(claim.value ?? claim);

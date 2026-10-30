@@ -1,0 +1,234 @@
+{
+  "thingId": 645,
+  "thingName": "Nordstrom NYC Flagship",
+  "type": "store",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Central_Park_Tower",
+      "title": "Central Park Tower - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New York 's building at 215 West 57th Street , intended to m",
+      "snippet": "ral Park Tower was developed by Extell Development Company and Shanghai Municipal Investment Group . The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019. The eastern portion of the tower contains a cantilever above the Art Students League of New Yor",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://exa.ai/library/place/ppdy06vf1wn",
+      "title": "Exa place listing: Nordstrom NYC Flagship, 225 W 57th St",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "… The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the Nordstrom on 57th Street. … The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I recently had an appointm … ection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I recently had an appointment in the Stylist Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has the most amazing lighting and dressing rooms … Prices are generally o … g 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the Nordstrom on 57th Street. … The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I recently had an appointme …  modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the Nordstrom on 57th Street. … The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I recently had an appointment in the Stylist Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has th … e Nordstrom on 57th Street. … The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I recently had an appointment in the Stylist Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has the most amazing lighting and dressing rooms … Prices are generally o … ed to some other department stores, but in my opinion it feels much more curated … I recently had an appointment in the Stylist Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has the most amazing lighting and dressing rooms … Prices are generally on the high side … e curated … I recently had an appointment in the Stylist Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has the most amazing lighting and dressing rooms … Prices are generally on the high side … strom NYC Flagship, 225 W 57th St | live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the … ve curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts | Rating 4.4 out of 5 · 1,761 reviews … The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the Nordstrom on 57th Street. … The selection  … st Lounge at Nordstrom … Came in today looking for a perfume and ended up walking out with 2! … it has the most amazing lighting and dressing rooms … Prices are generally on the high side I went to Nordstrom this evening and saw a display with lipstick. There was only one lipstick left of two of the colors. Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist. When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color. I explained to her that the display had all of the colors priced at $25. She explained that sometimes different colors are more money. So I said why are they all printed on the display at $25? I really enjoy shopping at the Nordstrom on 57th Street. The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together. The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste. I often find the pieces to be truly exquisite. Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
+      "snippet": "… The store has a beautiful, modern design … The selection is a bit smaller compared to some other department stores … I really enjoy shopping at the Nordstrom on 57th Street. … The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated … I ",
+      "fetchMethod": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts"
+    }
+  ],
+  "rating": {
+    "primary": 4.4,
+    "primarySource": "aggregator",
+    "aggregator": 4.4
+  },
+  "reviewCount": {
+    "aggregator": 1761
+  },
+  "priceHint": "$$$$ luxury department store",
+  "hoursHint": null,
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Nordstrom on 57th Street",
+    "Stylist Lounge at Nordstrom",
+    "Nordstrom on 57th Street",
+    "Stylist Lounge at Nordstrom",
+    "I really enjoy shopping at the Nordstrom on 57th Street.",
+    "The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated",
+    "I recently had an appointment in the Stylist Lounge at Nordstrom",
+    "Came in today looking for a perfume and ended up walking out with 2!",
+    "it has the most amazing lighting and dressing rooms",
+    "contain a large Nordstrom store, which opened in 2019",
+    "Rating 4.4 out of 5 · 1,761 reviews",
+    "The store has a beautiful, modern design",
+    "Prices are generally on the high side"
+  ],
+  "itineraryNoteCandidate": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from live fetches (see each source's fetchMethod)"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 100,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Nordstrom NYC Flagship on West 57th Street is a curated multi-floor department store known for fashion, beauty and perfume counters and its Stylist Lounge. The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019.",
+      "claims": [
+        {
+          "text": "Nordstrom on 57th Street",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "Stylist Lounge at Nordstrom",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "The basement and first five above-ground stories contain a large Nordstrom store, which opened in 2019.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        }
+      ]
+    },
+    "description": {
+      "value": "Nordstrom NYC Flagship is the chain's big Manhattan store; one guest writes, I really enjoy shopping at the Nordstrom on 57th Street. Reviewers describe the edit as curated rather than huge: The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated. Services are a draw, from personal styling (I recently had an appointment in the Stylist Lounge at Nordstrom) to beauty, where one shopper Came in today looking for a perfume and ended up walking out with 2!, and another says it has the most amazing lighting and dressing rooms. Wikipedia adds that the basement and first five above-ground stories of Central Park Tower contain a large Nordstrom store, which opened in 2019. The Exa listing shows Rating 4.4 out of 5 · 1,761 reviews. Representative aggregated guest reviews praise: “The store has a beautiful, modern design”. Representative watch-outs: “Prices are generally on the high side”.",
+      "claims": [
+        {
+          "text": "I really enjoy shopping at the Nordstrom on 57th Street.",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "I recently had an appointment in the Stylist Lounge at Nordstrom",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "Came in today looking for a perfume and ended up walking out with 2!",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "it has the most amazing lighting and dressing rooms",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "contain a large Nordstrom store, which opened in 2019",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Central_Park_Tower"
+        },
+        {
+          "text": "Rating 4.4 out of 5 · 1,761 reviews",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "The store has a beautiful, modern design",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "Prices are generally on the high side",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
+      "claims": [
+        {
+          "text": "Nordstrom on 57th Street",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        },
+        {
+          "text": "Stylist Lounge at Nordstrom",
+          "sourceUrl": "https://exa.ai/library/place/ppdy06vf1wn"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://exa.ai/library/place/ppdy06vf1wn",
+    "site": "Exa place listing",
+    "via": "live curl fetch 2026-10-29 (Exa place listing page aggregating guest reviews); text stored as verbatim excerpts",
+    "praise": [
+      "The store has a beautiful, modern design"
+    ],
+    "watchOuts": [
+      "Prices are generally on the high side"
+    ],
+    "themes": [
+      "Overall experience",
+      "Value"
+    ],
+    "complaints": [
+      "Prices are generally on the high side"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Nordstrom NYC Flagship: a modern department store on Nordstrom on 57th Street terms; book the Stylist Lounge at Nordstrom for a styling session.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Nordstrom's 57th Street flagship impresses with a beautiful, modern design across its floors, creating a calm and polished shopping atmosphere that suits a leisurely browse through the departments.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "4.4/5",
+  "review1Theme": "Overall experience",
+  "review1SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review2": "Prices are generally on the high side, which fits the flagship's positioning but is worth factoring into a shopping budget before committing to larger purchases or multiple items.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4.4/5",
+  "review2Theme": "Value",
+  "review2SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review3": "Checkout problems appear in some accounts, such as beauty items rung up at a higher price than the display showed, so confirming the price at the register before paying is sensible.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "1/5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review4": "Regular shoppers enjoy the curated selection and setting, although the range can feel smaller than at some other department stores.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Selection",
+  "review4SourceUrl": "https://exa.ai/library/place/ppdy06vf1wn",
+  "review1Claims": [
+    "The store has a beautiful, modern design"
+  ],
+  "review2Claims": [
+    "Prices are generally on the high side"
+  ],
+  "review3Claims": [
+    "I went to Nordstrom this evening and saw a display with lipstick.",
+    "There was only one lipstick left of two of the colors.",
+    "Seeing that they were $25 each I decided to get the last lipstick of color future beige and pinklist.",
+    "When the employee told me my total, I was surprised to find out that they were charging me $30 for the future beige color.",
+    "I explained to her that the display had all of the colors priced at $25.",
+    "She explained that sometimes different colors are more money.",
+    "So I said why are they all printed on the display at $25?"
+  ],
+  "review4Claims": [
+    "I really enjoy shopping at the Nordstrom on 57th Street.",
+    "The store has a beautiful, modern design and the overall atmosphere feels calm, elegant, and thoughtfully put together.",
+    "The selection is a bit smaller compared to some other department stores, but in my opinion it feels much more curated and aligned with my personal taste.",
+    "I often find the pieces to be truly exquisite.",
+    "Even though they may carry fewer items overall, I tend to walk out with more things I actually love.",
+    "The store has a beautiful, modern design"
+  ],
+  "reviewStarsDropped": "mean 3.75 vs venue 4.40 >0.5",
+  "reviewsLabel": "Representative reviews written from 18 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.185112+00:00"
+  }
+}

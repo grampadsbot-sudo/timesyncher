@@ -20,9 +20,10 @@ import {
 } from '../src/vacation/shared-trip-api-budget.mjs';
 
 const tripId = 63357430;
+const budgetDayId = 1;
 const base = {
   trip: { id: tripId, title: 'Maui', start_date: '2027-03-10', end_date: '2027-03-17', currency: 'usd' },
-  days: [],
+  days: [{ id: budgetDayId, date: '2027-03-10', title: 'Day 1' }],
   places: [],
   assignments: {},
   thingOverrides: {},
@@ -35,6 +36,13 @@ const carAId = 1002;
 const carBId = 1003;
 const shared = prepareSharedTripForLiveApp({
   ...base,
+  assignments: {
+    [budgetDayId]: [
+      { place_id: hotelId },
+      { place_id: carAId },
+      { place_id: carBId },
+    ],
+  },
   places: [
     { id: hotelId, name: 'Hyatt Regency Maui', category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
     { id: carAId, name: 'Hertz OGG', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
@@ -78,6 +86,14 @@ const gateCarHertz = 2003;
 const gateCarAlamo = 2004;
 const gateShared = prepareSharedTripForLiveApp({
   ...base,
+  assignments: {
+    [budgetDayId]: [
+      { place_id: gateHotelA },
+      { place_id: gateHotelB },
+      { place_id: gateCarHertz },
+      { place_id: gateCarAlamo },
+    ],
+  },
   places: [
     { id: gateHotelA, name: 'Hyatt Regency Maui Resort & Spa', category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
     { id: gateHotelB, name: "The Westin Maui Resort & Spa, Ka'anapali", category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
@@ -147,6 +163,12 @@ const metadataShared = prepareSharedTripForLiveApp(
   applyTripMetadataBudgetTargets(
     {
       ...base,
+      assignments: {
+        [budgetDayId]: [
+          { place_id: gateCarHertz },
+          { place_id: gateCarAlamo },
+        ],
+      },
       trip: { id: tripId, title: 'Maui', start_date: '2027-03-10', end_date: '2027-03-17', currency: 'usd' },
       places: [
         { id: gateCarHertz, name: 'Hertz', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
@@ -179,6 +201,14 @@ assert.deepEqual(metadataGateHits, [], `metadata budget targets must sync to API
 
 const unsetTargetsShared = prepareSharedTripForLiveApp({
   ...base,
+  assignments: {
+    [budgetDayId]: [
+      { place_id: gateHotelA },
+      { place_id: gateHotelB },
+      { place_id: gateCarHertz },
+      { place_id: gateCarAlamo },
+    ],
+  },
   places: [
     { id: gateHotelA, name: 'Hyatt Regency Maui Resort & Spa', category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
     { id: gateHotelB, name: "The Westin Maui Resort & Spa, Ka'anapali", category_name: 'Hotel', category: { name: 'Hotel', icon: '🧳' } },
@@ -224,7 +254,11 @@ assert.equal(
   'unset __budgetTargets must still fail invented / $200 targets in the DOM',
 );
 
-const unpricedRestaurant = prepareSharedTripForLiveApp({ ...base, places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }] });
+const unpricedRestaurant = prepareSharedTripForLiveApp({
+  ...base,
+  assignments: { [budgetDayId]: [{ place_id: 9 }] },
+  places: [{ id: 9, name: 'Cafe', category_name: 'Restaurant' }],
+});
 assert.equal(unpricedRestaurant.budget.some((line) => Number(line.total_price) === 0), true);
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -235,14 +269,17 @@ function runGatebHeadBudgetScript(fixturePath) {
   return JSON.parse(out);
 }
 
+const gatebProbeDayId = 2;
 const gatebPricedFixture = {
   trip: { id: tripId, title: 'Gate B head budget probe', start_date: '2026-06-10', end_date: '2026-06-17', currency: 'usd' },
-  days: [],
+  days: [{ id: gatebProbeDayId, date: '2026-06-10', title: 'Day 1' }],
   places: [
     { id: 5, name: 'Sample priced restaurant', category_name: 'Restaurant', category: { name: 'Restaurant', icon: '🍽️' } },
     { id: 6, name: 'Hertz OGG', category_name: 'Car', category: { name: 'Car', icon: '🚗' } },
   ],
-  assignments: {},
+  assignments: {
+    [gatebProbeDayId]: [{ place_id: 5 }, { place_id: 6 }],
+  },
   thingOverrides: {
     'place:5': { price: 20, category: 'restaurant' },
     'place:6': { price: 45, category: 'car' },
@@ -301,6 +338,7 @@ assert.deepEqual(
 
 const miscPlaceShared = prepareSharedTripForLiveApp({
   ...base,
+  assignments: { [budgetDayId]: [{ place_id: 88 }] },
   places: [{ id: 88, name: 'Jazz club', category_name: 'Event', category: { name: 'Event', icon: '🎟️' } }],
   thingOverrides: {
     'place:88': { price: 80, category: 'event' },
@@ -315,6 +353,7 @@ assertNoLegacyMiscBucketStrings(readFileSync(servedBundlePath, 'utf8'), 'patched
 
 const legacyMiscShared = prepareSharedTripForLiveApp({
   ...base,
+  assignments: { [budgetDayId]: [{ place_id: 77 }] },
   places: [{ id: 77, name: 'Harbor tour', category_name: 'Tour', category: { name: 'Tour', icon: '🎟️' } }],
   thingOverrides: {
     __budgetTargets: { [`overall:${upstreamMiscBucketLabel}`]: '275' },

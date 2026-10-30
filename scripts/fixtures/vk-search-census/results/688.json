@@ -1,0 +1,201 @@
+{
+  "thingId": "688",
+  "thingName": "Sylvia's Harlem",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem",
+      "title": "Sylvia's Restaurant of Harlem - Wikipedia",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac … t WikiMiniAtlas]]</span>\"}}'/> Website sylviasrestaurant .com Sylvia's Restaurant of Harlem , often called Sylvia's Soul Food or just Sylvia's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared  … via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woods. [ 1 ] The restaurant attrac",
+      "snippet": "via's , is a soul food restaurant located at 328 Malcolm X Boulevard , between 126th and 127th Streets, in Harlem , Manhattan , New York City . [ 1 ] Founded in 1962 by Sylvia Woods , [ 2 ] it sells a line of prepared foods, beauty and skin care items, cookbooks, and a children's book written by Woo",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+      "title": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … lvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … The food and service was amazing! … bought her seasoning and hot sauce … First time in Harlem, the best food hands down.. we ate everything on our plates! … soooo delicious",
+      "snippet": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://sylviasrestaurant.com/drink-menu",
+      "title": "Sylvia's Harlem official (sylviasrestaurant.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Sylvia’s Restaurant - Drink Menu Skip to main content (212)-996-0660 info@sylviasrestaurant.com Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Twitter / X page Facebook page Instagram page Google page Twitter / X page Facebook page Instagram page Google page Toggle navigation Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Our Drinks Happy Hour Cocktails Beer Wine and Bubbles Zero-Proof Favorites Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8 Riesling, Sauvignon Blanc, Chianti, Pinot Noir, Prosecco, Rosé Prosecco, Moscato Wines by The Bottle $30 Chardonnay, Cabernet, Prosecco, Rosé Prosecco Beer $5 Budweiser Bud Light Corona Cocktails $10 Harlem Blues Margarita Mo’ Money Whiskey Margarita Well Drinks (max 2 mixers): House Rum, Tequila, Vodka, Gin, Whiskey Please choose wisely. No returns on alcoholic beverages. Cocktails on The Rocks South Carolina Rum Punch Rum blend and Grandma Julia’s Fruit Punch Sylvia’s Soulful Sangria Rum, red wine, and Grandma Julia’s Fruit Punch Sylvia’s Summertime Sangria (Seasonal) White Rum, white wine, juices Harlem Blues Sylvia’s homemade lemonade, vodka, sour mix, and a splash of blue curaçao and cranberry juice Margarita Special (Strawberry, Mango, Peach, or Pineapple) Blanco tequila, lime juice, orange liqueur Uptown Delight Cognac, Sylvia’s Uptown Long Island Iced Tea Vodka, gin, rum, tequila, splash of Coke Harlem Old Fashioned Rye whiskey, bitters The Hemingway Rum, orange liqueur, pineapple juice Cocktails Straight Up Mo’ Money Gin, strawberry puree, fresh lime The 1944 Tequila, dry vermouth, ginger, bitters, egg white Love, Harlem Vodka, elderflower, dry vermouth, fresh lime Coconut Lime Drop Coconut rum, vodka, fresh lime Espresso Martini Vodka, espresso Cocktails Bubbly The Lenox Prosecco with Grandma Julia’s Fruit Punch, topped with a shot of cognac Bellini Prosecco with peach nectar Hugo Spritz Prosecco, elderflower, club soda, gin, mint South Carolina Spritz Grandma Julia's Fruit Punch, ,rum, prosecco, club soda Mo' Money Spritz Gin, strawberry puree, fresh lime Beer Harlem’s Own Sugar Hill Golden Ale Stella Artois Corona Heineken Budweiser Bud Light White Wine Dante Chardonnay, California, 2024 Ca’di Ponti Pinot Grigio, Italy, 2025 Fair Valley Sauvignon Blanc, South Africa, 2024 Ryan Patrick Riesling, Washington, 2023 Red Wine Dante Cabernet Sauvignon, California, 2023 Cesani Chianti Colli Senesi, Italy, 2022 Dante Merlot, California, 2023 Dante Pinot Noir, 2024 Sparkling Wine Ca’ Furlan Cuvée Beatrice Prosecco, Italy Ca’ Furlan Cuvée Beatrice Rosé Prosecco, Italy Champagne Veuve Clicquot Brut Rosé Moët & Chandon Nectar Imperial Zero-Proof Favorites Grandma Julia’s Fruit Punch Sylvia's Nojito Home Brewed Sweetened Iced Tea Peach Iced Tea Lemonade Peach, Strawberry, Mango Sylvia’s Uptown Coke Diet Coke Sprite Ginger Ale Bottled Water Order Reserve Parties Jobs",
+      "snippet": "Sylvia’s Restaurant - Drink Menu Skip to main content (212)-996-0660 info@sylviasrestaurant.com Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Twitter / X page Facebook page Instagram page Google page Twitter / X page Facebook page Instagram page Google page Toggle navigation Menu Food Drinks Daily"
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "restaurantji",
+    "restaurantji": 4.2
+  },
+  "reviewCount": {
+    "restaurantji": 925
+  },
+  "priceHint": null,
+  "hoursHint": null,
+  "happyHourHint": "Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8",
+  "summaryClaims": [
+    "Founded in 1962 by Sylvia Woods",
+    "The food and service was amazing!",
+    "First time in Harlem, the best food hands down",
+    "soul food restaurant located at 328 Malcolm X Boulevard",
+    "Founded in 1962 by Sylvia Woods",
+    "First time in Harlem, the best food hands down",
+    "the drinks were great",
+    "4.2 925 ratings",
+    "the drinks were great",
+    "bought her seasoning and hot sauce"
+  ],
+  "itineraryNoteCandidate": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "Sylvia's Harlem is the soul food institution at 328 Malcolm X Boulevard, founded by Sylvia Woods in 1962, and a Sunday gospel brunch here is a classic Harlem outing. Restaurantji diners say The food and service was amazing!, and a first-time visitor wrote First time in Harlem, the best food hands down. It suits a Harlem day with a hearty Southern meal.",
+      "claims": [
+        {
+          "text": "The food and service was amazing!",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "First time in Harlem, the best food hands down",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Sylvia's Harlem is a legendary soul food restaurant in Harlem. It is a soul food restaurant located at 328 Malcolm X Boulevard, between 126th and 127th Streets. It was founded in 1962 by Sylvia Woods, and Sunday gospel brunch is the classic visit. Restaurantji shows 4.2 925 ratings. Representative Restaurantji praise (diner reviews): “First time in Harlem, the best food hands down”; “the drinks were great”. Restaurantji guests also say the drinks were great, and one diner bought her seasoning and hot sauce to take home.",
+      "claims": [
+        {
+          "text": "soul food restaurant located at 328 Malcolm X Boulevard",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        },
+        {
+          "text": "Founded in 1962 by Sylvia Woods",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        },
+        {
+          "text": "First time in Harlem, the best food hands down",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "the drinks were great",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "4.2 925 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        },
+        {
+          "text": "bought her seasoning and hot sauce",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
+      "claims": [
+        {
+          "text": "Founded in 1962 by Sylvia Woods",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
+        }
+      ]
+    },
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8",
+          "sourceUrl": "https://sylviasrestaurant.com/drink-menu"
+        }
+      ]
+    }
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+    "site": "Restaurantji",
+    "via": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews",
+    "praise": [
+      "First time in Harlem, the best food hands down.. we ate everything on our plates!",
+      "The food and service was amazing!",
+      "soooo delicious",
+      "bought her seasoning and hot sauce"
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Soul food",
+      "Service",
+      "Drinks",
+      "Take-home souvenirs"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Sylvia's Harlem: the Queen of Soul Food's 1962 Harlem landmark; go for Sunday gospel brunch and bring home the hot sauce.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "Sylvia's delivers classic soul food that first-time Harlem visitors rank as the best food hands down, with plates often cleared completely, making it a natural centerpiece for an uptown day.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.2",
+  "review1Theme": "Soul food",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review2": "Food and service are both praised as amazing, describing a warm, welcoming dining room where the hospitality feels as much a part of the Harlem experience as the soul food itself.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.2",
+  "review2Theme": "Service",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review3": "Drinks hold up as well, with very tasty meals paired with good cocktails, so lingering over a full meal with a drink or two is an easy way to enjoy the visit.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.2",
+  "review3Theme": "Drinks",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review4": "The house seasoning and hot sauce are sold on site and make an easy edible souvenir, letting the flavors of the restaurant travel home long after the meal itself has ended.",
+  "review4Source": "Restaurantji",
+  "review4Rating": "4.2",
+  "review4Theme": "Take-home souvenirs",
+  "review4SourceUrl": "https://www.restaurantji.com/ny/new-york/sylvias-/",
+  "review1Claims": [
+    "we ate everything on our plates!",
+    "First time in Harlem, the best food hands down.. we ate everything on our plates!"
+  ],
+  "review2Claims": [
+    "The food and service was amazing!"
+  ],
+  "review3Claims": [
+    "soooo delicious"
+  ],
+  "review4Claims": [
+    "bought her seasoning and hot sauce"
+  ],
+  "reviewStarsDropped": "mean 5.00 vs venue 4.20 >0.5",
+  "reviewsLabel": "Representative reviews written from 9 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": "https://sylviasrestaurant.com/drink-menu",
+  "happyHour": true
+}

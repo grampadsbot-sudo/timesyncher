@@ -6,62 +6,12 @@ import {
 import { intId } from './intake-shared-trip.mjs';
 import { productThingCategory } from './keepsake-product-overrides.mjs';
 
-const PER_PERSON_CATEGORIES = new Set([
-  'restaurant',
-  'store',
-  'event',
-  'family_event',
-  'tour',
-  'transport',
-  'music',
-  'workout',
-  'artist',
-  'theatre',
-  'sightseeing',
-  'other',
-  'flight',
-]);
+import { thingBudgetAmount, thingPeople, perPersonThing } from './thing-price.mjs';
+import { assignedPlaceIds } from './itinerary-minimums.mjs';
+import { provenanceBlocksSourcedPrice } from './shared-trip-live-app-fields.mjs';
 
 function text(value) {
   return String(value || '').trim();
-}
-
-function haFields(place = {}, override = {}) {
-  return { ...place, ...override, ...(override && typeof override === 'object' ? override : {}) };
-}
-
-function priceText(place = {}, override = {}) {
-  const row = haFields(place, override);
-  const raw = row.price ?? place.price;
-  if (raw === null || raw === undefined || raw === '') return '';
-  if (typeof raw === 'number' && Number.isFinite(raw)) return `$${raw}`;
-  return text(raw);
-}
-
-function parsePriceNumbers(priceStr = '') {
-  const hay = String(priceStr || '');
-  const nums = [...hay.matchAll(/\$?([0-9][0-9,]*(?:\.\d+)?)/g)]
-    .map((match) => Number(String(match[1]).replace(/,/g, '')))
-    .filter((n) => Number.isFinite(n));
-  if (!nums.length) return { nightly: null, numbers: [] };
-  const nightly = nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0];
-  return { nightly, numbers: nums };
-}
-
-function stayDays(place = {}, override = {}) {
-  const row = haFields(place, override);
-  const explicit = Number(row.stayDays);
-  if (Number.isFinite(explicit) && explicit > 0) return Math.round(explicit);
-  const checkIn = text(row.checkInDate || row.check_in_date);
-  const checkOut = text(row.checkOutDate || row.check_out_date);
-  if (checkIn && checkOut) {
-    const start = Date.parse(`${checkIn}T00:00:00Z`);
-    const end = Date.parse(`${checkOut}T00:00:00Z`);
-    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
-      return Math.max(1, Math.round((end - start) / 86400000));
-    }
-  }
-  return 7;
 }
 
 function trekBudgetBucket(category = '') {
@@ -74,35 +24,23 @@ function trekBudgetBucket(category = '') {
   return OTHER_THINGS_BUCKET;
 }
 
-export function trekBudgetAmount(place = {}, override = {}, category = '') {
-  const priceStr = priceText(place, override);
-  const { nightly, numbers } = parsePriceNumbers(priceStr);
-  if (nightly === null) return { amount: 0, hasPrice: false, nightly: null };
-  const hasPrice = /\$?\d/.test(priceStr);
-  let amount = nightly;
-  const lower = priceStr.toLowerCase();
-  const cat = text(category).toLowerCase();
-  if (cat === 'hotel' || /night/.test(lower)) {
-    amount *= Math.max(1, stayDays(place, override));
-  }
-  if (
-    /per person|pp|fare|ticket|flight/.test(lower)
-    || PER_PERSON_CATEGORIES.has(cat)
-  ) {
-    amount *= 2;
-  }
-  return { amount: Math.round(amount), hasPrice, nightly: Math.round(nightly) };
+export function trekBudgetAmount(place = {}, override = {}, category = '', shared = {}) {
+  return thingBudgetAmount(place, override, category, shared);
 }
 
 function budgetRowsFromShared(shared = {}) {
   const places = Array.isArray(shared.places) ? shared.places : [];
   const overrides = shared.thingOverrides && typeof shared.thingOverrides === 'object' ? shared.thingOverrides : {};
   const rows = [];
+  const selected = assignedPlaceIds(shared);
+  const dayIds = new Set((shared.days || []).map((day) => String(day.id)));
   for (const place of places) {
     const override = overrides[`place:${place.id}`] || {};
+    const placed = Array.isArray(override.dayIds) && override.dayIds.some((id) => dayIds.has(String(id)));
+    if (!selected.has(Number(place.id)) && !placed) continue;
     const category = productThingCategory(place, override);
     const bucket = trekBudgetBucket(category);
-    const { amount, hasPrice, nightly } = trekBudgetAmount(place, override, category);
+    const { amount, hasPrice, nightly } = trekBudgetAmount(place, override, category, shared);
     rows.push({ place, override, category, bucket, amount, hasPrice, nightly });
   }
   return rows;
@@ -220,7 +158,26 @@ export function syncSharedTripApiBudget(shared = {}) {
   const rows = budgetRowsFromShared(shared);
   const visible = visibleAmountSet(rows, shared);
   const existing = Array.isArray(shared.budget) ? shared.budget : [];
-  const lines = [...existing.map((line) => ({ ...line }))];
+  const overrides = { ...(shared.thingOverrides || {}) };
+  for (const row of rows) {
+    const key = `place:${row.place.id}`;
+    if (perPersonThing(row.place, row.override, row.category) && !provenanceBlocksSourcedPrice(row.override, row.place)) {
+      overrides[key] = {
+        ...overrides[key],
+        ...row.override,
+        ...(row.hasPrice ? { pricePerPerson: row.nightly } : {}),
+        people: thingPeople(row.place, row.override, shared),
+      };
+    }
+  }
+  if (!rows.length) {
+    return { ...shared, thingOverrides: overrides, budget: [] };
+  }
+  const rowPlaceIds = new Set(rows.map((row) => String(row.place.id)));
+  const lines = [
+    ...existing.filter((line) => line.place_id && rowPlaceIds.has(String(line.place_id))),
+    ...existing.filter((line) => !line.place_id),
+  ].map((line) => ({ ...line }));
   const coveredPlaces = new Set(lines.map((line) => String(line.place_id ?? '')));
   const coveredIds = new Set(lines.map((line) => String(line.id)));
   const covered = new Set(
@@ -230,7 +187,6 @@ export function syncSharedTripApiBudget(shared = {}) {
   );
 
   for (const row of rows) {
-    if (!row.hasPrice) continue;
     const placeId = String(row.place.id);
     const nameKey = text(row.place.name || row.place.title).toLowerCase();
     for (const line of lines) {
@@ -239,10 +195,8 @@ export function syncSharedTripApiBudget(shared = {}) {
       const samePlace = linePlace && linePlace === placeId;
       const sameName = lineName && lineName === nameKey;
       if (!samePlace && !sameName) continue;
-      if (!Number(line.total_price) || line.total_price === 0) {
-        line.total_price = row.amount;
-        line.place_id = row.place.id;
-      }
+      line.total_price = row.amount;
+      line.place_id = row.place.id;
     }
   }
 
@@ -308,5 +262,5 @@ export function syncSharedTripApiBudget(shared = {}) {
     deduped.push(line);
   }
 
-  return { ...shared, budget: deduped };
+  return { ...shared, thingOverrides: overrides, budget: deduped };
 }

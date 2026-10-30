@@ -44,6 +44,16 @@ function placeOfficialHost(place = {}) {
   }
 }
 
+function pageUrlHost(page = {}) {
+  const raw = text(page.url || '');
+  if (!raw) return '';
+  try {
+    return new URL(raw).hostname.replace(/^www\./i, '').toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
 const REVIEW_HOST_RE = /yelp\.|tripadvisor\.|google\.|opentable\.|booking\.com/i;
 
 export function evidencePageMatchesPlace(page = {}, place = {}, dossier = {}) {
@@ -66,6 +76,8 @@ export function pageNamesOtherVenue(page = {}, place = {}, { allowTargetMention 
   const title = text(place.title || place.name);
   const titleNorm = norm(title);
   if (!blob && !url) return false;
+  const officialHost = placeOfficialHost(place);
+  if (officialHost && pageUrlHost(page) === officialHost) return false;
   if (/blue note/i.test(titleNorm) && (/dizzy['']?s/i.test(blob) || /\/dizzy/i.test(url)) && !/blue note/i.test(blob)) {
     return true;
   }

@@ -366,7 +366,13 @@ export const NYC_STAGING_CAPTURE_LIST_ROWS = [
     "name": "The Smith - Lincoln Square",
     "cat": "restaurant",
     "ccabKey": "The Smith - Lincoln Square"
-  }
+  },
+  {"id": 710, "name": "Hertz JFK — Compact SUV", "cat": "car", "ccabKey": "Hertz JFK — Compact SUV"},
+  {"id": 711, "name": "Thrifty JFK — Midsize sedan", "cat": "car", "ccabKey": "Thrifty JFK — Midsize sedan"},
+  {"id": 712, "name": "Thrifty JFK — Compact SUV", "cat": "car", "ccabKey": "Thrifty JFK — Compact SUV"},
+  {"id": 713, "name": "Dollar JFK — Midsize sedan", "cat": "car", "ccabKey": "Dollar JFK — Midsize sedan"},
+  {"id": 714, "name": "Dollar JFK — Compact SUV", "cat": "car", "ccabKey": "Dollar JFK — Compact SUV"},
+  {"id": 715, "name": "Dollar JFK — Full-size sedan", "cat": "car", "ccabKey": "Dollar JFK — Full-size sedan"}
 ];
 
 export function appendNycStagingListTabRows(rows, options = {}) {
@@ -382,6 +388,8 @@ export function appendNycStagingListTabRows(rows, options = {}) {
     const identity = `${listRow.ccabKey}\0${listRow.name}`;
     if (seenRowIdentities.has(identity)) continue;
     seenRowIdentities.add(identity);
+    const duplicateFlight = listRow.cat === 'flight'
+      && rows.some((row) => row.cat === 'flight' && row.ccabKey === listRow.ccabKey);
     let id = listRow.id;
     if (listRow.id == null || seenIds.has(id)) {
       id = nextFreeId;
@@ -391,6 +399,7 @@ export function appendNycStagingListTabRows(rows, options = {}) {
     } else {
       seenIds.add(id);
     }
+    if (duplicateFlight) continue;
     rows.push({
       day: 1,
       time: '11:00',

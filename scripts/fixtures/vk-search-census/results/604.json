@@ -1,0 +1,245 @@
+{
+  "thingId": 604,
+  "thingName": "Statue of Liberty walking tour",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://statuecitycruises.com/faq",
+      "title": "FAQs - Statue of Liberty Ferry & Ellis Island Answers",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": " All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace. General Admission: • Adults: $ … w York and New Jersey landmarks! What are the different ticket combinations possible and how much do they cost? All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your o …  All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace. General Admission: • Adults: $",
+      "snippet": " All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island. Each ticket also comes with a self-guided audio tour of both historic islands—perfect for exploring at your own pace.",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+      "title": "Review of Statue City Cruises, New York City, NY - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for ne … k City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for nearly an hour for a boat",
+      "snippet": "Review of Statue City Cruises, New York City, NY - Tripadvisor | | The best part is access to the Statue of Liberty and Ellis Island … the boat ride was calm, and the views were amazing … the loading and unloading process is crowded and disorganized … had to wait in the heat for ne",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://exa.ai/library/place/qstwz1dv09v",
+      "title": "Statue of Liberty walking tour reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:19:12-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_qstwz1dv09v.html",
+      "text": "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat. Enjoyable day trip. Needed more time to explore Ellis Island properly but that was the fault of our planning The official ferry to get you to the Statue of Liberty in Ellis Island. The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice. Plenty of stating for people who may need it, and efficient at loading and unloading everyone. This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands. We started around 9:00 AM, which I highly recommend to avoid the rush. The ferry from Battery Park is only about 20–25 minutes. We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum. Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours. A must-do if you want to see both islands properly without feeling rushed! Great experience overall! Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience! The National Park officers were very pleasant. We definitely need to come back here during the warmer months cause the weather dampened our day a bit"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "thirdParty",
+    "thirdParty": 4.5
+  },
+  "reviewCount": {
+    "thirdParty": 44396
+  },
+  "priceHint": "Adult general admission ferry ~$26; child/senior lower; crown/pedestal extra (SCC FAQ via search)",
+  "hoursHint": "Ferry-only access; schedules seasonal — buy via Statue City Cruises; NPS park hours page refers to ferry schedule",
+  "happyHourHint": null,
+  "summaryClaims": [
+    "Liberty Island and Ellis Island",
+    "Liberty Island and Ellis Island",
+    "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
+    "Liberty Island and Ellis Island",
+    "The best part is access to the Statue of Liberty and Ellis Island",
+    "the loading and unloading process is crowded and disorganized"
+  ],
+  "itineraryNoteCandidate": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 2
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 2 WebFetch (Foundation + NPS).",
+  "baselineExisting": {
+    "hasDossier": true,
+    "pageCount": 80,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 26,
+    "hours": false,
+    "happyHour": false,
+    "itineraryNote": true,
+    "xaiUsd": 0.070172,
+    "attemptKinds": {
+      "brave": 31
+    },
+    "officialUrls": [
+      "https://www.statueofliberty.org/visit/",
+      "https://www.statueofliberty.org/directions-battery-park",
+      "https://www.musement.com/us/new-york/vip-access-ellis-island-statue-liberty-and-battery-park-walking-tour-330022/",
+      "https://www.nps.gov/stli/planyourvisit/index.htm",
+      "https://www.statueofliberty.org/LegitTickets"
+    ]
+  },
+  "botFieldScore": 6,
+  "baseFieldScore": 5,
+  "censusReuse": "full10",
+  "fields": {
+    "summary": {
+      "value": "Statue of Liberty walking tour by ferry to Liberty Island and Ellis Island from Battery Park. All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island.",
+      "claims": [
+        {
+          "text": "Liberty Island and Ellis Island",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        },
+        {
+          "text": "All general admission tickets include round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City, NJ to Liberty Island and Ellis Island.",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Statue of Liberty walking tour starts with the official ferry. Statue City Cruises offers round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City. The ferry stops at Liberty Island and Ellis Island, so plan most of a day. Representative Tripadvisor praise (search snapshot): “The best part is access to the Statue of Liberty and Ellis Island”. Representative watch-outs: “the loading and unloading process is crowded and disorganized”.",
+      "claims": [
+        {
+          "text": "round-trip ferry service from either Battery Park in New York City or Liberty State Park in Jersey City",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        },
+        {
+          "text": "Liberty Island and Ellis Island",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        },
+        {
+          "text": "The best part is access to the Statue of Liberty and Ellis Island",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+        },
+        {
+          "text": "the loading and unloading process is crowded and disorganized",
+          "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
+      "claims": [
+        {
+          "text": "Liberty Island and Ellis Island",
+          "sourceUrl": "https://statuecitycruises.com/faq"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Statue of Liberty walking tour: The best part is access to the Statue of Liberty and Ellis Island. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "The best part is access to the Statue of Liberty and Ellis Island",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 36
+      },
+      {
+        "theme": "Overall experience",
+        "value": "Watch-out from a Tripadvisor reviewer at Statue of Liberty walking tour: the loading and unloading process is crowded and disorganized. Worth weighing alongside the overall 4.5/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "the loading and unloading process is crowded and disorganized",
+            "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+        "rating": "4.5/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "watchOut",
+        "words": 32
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/ShowUserReviews-g60763-d1142544-r908120946-Statue_City_Cruises-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "The best part is access to the Statue of Liberty and Ellis Island"
+    ],
+    "watchOuts": [
+      "the loading and unloading process is crowded and disorganized"
+    ],
+    "themes": [
+      "Overall experience",
+      "Overall experience"
+    ],
+    "complaints": [
+      "the loading and unloading process is crowded and disorganized"
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Statue of Liberty walking tour: a classic harbor day; ride over to Liberty Island and Ellis Island early to beat the crowds.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Statue of Liberty ferry processes busy crowds quickly, but visitors advise allowing enough time to explore Ellis Island fully.",
+  "review1Source": "Exa place listing",
+  "review1Rating": "5/5",
+  "review1Theme": "Crowds",
+  "review1SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
+  "review1Stars": 5,
+  "review2": "The official ferry is described as efficient and safe even in poor weather, with plenty of seating and good onboard refreshments.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "5/5",
+  "review2Theme": "Atmosphere",
+  "review2SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
+  "review2Stars": 5,
+  "review3": "Starting early is strongly recommended to beat the rush, and the short ride from Battery Park gives access to both islands.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "5/5",
+  "review3Theme": "Building and design",
+  "review3SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
+  "review3Stars": 5,
+  "review4": "Security checks can happen twice for pedestal tickets, but park rangers are pleasant and most visitors call it a great experience.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Atmosphere",
+  "review4SourceUrl": "https://exa.ai/library/place/qstwz1dv09v",
+  "review4Stars": 5,
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-stores-attractions-20261029",
+  "review1Claims": [
+    "Busy but quite quick to get processed onto the boat, fast changeover on / off the boat.",
+    "Enjoyable day trip.",
+    "Needed more time to explore Ellis Island properly but that was the fault of our planning"
+  ],
+  "review2Claims": [
+    "The official ferry to get you to the Statue of Liberty in Ellis Island.",
+    "The hot chocolate was amazing and everyone was efficient and safe getting us over to the island despite the water being full of ice.",
+    "Plenty of stating for people who may need it, and efficient at loading and unloading everyone."
+  ],
+  "review3Claims": [
+    "This is the only authorized cruise that actually takes you onto Liberty and Ellis Islands.",
+    "We started around 9:00 AM, which I highly recommend to avoid the rush.",
+    "The ferry from Battery Park is only about 20–25 minutes.",
+    "We spent about 2 hours at the Statue of Liberty seeing the museum and the pedestal views, then took the 20-minute ferry to Ellis Island for the Immigrants Museum.",
+    "Including the 20-minute ride back to Battery Park, the whole trip took about 4 hours.",
+    "A must-do if you want to see both islands properly without feeling rushed!"
+  ],
+  "review4Claims": [
+    "Great experience overall!",
+    "Had to go security twice(booked ticketes that let us inside the base of the statue) but after that it was a great experience!",
+    "The National Park officers were very pleasant.",
+    "We definitely need to come back here during the warmer months cause the weather dampened our day a bit"
+  ],
+  "reviewsLabel": "Representative reviews written from 22 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true
+}

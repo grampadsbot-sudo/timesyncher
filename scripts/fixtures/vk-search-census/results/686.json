@@ -1,0 +1,218 @@
+{
+  "thingId": "686",
+  "thingName": "The Consulate UWS",
+  "type": "restaurant",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://theconsulate.nyc/upper-west-side-ny",
+      "title": "The Consulate - Upper West Side NY",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … 0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new … accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you are leaving the website, opens in a new tab , The Consulate UWS is situated on the corner of Columbus Avenue and West 85th Street in Manhattan’s Upper West Side. The restaurant is just steps from Central Park and a short walk from the American Mu …  – Friday: 11:00 AM – 3:30 PM LUNCH MENU Dinner Monday – Sunday: 4:30 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 5",
+      "snippet": "0 – 10:00 PM DINNER MENU Brunch Saturday & Sunday: 10:00 AM – 3:30 PM Brunch MENU Happy Hour Monday – Friday: 3:30 – 6:30 PM Happy Hour MENU Location 519 Columbus Avenue New York, NY 10024 Cash and all major credit cards are accepted. The Consulate UWS Location Located at 519 Columbus Avenue , you a",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.opentable.com/r/the-consulate-new-york",
+      "title": "The Consulate Upper West Side Restaurant - New York, NY | OpenTable",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "st Side Restaurant - New York, NY | OpenTable | | The Consulate Upper West Side Restaurant - New York, NY | OpenTable # The Consulate Upper West Side 4.5 (528) $31 to $50 French American 519 Columbus Ave, New York, NY 10024-3402 ## Reviews OpenTable reviews from verified diners Reviews from people who have d",
+      "snippet": "st Side Restaurant - New York, NY | OpenTable | | The Consulate Upper West Side Restaurant - New York, NY | OpenTable # The Consulate Upper West Side 4.5 (528) $31 to $50 French American 519 Columbus Ave, New York, NY 10024-3402 ## Reviews OpenTable reviews from verified diners Reviews from people w",
+      "fetchMethod": "WebFetch live fetch 2026-10-28 (curl 403/blocked); text saved verbatim from WebFetch markdown"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
+      "title": "The Consulate UWS reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:05:00-07:00",
+      "text": "The Consulate UWS | Restaurantji listing | live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews | 4.6 828 ratings … Blown away by interior design, topped with finger-licking food, friendly service … nice casual/not too casual joint … great for Sunday supper … Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks! … The food was amazing. Bibi is an amazing waitress.",
+      "snippet": "4.6 828 ratings",
+      "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://exa.ai/library/place/jv3tf57qdxs",
+      "title": "The Consulate UWS reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:33-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_jv3tf57qdxs.html",
+      "text": "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner! The food was amazing, with a mix of interesting and classic foods. Bibi, our server, was lovely, thoughtful, and recommended some great dishes. We’ll be back!"
+    }
+  ],
+  "rating": {
+    "primary": 4.5,
+    "primarySource": "opentable",
+    "opentable": 4.5
+  },
+  "reviewCount": {
+    "opentable": 528
+  },
+  "priceHint": null,
+  "hoursHint": "Monday – Friday: 11:00 AM – 10:00 PM Saturday & Sunday: 10:00 AM – 10:00 PM",
+  "happyHourHint": "Monday – Friday: 3:30 – 6:30 PM",
+  "summaryClaims": [
+    "519 Columbus Avenue New York, NY 10024",
+    "4.6 828 ratings",
+    "Blown away by interior design, topped with finger-licking food, friendly service",
+    "519 Columbus Avenue New York, NY 10024",
+    "on the corner of Col",
+    "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
+    "4.5 (528)",
+    "nice casual/not too casual joint",
+    "great for Sunday supper"
+  ],
+  "itineraryNoteCandidate": "The Consulate UWS: a stylish French brasserie on Columbus Avenue; come for weekday happy hour or a relaxed Sunday supper.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text; itineraryNote/summary/description/reviews each carry their own claims"
+  },
+  "callCounts": {
+    "webSearch": 0,
+    "webFetch": 0
+  },
+  "wallClockMs": null,
+  "fields": {
+    "summary": {
+      "value": "The Consulate UWS is a French-American brasserie at 519 Columbus Avenue on the corner of West 85th Street, a short walk from Central Park, with dinner, weekend brunch and weekday happy hour. Restaurantji diners rate it 4.6 828 ratings and were Blown away by interior design, topped with finger-licking food, friendly service. It suits a polished but easy neighborhood meal.",
+      "claims": [
+        {
+          "text": "4.6 828 ratings",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
+        },
+        {
+          "text": "Blown away by interior design, topped with finger-licking food, friendly service",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
+        }
+      ]
+    },
+    "description": {
+      "value": "The Consulate UWS is a French brasserie at 519 Columbus Avenue New York, NY 10024. It sits on the corner of Columbus Avenue and West 85th Street near Central Park. The restaurant lists Happy Hour Monday – Friday: 3:30 – 6:30 PM, and brunch on weekends. OpenTable diners rate The Consulate UWS 4.5 from 528 reviews. Restaurantji diners call it a nice casual/not too casual joint that is great for Sunday supper.",
+      "claims": [
+        {
+          "text": "519 Columbus Avenue New York, NY 10024",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "on the corner of Col",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        },
+        {
+          "text": "4.5 (528)",
+          "sourceUrl": "https://www.opentable.com/r/the-consulate-new-york"
+        },
+        {
+          "text": "nice casual/not too casual joint",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
+        },
+        {
+          "text": "great for Sunday supper",
+          "sourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "The Consulate UWS: a stylish French brasserie on Columbus Avenue; come for weekday happy hour or a relaxed Sunday supper.",
+      "claims": [
+        {
+          "text": "519 Columbus Avenue New York, NY 10024",
+          "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Happy hour",
+        "value": "For an early drink, The Consulate UWS lists Happy Hour Monday – Friday: 3:30 – 6:30 PM, a good stop after the park or the museum.",
+        "claims": [
+          {
+            "text": "Happy Hour Monday – Friday: 3:30 – 6:30 PM",
+            "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny"
+          }
+        ],
+        "source": "official site",
+        "sourceUrl": "https://theconsulate.nyc/upper-west-side-ny",
+        "rating": "4.5",
+        "ratingBasis": "listing aggregate (per-review stars not saved)",
+        "words": 26
+      }
+    ]
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:05:00-07:00",
+    "writer": "grok-bot"
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
+    "site": "Restaurantji",
+    "praise": [
+      "Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks!",
+      "nice casual/not too casual joint",
+      "The food was amazing. Bibi is an amazing waitress.",
+      "Happy Hour Monday – Friday: 3:30 – 6:30 PM"
+    ],
+    "watchOuts": [],
+    "complaints": [],
+    "themes": [
+      "Design and food",
+      "Sunday supper",
+      "Service",
+      "Happy hour"
+    ],
+    "via": "curl live fetch 2026-10-28"
+  },
+  "itineraryNote": "The Consulate UWS: a stylish French brasserie on Columbus Avenue; come for weekday happy hour or a relaxed Sunday supper.",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "review1": "The Consulate impresses with its striking interior design, finger-licking food, friendly service and well-crafted cocktails, making it a strong all-round choice for a relaxed dinner with drinks in the neighborhood.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "4.5",
+  "review1Theme": "Design and food",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
+  "review1Stars": 5,
+  "review2": "Diners describe a comfortable middle ground between casual and dressy that suits relaxed weekend dinners on the Upper West Side.",
+  "review2Source": "Restaurantji",
+  "review2Rating": "4.5",
+  "review2Theme": "Sunday supper",
+  "review2SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
+  "review2Stars": 5,
+  "review3": "Individual servers are singled out by name for amazing service, and warm, attentive hospitality combined with consistently amazing food is a recurring reason for return visits to the restaurant.",
+  "review3Source": "Restaurantji",
+  "review3Rating": "4.5",
+  "review3Theme": "Service",
+  "review3SourceUrl": "https://www.restaurantji.com/ny/new-york/the-consulate-/",
+  "review3Stars": 5,
+  "review4": "Diners enjoy the mix of interesting and classic dishes and say they wish they had visited sooner, with thoughtful recommendations from staff.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Food and drinks",
+  "review4SourceUrl": "https://exa.ai/library/place/jv3tf57qdxs",
+  "review4Stars": 5,
+  "review1Claims": [
+    "Blown away by interior design, topped with finger-licking food, friendly service, and such a well crafted drinks!"
+  ],
+  "review2Claims": [
+    "nice casual/not too casual joint"
+  ],
+  "review3Claims": [
+    "The food was amazing.",
+    "The food was amazing. Bibi is an amazing waitress."
+  ],
+  "review4Claims": [
+    "We’ve been recommended The Consulate and haven’t had the chance to come until now, and I wish we had come sooner!",
+    "The food was amazing, with a mix of interesting and classic foods.",
+    "Bibi, our server, was lovely, thoughtful, and recommended some great dishes."
+  ],
+  "reviewsLabel": "Representative reviews written from 12 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenOrder": [
+    "reviews"
+  ],
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.271028+00:00"
+  }
+}

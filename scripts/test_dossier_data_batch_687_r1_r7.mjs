@@ -124,7 +124,7 @@ for (const target of targets) {
   assert.equal(resolved.lat ?? null, target.lat ?? target.sourceRecord.lat ?? null);
   assert.equal(resolved.sourceRecord.longDetails, target.sourceRecord.longDetails);
 }
-assert.deepEqual(inventory, { flight: 16, store: 15, hotel: 22, attraction: 15, car: 1, restaurant: 25 });
+assert.deepEqual(inventory, { flight: 10, store: 15, hotel: 22, attraction: 15, car: 7, restaurant: 25 });
 const customTargets = buildNycThingEvidenceDossierTargets({
   rows: [{ id: 'fresh' }],
   placesById: { fresh: { title: 'New venue', category: 'store', address: '45 North St' } },

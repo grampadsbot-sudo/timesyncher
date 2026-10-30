@@ -50,10 +50,16 @@ export function runDossierFetchTask(operation, place, options = {}, {
           }
         } catch (error) { finish(error); }
       });
-      const { destination, center, deadline, onlyFields, dossier, bravePace } = options;
+      const { destination, center, deadline, onlyFields, dossier, bravePace, botPrimary } = options;
+      const env = options.env || process.env;
       child.send({ operation, place, options: {
-        destination, center, deadline, onlyFields, dossier, bravePace,
-        env: { [BRAVE_PROVIDER_KEY_NAME]: braveSubscriptionKey(options.env), [TAVILI_PROVIDER_KEY_NAME]: tavilyApiKey(options.env) },
+        destination, center, deadline, onlyFields, dossier, bravePace, botPrimary,
+        env: {
+          [BRAVE_PROVIDER_KEY_NAME]: braveSubscriptionKey(options.env), [TAVILI_PROVIDER_KEY_NAME]: tavilyApiKey(options.env),
+          VK_SEARCH_BOT_PRIMARY: env.VK_SEARCH_BOT_PRIMARY,
+          VK_SEARCH_WAKE_URL: env.VK_SEARCH_WAKE_URL,
+          VK_SEARCH_CENSUS_DIR: env.VK_SEARCH_CENSUS_DIR,
+        },
       } }, (error) => { if (error) failed('fetch_worker_ipc_failed'); });
     } catch {
       failed('fetch_worker_start_failed');

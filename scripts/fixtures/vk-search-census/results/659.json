@@ -1,0 +1,266 @@
+{
+  "thingId": 659,
+  "thingName": "Blue Note",
+  "type": "attraction",
+  "provider": "grok-bot",
+  "sources": [
+    {
+      "url": "https://www.bluenotejazz.com/nyc/shows/",
+      "title": "Shows | Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "c Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 17 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note …  PM & 10:30 PM Blue Note Jazz Club 12 Eric Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 13 Eric Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note … o 8:00 PM & 10:30 PM Blue Note Jazz Club 19 Amber Mark 8:00 PM & 10:30 PM Blue Note Jazz Club 20 Amber Mark 8:00 PM & 10:30 PM Blue Note Jazz Club 21 Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club 22 Robert Glasper X Wyclef Presents Q Theory 8:00 PM & 10:30 PM Blue Note Jazz Club 23 Robert Glasper X Wyclef Presents Q Theory 8:00 PM & 10:30 PM B … 0 PM & 10:30 PM Blue Note Jazz Club 3 Robert Glasper 8:00 PM & 10:30 PM Blue Note Jazz Club 4 Robert Glasper 8:00 PM & 10:30 PM Blue Note Jazz Club 5 Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club 6 Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club 7 Robert Glasper X Terrace Martin with Special Guest Phoelix 8:00 PM & 10:30 PM Blu",
+      "snippet": "c Roberson 8:00 PM & 10:30 PM Blue Note Jazz Club 14 Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club 15 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club 16 Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jaz",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.bluenotejazz.com/nyc/contact/",
+      "title": "Contact Us | Blue Note New York",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question?  … e hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note New York Address: 131 West 3rd Street New York, NY 10012 Have a question? Fill out the form below and we’ll get back to you and be sure to ",
+      "snippet": "nces Follow Us visit Blue Note New York on facebook visit Blue Note New York on Instagram Contact Us We hope to see you at one of our upcoming shows! Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. All times are approximate. Box Office Phone Number: 212-475-8592 Blue Note ",
+      "fetchMethod": "curl live fetch 2026-10-28"
+    },
+    {
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+      "title": "BLUE NOTE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor",
+      "fetchedAt": "2026-10-29T06:30:00Z",
+      "text": "TE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the … y friendly and welcoming … They really do try to cram everyone into a space that only comfortably accommodates two thirds of the people in the room … Staff is quite pushy during the seating process … on top of the expensive ticket price, there is a mandatory minimum spend at the table",
+      "snippet": "TE, New York City - Greenwich Village - Menu, Prices & Restaurant Reviews - Tripadvisor | | The location is iconic, intimate and full of atmosphere … the real star was the Gospel Choir show … Door staff were very friendly and welcoming … They really do try to cram everyone into a space that only com",
+      "fetchMethod": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch"
+    },
+    {
+      "url": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+      "title": "Blue Note reviews | Restaurantji",
+      "fetchedAt": "2026-10-29T09:16:08-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r7/raw/st_124430a340.html",
+      "text": "The performance was wonderful, but I did not appreciate how long it took for the club to let us in. It said doors open at 9:30 but people were not let in until almost 10. I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+    },
+    {
+      "url": "https://exa.ai/library/place/3yp348r72jp",
+      "title": "Blue Note reviews | Exa place listing",
+      "fetchedAt": "2026-10-29T09:49:34-07:00",
+      "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_3yp348r72jp.html",
+      "text": "The renowned Blue Note has intimate seating for those who reserve tables. The atmosphere was charged. The sound was great. The service was amazing and efficient. My food was delicious. My only gripe is that they squeeze people in. Really, there should have been only six people to a table, not 8. Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer. 🙌🏽🙌🏿🙌🏾 Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best. There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views. The sound system is excellent, though, and the food good. If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served! If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show. It gets crowded but all the servers move fast. The tables are shared, so keep it in mind. The drinks were really good! The food was just ok. The live music was awesome. And by the end of the show everyone was dancing and enjoying themselves."
+    }
+  ],
+  "rating": {
+    "primary": 4.2,
+    "primarySource": "aggregator",
+    "aggregator": 4.2
+  },
+  "reviewCount": {
+    "aggregator": 5492
+  },
+  "priceHint": "$20 consumption minimum + ticket (varies by show)",
+  "hoursHint": "Music ~8:00pm & 10:30pm; doors 6pm/10pm (official contact/FAQ)",
+  "happyHourHint": null,
+  "happyHourRejectReason": null,
+  "summaryClaims": [
+    "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club"
+  ],
+  "itineraryNoteCandidate": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
+  "voicePass": {
+    "claimSupportOk": true,
+    "note": "every claim is a verbatim substring of sources[].text saved from a live fetch on 2026-10-28"
+  },
+  "callCounts": {
+    "webSearch": 1,
+    "webFetch": 1
+  },
+  "wallClockMs": null,
+  "estimatedCostNote": "Grok Bot plan: 1 WebSearch + 1 WebFetch. No Brave/Tavily/xAI billed.",
+  "baselineExisting": {
+    "hasDossier": false,
+    "pageCount": 0,
+    "googleRating": null,
+    "yelpRating": null,
+    "price": 40,
+    "hours": false,
+    "happyHour": null,
+    "itineraryNote": false,
+    "xaiUsd": null,
+    "attemptKinds": {},
+    "braveAttempts": 0
+  },
+  "censusReuse": null,
+  "botFieldScore": 6,
+  "baseFieldScore": 2,
+  "winner": "grok-bot",
+  "fields": {
+    "summary": {
+      "value": "Blue Note is running a star-heavy October residency, so this row is about catching a specific headliner: Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club. Reviews praise the intimate tables and sound but warn of crowded seating, pushy seating staff and minimum spends, so buy table seats and arrive at the doors.",
+      "claims": [
+        {
+          "text": "Robert Glasper OG Acoustic Piano Trio 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        }
+      ]
+    },
+    "description": {
+      "value": "Blue Note runs two sets a night, and its contact page lists Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m. The October 2026 calendar includes Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club on the 14th. Other October bookings include Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club and Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club. The Box Office Phone Number: 212-475-8592 handles ticket questions. Representative Tripadvisor praise (search snapshot): “the real star was the Gospel Choir show”. Representative watch-outs: “Staff is quite pushy during the seating process”.",
+      "claims": [
+        {
+          "text": "Hours: Music at 8:00 p.m. and 10:30 p.m. Doors at 6:00 p.m. and 10:00 p.m.",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        },
+        {
+          "text": "Blue Note's 45th Anniversary Celebration hosted by Robert Glasper 8:00 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Robert Glasper X Questlove + Special Guest Bilal 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Stefon Harris & Blackout 8:00 PM & 10:30 PM Blue Note Jazz Club",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/shows/"
+        },
+        {
+          "text": "Box Office Phone Number: 212-475-8592",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        },
+        {
+          "text": "the real star was the Gospel Choir show",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        },
+        {
+          "text": "Staff is quite pushy during the seating process",
+          "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+        }
+      ]
+    },
+    "itineraryNote": {
+      "value": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
+      "claims": [
+        {
+          "text": "Music at 8:00 p.m. and 10:30 p.m.",
+          "sourceUrl": "https://www.bluenotejazz.com/nyc/contact/"
+        }
+      ]
+    },
+    "reviewsUnstarred": [
+      {
+        "theme": "Overall experience",
+        "value": "Tripadvisor reviewer on Blue Note: the real star was the Gospel Choir show. That is the clearest takeaway from this guest review for planning the visit around it.",
+        "claims": [
+          {
+            "text": "the real star was the Gospel Choir show",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 28
+      },
+      {
+        "theme": "Service",
+        "value": "Tripadvisor reviewer on Blue Note: Staff is quite pushy during the seating process. Worth weighing alongside the overall 4.2/5 score before locking in the plan.",
+        "claims": [
+          {
+            "text": "Staff is quite pushy during the seating process",
+            "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html"
+          }
+        ],
+        "source": "Tripadvisor",
+        "sourceUrl": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+        "rating": "4.2/5",
+        "ratingBasis": "listing aggregate",
+        "polarity": "praise",
+        "words": 25
+      }
+    ]
+  },
+  "reviewThemes": {
+    "representative": true,
+    "source": "https://www.tripadvisor.com/Restaurant_Review-g60763-d527041-Reviews-Blue_Note-New_York_City_New_York.html",
+    "site": "Tripadvisor",
+    "via": "SERP-saved review snapshot 2026-10-29 via WebSearch result highlights (verbatim page text; direct Tripadvisor fetch 403); not a live fetch",
+    "praise": [
+      "the real star was the Gospel Choir show",
+      "Staff is quite pushy during the seating process"
+    ],
+    "watchOuts": [],
+    "themes": [
+      "Overall experience",
+      "Service"
+    ],
+    "complaints": []
+  },
+  "fieldsWritePass": {
+    "pass": "vk728-all-things-essence-ladder-20261029",
+    "new": false,
+    "at": "2026-10-29T09:10:00-07:00",
+    "writer": "grok-bot"
+  },
+  "itineraryNote": "Blue Note: catch a headliner at the Village club; shows run Music at 8:00 p.m. and 10:30 p.m., so pick the late set for atmosphere.",
+  "cardReviewsPass": "vk728-card-reviews-pass-20261029",
+  "cardReviewsStarsPass": "vk728-card-reviews-stars-20261029",
+  "cardReviewsTripcom10Pass": "vk728-card-reviews-tripcom10-20261029",
+  "review1": "Blue Note shows are widely praised, though delayed entry well past the posted door time and a mandatory per-person minimum on top of the ticket price frustrate some attendees.",
+  "review1Source": "Restaurantji",
+  "review1Rating": "3/5",
+  "review1Theme": "Music",
+  "review1SourceUrl": "https://www.restaurantji.com/ny/new-york/blue-note-/",
+  "review1Stars": 3,
+  "review2": "Intimate table seating, a charged atmosphere, great sound and amazing, efficient service are clear highlights, even if the club squeezes extra people onto tables and the room feels crowded.",
+  "review2Source": "Exa place listing",
+  "review2Rating": "4/5",
+  "review2Theme": "Seating",
+  "review2SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review2Stars": 4,
+  "review3": "The legendary venue continues to book top talent, with the Gospel Choir show singled out, though bar spots have limited views.",
+  "review3Source": "Exa place listing",
+  "review3Rating": "4/5",
+  "review3Theme": "Seating",
+  "review3SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review3Stars": 4,
+  "review4": "Buying table tickets and arriving about an hour early leaves time to eat and claim better seats, since tables are shared and the room fills quickly before showtime.",
+  "review4Source": "Exa place listing",
+  "review4Rating": "5/5",
+  "review4Theme": "Seating",
+  "review4SourceUrl": "https://exa.ai/library/place/3yp348r72jp",
+  "review4Stars": 5,
+  "review1Claims": [
+    "The performance was wonderful, but I did not appreciate how long it took for the club to let us in.",
+    "It said doors open at 9:30 but people were not let in until almost 10.",
+    "I also do not appreciate that we were forced to order a $20 minimum per person after paying over 150 for a ticket."
+  ],
+  "review2Claims": [
+    "The renowned Blue Note has intimate seating for those who reserve tables.",
+    "The atmosphere was charged.",
+    "The sound was great.",
+    "The service was amazing and efficient.",
+    "My food was delicious.",
+    "My only gripe is that they squeeze people in.",
+    "Really, there should have been only six people to a table, not 8.",
+    "Other than that, I truly enjoyed Louie Vega, the Elements of Life and Lisa Fischer."
+  ],
+  "review3Claims": [
+    "Blue Note has long ago secured it's place in Jazz history internationally, and continues to showcase the best of the best.",
+    "There is a $20 minimum at the bar, which is limited and also all the way to the side, so don't expect to get good views.",
+    "The sound system is excellent, though, and the food good.",
+    "If you love the artist you're going to see, spring for a table, get your tickets early, and get there early, as all seating is first-come first-served!"
+  ],
+  "review4Claims": [
+    "If you want to enjoy a good jazz show definitely purchase the tickets for the tables but try to get there early like 1 hour before the show so you can eat and get the best seats for the show.",
+    "It gets crowded but all the servers move fast.",
+    "The tables are shared, so keep it in mind.",
+    "The drinks were really good!",
+    "The food was just ok.",
+    "The live music was awesome.",
+    "And by the end of the show everyone was dancing and enjoying themselves."
+  ],
+  "reviewsLabel": "Representative reviews written from 28 reviews",
+  "reviewsRepresentative": true,
+  "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
+  "representative": true,
+  "writtenAt": {
+    "reviews": "2026-10-29T20:22:18.186716+00:00"
+  },
+  "writtenOrder": [
+    "reviews"
+  ]
+}
