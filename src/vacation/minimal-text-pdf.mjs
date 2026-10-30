@@ -52,26 +52,37 @@ export function renderMinimalTextPdf({ title = 'Report', lines = [] } = {}) {
   const fontSize = 11;
   const leading = 14;
   const startY = 760;
-  const commands = ['BT', `/F1 ${fontSize} Tf`, `${leading} TL`, `72 ${startY} Td`];
-  for (let index = 0; index < bodyLines.length; index += 1) {
-    if (index > 0) commands.push('T*');
-    commands.push(`(${escapePdfText(bodyLines[index])}) Tj`);
+  const perPage = 50;
+  const pages = [];
+  for (let index = 0; index < bodyLines.length; index += perPage) {
+    pages.push(bodyLines.slice(index, index + perPage));
   }
-  commands.push('ET');
-  const stream = `${commands.join('\n')}\n`;
-  const streamLength = Buffer.byteLength(stream, 'utf8');
+  if (!pages.length) pages.push(['']);
 
   const objects = [];
+  const pageCount = pages.length;
+  const kids = pages.map((_, index) => `${4 + index * 2} 0 R`).join(' ');
   objects.push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
-  objects.push('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
-  objects.push(
-    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
-    + '/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
-  );
-  objects.push('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
-  objects.push(
-    `5 0 obj\n<< /Length ${streamLength} >>\nstream\n${stream}endstream\nendobj\n`,
-  );
+  objects.push(`2 0 obj\n<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>\nendobj\n`);
+  objects.push('3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
+  pages.forEach((pageLines, pageIndex) => {
+    const pageId = 4 + pageIndex * 2;
+    const contentId = pageId + 1;
+    const commands = ['BT', `/F1 ${fontSize} Tf`, `${leading} TL`, `72 ${startY} Td`];
+    pageLines.forEach((line, index) => {
+      if (index > 0) commands.push('T*');
+      commands.push(`(${escapePdfText(line)}) Tj`);
+    });
+    commands.push('ET');
+    const stream = `${commands.join('\n')}\n`;
+    objects.push(
+      `${pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] `
+      + `/Resources << /Font << /F1 3 0 R >> >> /Contents ${contentId} 0 R >>\nendobj\n`,
+    );
+    objects.push(
+      `${contentId} 0 obj\n<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}endstream\nendobj\n`,
+    );
+  });
 
   let pdf = '%PDF-1.4\n';
   const offsets = [0];
