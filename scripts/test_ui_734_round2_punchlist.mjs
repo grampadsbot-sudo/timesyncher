@@ -22,6 +22,7 @@ assert.match(committed, /if\(hotel\)\{const summary=pick\(ha\(G\)\.summary/);
 assert.match(committed, /data-ts-detail-info-box":"website"/);
 assert.match(committed, /data-ts-detail-summary-readonly":"1"/);
 assert.match(committed, /data-ts-detail-reviews-readonly":"1"/);
+assert.match(committed, /data-ts-detail-reviews":"1"/);
 
 assert.match(committed, /Ce\?n\.jsxs\("label",\{style:Hn,children:\["Summary",n\.jsx\("textarea"/);
 assert.match(committed, /Ce\?n\.jsxs\("label",\{style:Hn,children:\["Details",n\.jsx\("textarea"/);

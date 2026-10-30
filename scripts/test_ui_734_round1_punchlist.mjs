@@ -39,7 +39,9 @@ assert.match(committed, /data-ts-review-stars":"1"/);
 assert.doesNotMatch(committed, /children:\[x\.r,"★"\]/);
 
 const readonlyOnly = patchThingDetailReadonlyBoxes(committed);
-assert.doesNotMatch(readonlyOnly, /rev\.length\?n\.jsxs\("div",\{"data-ts-detail-reviews":"1"/);
+assert.doesNotMatch(readonlyOnly, /rev\.length\?n\.jsxs\("div",\{"data-ts-detail-reviews":"1",style:\{marginBottom:12\}/);
+assert.match(committed, /data-ts-detail-reviews-readonly":"1"/);
+assert.match(committed, /data-ts-detail-reviews":"1"/);
 
 const uiOnly = patchUi734Round1(committed);
 assert.equal(uiOnly, committed);

@@ -58,3 +58,4 @@ export function patchUi734Round1(source = '') {
 }
 
 export { patchUi734Round2 } from './trek-ui-734-round2-patch.mjs';
+export { patchUi735SharedPdf } from './trek-ui-735-shared-pdf-patch.mjs';
