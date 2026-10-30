@@ -212,7 +212,7 @@ function buildFontWidthArray(face, usedGlyphs) {
   const parts = [];
   for (const gid of gids) {
     const width = face.advanceWidths[gid] || 0;
-    parts.push(gid, Math.round((width * 1000) / face.unitsPerEm));
+    parts.push(`${gid} [${Math.round((width * 1000) / face.unitsPerEm)}]`);
   }
   return `[${parts.join(' ')}]`;
 }
@@ -337,7 +337,7 @@ export function renderMinimalTextPdf({ title = 'Report', lines = [] } = {}) {
     pageLines.forEach((line, index) => {
       if (index > 0) commands.push('T*');
       if (line) commands.push(`${encodeLineHex(line, face)} Tj`);
-      else commands.push('<0020> Tj');
+      else commands.push(`<${hexPad(face.glyphForCodePoint(0x20) || 0)}> Tj`);
     });
     commands.push('ET');
     const stream = `${commands.join('\n')}\n`;
