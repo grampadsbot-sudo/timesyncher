@@ -866,11 +866,11 @@ assertStyleTwoPatchParses(livePatched);
 await assertTemporaryJavaScriptParses(livePatched, 'patched TREK bundle failed node --check');
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'restaurants' }),
-  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/report/restaurants.pdf`,
+  'https://vacation-staging.timesyncher.com/api/pdf/shared/sample-trip/report/restaurants.pdf',
 );
 assert.equal(
   productPdfUrl({ shareToken: 'sample-trip', report: 'daily', pdfPath: 'sample-trip/daily/2.pdf' }),
-  `${getProductTrekPublic()}/api/pdf/shared/sample-trip/daily/2.pdf`,
+  'https://vacation-staging.timesyncher.com/api/pdf/shared/sample-trip/daily/2.pdf',
 );
 assert.match(
   forwardedKeepsakeSearch(new URL('https://x.test/?ksLogo=0&ksMapOff=1,2,3&other=1')),
