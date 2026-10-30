@@ -193,7 +193,8 @@ export function vkSearchResultToDossier(result = {}, place = {}) {
     const explicit = raw?.sourceUrl || sourceUrl;
     const claim = claims.find((row) => claimBody(row).includes(value) && pageSupports(pageIndex(row.sourceUrl), value));
     const official = sources.findIndex((source) => !/yelp\.|google\.|tripadvisor\./i.test(new URL(source.url).hostname));
-    const index = explicit ? pageIndex(explicit) : claim ? pageIndex(claim.sourceUrl) : official >= 0 ? official : pages.length ? 0 : -1;
+    const supporting = pages.findIndex((_, i) => pageSupports(i, value));
+    const index = explicit ? pageIndex(explicit) : claim ? pageIndex(claim.sourceUrl) : supporting >= 0 ? supporting : official >= 0 ? official : pages.length ? 0 : -1;
     scalar(key, value, index);
   };
   hint('hours', result.hoursHint, result.hoursSourceUrl);
