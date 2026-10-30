@@ -38,7 +38,7 @@
   },
   "priceHint": "HH drinks $7–12; oysters $2; snacks $5; baseline floor $24 cocktail",
   "hoursHint": "Mon–Fri 12pm–2am; Sat–Sun 11am–2am (official)",
-  "happyHourHint": "Daily 3–6pm: draft $7, wine $10, cocktails $12, oysters $2 min 4 (official menu)",
+  "happyHourHint": "Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12",
   "summaryClaims": [
     "Happy Hour 3 pm - 6 pm daily",
     "They have the best burgers on the UWS!",
@@ -140,7 +140,16 @@
         "ratingBasis": "listing aggregate (per-review stars not saved)",
         "words": 29
       }
-    ]
+    ],
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Happy Hour 3 pm - 6 pm daily Draft Beers $ 7 Wines by the glass $ 10 prosecco, white, rosé, red Cocktails $ 12",
+          "sourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/"
+        }
+      ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -219,9 +228,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.266569+00:00"
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
   },
   "writtenOrder": [
-    "reviews"
-  ]
+    "happyHour"
+  ],
+  "happyHourSourceUrl": "https://www.nobodytoldme.nyc/menu/uws-happy-hour/",
+  "happyHour": true
 }

@@ -19,6 +19,14 @@
       "text": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter … A must see and experience when in NY … go above and beyond for that true over the top experience … a birthday and a new job … It’s worth securing a reservation when they go live … your hosts go above and beyond for that true over the top experience … the whole experience was just wonderful",
       "snippet": "Carbone New York, New York - Menu, Reviews (822), Photos (77) - Restaurantji | | 4.2 822 ratings … The food was exceptional, the decor is so chic … Roberto was a sensational waiter",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://www.yelp.com/biz/carbone-new-york",
+      "title": "CARBONE - Yelp",
+      "fetchedAt": "2026-10-30T03:02:58.709607+00:00",
+      "fetchMethod": "search-snapshot (direct fetch 403)",
+      "text": "CARBONE - 181 Thompson St, New York. Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM. Location & Hours: Mon 5:00 PM - 11:30 PM; Tue-Sun 11:30 AM - 2:00 PM 5:00 PM - 11:30 PM. Takes reservations. Carbone is an Italian-American restaurant created by Mario Carbone, Rich Torrisi and Jeff Zalaznick located in Greenwich Village.",
+      "snippet": "CARBONE - 181 Thompson St, New York. Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM. Location & Hours: Mon 5:00 PM - 11:30 PM; Tue-Sun 11:30 AM - 2:00 PM 5:00 PM - 11:30 PM. Takes reservations. Carbone is an Italian-American restaurant created by Mario Carbone, Rich Torrisi and Jeff Zalaznick located in Greenwich Village."
     }
   ],
   "rating": {
@@ -146,6 +154,25 @@
           "sourceUrl": "https://carbonenewyork.com/"
         }
       ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [
+        {
+          "text": "Lunch Tuesday - Sunday 11:30am - 2:00pm Dinner Monday - Sunday 5:00pm - 11:30pm",
+          "sourceUrl": "https://carbonenewyork.com/"
+        },
+        {
+          "text": "Open 11:30 AM - 2:00 PM, 5:00 PM - 11:30 PM",
+          "sourceUrl": "https://www.yelp.com/biz/carbone-new-york"
+        }
+      ],
+      "note": "Confirmed none: official hours list only lunch and dinner service; no happy hour on carbonenewyork.com, Yelp hours, or Restaurantji.",
+      "checkedSources": [
+        "https://carbonenewyork.com/",
+        "https://www.yelp.com/biz/carbone-new-york",
+        "https://www.restaurantji.com/ny/new-york/carbone-/"
+      ]
     }
   },
   "reviewThemes": {
@@ -212,5 +239,11 @@
   "reviewsLabel": "Representative reviews written from 8 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T03:02:58.709607+00:00"
+  }
 }

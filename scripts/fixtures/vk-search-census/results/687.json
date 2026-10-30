@@ -114,6 +114,16 @@
           "sourceUrl": "https://www.opentable.com/r/cilantro-new-york"
         }
       ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Soft/unconfirmed: only delivery-app listings (Uber Eats/Postmates, not allowlisted) show Monday - Thursday 3:00 PM - 7:00 PM Happy Hour; official cilantrony.com fetch returned 404 and Restaurantji shows none. Not cited.",
+      "status": "soft",
+      "checkedSources": [
+        "https://www.opentable.com/r/cilantro-new-york",
+        "https://www.restaurantji.com/ny/new-york/cilantro-/"
+      ]
     }
   },
   "fieldsWritePass": {
@@ -188,5 +198,13 @@
   "reviewsLabel": "Representative reviews written from 9 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "happyHourSourceUrl": null,
+  "happyHour": false,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  }
 }

@@ -114,7 +114,18 @@
         "polarity": "praise",
         "words": 34
       }
-    ]
+    ],
+    "happyHour": {
+      "value": null,
+      "claims": [],
+      "note": "Jazz club inside Aman: HH not required per Craig rule; Aman dining pages state no happy hour.",
+      "status": "na",
+      "checkedSources": [
+        "https://www.aman.com/hotels/aman-new-york/dining",
+        "https://www.aman.com/hotels/aman-new-york",
+        "https://exa.ai/library/place/8t7j7x9qnkg"
+      ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -194,9 +205,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.273649+00:00"
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
   },
   "writtenOrder": [
-    "reviews"
-  ]
+    "happyHour"
+  ],
+  "happyHourSourceUrl": null,
+  "happyHour": null
 }

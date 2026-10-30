@@ -114,6 +114,16 @@
           "sourceUrl": "https://www.joespizzanyc.com/"
         }
       ]
+    },
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.joespizzanyc.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.joespizzanyc.com/",
+        "https://www.restaurantji.com/ny/new-york/joes-pizza-4/"
+      ]
     }
   },
   "reviewThemes": {
@@ -185,9 +195,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.269732+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
 }

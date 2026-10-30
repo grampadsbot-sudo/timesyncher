@@ -109,6 +109,21 @@
           "sourceUrl": "https://www.zincbar.com/"
         }
       ]
+    },
+    "happyHour": {
+      "value": null,
+      "claims": [
+        {
+          "text": "Monday - Wednesday 5 pm - 12 am Thursday 5 pm - 1 am Friday 5 pm - 2 am Saturday 2",
+          "sourceUrl": "https://www.zincbar.com/"
+        }
+      ],
+      "note": "Jazz club (Zinc Bar): HH not required per Craig rule. Official site lists bar hours only; no happy hour stated.",
+      "status": "na",
+      "checkedSources": [
+        "https://www.zincbar.com/",
+        "https://www.restaurantji.com/ny/new-york/zinc-bar-/"
+      ]
     }
   },
   "reviewThemes": {
@@ -187,9 +202,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.271736+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": null
 }

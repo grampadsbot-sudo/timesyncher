@@ -54,7 +54,7 @@
   },
   "priceHint": "OT $31–50; HH wine flight $14 / wine of day $10",
   "hoursHint": "Dinner Mon–Thu & Sun 4–9:30pm, Fri–Sat 4–10:30pm; Lunch Tue–Fri 12–3pm; Brunch Sat–Sun 11am–3pm (official)",
-  "happyHourHint": "Daily 4–6pm: $14 wine flights, $10 wine of the day, HH cocktails $9–11 (official menu)",
+  "happyHourHint": "Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday.",
   "summaryClaims": [
     "$1.5 oysters",
     "$14 wine flights",
@@ -181,7 +181,16 @@
         "ratingBasis": "listing aggregate (per-review stars not saved)",
         "words": 36
       }
-    ]
+    ],
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Happy hour every day, 4 to 6 pm, on Amsterdam Avenue: $14 wine flights, $10 wine of the day, $9 cocktails, and $1.50 oysters all day Sunday and Monday.",
+          "sourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour"
+        }
+      ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -256,5 +265,13 @@
   "reviewsLabel": "Representative reviews written from 12 reviews",
   "reviewsRepresentative": true,
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "happyHourSourceUrl": "https://www.ameliewinebar.com/uws/menus/happy-hour",
+  "happyHour": true,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  }
 }

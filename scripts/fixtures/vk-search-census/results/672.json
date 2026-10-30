@@ -47,7 +47,7 @@
   },
   "priceHint": "$$ neighborhood bar; HH $5 burger noted by NY Mag",
   "hoursHint": "Mon 5–11; Tue–Wed 5–12; Thu 4–2am; Fri 2–2am; Sat 12–2am; Sun 12–11 (official; page also shows updated Thu–Sun daytime)",
-  "happyHourHint": "Happy hour referenced on site/press ($5 burger); confirm exact HH window in-person — stoop.bar lists 5–7pm daily (third-party)",
+  "happyHourHint": null,
   "happyHourRejectReason": null,
   "summaryClaims": [
     "511 Amsterdam Ave (btw 84/85th)",
@@ -140,7 +140,24 @@
         }
       ]
     },
-    "reviewsScope": "Reviews are for e's BAR, 511 Amsterdam Ave (first venue named in this row), not every candidate in this row"
+    "reviewsScope": "Reviews are for e's BAR, 511 Amsterdam Ave (first venue named in this row), not every candidate in this row",
+    "happyHour": {
+      "value": false,
+      "claims": [
+        {
+          "text": "Monday | 5PM - 11PM Tuesday | 5PM - 12AM Wednesday | 5PM - 12AM Thursday",
+          "sourceUrl": "https://e-barnyc.com/"
+        }
+      ],
+      "note": "Soft/unconfirmed: official site quotes press mentioning a $5 burger at Happy Hour but states no days/times; an Exa review says happy hour ends at 4p on saturdays. No allowlisted page states the window. stoop.bar not allowlisted, not cited.",
+      "status": "soft",
+      "checkedSources": [
+        "https://e-barnyc.com/",
+        "https://www.thedeadpoet.com/",
+        "https://exa.ai/library/place/n75jlxhmk9d",
+        "https://exa.ai/library/place/0v5s9xtvsfw"
+      ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -198,5 +215,13 @@
     "representative": true
   },
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
-  "representative": true
+  "representative": true,
+  "happyHourSourceUrl": null,
+  "happyHour": false,
+  "writtenOrder": [
+    "happyHour"
+  ],
+  "writtenAt": {
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  }
 }

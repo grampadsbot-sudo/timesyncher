@@ -131,7 +131,17 @@
         "ratingBasis": "listing aggregate (per-review stars not saved)",
         "words": 36
       }
-    ]
+    ],
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: bakery; official angelinabakery.com returned 403, saved Exa page mentions no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://angelinabakery.com/",
+        "https://exa.ai/library/place/dl6s896ycgb"
+      ]
+    }
   },
   "reviewThemes": {
     "representative": true,
@@ -216,9 +226,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.272578+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
 }

@@ -73,7 +73,17 @@
         }
       ]
     },
-    "reviewsScope": "Reviews are for the Famous Original Ray's Pizza branch at 462 Columbus Ave (Upper West Side), not every branch"
+    "reviewsScope": "Reviews are for the Famous Original Ray's Pizza branch at 462 Columbus Ave (Upper West Side), not every branch",
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.rayspizza.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.rayspizza.com/",
+        "https://exa.ai/library/place/wf26hjkh6mk"
+      ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -145,9 +155,12 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.268391+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourHint": null,
+  "happyHourSourceUrl": null,
+  "happyHour": false
 }

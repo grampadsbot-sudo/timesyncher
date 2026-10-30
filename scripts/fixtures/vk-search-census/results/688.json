@@ -19,6 +19,14 @@
       "text": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … lvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great … The food and service was amazing! … bought her seasoning and hot sauce … First time in Harlem, the best food hands down.. we ate everything on our plates! … soooo delicious",
       "snippet": "Sylvia's Restaurant, New York - Menu, Reviews (925), Photos (136) - Restaurantji | | 4.2 925 ratings … First time in Harlem, the best food hands down … the drinks were great",
       "fetchMethod": "live curl fetch 2026-10-29 (Restaurantji listing page); text stored as verbatim excerpts of the rating line and quoted reviews"
+    },
+    {
+      "url": "https://sylviasrestaurant.com/drink-menu",
+      "title": "Sylvia's Harlem official (sylviasrestaurant.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Sylvia’s Restaurant - Drink Menu Skip to main content (212)-996-0660 info@sylviasrestaurant.com Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Twitter / X page Facebook page Instagram page Google page Twitter / X page Facebook page Instagram page Google page Toggle navigation Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Our Drinks Happy Hour Cocktails Beer Wine and Bubbles Zero-Proof Favorites Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8 Riesling, Sauvignon Blanc, Chianti, Pinot Noir, Prosecco, Rosé Prosecco, Moscato Wines by The Bottle $30 Chardonnay, Cabernet, Prosecco, Rosé Prosecco Beer $5 Budweiser Bud Light Corona Cocktails $10 Harlem Blues Margarita Mo’ Money Whiskey Margarita Well Drinks (max 2 mixers): House Rum, Tequila, Vodka, Gin, Whiskey Please choose wisely. No returns on alcoholic beverages. Cocktails on The Rocks South Carolina Rum Punch Rum blend and Grandma Julia’s Fruit Punch Sylvia’s Soulful Sangria Rum, red wine, and Grandma Julia’s Fruit Punch Sylvia’s Summertime Sangria (Seasonal) White Rum, white wine, juices Harlem Blues Sylvia’s homemade lemonade, vodka, sour mix, and a splash of blue curaçao and cranberry juice Margarita Special (Strawberry, Mango, Peach, or Pineapple) Blanco tequila, lime juice, orange liqueur Uptown Delight Cognac, Sylvia’s Uptown Long Island Iced Tea Vodka, gin, rum, tequila, splash of Coke Harlem Old Fashioned Rye whiskey, bitters The Hemingway Rum, orange liqueur, pineapple juice Cocktails Straight Up Mo’ Money Gin, strawberry puree, fresh lime The 1944 Tequila, dry vermouth, ginger, bitters, egg white Love, Harlem Vodka, elderflower, dry vermouth, fresh lime Coconut Lime Drop Coconut rum, vodka, fresh lime Espresso Martini Vodka, espresso Cocktails Bubbly The Lenox Prosecco with Grandma Julia’s Fruit Punch, topped with a shot of cognac Bellini Prosecco with peach nectar Hugo Spritz Prosecco, elderflower, club soda, gin, mint South Carolina Spritz Grandma Julia's Fruit Punch, ,rum, prosecco, club soda Mo' Money Spritz Gin, strawberry puree, fresh lime Beer Harlem’s Own Sugar Hill Golden Ale Stella Artois Corona Heineken Budweiser Bud Light White Wine Dante Chardonnay, California, 2024 Ca’di Ponti Pinot Grigio, Italy, 2025 Fair Valley Sauvignon Blanc, South Africa, 2024 Ryan Patrick Riesling, Washington, 2023 Red Wine Dante Cabernet Sauvignon, California, 2023 Cesani Chianti Colli Senesi, Italy, 2022 Dante Merlot, California, 2023 Dante Pinot Noir, 2024 Sparkling Wine Ca’ Furlan Cuvée Beatrice Prosecco, Italy Ca’ Furlan Cuvée Beatrice Rosé Prosecco, Italy Champagne Veuve Clicquot Brut Rosé Moët & Chandon Nectar Imperial Zero-Proof Favorites Grandma Julia’s Fruit Punch Sylvia's Nojito Home Brewed Sweetened Iced Tea Peach Iced Tea Lemonade Peach, Strawberry, Mango Sylvia’s Uptown Coke Diet Coke Sprite Ginger Ale Bottled Water Order Reserve Parties Jobs",
+      "snippet": "Sylvia’s Restaurant - Drink Menu Skip to main content (212)-996-0660 info@sylviasrestaurant.com Menu Food Drinks Daily Specials Order Catering/Parties Events News Gift Cards Loyalty Shop Cookbook Products Jobs Scholarships Contact Us * Reserve Twitter / X page Facebook page Instagram page Google page Twitter / X page Facebook page Instagram page Google page Toggle navigation Menu Food Drinks Daily"
     }
   ],
   "rating": {
@@ -31,7 +39,7 @@
   },
   "priceHint": null,
   "hoursHint": null,
-  "happyHourHint": null,
+  "happyHourHint": "Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8",
   "summaryClaims": [
     "Founded in 1962 by Sylvia Woods",
     "The food and service was amazing!",
@@ -105,6 +113,15 @@
           "sourceUrl": "https://en.wikipedia.org/wiki/Sylvia%27s_Restaurant_of_Harlem"
         }
       ]
+    },
+    "happyHour": {
+      "value": true,
+      "claims": [
+        {
+          "text": "Monday through Friday 3 pm – 7 pm Happy Hour Wines by The Glass $8",
+          "sourceUrl": "https://sylviasrestaurant.com/drink-menu"
+        }
+      ]
     }
   },
   "reviewThemes": {
@@ -174,9 +191,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.271375+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": "https://sylviasrestaurant.com/drink-menu",
+  "happyHour": true
 }

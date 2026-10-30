@@ -26,6 +26,14 @@
       "fetchedAt": "2026-10-29T09:19:20-07:00",
       "fetchMethod": "live curl fetch 2026-10-29; saved r8/exa_p6w36cmf6x5.html",
       "text": "I'm so glad, I gave me the opportunity to visit Carmine's for my birthday. It was an amazing experience. The food quality is super. Service top notch 👌. And atmosphere simply the best you can find. I totally recommend this restaurant make sure to come hungry because you will for sure get enough food. Thank you to all the staff you customer service is above and beyond. I wasn’t aware this was a family style restaurant, which means massive portions meant for sharing I had the lasagna and it was delicious, massive but delicious. I ended up giving half my lasagna to the table next to me. I had the cheese cake and again that was unbelievably huge as well I found everything to be reasonably priced given the portion sizes The service was great, and the server took the time to give me great recommendations. Highly recommended this dinning experience. If you’re going by yourself prepare to take leftovers with you. In Times Square I ate on the restaurant a some years ago and we had a great experience. The review below represents what we typically order everytime we go to Carmines. I have been to Carmine's in NYC, Washington, DC and Las Vegas and each and every time it is on point!!! I am not sure why i have never left a review but I will be fixing that today. I took photos and a copy of the receipt from Las Vegas so yall can see everything we ordered to go.. the only difference is the bread doesn't transport well with cheese i will remove the cheese next time. The show is amazing and the actors and actresses are so great. It was very entertaining. My only issue was the food. They give a great amount of food but not enough time to eat it. You are sharing plates with 10 different people. you serve yourself a little at first so everyone can eat. They then would send you to do a task and when u came back they would clear the entire table. We had full plates of food left and you think you are going to go back to finish it but it’s gone. They don’t mention that they are going to take everything away."
+    },
+    {
+      "url": "https://www.carminesnyc.com/menus",
+      "title": "Carmine's Times Square official (www.carminesnyc.com)",
+      "fetchedAt": "2026-10-30T13:06:00.262645+00:00",
+      "fetchMethod": "curl",
+      "text": "Carmine's Dining Menu & Take-Out Menu Skip to main content --> LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS Should we open Carmine's in your city? Let us know! --> TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV TIMES SQUARE, NYC WASHINGTON D.C. UPPER WEST SIDE, NYC LAS VEGAS, NV ATLANTIC CITY, NJ --> TIMES SQUARE, NYC WASHINGTON D.C. UPPER WEST SIDE, NYC LAS VEGAS, NV ATLANTIC CITY, NJ OUR ONLINE STORE VISIT THE STORE --> SELECT ONE OF OUR SAUCES All Sauces Recipes Where to Buy RESERVATIONS ORDER ONLINE TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV MENUS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV LOCATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS PARTIES TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV CATERING TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV HAPPENINGS FEATURES RECIPES BLOG PRESS SAUCE GIFT CARDS SHOP --> CAREERS Carmine's Italian Menus Select a restaurant location below to view menus: TIMES SQUARE, NYC SELECT LOCATION UPPER WEST SIDE, NYC SELECT LOCATION ATLANTIC CITY, NJ SELECT LOCATION WASHINGTON D.C. SELECT LOCATION LAS VEGAS, NV SELECT LOCATION --> --> Join our list to receive promotions & updates Join Our List Join our list to receive promotions & updates Enter the information below to be entered on to our list to receive specials, promotions and updates. First Name * Zip Code * Birthday * Month 01 02 03 04 05 06 07 08 09 10 11 12 Day 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 10 21 22 23 24 25 26 27 28 29 30 31 Email * Your Favorite Location * Please Choose Times Square, NYC Upper West Side, NYC Atlantic City, NJ Las Vegas Washington D.C. Select any additional locations you're interested in below: TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ LAS VEGAS WASHINGTON D.C. Please complete all required fields. --> --> LEGAL PRIVACY SITE MAP ACCESSIBILITY © 2026 Carmine's Broadway Feast, Inc. A W3C | WAI-AA WCAG 2.0 Compliant Website CAREERS SIGN UP FOR NEWS & PROMOTIONS --> CAREERS ABOUT GIFT CARDS PRESS CONTACT MENUS ORDER ONLINE RESERVATIONS AGREE Our website uses cookies so that we can understand how you use our site, provide necessary site functionality and improve your online experience. By using this website, you agree to the use of cookies. You can read more in our privacy policy . --> Follow Us on Facebook Select a location TIMES SQUARE UPPER WEST SIDE ATLANTIC CITY WASHINGTON D.C. LAS VEGAS A Quick Holiday Note to Customers We get an increased order volume during the holidays. While placing an order, your requested time slot may not be available. We’re sorry for any inconvenience this may cause. If this happens please try to select another time slot or try placing your order online at one of our other Carmines locations. Proceed to Order Thank you for choosing Carmine’s. Hungry for barbecue? Try Virgil’s BBQ. Click here to order online. A Quick Holiday Note to Customers We get an increased order volume during the holidays. While placing an order, your requested time slot may not be available. We’re sorry for any inconvenience this may cause. If this happens please try to select another time slot or try placing your order online at one of our other Carmines locations. Proceed to Order Thank you for choosing Carmine’s. Hungry for barbecue? Try Virgil’s BBQ. Click here to order online.",
+      "snippet": "Carmine's Dining Menu & Take-Out Menu Skip to main content --> LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS LOCATIONS MENUS PARTIES CATERING HAPPENINGS RECIPES SAUCE SHOP ORDER ONLINE RESERVATIONS TIMES SQUARE, NYC UPPER WEST SIDE, NYC ATLANTIC CITY, NJ WASHINGTON D.C. LAS VEGAS, NV ATLANTIS, BAHAMAS Should we open Carmine's in your city? Let us know! --"
     }
   ],
   "rating": {
@@ -153,7 +161,19 @@
         "ratingBasis": "listing aggregate (per-review stars not saved)",
         "words": 33
       }
-    ]
+    ],
+    "happyHour": {
+      "value": false,
+      "claims": [],
+      "note": "Confirmed none: official site (www.carminesnyc.com) and saved allowlisted pages state no happy hour.",
+      "status": "none",
+      "checkedSources": [
+        "https://www.carminesnyc.com/locations/times-square",
+        "https://www.opentable.com/carmines-44th-street-nyc",
+        "https://exa.ai/library/place/p6w36cmf6x5",
+        "https://www.carminesnyc.com/menus"
+      ]
+    }
   },
   "fieldsWritePass": {
     "pass": "vk728-all-things-essence-ladder-20261029",
@@ -251,9 +271,11 @@
   "cardReviewsRepresentativePass": "vk728-card-reviews-representative-20261029",
   "representative": true,
   "writtenOrder": [
-    "reviews"
+    "happyHour"
   ],
   "writtenAt": {
-    "reviews": "2026-10-29T20:22:18.270588+00:00"
-  }
+    "happyHour": "2026-10-30T13:06:00.262645+00:00"
+  },
+  "happyHourSourceUrl": null,
+  "happyHour": false
 }
