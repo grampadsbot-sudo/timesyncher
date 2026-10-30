@@ -13,12 +13,14 @@ const raw = execFileSync('git', ['show', `${UPSTREAM_COMMIT}:${UPSTREAM_PATH}`],
 });
 
 const rendered = renderServedTrekBundle(raw.toString('utf8'));
-assert.match(rendered, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
-assert.match(rendered, /className:"tsv-logo-fallback",style:\{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,transform:"translateY\(-2\.5px\)"\}/);
+assert.match(rendered, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/);
+assert.match(rendered, /tsCenterThingLogoFallbackEl/);
+assert.match(rendered, /className:"tsv-logo-fallback",ref:Rn=>\{Rn&&tsCenterThingLogoFallbackEl\(Rn\)/);
 assert.match(rendered, /className:"tiny-logo",src:zt,alt:""/);
 assert.match(rendered, /function tsCenterThingLogoInk\(/);
 assert.match(rendered, /tsCenterThingLogoInk\(Rn\.currentTarget\)/);
-assert.doesNotMatch(rendered, /tsCenterThingLogoFallback/);
+assert.doesNotMatch(rendered, /function tsCenterThingLogoFallback\(/);
+assert.match(rendered, /function tsCenterThingLogoFallbackEl\(/);
 assert.match(rendered, /tsv-logo-fallback/);
 assert.match(rendered, /_l=G=>\{if\(qr\(G\)\)return pDe;const Re=ha\(G\);return Re\.logoUrl\|\|Re\.iconUrl\|\|G\.logoUrl\|\|oi\(cc\(G\)\)\}/);
 assert.match(rendered, /data-ts-category-tab-icon":"1"/);

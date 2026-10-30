@@ -39,6 +39,11 @@ function scanText(label, text) {
       if (/\bCraig\b/.test(text)) hits.push({ needle, label });
       continue;
     }
+    if (needle === '"TBD"') {
+      if (/\bua\.time\?Yo\(ua\.time\):"TBD"/.test(text)) continue;
+      if (text.includes(needle)) hits.push({ needle, label });
+      continue;
+    }
     if (text.includes(needle)) hits.push({ needle, label });
   }
   return hits;

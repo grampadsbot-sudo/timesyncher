@@ -107,7 +107,10 @@ export function listRowFirstNameLineCenterY(chip) {
     const rg = doc.createRange();
     rg.selectNodeContents(nd);
     const rs = [...rg.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
-    if (rs.length) return rs[0].top + rs[0].height / 2;
+    if (rs.length) {
+      const line = rs.sort((a, b) => a.top - b.top || a.left - b.left)[0];
+      return line.top + line.height / 2;
+    }
   }
   const nr = nameEl.getBoundingClientRect();
   if (nr.height > 0) return nr.top + nr.height / 2;
@@ -125,7 +128,12 @@ function centerThingLogoInk(img) {
       if (!chip) return;
       const nw = img.naturalWidth;
       const nh = img.naturalHeight;
-      if (nw < 2 || nh < 2) return;
+      if (nw < 2 || nh < 2) {
+        const fb = chip.querySelector('.tsv-logo-fallback');
+        if (fb) centerThingLogoFallbackEl(fb);
+        img.dataset.tsLogoInkDone = '1';
+        return;
+      }
       const src = img.currentSrc || img.src || '';
       const key = (() => {
         const s = String(src || '').trim();
@@ -143,6 +151,8 @@ function centerThingLogoInk(img) {
         inkCy = Math.abs(nh - row.nh) > 2 ? (row.inkCy / row.nh) * nh : row.inkCy;
       }
       if (inkCy == null) {
+        const fb = chip.querySelector('.tsv-logo-fallback');
+        if (fb) centerThingLogoFallbackEl(fb);
         img.dataset.tsLogoInkDone = '1';
         return;
       }
@@ -170,6 +180,42 @@ function centerThingLogoInk(img) {
   else setTimeout(run, 0);
 }
 
+function centerThingLogoFallbackEl(fb) {
+  if (!fb || fb.dataset.tsLogoInkDone === '1') return;
+  if (fb.dataset.tsLogoInkQueued === '1') return;
+  fb.dataset.tsLogoInkQueued = '1';
+  const run = () => {
+    try {
+      if (!fb || fb.dataset.tsLogoInkDone === '1') return;
+      const chip = fb.closest('[data-ts-logo-chip]');
+      if (!chip) return;
+      const listRow = chip.closest('li[data-list-row], li[data-ts-list-row]');
+      const cat = String(listRow?.getAttribute('data-thing-category') || '').toLowerCase();
+      if (cat !== 'car' && cat !== 'flight') {
+        fb.style.transform = 'translateY(-2.5px)';
+        fb.dataset.tsLogoInkDone = '1';
+        return;
+      }
+      const chipRect = chip.getBoundingClientRect();
+      if (chipRect.height < 1) return;
+      let targetY = listRowFirstNameLineCenterY(chip);
+      if (targetY == null) targetY = chipRect.top + chipRect.height / 2;
+      const glyphRect = fb.getBoundingClientRect();
+      const glyphCy = glyphRect.top + glyphRect.height / 2;
+      let dy = targetY - glyphCy;
+      if (cat === 'car') dy -= 3;
+      if (Math.abs(dy) > 0.01) fb.style.transform = `translateY(${dy}px)`;
+      fb.dataset.tsLogoInkDone = '1';
+    } catch {
+      fb.dataset.tsLogoInkDone = '1';
+    } finally {
+      delete fb.dataset.tsLogoInkQueued;
+    }
+  };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+  else setTimeout(run, 0);
+}
+
 function minifyFn(fn) {
   return fn.toString().replace(/\s+/g, ' ').trim();
 }
@@ -178,14 +224,17 @@ const BUNDLE_INK_RUNTIME_FNS = [
   inkBboxCenterYFromRgba,
   listRowFirstNameLineCenterY,
   centerThingLogoInk,
+  centerThingLogoFallbackEl,
 ];
 
 const BUNDLE_INK_RENAMES = [
   ['function inkBboxCenterYFromRgba', 'function tsInkBboxCenterYFromRgba'],
   ['function listRowFirstNameLineCenterY', 'function tsListRowFirstNameLineCenterY'],
   ['function centerThingLogoInk', 'function tsCenterThingLogoInk'],
+  ['function centerThingLogoFallbackEl', 'function tsCenterThingLogoFallbackEl'],
   ['inkBboxCenterYFromRgba(', 'tsInkBboxCenterYFromRgba('],
   ['listRowFirstNameLineCenterY(', 'tsListRowFirstNameLineCenterY('],
+  ['centerThingLogoFallbackEl(', 'tsCenterThingLogoFallbackEl('],
 ];
 
 export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffsets) {
@@ -195,7 +244,7 @@ export function thingLogoInkCenterBundleSnippet(offsetTable = thingLogoInkOffset
   return `const TS_LOGO_INK_CY=${tableJson};${body}`;
 }
 
-const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:zt?[n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{Rn.currentTarget.style.display="none"},ref:Rn=>{if(Rn&&Rn.complete&&Rn.naturalWidth>1)tsCenterThingLogoInk(Rn)},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block"}})]:[n.jsx("span",{className:"tsv-logo-fallback",style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,transform:"translateY(-2.5px)"},children:ua})]})}';
+const THING_LOGO_CHIP_DC_INK_PATCH = 'dc=({item:G,size:Re=28})=>{const zt=_l(G),ua=Pc(G);return n.jsxs("span",{"data-ts-logo-chip":"1","aria-hidden":"true",style:{width:Re,height:Re,minWidth:Re,borderRadius:9,background:"#f8fafc",border:"1px solid #e5e7eb",display:"inline-grid",placeItems:"center",position:"relative",overflow:"hidden",fontSize:Math.max(14,Math.round(Re*.62)),lineHeight:1,boxShadow:"0 1px 2px rgba(15,23,42,0.05)",boxSizing:"border-box"},children:[n.jsx("span",{className:"tsv-logo-fallback",ref:Rn=>{Rn&&tsCenterThingLogoFallbackEl(Rn)},style:{display:"grid",placeItems:"center",width:"100%",height:"100%",lineHeight:1,gridArea:"1/1"},children:ua}),zt?n.jsx("img",{className:"tiny-logo",src:zt,alt:"",loading:"lazy",onError:Rn=>{const ua=Rn.currentTarget;ua.style.display="none";const Xi=ua.closest("[data-ts-logo-chip]"),ts=Xi&&Xi.querySelector(".tsv-logo-fallback");ts&&tsCenterThingLogoFallbackEl(ts)},ref:Rn=>{if(!Rn||!Rn.complete)return;if(Rn.naturalWidth>1)tsCenterThingLogoInk(Rn);else{const ua=Rn.closest("[data-ts-logo-chip]"),ts=ua&&ua.querySelector(".tsv-logo-fallback");ts&&tsCenterThingLogoFallbackEl(ts)}},onLoad:Rn=>{tsCenterThingLogoInk(Rn.currentTarget)},style:{maxWidth:"100%",maxHeight:"100%",width:"auto",height:"auto",objectFit:"contain",objectPosition:"center center",display:"block",gridArea:"1/1",background:"#f8fafc"}}):null]})}';
 
 const THING_LOGO_INK_ANCHOR = 'function pze({places:e=[],dayPlaces:t=[]';
 
@@ -224,8 +273,8 @@ export function patchThingLogoInkCenterInBundle(js = '', dcNeedles = []) {
   if (!out.includes('tsCenterThingLogoInk(Rn.currentTarget)')) {
     throw new Error('trek bundle dc() logo chip ink patch did not apply');
   }
-  if (!out.includes('transform:"translateY(-2.5px)"')) {
-    throw new Error('trek bundle dc() emoji fallback vertical center patch did not apply');
+  if (!out.includes('tsCenterThingLogoFallbackEl(')) {
+    throw new Error('trek bundle dc() emoji fallback name-line center patch did not apply');
   }
   return out;
 }

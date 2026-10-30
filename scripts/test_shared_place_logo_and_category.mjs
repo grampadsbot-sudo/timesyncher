@@ -57,7 +57,9 @@ assert.equal(productOverride.category, 'car');
 
 const bundle = await readFile(new URL('../public/assets/index-BKun7ofk.js', import.meta.url), 'utf8');
 assert.match(bundle, /dc=\(\{item:G,size:Re=28\}\)=>\{const zt=_l\(G\),ua=Pc\(G\)/);
-assert.match(bundle, /onError:Rn=>\{Rn\.currentTarget\.style\.display="none"\}/);
+assert.match(bundle, /onError:Rn=>\{const ua=Rn\.currentTarget;ua\.style\.display="none"/);
+assert.match(bundle, /tsv-logo-fallback/);
+assert.match(bundle, /ic&&ic!=="\?"\?ic:wl\(G\)/);
 assert.match(bundle, /data-ts-logo-chip":"1"/);
 
 const logoSrc = 'https://cdn.example/brand-mark.png';

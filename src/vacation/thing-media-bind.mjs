@@ -192,6 +192,10 @@ export function mergeBindingsIntoShared(shared = {}, bindings = []) {
   for (const raw of bindings) {
     const binding = toPublicBinding(raw);
     if (!binding.thingId || !binding.publicUrl) continue;
+    const playUrl = boundMediaPlayUrl(binding);
+    if (playUrl && (isVideoBinding(binding) || PLACEHOLDER_MEDIA_HOST_RE.test(binding.publicUrl))) {
+      binding.publicUrl = playUrl;
+    }
     const list = byPlace.get(binding.thingId) || [];
     list.push(binding);
     byPlace.set(binding.thingId, list);
@@ -343,6 +347,24 @@ export function mediaKindFromMime(mime = '') {
 
 export function neonRawMediaPath(shareToken, bindingId) {
   return `/api/bind-thing-media?shareToken=${encodeURIComponent(text(shareToken, 180))}&id=${encodeURIComponent(text(bindingId, 80))}&raw=1`;
+}
+
+const PLACEHOLDER_MEDIA_HOST_RE = /example\.com/i;
+
+export function boundMediaPlayUrl(row = {}) {
+  const candidates = [row.publicUrl, row.public_url, row.url]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  const direct = candidates.find((url) => !PLACEHOLDER_MEDIA_HOST_RE.test(url));
+  if (direct) return direct;
+  const shareToken = String(row.shareToken || row.share_token || '').trim();
+  const id = String(row.id || '').trim();
+  if (shareToken && id) return neonRawMediaPath(shareToken, id);
+  return '';
+}
+
+export function boundMediaPlayUrlBundleInject() {
+  return 'tsBoundMediaPlayUrl=gr=>{const u=[gr.publicUrl,gr.public_url,gr.url].map(v=>String(v||"").trim()).find(v=>v&&!/example\\.com/i.test(v));if(u)return u;const t=String(gr.shareToken||gr.share_token||"").trim(),id=String(gr.id||"").trim();return t&&id?"/api/bind-thing-media?shareToken="+encodeURIComponent(t)+"&id="+encodeURIComponent(id)+"&raw=1":""}';
 }
 
 export function chooseMediaStorage({

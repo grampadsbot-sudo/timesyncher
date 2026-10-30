@@ -54,6 +54,26 @@
     "nh": 32,
     "nw": 32
   },
+  "https://www.hertz.com/etc.clientlibs/vulcan-aem/clientlibs/clientlib-react/resources/hertz/favicon-16x16.png": {
+    "inkCy": 10,
+    "nh": 16,
+    "nw": 16
+  },
+  "https://www.thrifty.com/etc.clientlibs/vulcan-aem/clientlibs/clientlib-react/resources/thrifty/favicon-16x16.png": {
+    "inkCy": 12,
+    "nh": 16,
+    "nw": 16
+  },
+  "https://www.thrifty.com/etc.clientlibs/vulcan-aem/clientlibs/clientlib-react/resources/thrifty/favicon-196x196.png": {
+    "inkCy": 106,
+    "nh": 196,
+    "nw": 196
+  },
+  "https://www.dollar.com/etc.clientlibs/vulcan-aem/clientlibs/clientlib-react/resources/dollar/favicon-16x16.png": {
+    "inkCy": 9.5,
+    "nh": 16,
+    "nw": 16
+  },
   "https://www.beaconhotel.com/favicon.ico": {
     "inkCy": 8,
     "nh": 16,
