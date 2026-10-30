@@ -17,7 +17,8 @@ assert.equal(rebaked, committed);
 assert.match(committed, /En=G=>Sn\("",G\),Mn=G=>/);
 
 assert.match(committed, /const hotel=It\(G\)==="hotel"\|\|Zi\(G\)/);
-assert.match(committed, /if\(hotel\)\{const summary=pick\(ha\(G\)\.summary/);
+assert.match(committed, /if\(hotel\)\{const summary=String\(ha\(G\)\.summary/);
+assert.match(committed, /"data-ts-list-desc":"1"/);
 
 assert.match(committed, /data-ts-detail-info-box":"website"/);
 assert.match(committed, /data-ts-detail-summary-readonly":"1"/);

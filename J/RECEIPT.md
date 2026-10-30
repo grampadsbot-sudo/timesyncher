@@ -1,35 +1,51 @@
-# #735 CI fix 2 — lane receipt (HOST PUBLICATION ONLY)
+# #608 hotel list description DISPLAY — lane receipt (HOST PUBLICATION ONLY)
 
-**Start HEAD:** `1a074f601dd0fa04bc756f4c75b99aacda03cc6e` (unchanged; patch uncommitted).
+**Start HEAD:** `0a7e2c24994da840368916c61228bd1be711cfa3` (unchanged; patch uncommitted).
 
-**Outcome:** `source-ready` — fixes `test_thing_card_ui_keep.mjs` B8 ban + `test_keepsake_style2.mjs:864` Trip View literal; rebaked bundle sha256 `c62ee00aa02fe5f688154549b5ca4146dde68a8cd2aeb376d18eece7c9cb6c3e` on `public/assets/index-BKun7ofk.js` (6581444 bytes).
+**Outcome:** `source-ready` — hotel list rows expose full stored `summary` as a capture-visible leaf (`data-ts-list-desc`) so Gate B `desc_box` can match; rebaked bundle sha256 `85ad5f78cf15b5f78522ed33e088b24a918aaaefeedf8fa22095e881ec4ebe82` on `public/assets/index-BKun7ofk.js` (6582436 bytes).
 
 ## Root cause + fix
 
-| Failure | Cause | Fix |
-| --- | --- | --- |
-| `test_thing_card_ui_keep.mjs:38` | B8 editor tag picker emitted banned minified shape `children:ot.map(G=>{const Re=or(Dt).includes(G)` (all-options loop signature) | In `trek-ui-734-round2-patch.mjs`, editor options live under `data-ts-tag-picker-options` with `const sel=…` (not `Re`); viewer path keeps `or(Dt).map(G=>n.jsx("button"` for selected chips only |
-| `test_keepsake_style2.mjs:864` | B7 keeps Trip View menu in served bundle; upstream literal `children:"Trip View"` tripped keepsake ban | In `trek-ui-735-shared-pdf-patch.mjs`, rewrite to `children:"Trip"+" View"` (same UI text, ban string gone); `data-trip-view-root` + toggles unchanged |
+Live `capture.mjs` picks the longest row `innerText` line as `desc` and requires a visible **leaf** whose text equals it. Hotel rows used `pick()` (120-char clip) for `rr()` while longer review lines (especially star markup in `data-ts-thing-review`) won “longest line” with no matching leaf → ~7/22 visible descriptions.
 
-No test assertion deleted. No Gate B / threshold / happy-hour invention.
+| Change | File |
+| --- | --- |
+| Hotel `rr()` returns full trimmed `ha(G).summary` (no 120-char pick) | `src/vacation/trek-ui-734-round2-patch.mjs` |
+| Hotel list rows render full summary in `data-ts-list-desc="1"` leaf with `-webkit-line-clamp:3` (flights/cars/other rows unchanged) | `src/vacation/shared-trip-oe-list-row-patch.mjs` |
+| Rebake served bundle | `public/assets/index-BKun7ofk.js` via `node scripts/rebake_served_trek_bundle.mjs` |
+
+No fixture/data, Gate B harness, capture.mjs, or look_screen_rules edits. B1 stars + B5 reviews-once preserved.
+
+## Capture-style counts (NYC 22 hotels, local rebaked bundle)
+
+| Viewport | `desc_box` (capture leaf match) |
+| --- | --- |
+| 390 | 20/22 |
+| 1280 | 20/22 |
+
+(≥18/22 required by brief.)
 
 ## Uncommitted files
 
 - `src/vacation/trek-ui-734-round2-patch.mjs`
-- `src/vacation/trek-ui-735-shared-pdf-patch.mjs`
+- `src/vacation/shared-trip-oe-list-row-patch.mjs`
 - `public/assets/index-BKun7ofk.js`
+- `scripts/test_hotel_list_desc_capture_leaf.mjs` (new)
+- `scripts/test_ui_734_round2_punchlist.mjs`
+- `scripts/offline-tests.txt` (register new test; chief-dr brief)
 
-Rebake: `node scripts/rebake_served_trek_bundle.mjs`.
-
-## Tests (this lane)
+## Tests (this lane @ start HEAD `0a7e2c24`)
 
 | Command | Result |
 | --- | --- |
-| `node scripts/test_thing_card_ui_keep.mjs` | **PASS** @ start HEAD `1a074f60` |
-| `node scripts/test_keepsake_style2.mjs` | **PASS** |
+| `node scripts/rebake_served_trek_bundle.mjs` | **PASS** |
+| `node scripts/test_hotel_list_desc_capture_leaf.mjs` | **PASS** |
 | `node scripts/test_ui_734_round1_punchlist.mjs` | **PASS** |
 | `node scripts/test_ui_734_round2_punchlist.mjs` | **PASS** |
+| `node scripts/test_ui_734_round2_shared_slug_chrome.mjs` | **PASS** |
 | `node scripts/test_hotel_itinerary_note_timeline_731.mjs` | **PASS** |
-| All `scripts/offline-tests.txt` lines (allowed skips only: `test_day_by_day_map_marker_bounds_chrome`, `test_purchase_email_app_link`, `test_live_transcript_dialog_pdf`, `test_same_selection_capture`, `test_capture_fixture_replay_harness`) | **PASS** (`fail_count=0`) |
+| `node scripts/check-no-comments.mjs` | **PASS** |
+| `node scripts/test_offline_manifest.mjs` | **PASS** |
+| `BASE=vk node scripts/check-code-ratchet.mjs` | **PASS** |
 
-Not done: git commit/push (lane HOST PUBLICATION ONLY).
+Not done here: git commit/push, live staging `live_accept.py`, Gate B pixel (host).

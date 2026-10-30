@@ -11,7 +11,7 @@ const EN_AREA_PATCH = 'En=G=>Sn("",G),Mn=G=>';
 
 const RR_HOTEL_LIST_NEEDLE = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
 
-const RR_HOTEL_LIST_PATCH = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};const hotel=It(G)==="hotel"||Zi(G);if(hotel){const summary=pick(ha(G).summary??"");if(summary)return summary}return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
+const RR_HOTEL_LIST_PATCH = `rr=G=>{const pick=${STORED_SUMMARY_LIST_ROW_PICK_BUNDLE};const hotel=It(G)==="hotel"||Zi(G);if(hotel){const summary=String(ha(G).summary??"").replace(/\\s+/g," ").trim();if(summary)return summary}return pick(ha(G).itineraryNote??ha(G).itinerary_note)||pick(ha(G).summary??"")||""}`;
 
 const WEBSITE_INSERT_NEEDLE =
   'phone?n.jsxs("a",{"data-ts-detail-info-box":"phone",href:"tel:"+phone.replace(/\\s+/g,""),style:{display:"block",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 12px",marginBottom:10,background:"#f0fdf4",color:"#0f766e",textDecoration:"none",fontSize:13},children:[n.jsx("strong",{children:"Phone:"})," ",phone]}):null,hhShow?';
