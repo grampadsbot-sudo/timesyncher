@@ -129,5 +129,20 @@ export function patchSharedTripListWrapping(source = '') {
   const reviewLine = '"data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1",style:{marginTop:4,fontSize:12,lineHeight:1.45,color:"#334155",whiteSpace:"normal",overflowWrap:"anywhere"},dangerouslySetInnerHTML:{__html:tsRev}}):null})()';
   if (!next.includes(summaryClose)) throw new Error('thing card review line anchor missing');
   next = next.replaceAll(summaryClose, reviewLine);
-  return next;
+  return patchHotelListDescCaptureLeaf(next);
+}
+
+const HOTEL_LIST_DESC_SUMMARY_NEEDLE =
+  'Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
+const HOTEL_LIST_DESC_SUMMARY_PATCH =
+  'Pn?(()=>{const tsHotel=It(G)==="hotel"||Zi(G);const tsFull=tsHotel?String(ha(G).summary??"").replace(/\\s+/g," ").trim():"";return tsFull?n.jsx("div",{"data-ts-list-desc":"1","data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"},children:tsFull}):Pn?n.jsx("div",{"data-list-summary":"1","data-summary-src":"thing",style:{marginTop:6,fontSize:11,fontWeight:700,width:"100%",minWidth:0,whiteSpace:"normal",overflowWrap:"anywhere",color:"#475569",lineHeight:1.4},children:Pn}):null})():null,(()=>{const tsRev=tsThingReviewLines(G);return tsRev?n.jsx("div",{"data-ts-thing-review-line":"1"';
+
+function patchHotelListDescCaptureLeaf(source = '') {
+  let js = String(source || '');
+  if (js.includes(HOTEL_LIST_DESC_SUMMARY_NEEDLE)) {
+    js = js.replaceAll(HOTEL_LIST_DESC_SUMMARY_NEEDLE, HOTEL_LIST_DESC_SUMMARY_PATCH);
+  } else if (!js.includes('"data-ts-list-desc":"1"')) {
+    throw new Error('hotel list desc capture leaf patch did not apply');
+  }
+  return js;
 }
