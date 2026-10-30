@@ -1,4 +1,10 @@
-import { cleanText, headerValue } from './http.mjs';
+import { cleanText, headerValue, sendJson } from './http.mjs';
+import { loadSharedTripPayload } from './shared-trip-handler.mjs';
+import {
+  isSharedListReportSlug,
+  normalizeSharedListReportSlug,
+  renderSharedTripReportPdf,
+} from './shared-trip-report-pdf.mjs';
 
 function productTrekPublic() {
   const fromEnv = String(
@@ -69,6 +75,15 @@ function dailyDayFromPdfPath(pdfPath = '') {
   return match ? match[1] : '';
 }
 
+function reportFromPdfPath(pdfPath = '') {
+  const parts = String(pdfPath || '').split('/').filter(Boolean);
+  if (parts[1] === 'report') {
+    return String(parts[2] || '').replace(/\.pdf$/i, '').trim();
+  }
+  if (parts[1] === 'daily') return 'daily';
+  return '';
+}
+
 export function normalizeReportName(name = '') {
   const cleaned = String(name || '').replace(/\.pdf$/i, '').trim();
   if (!cleaned || /^(style-?2|journey|layout-?2)$/i.test(cleaned)) {
@@ -128,28 +143,29 @@ export function productPdfUrl({
   search = '',
   origin = '',
 } = {}) {
+  const host = String(origin || 'https://vacation-staging.timesyncher.com').replace(/\/+$/, '');
   const token = encodeURIComponent(shareToken);
   if (isDailyReport(report, pdfPath)) {
     const day = dailyDayFromPdfPath(pdfPath) || String(report).replace(/^[^\d]*/, '') || '';
     const suffix = day ? `/daily/${encodeURIComponent(day)}.pdf` : '/daily.pdf';
-    return `${getProductTrekPublic()}/api/pdf/shared/${token}${suffix}${search}`;
+    return `${host}/api/pdf/shared/${token}${suffix}${search}`;
   }
   const name = normalizeReportName(report);
   if (name === PRODUCT_STYLE_TWO_REPORT) {
     return productStyleTwoViewUrl({
       shareToken,
-      origin: origin || 'https://vacation-staging.timesyncher.com',
+      origin: host,
       search,
     });
   }
   if (isProductStyleOne(name) || isProductStyleOne(report)) {
     return productStyleOneViewUrl({
       shareToken,
-      origin: origin || 'https://vacation-staging.timesyncher.com',
+      origin: host,
       search,
     });
   }
-  return `${getProductTrekPublic()}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
+  return `${host}/api/pdf/shared/${token}/report/${encodeURIComponent(name)}.pdf${search}`;
 }
 
 export function forwardedKeepsakeSearch(url) {
@@ -182,6 +198,13 @@ export function journeyBookGate({ pdfPath = '', report = '' } = {}) {
   return { ok: true, status: 200, kind: isProductStyleTwo(report) ? 'style-two' : 'trek-report' };
 }
 
+function sendPdf(res, buffer) {
+  res.statusCode = 200;
+  res.setHeader('content-type', 'application/pdf');
+  res.setHeader('cache-control', 'no-store');
+  res.end(buffer);
+}
+
 export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'https://timesyncher.com');
   const pdfPath = cleanText(url.searchParams.get('pdfPath'), 240);
@@ -190,7 +213,9 @@ export default async function handler(req, res) {
     180,
   );
   const reportName = cleanText(
-    url.searchParams.get('report') || (pdfPath.split('/')[2] || PRODUCT_STYLE_TWO_REPORT),
+    url.searchParams.get('report')
+    || reportFromPdfPath(pdfPath)
+    || (pdfPath.split('/')[2] || PRODUCT_STYLE_TWO_REPORT),
     80,
   ) || PRODUCT_STYLE_TWO_REPORT;
 
@@ -204,19 +229,35 @@ export default async function handler(req, res) {
     report: reportName,
     view: url.searchParams.get('view') || '',
   });
-  const location = wantsView || isProductStyleTwo(reportName)
-    ? productStyleTwoViewUrl({ shareToken, origin, search })
-    : isProductStyleOne(reportName)
-      ? productStyleOneViewUrl({ shareToken, origin, search })
-      : productPdfUrl({
-        shareToken,
-        report: reportName,
-        pdfPath,
-        search,
-        origin,
-      });
+
+  const daily = isDailyReport(reportName, pdfPath);
+  const listSlug = normalizeSharedListReportSlug(reportName);
+  const inAppPdf = daily || isSharedListReportSlug(listSlug);
+
+  if (inAppPdf) {
+    const payload = await loadSharedTripPayload(shareToken, req);
+    if (!payload) {
+      return sendJson(res, 404, { ok: false, error: 'shared trip not found', shareToken });
+    }
+    if (!daily && !isSharedListReportSlug(listSlug)) {
+      return sendJson(res, 400, { ok: false, error: 'unknown report slug', report: reportName });
+    }
+    const dayNumber = daily ? Number(dailyDayFromPdfPath(pdfPath) || reportName.replace(/\D/g, '') || 0) : 0;
+    if (daily && (!Number.isFinite(dayNumber) || dayNumber <= 0)) {
+      return sendJson(res, 400, { ok: false, error: 'daily day_number is required' });
+    }
+    const pdf = renderSharedTripReportPdf(payload, {
+      report: daily ? 'daily' : listSlug,
+      dayNumber,
+    });
+    if (!pdf) {
+      return sendJson(res, 400, { ok: false, error: 'unknown report slug', report: reportName });
+    }
+    return sendPdf(res, pdf);
+  }
 
   if (isProductStyleTwo(reportName) || wantsView) {
+    const location = productStyleTwoViewUrl({ shareToken, origin, search });
     if (!styleTwoLocationStaysOnStaging(location, origin)) {
       return sendJson(res, 500, {
         ok: false,
@@ -227,6 +268,7 @@ export default async function handler(req, res) {
   }
 
   if (isProductStyleOne(reportName)) {
+    const location = productStyleOneViewUrl({ shareToken, origin, search });
     if (!styleOneLocationStaysOnStaging(location, origin)) {
       return sendJson(res, 500, {
         ok: false,
@@ -236,5 +278,5 @@ export default async function handler(req, res) {
     return sendRedirect(res, location, { 'x-timesyncher-style1': 'staging-ae' });
   }
 
-  return sendRedirect(res, location);
+  return sendJson(res, 400, { ok: false, error: 'unknown report slug', report: reportName });
 }
