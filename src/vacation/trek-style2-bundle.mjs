@@ -20,7 +20,8 @@ import { patchStarRatings } from './trek-star-rating-patch.mjs';
 import { patchSharedTripListWrapping } from './shared-trip-oe-list-row-patch.mjs';
 import { patchDayByDayKeepsakeMap } from './trek-day-by-day-map-patches.mjs';
 import { patchTimelineItineraryNote } from './trek-timeline-itinerary-note-patch.mjs';
-import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
+import { patchUi734Round1, patchUi734Round2, patchUi735SharedPdf } from './trek-ui-734-round1-patch.mjs';
+import { patchUi737 } from './trek-ui-737-patch.mjs';const SERVED_BUNDLE = new URL('../../public/assets/index-BKun7ofk.js', import.meta.url);
 const ZU_STYLE2 = 'G==="keepsake-style-2"?zu()';
 const AE_STYLE2 = 'G==="keepsake-style-2"?Ae(!0)';
 
@@ -509,7 +510,7 @@ export function renderServedTrekBundle(raw) {
   const patched = patchThingLogoChipAlignment(dropServedTrekCallers(patchStyleTwoToConfigRenderer(stripped.source, { served: true })));
   const js = stripHotelBrandNameGuessing(stripServedQaCopy(rewriteAppConfigCallers(patched)));
   assertServedBundleClean(js);
-  return patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js)))))));
+  return patchUi737(patchUi735SharedPdf(patchTimelineItineraryNote(patchUi734Round2(patchUi734Round1(patchSharedTripListWrapping(patchStarRatings(patchThingDetailCapture(js))))))));
 }
 
 function endOfCall(text, callStart) {
