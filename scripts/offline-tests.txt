@@ -183,6 +183,7 @@ scripts/test_harness_outbound_email_stub.mjs
 scripts/test_shared_trip_slug_miss.mjs
 scripts/test_shared_trip_boot_fetch.mjs
 scripts/test_shared_trip_report_pdf.mjs
+scripts/test_shared_pdf_unicode.mjs
 scripts/test_shared_trek_link_routing.mjs
 scripts/test_served_canned_needles.mjs
 scripts/test_vacation_selector_dropdown.mjs

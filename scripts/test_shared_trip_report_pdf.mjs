@@ -6,6 +6,7 @@ import {
   placeNamesForReport,
   renderSharedTripReportPdf,
 } from '../src/vacation/shared-trip-report-pdf.mjs';
+import { extractMinimalPdfText } from '../src/vacation/minimal-text-pdf.mjs';
 
 const shared = buildGateBApprovedSharedTrip();
 
@@ -21,7 +22,7 @@ function mockRes() {
 }
 
 function pdfText(buffer) {
-  return buffer.toString('latin1');
+  return extractMinimalPdfText(buffer);
 }
 
 const slugs = [

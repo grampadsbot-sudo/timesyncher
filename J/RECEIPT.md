@@ -1,57 +1,40 @@
-# #739 B10 shared PDF in-app — lane receipt (HOST PUBLICATION ONLY)
+# #741 Shared report PDF Unicode — lane receipt (HOST PUBLICATION ONLY)
 
-**Start HEAD:** `7079bc4b73507d981a78a9dc6c068070e8009ad6` (unchanged committed tip; patch uncommitted).
+**Start HEAD:** `2a26b5acbe8ecdcc2fd56814cc4e53eb75bc58a5`
 
-**Outcome:** `source-ready` — list + daily shared PDF routes render `application/pdf` from the same shared-trip loader as `/api/shared/<token>`; Trek 302 removed for restaurants/stores/rest/complete-list/daily. Style-one/two keepsake PDFs still 302 to staging `Ae()` print (unchanged).
+**Outcome:** `source-ready` — embed DejaVu Sans (CIDFontType2 + Identity-H + ToUnicode); non-ASCII no longer folded to `?`; new unicode extract test registered.
 
 ## Root cause + fix
 
-Shared list/daily PDF handler built Trek URLs via `TIMESYNCHER_TREK_PUBLIC_BASE_URL` and 302-forwarded. Vacation-staging trips are not on Trek → invalid PDF. Fix: load trip with `loadSharedTripPayload()` (intake DB, Gate B offline fixture, optional upstream) and emit a minimal text PDF in-process.
+`foldPdfLine` stripped non-ASCII and Type1 Helvetica could not render Unicode. Fix: ship `src/vacation/pdf-fonts/DejaVuSans.ttf`, parse TTF cmap/hmtx in-process, emit Type0/CIDFontType2 PDF text as `<GID…> Tj` with ToUnicode for extraction.
 
 | File | Change |
 | --- | --- |
-| `src/vacation/minimal-text-pdf.mjs` | Pure-JS PDF 1.4 writer (Helvetica text) |
-| `src/vacation/shared-trip-report-pdf.mjs` | Report bodies (restaurants/stores/rest/complete-list/daily) from shared payload |
-| `src/vacation/shared-trip-handler.mjs` | Export `loadSharedTripPayload()`; refactor GET to use it |
-| `src/vacation/keepsake-style2-handler.mjs` | In-app PDF for list+daily; local `productPdfUrl`; 404/400 JSON; import `sendJson` |
-| `scripts/test_shared_trip_report_pdf.mjs` | Fixture slug PDF content-type + `%PDF-` + thing names |
-| `scripts/test_keepsake_style2.mjs` | `productPdfUrl` expects vacation-staging `/api/pdf/shared/…` not Trek |
+| `src/vacation/minimal-text-pdf.mjs` | Unicode font embed; `extractMinimalPdfText()` for tests |
+| `src/vacation/pdf-fonts/DejaVuSans.ttf` | Bundled open-font (system DejaVu copy) |
+| `scripts/test_shared_pdf_unicode.mjs` | Asserts `→`, `é`, `ʻ` round-trip via ToUnicode |
+| `scripts/test_shared_trip_report_pdf.mjs` | PDF body assertions via `extractMinimalPdfText` (hex text no longer ASCII-visible) |
+| `scripts/offline-tests.txt` | Register `test_shared_pdf_unicode.mjs` |
 
-## Tests run (7079bc4b workspace)
+## Tests run (workspace @ 2a26b5ac)
 
 | Command | Result |
 | --- | --- |
+| `node scripts/test_shared_pdf_unicode.mjs` | PASS |
 | `node scripts/test_shared_trip_report_pdf.mjs` | PASS |
-| `node scripts/test_keepsake_style2.mjs` | PASS |
-| `node scripts/check-no-comments.mjs` | BLOCKED (lane: missing `apps/vacation-client/node_modules/typescript`; host install) |
-| `BASE=7079bc4b73507d981a78a9dc6c068070e8009ad6 node scripts/check-code-ratchet.mjs` | DEAD-CODE PASS; BASELINE-GROWTH FAIL (`origin/7079bc4b…` ref missing locally) |
-| `node scripts/test_api_route_bundle.mjs` | PASS |
+| `node scripts/test_offline_manifest.mjs` | PASS (379 offline) |
+| `node scripts/check-no-comments.mjs` | BLOCKED — missing `apps/vacation-client/node_modules/typescript` (host install) |
+| `BASE=2a26b5ac node scripts/check-code-ratchet.mjs` | REPORT only; BASELINE-GROWTH FAIL — `origin/2a26b5ac…` ref missing locally |
 
-**Host:** register `scripts/test_shared_trip_report_pdf.mjs` in `scripts/offline-tests.txt` (issue scope banned coder edit; chief brief requires registration) then `node scripts/test_offline_manifest.mjs`.
-
-**Note:** `test_keepsake_layout_routes.mjs` still expects keepsake/style-2 PDF **302** to journey print — intentional; full `Ae()` book PDF not in this patch. Keepsake menu items are HTML print targets, not Trek list reports.
-
-## Slug results (fixture `8CQXghBP4fbUHWVYHkr5r1MUcWg4xz5y`)
-
-| Slug | Handler | Sample text in PDF |
-| --- | --- | --- |
-| `restaurants` | 200 `application/pdf` | Carbone |
-| `stores` | 200 | Zabar's |
-| `rest` | 200 | Statue of Liberty walking tour |
-| `complete-list` | 200 | Carbone (+ other buckets) |
-| `daily/1` | 200 | Day 1 timed rows |
-| `keepsake` / `keepsake-style-2` | 302 staging journey | (unchanged) |
-| invalid token | 404 JSON | — |
-| unknown slug | 400 JSON | — |
+**Host:** commit + push once; PR into `vk` with `Closes #741`; run full pre-push gates on Ubuntu with origin ref fetched; no Gate B on this DATA/UI PDF text change per #65 unless UI screens touched.
 
 ## Uncommitted files
 
-- `src/vacation/minimal-text-pdf.mjs` (new)
-- `src/vacation/shared-trip-report-pdf.mjs` (new)
-- `src/vacation/shared-trip-handler.mjs`
-- `src/vacation/keepsake-style2-handler.mjs`
-- `scripts/test_shared_trip_report_pdf.mjs` (new)
-- `scripts/test_keepsake_style2.mjs`
+- `src/vacation/minimal-text-pdf.mjs`
+- `src/vacation/pdf-fonts/DejaVuSans.ttf` (new)
+- `scripts/test_shared_pdf_unicode.mjs` (new)
+- `scripts/test_shared_trip_report_pdf.mjs`
+- `scripts/offline-tests.txt`
 - `J/RECEIPT.md`
 
-Local `npm install` may touch `node_modules/` / lockfile; host must not commit lockfile changes from lane install.
+Local `npm install` may have updated `node_modules/`; do not commit lockfile churn from lane install.
